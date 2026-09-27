@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circle Cost Board</title><style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1d2433;--mut:#5b6475;--free:#8a94a6;--st:#2f6fdb;--pro:#1f3864;--cost:#d9534f;--up:#2e9e5b;--intro:#16a3a3;--dev:#2e9e5b;--srv:#2f6fdb;--ai:#e08a1e}
+@media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2029;--ink:#e8ecf3;--mut:#9aa3b5;--pro:#7e9ce0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,sans-serif;padding:20px 16px}
+.wrap{max-width:1050px;margin:auto}h1{margin:0 0 4px;font-size:24px}.sub{color:var(--mut);margin-bottom:18px}
+h2{font-size:17px;margin:26px 0 10px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.card{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px #0002;border-top:5px solid var(--c)}
+.card h3{margin:0 0 6px;font-size:16px;color:var(--c)}.big{font-size:26px;font-weight:700}.row{display:flex;justify-content:space-between;color:var(--mut);font-size:14px}
+.row b{color:var(--ink)}.scale{background:var(--card);border-radius:12px;padding:12px 16px;margin-bottom:10px;box-shadow:0 1px 3px #0002}
+.n{font-weight:700;margin-bottom:6px}.bar{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:8px;margin:4px 0;font-size:14px}
+.bar i{display:block;height:14px;border-radius:7px}.c{background:var(--cost)}.u{background:var(--up)}.t{background:var(--intro)}.bar b{text-align:right}
+.legend span{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:13px;color:var(--mut)}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.flow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}@media(max-width:700px){.flow{grid-template-columns:1fr}.bar{grid-template-columns:110px 1fr 60px}}
+.box{background:var(--card);border-radius:12px;padding:14px;border-left:6px solid var(--c);box-shadow:0 1px 3px #0002}.box h3{margin:0 0 6px;color:var(--c);font-size:15px}
+.box ul{margin:0;padding-left:18px}.note{color:var(--mut);font-size:13px;margin-top:8px}
+.key{background:var(--card);border-left:6px solid var(--up);padding:12px 16px;border-radius:10px;margin:8px 0}
+</style></head><body><div class="wrap">
+<h1>Circle &amp; PA Tools — cost board</h1><div class="sub">MarketSquare · 26 Sep 2026 · analysis only, nothing built · full detail in the Word report</div>
+<div class="key"><b>The crux:</b> the Circle costs almost nothing to run. Its only real cost is e-mail when a customer has no app notifications. The server needs no upgrade. Most of the money comes from invited customers becoming new app users.</div>
+<h2>The three plans</h2><div class="grid">
+<div class="card" style="--c:var(--free)"><h3>Free</h3><div class="big">10 regulars</div><div class="row">Listing slots<b>2</b></div><div class="row">Group messages<b>no</b></div><div class="row">Cost to serve (worst)<b>$0.04/mo</b></div></div>
+<div class="card" style="--c:var(--st)"><h3>$5 Starter</h3><div class="big">50 regulars</div><div class="row">Listing slots<b>10</b></div><div class="row">Group messages<b>yes</b></div><div class="row">Cost to serve (worst)<b>$0.36/mo</b></div><div class="row">Margin (worst)<b>89%</b></div></div>
+<div class="card" style="--c:var(--pro)"><h3>$20 Pro</h3><div class="big">200 regulars</div><div class="row">Listing slots<b>30</b></div><div class="row">Group messages<b>yes</b></div><div class="row">Cost to serve (worst)<b>$2.16/mo</b></div><div class="row">Margin (worst)<b>86%</b></div></div></div>
+<h2>Monthly cost vs extra income (mid scenario)</h2>
+<div class="legend"><span><i style="background:var(--cost)"></i>E-mail cost</span><span><i style="background:var(--up)"></i>Extra subscription income</span><span><i style="background:var(--intro)"></i>Extra introduction income (least certain)</span></div>
+<div class="scale"><div class="n">100 sellers</div>
+<div class="bar"><span class="lbl">E-mail cost</span><i class="c" style="width:4%"></i><b>$20</b></div>
+<div class="bar"><span class="lbl">Extra from upgrades</span><i class="u" style="width:6%"></i><b>$53</b></div>
+<div class="bar"><span class="lbl">Extra introductions</span><i class="t" style="width:8%"></i><b>$98</b></div></div><div class="scale"><div class="n">1,000 sellers</div>
+<div class="bar"><span class="lbl">E-mail cost</span><i class="c" style="width:8%"></i><b>$90</b></div>
+<div class="bar"><span class="lbl">Extra from upgrades</span><i class="u" style="width:19%"></i><b>$531</b></div>
+<div class="bar"><span class="lbl">Extra introductions</span><i class="t" style="width:25%"></i><b>$983</b></div></div><div class="scale"><div class="n">10,000 sellers</div>
+<div class="bar"><span class="lbl">E-mail cost</span><i class="c" style="width:19%"></i><b>$547</b></div>
+<div class="bar"><span class="lbl">Extra from upgrades</span><i class="u" style="width:59%"></i><b>$5,310</b></div>
+<div class="bar"><span class="lbl">Extra introductions</span><i class="t" style="width:81%"></i><b>$9,828</b></div></div>
+<div class="note">Bars use a square-root scale so the small numbers stay visible. Switching customers to app notifications cuts the 10,000-seller e-mail bill from $547 to $137.</div>
+<h2>PA micro tools — where the data lives</h2><div class="flow">
+<div class="box" style="--c:var(--dev)"><h3>Her phone or laptop</h3><ul><li>Viewer lists, notes, numbers</li><li>Viewing schedule</li><li>Saved to her own file</li><li>Cost to us: $0</li></ul></div>
+<div class="box" style="--c:var(--srv)"><h3>MarketSquare server</h3><ul><li>Only the Tuppence charge</li><li>Stores no private contacts</li><li>Calendar and e-mail go out from her own apps</li></ul></div>
+<div class="box" style="--c:var(--ai)"><h3>AI provider (a second)</h3><ul><li>Drafts a feedback e-mail</li><li>Text passes through, not stored</li><li>About $0.001 per draft</li></ul></div></div>
+<h2>Build effort</h2><div class="grid">
+<div class="card" style="--c:var(--st)"><h3>Circle</h3><div class="big">≈ 8 sessions</div></div>
+<div class="card" style="--c:var(--dev)"><h3>PA micro tools</h3><div class="big">≈ 6 sessions</div></div></div>
+</div></body></html>

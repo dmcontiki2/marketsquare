@@ -325,6 +325,26 @@
    ]
   },
   {
+   "key": "GET /users/{email}/listings/keep",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
+   "key": "POST /users/{email}/listings/keep",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ]
+  },
+  {
    "key": "GET /sellers/credentials/{listing_id}",
    "level": "public"
   },
@@ -1571,6 +1591,16 @@
     {
      "name": "email",
      "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /buzz/keep",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
     }
    ]
   },

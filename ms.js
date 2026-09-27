@@ -2537,6 +2537,8 @@ async function openSubscriptionScreen(returnTo) {
 }
 
 function _renderSubscriptionScreen(d, email) {
+  window._subData = d || null;   // KEEP-CHOICE-1: the downgrade warning reads the counts from here
+  try{ _subKeepLoad(d, email); }catch(e){}
   const tier    = d?.seller_tier || 'free';
   const limit   = d?.slot_limit ?? 2;
   const used    = d?.slots_used ?? 0;
@@ -2585,7 +2587,7 @@ function _renderSubscriptionScreen(d, email) {
         ${t.usd>0?'<span style="font-size:12px;color:var(--text-3);">/month · ≈ R'+t.zar+'</span>':(t.id==='agency'?'':'<span style="font-size:12px;color:var(--text-3);">forever</span>')}
       </div>
       <div style="font-size:12px;color:var(--text-2);margin-top:4px;">${t.id==='agency' ? 'Listing allowance set on review of your agency size' : t.slots + ' listing slots'} · ${t.desc}</div>
-      ${(t.bullets||[]).map(b=>'<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">· '+b+'</div>').join('')}
+      ${_circleBullets(t).map(b=>'<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">· '+b+'</div>').join('')}
       ${isDown && !isCur ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
     `;
     container.appendChild(card);
@@ -2600,24 +2602,81 @@ function _renderSubscriptionScreen(d, email) {
   if (ovSlots) ovSlots.textContent = avail + ' of ' + limit + ' slots available · tap to manage';
 }
 
+// KEEP-CHOICE-1 (David, 27 Sep 2026): the standard for every downgrade -- she is told BEFORE she
+// confirms what the lower plan holds against what she has, and that SHE chooses what stays active.
+function _subDownWarning(tierId){
+  const d = window._subData || {};
+  const t = _SUB_TIERS.find(x => x.id === tierId); if(!t) return '';
+  const live = d.slots_used || 0, regs = d.circle_used || 0;
+  const parts = [], have = [];
+  if(live > t.slots){ parts.push(t.slots + ' listings'); have.push(live + ' listings'); }
+  if(d.circle_caps_on && _CIRCLE_LIMITS[tierId] != null && regs > _CIRCLE_LIMITS[tierId]){
+    parts.push(_CIRCLE_LIMITS[tierId] + ' regulars'); have.push(regs + ' regulars'); }
+  if(!parts.length) return '';
+  return '\n\n' + t.label + ' holds ' + parts.join(' and ') + '. You have ' + have.join(' and ') + '.'
+       + '\nYou choose which stay active. The rest rest: hidden, never deleted, and moving up again brings them all back.';
+}
+async function _subKeepLoad(d, email){
+  const plans = document.getElementById('sub-screen-plans'); if(!plans || !email || !BEA_ENABLED) return;
+  let box = document.getElementById('sub-keep-box');
+  if(!box){ box = document.createElement('div'); box.id = 'sub-keep-box'; plans.parentNode.insertBefore(box, plans); }
+  box.innerHTML = '';
+  if(!d || !((d.listings_resting||0) > 0 || d.pending_downgrade_tier)) return;
+  let k = null;
+  try{ const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/listings/keep', {headers:{'X-Api-Key':API_KEY}, credentials:'include'});
+       if(r.ok) k = await r.json(); }catch(e){}
+  if(!k) return;
+  const n = (k.pending_tier && k.pending_limit != null) ? Math.min(k.slot_limit, k.pending_limit) : k.slot_limit;
+  if(!(k.listings||[]).length || (k.listings.length <= n && !(d.listings_resting>0))) return;
+  let h = '<div class="ms-card" style="margin-bottom:12px"><div style="font-weight:800;margin-bottom:4px">Choose which listings stay live</div>'
+        + '<div style="font-size:12px;color:var(--text-2);margin-bottom:8px">'
+        + (k.pending_tier ? 'Your plan changes to ' + k.pending_tier.charAt(0).toUpperCase() + k.pending_tier.slice(1)
+            + (k.pending_on ? ' on ' + String(k.pending_on).substring(0,10) : '') + '. ' : '')
+        + 'Tick up to <b>' + n + '</b>. The others rest: hidden from buyers, never deleted, and moving up brings them back.</div>';
+  k.listings.forEach(function(l){
+    h += '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border);cursor:pointer">'
+       + '<span style="font-size:13px">' + _lmEsc(l.title||('Listing '+l.id)) + (l.status==='resting' ? ' <span style="font-size:11px;color:var(--text-3)">· resting</span>' : '') + '</span>'
+       + '<input type="checkbox" data-lkeep="' + l.id + '"' + (l.status!=='resting' ? ' checked' : '') + '></label>';
+  });
+  h += '<div id="sub-keep-count" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>'
+     + '<button class="mla-btn accent" id="sub-keep-save" style="margin-top:8px">Save my choice</button></div>';
+  box.innerHTML = h;
+  const boxes = box.querySelectorAll('[data-lkeep]');
+  let on = 0; boxes.forEach(function(b){ if(b.checked){ on++; if(on > n) b.checked = false; } });
+  function count(){ const c = box.querySelectorAll('[data-lkeep]:checked').length;
+    box.querySelector('#sub-keep-count').textContent = c + ' of ' + n + ' ticked';
+    boxes.forEach(function(b){ if(!b.checked) b.disabled = (c >= n); }); }
+  boxes.forEach(function(b){ b.onchange = count; }); count();
+  box.querySelector('#sub-keep-save').onclick = async function(){
+    const keep = []; box.querySelectorAll('[data-lkeep]:checked').forEach(function(b){ keep.push(+b.getAttribute('data-lkeep')); });
+    try{ const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/listings/keep',
+           {method:'POST', headers:{'Content-Type':'application/json','X-Api-Key':API_KEY}, credentials:'include', body: JSON.stringify({keep: keep})});
+         const j = await r.json().catch(()=>({}));
+         if(!r.ok){ showToast(j.detail || 'Could not save'); return; }
+         showToast(j.applied ? 'Saved. ' + keep.length + ' live, the rest resting.' : 'Saved. Applied on the day your plan changes.');
+         openSubscriptionScreen(window._subReturnTo);
+    }catch(e){ showToast('Could not save - check your connection'); }
+  };
+}
+
 async function _subSelectTier(tierId, tierLabel, usdPrice, isDowngrade) {
   const email = localStorage.getItem('ms_aa_email') || '';
   if (!email) { showToast('Sign in to manage your subscription'); return; }
 
   if (tierId === 'free') {
-    if (!confirm('Switch to Free (2 slots)? Takes effect immediately.\nYou must have ≤2 active listings.')) return;
+    if (!confirm('Switch to Free (2 listing slots)? If you have paid time left, it changes on your renewal date.' + _subDownWarning('free'))) return;
     try {
       const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/seller-tier/downgrade-free', { method: 'POST' });
       const d = await r.json();
       if (!r.ok) { showToast(d.detail || 'Could not switch plan'); return; }
-      showToast('Switched to Free plan.');
+      showToast(d.pending_downgrade_tier ? ('Free starts on ' + String(d.billing_period_end||'').substring(0,10) + '. Choose what stays active before then.') : 'Switched to Free plan.');
       openSubscriptionScreen(window._subReturnTo);
     } catch(_) { showToast('Could not switch — check your connection'); }
     return;
   }
 
   const confirmMsg = isDowngrade
-    ? `Downgrade to ${tierLabel} ($${usdPrice}/mo, takes effect at end of billing period)?`
+    ? `Downgrade to ${tierLabel} ($${usdPrice}/mo, takes effect at end of billing period)?` + _subDownWarning(tierId)
     : `Upgrade to ${tierLabel} ($${usdPrice}/mo)?\nYou'll be redirected to Paystack to complete payment.`;
   if (!confirm(confirmMsg)) return;
 
@@ -2664,10 +2723,14 @@ function setPlan(tier, label){
   if (tier === 'free') {
     // Downgrade to free — call self-service endpoint
     if (!email) { showToast('Sign in first'); return; }
+    // KEEP-CHOICE-1: told before, never after
+    if (!confirm('Switch to Free (2 listing slots)? If you have paid time left, it changes on your renewal date.'
+                 + (typeof _subDownWarning==='function' ? _subDownWarning('free') : ''))) return;
     fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/seller-tier/downgrade-free', { method: 'POST' })
       .then(r => r.json())
       .then(d => {
-        if (d.seller_tier) { showToast('Switched to Free plan (2 slots)'); goTo(window._plansReturnTo || 'dashboard'); }
+        if (d.pending_downgrade_tier) { showToast('Free starts on your renewal date. Choose what stays active on the Subscription screen.'); goTo(window._plansReturnTo || 'dashboard'); }
+        else if (d.seller_tier) { showToast('Switched to Free plan (2 slots)'); goTo(window._plansReturnTo || 'dashboard'); }
         else showToast(d.detail || 'Could not switch plan');
       }).catch(() => showToast('Could not switch — check your connection'));
     return;
@@ -11264,7 +11327,8 @@ function sbLifecycleChip(ls){
     faded:     ['st-fade','🌙 Hidden — buyers can\u2019t see this listing'],
     withdrawn: ['st-withdrawn','↩ Withdrawn'],
     blocked:   ['st-blocked','⛔ Blocked'],
-    archived:  ['st-archived','🗄 Archived']
+    archived:  ['st-archived','🗄 Archived'],
+    resting:   ['st-paused','💤 Resting — your plan holds fewer listings. Choose it on Plans to bring it back.']   // KEEP-CHOICE-1
   };
   var c=M[s]||M.live;
   return '<span class="ml-status '+c[0]+'">'+c[1]+'</span>';
@@ -15505,6 +15569,90 @@ async function bzAcceptShow(box, email){
 }
 
 let _bzPairs = [];
+// ── CIRCLE-CAPS-1 (RUL-176, 27 Sep 2026) ─────────────────────────────────────
+// Regulars limits: Free 10 · $5 50 · $20 200 (Agency 50), behind David's switch on the +1 page
+// (/flags effective.circle_caps). The server is the authority and enforces; this only SHOWS, and
+// shows a limit ONLY while the switch is on -- never a limit that is not being enforced.
+const _CIRCLE_LIMITS = {free:10, starter:50, pro:200, agency:50};   // mirror of bea_main.CIRCLE_LIMITS
+function _circleOn(){ try{ return !!(window.FEATURES && window.FEATURES.circle_caps); }catch(e){ return false; } }
+function _circleBullets(t){
+  const b = (t && t.bullets) ? t.bullets.slice() : [];
+  if(_circleOn() && t && _CIRCLE_LIMITS[t.id] != null)
+    b.splice(1, 0, 'Buzz up to ' + _CIRCLE_LIMITS[t.id] + ' regular customers');
+  return b;
+}
+function _bzCircleCard(c){
+  if(!c || c.used == null) return '';
+  if(!c.on){
+    return '<div class="ms-card"><div class="bz-row"><div class="bz-lbl"><b>Your regulars: ' + c.used
+         + '</b><span>People who joined from your link and count as your regular customers.</span></div></div></div>';
+  }
+  const cap = c.allowance || c.limit, act = c.used - (c.resting || 0);
+  const pct = cap ? Math.min(100, Math.round(act * 100 / cap)) : 0;
+  const col = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#16a34a';
+  const nxt = {free:'move to $5 for 50', starter:'move to $20 for 200', agency:'move to $20 for 200'}[c.tier] || '';
+  let h = '<div class="ms-card"><div class="bz-row"><div class="bz-lbl"><b>' + act + ' of ' + cap
+        + ' regulars' + (c.resting ? ' active' : '') + '</b><span>Your plan holds ' + cap + ' regular customers on Buzz.</span></div></div>'
+        + '<div style="height:8px;border-radius:4px;background:var(--line,#e5e7eb);overflow:hidden;margin-top:6px">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + col + '"></div></div>';
+  if(c.full && !c.resting) h += '<div class="bz-note">Your plan is full. Close Buzz with someone you no longer need'
+               + (nxt ? ', or ' + nxt : '') + '. Nobody already connected is affected.</div>';
+  if(c.resting) h += '<div class="bz-note">' + c.resting + ' regular' + (c.resting === 1 ? ' is' : 's are')
+               + ' resting because your plan holds ' + c.allowance + '. They can still buzz you. '
+               + 'Choose who stays active below.</div>';
+  if(c.pending_tier && c.pending_limit != null && c.used > c.pending_limit)
+    h += '<div class="bz-note">Your plan changes soon and will hold ' + c.pending_limit + ' regulars. '
+       + 'Choose below who stays active. Nobody is deleted.</div>';
+  return h + '</div>';
+}
+// KEEP-CHOICE-1 (David, 27 Sep 2026): when her plan holds fewer regulars than she has, SHE ticks who
+// stays active. The rest rest -- they can still buzz her, nothing is deleted, she can swap any time,
+// moving up wakes everyone, and the customer is never told.
+function _bzChooseTarget(c){
+  if(!c || !c.on) return 0;
+  if(c.pending_tier && c.pending_limit != null && c.used > c.pending_limit) return c.pending_limit;
+  if(c.resting) return c.allowance;
+  return 0;
+}
+function _bzChooseCard(c, pairs){
+  const n = _bzChooseTarget(c);
+  if(!n) return '';
+  const mine = (pairs||[]).filter(function(p){ return p.mine && !p.closed; });
+  let h = '<div class="ms-section-lbl">Choose who stays active</div><div class="ms-card" id="bz-choose">'
+        + '<div class="bz-note">Tick up to <b>' + n + '</b>. The others rest: they can still buzz you, '
+        + 'nothing is deleted, and you can change this any time.</div>';
+  mine.forEach(function(p, k){
+    h += '<label class="bz-row" style="cursor:pointer"><div class="bz-lbl"><b>' + _lmEsc(p.other_name||'') + '</b>'
+       + '<span>' + _lmEsc(p.other_email||'') + '</span></div>'
+       + '<input type="checkbox" data-keep="' + _lmEsc(p.other_email||'') + '"' + (!(p.resting||p.paused) ? ' checked' : '') + '></label>';
+  });
+  return h + '<div class="bz-note" id="bz-keep-count"></div>'
+           + '<button class="mla-btn accent" id="bz-keep-save" style="margin-top:8px">Save my choice</button></div>';
+}
+function _bzChooseWire(box, c){
+  const n = _bzChooseTarget(c);
+  const card = box.querySelector('#bz-choose');
+  if(!n || !card) return;
+  const boxes = card.querySelectorAll('[data-keep]');
+  // pre-tick no more than n: the list arrives newest-first, so the first n ticked stay ticked
+  let on = 0; boxes.forEach(function(b){ if(b.checked){ on++; if(on > n) b.checked = false; } });
+  function count(){
+    const k = card.querySelectorAll('[data-keep]:checked').length;
+    const el = card.querySelector('#bz-keep-count');
+    if(el) el.textContent = k + ' of ' + n + ' ticked';
+    boxes.forEach(function(b){ if(!b.checked) b.disabled = (k >= n); });
+  }
+  boxes.forEach(function(b){ b.onchange = count; }); count();
+  const save = card.querySelector('#bz-keep-save');
+  if(save) save.onclick = async function(){
+    const keep = []; card.querySelectorAll('[data-keep]:checked').forEach(function(b){ keep.push(b.getAttribute('data-keep')); });
+    save.disabled = true; save.textContent = 'Saving…';
+    try{ await bzApi('/buzz/keep', 'POST', {email: bzEmail(), keep: keep}); showToast('Saved. ' + keep.length + ' stay active.'); }
+    catch(e){ showToast(e.message); }
+    buzzRender();
+  };
+}
+
 async function buzzRender(){
   const box = document.getElementById('bz-content');
   if(!box) return;
@@ -15517,8 +15665,10 @@ async function buzzRender(){
   box.innerHTML = '<div class="bz-lede">Loading…</div>';
   // Ask first, because /buzz/me is the one Buzz call that does NOT require acceptance — a
   // gate that blocks the page carrying the gate is a locked door with the key inside.
+  let _bzCircle = null;   /* CIRCLE-CAPS-1: counts only, from /buzz/me */
   try{
     const me = await bzApi('/buzz/me');
+    if(me && me.circle) _bzCircle = me.circle;
     if(me && me.signed_in && !me.accepted){ return bzAcceptShow(box, me.email || email); }
     // BUZZ-PAIRS-SELF-1: the SERVER's idea of who we are wins. localStorage can hold a
     // different spelling of the same person (a test account, an old address), and once
@@ -15541,6 +15691,7 @@ async function buzzRender(){
      + 'out.</div></div>';
 
   h += '<div class="ms-section-lbl">People you are connected to</div>';
+  h += _bzCircleCard(_bzCircle);
   if(!_bzPairs.length){
     // BUZZ-EMPTY-1 (15 Sep 2026, David: "it is blank... this should look like a communicating
     // page, it should show a layout"). An empty list that only apologises teaches nothing. This
@@ -15586,6 +15737,11 @@ async function buzzRender(){
            + '</div></div>';
         return;
       }
+      if(p.resting || p.paused){
+        h += '<div class="bz-closed">Resting: your plan holds '+((_bzCircle&&_bzCircle.allowance)||'')+' regulars. '
+           + p.other_name+' can still buzz you. Tick '+p.other_name+' under \u201cChoose who stays active\u201d, or move up a plan, '
+           + 'to buzz them again.</div>';
+      }
       h += '<div class="bz-row"><div class="bz-lbl">Let <b>'+p.other_name+'</b> buzz me'
         + '<span>Switching this on accepts the terms above, for this person only.</span></div>'
         + '<div class="bz-sw'+(p.i_allow_them?' on':'')+'" data-allow="'+i+'"></div></div>'
@@ -15601,7 +15757,9 @@ async function buzzRender(){
         + '</div>';
     });
   }
+  h += _bzChooseCard(_bzCircle, _bzPairs);   // KEEP-CHOICE-1
   box.innerHTML = h;
+  _bzChooseWire(box, _bzCircle);
 
   const sw = document.getElementById('bz-push-sw');
   if(sw) sw.onclick = async function(){
@@ -17348,7 +17506,7 @@ function _renderBillingTab(d, email) {
         ${btnHtml}
       </div>
       <div style="font-size:13px;color:var(--text-2);">${isAgency ? 'Free with verification' : (t.usd === 0 ? 'Free forever' : '$'+t.usd+'/mo · ≈ R'+t.zar)} · ${t.desc}</div>
-      ${(t.bullets||[]).map(b=>'<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">· '+b+'</div>').join('')}
+      ${_circleBullets(t).map(b=>'<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">· '+b+'</div>').join('')}
       ${isAgency && !isCur ? '<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Apply through the support form with your agency\'s name, country and number of agents — we set up your console after a short check.</div>' : ''}
       ${isDown && (Number(t.usd) || 0) > 0 ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
     `;

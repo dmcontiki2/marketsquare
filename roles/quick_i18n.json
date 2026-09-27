@@ -1,5 +1,5 @@
 {
- "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160). 25 Sep 2026 inspection (fix wave C1): the save step, saved screen, Buzz explainer, previews, city step and score panel carry whole-sentence keys; David's Afrikaans corrections applied (25 Sep 2026 inspection, langq-20, langq-21, langq-22, langq-24, langq-25, langq-26); new keys are written in Afrikaans and, for isiZulu, isiXhosa and Sepedi, left empty (clean English fallback) unless an existing translation carried the same meaning -- their readers fill the rest after launch (RUL-165). 26 Sep 2026 (INSPECT-FIX-2, RUL-165 -- Claude's versions are the live ones, readers correct them after launch): the whole-sentence keys the inspection added, and the lines it reworded, now carry Claude's isiZulu, isiXhosa and Sepedi drafts instead of an English fallback (419 phrases and 25 patterns).",
+ "_about": "Quick door translations (preview, NOT a ruling). Claude's first draft 20 Sep 2026; to be read by David's reviewers and the Language reviewer (RUL-160). Keys are the exact English on screen. 23 Sep 2026 (RUL-162): Sepedi ('nso') added as the fifth column; Sesotho ('st') is kept for readers who chose it before, but is no longer offered. 23 Sep 2026 evening (David: 'translate the draft screen's own words for all five languages'): the draft/publish/arrival screens' words added, Claude's draft for David's readers (RUL-160). 25 Sep 2026 inspection (fix wave C1): the save step, saved screen, Buzz explainer, previews, city step and score panel carry whole-sentence keys; David's Afrikaans corrections applied (25 Sep 2026 inspection, langq-20, langq-21, langq-22, langq-24, langq-25, langq-26); new keys are written in Afrikaans and, for isiZulu, isiXhosa and Sepedi, left empty (clean English fallback) unless an existing translation carried the same meaning -- their readers fill the rest after launch (RUL-165). 26 Sep 2026 (INSPECT-FIX-2, RUL-165 -- Claude's versions are the live ones, readers correct them after launch): the whole-sentence keys the inspection added, and the lines it reworded, now carry Claude's isiZulu, isiXhosa and Sepedi drafts instead of an English fallback (419 phrases and 25 patterns). 27 Sep 2026 (CIRCLE-CAPS-1, RUL-176): the Buzz explainer's 'Your plan' row -- Claude's draft for David's readers.",
  "langs": [
   "af",
   "zu",
@@ -5257,6 +5257,20 @@
    "",
    "Ivela kwiziphumo zokukhangela xa isiqinisekiso sakho samapolisa siqinisekisiwe kwiTrustSquare.",
    "E tšwelela dinyakišišong ge tiišetšo ya gago ya maphodisa e netefaditšwe go TrustSquare."
+  ],
+  "Your plan": [
+   "Jou plan",
+   "Uhlelo lwakho",
+   "Moralo wa hao",
+   "Isicwangciso sakho",
+   "Leano la gago"
+  ],
+  "Your plan holds up to 10 regulars on Free, 50 on $5, 200 on $20.": [
+   "Jou plan hou tot 10 vaste klante op Gratis, 50 op $5, 200 op $20.",
+   "Uhlelo lwakho luphatha amakhasimende ajwayelekile afika ku-10 ku-Mahhala, angu-50 ku-$5, angu-200 ku-$20.",
+   "Moralo wa hao o tshwara bareki ba kamehla ho fihla ho 10 ho Mahala, 50 ho $5, 200 ho $20.",
+   "Isicwangciso sakho sithwala abathengi abaqhelekileyo ukuya kuma-10 kwi-Simahla, ama-50 kwi-$5, ama-200 kwi-$20.",
+   "Leano la gago le swara bareki ba ka mehla go fihla go 10 go Mahala, 50 go $5, 200 go $20."
   ]
  },
  "p": [

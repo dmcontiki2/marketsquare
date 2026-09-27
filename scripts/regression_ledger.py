@@ -30071,9 +30071,17 @@ def rg_i18n_af_2():
            "every source check on the board stays green. This entry therefore asserts the "
            "manifest line and the nightly_wave.sh preflight as well as the code. RESIDUAL, "
            "named rather than swept: the reachability gate does not create South African "
-           "supply. After it, the wave can reach ~96 ZA addresses; 1,066 more are held by "
-           "SOURCE-QUALITY-1 and 1,114 by the teachers category block, which is David's "
-           "POPIA call (D8), not a defect.")
+           "supply. AMENDED 27 Sep 2026 by run 22, because the residual as first written was "
+           "wrong in both of its numbers and the wrong version reached David. It said the wave "
+           "could reach ~96 ZA addresses with 1,066 held by SOURCE-QUALITY-1 and 1,114 by the "
+           "teachers category block, 'which is David's POPIA call, not a defect'. MEASURED "
+           "across all twelve armed ZA cities: 2,248 scraped rows, 97 pass every guard, and "
+           "the SENDABLE pool after ONE-PER-ORG-1 is about 20, nearly all of it in Pretoria. "
+           "67 of those 97 were property24 rows now held by RG-0507. And the 1,114 teachers "
+           "are not held by one ruling: 1,091 of them are ALSO held by ORG-NAME-1 because they "
+           "are SCHOOLS, so lifting the POPIA block would release none of them -- PERSON-ONLY-1 "
+           "had measured exactly this on 5 Sep and said so in its own note. The residual was "
+           "written from a board that could not see either fact; RG-0508 is why it could not.")
 def rg_geo_reach_1():
     cl = os.path.join(REPO, "..", "CityLauncher")
     if not sibling_visible(cl):
@@ -30585,8 +30593,8 @@ def _py_message_literals(src):
     return out
 
 
-@entry("RG-0503", "BANKING-FORM-1: a seller can give her banking details in the app, and every line about them says "
-       "what they are for -- confirming who she is and buying Tuppence; nothing is ever paid out",
+@entry("RG-0503", "BANKING-FORM-1 (re-aimed by RUL-176/178): the in-app bank check asks HER BANK to confirm the name "
+       "and stores nothing -- no banking details are kept, and no line promises a payout",
        LOCKED, fixed_on="2026-09-26",
        scope="ms.js msOpenBankingSheet/msLoadBankingCard/sobAddBanking; marketsquare.html sob/sb nudges + the Billing "
              "card #ms-banking-card; bea_main.py category.lm.banking how_to_earn; route_policy POST "
@@ -30595,7 +30603,13 @@ def _py_message_literals(src):
              "'we do need the users banking details ... security to know our customer and also for them to purchase "
              "tuppence ... we just dont use it to pay them any money out'.",
        ref="Terms 5.2 (Tuppence is not redeemable for cash); INSPECTION_2026-09-25.html ts2-17 / langt-06; "
-           "CARD-WORDS-2 (langt-04 leftovers).")
+           "CARD-WORDS-2 (langt-04 leftovers). RE-AIMED 27 Sep 2026 (circle-caps lane, board read before its deploy): "
+           "RUL-176 (David: 'we dont store the customers banking details') and RUL-178 retired POST /users/{email}/banking "
+           "and the category.lm.banking signal; the banking lane shipped that at 01:05Z but left this entry asserting the "
+           "OLD form, so it printed REGRESSION over a ruled change. Now asserts the ruled state: the form posts only an "
+           "account number and bank code to /verify-bank-name, sends no holder name or branch code, the retired route is "
+           "gone from route_policy, and the signal's line says the number is never stored. Not weakened: every nudge, "
+           "Billing-card and no-payout-words check stands unchanged.")
 def rg_banking_form_1():
     import json as _j, re as _re
     js = repo_file("ms.js"); h = repo_file("marketsquare.html"); b = repo_file("bea_main.py"); rp = repo_file("route_policy.json")
@@ -30603,19 +30617,24 @@ def rg_banking_form_1():
         return [(INFO, "NOT EVALUATED - ms.js / marketsquare.html not readable from here")]
     bad = []
     i = js.find("function msOpenBankingSheet(")
-    if i < 0:
-        bad.append("the banking form (msOpenBankingSheet) is gone")
+    # RUL-178: msOpenBankingSheet is now a one-line alias for msOpenBankNameCheck, which holds the form.
+    i2 = js.find("async function msOpenBankNameCheck(")
+    if i < 0 or i2 < 0 or "msOpenBankNameCheck()" not in js[i:i + 120]:
+        bad.append("the bank check form (msOpenBankingSheet -> msOpenBankNameCheck) is gone")
     else:
-        body = js[i:i + 6000]
-        if not _re.search(r"'/users/'\s*\+\s*encodeURIComponent\(\s*email\s*\)\s*\+\s*'/banking'", body):
-            bad.append("the form no longer posts to /users/{email}/banking")
+        body = js[i2:i2 + 6000]
+        if not _re.search(r"'/users/'\s*\+\s*encodeURIComponent\(\s*email\s*\)\s*\+\s*'/verify-bank-name'", body):
+            bad.append("the form no longer asks /users/{email}/verify-bank-name (RUL-178)")
         if "method: 'POST'" not in body and 'method:"POST"' not in body and "method:'POST'" not in body:
             bad.append("the form does not POST")
         if "credentials: 'include'" not in body and "credentials:'include'" not in body:
             bad.append("the form does not send the sign-in (credentials include) -- the route is bound to her session")
-        for k in ("account_holder", "bank_name", "account_number", "branch_code"):
+        for k in ("account_number", "bank_code"):
             if k not in body:
                 bad.append("the form does not send %s" % k)
+        for k in ("account_holder", "branch_code"):
+            if k in body:
+                bad.append("the form still sends %s -- RUL-176: nothing about her bank is collected beyond the check" % k)
     j = js.find("function sobAddBanking(")
     if j < 0 or "msOpenBankingSheet()" not in js[j:j + 300]:
         bad.append("the success-screen button no longer opens the form")
@@ -30638,22 +30657,24 @@ def rg_banking_form_1():
             m = W.search(hits[0])
             bad.append("%s tells users about %r: '%s'" % (name, m.group(0), hits[0][max(0, m.start() - 50):m.end() + 30].strip()))
     if b is not None:
-        m = _re.search(r'"category\.lm\.banking":\s*\{[^}]*"how_to_earn":\s*"([^"]*)"', b)
+        m = _re.search(r'"category\.lm\.bank_name_verified":\s*\{[^}]*"how_to_earn":\s*"([^"]*)"', b)
         if not m:
-            bad.append("the banking trust signal lost its how-to-earn line")
-        elif _re.search(r"pay-?out", m.group(1), _re.I) or "Tuppence" not in m.group(1):
-            bad.append("the banking trust signal's line does not say what the details are for: %r" % m.group(1))
+            bad.append("the bank-name trust signal lost its how-to-earn line")
+        elif _re.search(r"pay-?out", m.group(1), _re.I) or "never store" not in m.group(1).lower():
+            bad.append("the bank-name signal's line does not say the number is never stored: %r" % m.group(1))
     if rp is not None:
         try:
             P = _j.loads(rp); rows = P if isinstance(P, list) else P.get("routes", [])
-            r = [x for x in rows if isinstance(x, dict) and x.get("key") == "POST /users/{email}/banking"]
+            r = [x for x in rows if isinstance(x, dict) and x.get("key") == "POST /users/{email}/verify-bank-name"]
             if not r or r[0].get("level") != "user" or not any(x.get("name") == "email" for x in r[0].get("bind", [])):
-                bad.append("POST /users/{email}/banking is no longer a signed-in route bound to her own address")
+                bad.append("POST /users/{email}/verify-bank-name is not a signed-in route bound to her own address")
+            if any(isinstance(x, dict) and x.get("key") == "POST /users/{email}/banking" for x in rows):
+                bad.append("the retired POST /users/{email}/banking is still declared (RUL-176)")
         except Exception as e:
             bad.append("route_policy.json unreadable: %s" % e)
     if bad:
         return [(FAIL, "; ".join(bad[:6]))]
-    return [(INFO, "the form posts to her own bound route; nudges and the Billing card open it; no payout or card-check words")]
+    return [(INFO, "the bank check asks her bank and stores nothing; nudges and the Billing card open it; no payout or card-check words")]
 
 
 @entry("RG-0504", "LISTING-WORD-1: one word for the thing a seller makes -- 'listing' -- on every screen of both apps "
@@ -30797,6 +30818,317 @@ def rg_qa11_wave_prep_admin_only():
     return [(INFO, "wave-prep is admin-only with no loopback pass" + ("; CityLauncher sends X-Admin-Key" if cl is not None else "")
              + ("" if not notes else " (" + notes[0] + ")"))]
 
+
+def _cl_read(rel):
+    """Read a file out of the CityLauncher sibling, or None when it is not mounted."""
+    fp = os.path.join(REPO, "..", "CityLauncher", rel)
+    if not os.path.exists(fp):
+        return None
+    with open(fp, encoding="utf-8", errors="replace") as fh:
+        return fh.read()
+
+
+@entry("RG-0507", "SOURCE-HARDSTOP-1: a source that has bounced enough letters is held on the "
+       "BOUNCE COUNT even before it reaches the sample floor -- the send floor may no longer "
+       "shelter a list that is provably dead",
+       LOCKED, fixed_on="2026-09-27",
+       scope="CityLauncher/emailer/wave_runner.py blocked_sources(), and "
+             "waves_policy.json defaults.source_hard_bounce_stop. FOUND 27 Sep 2026 by run 22 "
+             "of the onboarding goal, asking what the wave would send NEXT rather than what it "
+             "had sent. SOURCE-QUALITY-1 held a source only when ALL THREE of sends >= "
+             "source_min_sample (20), bounces >= bounce_stop_min_bounces (3) and rate > "
+             "bounce_stop_pct (5%) were true. The send floor and the bounce floor were "
+             "guarding the same thing from the same side, and the hole between them was total: "
+             "a source could bounce ANY PROPORTION of an under-20 sample and stay allowed. "
+             "MEASURED on the live register, not reasoned: property24 had sent 12 and bounced "
+             "8 -- 66.7%, the worst rate of any source in the database, four of the eight at "
+             "one agency domain -- and was NOT held. It was simultaneously the ONLY non-teacher "
+             "supply left in Durban, Port Elizabeth, Cape Town and Johannesburg (67 unsent "
+             "rows), the top of the send queue in every one of them, and the proven cause of "
+             "two of the three South African stop-loss latches: Cape Town latched on "
+             "property24 3/3 on 18 Sep and Port Elizabeth on 2/2 the same night. The single "
+             "letter the whole wave sent on 26 Sep was an Estate Agent. "
+             "THE CAUSE, and it is why MX verification could not see this: property24's own "
+             "docstring says 'Fallback: construct firstname.lastname@agencydomain.co.za', and "
+             "guess_email() does exactly that. The domains are real, so every guessed address "
+             "passes an MX check; the mailboxes do not exist, so they bounce. Run 21 MX-swept "
+             "2,240 South African rows, pronounced the pool 96% clean, and concluded the "
+             "bounces were 'mailbox-level, not domain-level' -- correct, and this is the "
+             "machine that manufactures them. See RG-0509 for the root cause, which is open. "
+             "FIX: the floor may now be cleared EITHER by sample size OR by an absolute bounce "
+             "count (source_hard_bounce_stop, default 5). The send floor is a proxy for 'we do "
+             "not know yet'; eight dead letters is knowing, and reputation is spent per bounce, "
+             "not per percent. STRICTLY TIGHTENING BY CONSTRUCTION -- the old predicate implies "
+             "the new one -- and MEASURED that way against the live register before shipping: "
+             "old blocked 11 sources, new blocks 12, released 0, newly held exactly "
+             "{property24: 12 sent, 8 bounced, 66.67%}.",
+       ref="DELIBERATE COST, named rather than hidden: this removes 67 of the 97 South African "
+           "rows that passed every guard, and takes the honest sendable ZA pool to about 20, "
+           "nearly all of it in Pretoria. That is the true number and it was always the true "
+           "number -- what changed is that the wave will no longer spend the domain's "
+           "reputation discovering it one bounce at a time. A gate is not weakened to keep a "
+           "send count non-zero (run 21 refused exactly that on MX evidence; this is the same "
+           "discipline in the other direction).")
+def rg_source_hardstop_1():
+    src = _cl_read(os.path.join("emailer", "wave_runner.py"))
+    if src is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    body = fn_body(src, "def blocked_sources(")
+    if not body:
+        return [(FAIL, "blocked_sources() is gone from wave_runner.py -- SOURCE-QUALITY-1 has "
+                       "no gate at all")]
+    bad = []
+    if "source_hard_bounce_stop" not in body:
+        bad.append("the absolute bounce stop is gone -- a source can bounce any proportion of "
+                   "an under-sample-floor batch again")
+    if "SOURCE-HARDSTOP-1" not in body:
+        bad.append("the SOURCE-HARDSTOP-1 reasoning was stripped, so the next author closes "
+                   "the OR back into an AND")
+
+    # BEHAVIOURAL, not a source read: run the shipped predicate over a fixed table.
+    ns = {}
+    try:
+        # fn_body() returns the text AFTER the marker, so the signature is put back on.
+        exec("def source_bounce_rates():\n    return _RATES\ndef blocked_sources(" + body, ns)
+        def held(rates, d=None):
+            ns["_RATES"] = rates
+            return set(ns["blocked_sources"](d or {"source_quality_gate": True}))
+        dead_small = {"guessy": (12, 8, 66.67)}
+        clean_big  = {"good": (100, 2, 2.0)}
+        thin       = {"newlane": (10, 3, 30.0)}
+        if "guessy" not in held(dead_small):
+            bad.append("12 sent / 8 bounced / 66.7% is NOT held -- the hole property24 walked "
+                       "through is open again")
+        if held(clean_big):
+            bad.append("a 100-send 2% source is held -- the gate now punishes a clean lane")
+        if held(thin):
+            bad.append("3 bounces in 10 sends is held -- the sample floor stopped meaning "
+                       "anything and a new register lane can be convicted on noise")
+        if held(dead_small, {"source_quality_gate": False}):
+            bad.append("the gate no longer honours source_quality_gate=false")
+        # the tightening property itself, over the shape of the real table
+        table = {"a": (25, 4, 16.0), "b": (100, 1, 1.0), "c": (12, 8, 66.7),
+                 "d": (19, 5, 26.3), "e": (19, 4, 21.1), "f": (30, 3, 10.0)}
+        new = held(table)
+        old = {s for s, v in table.items() if v[0] >= 20 and v[1] >= 3 and v[2] > 5.0}
+        if old - new:
+            bad.append("NOT strictly tightening -- %s was held before and is released now"
+                       % ", ".join(sorted(old - new)))
+    except Exception as e:
+        bad.append("the predicate could not be run: %s" % str(e)[:80])
+
+    pol = _cl_read(os.path.join("emailer", "waves_policy.json")) or ""
+    if "source_min_sample" not in pol:
+        bad.append("waves_policy lost source_min_sample -- the sample floor is gone entirely")
+    if bad:
+        return [(FAIL, "; ".join(bad[:5]))]
+    return [(INFO, "a provably dead source is held on its bounce count; a clean lane and a "
+                   "thin new lane are not; nothing the old gate held is released")]
+
+
+@entry("RG-0508", "HELD-BLIND-1: the pool census can see the reasons that actually shrink a "
+       "pool -- a city that reports 'sendable 0' must say what is holding the other 633 rows",
+       LOCKED, fixed_on="2026-09-27",
+       scope="CityLauncher/emailer/wave_runner.py held_by_guard() and the board line that "
+             "prints it. FOUND 27 Sep 2026 by run 22 of the onboarding goal. held_by_guard's "
+             "own docstring promised 'so a shrunken pool is never a mystery', and it applied "
+             "_source_clause() and `category IN (categories)` in its OWN query -- so a row held "
+             "by SOURCE-QUALITY-1 or by defaults.blocked_categories was filtered out BEFORE "
+             "anything could count it. The two largest reasons a pool shrinks were the two it "
+             "could not see. MEASURED across the twelve armed South African cities: 2,248 "
+             "scraped rows, 97 passing every guard, and held_by_guard returned an EMPTY DICT "
+             "for eleven of the twelve. Pretoria printed 'sendable 20' with 352 rows held and "
+             "no explanation. Durban printed 'sendable 0, held {}' with 633 rows in its pool. "
+             "THE COST, which is why this is a defect and not a nicety: run 21 reasoned about "
+             "South African supply from this board and told David in writing that the "
+             "1,114-row teachers register was 'held only by a POPIA ruling, not by anything "
+             "technical' and was '92% of the entire remaining reachable South African list'. "
+             "Both halves were wrong. 1,091 of those rows are ALSO held by ORG-NAME-1 -- they "
+             "are schools, name == business_name == '<X> Primary School' -- so lifting the "
+             "ruling would release none of them, and PERSON-ONLY-1's own note had already said "
+             "so on 5 Sep with the same measurement. A census blind to its own biggest bucket "
+             "is not a census, and this one sent a POPIA question to David with a prize "
+             "attached that does not exist. FIX: the census reads the city's WHOLE scraped "
+             "pool and buckets every row by the reason it is held, in the order the chokepoint "
+             "applies them; the buckets sum to the pool. passes_every_guard is published as "
+             "the pre-dedupe ceiling so the gap to sendable_by_category() (ONE-PER-ORG-1) is "
+             "visible rather than mysterious.",
+       ref="CLASS, and it is this project's most expensive one: an instrument that reports a "
+           "number without its denominator. Sibling of FUNNEL-DENOM-1, PROXY-OPEN-1 and "
+           "GEO-REACH-1. The difference here is that the instrument was not wrong about what "
+           "it measured -- it was silent about what it could not, and silence read as zero.")
+def rg_held_blind_1():
+    src = _cl_read(os.path.join("emailer", "wave_runner.py"))
+    if src is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    body = fn_body(src, "def held_by_guard(")
+    if not body:
+        return [(FAIL, "held_by_guard() is gone -- a shrunken pool has no explanation at all")]
+    # PROXY-ASSERTION GUARD, and it caught this check the first time it was run: the
+    # function's own docstring NAMES the two filters it must no longer apply, so a needle
+    # test over the whole body convicts the fix for explaining itself (the RG-0494 lesson,
+    # same session). Judge the CODE -- everything after the docstring.
+    code = body
+    for _q in ('"""', "'''"):
+        if code.count(_q) >= 2:
+            code = code.split(_q, 2)[2]
+            break
+    bad = []
+    if "_source_clause" in code:
+        bad.append("the census filters by _source_clause again -- SOURCE-QUALITY-1 holds are "
+                   "invisible to it, which is the whole fault")
+    if "category IN (" in code:
+        bad.append("the census filters by category in its own query again -- a blocked "
+                   "category never reaches the loop and reads as zero")
+    for needle, why in (("source_quality", "the source_quality bucket is gone"),
+                        ("category_not_asked", "the blocked/unasked-category bucket is gone"),
+                        ("passes_every_guard", "the pre-dedupe ceiling is no longer published, "
+                                               "so the gap to sendable is a mystery again"),
+                        ("organisation", "the ORG-NAME-1 bucket is gone"),
+                        ("mx_bad", "the mx bucket is gone"),
+                        ("HELD-BLIND-1", "the reasoning was stripped, so the next author "
+                                         "re-filters the census")):
+        if needle not in code and needle not in body:
+            bad.append(why)
+    if "status='scraped'" not in code:
+        bad.append("the census no longer reads the city's whole scraped pool")
+    if bad:
+        return [(FAIL, "; ".join(bad[:5]))]
+    return [(INFO, "every scraped row in a city is bucketed by the reason it is held, "
+                   "source-quality and blocked categories included")]
+
+
+@entry("RG-0509", "GUESSED-ADDRESS-1: a scraper may not invent an email address and hand it on "
+       "as a harvested one -- a constructed address is marked as constructed, or it is not "
+       "written",
+       OPEN,
+       scope="CityLauncher/scraper/sources/property24.py guess_email() and the row it writes; "
+             "any future source that composes an address from a name and a domain. FOUND 27 "
+             "Sep 2026 by run 22, tracing why the dirtiest source in the database is also the "
+             "one an MX sweep pronounced clean. property24's docstring states the fallback in "
+             "its own words -- 'construct firstname.lastname@agencydomain.co.za' -- and "
+             "guess_email() composes it when no real address is found on the agency's site. "
+             "The row it writes is INDISTINGUISHABLE downstream from a harvested one: it "
+             "carries the same source tag, it passes MX because the agency's domain is real, "
+             "and it passes every address-shape and person-name guard because a guessed "
+             "address looks exactly like a person's. MEASURED: 12 sent, 8 bounced (66.7%), "
+             "four of the eight at one agency domain; 67 more such rows are unsent. THE "
+             "GENERAL PROPERTY: an invented address is not a person we contacted, it cannot "
+             "convert by construction, and it costs sending reputation and a stop-loss latch "
+             "every time it is tried. WHAT WOULD CLOSE THIS: either guess_email() stops being "
+             "a fallback, or a constructed address is written under its own source suffix (for "
+             "example property24:guessed) so SOURCE-QUALITY-1 judges invented addresses "
+             "separately from harvested ones -- asked, never hardcoded, so a source that starts "
+             "guessing tomorrow is caught by the same gate. NOT DONE TONIGHT and deliberately "
+             "so: RG-0507 already holds the whole source, so no guessed address can be sent "
+             "while this is open, and re-tagging the 67 existing rows is a write to the live "
+             "prospects register that belongs in a focused session, not at the end of this one.",
+       ref="Run 22. The class is older than this source: an instrument or a lane that produces "
+           "a plausible artefact and does not mark it as produced. Sibling of PROXY-OPEN-1 (a "
+           "machine's fetch published as a person's read) and ONBOARD-REAL-1 (our own mailer's "
+           "rows published as registrations).")
+def rg_guessed_address_1():
+    src = _cl_read(os.path.join("scraper", "sources", "property24.py"))
+    if src is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    guesses = "def guess_email(" in src
+    marked = ("property24:guessed" in src or "source_suffix" in src
+              or "email_guessed" in src)
+    if guesses and not marked:
+        # Deliberately a FAIL, not an INFO. An OPEN entry that returns no fail is judged
+        # READY TO LOCK, and this one printed exactly that on the run that created it --
+        # RG-0431 and RG-0437's family, "a check that cannot say no", caught the same night
+        # it was written. The work is not done; the board must say so.
+        return [(FAIL, "guess_email() still composes an address out of a name and a domain, "
+                       "and the row it writes carries no mark saying it was constructed -- "
+                       "so an invented address is indistinguishable downstream from a "
+                       "harvested one. RG-0507 holds the whole source meanwhile, so nothing "
+                       "guessed can be sent while this stands.")]
+    if not guesses:
+        return [(INFO, "closed by removal: property24 no longer constructs an address")]
+    return [(INFO, "constructed addresses are marked at the source and judged on their own "
+                   "bounce record")]
+
+
+
+@entry("RG-0510", "CIRCLE-CAPS-1 + KEEP-CHOICE-1: the regulars limits (Free 10 / $5 50 / $20 200) sit behind "
+       "David's one switch, and on every downgrade -- regulars AND listing slots -- SHE chooses what stays active: "
+       "the rest rest, never deleted, upgrading wakes them, and she is told before she confirms",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py (CIRCLE_LIMITS, _circle_on/_circle_owner/_circle_status, launch_switches.circle_caps, "
+             "buzz_pairs.circle_owner/under_caps, the refusal in /buzz/pair and in the reference link's "
+             "connection, the downgrade pause in POST /buzz, /buzz/me circle, /buzz/pairs paused, "
+             "/users/{email}/subscription circle_*, /flags circle_caps + circle_limits); dashboard.server.html "
+             "(the +1 page switch ls_m_circle); ms.js (_circleBullets on both plan renderers, _bzCircleCard on "
+             "the Buzz screen); quick.html = genie/HARNESS.html (the 'Your plan' row, only while on). SCOPE: all "
+             "countries -- the limits are per plan, not per market. Behaviour proven 27 Sep 2026 on a temp "
+             "database (scripts/test_circle_caps.py): arming grandfathers a seller at what she has and cuts nobody "
+             "off; the allowance only shrinks; a Starter->Free downgrade keeps her 3 ticked + most recently buzzed "
+             "active and rests 30, who can still buzz her; a swap works; upgrading wakes all; LISTINGS: a Free "
+             "move with paid time left is SCHEDULED, her 2 ticked stay live on the day, 6 rest, drafts untouched, "
+             "a swap works, raising the plan wakes all. The three choose routes refuse a stranger (401). "
+             "Staged in scripts/apply_circle_caps.py while WORK-LOCK-1 is held by another lane.",
+       ref="RUL-173/174/175/176. David 27 Sep 2026: 'please build it now as a switch that works as you "
+           "explained'. The switch itself is David's to flip; this entry asserts the machinery, not the switch.")
+def rg_circle_caps_1():
+    out = []
+    src = repo_file("bea_main.py")
+    if src is not None:
+        for needle in ('CIRCLE_LIMITS = {"free": 10, "starter": 50, "pro": 200, "agency": 50}',
+                       'ADD COLUMN circle_caps INTEGER NOT NULL DEFAULT 0',
+                       'ADD COLUMN circle_owner TEXT', 'ADD COLUMN kept_by_owner INTEGER NOT NULL DEFAULT 0',
+                       'ADD COLUMN slot_kept INTEGER NOT NULL DEFAULT 0', 'ADD COLUMN circle_grandfather INTEGER',
+                       'return _bit_flag("circle_caps", False)',
+                       'raise HTTPException(status_code=403, detail=_circle_full_detail(_cst))',
+                       'detail=("Resting: your plan holds %d regulars.',
+                       'def _rebalance_listings(conn, email, limit_n)', 'def _plan_changed(conn, email, new_tier, lowered',
+                       '@app.post("/buzz/keep")', '@app.post("/users/{email}/listings/keep")',
+                       "listing_status IN ('live','paused','faded','resting')",
+                       'threading.Thread(target=_plan_change_hourly_loop, daemon=True).start()',
+                       'def _circle_grandfather_all(conn)',
+                       'CIRCLE-CAPS-1 reference counted, Buzz connection held',
+                       '"circle_caps": b("circle_caps")', 'circle_caps:           Optional[bool] = None'):
+            if needle not in src:
+                out.append((FAIL, "bea_main.py lost %s" % needle[:70]))
+        # the fail-safe side: the switch must default OFF
+        if 'circle_caps INTEGER NOT NULL DEFAULT 1' in src:
+            out.append((FAIL, "the regulars limits default ON -- the switch is David's to arm"))
+    d = repo_file("dashboard.server.html")
+    if d is not None and ("id=\"ls_m_circle\"" not in d or "ls_m_circle:'circle_caps'" not in d
+                          or "circle_caps:!!S.circle_caps" not in d):
+        out.append((FAIL, "the +1 page lost the Regulars limits switch"))
+    m = repo_file("ms.js")
+    if m is not None:
+        if m.count("_circleBullets(t)") < 2 or "function _bzCircleCard(" not in m:
+            out.append((FAIL, "ms.js lost the plan-card limits or the Buzz screen counter"))
+        if "window.FEATURES.circle_caps" not in m:
+            out.append((FAIL, "ms.js shows limits without asking the switch"))
+        for needle in ("function _bzChooseCard(", "function _subDownWarning(", "function _subKeepLoad(",
+                       "resting:   ['st-paused'"):
+            if needle not in m:
+                out.append((FAIL, "ms.js lost %s (KEEP-CHOICE-1)" % needle))
+    rp = repo_file("route_policy.json")
+    if rp is not None:
+        for k in ('"POST /buzz/keep"', '"GET /users/{email}/listings/keep"', '"POST /users/{email}/listings/keep"'):
+            if k not in rp:
+                out.append((FAIL, "route_policy.json does not declare %s" % k))
+    q = repo_file("quick.html")
+    if q is not None and ("qCircleOn()?'<dt>Your plan</dt>" not in q):
+        out.append((FAIL, "Quick lost its 'Your plan' row, or shows it without asking the switch"))
+    try:
+        f = json.loads(_get("/flags"))
+        if "circle_caps" not in (f.get("effective") or {}):
+            out.append((FAIL, "LIVE /flags does not report effective.circle_caps (not deployed yet?)"))
+        lim = f.get("circle_limits") or {}
+        if lim and (lim.get("free"), lim.get("starter"), lim.get("pro")) != (10, 50, 200):
+            out.append((FAIL, "LIVE /flags circle_limits are not 10/50/200: %r" % lim))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        out.append((FAIL, "LIVE /flags not answering: %s" % str(e)[:120]))
+    if not out:
+        return [(INFO, "switch present and reported live; limits 10/50/200; display gated on the switch")]
+    return out
 
 if __name__ == "__main__":
     sys.exit(main())

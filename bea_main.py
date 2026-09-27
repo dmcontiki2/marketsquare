@@ -914,8 +914,14 @@ def run_migrations(conn):
     # (an employer and a domestic worker) that is worse than no channel at all.
     # One close ends it in both directions, and only whoever closed it may reopen it,
     # or the close would mean nothing the moment the other party flipped it back.
+    # CIRCLE-CAPS-1 (RUL-176): circle_owner = whose Circle the connection counts against (the
+    # person whose link or invitation made it); kept_by_owner/kept_at = she ticked it to stay
+    # active when her plan holds fewer regulars than she has (KEEP-CHOICE-1).
     for _bz_col in ("ALTER TABLE buzz_pairs ADD COLUMN closed_at TEXT",
-                    "ALTER TABLE buzz_pairs ADD COLUMN closed_by TEXT"):
+                    "ALTER TABLE buzz_pairs ADD COLUMN closed_by TEXT",
+                    "ALTER TABLE buzz_pairs ADD COLUMN circle_owner TEXT",
+                    "ALTER TABLE buzz_pairs ADD COLUMN kept_by_owner INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE buzz_pairs ADD COLUMN kept_at TEXT"):
         try:
             conn.execute(_bz_col)
         except Exception:
@@ -1281,6 +1287,16 @@ def run_migrations(conn):
         # holding the tester cookie (ts_review), so David and his testers see it first. Switching it
         # on for everybody is David's act, via POST /admin/flags {"lang_layer": true}.
         "ALTER TABLE launch_switches ADD COLUMN lang_layer INTEGER NOT NULL DEFAULT 0",
+        # CIRCLE-CAPS-1 (RUL-176, 27 Sep 2026): the regulars limits -- Free 10 / $5 50 / $20 200.
+        # Default OFF = no limit anywhere and the app shows only a count. Arming it is DAVID'S act,
+        # from the +1 page or POST /admin/flags {"circle_caps": true}; reversible, no deploy.
+        "ALTER TABLE launch_switches ADD COLUMN circle_caps INTEGER NOT NULL DEFAULT 0",
+        # KEEP-CHOICE-1 (RUL-176 standard, 27 Sep 2026): when a plan holds fewer than she has, SHE
+        # chooses what stays active. circle_grandfather = her regulars count when the limits were
+        # switched on (nobody is cut off by the switch); cleared when her plan is lowered.
+        # slot_kept = a listing she ticked to stay live; 'resting' = hidden from buyers, never deleted.
+        "ALTER TABLE users ADD COLUMN circle_grandfather INTEGER",
+        "ALTER TABLE listings ADD COLUMN slot_kept INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -1818,6 +1834,8 @@ def _apply_pending_downgrades():
                 "WHERE LOWER(email)=?",
                 (new_tier, new_limit, row["email"].lower())
             )
+            # KEEP-CHOICE-1: what she ticked stays active; the rest rest (nothing deleted).
+            _plan_changed(conn, row["email"], new_tier, lowered=True)
             _log.info("Downgrade applied: %s → %s", row["email"], new_tier)
         if rows:
             conn.commit()
@@ -1826,7 +1844,9 @@ def _apply_pending_downgrades():
     finally:
         conn.close()
 
-_apply_pending_downgrades()
+# KEEP-CHOICE-1 (27 Sep 2026): this used to run ONCE, at import -- so a downgrade dated for the 14th
+# waited for the next restart, however many days that was. It now runs from the hourly plan loop
+# (started beside the lifecycle loop, after the helpers it calls exist), first pass ~1 min after boot.
 
 # n8n webhook URLs (Task 2 — optional, skip silently if not set)
 N8N_WEBHOOK_ACCEPT     = os.getenv("N8N_WEBHOOK_ACCEPT")
@@ -7073,9 +7093,24 @@ def get_user_subscription(email: str):
             (email,)
         ).fetchone()["n"]
         plan = _SELLER_SUB_TIERS.get(tier, _SELLER_SUB_TIERS["free"])
+        try:
+            _cst = _circle_status(conn, email)   # CIRCLE-CAPS-1: counts only
+        except Exception:
+            _cst = None
+        try:   # KEEP-CHOICE-1: listings resting because her plan holds fewer
+            _resting_n = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? "
+                                      "AND listing_status='resting'", (email,)).fetchone()["n"]
+        except Exception:
+            _resting_n = 0
     finally:
         conn.close()
     return {
+        "circle_caps_on": bool(_cst and _cst["on"]),
+        "circle_limit": (_cst or {}).get("limit"),
+        "circle_allowance": (_cst or {}).get("allowance"),
+        "circle_used": (_cst or {}).get("used"),
+        "circle_resting": len((_cst or {}).get("resting_ids") or []),
+        "listings_resting": _resting_n,
         "email": email,
         "seller_tier": tier,
         "tier_label": plan["label"],
@@ -9558,6 +9593,7 @@ def verify_seller_subscription(reference: str):
                 (email, tier, slot_limit, billing_end),
             )
             effective = "immediate"
+            _plan_changed(conn, email, tier, lowered=False)   # KEEP-CHOICE-1: resting listings wake up
             try:
                 launch_redemption.grant_monthly_tuppence(conn, email, tier)
             except Exception as _alloc_e:
@@ -14521,9 +14557,17 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
         _conf = (_session_email(ts_user) or "").strip().lower()
         if _conf and "@" in _conf and _conf != (email or "").strip().lower():
             _pa, _pb = _buzz_key(email, _conf)
-            conn.execute("INSERT INTO buzz_pairs (a_email, b_email, created_by, source) VALUES (?,?,?,?) "
-                         "ON CONFLICT(a_email, b_email) DO NOTHING", (_pa, _pb, _conf, "reference"))
-            conn.commit()
+            # CIRCLE-CAPS-1 (RUL-176): the reference ALWAYS counts; only the Buzz connection waits for
+            # room in the worker's Circle -- she owns it, it came through her link.
+            _cst = None if _buzz_pair(conn, _pa, _pb) else _circle_status(conn, email)
+            if _cst and _cst["full"]:
+                _log.info("CIRCLE-CAPS-1 reference counted, Buzz connection held: Circle full (%d/%d)",
+                          _cst["used"], _cst["limit"])
+            else:
+                conn.execute("INSERT INTO buzz_pairs (a_email, b_email, created_by, source, circle_owner) "
+                             "VALUES (?,?,?,?,?) ON CONFLICT(a_email, b_email) DO NOTHING",
+                             (_pa, _pb, _conf, "reference", (email or "").strip().lower()))
+                conn.commit()
     except Exception as _bze:
         _log.error("E2E-HMI-1 buzz pair from reference failed: %s", _bze)
     conn.close()
@@ -16366,7 +16410,7 @@ def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_
     """Admin: set seller subscription tier immediately (bypasses Paystack).
     tier must be: free | starter | pro | agency  (the Simpler Model set -- PRICING_CANON.md)
     Also applies pending downgrades — call with tier=free for immediate free downgrade.
-    Enforces slot guard: if active listings > new slot_limit, returns 409 with count.
+    KEEP-CHOICE-1: over the new slot limit, the listings she ticked stay live and the rest rest.
     """
     _admin_only(x_admin_key, "seller-tier")
     email = email.lower().strip()
@@ -16379,23 +16423,16 @@ def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_
         user = conn.execute("SELECT email FROM users WHERE LOWER(email)=?", (email,)).fetchone()
         if not user:
             raise HTTPException(status_code=404, detail="Seller not found")
-        # Slot guard: count active (live/draft) listings
-        active_count = conn.execute(
-            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
-            "AND (listing_status IS NULL OR listing_status IN ('live','draft'))",
-            (email,)
-        ).fetchone()["n"]
-        if active_count > new_limit:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Seller has {active_count} active listings but {tier} allows only {new_limit}. "
-                       f"Archive {active_count - new_limit} listing(s) before downgrading."
-            )
+        # KEEP-CHOICE-1 (27 Sep 2026): no 'archive first' refusal any more -- the listings she ticked
+        # stay live and the rest rest (never deleted); raising the plan wakes them.
+        _old = conn.execute("SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        _old_lim = _tier_slot_limit(((_old["seller_tier"] if _old else "") or "free").lower())
         conn.execute(
             "UPDATE users SET seller_tier=?, slot_limit=?, pending_downgrade_tier=NULL "
             "WHERE LOWER(email)=?",
             (tier, new_limit, email)
         )
+        _plan_changed(conn, email, tier, lowered=(new_limit < _old_lim))
         conn.commit()
     finally:
         conn.close()
@@ -16404,34 +16441,41 @@ def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_
 
 @app.post("/users/{email}/seller-tier/downgrade-free")
 def downgrade_to_free(email: str):
-    """Self-service: seller requests immediate downgrade to free tier.
-    Blocked if active listing count > 2. No payment required.
+    """Self-service: seller moves to the Free plan.
+
+    KEEP-CHOICE-1 (David, 27 Sep 2026 -- "make this the standard for regulars, and also for listing
+    slots on a downgrade"). This used to REFUSE with 409 until she archived down to 2 herself. Now:
+      * if a paid month is still running, the move is SCHEDULED for its end date -- she keeps what she
+        paid for, and chooses meanwhile which listings and regulars stay active;
+      * otherwise it applies now, and what she ticked stays live; the rest REST -- hidden from buyers,
+        never deleted -- and an upgrade brings them all back.
     """
     email = email.lower().strip()
     free_limit = _tier_slot_limit("free")
     conn = database.get_db()
     try:
-        user = conn.execute("SELECT email FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        user = conn.execute("SELECT email, seller_tier, billing_period_end FROM users WHERE LOWER(email)=?",
+                            (email,)).fetchone()
         if not user:
             raise HTTPException(status_code=404, detail="Seller not found")
-        active_count = conn.execute(
-            "SELECT COUNT(*) as n FROM listings WHERE LOWER(seller_email)=? "
-            "AND (listing_status IS NULL OR listing_status IN ('live','draft'))",
-            (email,)
-        ).fetchone()["n"]
-        if active_count > free_limit:
-            raise HTTPException(
-                status_code=409,
-                detail=f"You have {active_count} active listings. Archive down to {free_limit} before switching to Free."
-            )
+        end = (user["billing_period_end"] or "").strip()
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if (user["seller_tier"] or "free").lower() != "free" and end and end > now_iso:
+            conn.execute("UPDATE users SET pending_downgrade_tier='free' WHERE LOWER(email)=?", (email,))
+            conn.commit()
+            return {"email": email, "seller_tier": (user["seller_tier"] or "free").lower(),
+                    "pending_downgrade_tier": "free", "effective": "end_of_billing_period",
+                    "billing_period_end": end, "slot_limit_after": free_limit}
         conn.execute(
             "UPDATE users SET seller_tier='free', slot_limit=?, pending_downgrade_tier=NULL WHERE LOWER(email)=?",
             (free_limit, email)
         )
+        res = _plan_changed(conn, email, "free", lowered=True)
         conn.commit()
     finally:
         conn.close()
-    return {"email": email, "seller_tier": "free", "slot_limit": free_limit}
+    return {"email": email, "seller_tier": "free", "slot_limit": free_limit, "effective": "immediate",
+            "listings_resting": (res or {}).get("resting", 0)}
 
 
 # ── DASHBOARD SUMMARY ────────────────────────────────────────
@@ -21577,6 +21621,7 @@ class _FlagsUpdate(BaseModel):
     photo_replace_request: Optional[bool] = None  # PHOTO-REPLACE-1: ask for a new photo rather than blur it into ruin (TS-0022)
     baseline_q4:           Optional[bool] = None  # BASELINE-Q4-1: the RUL-126 batch, armed by David only
     lang_layer:            Optional[bool] = None  # LANG-LAYER-1: the language layer for everybody (testers always see it)
+    circle_caps:           Optional[bool] = None  # CIRCLE-CAPS-1 (RUL-176): regulars limits 10/50/200, David's switch
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -21593,6 +21638,9 @@ def _flags_payload(d):
         "photo_replace_request": bool(d.get("photo_replace_request", 1)),
         # BASELINE-Q4-1: a row predating the column reads OFF -- dark is the safe side.
         "baseline_q4": b("baseline_q4"),
+        # CIRCLE-CAPS-1 (RUL-176): a row predating the column reads OFF -- no limits is the safe side.
+        "circle_caps": b("circle_caps"),
+        "circle_limits": dict(CIRCLE_LIMITS),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
@@ -21607,6 +21655,7 @@ def _flags_payload(d):
             "weekend_verified":    live and b("verified_tier") and b("p_weekend"),
             "baseline_q4":         b("baseline_q4"),   # BASELINE-Q4-1: the FEA reads it from here
             "lang_layer":          b("lang_layer") or b("baseline_q4"),   # LANG-Q4-1: rides the Q4 switch; get_flags ORs in testers
+            "circle_caps":         b("circle_caps"),   # CIRCLE-CAPS-1: ms.js + quick.html show limits only when this is on
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -21762,6 +21811,14 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
                 _log.warning("RUL-128 fold on arming: %d Global subscriber(s) moved to Starter at the same price: %s", len(_moved), _moved)
         except Exception as _fe:
             _log.error("RUL-128 fold failed on arming (flag stays armed; run the fold again via /admin/flags): %s", _fe)
+        # KEEP-CHOICE-1: arming the regulars limits (0 -> 1) grandfathers everyone already over their
+        # plan's limit at what they have -- the switch itself cuts nobody off. Idempotent.
+        try:
+            if data.get("circle_caps") and not int(prior.get("circle_caps") or 0) and row and int(row["circle_caps"] or 0):
+                _gfn = _circle_grandfather_all(conn); conn.commit()
+                _log.warning("CIRCLE-CAPS-1 armed: %d seller(s) over their limit grandfathered at what they have", _gfn)
+        except Exception as _ge:
+            _log.error("CIRCLE-CAPS-1 grandfathering on arming failed: %s", _ge)
         # D4: the change is RECORDED — actor, prior value, new value, reason, timestamp.
         try:
             _actor = str((_admin or {}).get("name") or (_admin or {}).get("sub") or "admin")[:80]
@@ -27155,12 +27212,12 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
         res["b3_blocked"] = 0
         for sb in b3:
             live = conn.execute("SELECT id, title FROM listings WHERE LOWER(seller_email) = ? "
-                                "AND listing_status IN ('live','paused','faded')", (sb["seller"],)).fetchall()
+                                "AND listing_status IN ('live','paused','faded','resting')", (sb["seller"],)).fetchall()
             if not live:
                 continue
             if not dry_run:
                 conn.execute("UPDATE listings SET listing_status='blocked', block_cause='B3', status_changed_at=? "
-                             "WHERE LOWER(seller_email) = ? AND listing_status IN ('live','paused','faded')",
+                             "WHERE LOWER(seller_email) = ? AND listing_status IN ('live','paused','faded','resting')",
                              (now_iso, sb["seller"]))
             res["b3_blocked"] += len(live)
             _mail(sb["seller"], "Your listings are blocked \u2014 introductions went unanswered",
@@ -27197,7 +27254,7 @@ def admin_block_listing(listing_id: int, req: _AdminBlockIn, _admin=Depends(_req
             raise HTTPException(status_code=404, detail="Listing not found")
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         cur = conn.execute("UPDATE listings SET listing_status='blocked', block_cause=?, status_changed_at=? "
-                           "WHERE LOWER(seller_email) = LOWER(?) AND listing_status IN ('live','paused','faded')",
+                           "WHERE LOWER(seller_email) = LOWER(?) AND listing_status IN ('live','paused','faded','resting')",
                            (cause + ((":" + req.notes[:200]) if req.notes else ""), now_iso, row["seller_email"]))
         conn.commit()
         return {"ok": True, "cause": cause, "listings_blocked": cur.rowcount}
@@ -27400,6 +27457,181 @@ def _buzz_pair_view(row, me: str):
             "source": row["source"], "created_at": row["created_at"]}
 
 
+# ══ CIRCLE-CAPS-1 (RUL-176, 27 Sep 2026) — how many regulars each plan holds ══
+# David, 26-27 Sep 2026: Free 10 · Starter $5 50 · Pro $20 200, behind ONE switch on the +1 page
+# (launch_switches.circle_caps, default OFF). OFF = no limit anywhere; the app shows only a count.
+# ON = a NEW connection into a full Circle is refused with the way out named.
+# KEEP-CHOICE-1 -- THE STANDARD for every downgrade (David, 27 Sep 2026: "make this the standard for
+# regulars, and also for listing slots on a downgrade"):
+#   * switching the limits ON cuts nobody off: a seller already over her limit is grandfathered at
+#     what she has (users.circle_grandfather) and simply cannot add more;
+#   * when her PLAN is lowered, SHE chooses which regulars stay active (POST /buzz/keep); until she
+#     chooses, the ones she buzzed most recently stay active -- never random, never the oldest;
+#   * the rest RESTING: nothing deleted, they can still buzz her, she cannot buzz them; she can swap
+#     at any time; upgrading wakes everyone at once; the customer is never told.
+# Agency follows Starter (50): its free seat IS Starter tools -- Claude's technical call.
+# Authority for the numbers: this table; mirrored in PRICING_CANON §1 CIRCLE-1 and ms.js.
+CIRCLE_LIMITS = {"free": 10, "starter": 50, "pro": 200, "agency": 50}
+
+
+def _circle_on() -> bool:
+    """Fail-safe read of launch_switches.circle_caps: on ANY doubt the limits are OFF."""
+    return _bit_flag("circle_caps", False)
+
+
+def _circle_owner(row) -> str:
+    """Whose Circle a connection counts against: the person whose link or invitation made it.
+    A reference is written by the CUSTOMER through the WORKER's link, so the worker owns it; a
+    direct /buzz/pair belongs to the caller. Rows from before the column resolve the same way."""
+    try:
+        own = (row["circle_owner"] or "").strip().lower()
+        if own:
+            return own
+    except Exception:
+        pass
+    cb = (row["created_by"] or "").strip().lower()
+    if (row["source"] or "") == "reference":
+        return row["b_email"] if row["a_email"] == cb else row["a_email"]
+    return cb
+
+
+def _circle_rows(conn, email):
+    """Her OPEN connections in the order that decides who stays active: the ones she ticked
+    (newest tick first), then the ones she buzzed most recently, then the newest. Closed never count."""
+    email = (email or "").strip().lower()
+    if not email:
+        return []
+    rows = [r for r in conn.execute(
+                "SELECT p.*, (SELECT MAX(l.created_at) FROM buzz_log l WHERE l.pair_id = p.id "
+                "AND l.from_email = ?) AS owner_last_buzz FROM buzz_pairs p "
+                "WHERE (p.a_email=? OR p.b_email=?) AND COALESCE(p.closed_by,'')=''",
+                (email, email, email)).fetchall()
+            if _circle_owner(r) == email]
+    def _k(r):
+        try:
+            kept = int(r["kept_by_owner"] or 0)
+        except Exception:
+            kept = 0
+        return (kept, (r["kept_at"] or "") if kept else "", r["owner_last_buzz"] or "",
+                r["created_at"] or "", r["id"])
+    return sorted(rows, key=_k, reverse=True)
+
+
+def _circle_status(conn, email) -> dict:
+    """Her Circle as it stands: tier, plan limit, the limit that applies (grandfathered or plan),
+    open connections she owns, which are resting, and whether she may add another."""
+    email = (email or "").strip().lower()
+    tier = _seller_tier_of(conn, email) if email else "free"
+    limit_n = CIRCLE_LIMITS.get(tier, CIRCLE_LIMITS["free"])
+    rows = _circle_rows(conn, email)
+    used = len(rows)
+    gf = 0
+    pend = None
+    if email:
+        try:
+            u = conn.execute("SELECT circle_grandfather, pending_downgrade_tier FROM users WHERE LOWER(email)=?",
+                             (email,)).fetchone()
+            gf = int((u["circle_grandfather"] if u else 0) or 0)
+            pend = ((u["pending_downgrade_tier"] if u else None) or None)
+        except Exception:
+            gf = 0
+    # A grandfathered allowance only ever SHRINKS towards what she still has: closing someone can
+    # never be undone into room above her plan.
+    eff = max(limit_n, min(gf, used))
+    on = _circle_on()
+    resting = [r["id"] for r in rows[eff:]] if (on and used > eff) else []
+    return {"on": on, "tier": tier, "limit": limit_n, "allowance": eff, "used": used,
+            "full": bool(on and used >= eff), "resting_ids": resting, "frozen_ids": resting,
+            "grandfathered": bool(on and gf > limit_n and eff > limit_n),
+            "pending_tier": pend, "pending_limit": CIRCLE_LIMITS.get(pend) if pend else None,
+            "limits": dict(CIRCLE_LIMITS)}
+
+
+def _circle_full_detail(st) -> str:
+    """The refusal names the way out -- never a bare 'limit reached'."""
+    nxt = {"free": "move to $5 for 50", "starter": "move to $20 for 200",
+           "agency": "move to $20 for 200"}.get(st.get("tier"), "")
+    return ("Your plan holds %d regulars. Close Buzz with someone you no longer need%s."
+            % (st.get("limit", 0), (", or " + nxt) if nxt else ""))
+
+
+def _circle_public(email):
+    """The /buzz/me and subscription view: counts only, never who. Fails soft to None."""
+    try:
+        conn = database.get_db()
+        try:
+            st = _circle_status(conn, email)
+        finally:
+            conn.close()
+        return {"on": st["on"], "tier": st["tier"], "limit": st["limit"], "allowance": st["allowance"],
+                "used": st["used"], "full": st["full"], "resting": len(st["resting_ids"]),
+                "paused": len(st["resting_ids"]), "grandfathered": st["grandfathered"],
+                "pending_tier": st["pending_tier"], "pending_limit": st["pending_limit"],
+                "limits": st["limits"]}
+    except Exception as exc:
+        _log.error("CIRCLE-CAPS-1 status read failed: %s", exc)
+        return None
+
+
+def _circle_grandfather_all(conn) -> int:
+    """KEEP-CHOICE-1: on ARMING the switch (0 -> 1) everyone already over their plan's limit is
+    grandfathered at what they have, so the switch itself cuts nobody off. Idempotent."""
+    owners = {}
+    for r in conn.execute("SELECT * FROM buzz_pairs WHERE COALESCE(closed_by,'')=''").fetchall():
+        o = _circle_owner(r)
+        if o:
+            owners[o] = owners.get(o, 0) + 1
+    n = 0
+    for o, cnt in owners.items():
+        lim = CIRCLE_LIMITS.get(_seller_tier_of(conn, o), CIRCLE_LIMITS["free"])
+        if cnt > lim:
+            conn.execute("UPDATE users SET circle_grandfather = MAX(COALESCE(circle_grandfather,0), ?) "
+                         "WHERE LOWER(email)=?", (cnt, o))
+            n += 1
+    return n
+
+
+def _rebalance_listings(conn, email, limit_n) -> dict:
+    """KEEP-CHOICE-1 for listing slots: of her live + resting listings, the first `limit_n` are live
+    and the rest REST (hidden from buyers, never deleted). Order: the ones she ticked, then the most
+    recently published or updated. Drafts, sold, archived, blocked and faded are never touched."""
+    email = (email or "").strip().lower()
+    rows = conn.execute(
+        "SELECT id, listing_status, COALESCE(slot_kept,0) AS kept, "
+        "COALESCE(published_at, updated_at, created_at, '') AS recency FROM listings "
+        "WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status IN ('live','resting'))",
+        (email,)).fetchall()
+    rows = sorted(rows, key=lambda r: (int(r["kept"] or 0), r["recency"] or "", r["id"]), reverse=True)
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    woke = rested = 0
+    for i, r in enumerate(rows):
+        st = (r["listing_status"] or "live")
+        if i < limit_n and st == "resting":
+            conn.execute("UPDATE listings SET listing_status='live', status_changed_at=? WHERE id=?", (now_iso, r["id"]))
+            woke += 1
+        elif i >= limit_n and st != "resting":
+            conn.execute("UPDATE listings SET listing_status='resting', status_changed_at=? WHERE id=?", (now_iso, r["id"]))
+            rested += 1
+    return {"live": min(len(rows), limit_n), "resting": max(0, len(rows) - limit_n), "woke": woke, "rested": rested}
+
+
+def _plan_changed(conn, email, new_tier, lowered: bool) -> dict:
+    """KEEP-CHOICE-1: the one place a plan change re-balances what stays active. Lowered: the
+    Circle's grandfathered allowance ends and listings rest down to the new slots. Raised: resting
+    listings wake up to the new slots (regulars wake by themselves -- resting is computed)."""
+    email = (email or "").strip().lower()
+    if lowered:
+        try:
+            conn.execute("UPDATE users SET circle_grandfather=NULL WHERE LOWER(email)=?", (email,))
+        except Exception:
+            pass
+    try:
+        return _rebalance_listings(conn, email, _tier_slot_limit(new_tier))
+    except Exception as exc:
+        _log.error("KEEP-CHOICE-1 rebalance failed for a plan change: %s", exc)
+        return {}
+
+
 class BuzzPairReq(BaseModel):
     from_email: str
     to_email:   str
@@ -27490,7 +27722,8 @@ def buzz_me(_key: str = Depends(auth.require_api_key),
     me = _buzz_who(ts_user, None, "me", require_accept=False)
     return {"email": me or "", "signed_in": bool(_session_email(ts_user)),
             "accepted": _buzz_accepted(me) if me else False,
-            "enforced": _identity_bind_enabled()}
+            "enforced": _identity_bind_enabled(),
+            "circle": _circle_public(me) if me else None}   # CIRCLE-CAPS-1: counts only
 
 
 class _BuzzAcceptIn(BaseModel):
@@ -27529,10 +27762,17 @@ def buzz_pair_create(req: BuzzPairReq, _key: str = Depends(auth.require_api_key)
     if a == b:
         raise HTTPException(status_code=400, detail="cannot pair somebody with themselves")
     conn = database.get_db()
-    conn.execute("""INSERT INTO buzz_pairs (a_email, b_email, created_by, source)
-                    VALUES (?, ?, ?, ?)
+    # CIRCLE-CAPS-1 (RUL-176): a NEW connection into a full Circle is refused, with the way out
+    # named. An existing pair is untouched (this call is idempotent), and the switch OFF changes nothing.
+    if not _buzz_pair(conn, a, b):
+        _cst = _circle_status(conn, me)
+        if _cst["full"]:
+            conn.close()
+            raise HTTPException(status_code=403, detail=_circle_full_detail(_cst))
+    conn.execute("""INSERT INTO buzz_pairs (a_email, b_email, created_by, source, circle_owner)
+                    VALUES (?, ?, ?, ?, ?)
                     ON CONFLICT(a_email, b_email) DO NOTHING""",
-                 (a, b, me, req.source or "link"))
+                 (a, b, me, req.source or "link", me))
     conn.commit()
     row = _buzz_pair(conn, a, b)
     out = _buzz_pair_view(row, me)
@@ -27666,8 +27906,20 @@ def buzz_pairs(email: str = None, _key: str = Depends(auth.require_api_key),
     rows = conn.execute("""SELECT * FROM buzz_pairs WHERE a_email=? OR b_email=?
                            ORDER BY created_at DESC""", (me, me)).fetchall()
     out = []
+    # CIRCLE-CAPS-1 / KEEP-CHOICE-1: 'resting' = beyond what her plan holds and not chosen to keep;
+    # 'kept' = she ticked it; 'mine' = it counts in HER Circle. Additive keys -- older screens ignore them.
+    try:
+        _frozen = set(_circle_status(conn, me)["resting_ids"]) if _circle_on() else set()
+    except Exception:
+        _frozen = set()
     for r in rows:
         v = _buzz_pair_view(r, me)
+        v["resting"] = v["paused"] = r["id"] in _frozen
+        v["mine"] = _circle_owner(r) == me
+        try:
+            v["kept"] = bool(int(r["kept_by_owner"] or 0))
+        except Exception:
+            v["kept"] = False
         # SEC-GATE-1 (24 Sep 2026): the registered name only once THEY have let me buzz them - anybody can
         # pair with any address, so otherwise this is a name lookup; fall back to _buzz_name's own local part.
         v["other_name"] = (_buzz_name(conn, v["other_email"]) if v["they_allow_me"]
@@ -27675,6 +27927,119 @@ def buzz_pairs(email: str = None, _key: str = Depends(auth.require_api_key),
         out.append(v)
     conn.close()
     return out
+
+
+# ══ KEEP-CHOICE-1 (RUL-176 standard, David 27 Sep 2026) — she chooses what stays active ══
+class BuzzKeepReq(BaseModel):
+    email: Optional[str] = None
+    keep: list = []
+
+
+@app.post("/buzz/keep")
+def buzz_keep(req: BuzzKeepReq, _key: str = Depends(auth.require_api_key),
+              ts_user: str = Cookie(default=None)):
+    """SHE chooses which regulars stay active when her plan holds fewer than she has. `keep` is the
+    other person's email for each one, at most what her plan holds. Everyone else in HER Circle rests:
+    nothing deleted, they can still buzz her. She may change this any time; the customer is never told."""
+    me = _buzz_who(ts_user, req.email, "keep")
+    want = set((e or "").strip().lower() for e in (req.keep or []) if isinstance(e, str) and (e or "").strip())
+    conn = database.get_db()
+    try:
+        st = _circle_status(conn, me)
+        if len(want) > st["allowance"]:
+            raise HTTPException(status_code=400,
+                                detail="Your plan holds %d regulars - untick %d first."
+                                       % (st["allowance"], len(want) - st["allowance"]))
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        n = 0
+        for r in _circle_rows(conn, me):
+            other = r["b_email"] if r["a_email"] == me else r["a_email"]
+            if other in want:
+                conn.execute("UPDATE buzz_pairs SET kept_by_owner=1, kept_at=? WHERE id=?", (now_iso, r["id"]))
+                n += 1
+            else:
+                conn.execute("UPDATE buzz_pairs SET kept_by_owner=0, kept_at=NULL WHERE id=?", (r["id"],))
+        conn.commit()
+    finally:
+        conn.close()
+    out = _circle_public(me) or {}
+    out["kept"] = n
+    return out
+
+
+class ListingKeepReq(BaseModel):
+    keep: list = []
+
+
+def _listing_keep_rows(conn, email):
+    return conn.execute(
+        "SELECT id, title, category, listing_status, COALESCE(slot_kept,0) AS kept, "
+        "COALESCE(published_at, updated_at, created_at, '') AS recency FROM listings "
+        "WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status IN ('live','resting')) "
+        "ORDER BY COALESCE(slot_kept,0) DESC, recency DESC, id DESC", (email,)).fetchall()
+
+
+@app.get("/users/{email}/listings/keep")
+def listings_keep_view(email: str, _key: str = Depends(auth.require_api_key),
+                       ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Her live and resting listings, for the 'choose which stay live' list. Hers only."""
+    me = (_actor(ts_user, email, "listings-keep", x_admin_key) or "").strip().lower()
+    conn = database.get_db()
+    try:
+        u = conn.execute("SELECT seller_tier, slot_limit, pending_downgrade_tier, billing_period_end "
+                         "FROM users WHERE LOWER(email)=?", (me,)).fetchone()
+        tier = ((u["seller_tier"] if u else "") or "free").lower()
+        limit_n = int(u["slot_limit"]) if (u and u["slot_limit"]) else _tier_slot_limit(tier)
+        pend = (u["pending_downgrade_tier"] if u else None) or None
+        rows = _listing_keep_rows(conn, me)
+    finally:
+        conn.close()
+    return {"slot_limit": limit_n, "tier": tier, "pending_tier": pend,
+            "pending_limit": _tier_slot_limit(pend) if pend else None,
+            "pending_on": (u["billing_period_end"] if (u and pend) else None),
+            "listings": [{"id": r["id"], "title": r["title"], "category": r["category"],
+                          "status": (r["listing_status"] or "live"), "kept": bool(r["kept"])} for r in rows]}
+
+
+@app.post("/users/{email}/listings/keep")
+def listings_keep(email: str, req: ListingKeepReq, _key: str = Depends(auth.require_api_key),
+                  ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """SHE chooses which listings stay live when her plan holds fewer than she has. `keep` = listing ids,
+    at most what her plan (or the lower plan she is moving to) holds. With listings already resting the
+    choice applies at once (a swap); before a downgrade date it is stored and applied on the day."""
+    me = (_actor(ts_user, email, "listings-keep", x_admin_key) or "").strip().lower()
+    try:
+        want = set(int(x) for x in (req.keep or []))
+    except Exception:
+        raise HTTPException(status_code=400, detail="keep must be a list of listing ids")
+    conn = database.get_db()
+    try:
+        u = conn.execute("SELECT seller_tier, slot_limit, pending_downgrade_tier FROM users WHERE LOWER(email)=?",
+                         (me,)).fetchone()
+        if not u:
+            raise HTTPException(status_code=404, detail="Seller not found")
+        tier = (u["seller_tier"] or "free").lower()
+        limit_n = int(u["slot_limit"]) if u["slot_limit"] else _tier_slot_limit(tier)
+        rows = _listing_keep_rows(conn, me)
+        mine = set(r["id"] for r in rows)
+        if not want.issubset(mine):
+            raise HTTPException(status_code=403, detail="Only your own live or resting listings can be chosen")
+        cap = limit_n
+        if u["pending_downgrade_tier"]:
+            cap = min(cap, _tier_slot_limit(u["pending_downgrade_tier"]))
+        if len(want) > limit_n:
+            raise HTTPException(status_code=400, detail="Your plan holds %d listings - untick %d first."
+                                                        % (limit_n, len(want) - limit_n))
+        for r in rows:
+            conn.execute("UPDATE listings SET slot_kept=? WHERE id=?", (1 if r["id"] in want else 0, r["id"]))
+        res = {"applied": False}
+        if any((r["listing_status"] or "") == "resting" for r in rows):
+            res = _rebalance_listings(conn, me, limit_n); res["applied"] = True
+        conn.commit()
+        res.update({"kept": len(want), "slot_limit": limit_n, "choose_up_to": cap})
+        return res
+    finally:
+        conn.close()
 
 
 def _buzz_prune(conn):
@@ -27714,6 +28079,15 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
         conn.close()
         raise HTTPException(status_code=403,
                             detail="Buzz is closed between you two \u2014 use their number")
+    # CIRCLE-CAPS-1 / KEEP-CHOICE-1: a RESTING regular (beyond what her plan holds, not one she
+    # chose to keep) cannot be buzzed BY HER; theirs still reach her. She swaps on the Buzz screen.
+    if _circle_on() and _circle_owner(row) == sender:
+        _cst = _circle_status(conn, sender)
+        if row["id"] in _cst["resting_ids"]:
+            conn.close()
+            raise HTTPException(status_code=403,
+                                detail=("Resting: your plan holds %d regulars. Choose who stays active on "
+                                        "the Buzz screen, or move up a plan." % _cst["allowance"]))
     view = _buzz_pair_view(row, receiver)          # the RECEIVER's own switch
     if not view["i_allow_them"]:
         conn.close()
@@ -28060,6 +28434,19 @@ def save_my_profile(req: _ProfileIn, _key: str = Depends(auth.require_api_key),
         except Exception:
             pass
     return out
+
+
+# KEEP-CHOICE-1: scheduled downgrades take effect within the hour of their date, not at the next restart.
+def _plan_change_hourly_loop():
+    import time as _pt
+    _pt.sleep(60)
+    while True:
+        try:
+            _apply_pending_downgrades()
+        except Exception as _pe:
+            print("PLAN-CHANGE loop error: %s" % _pe)
+        _pt.sleep(3600)
+threading.Thread(target=_plan_change_hourly_loop, daemon=True).start()
 
 
 # Daily runner: first pass ~2 minutes after boot, then every 24h. Gated by env.

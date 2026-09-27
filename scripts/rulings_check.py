@@ -1102,6 +1102,30 @@ REFLECTIONS = {
  # COUNTRY-PACK-1 (25 Sep 2026): Quick examples follow her country and city.
  # SHARE-CHAIN-ALL-1 (25 Sep 2026): every business is a Share Chain; Buzz free, Tuppence only on a new introduction.
  # ROLES-25SEP-1 (25 Sep 2026): every type on the 42-type Services board is a live Quick role; the self-employed are vouched for by a customer.
+ "RUL-180": [
+   ("RULINGS.md", ["THE DOWNGRADE STANDARD -- SHE CHOOSES WHAT STAYS ACTIVE"], []),
+   ("PRICING_CANON.md", ["KEEP-CHOICE-1 — the downgrade standard (RUL-180"], []),
+   ("bea_main.py", ["def _rebalance_listings(conn, email, limit_n)", '@app.post("/users/{email}/listings/keep")', '@app.post("/buzz/keep")', "_plan_change_hourly_loop"], ["Archive down to {free_limit} before switching to Free"]),
+   ("ms.js", ["function _subDownWarning(", "function _bzChooseCard("], ["You must have \u22642 active listings"]),
+ ],
+ "RUL-179": [
+   ("RULINGS.md", ["THE REGULARS LIMITS (FREE 10 / $5 50 / $20 200) ARE BUILT BEHIND ONE SWITCH"], []),
+   ("PRICING_CANON.md", ["BUILT BEHIND DAVID'S 'Regulars limits' SWITCH", "Agency = **50**"], ["UNDER ACTIVE INVESTIGATION, MAY BE ALLOWED"]),
+   ("bea_main.py", ['CIRCLE_LIMITS = {"free": 10, "starter": 50, "pro": 200, "agency": 50}', "ADD COLUMN circle_caps INTEGER NOT NULL DEFAULT 0"], ["ADD COLUMN circle_caps INTEGER NOT NULL DEFAULT 1"]),
+   ("dashboard.server.html", ["ls_m_circle:'circle_caps'"], []),
+ ],
+ "RUL-175": [
+   ("RULINGS.md", ["THE IDEA SPLITS IN TWO"], []),
+   ("PRICING_CANON.md", ["PA micro-tools idea is SHELVED (RUL-175)"], []),   # Part A amended by RUL-179
+ ],
+ "RUL-174": [
+   ("RULINGS.md", ["THE CIRCLE AND THE PA MICRO TOOLS ARE AN IDEA UNDER INVESTIGATION"], []),
+   ("PRICING_CANON.md", ["The separate PA micro-tools idea is SHELVED"], ["(RUL-173, 26 Sep 2026), DECIDED, NOT YET BUILT"]),   # amended by RUL-179: built behind the switch
+ ],
+ "RUL-173": [
+   ("RULINGS.md", ["EVERY SELLER TIER CARRIES A CIRCLE"], []),
+   ("PRICING_CANON.md", ["CIRCLE-1", "Free = Circle of **10**", "Circle of **50**", "Circle of **200**"], ["Circle size awaiting David"]),
+ ],
  "RUL-172": [
    ("RULINGS.md", ["EVERY TYPE ON THE 42-TYPE SERVICES BOARD IS A LIVE QUICK ROLE"], []),
    ("ROLE_SLATE_REVIEW.md", ["| Pet sitter / dog walker |  | IN |", "| Bodyguard |  | IN |"], ["| Pet sitter / dog walker | Home & care |"]),
