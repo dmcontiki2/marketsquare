@@ -1762,9 +1762,11 @@
       "last_seen": "2026-09-27",
       "sev": "MEDIUM",
       "source": "QA Bot nightly review 20260927-003507 + read of scripts/maintenance_agent.py",
-      "status": "FIXED-UNVERIFIED",
+      "status": "CLOSED",
       "summary": "FIX SHIPPED 27 Sep ~06:46Z (attended, David: \"Please fix DW-162\") — commit 2c66601, FIXED-UNVERIFIED until the QA Bot re-reviews. New fault_text.py: complaints keep only letters and digits (any language), spaces, line breaks and ordinary punctuation; code/markup characters, hidden (zero-width, direction-override) characters and emoji are dropped; limits title 150 / message 1,000 / name 80. Applied at the door (POST /app/fault, POST /support/message) and again in the maintenance agent: every AI prompt uses _complaint() (cleaned, capped, fenced as data never to be obeyed); the dossier cleans every field and escapes the heading. Report box and support form stop at 1,000 characters with a live count. PROBED live: a code-only message now answers 400, an ordinary one is still accepted; /support serves maxlength 1000; ts_report.js v=8 served. Ledger RG-0521 LOCKED and holding; full board 511 entries, 0 regressed. RUL-184 recorded.  | NEW — the QA Bot's nightly code review (20260927-003507, OpenAI reviewer) is RED on scripts/maintenance_agent.py (last change d449eec, 26 Sep): (1) design_direction() sends a user complaint's full title + detail to the paid design tier with no input-size cap (the dossier truncates to 400 chars, the prompt does not); (2) the dossier writer puts complaint title/detail into DESIGN_BACKLOG markdown unescaped, so markup in a complaint could render if the backlog is shown as HTML. Read-only confirmation of (1) in source lines ~554-556. Not user-visible; a spend/injection risk in the shadow agent.",
-      "next_action": "The watch closes it when the next QA Bot nightly review (00:3xZ 28 Sep) no longer reports RED on maintenance_agent.py."
+      "next_action": "None - closed.",
+      "closed": "2026-09-27",
+      "closed_evidence": "Re-review run on demand 27 Sep ~07:2xZ on the server with the QA Bot's OWN reviewer (qa_bot.REVIEW_SYSTEM via qa_bot.openai_chat, OpenAI, $0.042) over the last 40h of scripts/maintenance_agent.py + fault_text.py - the flagged code and the fix together: verdict GREEN, 0 findings. Live probe: a code-only support message answers 400, an ordinary one is accepted. Ledger RG-0521 LOCKED and holding; full board 0 regressed."
     }
   },
   "last_run": "2026-09-27",
@@ -3775,13 +3777,13 @@
     ],
     "closed": [
       "DW-159",
-      "DW-160"
+      "DW-160",
+      "DW-162"
     ],
     "still_open": [
       "DW-010",
       "DW-149",
-      "DW-158",
-      "DW-162"
+      "DW-158"
     ],
     "checks_run": "12 of 12 applicable"
   }
