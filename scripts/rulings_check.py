@@ -86,6 +86,13 @@ def _outside_repo(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-186": [
+   ("RULINGS.md", ["TRUST SCORE BANDS NAME THE STRENGTH OF EVIDENCE"], []),
+   ("ms.js", ["label:'Fullest evidence'", "It is a score, not a guarantee or an assessment of character."], ["label:'Highly Trusted'", "Trusted+ (70)"]),
+   ("marketsquare.html", ["Fullest evidence (90+)", "A new seller simply has less evidence"], ["Highly Trusted (90)"]),
+   ("bea_main.py", ['(90, 100, "Fullest evidence", "gold")'], ['(90, 100, "Highly Trusted", "gold")']),
+   ("terms.html", ["Fullest evidence \u2014 gold badge"], ["Highly Trusted \u2014 gold badge"]),
+ ],
  "RUL-185": [
    ("RULINGS.md", ["IN LOCAL MARKET THE SELLER PAYS"], []),
    ("PRINCIPLE_REQUIREMENTS.md", ["(iv) LOCAL MARKET", "(v) AGENTS"], []),

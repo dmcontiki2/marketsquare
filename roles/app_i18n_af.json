@@ -1722,7 +1722,17 @@
   "Sign in first to add your banking details.": "Meld eers aan om jou bankbesonderhede by te voeg.",
   "Your listing goes live on the free plan straight away. Your account details, plan and banking details can wait — we email you a sign-in link.": "Jou advertensie gaan dadelik op die gratis plan aanlyn. Jou profiel, plan en bankbesonderhede kan wag — ons e-pos vir jou 'n aantekenskakel.",
   "We check your ID number against the Home Affairs population register and your listings show the green tick. This is optional: buyers can request introductions as soon as your uploaded ID is confirmed.": "Ons kontroleer jou ID-nommer teen die Binnelandse Sake-bevolkingsregister, en jou advertensies wys die groen regmerkie. Dit is opsioneel: kopers kan voorstellings versoek sodra jou opgelaaide ID bevestig is.",
-  "Confirm the name on your account →": "Bevestig die naam op jou rekening →"
+  "Confirm the name on your account →": "Bevestig die naam op jou rekening →",
+  "Some evidence": "Enkele bewyse",
+  "Strong evidence": "Sterk bewyse",
+  "Fullest evidence": "Volledigste bewyse",
+  "Some evidence (40+)": "Enkele bewyse (40+)",
+  "Strong evidence (70+)": "Sterk bewyse (70+)",
+  "Fullest evidence (90+)": "Volledigste bewyse (90+)",
+  "0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence": "0 · Nuut · 40 · Enkele bewyse · 70 · Sterk bewyse · 90 · Volledigste bewyse",
+  "Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.": "Die Trust Score wys die bewyse wat ’n verkoper verskaf het en die kontroles wat ons voltooi het. Dit is ’n telling, nie ’n waarborg of ’n oordeel oor iemand se karakter nie.",
+  "A new seller simply has less evidence — not a mark against them.": "’n Nuwe verkoper het bloot minder bewyse — dit tel nie teen hulle nie.",
+  "to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.": "om verkopers te sien volgens die bewyse wat hulle verskaf het. Die Trust Score wys die bewyse wat ’n verkoper verskaf het en die kontroles wat ons voltooi het. Dit is ’n telling, nie ’n waarborg of ’n oordeel oor iemand se karakter nie. ’n Nuwe verkoper het bloot minder bewyse — dit tel nie teen hulle nie."
  },
  "en": [
   "KE",
@@ -2226,6 +2236,9 @@
   "You have obtained all necessary consents from any identifiable persons appearing in photos (including model releases where required) and from any property owners whose property is depicted, where such consent is required by applicable law;",
   "Nothing in this EULA limits any non-waivable right you have under applicable federal or state law. Where a state consumer-protection statute grants you mandatory rights or remedies, those prevail over any conflicting provision of this EULA.",
   "Technically process Your Content as needed for Platform operation: resizing, cropping, compression, format conversion, thumbnail generation, and watermarking for display optimisation — without material alteration of the substantive content;",
-  "The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:"
+  "The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:",
+  "Some evidence — blue badge; standard listing position",
+  "Strong evidence — green badge; higher visibility",
+  "Fullest evidence — gold badge + featured position"
  ]
 }

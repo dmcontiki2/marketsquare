@@ -1416,15 +1416,15 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
   <!-- LM-12 trust guidance -->
   <div class="lm-guidance">
-    🛡 <strong>Filter by Trust Score</strong> to find serious sellers. Highly Trusted sellers have verified ID, phone, and a strong track record.
+    🛡 <strong>Filter by Trust Score</strong> to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.
   </div>
 
   <!-- Trust Score filter (LM-11) -->
   <div class="lm-trust-row" id="lm-trust-row">
     <div class="lm-trust-chip active" data-min-trust="0"  onclick="setLmTrust(0)">Any seller</div>
-    <div class="lm-trust-chip"        data-min-trust="40" onclick="setLmTrust(40)">Established+ (40)</div>
-    <div class="lm-trust-chip"        data-min-trust="70" onclick="setLmTrust(70)">Trusted+ (70)</div>
-    <div class="lm-trust-chip"        data-min-trust="90" onclick="setLmTrust(90)">Highly Trusted (90)</div>
+    <div class="lm-trust-chip"        data-min-trust="40" onclick="setLmTrust(40)">Some evidence (40+)</div>
+    <div class="lm-trust-chip"        data-min-trust="70" onclick="setLmTrust(70)">Strong evidence (70+)</div>
+    <div class="lm-trust-chip"        data-min-trust="90" onclick="setLmTrust(90)">Fullest evidence (90+)</div>
   </div>
 
   <!-- Free-text search (LM-03) -->
@@ -1470,13 +1470,13 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
       <div style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Trust Score floor</div>
       <div style="font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.5;">
-        Only show listings from sellers above this trust level. Recommended: <strong>Highly Trusted</strong> for high-value items.
+        Only show listings from sellers above this trust level. Recommended: <strong>Fullest evidence</strong> for high-value items.
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
         <button class="wl-trust-btn" data-trust="0" onclick="wlSetTrustFilter(0)">Any seller</button>
-        <button class="wl-trust-btn" data-trust="40" onclick="wlSetTrustFilter(40)">Established+ (40)</button>
-        <button class="wl-trust-btn" data-trust="70" onclick="wlSetTrustFilter(70)">Trusted+ (70)</button>
-        <button class="wl-trust-btn" data-trust="90" onclick="wlSetTrustFilter(90)">Highly Trusted (90)</button>
+        <button class="wl-trust-btn" data-trust="40" onclick="wlSetTrustFilter(40)">Some evidence (40+)</button>
+        <button class="wl-trust-btn" data-trust="70" onclick="wlSetTrustFilter(70)">Strong evidence (70+)</button>
+        <button class="wl-trust-btn" data-trust="90" onclick="wlSetTrustFilter(90)">Fullest evidence (90+)</button>
       </div>
       <div id="wl-trust-current" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
     </div>

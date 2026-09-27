@@ -10433,9 +10433,9 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
 
     def _tier_label(s):
         if s < 40: return "New — no badge yet"
-        if s < 70: return "Established — blue badge"
-        if s < 90: return "Trusted — green badge"
-        return "Highly Trusted — gold badge + featured at top of results"
+        if s < 70: return "Some evidence — blue badge"
+        if s < 90: return "Strong evidence — green badge"
+        return "Fullest evidence — gold badge + featured at top of results"
 
     # Category-specific credential reference used in system prompt
     _TS_CREDENTIALS = {
@@ -10613,9 +10613,10 @@ async def aa_coach(req: AACoachRequest, background_tasks: BackgroundTasks):
         "MISSION 2 — TRUST SCORE MAXIMISATION\n"
         "The Trust Score (0–100) is the seller's most important asset.\n"
         "  0–39:  New — no badge\n"
-        "  40–69: Established — blue badge\n"
-        "  70–89: Trusted — green badge\n"
-        "  90–100: Highly Trusted — gold badge, top of search results\n\n"
+        "  40–69: Some evidence — blue badge\n"
+        "  70–89: Strong evidence — green badge\n"
+        "  90–100: Fullest evidence — gold badge, top of search results\n"
+        "  (CC-005 / RUL-088: the bands name the STRENGTH OF EVIDENCE, never a quality of the person -- never call a seller trusted, trustworthy or reliable.)\n\n"
         "STEPS:\n"
         "1. Read every field. Identify ALL credentials mentioned: qualifications, registrations, "
         "certifications, memberships, reference letters, experience years, trade tickets.\n"
@@ -13714,9 +13715,9 @@ def accept_main_eula(email: str, _key: str = Depends(auth.require_api_key),
 # Tier thresholds (locked — Principle A5)
 TRUST_TIERS = [
     (0,  39,  "New",            "grey"),
-    (40, 69,  "Established",    "blue"),
-    (70, 89,  "Trusted",        "green"),
-    (90, 100, "Highly Trusted", "gold"),
+    (40, 69,  "Some evidence",    "blue"),    # CC-005 / TRUST-WORDS-1 (27 Sep 2026): evidence strength, never
+    (70, 89,  "Strong evidence",  "green"),   # a quality of the person (RUL-088, weakest-holder test)
+    (90, 100, "Fullest evidence", "gold"),
 ]
 
 # RUL-142 (David, 18 Sep 2026; built 24 Sep): the universal cap rises from 30 to 40 so rising
@@ -14023,7 +14024,7 @@ _CATEGORY_SIGNALS = {
     #   Regular seller, 1 cert + 1 membership         → 40 + ~15 = 55 (Established ✓)
     #   Serious seller, 2 certs + 2 memberships        → 40 + ~25 = 65 (Established ✓)
     #   Expert, dual membership + named role + certs   → 40 + ~45 = 85 (Trusted ✓)
-    #   Top of field, national role + full profile     → 40 + ~55 = 95 (Highly Trusted ✓)
+    #   Top of field, national role + full profile     → 40 + ~55 = 95 (Fullest evidence ✓)
     "Travel": {
         "category.travel.asata_member":      {"name": "ASATA membership", "points": 10, "how_to_earn": "Upload ASATA membership number — verified against the public member register."},
         "category.travel.iata_accredited":   {"name": "IATA accreditation", "points": 10, "how_to_earn": "Upload IATA agency code — verified via IATA CheckACode where available."},

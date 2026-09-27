@@ -31833,5 +31833,55 @@ def rg_lang_cost_rail_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the listing language draft checks the ceiling first and logs every call")]
 
+
+@entry("RG-0526", "TRUST-WORDS-1: Trust Score bands name the strength of EVIDENCE, never a quality of the person -- "
+       "no 'Trusted' / 'Highly Trusted' / 'Established' label anywhere the score is shown or filtered",
+       LOCKED, fixed_on="2026-09-27",
+       scope="ms.js (trustTier, sbScoreBadge, the Local Market detail label, the tier showcase, both filter label "
+             "maps, both trust bars + the standing explainer and new-seller line, the next-band nudge, the embedded "
+             "Terms table); marketsquare.html (both filter chip rows, the guidance and floor text); quick.html = "
+             "genie/HARNESS.html trustBand; eula_clean.html + terms.html Trust Score table; bea_main.py TRUST_TIERS, "
+             "the AI coach's band labels and prompt; the four app_i18n files + quick_i18n.json carry every new phrase "
+             "(migration 062 loads them). SCOPE: every screen, every language. CLASS (RUL-088 + the weakest-holder "
+             "test, CC-005): a label must be true for the weakest seller in the band, so it may name only the "
+             "strength of the evidence. David approved the wording as written, 27 Sep 2026 (RUL-186).",
+       ref="CC-005, RUL-088, RUL-186, scripts/apply_trust_words.py.")
+def rg_trust_words_1():
+    bad = []
+    banned = ("'Highly Trusted'", "'Trusted'", "'Established'", "Highly Trusted (90)", "Trusted+ (70)",
+              "Established+ (40)", "{n:'Highly trusted'", "{n:'Trusted'", "{n:'Established'",
+              ">Highly Trusted<", ">Trusted<", ">Established<", "Highly Trusted sellers have",
+              "Highly Trusted \\u2014", "Highly Trusted \u2014", "Trusted \u2014 green badge", "Established \u2014 blue badge",
+              '"Highly Trusted"', '"Trusted",', '"Established",')
+    seen = 0
+    for f in ("ms.js", "marketsquare.html", "quick.html", "genie/HARNESS.html", "eula_clean.html", "terms.html", "bea_main.py"):
+        src = repo_file(f)
+        if src is None:
+            continue
+        seen += 1
+        for b in banned:
+            if b in src:
+                bad.append("%s still carries %r" % (f, b))
+    if not seen:
+        return [(INFO, "NOT EVALUATED - the app files are not readable from here")]
+    ms = repo_file("ms.js") or ""
+    if ms.count("It is a score, not a guarantee or an assessment of character.") < 2:
+        bad.append("the standing explainer is missing from a trust bar")
+    if "A new seller simply has less evidence" not in (repo_file("marketsquare.html") or ""):
+        bad.append("the new-seller line is missing from the filter guidance")
+    import json as _j
+    for l in ("af", "zu", "xh", "nso"):
+        t = repo_file("roles/app_i18n_%s.json" % l)
+        if t is None:
+            continue
+        d = _j.loads(t).get("t", {})
+        for k in ("Some evidence", "Strong evidence", "Fullest evidence", "Fullest evidence (90+)",
+                  "A new seller simply has less evidence \u2014 not a mark against them."):
+            if not (d.get(k) or "").strip():
+                bad.append("%s has no translation for %r" % (l, k))
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "evidence-strength labels only, the two standing lines present, four languages carried")]
+
 if __name__ == "__main__":
     sys.exit(main())

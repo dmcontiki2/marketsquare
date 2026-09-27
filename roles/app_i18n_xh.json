@@ -1715,7 +1715,17 @@
   "Sign in first to add your banking details.": "Qala ungene ukuze wongeze iinkcukacha zakho zebhanki.",
   "Your listing goes live on the free plan straight away. Your account details, plan and banking details can wait — we email you a sign-in link.": "Isibhengezo sakho siyabonakala kwangoko kwisicwangciso sasimahla. Iinkcukacha zeakhawunti yakho, isicwangciso neenkcukacha zebhanki zingalinda — sikuthumelela ikhonkco lokungena nge-imeyile.",
   "We check your ID number against the Home Affairs population register and your listings show the green tick. This is optional: buyers can request introductions as soon as your uploaded ID is confirmed.": "Sijonga inombolo yakho ye-ID kwirejista yabemi yeMicimbi yezeKhaya, kwaye izibhengezo zakho zibonisa uphawu oluluhlaza. Oku kukhetho: abathengi bangacela iintshayelelo xa nje i-ID yakho oyilayishileyo iqinisekisiwe.",
-  "Confirm the name on your account →": "Qinisekisa igama elikwiakhawunti yakho →"
+  "Confirm the name on your account →": "Qinisekisa igama elikwiakhawunti yakho →",
+  "Some evidence": "Obunye ubungqina",
+  "Strong evidence": "Ubungqina obomeleleyo",
+  "Fullest evidence": "Ubungqina obupheleleyo",
+  "Some evidence (40+)": "Obunye ubungqina (40+)",
+  "Strong evidence (70+)": "Ubungqina obomeleleyo (70+)",
+  "Fullest evidence (90+)": "Ubungqina obupheleleyo (90+)",
+  "0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence": "0 · Usemtsha · 40 · Obunye ubungqina · 70 · Ubungqina obomeleleyo · 90 · Ubungqina obupheleleyo",
+  "Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.": "I-Trust Score ibonisa ubungqina obunikezwe ngumthengisi kunye nokuhlola esikugqibileyo. Linqaku, ayisosiqinisekiso okanye uvavanyo lwesimilo somntu.",
+  "A new seller simply has less evidence — not a mark against them.": "Umthengisi omtsha unobungqina obuncinci nje — asiyonto embi ngaye.",
+  "to see sellers by the evidence they have supplied. Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character. A new seller simply has less evidence — not a mark against them.": "ukuze ubone abathengisi ngokobungqina ababunikezileyo. I-Trust Score ibonisa ubungqina obunikezwe ngumthengisi kunye nokuhlola esikugqibileyo. Linqaku, ayisosiqinisekiso okanye uvavanyo lwesimilo somntu. Umthengisi omtsha unobungqina obuncinci nje — asiyonto embi ngaye."
  },
  "en": [
   "KE",
@@ -2219,6 +2229,9 @@
   "You have obtained all necessary consents from any identifiable persons appearing in photos (including model releases where required) and from any property owners whose property is depicted, where such consent is required by applicable law;",
   "Nothing in this EULA limits any non-waivable right you have under applicable federal or state law. Where a state consumer-protection statute grants you mandatory rights or remedies, those prevail over any conflicting provision of this EULA.",
   "Technically process Your Content as needed for Platform operation: resizing, cropping, compression, format conversion, thumbnail generation, and watermarking for display optimisation — without material alteration of the substantive content;",
-  "The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:"
+  "The following South African Acts are mandatory public law and cannot be waived, contracted out of, or overridden by this EULA. If any provision of this EULA conflicts with these Acts, the relevant Act prevails to the extent of the conflict:",
+  "Some evidence — blue badge; standard listing position",
+  "Strong evidence — green badge; higher visibility",
+  "Fullest evidence — gold badge + featured position"
  ]
 }

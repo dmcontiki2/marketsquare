@@ -477,7 +477,7 @@ in the HOOK (kept by David's choice); the snap clip itself is 100% the male voic
 ---
 
 ## CC-005 · Trust Score reads as a SCORE, never a verdict about a person
-**Stage:** 1/8 SPEC WRITTEN — awaiting David's wording sign-off, then copy sweep
+**Stage:** DONE 27 Sep 2026 — David approved the wording as written (RUL-186); copy sweep built by scripts/apply_trust_words.py across ms.js, marketsquare.html, quick.html, the Terms, bea_main.py and all four languages; asserted by RG-0526. [was: 1/8 SPEC WRITTEN — awaiting David's wording sign-off, then copy sweep]
 **Opened:** 1 Sep 2026 · **Owner:** David (wording) / Claude (implementation)
 **Source decision:** RUL-088 (this session) · extends RUL-072 · sibling of CHILD-SAFETY-WORDING-1 (RG-0238)
 
