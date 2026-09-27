@@ -83,10 +83,12 @@
       "last_seen": "2026-09-27",
       "sev": "MEDIUM",
       "source": "cc_age_check (Monday lane)",
-      "status": "SCHEDULED",
+      "status": "CLOSED",
       "summary": "cc_age 2026-09-27 (Sunday, off-lane): CC-002 open 109d, CC-005 open 26d vs the 7d threshold - still both David's sign-offs. cc_age 2026-09-26 (Saturday, off-lane): CC-002 open 108d, CC-005 open 25d vs the 7d threshold - still both David's sign-offs. cc_age 2026-09-25 (off-lane): CC-002 open 107d, CC-005 open 24d vs the 7d threshold. cc_age 2026-09-24: CC-002 open 106d, CC-005 open 23d. cc_age 2026-09-23: CC-002 open 105d, CC-005 open 22d against the 7d threshold. Stays SCHEDULED: both are David's sign-offs (canon call + wording), not technical forks. cc_age 2026-09-14: CC-002 open 96d and CC-005 open 13d against the 7d threshold - both past it, CC-002 now a day past the week David deferred it to. Stays SCHEDULED: landing CC-002 is a canon call (its staged edits were built on the RETIRED five-tier model), and that call is David's.",
       "disposition": "FORMALLY DEFERRED 2026-08-21 (attended session, reflected here by the watch) — CC-002 is ~10 open product/pricing questions in AWAITING_DAVID.md, several touching the EULA and one a live payment path, against SOFT-to-PUBLIC 29 Aug / FULL LAUNCH 1 Sep (RUL-001). Target: first post-launch week, from Mon 8 Sep 2026. David's veto point: name any single item that must land before launch and it lands on its own.",
-      "last_note": "2026-09-18: cc_age_check re-ran off-lane (cheap date check) - CC-002 open 100d (4/5 STAGED), CC-005 open 17d (1/8 spec written), both past the 7d threshold. Stays SCHEDULED - both are David's calls."
+      "last_note": "2026-09-18: cc_age_check re-ran off-lane (cheap date check) - CC-002 open 100d (4/5 STAGED), CC-005 open 17d (1/8 spec written), both past the 7d threshold. Stays SCHEDULED - both are David's calls.",
+      "closed": "2026-09-27",
+      "closed_evidence": "cc_age_check.py re-run 27 Sep: 'none aged' - resolved CC-001..CC-005. CC-002 SUPERSEDED by RUL-107 (its package targeted the retired five-tier model, never landed); CC-005 DONE - David approved the Trust Score wording as written (RUL-186), built by scripts/apply_trust_words.py, live 73faf8d (server ms.js/index/quick/main.py carry 'Fullest evidence', 0 'Highly Trusted'; migration 062 loaded all four languages), RG-0526 holding."
     },
     "DW-011": {
       "first_seen": "2026-08-03",
@@ -1631,9 +1633,11 @@
       "last_seen": "2026-09-27",
       "sev": "LOW",
       "source": "cost_compliance_sweep.py NEW WARN vs 23 Sep",
-      "status": "OPEN",
+      "status": "CLOSED",
       "summary": "27 Sep: STILL WARN - cost sweep exit 1, only WARN '_lang_ai' (now bea_main.py:29463); no CRITICAL; identical to 26 Sep apart from line numbers. | 26 Sep: STILL WARN - cost sweep exit 1, only WARN is '_lang_ai - helper; caller logs spend, but add a ceiling check' (now bea_main.py:27892); no CRITICAL; the sweep is identical to 25 Sep apart from line numbers. | 25 Sep: STILL WARN - cost sweep exit 1, only WARN is '_lang_ai - helper; caller logs spend, but add a ceiling check' (now bea_main.py:27704); no CRITICAL. | bea_main.py:25968 _lang_ai helper has no platform ceiling check; bounded by RG-0439 lane caps.",
-      "next_action": "Same rail fix as DW-142; sweep with no WARN on _lang_ai closes it."
+      "next_action": "Same rail fix as DW-142; sweep with no WARN on _lang_ai closes it.",
+      "closed": "2026-09-27",
+      "closed_evidence": "Cost sweep re-run 27 Sep ~07:1xZ after LANG-COST-RAIL-1 (681e1d0, live on the server: main.py carries it): _lang_ai -- ceiling OK spend-log OK, sweep exit 0, no WARN. Ledger RG-0525 LOCKED and holding."
     },
     "DW-150": {
       "first_seen": "2026-09-24",
@@ -1718,9 +1722,11 @@
       "last_seen": "2026-09-27",
       "sev": "LOW",
       "source": "watch check 1 (site pulse) GET /payment/test",
-      "status": "OPEN",
+      "status": "CLOSED",
       "summary": "27 Sep: STILL BLIND - anonymous GET /payment/test 401 admin_required; substitute: subscription_monitor paystack UP 'HTTP 403; key ok'. | 26 Sep: STILL BLIND - anonymous GET /payment/test now answers 401 {'code':'admin_required'} (403 on 25 Sep; same gate, same code; /dashboard/bit likewise 401). Substitute evidence today: subscription_monitor paystack UP 'HTTP 403; key ok'. | The watch's anonymous GET /payment/test now answers 403 {'code':'admin_required'} -- by design since SEC-GATE-1 (f780893, 24 Sep 08:49Z), same answer from 127.0.0.1 on the box. The payment leg of check 1 is therefore blind to the watch (instrument debt, not an app fault). Substitute evidence today: subscription_monitor paystack UP 'key ok'.",
-      "next_action": "An attended session re-points check 1's payment leg at the subscription_monitor paystack row (or an authenticated probe); closes when the watch reads a payment verdict again."
+      "next_action": "An attended session re-points check 1's payment leg at the subscription_monitor paystack row (or an authenticated probe); closes when the watch reads a payment verdict again.",
+      "closed": "2026-09-27",
+      "closed_evidence": "The watch's payment verdict re-pointed (task amended 27 Sep): the paystack row of subscription_monitor.py, read on the box 07:2xZ: status UP, key_state ok, 'HTTP 403; key ok'. /payment/test answering 401 is by design (SEC-GATE-1) and is no longer read as blindness."
     },
     "DW-159": {
       "first_seen": "2026-09-25",
@@ -3778,13 +3784,12 @@
     "closed": [
       "DW-159",
       "DW-160",
-      "DW-162"
-    ],
-    "still_open": [
-      "DW-010",
+      "DW-162",
       "DW-149",
-      "DW-158"
+      "DW-158",
+      "DW-010"
     ],
+    "still_open": [],
     "checks_run": "12 of 12 applicable"
   }
 }
