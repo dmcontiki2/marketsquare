@@ -1246,8 +1246,38 @@ def main():
     report["standup"] = _standup_lane()
     report["host_queue"] = _hostqueue_lane()
     report["screen_walk"] = _screen_walk_lane()
+    report["wave_witness"] = _wave_witness_lane()
     _flush()
     return 0
+
+
+def _wave_witness_lane():
+    """WITNESS-IN-AGENT-1 (27 Sep 2026). wave_hygiene_status.json says its three proofs are
+    're-run every maintenance loop by scripts/wave_hygiene_witness.py' -- but nothing in the
+    loop ran it, so on 27 Sep 2026 the witness aged past 14 days and ledger RG-0175 read a
+    POPIA-suppression property as REGRESSED with no code having changed. A producer that
+    lives in a sentence is not a producer (BACKUP-IN-AGENT-1); it lives here now.
+    Skipped on the origin (the witness belongs to the working tree). Hard cap 150 s, never raises."""
+    rec = {"ran": False, "state": "NOT_MEASURED", "outcome": ""}
+    if os.path.realpath(REPO).startswith("/opt/marketsquare-src"):
+        rec["outcome"] = "skipped: the witness is refreshed from the working tree only"
+        say("wave witness lane: %s" % rec["outcome"])
+        return rec
+    try:
+        prod = os.path.join(REPO, "scripts", "wave_hygiene_witness.py")
+        if not os.path.isfile(prod):
+            rec["outcome"] = "producer scripts/wave_hygiene_witness.py missing"
+        else:
+            rec["ran"] = True
+            r = subprocess.run([sys.executable, prod], cwd=REPO, capture_output=True, text=True,
+                               timeout=150)
+            rec["state"] = "OK" if r.returncode == 0 else "FAILED"
+            tail = [l for l in ((r.stdout or "") + (r.stderr or "")).splitlines() if l.strip()]
+            rec["outcome"] = " | ".join(tail[-4:])[:400] if tail else "(no output)"
+    except Exception as e:
+        rec["outcome"] = "FAILED: %s %s" % (type(e).__name__, str(e)[:120])
+    say("wave witness lane: %s -- %s" % (rec["state"], rec["outcome"][:160]))
+    return rec
 
 
 def _screen_walk_lane():

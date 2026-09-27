@@ -31580,5 +31580,72 @@ def rg_sent_list_1():
     return [(INFO, "sent requests render: string names, the listing title, escaped")]
 
 
+
+@entry("RG-0519", "COACH-HIRED-1: the AI trust plan's verified-client step always names the 'I hired them' tap -- "
+       "the model's wording may drift, the server's wiring may not",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py trust_score_guidance(), the loop that wires each AI-written step to its signal. SCOPE: "
+             "every category and every market -- the guard sits after the model, not in the prompt. FOUND 27 Sep "
+             "2026 by the maintenance loop: RG-0373 passed at 05:3x and read REGRESSED at 05:5x with no code "
+             "change, because the model rewords the plan on every call and one wording of the referral step no "
+             "longer named the only button that earns it. Probed three fresh plans the same minute: all three "
+             "named it, so the red was a sometimes-fault, which is exactly the kind a prompt cannot close. FIX: "
+             "(a) a step whose words say 'hired' is matched to the referral signal first, whatever points the "
+             "model wrote; (b) a step matched to a referral signal whose words do not say 'hired' is given the "
+             "canonical _SIGNAL_HOWTO wording and do='wait'. Source half here; RG-0373 is the live half and "
+             "becomes deterministic once this ships.",
+       ref="RG-0373 (COACH-EARNABLE-2), RUL-142 (verified clients via POST /intros/{id}/hired).")
+def rg_coach_hired_1():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py not readable from here")]
+    i = src.find("async def trust_score_guidance(")
+    body = src[i:i + 16000] if i >= 0 else ""
+    bad = []
+    if not body:
+        bad.append("trust_score_guidance is gone")
+    else:
+        if body.count("COACH-HIRED-1") < 2:
+            bad.append("one of the two COACH-HIRED-1 guards is gone")
+        if '"hired" not in str(_st.get("action") or "").lower()' not in body:
+            bad.append("a referral step without the 'I hired them' words is no longer re-worded")
+        if '_st["action"] = _signal_howto(_st["signal_id"], "")[1]' not in body:
+            bad.append("the re-wording no longer uses the canonical how-to text")
+    h = src.find('"universal.referral_1":           ("Get your first verified client"')
+    if h < 0 or "I hired them" not in src[h:h + 300]:
+        bad.append("the canonical referral how-to no longer names 'I hired them'")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the verified-client step is matched by its words and always names the 'I hired them' tap")]
+
+
+@entry("RG-0520", "WITNESS-IN-AGENT-1: the wave-hygiene witness is refreshed by the maintenance loop in CODE -- "
+       "a POPIA suppression proof can no longer go red just because fourteen days passed",
+       LOCKED, fixed_on="2026-09-27",
+       scope="scripts/maintenance_agent.py _wave_witness_lane(), called from the run's lane block, producing "
+             "wave_hygiene_status.json that RG-0175 judges. SCOPE: the working-tree witness (skipped on the "
+             "origin). FOUND 27 Sep 2026: the witness itself says its proofs are 're-run every maintenance loop "
+             "by scripts/wave_hygiene_witness.py', but no line of the loop ran it; its last run was 13 Sep "
+             "05:38Z, and at 05:38Z today RG-0175 flipped to REGRESSED between two ledger runs with nothing "
+             "changed. Same class as BACKUP-IN-AGENT-1: a producer that lives in a sentence is not a producer. "
+             "Re-run the same session: all three proofs ok (tests/test_wave_hygiene.py, test_intl_templates.py).",
+       ref="RG-0175 (WAVE-HYGIENE-1), BACKUP-IN-AGENT-1, RG-0456 (screen walk witness, same pattern).")
+def rg_witness_in_agent_1():
+    src = repo_file("scripts/maintenance_agent.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - scripts/maintenance_agent.py not readable from here")]
+    bad = []
+    if "def _wave_witness_lane(" not in src:
+        bad.append("_wave_witness_lane is gone")
+    if 'report["wave_witness"] = _wave_witness_lane()' not in src:
+        bad.append("the run no longer calls the wave witness lane")
+    if "wave_hygiene_witness.py" not in src:
+        bad.append("the lane no longer runs scripts/wave_hygiene_witness.py")
+    if repo_file("scripts/wave_hygiene_witness.py") is None:
+        bad.append("the producer scripts/wave_hygiene_witness.py is missing")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the maintenance loop refreshes the wave-hygiene witness on every run")]
+
 if __name__ == "__main__":
     sys.exit(main())

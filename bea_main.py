@@ -15211,9 +15211,16 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
         if not isinstance(_st, dict):
             continue
         _src = None
+        # COACH-HIRED-1 (27 Sep 2026): a step whose words name the 'I hired them' tap belongs
+        # to the verified-client signal whatever points the model wrote beside it.
+        if "hired" in str(_st.get("action") or "").lower():
+            for _c in _pool:
+                if str(_c["id"]).startswith("universal.referral"):
+                    _src = _c
+                    break
         try:
             _want = int(_st.get("points") or 0)
-            for _c in _pool:
+            for _c in ([] if _src else _pool):
                 if int(_c["points"]) == _want:
                     _src = _c
                     break
@@ -15227,6 +15234,14 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
             _st.setdefault("do", _DO.get(_src["id"], "credential"
                                          if _src["id"].startswith("category.") else "wait"))
             _st.setdefault("needs", _signal_howto(_src["id"], _src.get("how", ""))[0])
+        # COACH-HIRED-1 (27 Sep 2026): the model rewords every call, and one wording of the
+        # verified-client step dropped the name of the only button that earns it (ledger
+        # RG-0373 read red on a live probe). The words for this step are load-bearing, so a
+        # referral step that does not name 'I hired them' gets the canonical wording.
+        if (str(_st.get("signal_id") or "").startswith("universal.referral")
+                and "hired" not in str(_st.get("action") or "").lower()):
+            _st["action"] = _signal_howto(_st["signal_id"], "")[1]
+            _st["do"] = "wait"
     guidance["steps"]         = _steps
     guidance["ai_available"]  = True
     guidance["current_score"] = current_score
