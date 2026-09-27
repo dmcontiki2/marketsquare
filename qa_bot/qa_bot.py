@@ -47,9 +47,22 @@ warnings.filterwarnings("ignore", category=SyntaxWarning)   # the app source has
 LIVE    = os.environ.get("MS_LIVE", "/var/www/marketsquare")
 SRC     = os.environ.get("MS_SRC", "/opt/marketsquare-src")
 STATE   = os.environ.get("QA_STATE", "/var/lib/trustsquare-qabot")
-# The bot attacks through the FRONT DOOR a stranger uses (https://trustsquare.co -> nginx -> app),
-# so nginx-level locks count and nginx-level holes show. The name is pinned to this box
-# (127.0.0.1) so the attack never leaves the server and Cloudflare's rate limits do not apply.
+# QA-PIN-TRUTH-1 (27 Sep 2026) -- READ THIS BEFORE DEBUGGING A 403 FROM THE FRONT DOOR.
+# The bot AIMS at the front door a stranger uses (https://trustsquare.co -> nginx -> app), and the
+# name is pinned to this box (127.0.0.1) so the attack never leaves the server and Cloudflare's
+# rate limits do not apply. Those two facts FIGHT EACH OTHER, and the fight is why every probe in
+# the 25 Sep gate reports came back 403 (640/640 at 08:07Z, 629/629 at 07:18Z):
+#   the origin nginx accepts connections only from Cloudflare's published ranges, and a
+#   loopback-pinned request arrives from 127.0.0.1, so nginx refuses it BEFORE the app.
+# It is NOT the Cloudflare bad-User-Agent rule. PROBED 27 Sep: this bot's own UA
+# ("TrustSquare-QA-Bot/1") gets 200 from /health through the edge; only the bare urllib UA gets
+# 403 error code 1010. Three stand-ups chased a client-side UA bug that never existed because the
+# comment below used to claim the pinned hop was "exactly the path a visitor takes".
+# So the front-door canary is EXPECTED to fail here and choose_vantage() is EXPECTED to fall back
+# to the app's own loopback port, naming nginx and the edge as not covered. That is the honest
+# measurement available from on the box; it is not a bug to fix in this file, and it needs no
+# server hands. Covering nginx and the edge for real would mean letting the probes out through
+# Cloudflare -- a different measurement with different rate limits, not a one-line change.
 BASE    = os.environ.get("QA_BASE", "https://trustsquare.co")
 PIN_HOST = os.environ.get("QA_PIN_HOST", "trustsquare.co")
 SPEC_URL = os.environ.get("QA_SPEC_URL", "http://127.0.0.1:8000/openapi.json")   # route list, internal only
@@ -147,8 +160,14 @@ def mint_session(email, secret):
 # ── the app's routes: live OpenAPI + the source of each handler ─────────────────────────
 def pin_front_door():
     """Resolve the public hostname to this box, so requests go through the local nginx with the
-    real certificate and virtual host -- exactly the path a visitor's request takes after
-    Cloudflare -- without ever leaving the server."""
+    real certificate and virtual host, without ever leaving the server.
+
+    NOT the path a visitor's request takes after Cloudflare, and this docstring used to say it was
+    (QA-PIN-TRUTH-1, 27 Sep 2026). A visitor's request reaches nginx FROM A CLOUDFLARE IP; this one
+    reaches it from 127.0.0.1, and the origin's Cloudflare-ranges rule refuses that with 403 before
+    the app is reached. The certificate and virtual host are real; the CLIENT ADDRESS is not, and
+    the client address is what the origin lock judges. Expect the front-door canary in
+    choose_vantage() to fail and the run to be the narrower app-loopback measurement."""
     import socket
     real = socket.getaddrinfo
 
