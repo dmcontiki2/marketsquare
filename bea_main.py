@@ -2126,6 +2126,12 @@ def _ts_active_provider():
     _TS_AI_CACHE.update(prov=prov, standing=standing, override=override, expires=expires if override else None, ts=now)
     return prov
 
+# LANE-TRUTH-1: every ai_provider.complete() without provider= follows the live standing lane.
+try:
+    _ts_ai.ACTIVE_RESOLVER = _ts_active_provider
+except Exception:
+    pass
+
 def _ts_models_for(prov):
     try:
         return _ts_ai.TASK_MODEL.get(prov, _ts_ai.TASK_MODEL["anthropic"])
@@ -5413,6 +5419,7 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
         _gc = database.get_db()
         try:
             _d["seller_can_receive"] = _seller_intro_gate(_gc, _d.get("seller_email") or "") is None
+            _d["seller_id_checked"] = _seller_id_checked(_gc, _d.get("seller_email") or "")   # RUL-188: warning only
         finally:
             _gc.close()
     except Exception:
@@ -7896,26 +7903,32 @@ def close_user_account(email: str,
 # via the agency's own verification (Agency tier is free + verified).
 # Returns an HTTPException to raise (caller closes its own conn first), or None if clear.
 def _seller_intro_gate(conn, seller_email):
+    """ID-NEVER-BLOCKS-1 (RUL-188, David 27 Sep 2026): "i also decided not to allow the ID verification
+    to stop a flow". An unchecked ID no longer holds introductions; the buyer is WARNED instead
+    (RUL-039: informed consent, not gatekeeping). The ID check itself is _seller_id_checked()."""
     if not seller_email:
         return HTTPException(status_code=409,
             detail="Listing has no seller \u2014 cannot accept introductions")
+    return None
+
+
+def _seller_id_checked(conn, seller_email):
+    """True when the seller holds a checked ID document or is an active agent of a verified agency.
+    Drives the buyer's warning only -- never a refusal (RUL-188)."""
+    if not seller_email:
+        return False
     em = seller_email.lower().strip()
     row = conn.execute(
         "SELECT id_verified_at FROM users WHERE lower(email)=?", (em,)
     ).fetchone()
     if row and row["id_verified_at"]:
-        return None
+        return True
     ag = conn.execute(
         """SELECT 1 FROM agency_members m JOIN agencies a ON a.id = m.agency_id
            WHERE lower(m.agent_email)=? AND m.status != 'removed' AND a.verified = 1
            LIMIT 1""", (em,)
     ).fetchone()
-    if ag:
-        return None
-    return HTTPException(status_code=403,
-        detail="This seller hasn't completed ID verification yet, so "
-               "introductions to their listings are paused for your safety. "
-               "Verified sellers show the ID badge on their profile.")
+    return bool(ag)
 
 
 # ══ ACCOUNT-BIND-1 (5 Aug 2026) — charged identity is PROVEN, never asserted ══
@@ -18873,7 +18886,7 @@ def _update_triage_status(fault_code, status):
         _log.error("triage status update failed: %s", exc)
 
 
-def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
+def _send_html_email(to_email: str, subject: str, html: str, plain: str, reply_to: str = None) -> str:
     """One transport for outbound app mail: Resend if configured, else Gmail SMTP.
     Carries MAIL-FALLBACK-1 (22 Jul 2026): a configured-but-unauthorized Resend key
     falls through to Gmail, never short-circuits with 'failed'.
@@ -18889,7 +18902,7 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
                 json={"from": _safe_from(os.getenv("DEMAND_FROM_EMAIL")),
                       "to": [to_email], "subject": subject, "html": html,
-                      "reply_to": os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")},
+                      "reply_to": reply_to or os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")},
                 timeout=20)
             if r.status_code in (200, 201):
                 return "sent"
@@ -18907,7 +18920,7 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str) -> str:
             msg["From"] = "TrustSquare <" + GMAIL_ADDRESS + ">"
             msg["To"] = to_email
             msg["Subject"] = subject
-            msg["Reply-To"] = os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")
+            msg["Reply-To"] = reply_to or os.getenv("SUPPORT_REPLY_TO", "support@trustsquare.co")
             msg.set_content(plain)
             msg.add_alternative(html, subtype="html")
             with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
@@ -27287,6 +27300,18 @@ except Exception as _fares_ex:   # pragma: no cover
 # Called only by the AdvertAgent service (port 8002) with X-Api-Key.
 # Ledger stays in THIS one thin layer (scale-shape invariant 1 + 2).
 
+def _paid_feed_gate_active():
+    """PAID-AI-OPEN-1: True only when a contracted/paid data feed (or the paid-tier master
+    switch) is live. Unreadable flags => True (fail closed, the Pro gate stays)."""
+    try:
+        import feature_flags as _ff
+        if _ff.paid_tiers_enabled():
+            return True
+        return any(_ff.is_provider_live(p) for p in _ff.PAID_PROVIDERS)
+    except Exception:
+        return True
+
+
 @app.post("/tuppence/ai-commit")
 def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key)):
     """Place a hold: balance check + negative 'ai_hold' row, atomically."""
@@ -27304,8 +27329,13 @@ def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key))
         # Gates are OFF for Paystack review; until launch auth ships (LAUNCH-AUTH-1
         # magic-link, lands with Paystack), Tuppence SPENDING stays restricted to the
         # 4 family test accounts (is_superuser=1). Public keeps every FREE feature.
+        # PAID-AI-OPEN-1 (RUL-188, David 27 Sep 2026: "we have launched a month ago already ... there
+        # is no excuse"): the guard's own condition (launch auth live) was met at launch. It now holds
+        # ONLY while launch_switches.mode is not 'live'; in live mode every signed-in user may spend.
+        _mode_row = conn.execute("SELECT mode FROM launch_switches WHERE id=1").fetchone()
+        _is_live = bool(_mode_row and (_mode_row["mode"] or "") == "live")
         _su = conn.execute("SELECT is_superuser FROM users WHERE LOWER(email)=?", (email,)).fetchone()
-        if not (_su and int(_su["is_superuser"] or 0) == 1):
+        if not _is_live and not (_su and int(_su["is_superuser"] or 0) == 1):
             conn.execute("ROLLBACK")
             raise HTTPException(status_code=403,
                 detail="Paid AI features are in closed testing until launch — the free examples and free tools remain fully available.")
@@ -27314,7 +27344,11 @@ def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key))
         # covers Sonnet-plus-feed cost. Block Free/Starter/Agency BEFORE placing the hold,
         # so a gated call never charges and never leaks. Cheap (non-paid-feed) AI stays
         # open to everyone. PRICING AUTHORITY: PRICING_CANON.md §5.
-        if ai_service_tiers.requires_paid_feed(function_id):
+        # PAID-AI-OPEN-1 (RUL-188): the Pro gate exists to stop free Tuppence funding a CONTRACTED
+        # feed. Canon (ai_service_tiers note) says it is dormant while every paid feed is off; the
+        # code enforced it anyway, so buyers could never run a report. It now bites only when a paid
+        # feed or the paid-tier master switch is actually on (fails closed if flags cannot be read).
+        if ai_service_tiers.requires_paid_feed(function_id) and _paid_feed_gate_active():
             _trow = conn.execute(
                 "SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
             _stier = (_trow["seller_tier"] if _trow else "free") or "free"
@@ -27533,7 +27567,7 @@ def _eula_send_notices(conn, mail, dry_run: bool) -> dict:
             continue
         res = mail(em, "Our Terms change on 12 October 2026", _eula_notice_html())
         if res in ("sent", "skipped"):
-            conn.execute("INSERT OR IGNORE INTO eula_notices (email, version, sent_at, outcome) VALUES (?, '1.19', ?, ?)",
+            conn.execute("INSERT INTO eula_notices (email, version, sent_at, outcome) VALUES (?, '1.19', ?, ?) ON CONFLICT DO NOTHING",   # PG-portable (ratchet)
                          (em, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), res))
             conn.commit()
             out["sent" if res == "sent" else "skipped"] += 1
@@ -28628,8 +28662,12 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
         _bz_html = ("<p style=\"font:16px/1.5 system-ui,sans-serif\"><b>" + _buzz_esc(name)
                     + "</b> buzzed you:</p><p style=\"font:20px/1.4 system-ui,sans-serif\">"
                     + _buzz_esc(text) + "</p>")
+        # BUZZ-REPLY-1 (27 Sep 2026, Ripple E2E step 17): a reply to the buzz email reached support, not
+        # the person who buzzed. Both sides switched Buzz on for each other, so the reply goes to the sender
+        # (a key identity has no inbox -- then it stays with support).
         background_tasks.add_task(_send_html_email, receiver, "Buzz from " + name,
-                                  _bz_html, name + " buzzed you: " + text)
+                                  _bz_html, name + " buzzed you: " + text,
+                                  None if _is_key_identity(sender) else sender)
     conn.execute("""INSERT INTO buzz_log (pair_id, from_email, to_email, body, channel, devices)
                     VALUES (?, ?, ?, ?, ?, ?)""",
                  (row["id"], sender, receiver, text, channel or "none", devices))

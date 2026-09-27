@@ -15,7 +15,21 @@ to prove the seam is real. Spend logging is injected by the caller (keeps DB out
 import os, json
 from dataclasses import dataclass
 
-AI_ACTIVE = os.getenv("AI_ACTIVE", "anthropic")   # one place to swap the vendor
+AI_ACTIVE = os.getenv("AI_ACTIVE", "openai")   # startup fallback only; RUL-002 base lane = openai
+# LANE-TRUTH-1 (27 Sep 2026): the LIVE standing lane lives in the DB (launch_switches.ai_active, the
+# AI Providers card). Call sites that passed no provider= used this env default ("anthropic") and so
+# ignored the card -- translations ran on Claude while the card said OpenAI. The app registers its
+# live resolver here; every complete() without provider= now follows the card.
+ACTIVE_RESOLVER = None
+def _active_default():
+    if ACTIVE_RESOLVER is not None:
+        try:
+            v = ACTIVE_RESOLVER()
+            if v:
+                return v
+        except Exception:
+            pass
+    return AI_ACTIVE
 
 _ENVFILE_CACHE = None
 def envkey(*names):
@@ -319,7 +333,7 @@ def complete(messages, *, task="fast", max_tokens=700, system=None, provider=Non
         import ai_breaker as _brk
     except Exception:
         _brk = None
-    prov = provider or AI_ACTIVE
+    prov = provider or _active_default()
     if probe:
         allow_fallback = False
     def _allowed(p):

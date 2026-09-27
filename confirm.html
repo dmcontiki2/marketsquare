@@ -66,6 +66,24 @@
        Their listing will say only that someone they worked for confirmed them.</p>
   </div>
 
+  <!-- CONFIRM-SIGNIN-1 (27 Sep 2026, Ripple E2E step 14): a confirmation counts only from a signed-in
+       person (VOUCH-OTHERS-1), but this page said 'Please sign in first' and gave no way to do it.
+       Sign-in now happens HERE, by 6-digit code, and the confirmation is sent straight after. -->
+  <div id="signin" class="hide">
+    <h1>One quick step so your yes counts</h1>
+    <p>A confirmation only counts from a real person, so we check your email once. It is free and
+       you stay on this page.</p>
+    <div id="siform">
+      <input id="simail" class="yrs" type="email" inputmode="email" autocomplete="email" placeholder="your@email.com">
+      <button class="yes" id="sisend">Email me a 6-digit code</button>
+    </div>
+    <div id="sicodebox" class="hide">
+      <input id="sicode" class="yrs" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">
+      <button class="yes" id="sigo">Confirm</button>
+    </div>
+    <p class="fine" id="sifine">Your address is never shown to the person who asked, and never published.</p>
+  </div>
+
   <div id="done" class="hide">
     <div class="ok"><b>Thank you.</b> <span id="donetxt">That is recorded.</span></div>
   </div>
@@ -104,7 +122,7 @@
 (function(){
   /* RUL-137: 'done' and 'nope' are both EXITS, and every exit carries the free-account
      offer. 'bad' does not - a broken link is not the moment to sell anything. */
-  var show = function(id){ ['load','ask','done','nope','bad'].forEach(function(k){
+  var show = function(id){ ['load','ask','signin','done','nope','bad'].forEach(function(k){
       document.getElementById(k).className = (k===id ? '' : 'hide'); });
     document.getElementById('offer').className =
       (id === 'done' || id === 'nope') ? '' : 'hide'; };
@@ -161,12 +179,46 @@
         document.getElementById('offerfine').textContent = 'No connection just now.';
         b.disabled = false; b.textContent = 'Send me my free link'; });
   };
-  document.getElementById('yes').onclick = function(){
-    var b = this; b.disabled = true; b.textContent = 'Recording…';
-    fetch('/trust/employer-confirm', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({token: token, worked_from: (document.getElementById('yrs').value||'').trim()})})
+  /* CONFIRM-SIGNIN-1: sign in by code on this page, then send the confirmation automatically. */
+  var fine = function(t){ document.getElementById('sifine').textContent = t; };
+  document.getElementById('sisend').onclick = function(){
+    var b = this, m = (document.getElementById('simail').value || '').trim().toLowerCase();
+    if(m.indexOf('@') < 1 || m.indexOf('.') < 0){ fine('That address does not look right \u2014 please check it.'); return; }
+    b.disabled = true; b.textContent = 'Sending\u2026';
+    fetch('/auth/request-link', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: m})})
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
       .then(function(res){
+        b.disabled = false; b.textContent = 'Email me a 6-digit code';
+        if(!res.ok){ fine((res.j && res.j.detail) || 'That did not go through \u2014 please try again.'); return; }
+        document.getElementById('sicodebox').className = '';
+        fine('Code sent to ' + m + '. If it is not there in a minute, check your spam folder.');
+        try{ document.getElementById('sicode').focus(); }catch(e){}
+      })
+      .catch(function(){ b.disabled = false; b.textContent = 'Email me a 6-digit code'; fine('No connection just now.'); });
+  };
+  document.getElementById('sigo').onclick = function(){
+    var b = this, m = (document.getElementById('simail').value || '').trim().toLowerCase(),
+        c = (document.getElementById('sicode').value || '').replace(/\D/g,'');
+    if(c.length !== 6){ fine('The code has 6 digits.'); return; }
+    b.disabled = true; b.textContent = 'Checking\u2026';
+    fetch('/auth/verify-code', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: m, code: c})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        b.disabled = false; b.textContent = 'Confirm';
+        if(!res.ok){ fine((res.j && res.j.detail) || 'That code did not work \u2014 send yourself a new one.'); return; }
+        sendYes(document.getElementById('yes'));
+      })
+      .catch(function(){ b.disabled = false; b.textContent = 'Confirm'; fine('No connection just now.'); });
+  };
+  var sendYes = function(b){
+    b.disabled = true; b.textContent = 'Recording…';
+    fetch('/trust/employer-confirm', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({token: token, worked_from: (document.getElementById('yrs').value||'').trim()})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j, st:r.status}; }); })
+      .then(function(res){
+        if(!res.ok && res.st === 401 && res.j && res.j.code === 'signin_required'){
+          b.disabled = false; b.textContent = 'Yes, they worked for me'; show('signin'); return;
+        }
         if(!res.ok){
           document.getElementById('baderr').textContent = (res.j && res.j.detail) || 'That did not go through.';
           show('bad'); return;
@@ -178,6 +230,7 @@
       })
       .catch(function(){ b.disabled=false; b.textContent='Yes, they worked for me'; });
   };
+  document.getElementById('yes').onclick = function(){ sendYes(this); };
 })();
 </script>
 <script src="/static/ts_report.js?v=6" defer></script>

@@ -7818,10 +7818,12 @@ def rg_id_npr():
     # 1 ── the paid tier must stay a SEPARATE column from the introduction gate.
     # A session "simplifying" these into one would silently make the tick a
     # barrier, which is the exact opposite of David's ruling.
-    i = bea.find("def _seller_intro_gate")
+    # RUL-188 (27 Sep 2026): the ID check moved out of the introduction gate into _seller_id_checked(),
+    # which now drives the buyer's WARNING only. The paid tick must still never be part of it.
+    i = bea.find("def _seller_id_checked")
     gate = bea[i:i + 1400] if i > 0 else ""
     if not gate:
-        out.append((FAIL, "_seller_intro_gate not found"))
+        out.append((FAIL, "_seller_id_checked not found"))
     else:
         if "id_verified_at" not in gate:
             out.append((FAIL, "the introduction gate lost its id_verified_at check"))
@@ -30163,10 +30165,11 @@ def rg_intro_gate_match_1():
     bad = []
     if '_d["seller_can_receive"] = _seller_intro_gate(' not in bea:
         bad.append("GET /listings/{id} no longer carries the server's own seller_can_receive answer")
-    if "if (typeof d.seller_can_receive === 'boolean') return d.seller_can_receive;" not in js:
+    # RUL-188 (27 Sep 2026): the server's answer is still read first; an unchecked ID now WARNS ('unchecked').
+    if "if (typeof d.seller_can_receive === 'boolean' && !d.seller_can_receive) return false;" not in js:
         bad.append("ms.js _msSellerCanReceive no longer reads the server's answer first")
-    if "typeof ld.seller_can_receive === 'boolean'" not in js:
-        bad.append("ms.js unverified-seller gate no longer reads the server's answer first")
+    if "typeof ld.seller_id_checked === 'boolean'" not in js:
+        bad.append("ms.js unverified-seller warning no longer reads the server's seller_id_checked")
     if bad:
         return [(FAIL, "; ".join(bad))]
     try:
@@ -31982,6 +31985,39 @@ def rg_aa_seam_1():
     if "openai" not in lanes:
         return [(FAIL, "AI Features base lane (openai) is not configured: lanes=%s" % lanes)]
     return [(INFO, "AI Features lanes live: %s" % ", ".join(lanes))]
+
+@entry("RG-0530", "RUL-188 LAUNCHED-MEANS-OPEN: paid AI is open to every signed-in customer in live mode, the Pro gate is "
+       "dormant while no paid feed is on, an unchecked ID warns the buyer and never stops an introduction, and every AI "
+       "call without an explicit lane follows the AI Providers card",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py /tuppence/ai-commit (PAID-AI-OPEN-1: closed-testing guard only when mode != live; "
+             "_paid_feed_gate_active()), _seller_intro_gate/_seller_id_checked (ID-NEVER-BLOCKS-1), GET /listings/{id} "
+             "seller_id_checked; ms.js openModal/msUnverifiedGate warn-not-block; ai_provider.ACTIVE_RESOLVER (LANE-TRUTH-1) "
+             "set to _ts_active_provider. CLASS: pre-launch guards that outlived launch; call sites that ignored the "
+             "standing lane (247 translation calls on Claude on 27 Sep while the card said OpenAI).",
+       ref="David 27 Sep 2026 (RUL-188). Promote to LOCKED after the rendered Ripple re-run on the live app.")
+def rg_rul188_open():
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js"); ap = repo_file("ai_provider.py")
+    if bea is None or js is None or ap is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = bea.find('def tuppence_ai_commit'); body = bea[i:i + 4000] if i > 0 else ""
+    if "_is_live" not in body or "if not _is_live and not (_su" not in body:
+        bad.append("the closed-testing guard no longer lifts in live mode (PAID-AI-OPEN-1)")
+    if "requires_paid_feed(function_id) and _paid_feed_gate_active()" not in body:
+        bad.append("the Pro gate bites even with every paid feed off")
+    g = bea.find("def _seller_intro_gate"); gate = bea[g:bea.find("def _seller_id_checked")] if g > 0 else ""
+    if not gate or "id_verified_at" in gate or "status_code=403" in gate:
+        bad.append("RUL-188 BREACH: the introduction gate refuses for want of an ID again")
+    if "Seller ID not yet checked" not in js or "return 'unchecked';" not in js:
+        bad.append("ms.js no longer warns the buyer about an unchecked ID")
+    if "prov = provider or _active_default()" not in ap:
+        bad.append("ai_provider.complete() ignores the live standing lane again (LANE-TRUTH-1)")
+    if "_ts_ai.ACTIVE_RESOLVER = _ts_active_provider" not in bea:
+        bad.append("bea_main no longer registers the live lane resolver")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "paid AI open in live mode; Pro gate dormant with feeds off; ID warns never blocks; lanes follow the card")]
 
 if __name__ == "__main__":
     sys.exit(main())

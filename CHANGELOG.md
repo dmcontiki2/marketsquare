@@ -1,3 +1,2094 @@
+## 2026-09-27 — TRUST-WORDS-1 (CC-005, RUL-186, RG-0526): Trust Score bands name the evidence, not the person
+
+- Labels everywhere: New · Some evidence (40+) · Strong evidence (70+) · Fullest evidence (90+) — replacing Established / Trusted / Highly Trusted (ms.js trustTier, sbScoreBadge, detail labels, tier showcase, filter chips in both filter rows, next-band nudge; quick.html trustBand; Terms table in eula_clean.html, terms.html and the embedded copy; bea_main.py TRUST_TIERS and the AI coach's labels and prompt).
+- Both trust bars and the Local Market filter guidance now carry the two approved lines: the score explainer and the new-seller line.
+- Afrikaans, isiZulu, isiXhosa and Sepedi for every new phrase (app_i18n_* + quick_i18n.json); migration 062 loads them into the translation cache.
+- CHANGE_REGISTER CC-005 → DONE. Built by scripts/apply_trust_words.py (exact-match, refuses on drift).
+
+## 2026-09-27 — Terms v1.19 published, and the app now does what it says (R7: PROPERTY-ONE-1, BUYER-TERMS-1, EULA-1.19, COUNTRY-OPEN-1, KENYA-CONSENT-1, INTRO-WITHDRAW-1)
+
+David, 26–27 Sep 2026, on the Terms review: *"Publish; all re-accept"*, *"One at a time"*, *"Accept all 8"*, and on the
+countries: *"we decided to not add Germany and Botswana for now, please proceed with your option 1"*. His later word on
+banking, given to the other session (RUL-176: *"we dont store the customers banking details"*), wins over the 26 Sep
+"identity only" — this round's banking wording was dropped and that session's removal kept.
+
+- **EULA-1.19** — v1.19 is the text at /terms and in the app (eula_sync.py: one source, three copies). New accounts
+  accept it at once; accounts opened earlier get the clause-15.1 notice by email (the daily sweep, once per account,
+  table `eula_notices`) and as an in-app card, and on **12 October 2026** every earlier acceptance is set aside and each
+  person accepts once, at her next listing, edit, introduction request or top-up (`EULA_V119_EFFECTIVE`, the dated
+  `_EULA_MATERIAL_STEPS`). The notice summary and the Seller Terms box say what changed in five languages.
+- **BUYER-TERMS-1** — a Buyer accepts the Terms once, one tap on the real text, before her first introduction request,
+  Local Market request or top-up; the server refuses first (428) so nothing is held or charged; a plan payment opens
+  the Seller sheet (scroll + two ticks) instead.
+- **PROPERTY-ONE-1** — a request pauses a Property listing under the wallet lock; the next buyer is told why and when;
+  accepting, declining, the buyer withdrawing or the 96-hour removal opens it again; the seller cannot reopen it by
+  hand while a buyer waits; her own pause stays hers; Cars keep their queue. How-it-works and the seller's card say so.
+- **INTRO-WITHDRAW-1** — Terms 5.4 promised withdrawal only by an email that no tool performed. My Space now has a
+  Withdraw button on a request the seller has not answered; the 1T hold returns in full, exactly once.
+- **SENT-LIST-1** — found walking that button in a real browser: every sent request crashed My Space's list (a numeric
+  listing id met `.split`), so no buyer ever saw a request she had sent. The row now names the listing, escaped.
+- **COUNTRY-OPEN-1** — Germany, Botswana and Mozambique are "coming soon": browse only; publishing, introductions and
+  Quick refuse there with a plain sentence, and the country list marks them. South Africa, Namibia and Kenya are open.
+- **KENYA-CONSENT-1** — a Kenyan seller ticks consent once, herself, before her ID upload or a Kenyan property listing
+  goes live (Data Protection Act s.49). Registering with Kenya's ODPC is David's step (OPEN_LOOPS L24;
+  `KENYA_ODPC_HANDOVER.html` has the form's answers).
+- **Terms text** — Schedules H — Kenya and I — Namibia (researched 26 Sep); the merged draft's five short schedules
+  had been placed between Argentina's G6 and G7, and G7 is back after G6; 2.4/9.3 Buyer acceptance; 5.3 Property one at
+  a time; 5.4 withdraw in the app; 13.5 coming soon; 15.1 the express re-acceptance; D8/E9 without the closed EU ODR
+  platform; 9.2 carries the other session's identity-checks row (RUL-178).
+- **BANKING words (RUL-176 follow-through)** — the other session removed the banking route and form; three screens
+  still said "Add your banking details … when you buy Tuppence". They now describe the bank name check, in five
+  languages; the publish note no longer mentions banking.
+- **LM-WORDS-1** — the Local Market tile says the seller pays 1T when the first buyer asks; its in-app clauses 1 and 4
+  say what the code does.
+- **Integration fixes** — Quick's language block regenerated from its source with the other lane's 'Share' carried
+  into roles/quick_i18n.json, and genie/HARNESS.html is again byte-identical to quick.html.
+
+Ledger: RG-0503 (re-aimed to RUL-176/178 by the Circle lane) now also refuses the old banking words on the three
+screens; RG-0511 PROPERTY-ONE-1, RG-0512 BUYER-TERMS-1, RG-0513 EULA-1.19, RG-0514
+KENYA-CONSENT-1, RG-0515 COUNTRY-OPEN-1, RG-0516 LM-WORDS-1, RG-0517 INTRO-WITHDRAW-1, RG-0518 SENT-LIST-1 — each
+red on a deliberate break and green on the real tree. Rulings RUL-181/182/183, with reflections for RUL-176/177/178.
+Translations: migration 061 (af, zu, xh, nso). Stranger test PASS, 324 routes (two new routes declared).
+Cost model impact: none.
+
+## 2026-09-27 — RUL-188 LAUNCHED-MEANS-OPEN + Ripple E2E fixes (RG-0530)
+
+- **PAID-AI-OPEN-1:** the "closed testing until launch" guard in /tuppence/ai-commit now holds only while launch_switches.mode is not live. Live mode = every signed-in customer with Tuppence can buy an AI report (David: "we have launched a month ago ... there is no excuse").
+- **Pro gate dormant with feeds off:** the paid-feed class is Pro-only only while a contracted paid feed or the paid-tier master switch is on (_paid_feed_gate_active), as PRICING_CANON's own note says. Today every paid feed is off, so Jacques can run Collectables (5T) and Property Dossier (3T).
+- **ID-NEVER-BLOCKS-1:** an unchecked seller ID no longer stops an introduction (main app or Local Market). The buyer sees "Seller ID not yet checked" and a safety line; GET /listings/{id} carries seller_id_checked for the warning only.
+- **LANE-TRUTH-1:** ai_provider.complete() without provider= now follows the live AI Providers card (DB standing lane) via ACTIVE_RESOLVER; 247 translation calls ran on Claude on 27 Sep while the card said OpenAI. Startup fallback is now openai (RUL-002).
+- **CONFIRM-SIGNIN-1:** the employer/reference confirmation page signs the person in by 6-digit code on the same page and sends the Yes straight after — no more "Please sign in first" dead end.
+- **BUZZ-REPLY-1:** replying to a Buzz email reaches the person who buzzed, not support.
+- **AI-PREFILL-1:** City and Currency on AI Features forms are real values from the active city, not grey hints.
+- **PRICE-DESC-SYNC-1 / DRAFT-TRUTH-1 / SAVED-BTN-1:** a re-priced listing's "Price:" sentence follows the new price; the edit toast no longer says "live" of a draft; Quick's save button reads Saved/Published, never "Saving…" behind the success card (af/zu/xh/nso words added).
+- Ledger: RG-0530 added; RG-0495 and the NPR entry re-anchored on _seller_id_checked. RULINGS.md RUL-188.
+
+## 2026-09-27 — DOOR-DECLUTTER-1 / DOOR-SHARE-1: Quick door tidied (David, screenshot)
+
+- The five language buttons sit on one line (smaller, no wrap).
+- The saved-listing card ("SUV — Isuzu · Open it") is gone from the door; the arrival screen already gives her the listing and key.
+- "Carry on" (only when an unfinished listing/search exists) and the share link share one bottom line.
+- "Pass Quick on to someone" on the door is now "Share" + a small violet Quick icon (translated af/zu/xh/nso); same share sheet.
+- No scrollbar on the door; at 360x640 the door fits without scrolling. Verified by local render at 397x860 and 360x640.
+
+## 2026-09-27 — Watch open items closed: LANG-COST-RAIL-1 (DW-149), payment verdict re-pointed (DW-158), CC-002 superseded
+
+- `bea_main.py` `_lang_ai()`: the second-language listing draft now checks the platform AI ceiling before each call and logs every call's real tokens (same pattern as I18N-COST-RAIL-1). Cost sweep exit 0 (was 1). Ledger RG-0525.
+- Daily watch task: the payment verdict now comes from the server's subscription monitor (Paystack row: UP + key ok). `/payment/test` is admin-only by design since SEC-GATE-1, so its 401 is no longer read as blindness.
+- `CHANGE_REGISTER.md` CC-002: SUPERSEDED by RUL-107 + PRICING_CANON — its staged package targeted the retired five-tier model and was never landed.
+
+## 2026-09-27 — Maintenance loop: two sometimes-reds closed at the cause (COACH-HIRED-1, WITNESS-IN-AGENT-1)
+
+- Fault queue: 0 new, 0 fix-shipped, 26 verified, 12 closed. Shadow agent run 20260927T054257Z saw 0 and acted on 0; heartbeat confirmed on /dashboard/maint. No escalations in 24 h (no brief written).
+- Ledger before: green (a first pass read RG-0428 NOT EVALUATED because shard 1 installed fastapi mid-process; re-run clean). Ledger after the loop's first re-run: RG-0373 and RG-0175 read REGRESSED with no code change.
+- **COACH-HIRED-1 (RG-0519)** — bea_main.py trust_score_guidance(): the AI rewords the trust plan on every call and one wording of the verified-client step dropped the 'I hired them' button name. Now a step saying 'hired' is matched to the referral signal first, and a referral step that does not name the tap gets the canonical wording and do='wait'. Scope: every category, every market. Needs the nightly ship to reach the live coach; RG-0373 is the live half.
+- **WITNESS-IN-AGENT-1 (RG-0520)** — wave_hygiene_status.json claimed to be re-run every maintenance loop; nothing ran it, so at 05:38Z it aged past 14 days and RG-0175 (POPIA suppression witness) went red. Witness re-run (all three proofs ok, 05:49Z) and scripts/maintenance_agent.py now runs it as a lane on every run.
+- Ledger after: exit 0, every locked fix holding, 21 open.
+
+## 2026-09-27 — RUL-185: Local Market seller pays; low-balance seller is told (LM-LOWBAL-1, LM-429-WORDING-1)
+- David ruled: Local Market keeps "the seller pays" (1T, 2T boosted, once per listing, first buyer), as Terms v1.19 says; agents pay 1T to accept a free request. PRINCIPLE_REQUIREMENTS.md A8 now lists both as (iv) and (v); mirrors propagated.
+- bea_main.py lm_create_intro: when the seller cannot pay, the turned-away buyer now triggers `_lm_low_balance_notice` (e-mail, SMS for a key identity; once a day per listing).
+- bea_main.py lm_create_listing + ms.js: a seller who publishes with less than 1T gets a warning on the spot (`low_tuppence_warning`).
+- ms.js lmSubmitIntro: a 429 from the daily limit now says "try again tomorrow" instead of "wait 7 days".
+- host_queue: AdvertAgent added to the git_push allowlist; the worker pushes to `master` where the remote has no `main` (PUSH-BRANCH-1). The 27 Sep AdvertAgent push had been refused for that reason; CityLauncher's had landed (2e07478 on GitHub main).
+- Ledger RG-0522, RG-0523 (OPEN until live), RG-0524 (LOCKED). rulings_check RUL-185.
+
+## 2026-09-27 — Banking storage removed; the 5 Trust Score points replaced by checks that hold nothing
+
+David, 27 Sep: *"we dont store the customers banking details because that was an earlier option before
+we had Paystack, we dont need it now"* — then, on being shown what that costs: *"Implement 1 to 3 and 4
+as per your suggestion is good, i approve it."* **RUL-176 and RUL-178.**
+
+- **The premise was inverted, and probing first is what found it.** He thought he was losing 5 points.
+  He was **failing to award 9 he had already designed.** The `local_market` identity block declares 23
+  points; only 14 were reachable. `category.lm.phone_verified` (2) was declared and never written
+  although `POST /auth/phone/verify` is a *complete* OTP flow — hashed six-digit code, five-attempt
+  limit, expiry, single use. `category.lm.id_uploaded` (2) is written as **pending** on upload by
+  EVIDENCE-TRUE-2 and could never become earned. `category.lm.id_admin_verified` (5) was never written
+  at all. The last two were **one missing route, not two gaps**: nothing existed for a human to confirm
+  an identity document. Same shape as OPEN_LOOPS L8 and DESIGN-ROUTE-1 — a capability fully declared
+  with no caller.
+
+- **BANKRESOLVE-1 replaces `POST /users/{email}/banking`.** The old endpoint stored account holder,
+  bank, last-4 and branch code and awarded 5 points. It also did not do what it claimed: nothing
+  validated the number, and the name it matched was one *she* typed — both sides of the comparison came
+  from the same person — while no purchase code ever read the stored details, because Paystack takes
+  payment details itself. The new endpoint asks her **bank**, through Paystack's `/bank/resolve`, for
+  the name it holds against the account, and compares that to her verified ID name. **Only the verdict
+  is kept** (`users.bank_name_verified_at` plus the credential). The account number is a local variable
+  for the length of one HTTPS call and is never written to the database, a log line, a response body or
+  an exception message — `scripts/test_identity_verdicts.py` asserts each of those four and fails if a
+  later edit leaks one. Bank codes come from `GET /payment/banks` (Paystack's own list), never a
+  hardcoded table, because a guessed code resolves to the wrong bank.
+
+- **PAYNAME-1 — the strongest check, and it costs nothing.** Where Paystack reports the name on a
+  payment she was making anyway, a **bank has moved money in that name**; compared to her verified ID
+  name that is two independent sources, and strictly stronger than the retired `banking_name_match`.
+  Hooked into both the webhook and the client verify path, and it can never fail a top-up. **A payment
+  with no reported name — most card charges — is NOT MEASURED, never a mismatch:** a Seller who paid by
+  card has not failed a check, she was never given one. RG-0401's rule, applied to a person.
+
+- **PHONE-CRED-1** awards the 2 points the OTP already earned. **ID-CONFIRM-1** adds
+  `POST /admin/identity/confirm`, which earns the pending `id_uploaded` and awards `id_admin_verified`
+  — **mutually exclusive with `id_ai_verified`**, because two routes to one fact must not stack to 10.
+  Identity block after: **18 reachable**, against the block's own "max ~20 from category" intent.
+
+- **The five `users.banking_*` columns are LEFT IN PLACE.** Dropping them is a deletion, reserved to
+  David (SO-3), and migrations here are additive. `migrations/060_identity_verdicts.py` adds three
+  columns that are each a **verdict and a date**, refuses to run if the schema already carries a column
+  that could hold an account number, and never drops anything. Proven idempotent against a real copy of
+  the live schema before shipping (50 columns, no refuse-match, so it cannot jam the migration chain).
+
+- **Carried into the Terms without being asked, because the ruling made it true:** option 4 processes an
+  account number transiently, so 9.2 now carries a narrow row recording only the yes/no and the date and
+  stating in bold what is *not* stored. Saying nothing at all would have been the old row's defect in
+  reverse. `eula_clean_v1.19_DRAFT.html` and the review page both updated; review decisions 2, 3 and 11
+  are marked ANSWERED and the remaining eight renumbered 1–8.
+
+- **The PG-readiness ratchet caught me and I fixed it rather than shipping over it.** My four new
+  timestamp writes used the SQLite date-format function the ratchet counts (15 → 18), taking
+  `predeploy_check.py` to **DANGER**. `_utc_now()` exists for exactly this and its own docstring warns
+  about the trap. Converted all four; verdict back to REVIEW. Gates after: `rulings_check` 150 rulings
+  **0 FAIL**; `test_trust_base40`, `test_trust_evidence_true` and all seven instrument tests exit 0.
+
+- **Found by the post-deploy probe, not by reading the diff: the READ side had been left behind.**
+  `GET /users/{email}/identity-status` was still returning `banking_holder`, `banking_bank`,
+  `banking_account_last4` and `banking_added_at` after the write side was gone — a live surface still
+  describing data we had just undertaken not to hold. All four removed from its SELECT and replaced by
+  the three verdict columns. It now also answers **503 naming `migrations/060_identity_verdicts.py`**
+  if a verdict column is missing, rather than a bare SQL 500: an operator needs to know that the
+  MIGRATION is not there, not that the seller isn't. The test was extended to cover the read side, and
+  checks the SELECT rather than the prose — the docstring legitimately names the fields it removed, and
+  a check that cannot tell an explanation from a live reference is one that gets silenced by rewording.
+
+## 2026-09-27 — GRANT-WHO-1: the +1 Tuppence card shows who you are paying
+- David, 27 Sep 2026, typing "admin" into the grant box: "how do i identify the person i want to send it to?"
+- New admin-only read `GET /admin/tuppence/lookup?q=` — up to 8 accounts by part of a name or email, with plan, country, joined date, ID verified, live listings, balance and grants already given.
+- dashboard.server.html grant card: type a name or email, choose the person, see who it is; Credit only works for a chosen person and the confirm shows name, balance now and balance after. The recent-listers "use" button also looks the person up.
+- Ledger RG-0527.
+
+## 2026-09-27 — FAULT-TEXT-1: complaints carry plain words only (DW-162, RUL-184, RG-0521)
+
+- NEW `fault_text.py` (deployed beside main.py): one cleaner for complaint text. Keeps letters and digits in any language, spaces, line breaks and ordinary punctuation; drops markup/code characters, control, zero-width and direction-override characters, emoji; caps title 150, message 1,000, name 80.
+- `bea_main.py`: POST /app/fault and POST /support/message clean title, message and name before anything is stored (was: trimmed to 200/4000/120, any character).
+- `scripts/maintenance_agent.py`: every AI prompt carrying a complaint (design, classify, patch, rewrite) uses `_complaint()` — cleaned, capped, fenced as data the AI must not obey. The design dossier cleans every field and markdown-escapes the heading. Fails closed to a stricter cleaner if the module cannot be imported.
+- `ts_report.js` (v=8 in marketsquare.html, quick.html, genie/HARNESS.html, support.html) and `support.html`: the box stops at 1,000 characters and shows a live count; name box stops at 80.
+- Ledger RG-0521 (repo half runs the cleaner on hostile input; live half posts a code-only message to the support form in probe mode and expects 400). RULINGS RUL-184 + rulings_check reflections. Found by the QA Bot's nightly code review.
+
+## 2026-09-27 — RUL-187 DEMO-INACTIVE-1: demo examples are marked and take no introductions
+- David: "The demo examples should all be inactive and if users want to use them they should be cautioned/warned that there is no product/service because it is only demo examples."
+- Server: a listing held by a house account (@trustsquare.co / @example.com) or flagged is_demo carries `demo_example: true` on every public read; /intros and /local-market/intro refuse it (409, plain warning) before anything is held or charged. Family test accounts are exempt so they can still walk the flow.
+- App: "Demo example" badge on cards and pages (tap explains); the request button reads "Demo example — no real product or service"; both intro modals refuse with the warning.
+- Ledger RG-0528; rulings_check RUL-187.
+
+## 2026-09-27 — CIRCLE-CAPS-1 built and STAGED (regulars limits 10 / 50 / 200 behind David's switch)
+
+**What David asked (27 Sep, ~02:30 SAST):** "please build it now as a switch that works as you explained."
+
+**Built:** one switch on the +1 page ("Regulars limits", `launch_switches.circle_caps`, default OFF).
+OFF = no limit, the app shows "Your regulars: N". ON = Free 10 / Starter 50 / Pro 200 (Agency 50),
+the Buzz screen shows "N of L regulars" with a bar, the plan cards and Quick list the limits, a new
+connection into a full Circle is refused with the way out named, nobody already connected is cut off,
+and after a downgrade the regulars beyond the new limit that were added under the limits are paused
+for her buzzes only. Strangers unchanged. Behaviour proven on a temp database:
+`scripts/test_circle_caps.py` -> ALL OK.
+
+**Why it is STAGED, not live — a WORK-LOCK-1 breach by this lane, caught before any commit.**
+The banking-terms lane took the lock on bea_main.py / ms.js / RULINGS.md at 00:23Z. This lane edited
+bea_main.py and ms.js at 00:32Z without running `work_lock.py check` (RUL-140). Found at 00:37Z when
+RUL-176 turned out to be taken. Undone: ms.js, dashboard.server.html, quick.html, genie/HARNESS.html
+and roles/quick_i18n.json restored byte-for-byte to HEAD; bea_main.py — which the banking lane had
+already edited on top — had only the 12 Circle hunks reversed, its BANKRESOLVE-1 work untouched and
+compiling. The whole change now lives in `scripts/apply_circle_caps.py` (idempotent, exact anchors,
+refuses while the lock is held; self-test reproduces the built files byte-for-byte).
+
+**Tracked:** RG-0510 CIRCLE-CAPS-1 (OPEN until applied and live). The ruling is written to RULINGS.md
+when the lock clears (RULINGS.md is inside the lock).
+
+### Added the same night — KEEP-CHOICE-1, the downgrade standard (David 27 Sep: "Approved ... make this the standard for regulars, and also for listing slots on a downgrade")
+
+**Ruling text for RULINGS.md (file it under the next free RUL number when the lock clears):**
+THE DOWNGRADE STANDARD — SHE CHOOSES WHAT STAYS ACTIVE, FOR REGULARS AND FOR LISTING SLOTS.
+(a) Before she confirms a downgrade she is told what the lower plan holds against what she has
+("Free holds 2 listings and 10 regulars. You have 8 listings and 50 regulars.").
+(b) A paid month runs to its end date — a move to Free with paid time left is SCHEDULED, not immediate
+(it used to be immediate and forfeited the paid time) — and she ticks meanwhile what stays active.
+(c) If she does not choose: the regulars she buzzed most recently, and the listings most recently
+published, stay active — never random, never the oldest.
+(d) The rest REST: resting regulars can still buzz her, she cannot buzz them; resting listings are
+hidden from buyers. Nothing is deleted. She can swap any time. Moving up wakes everything at once.
+(e) Customers are never told they were put on rest.
+(f) The old "archive down to 2 before switching to Free" refusal is gone. Switching the regulars limits
+ON still cuts nobody off (grandfathered at what she has; that allowance only shrinks, and ends when
+her plan is lowered). Listing rest is NOT behind the regulars switch — it is the downgrade rule itself —
+and applies only at a plan change or her own choice, so sellers already over their slots today are
+untouched until they act.
+**Also fixed on the way:** scheduled downgrades only ever took effect at a server RESTART
+(`_apply_pending_downgrades()` ran once, at import). It now runs hourly.
+**Built in the same staged script** (5 files now incl. route_policy.json: POST /buzz/keep,
+GET/POST /users/{email}/listings/keep, all user-level and bound; a stranger gets 401).
+Test: `scripts/test_circle_caps.py` → regulars OK, listings OK, ALL OK. RG-0510 re-scoped.
+
+### APPLIED 27 Sep 2026 01:28Z (lock clear, repo silent since 01:15Z)
+`apply_circle_caps.py` applied cleanly on top of the banking lane's RUL-176/178 commits (bea_main.py 24
+hunks, ms.js 13, dashboard 4, quick 2, route_policy 2 + the Quick i18n block). Test ALL OK; the three new
+routes answer a stranger 401; no undeclared routes. Rulings filed as **RUL-179** (the switch) and
+**RUL-180** (the downgrade standard); PRICING_CANON §1 carries both; rulings_check 0 FAIL.
+**Board before deploy: 0 REGRESSED.** On the way it read 4 red, none from a rotted fix:
+RG-0504 was this lane's own word ('adverts' in the new messages -> 'listings'); RG-0503 still asserted
+the banking form RUL-176 retired (the banking lane shipped at 01:05Z without re-aiming it) -- RE-AIMED to
+the ruled state, not weakened, reasons in its ref; RG-0154 was deploy debt (session counter re-derived,
+209); RG-0315 was a transient live read that passed on re-run.
+
+## 2026-09-27 — AA-SEAM-1: AI Features service moved onto the base→failover lanes (RG-0529)
+
+- Ripple E2E audit (docs/E2E_RIPPLE_AUDIT_2026-09-27.html) found every AI Features report failing with 503: the AdvertAgent service was hard-wired to one vendor and had no key.
+- AdvertAgent now follows the main app's lane order (OpenAI base with hosted web search, Anthropic failover), forwards the person's own session for the SEC-GATE-1 user check, and passes BEA refusals through as sentences. Commit f9f488f in the AdvertAgent repo.
+- Probed live: /ai/health lanes=[openai]; Collectables report $0.058 and Property Dossier $0.214 delivered sourced reports server-side. In-app runs now stop at the pre-launch closed-testing guard in /tuppence/ai-commit (David's 6 Jul ruling) and, after that, the Pro-only paid-feed gate — both put to David.
+- New ledger entry RG-0529 (LOCKED) asserts the AI Features lanes from the live /ai/health.
+
+## 2026-09-26 — The last open security item closed; two slips from the morning's deploy fixed (INSPECT-FIX-6)
+
+- **QA-11 — POST /agencies/wave-prep is admin-only, with no loopback pass.** It mints one-click sign-in links for any
+  address, and it kept a loopback exemption only because CityLauncher called it over 127.0.0.1 with the public app key.
+  CityLauncher's `mint_agency_console_link` now sends `X-Admin-Key` — the running app's key, which the nightly wave
+  (root) reads from the service secrets file; proven equal to the app's key by hash on the box, never printed. The
+  exemption and the handler's `_local_caller` branch are gone (route_policy.json, bea_main.py). CityLauncher's
+  emailer.py was shipped to the box on its own (the rest of that folder's uncommitted work was already byte-identical
+  to the server), with a backup beside it. Stranger test PASS on the new tree (320 routes).
+- **CARD-WORDS-3** — the morning's CARD-WORDS-2 put 'Free forever' into the free plan's description, which the plan
+  card already prints first, so the card read 'Free forever · Free forever · no card needed' for about an hour. The
+  description is 'no card needed'; the subscription sheet's '2 listing slots · no card needed' carries checked
+  Afrikaans and Claude's isiZulu, isiXhosa and Sepedi (migration 059).
+- **XH-CONCORD-1** — Quick's isiXhosa read 'Nantsi isibhengezo sakho'; *isibhengezo* is class 7, so it is
+  **'Nasi isibhengezo sakho'** (the app already had it right). No other class-7/class-9 slip in either dictionary.
+
+Ledger: RG-0506 (wave-prep answers only the admin key; CityLauncher sends it and never logs it) — red on the deployed
+tree, on the loopback branch put back, on CityLauncher without the header and on a logged key; green on the real files.
+RG-0503 now also catches the doubled free-plan line (red on the morning's ms.js).
+
+## 2026-09-26 — Stand-up: three instrument/routing faults fixed, L8's 26-day zero explained
+
+- **EDGE-STATUS-BLIND-1 (OPEN_LOOPS L20a).** `scripts/regression_ledger.py` told a Cloudflare
+  edge refusal from an app answer in `_get()` (EDGE-BLIND-1, 18 Sep) but **not** in `_status()`,
+  `_post_status()` or `_headers()` — each handed the caller Cloudflare's own 403 as though the APP
+  had said it. Two-sided damage: an entry asserting `/health == 200` CONVICTS a healthy site
+  (RG-0028 did exactly that on the 25 Sep board, printing "Do not deploy over this"), and an entry
+  asserting a route refuses anonymous callers PASSES without the app being reached — the same hole
+  QA-GATE-BLIND-1 found in the deploy gate a day earlier, one layer in. RG-0401 already rules it:
+  an edge refusal is BLIND, never REGRESSED. Fixed as ONE writer, `_edge_refused()`, consulted by
+  all four readers (RG-0421's pattern). **Not weakened:** only a refusal Cloudflare SIGNS counts, so
+  an app 401/403 still returns its code and every negative entry keeps its teeth; origin 5xx stays
+  in `_get()` alone per UPSTREAM-BLIND-1. `scripts/test_edge_status_blind1.py` is red on the pre-fix
+  source and prints the false conviction and the false acquittal verbatim.
+  *Correction to L20's own diagnosis:* the row blamed a missing named User-Agent. The ledger has
+  carried one since line 84; probed 26 Sep, its UA gets 200 and only the bare urllib UA gets
+  `error code: 1010`. The mechanism is a transient edge refusal mid-board being read as a verdict.
+
+- **INSTRUMENT-DOOR-1.** `GET /dashboard/bit` and `GET /dashboard/maint` both carried the docstring
+  *"No auth (obscure URL)"*. That stopped being true on **24 Sep**, when SEC-GATE-1 declared both
+  **admin** in `route_policy.json`: the gate now answers an anonymous caller `401
+  {"code":"admin_required"}` before either handler is entered. The false sentence had already cost
+  vision — the 25 Sep daily watch recorded its anonymous probes going blind (DW-158), and this
+  stand-up read both dashboards blind until it carried a credential. Docstrings and the MAINT-DASH-1
+  header comment corrected to name the admin door and the `dashboard.server.html` fetch wrapper that
+  supplies it. Handlers unchanged; the served ops dashboard was never affected (it has the wrapper).
+
+- **DESIGN-ROUTE-1 (OPEN_LOOPS L8) — and it explains the 26-day zero four stand-ups re-probed.**
+  `classify()` returned PATH_B and the loop wrote *"routed to design backlog (batched, designer
+  gate)"* into its report. **Nothing wrote a dossier; nothing in `scripts/` touched
+  `DESIGN_BACKLOG.md` at all.** Measured: TS-0027 and TS-0006 were both closed 11 Aug with "routed
+  to the design backlog" in their fix_note, and the file holds exactly one dossier — DCB-001, which
+  is neither of them. Two faults said routed; zero arrived. **So L8's premise was wrong:** the
+  `design` tier was wired at the chokepoint the whole time (`/admin/maint/brain` accepts
+  `task="design"`; `_MAINT_TIER_LADDER` carries it). It had no caller because no design work ever
+  reached a backlog, because the routing was a string. `grep task="design"` → 0 was the symptom.
+  Fixed: PATH_B now files a real dossier in the template `DESIGN_CHANGE_GUIDELINES.md` publishes,
+  asking the **design tier** for the PROPOSED DIRECTION (`task="design"`, RUL-013's allocated lane —
+  its first real caller), stamping the serving model, and reporting the dossier id actually written
+  instead of the old sentence. **The GATE line is written EMPTY on purpose**: criterion 10 says an
+  absent gate means NOT APPROVED, DO NOT BUILD, and binding the designer role is open item 2 and
+  David's. The filer never scores its own dossier, declares criteria 3 and 5 unmet rather than
+  claiming them, is idempotent across the loop's three daily runs, and when the brain is unreachable
+  from a sandbox vantage (VANTAGE-BRAIN-1) files with the direction blank and the reason NAMED —
+  never a guess. `scripts/test_design_route1.py` red on the pre-fix source, printing the measurement.
+
+- Gates after: `rulings_check` 150 rulings, **0 FAIL**, 25 WARN, 38 NOT CHECKED (VANTAGE-BLIND-1
+  reporting its blindness). BIT board from the edge vantage **8/8 PASS**. The three pre-existing
+  instrument tests (hostqueue watchdog, stand-up watchdog, QA gate blind) all still exit 0.
+
+- **BIT-STORE-FLOOR-1 — found live DURING this run's post-deploy verification, and it is the
+  reason the run did not report green and stop.** At **19:36:04Z** a caller POSTed an **empty body**
+  to `POST /dashboard/bit`. The handler stored `dict(payload)` unconditionally, so
+  `bit_status.json` became `{"received_at": "2026-09-26T19:36:04Z"}` and nothing else — and
+  `GET /dashboard/bit` served exactly that: **no state, no results, no verdict.** It could not even
+  fall through to the handler's own "no BIT run recorded yet" branch, because the file existed. Two
+  probes 60 s apart returned the same stub, so it was persistent, not a mid-write. **The site was
+  healthy throughout:** the board had read 8/8 PASS at 19:02:29Z and an independent edge-vantage run
+  returned 8/8 PASS minutes after the wipe. One empty POST replaced a real verdict with a blank, and
+  the dashboard panel read neither green nor red. Verified **not** caused by this run's own deploy:
+  the bea_main.py change in `d449eec` is 37 inserted lines of docstring prose and touches no handler.
+  This is QA-GATE-BLIND-1's lesson (25 Sep) one store along — there the damage was not the blind run
+  but `accept()` writing it over the baseline. Fixed with the same rule: a payload carrying no
+  `results`, no `state` and no `total` is **NOT MEASURED** and does not overwrite; it is recorded as
+  `last_blind_post` **inside** the surviving board so the blindness is visible rather than silent,
+  and the caller gets 200 with `stored: false` and the reason — never an error, because a BIT runner
+  that cannot post is a second failure on top of the first. **The floor never suppresses red:** an
+  all-FAIL board still overwrites, asserted by name in the test. `scripts/test_bit_store_floor1.py`
+  is red on the pre-fix source and reproduces the wipe verbatim.
+
+## 2026-09-26 — Maintenance loop: RG-0391 assertion corrected, RG-0485 locked
+
+- **RG-0391 (QUICK-READY-6) — assertion corrected, not weakened.** The morning board read one REGRESSION:
+  the Quick manifest's start_url is `/quick/` and quick.html links `quick.webmanifest?v=2`. Both were the
+  deliberate QUICK-SCOPE-1 change (SEAM-1, 25 Sep; RG-0477 asserts the `/quick/` scope) — the older entry
+  still pinned `start_url=/quick.html` and an unstamped link. It now guards what actually keeps an installed
+  tile alive: the manifest `id` stays `/quick.html`, start_url sits inside its own scope, any `?v=N` stamp is
+  accepted, and the live `/quick/` + `/quick.html` checks stay. Probed live: /quick.html 200, /quick/ 200,
+  manifest 200. Correction noted in the entry's ref.
+- **RG-0485 (MAP-FIRST-VIEW-1) promoted OPEN -> LOCKED** the run it printed READY TO LOCK.
+- Fault queue: 0 new, 0 fix-shipped, 26 verified, 12 closed. Shadow agent saw 0, acted on 0; heartbeat
+  probed on /dashboard/maint (run 20260926T054242Z). Backup lane OK (users=123, listings=126), screen walk OK.
+- No escalations in the last 24 h (no brief written). Ledger after: every locked fix holding, 19 open.
+  Rulings: 148 checked, 0 FAIL.
+
+## 2026-09-26 — David's four answers carried: one word 'listing', a real banking form with its true purpose, the pictures kept, Terms v1.19 drafted (INSPECT-FIX-5)
+
+David, 26 Sep 2026, answering the four questions the closure board left him: *"Listing"*; *"we do need the users
+banking details, we use it both as security to know our customer and also for them to purchase tuppence's. Dont remove
+that. We just dont use it to pay them any money out"*; *"Keep for later"* (the nine Quick pictures no screen shows);
+*"Yes, draft 1.19"*.
+
+- **LISTING-WORD-1 (langt-21)** — one word for what a seller makes. Both apps and every message the server sends her
+  say 'listing' (Quick: 65 English lines and 37 dictionary keys; the app and server: 124 lines; each translation
+  re-keyed, isiXhosa 'Nantsi isibhengezo sakho'). RUL-040 AMENDED the same day: the AI example badge reads
+  **AI EXAMPLE GENERATED LISTING**. Kept on purpose: the feature name 'Collectables Advert + Market Report' (RG-0493's
+  key), AI prompts, code names, and the Terms (they change only by a new version). RG-0140, RG-0106, RG-0166,
+  RG-0135, RG-0446, RG-0395 and the RUL-040 / RUL-026 reflections follow the new words.
+- **BANKING-FORM-1 (langt-06, ts2-17)** — the server route existed and the form never did. The Billing tab now has a
+  Banking details card, the nudges after publishing open the same form (holder, bank, account number, optional branch
+  code), it sends only to her own signed-in account, and the card then reads 'On file · FNB · account ending 6789'.
+  Every line says what the details are for — confirming who she is and when she buys Tuppence — and that nothing is
+  ever paid out (Terms 5.2: Tuppence is never cash). The server keeps the last 4 digits only. Translated into
+  Afrikaans, isiZulu, isiXhosa and Sepedi (migration 058; ms.js DICTV 6).
+- **CARD-WORDS-2 (langt-04 leftovers)** — the free plan's line in the plan list and on the Billing tab says
+  'Free forever · no card needed'.
+- **R2-FALLBACK-EARLY-1** — found in the banking walk: a picture that failed before ms.js loaded threw
+  'r2Fallback is not defined' and stayed broken. The page defines the same fallback first.
+- **SUPPORT-HOLD-96** — found while drafting the Terms: the support assistant told buyers the hold is released if the
+  seller does not answer within 48 hours; the app releases it when the request closes at 96 hours (the −5 lands at 48).
+- **Pictures (quick-20)** — kept on David's decision; nothing changes today.
+- **Terms v1.19 DRAFT** — `eula_clean_v1.19_DRAFT.html`, not wired and not published (eula_clean.html, terms.html and
+  the app's copy are untouched; eula_sync.py not run). 88 corrections, so the Terms say what the app does: 35 from the
+  inspection (drafting notes, code names, the blurred photo, the acceptance steps, Schedules A–G, one server fact) and
+  53 more (the hold-and-burn model in 5.1 and 6.3, the 96-hour close, live Paystack top-ups, the free ID check before
+  any introduction, AI prices Free / 1T / 2T / 3T / 5T, Cars, the ECT Act section 13, cross-references and list
+  numbers, the privacy contact, no expiry of bought Tuppence). Eleven points wait for David — each with a
+  recommendation on `Visuals/MarketSquare/TERMS_v1.19_REVIEW.html`.
+
+Ledger: RG-0503 (the banking form and its purpose), RG-0504 (one word on every screen and server message, allowlist
+explicit) and RG-0505 (the early r2Fallback) — each red on the deployed tree and on a deliberate break, green on the
+real files. Full sharded run against the deployed tree: identical board except the three new entries and RG-0140,
+whose live half reads the old badge until this deploy.
+
+## 2026-09-26 — Inspection follow-up: every language carried through the new wording; the QA bot reads the code it judges (INSPECT-FIX-3)
+
+Found while verifying INSPECT-FIX-2 in the live app, not by the inspection itself:
+
+- **Quick in isiZulu, isiXhosa and Sepedi went partly English** — the wave's whole-sentence keys were written in Afrikaans
+  only, so the door line, the save step, the saved screen and the Buzz explainer fell back to English for three of the
+  five live languages, and 14 lines that had been translated regressed. RUL-165 makes Claude's drafts the live versions,
+  so every Quick phrase (478) and pattern (25) now carries Claude's isiZulu, isiXhosa and Sepedi, three save-step lines
+  got their missing Afrikaans, and the door no longer tells those readers that categories are in English
+  (window.QLANG_PARTIAL is empty; the notice returns by itself for the next language that is partial). Walked in all four
+  languages with every write faked: door, draft, Buzz explainer, saved screen and menu show no English phrase.
+- **Three Sepedi role names** lost their English words (langq-37): 'Mootledi wa Khoutu 10 / 14', 'Mootledi wa metšhene
+  (TLB / motšhene wa go epa)', 'Mootledi wa thekisi / khombi' — Claude's words under RUL-165, for the Sepedi reader to confirm.
+- **The app's reworded English** (introduction, sign-in link, the free plan's line, the trust levels the Seller Hub now
+  names, the fresh-version bar's Refresh) got checked Afrikaans (migration 056) and Claude's isiZulu, isiXhosa and Sepedi
+  drafts (migration 057), instead of the runtime machine lane; ms.js DICTV 5 so every browser drops its copy.
+- **QA-SRC-LIVE-1** — the QA bot's rulings and appeals read `/var/www/marketsquare/bea_main.py`, a 12 Sep copy nothing
+  updates (the manifest ships bea_main.py to main.py). Three appeals on 26 Sep were judged against code that no longer
+  ran. `app_source()` now reads main.py first.
+- **Deploy purge**: the first deploy of INSPECT-FIX-2 ran the OLD engine (it parses itself before the checkout), which
+  purged without a key after the exemption was gone — 401, logged non-fatal. The CDN was purged by hand with the running
+  app's key at 09:58Z; the new engine's key read was proven on the box (GET /dashboard/scan -> 200).
+
+Ledger: RG-0325 re-aimed (the invited seller's city seed moved into sfNewState() when Sell stopped wiping a listing in
+progress; the check followed it, red on a seed without the invited city, green on the old and new shape); RG-0499 LOCKED after the live check (every corrected Afrikaans word served live); RG-0501 (every Quick phrase in
+all four live languages, the page equal to its source, no false 'still in English' notice) and RG-0502 (the QA bot reads
+main.py) added, each proven red on a deliberately broken copy and green on the real files.
+- **AI search help needs a sign-in (qa-15)** — the security judge, now reading the running code, kept its ruling that
+  POST /search/interpret must require a signed-in person (a per-address cap is not proof of a person). The route is
+  'user' level; plain search stays open to everyone, a signed-out caller gets 401 and the app keeps its plain results.
+  AI search is switched off today (SEARCH_AI_ENABLED dark), so nobody sees a difference yet. The other two appeals
+  (per-city advert counts, 'pass Quick on') were won once the judge read the right code; GET /quick/me was won earlier.
+- **The paid green-tick card no longer sounds compulsory (langt-02 follow-up, ID-WORDS-2)** — the 25 Sep wording said
+  buyers 'can only request introductions once you are verified' on the 1 Tuppence Home Affairs card. The server opens
+  introductions once the seller's UPLOADED ID is confirmed (free); the paid check is optional (RUL-039). The card now
+  says exactly that. The success screen already pointed to the free upload.
+- **Session counter** brought up to date (208): the day's fragments had put it one sitting behind the evidence (RG-0154).
+
+## 2026-09-26 — Inspection fix wave: the rest of the 25 Sep register closed in both apps (INSPECT-FIX-2)
+
+David, 25 Sep 2026: "please fix the language suggestions you made and also fix all of the bugs … fix the total findings,
+and please verify their closures with a feedback of all 266+". This wave carries every remaining item of
+`INSPECTION_2026-09-25.html` (266 findings + 16 QA-bot items) that could be closed in code; the per-item closure note for
+all 282 is on the board itself (status column) and in `INSPECTION_2026-09-25_closures.json`.
+
+- **Quick** (quick.html = genie/HARNESS.html): the door fits a 360x640 phone and scrolls; '1,500' / '1 500' / '1.500' read
+  as R1 500 (AMOUNT-PARSE-1); the saved card is opaque and says each thing once in her language; the WhatsApp note links
+  her draft; 'List something else' stays on the same account (quick-02, KEY-ID-HIDE-1); Back returns to her advert from
+  the reference and phone-around previews; answers survive a reload (WIP-KEEP-1); city and area choices are kept; the
+  first screen downloads only the picture on show and reads the account once (speed); every Quick screen uses whole-
+  sentence translations; Sepedi replaces Sesotho in both apps' language lists (a saved Sesotho choice maps to Sepedi).
+- **TrustSquare app** (ms.js, marketsquare.html, ms.css): saving an edit before the Terms were accepted now shows the real
+  Terms, not the Local Market box (TERMS-GATE-EDIT-1); photos are shrunk one at a time in the seller's own order before
+  upload (PHOTO-SMALL-1); the map library and the trip-guide data load only when needed (MAP-LAZY-1, TRIP-LAZY-1);
+  Local Market links open their own free page; rentals are 'To Rent' everywhere; the emailed link is a 'sign-in link'
+  everywhere; the sell flow no longer claims a draft is saved before it is; fading adverts carry the Keep live button;
+  code names and rule numbers are gone from what users read; grammar and spelling pass across the app.
+- **Server** (bea_main.py, security_gate.py, route_policy.json): the Listing Coach files the advert under the seller's city
+  and keeps her private notes off the public page; a signed-out advert list answers 304 when unchanged (ETag); signed-out
+  AI search is capped per address; POST /users needs a sign-in and registers only the signed-in address (qa-16);
+  GET /dashboard/summary is admin-only (qa-04); the loopback exemptions on admin routes are gone and the box's own
+  automation (deploy purge, sensor, ops sweep, maintenance census, media and dashboard bats) sends the admin key the
+  running app holds, read from its own process and never printed (ADMIN-KEY-LOCAL-1). POST /agencies/wave-prep keeps its
+  exemption until CityLauncher sends the key (qa-11, OPEN_LOOPS).
+- **Afrikaans** (roles/app_i18n_af.json, migration 055, DICTV 4 — I18N-AF-3): Handrat, Laerskool, Nutsman, Verbintenis,
+  Die topverkoper, per keer / uitvoering, Oop tou, Uitgelig, Een reël, Alles is welkom; 'AI' throughout (never 'KI');
+  checked Afrikaans added for the reworded English so no reader gets a machine translation.
+- **Kept, not changed:** 'AI EXAMPLE GENERATED ADVERT' stays word for word (RUL-040, David's own wording); the Terms text
+  is untouched (its wording items wait for David, version bump and eula_sync.py).
+
+Regression ledger: RG-0495 (introductions follow the server's gate), RG-0496 (Local Market never charged as a paid
+introduction), RG-0497 (an untouched price is never rewritten), RG-0498 (every painted field output-encoded, run against
+hostile records), RG-0499 (the Afrikaans corrections, OPEN until checked live), RG-0500 (Quick amounts); RG-0383 and
+RG-0400 re-aimed at the new code shape and proven red-on-break; RG-0167 honestly REOPENED — it was green only because a
+user-facing tooltip carried its code name, and the agent's own Pro-seat purchase lane has never been built.
+
+Proof before shipping: `node --check` / `py_compile` / JSON parse on every changed file; quick.html byte-identical to
+genie/HARNESS.html; rulings check (no new FAIL; the three FAILs are files that live outside git); full ledger run on the
+merged tree versus the same tree without this wave — identical board except RG-0167 (reopened on purpose); a local browser
+run with every write faked (introduction button, Local Market link, Back after Sell, Quick door at 360x640, '1,500', the
+saved card). Live check after the deploy is recorded in OPEN_LOOPS L19.
+
+## Watch reds + ambers fixed — trust-plan false red, SQL ratchet, git-lock host lane, sensor catch-up, transport-blind (25 Sep 2026)
+
+Attended CTO pass on David's "fix the two new reds, and also the 4 ambers" after the 25 Sep daily watch.
+
+- **COACH-EARNABLE-2 (RG-0373 amended, DW-155).** The red was the ASSERTION, not the app. RG-0373's
+  referral leg said "referrals are not tracked" -- true on 15 Sep, false since RUL-142 was built on
+  24 Sep (a client of an accepted intro taps "I hired them", POST /intros/{id}/hired, and the ladder
+  counts distinct confirmed clients). The live plan's referral step is correct: `do: wait`, points at
+  that button. The leg now asserts the property -- offered only while the ladder can earn it, and it
+  must point at the real tap. Proven able to say no (stripped source -> not earnable).
+- **PG-PORTABLE-4 (RG-0351, DW-146).** Four SQLite-only calls from the 24 Sep evening commits made
+  portable in bea_main.py: LM no-show age computed in Python (was julianday), the LM my-accepted window
+  and the EULA 14.5 B3 30-day window use a bound `_sql_since()` stamp (were datetime('now', ...)), and
+  used_signin_links uses `ON CONFLICT(link_hash) DO NOTHING` (was INSERT OR IGNORE). test_pg_readiness
+  back to the 15/15/2/12 baseline.
+- **GIT-LOCK-6 (RG-0467, DW-154).** nightly_checkpoint.bat exited on a clean tree BEFORE calling
+  git_unlock.bat, and the 20-min agent only swept when it had work -- so a HEAD.lock a sandbox commit
+  left at 02:01 stood 278 min. The checkpoint now sweeps first; the agent runs `git_unlock.bat /aged`
+  every tick (locks older than 15 min only -- a sandbox commit is invisible to tasklist).
+- **SENSOR-CATCHUP-1 (RG-0468, DW-157).** The once-a-day 01:30 UTC cron sensor was skipped by the
+  security assessment's one-time kernel reboot at 01:30:06Z. `sensor.py --catch-up` (no-op once today's
+  run exists) runs after every boot and hourly via /etc/cron.d/marketsquare-sensor-catchup
+  (migration 052). sensor.py now rides the deploy manifest.
+- **TRANSPORT-BLIND-1 (RG-0466, DW-144/145 residual).** _judge() now moves FAIL lines that carry a
+  transport signature (gaierror, name resolution, read timeout, urlopen error, dropped connection,
+  re-emitted ProbeOffline) to NOT EVALUATED, individually; real faults -- including RG-0099's SSH
+  lockout -- still convict. Behavioural self-test inside the entry.
+- **DW-156 (RG-0450).** genie/HARNESS.html re-synced to quick.html (byte-identical).
+
+## 2026-09-25 — Quick trip kind is respected, and every advert link opens its advert (TRIP-TYPE-1, DEEPLINK-FETCH-1)
+
+David, with screenshots: *"i selected Treinrit ... the next option was not a train option and only took me to the
+front page ... 1. For the selected type only that type should be viewable, 2. All options must pull through to the
+trip but only for the right type, 3. This may be a global fix required?"*
+
+- **Why the wrong trips:** Quick searched the LAST word of the kind ("Rail journey" -> journey*), so every
+  "journey" came back (Botswana, Mozambique, Namibia, Bavaria). It now searches the kind (rail*, lodge*, safari*,
+  tour*, drive*, fish*) and keeps only adverts of that kind: a game lodge is a stay, every other trip is an
+  experience, and the words must match.
+- **Why the front page (global):** the app opened ?listing=<id> only when that advert was already loaded for the
+  viewer's own city and category; anything else silently fell back to the front page. openDetail now fetches the
+  advert it cannot find and opens it -- Quick, wishlist, showcase and e-mail links all benefit.
+- **Trip-kind pictures:** Guided tour, Self-drive, Rail journey and Fishing had borrowed a safari's picture; each
+  now has its own (4 pictures, ~US$0.24, prepaid).
+- Ledger RG-0483 (OPEN until live).
+
+Cost model impact: ~US$0.24 one-off on the prepaid picture account.
+- Live 25 Sep ~10:35 UTC, checked in Chrome: Quick 'Treinrit' shows 3 rail trips only; ?listing=370 (London stay) and a Quick tap on #367 (Chicago) both open their adverts from a Pretoria session, where before they fell to the front page. RG-0483 LOCKED.
+
+## 2026-09-25 — SIM-CHAIN-1: Contagion Model v2.0, the Share Chain behind a purple toggle (RUL-171)
+
+David: *"how will this effect our simulation? ... Please update the simulation to statistically and realistically
+cater for this improved principle, then publish it for me to check."* Done in `docs/TrustSquare_Contagion_Model_v0.2.html`
+(deployed as `/orchestrator/simulation.html`); dashboard pin moved to v2.0 (RG-0287 green).
+
+**What the lane models (group "Share Chain" in Calibration, own random streams rC/r3):** every business can hand its
+regulars the link — chUse of new sellers (and the live base at the switch-on week, chainW, placeholder week 8) put
+custPer regulars on a to-ask list, asked at their next visit (chPace), joining at chJoin (only the increment over
+custJoin, nothing counted twice); regulars brought by their own seller churn ~18% less (Schmitt, Skiera & Van den
+Bulte 2011); some regulars list their own business (chB2sX on top of b2s, capped at GEM SA 2025's 19% who start or
+run one); rivals who watch her diary fill copy her at Bass q = 0.38/yr (Mahajan, Muller & Bass 1995) shared over
+her niche (chRivals); chain sellers churn less (chKeep). Buzz is free — the only money is a regular introduced to a
+seller she does not know (chIntro). New strip pairs each of 110 seeds with its own twin: uplift p10/p50/p90, runs
+below twin, weeks earlier to 1k/10k sellers and 100k buyers. Four presets, one pinning David's "2 rivals per seller".
+
+**OFF is v1.9 draw for draw** — verified in headless Chromium: mid runs (both plans, Services lane on) and 40/20-seed
+ensembles identical; no page errors desktop or phone.
+
+**What it says (defaults, link from week 8).** Mid run: sellers +36% at wk 26 and wk 52 (114,634 vs 84,474),
+buyers +59%, planner runs +56%, revenue +51% at wk 52; 100k sellers 3 weeks earlier; wk 156 +2% (the market-size
+ceiling does not move). Ensemble, paired: sellers +2.2% at wk 52 (p10 +0.3%, p90 +11%), +1.7% at wk 156 with every
+run at or above its twin from wk 104; at the LOW end of every chain prior still +1.9% at wk 156. It changes the
+speed, not the ceiling; the biggest effect is in slow worlds, because her regulars fill thin cities' liquidity.
+Literature imitation gives ~0.3 copies per Buzz seller a year; David's 2 per seller is ~7x that and gives +60% at wk 52.
+
+## 2026-09-25 — Quick ⇄ TrustSquare seam: the way back, real Find, Pass Quick on (SEAM-1)
+
+David asked for an audit of how the two apps meet (ease, accuracy, speed, the two icons, the gate, and passing
+Quick from one cleaner to another, phones held together). Board: `QUICK_TS_SEAM_AUDIT_2026-09-25.html`.
+His calls the same morning: gate option A (inside Sell), both tiles at their moments, build "Pass Quick on" now,
+plan the Android shell now.
+
+- **BACK-GESTURE-1** — the phone's Back gesture steps back inside Quick (it used to leave Quick mid-advert and
+  lose her answers); Back on the saved card, the Pass screen or an invite card closes it; Back on the door leaves.
+- **FIND-REAL-1** — "Find a pro" showed five invented adverts with prices and trust stars and made no server call;
+  it now reads real TrustSquare adverts (GET /listings, category + city + one stemmed word) and a tap opens the
+  advert in TrustSquare. An empty answer says so plainly. (RUL-125(b): one server, one rulebook.)
+- **CITY-FROM-AREA-1** — a stranger's advert was filed under "Pretoria" from the phone's time zone whatever area she
+  chose; tiles now map to their city (Sandton/Midrand -> Johannesburg) and a typed area is looked up in the geo
+  suburbs (Bellville -> Cape Town).
+- **LANG-CARRY-1** — the language she picks in Quick is the language the app speaks to her (ts_lang).
+- **QUICK-SCOPE-1** — Quick's tile covers /quick/ only (it claimed the whole site, so TrustSquare pages opened in
+  the violet Quick window); /q/<category> becomes /quick/<category>. Manifest stamp ?v=2.
+- **QUICK-TILE-2** — the Quick tile is offered on the saved card at her first save (native prompt on Android, the
+  two-step hint on iPhone); Quick now starts the shared service worker so the prompt can fire.
+- **FROM-APP-1 / QUICK-GATE-A** — one small line "In a hurry? 5-tap Quick advert" in the Sell sheet and at the
+  foot of the sell flow; Quick opened from there carries "‹ TrustSquare" on its door.
+- **QUICK-PASS-1** — "Pass Quick on": her flick of the icon (or a tap) creates a single-use invite; her screen shows
+  a QR and hands the link to the phone's share sheet (Quick Share / Tap to Share / AirDrop where the phone has it);
+  the other person sees "<first name> passed you Quick" and taps Accept; the sender's screen ticks. Never her key
+  link, never a number (RUL-146), no trust points (RUL-142). Server: /quick-invite routes + quick_invites table
+  (migration 053), declared public in route_policy.json.
+- **PUSH-TO-APP-1** — a push tap focuses a TrustSquare window, never the Quick door.
+- **FTS-KEYWORD-1** — a listings search containing OR/AND/NOT/NEAR answered HTTP 500; operators are dropped and
+  terms quoted.
+- Repo drift fixed: static/brand/site.webmanifest now matches the served file (id/start_url/scope were already live).
+- Rendered test at 390 px, publish and invites mocked: 25/25 (Back steps, saved card, tile offer, Pass it on
+  flick -> share sheet, accept once, real Find opens advert 268, Sandton -> Johannesburg, Bellville -> Cape Town,
+  /q/services -> /quick/services, language carry). Stranger test PASS (299 routes). Ledger RG-0477..0480 OPEN until live.
+
+**First ship rolled back by the QA Bot gate (08:07Z) — caused by this lane's own live probe, fixed, re-shipped.**
+The new table `quick_invites` has an e-mail column, so the QA Bot watches it. It did not exist when the bot took its
+snapshot; this lane's verification probe (GET /quick-invite/<made-up token>, sent while the gate was still running)
+created it through the lazy CREATE TABLE, and from then on every probe read as "changed another person's data
+(quick_invites)" (87 routes). Nothing was opened. Fixed two ways: a READ never creates the table any more (only the
+create route may), and the table already exists on the live DB. Lesson: never probe a new route on the live site
+until the deploy log says DEPLOY OK.
+Also seen in the gate reports (recorded as OPEN_LOOPS L18): every one of the bot's 640 probes (629 in the passing
+07:18 run) was answered 403 before reaching the app, so its attack half currently proves nothing; the in-process
+stranger test is the check that is actually looking.
+
+Cost model impact: none (the invite QR is drawn by the server's existing qrcode library; no AI call).
+
+## 2026-09-25 — Quick: all 42 board types are live Services roles; a search returns only the role asked for (ROLES-25SEP-1, SVC-FIND-1, RUL-172)
+
+David, checking orchestrator/quick_listing.html against Quick: *"If a dog walker wants to list ... or if they are searching
+for a dog walker, do they end up with the right adverts? And the same for all of these types"*. Answers: *"All of them"* and
+*"Yes, 'A customer'"*.
+
+- **12 roles added (61 -> 73 live):** Pool cleaner, Window cleaner, Pet sitter / dog walker (from LATER); Carpet washer,
+  Au pair (clearance gate, as Nanny), Tree cutter, Garden waste removal, Griller / braai, Hotel porter, Lodge staff,
+  Caterer, Bodyguard (PSIRA gate). Each has its own work picture (no people), the Casuals taps, its own wording in five
+  languages (Claude's draft for the language reviewer, RUL-160). Dog walker's finish screen asks "Which pets do you look
+  after?" (Dogs / Cats / Birds / Other pets). House sitter stays LATER.
+- **Search (SVC-FIND-1):** a Services search used one word from the role name, so Car guard returned Security guards,
+  Shop assistant returned Crèche assistants, Farm worker returned every advert saying "work". Every live role now has
+  its own match, run on title + description + service type over the whole Services shelf; each role finds itself and
+  no other role (checked for all 73), and adverts written in the app's own words ("Gardening", "Electrical",
+  "Cleaning", "Plumbing") are still found.
+- **Reference (RUL-172(c), amending RUL-169(b)):** Hair braider, Hairdresser, Nail technician, Car washer,
+  Seamstress / tailor, Handyman and the new self-employed roles read "A customer says one sentence about you" and buzz
+  "your regular customers"; employed roles keep "Your employer".
+- Ledger RG-0491 (OPEN until live).
+
+Cost model impact: ~US$0.72 one-off on the prepaid picture account (12 role pictures).
+- Live 25 Sep ~21:20 UTC (deploy 0846343, 12 role pictures via media push), walked in Chrome on trustsquare.co/quick/:
+  Services > Offer a service > Home & care lists all 15 roles incl. Pet sitter / dog walker; picking it, Pretoria East,
+  Mon + Wed and R80 / hour gives "Pet sitter / dog walker — Pretoria East" on the dog-walker work picture marked EXAMPLE
+  PHOTO, the pets question, "A customer says one sentence about you" and "One line to your regular customers". Find a pro >
+  Pet sitter / dog walker says "Nobody has listed this in Pretoria yet" (no wrong adverts); Gardener finds the garden
+  service; Tree cutter does not. orchestrator/quick_listing.html shows the 73-role roster (updated 25 Sep). RG-0491 LOCKED.
+
+## 2026-09-25 — Quick: the examples follow what she picked (QUICK-FIT-1, RUL-169)
+
+David, four screenshots in one sitting, all in Afrikaans:
+- *"the tutor - it says 'your employer...' but he is self employed ... could this be from an existing customer rather than an employer? A referral."*
+- *"I selected housecleaner ... these options are all wrong ... clearly indicate these are examples ... not a 1947 penny"*
+- *"I selected 'Cards' here and the generic photos shows coins, can we add related photos, to be generated in Higgsfield"*
+- *"I selected a Game Lodge, but this screen is showing suburb information?"*
+
+Fixed:
+- **Reference (VOUCH-WHO-1, RUL-169):** the draft's reference card names who she works for — employer for
+  housekeeping/casual roles, "a parent or student you teach" for tutors, "a customer you have worked for" for
+  trades, "a guest you have hosted" for stays. Same link, same points. confirm.html and the trust-list names
+  drop "employer" for "someone you worked for". The seller's Buzz card now speaks from the seller's side
+  (tutor: "one line to the parents you teach for", not "to the tutor").
+- **Phone-around (TRADERS-FIT-1):** example contacts and the example question fit the category (a cleaner:
+  "Does your cleaner have a free day?" to a neighbour, a friend, a sister), marked "EXAMPLES — in the app you
+  pick from your own contacts". Collectors keep the penny.
+- **Collectables pictures (COL-PICS-1):** 10 new example pictures (stamps, cards, militaria, watches, art — two
+  each); example adverts show only the picked kind. Generated on the prepaid picture account, ~US$0.60 (RUL-164).
+- **Adventure destinations (DEST-WHERE-1):** WHERE offers places that fit the trip — Game lodge/Safari: Kruger,
+  Pilanesberg, Waterberg, Madikwe, Zululand, Addo; Guided tour, Self-drive, Rail journey and Fishing their own
+  six — each with its own picture (23 new, ~US$1.38). "Another option" still takes any place.
+- **Afrikaans:** 126 missing Quick labels translated (chips, questions, the lookup screen); the new strings
+  in all five languages where marked (preview, RUL-160 review).
+- Rendered test before shipping (phone size, Afrikaans): all four screens correct, no page errors.
+- Ledger RG-0481 (OPEN until live); rulings_check RUL-169.
+
+Cost model impact: ~US$2 one-off on the prepaid picture account.
+- Live 25 Sep 08:45 UTC, checked in Chrome on trustsquare.co/q/ in Afrikaans: tutor reference and Buzz card, cleaner phone-around examples, Game lodge destinations (6 pictures loaded), Cards pictures. RG-0481 LOCKED.
+
+## 2026-09-25 — The deploy gate's first seeing run met a blind baseline; every deploy was being rolled back (QA-BASELINE-SEEING-1)
+
+QA-GATE-BLIND-1 (0ae338b) taught the QA Bot to prove it can see the app, and to fall back to the app's loopback when
+the front door refuses it. Its first seeing run was compared with a baseline written by the blind runs (every route
+"PASS" because nginx answered 403 before the app), so 15 routes that have answered strangers for a long time were
+reported as "OPENED by this deploy" and two releases were rolled back at 20:58Z (d004d98, INSPECT-FIX-1) and 21:02Z
+(dc6425b, QUICK-LINK-1). Nothing in either release opened a route.
+
+- **Proof the 15 were already open:** `qa_bot.py probe` from the same loopback vantage against the running release
+  (1bfd487, before either rolled-back deploy) returned the identical 15 FAIL + 1 CRASH (report
+  /var/lib/trustsquare-qabot/reports/20260925-210447-probe.html).
+- **Re-baselined, not weakened:** that measured run was accepted as the baseline (`probe --accept`, the seeing bot from
+  origin/main); the blind baseline is kept beside it as last.json.bak-blindbase-20260925-210310. The 15 FAIL and 1 CRASH
+  stay FAIL/CRASH in every report and keep the nightly RED until they are fixed; the gate again rolls back only a release
+  that opens a NEW route.
+- **The 15, now open work (OPEN_LOOPS L19):** admin/ops reads answering strangers at the app layer (/dashboard/cost,
+  /dashboard/email-triage, /dashboard/scan, /dashboard/summary, /health/resources, /listings-coverage, /onboard/funnel,
+  /ops/selfcheck with the public key, /optout/status), POST /admin/purge-cache, POST /agencies/wave-prep crashing on the
+  public key, and five routes the app serves signed-out by design (/quick/me, POST /quick-invite, POST /search/interpret,
+  POST /users, POST /presence/ping) whose rulings need an appeal rather than a lock.
+
+## 2026-09-25 — The deploy gate could not see the app, and passed anyway (QA-GATE-BLIND-1)
+
+OPEN_LOOPS L18, opened this morning: both 25 Sep QA Bot gate reports answered **403 to every
+probe before the request reached the app** — 640/640 at 08:07Z, 629/629 at 07:18Z — public
+routes such as `GET /quick/me` and `POST /listings/quick-publish` included.
+
+- **Why a wall read as perfect security.** `judge()` turns 401/403 into `PASS "refused"`, which is
+  right for a route that refuses a stranger and wrong for a wall in front of the whole app. Every
+  route "passed", `regressions()` therefore found nothing, and the gate returned 0.
+- **The damage was not the passed gate, it was the baseline.** `accept()` then wrote that blind run
+  over `last.json`. `regressions()` skips any route whose previous verdict was `PASS` or
+  `UNPROVEN`, so one accepted blind run disarms the gate for **every route** until a clean run
+  replaces it. Proven, not argued: driving the pre-fix `accept()` with the 25 Sep run shape
+  replaces a real baseline with 640 routes reading `PASS`.
+- **Fix — the bot must prove it can see the app before it may grade it.** (1) A pre-flight canary:
+  a known-public route (`/health`) must answer 2xx through the *same* client, vantage and pinning
+  the probes use. (2) A concentration check: one status shared by ≥90% of persona answers is one
+  wall, not N verdicts. (3) On either, the run is **NOT MEASURED** — `accept()` refuses it (guarded
+  at the writer, not only at the call sites), and `probe`/`gate`/`nightly` exit 2, which
+  `server_deploy.sh` already fails CLOSED on.
+- **And it does not freeze the pipeline, which an unconditional hard stop would have.** A gate that
+  cannot see must not certify — but making that an absolute stop would have rolled back *every*
+  release until someone with server hands fixed the vantage, unattended, overnight. So the bot now
+  picks a door it can actually see the app through: the front door first (nginx → app, where
+  nginx-level locks count), and if that refuses it before the app, the app's own loopback port —
+  which it already trusts enough to read the route list from. That is a **narrower** measurement,
+  not a blind one, and the run says so in as many words: *"NOT COVERED by this run: nginx and the
+  Cloudflare edge"*. Only when **no** door reaches the app is the run NOT MEASURED.
+- **Not a weakening.** A genuinely locked-down app still PASSes route by route and still gates:
+  the test pins a 300×403 + 200×401 + 60×404 + 40×200 board as *measured*. Only a run in which the
+  bot never reached the app is refused a verdict. Same class as BIT-EDGE-BLIND-1 (23 Sep) and
+  RG-0401: an edge refusal is BLIND, never a verdict.
+- `scripts/test_qa_gate_blind1.py` is **red on the pre-fix source** and prints the baseline damage
+  verbatim; green on the fix.
+- **What still needs server hands (not guessed here):** the cause of the 403 itself. RG-0028's own
+  scope text names the mechanism — the origin takes connections only from Cloudflare's published
+  ranges — so a loopback-pinned request arriving without Cloudflare's origin-pull credentials is
+  refused before nginx reaches the app. The bot now says so instead of certifying; pointing it at a
+  vantage that can actually see the app is the remaining half of L18.
+
+**No ledger entry yet:** `scripts/regression_ledger.py` is inside lane `goods-fit-2026-09-25`'s
+work lock (taken 11:21:58Z). RUL-140 is a stand-off, not a preference — recorded in OPEN_LOOPS
+rather than raced.
+
+## PROXY-OPEN-1 / FN-WINDOW-1 — the open rate was measuring Google, and a red was measuring nothing (24–25 Sep 2026)
+
+Onboarding run 20. Both are measurement faults, found by checking a number and a red before
+inheriting either.
+
+- **PROXY-OPEN-1 (RG-0464).** The click register graded **331 recipients as `human_open`** — a
+  12.9% read rate on 2,574 letters. PROBED on the live register: **297 of them had no open event
+  that was anything but a mailbox-provider prefetch.** 229 events carry `GoogleImageProxy` in the
+  User-Agent, 18 `YahooMailProxy`, 17 `MSOffice 16`, and 301 the bare token `Mozilla/5.0`, which is
+  Apple Mail Privacy Protection. 326 of the open events came from Google IP ranges.
+  `MACHINE_UA`/`MACHINE_IP_PREFIXES` were written on 3 Sep for *clicks* — corporate scanners — and
+  no image proxy is in either list, so a proxy fetch scored on `clicked Nh after send` alone, worth
+  −1, and −1 is "human". 328 of the 331 gradings rested on that single reason.
+  **Fixed without deleting the signal:** a proxy fetch proves the letter reached a live mailbox and
+  proves nothing about whether a person looked. New `proxy_open` tier, `n_proxy_opens` column
+  (+ migration for the live table), `opened_proxy` in the funnel totals, and it can never rejoin a
+  human count. Re-scored on a copy of the live DB before shipping: human_open 331 → 34, uncertain
+  84 → 16, proxy_open 365, machine 203 unchanged, **human_click 9 unchanged** — an image proxy
+  fetches pixels, not links. Strictly tightening.
+  *The honest funnel:* 2,574 letters · 34 demonstrable readers · 365 delivered-but-unmeasurable ·
+  9 clicks · 0 published. Nine clicks from thirty-four visible readers is ~26%: the letter works on
+  the people who read it, and the shortfall is reach.
+- **FN-WINDOW-1 (RG-0465).** RG-0110 printed *"auth_verify no longer routes through
+  `_establish_user_session`"* and carried a deploy block. That call is auth_verify's **last line**.
+  The check read `split("def auth_verify(")[1][:1400]` — the first 1400 bytes of the rest of the
+  file — and SIGNIN-ONCE-1, shipped the same morning, added ~1,050 characters and pushed the call to
+  offset 2056. `auth_verify_code` sat at 1372, **28 characters** from the same false red. New
+  `fn_body()` bounds the read by the next top-level def. Board: 4 regressed → 3.
+  *Named, not claimed closed:* 22 other checks in that file still read a fixed byte window.
+
+Cost model impact: none.
+
+## 2026-09-25 — ORG-ENROL-1: the employer door ships · STATUS-CARD-FIT-1: her card reads as words
+
+- **ORG-ENROL-1 (RUL-150, QUICK_LISTING_SPEC s12/12a; reach proposal 1) — RG-0474.** New module `org_enrol.py`
+  (router seam, mounted like estate_agents): `POST /agencies/{id}/enrol` (the organisation's own admin or the
+  admin key) takes a list of name + role + language and, per person, mints HER OWN RUL-167 key account (no
+  e-mail, no phone held; the secret is shown once and stored only as a hash), an `agency_members` row and an
+  `org_enrolments` slip. `?format=sheet` returns printable QR slips in her language. `GET /e/<secret>` signs
+  her in and opens `/q/services?role=<role>&lang=<lang>&src=org<id>`, or the app once she has an advert; the
+  link never lapses (RUL-141) and is the same key `/k/` honours. A VERIFIED organisation's enrolment is its
+  employer confirmation (`universal.employer_confirmed`, 12 pts, once; a rejected one never re-earns; an
+  organisation verified after the import confirms at claim). `GET /agencies/{id}/enrolments` shows the
+  organisation enrolled / opened / confirmed / published, never a link. `scripts/enrol_import.py` is the CSV
+  lane on the server. **The hard line:** the module never writes the listings table and reaches no
+  advert-creating path; RG-0474 asserts it from source AND by enrolling two people on an in-memory database
+  (0 adverts). Behavioural test before shipping: 19/19. Sends nothing to anyone -- the slips are handed out
+  by the organisation. `roles/role_registry.json` now ships (the importer validates roles against it).
+- **STATUS-CARD-FIT-1 — RG-0475.** Found on the live card for listing 367: the 24 Sep one-line ellipsis cut
+  "The Great American Yellowstone Safari" to "The Great Ameri…", and "Ask me on TrustSquare" crossed the
+  panel border. The title now steps 92 → 76 → 64 px and takes two lines before any ellipsis; the panel
+  heading shrinks to fit. RG-0475 renders a long title and fails on any text past the card edge or a
+  two-line-fitting title that is cut -- proven able to say no against the old renderer.
+- Shipped in the same deploy, by David's "Release" (25 Sep): the open-rate lane's RUL-168 typed-rates work
+  and the cto-fix lane's aged git-lock sweep log, which had sat uncommitted under that lane's work lock.
+
+Cost model impact: none.
+
+- **First deploy refused, correctly (06:42Z).** The stranger gate refused 19f89c3 because the three new routes
+  had no rule in `route_policy.json`; the live site was not changed. Declared: enrol and enrolments = signed-in
+  user who OWNS the agency; `/e/{secret}` = token. Hardened in the same pass: the door now runs its own
+  organisation-admin guard (`_org_admin`: admin key, or a session that IS that organisation's admin), so the
+  kill switch that can drop the shared agency seam into shadow mode can never open enrolment. Behavioural test
+  22/22 including shadow-mode stranger -> 401 and signed-in intruder -> 403. RG-0474 now also asserts the guard
+  and the three route declarations.
+
+## 2026-09-25 — Quick: rates are typed, the only preset is the minimum wage (RUL-168)
+
+David: *"most people in a bind will automatically select the higher rates ... people will think that is the
+only choices ... what will we present for other countries? ... a single legal minimum value with a space
+for them to enter their values"*.
+
+- **Quick door, work paid by time (Services incl. Home & care, Tutors):** the preset amount chips
+  (R250..R450 a day, R150..R400 an hour, R350..R800 call-out) are replaced by one screen: pick how you
+  charge (Per hour / Per day / Per visit / Per job / Call-out + per hour, or Quote first for trades),
+  pre-selected for the role, then type the amount. Nothing suggests a number.
+- **Floor:** the national minimum wage of her country per hour (x8 for a day, one hour for a visit, job
+  or call-out). Below it, Next stays off and says why. Countries by phone time zone or `?cc=`:
+  ZA R30.23 (1 Mar 2026) · NA N$15.00 domestic (1 Jan 2026) · BW P7.69 (domestic P1 500/month, Mar 2026)
+  · MZ 34.03 MT (7 072 MT/month, 1 Apr 2026) · KE KSh 80.15 (KSh 18 047.40/month, 1 May 2026) ·
+  UK £12.71 (1 Apr 2026) · DE €13.90 (1 Jan 2026) · AU A$26.44 (1 Jul 2026) · US $7.25 federal.
+  Each is the lowest legal minimum covering the work Quick carries, so a lawful rate is never refused.
+- **Call-out:** a fee plus an optional hourly rate; trades and jobs may add "plus parts and materials".
+  Advert reads e.g. "R450 / call-out + R380 / hour + parts" (passes the server's basis rule).
+- **Clicks:** trades lose a screen (how + how much are now one); casuals and tutors keep the same count.
+- New words added to roles/quick_i18n.json in all five languages (preview translations, RUL-160 review).
+- Rendered test before shipping (headless phone-size browser): casual day rate, trade call-out +
+  hourly + parts, Quote first, per job, UK and KE floors, isiZulu — no page errors.
+- Ledger RG-0473 (OPEN until live); rulings_check RUL-168.
+
+Cost model impact: none.
+- Live 25 Sep 06:48 UTC, checked in Chrome on trustsquare.co/q/services: casual R350 / day and trade R450 / call-out + R380 / hour + parts reached the advert; below the floor Next stays off; no console errors. RG-0473 live and locked.
+
+## 2026-09-25 — Adventure maps draw on first view again (MAP-FIRST-VIEW-1, TE-TEXT-1)
+
+David: *"the in app maps used to show a map on the first view, but lately i need to either expand or open it and
+even then i first have to press route for the map to appear. Showing it in the first view as it were is the view
+we need?"*
+
+- **Cause (probed in a rendered browser):** LIVE-MAP-1 (3 Sep) added a block that fetches today's stays and asks
+  the map for its bounds before the map has a view. Leaflet threw "Set map center and zoom first", which stopped
+  the rest of the page, so the map stayed blank until Route set a view. Live Botswana map: 0 tiles.
+- **Fix:** the block uses the route's own points and never asks an unset map for bounds; on any failure it steps
+  aside instead of stopping the page. All 15 maps and the generator template (scripts/journey_template.html).
+  Patched Botswana map rendered: 8 tiles, 41 pins, no errors. ms.js map cache-busters bumped (12 maps).
+- **Also on David's screenshot (TE-TEXT-1):** the "Before you go" itinerary showed raw `&nbsp;<a href=...>` —
+  the day text is shared with the maps, where the fare link is HTML. The brief now shows the words only.
+- Ledger RG-0485 (OPEN until live): no map may read its bounds unguarded; the brief shows no raw HTML.
+
+Cost model impact: none.
+
+## 2026-09-25 — maintenance-loop: HARNESS resync (RG-0450) + CENSUS-DOOR-1 (RG-0223)
+
+Daily maintenance loop (scheduled, 05:35–06:10Z). Fault queue: 0 new, 0 fix-shipped, 26 verified,
+12 closed; shadow agent saw 0 app faults and acted on 0. No escalations in 24h (no brief written).
+
+- **RG-0450 regression fixed** — `genie/HARNESS.html` had drifted from `quick.html` (house rule:
+  identical). Three 24 Sep commits (BUGSWEEP-24SEP e0a4d22, QUICK-WHERE-1 303fbc0, E2E-HMI-1 b951503)
+  edited `quick.html` only. `quick.html` is the deployed file (manifest: `quick.html | q/index.html`)
+  and carries the fixes, so it was copied over the prototype (`cp`, byte-identical by `cmp`;
+  backup `genie/HARNESS.html.bak-20260925-054135`). `build_comic.py`, which reads HARNESS, now sees
+  the fixed flow. Evidence: RG-0450 check run directly → no FAIL.
+  (The resynced file was swept into the concurrent session's commit c444c99 from the shared tree.)
+- **CENSUS-DOOR-1 — RG-0223 regression fixed.** SEC-GATE-1 (24 Sep) made
+  `GET /dashboard/email-triage` admin-only, so the brain's customer-email census got 401 and the run
+  reported "0 seen" on app faults only — exactly what RG-0223 forbids. Same class as GATE-SYNC-1
+  (RG-0457) and the same decision: the reader moves to the staff door. `email_lane_census()` now
+  tries anonymous first (loopback on the box is still admitted) and on 401/403 retries once with
+  X-Admin-Key when this machine holds one. Counts only by construction: `items` is dropped whatever
+  the door; the report gains `door`. Evidence: census probed live → 24 total, 5 held, door=staff;
+  re-run agent heartbeat carries it; RG-0223 run directly → "heartbeat carries the customer lane:
+  24 total, 5 held". Backup `scripts/maintenance_agent.py.bak-20260925-055852`.
+- **RG-0351 and RG-0373** were red at the start of this run and were fixed by the concurrent
+  David-directed session `cto-fix-2026-09-25` (PG-PORTABLE-4 in `bea_main.py`; COACH-EARNABLE-2 in
+  the ledger). This loop did not touch those files (that session held the work lock).
+
+## 2026-09-25 — Quick: every kind wears its own picture; Local Market reference says "A customer" (KIND-FIT-1, CUSTOMER-REF-1)
+
+David, on a Local Market Plants draft: the referral *"should rather say 'a customer' than 'someone you worked for'"*, and
+*"it is mostly to add photo generic types with the right categories"*. He approved 14 pictures (~US$0.84, prepaid, RUL-164).
+
+- **Reference:** a Local Market seller's reference card now reads "A customer says one sentence about you" ('n Klant sê /
+  Ikhasimende lithi / Moreki o re / Umthengi uthi / Moreki o re). Cars keep "Someone who has bought from you".
+- **Pictures (14 new):** Services — Plumber, Handyman, Painter, Pool care (they wore an electrical kit, garden edging and a
+  house); Local Market — Crafts (wore a cupboard); Tutors — English, Afrikaans, Accounting, Coding (shared three desk
+  photos); Home help — Cleaning, Laundry & ironing, Cooking, Childminding, Office cleaning (wore bedrooms, a lounge and an
+  electrical kit). No faces, brands or readable text.
+- Ledger RG-0487 (OPEN until live).
+
+Cost model impact: ~US$0.84 one-off on the prepaid picture account.
+- Live 25 Sep ~13:00 UTC (deploy 880000b, 14 pictures via media push), checked in Chrome on trustsquare.co/quick/ with David's own case: Local Market > Plants > Mamelodi > R500–R2 000 > Collect shows the plants picture marked EXAMPLE PHOTO, "Price: R500–R2 000", "A customer says one sentence about you" and the seller's Buzz line; Services, Tutors, Home help and Crafts tiles all read their own pictures. RG-0487 LOCKED.
+
+## 2026-09-25 — Inspection fixes: introductions unlocked, seller text can no longer carry code, money and hand-off breakers closed (INSPECT-FIX-1)
+
+David, 25 Sep 2026: "perform an inspection of the trustsquare and quick listing app code, check for bugs, interface fluid
+hand offs in both directions, again for speed, fluidity, ease of use and generally language grammar and spelling. Do it in
+depth and thoroughly." Nine reviewers read every line of quick.html, ms.js, marketsquare.html, ms.css, the service worker
+and the backend routes Quick and the hand-offs use; four verifiers tried to disprove the findings; the live site was walked
+at 390x844 and 360x640 with every write blocked or faked. 266 findings (9 critical, 46 high, 119 medium, 92 low) are on
+`INSPECTION_2026-09-25.html` (data: `INSPECTION_2026-09-25_findings.json`). This change closes the criticals that sit in
+files outside the Quick lane's lock (quick.html is locked by goods-fit-2026-09-25, so its items are recorded, not edited).
+
+- **INTRO-GATE-MATCH-1 (ts4-01)** — the app locked the introduction button on the paid Home Affairs tick, while the server's
+  real rule (`_seller_intro_gate`) accepts a verified ID document or a verified agency. Read-only production check: 44 of the
+  65 live adverts belonged to sellers the server would serve, and all 65 showed "Introductions open once this seller
+  verifies their ID". GET /listings/{id} now carries `seller_can_receive` (a yes/no from the server's own gate, never the
+  seller's identity) and the app gates on it (`_msSellerCanReceive`, `msUnverifiedGate`).
+- **CONTENT-GATE-2 (ts1-01, ts2-01, ts2-03, ts3-02, ts3-04)** — the output filter now also cleans subject, level, mode,
+  service_type, service_class, availability, buyer_name, buyer_first_name, price, per, other_name, from_name, colour,
+  variant, body_type, condition and destination, treats Buzz pair rows (`pair_id`) as records, and turns a straight double
+  quote into a typographic one, so a title can no longer break out of `alt="…"`/`src="…"` and add its own handler. The
+  Buzz list escapes names at render as well.
+- **LM-DEEPLINK-1 + LM-PAID-GUARD-1 (ts1-03)** — a Local Market advert opened from a link (Quick's Find, a Status share)
+  opened on the ordinary page and asked the buyer for 1T; it now opens on its own free page, and POST /intros refuses a
+  Local Market advert before anything is held.
+- **PLAN-RETURN-1 (ts1-02)** — the Plans screen sent Paystack back to `?sub_verify=1`, which nothing read, so a paid Starter
+  or Pro upgrade was never applied; both upgrade paths now return to the handler that verifies and applies the plan.
+- **CAR-ATTEST-SEED-1 (ts2-02)** — a Quick car advert could never publish: the hand-over to the Terms step seeded only id and
+  title, so the vehicle-confirmation card never showed and every publish failed 409; the full row is seeded now.
+- **PRICE-KEEP-1 (ts3-01)** — saving any edit to a Quick-made car, collectable or Local Market advert turned a price range such
+  as "R1 000–R5 000" into R10,005,000; an untouched price box now leaves the stored price alone.
+- **DRAFT-AFTER-SIGNIN-1 (ts1-06/backend-02)** — after signing in with the 6-digit code (or Google/Apple) the app reloaded to
+  the home page and the promised draft never opened; a draft still waiting in the tab opens now, and a draft that cannot be
+  found says so instead of giving up silently.
+- **CITY-SWITCH-LOAD-1 (ts1-07)** — choosing another city now loads that city's adverts at once.
+- **Share to Status (ts2-04)** — the hub button's handler was broken by an unescaped quote; it works again.
+- **QUICK-LINK-CARRY-1 (ts1-12, quick-13)** — every link from the app into Quick now carries the way back (`from=app`) and the
+  reader's language (`lang=`), which quick.html already reads.
+
+Proof: patched files pass `node --check` / `py_compile`; a local browser run with a faked server showed the unlocked
+"Request Introduction", the Local Market deep link on its own page and the carried Quick link, against the locked button,
+paid page and bare link on the unpatched code. Live check after the deploy is recorded in OPEN_LOOPS.
+Regression-ledger entries for these fixes wait for `scripts/regression_ledger.py` to leave the goods-fit lock.
+
+## 2026-09-25 — Afrikaans AI-function cards corrected (I18N-AF-2)
+
+David, reading the Afrikaans cards: *"This should be 'Eksamens studieplan' not 'Eksamenstu dieplan', the space is in
+the wrong spot"*; *"This should be '...+ Mark verslag' and not '...Marktverslag'"*; *"This word 'aangebode' is wrong,
+it should be 'voorgestelde'"*.
+
+- The three corrections are in roles/app_i18n_af.json (the checked words) and reach the server's translation cache
+  through migrations/054_i18n_af_ai_cards.py, the same lane as 045.
+- The same screen had three more plain errors, fixed with them: "navorsingssdossier" (double s), "'n persoonlike
+  toetsritkontroles" (now "'n persoonlike toetsrit-kontrolelys"), and "Eenmalige Ekspedisiedossier" for
+  Once-in-a-Lifetime (now "Eens-in-'n-leeftyd-ekspedisiedossier").
+- The Heritage and Retirement card blurbs were longer than the 240-character translation limit and showed in English;
+  both are hand-translated and the limit is 400 (ms.js MAXLEN, bea_main.py I18N_MAX_CHARS).
+- ms.js DICTV 2 -> 3 so every browser drops its stored copy and fetches the corrected words once.
+- Ledger RG-0493 (OPEN until live).
+
+Cost model impact: none (checked words are served from cache; longer strings stay under the daily translation cap).
+- Live (deploy 54af268, migration 054 applied), checked in Chrome on trustsquare.co in Afrikaans: the AI-function
+  cards read "Eksamens studieplan", "Versamelstukke-advertensie + Mark verslag", "die beste voorgestelde
+  naweekpakket", "Eens-in-'n-leeftyd-ekspedisiedossier", "navorsingsdossier", "'n persoonlike toetsrit-kontrolelys",
+  and the Heritage and Retirement blurbs are in Afrikaans. RG-0493 LOCKED.
+
+## 2026-09-25 — Claude's hands stopped for 7½ hours and nothing noticed (HOSTQUEUE-WATCHDOG-1)
+
+`autodeploy_agent.bat` on David's PC — the executor behind HOST-QUEUE-1 (RUL-095) and the deploy
+path (RUL-092) — last completed an action at **13:15:06Z**. At the 20:38Z stand-up it had not
+ticked for **7h31m** against a ~20-minute cadence.
+
+- **What it cost, measured not assumed:** `git log origin/main..HEAD` = **5 commits stranded**,
+  none of them on the mirror and therefore none deployable — among them `eef4097 INSPECT-FIX-1`,
+  the 25 Sep inspection's critical fixes (introductions unlocked where the server accepts, seller
+  text can no longer carry code, the Local Market deep link no longer charges the buyer, Plans
+  upgrades apply, Quick cars publish). The origin pulls from the mirror on its own timer, so the
+  one broken link in the chain was local → mirror, which needs that PC's credentials.
+- **Why nothing caught it.** Every site-facing instrument read green all evening and was right to:
+  the site was fine. STANDUP-WATCHDOG-1 watches the stand-up's own freshness; nothing watched the
+  lane that carries work off this machine. A healthy site is not evidence that the way to change
+  it is open.
+- **Detector — `_hostqueue_lane()` in `scripts/maintenance_agent.py`, beside the stand-up lane.**
+  Two signals, because 25 Sep tripped only the second: (1) a permission-backed `.req` queued past
+  **two whole ticks** — one missed tick is ordinary, two is an executor that is not running;
+  (2) **commits ahead of the mirror for more than a tick**, which is the harm itself and happens
+  with nothing queued at all. Either reads STALLED and names the oldest item.
+  Deliberately *not* "have results appeared lately": the agent only writes a result when there is
+  work, so quiet is normal and would have produced a false alarm every idle night.
+- Local-only by construction — `host_queue/` is gitignored, so the lane skips on the origin
+  (BACKUP-ORIGIN-SKIP-1's precedent) rather than reporting a confident verdict from a vantage that
+  cannot see the queue. Never raises; an unreadable queue reports UNKNOWN, never OK (RG-0187).
+- `scripts/test_hostqueue_watchdog1.py` is **red on the pre-fix source** and pins both signals plus
+  the three ordinary states that must NOT report trouble.
+
+**Not fixed from here:** starting the agent needs that PC. The queued push
+(`20260925-203849-091_git_push_marketsquare.req`) runs by itself on the next tick, so this
+self-heals the moment the machine is awake — and from now on it says so instead of going quiet.
+
+## 2026-09-25 — Quick: Local Market, Cars and Property drafts fit the pick (GOODS-FIT-1)
+
+David: *"this selection was local and then plants - the photo ... looks like a property advert, and then the referral
+and buzz need to be topic specific like you fixed this morning, but here also please"* and *"This was a listing to sell
+a plot, showing a property with a house ... the photo advert ... does not show it as an demo advert plus it is not a plot."*
+
+- **Pictures:** 15 new kind pictures (plants, furniture, clothes, tools; bakkie, sedan, SUV, hatchback, double cab,
+  motorbike; plot, townhouse, flat, farm, commercial) — ~US$0.90, prepaid (RUL-164). No brands, badges or plates.
+- **The draft's picture says what it is:** "EXAMPLE PHOTO — add your own in the app" on the draft and on the
+  arrival card. (It is never sent with the advert; it only illustrates the draft.)
+- **Reference (RUL-169 extended to goods):** Local Market and Cars — "Someone who has bought from you";
+  Collectables — "A collector you have dealt with"; Property — "Someone who has rented or bought from you".
+- **Buzz on the seller's draft** speaks from the seller's side: "One line to the people who buy from you — fresh
+  today, sold out, at the gate"; cars and collectables likewise.
+- **Property:** a plot or commercial property is no longer asked for bedrooms; bedrooms read "3 bedrooms".
+- **Goods say Price, not Rate** (Prys / Intengo / Ixabiso / Theko), and the price band is translated.
+- Ledger RG-0486 (OPEN until live).
+
+Cost model impact: ~US$0.90 one-off on the prepaid picture account.
+- Live 25 Sep ~11:50 UTC (deploy 76fa6b2, pictures via media push), checked in Chrome on trustsquare.co/quick/: Local Market > Furniture draft shows the furniture picture with "EXAMPLE PHOTO — add your own in the app", "Price: R100–R500", reference "Someone who has bought from you", Buzz "One line to the people who buy from you"; Property > Plot > To sell goes straight to the draft (no bedrooms), shows an empty-plot picture marked EXAMPLE PHOTO, reference "Someone who has rented or bought from you". No console errors. RG-0486 LOCKED.
+
+## 2026-09-25 — AI example adverts are marked everywhere (EXAMPLE-MARK-1)
+
+David, with screenshots: *"The demos adverts are showing and that is good until we have some real adverts, but they
+do need to be marked very clearly ... currently they get showed as real adverts inside the quick launcher but does
+show as example/demo adverts inside the trustsquare app. This will then be a global fix?"*
+
+- **Quick:** every AI example advert (super_example or is_demo) in the find results wears the app's red
+  "AI EXAMPLE ADVERT" ribbon. When only examples are found the heading reads "Only examples so far" and the
+  count line "AI examples of what an advert looks like" -- never "Yes — N on TrustSquare · real adverts".
+  Real and example adverts together read "real adverts and AI examples"; only real adverts count in "Yes — N".
+- **Global — the outreach letters:** 17 CityLauncher letter templates showed the same example adverts under
+  "<Kind> already live on TrustSquare" with image text "— live on TrustSquare". Probed: the linked adverts
+  (e.g. 315, 336, 306) are all super_example=1. The letters now say "<Kind> on TrustSquare — AI-made example
+  adverts, so you can see what yours will look like", and each image "— an AI-made example advert".
+- The app's own cards and detail page already carried the red ribbon (SUPER-1, guarded in the ledger).
+- Ledger RG-0484 (OPEN until live) also scans every letter template, so an "already live" example cannot return.
+
+Cost model impact: none.
+- Live 25 Sep ~11:25 UTC, checked in Chrome on /q/ in Afrikaans: Visvang and Treinrit both read 'Tot dusver net voorbeelde', every card wears the red KI-VOORBEELD ribbon (1/1 and 3/3). CityLauncher letters queued for the host agent's deploy. RG-0484 LOCKED.
+
+## 2026-09-25 — E2E walk corrected: money route was already proven; walk fixes now in the ledger
+
+David: *"i have already done the tuppence payment route. You could not see it a previous time as well?"*
+
+- The 24 Sep walk's one "still open" item (intro accept -> Tuppence -> contact) was wrong. The record
+  already proved it: 1T bought live through Paystack 15 Aug (STATUS.md, settled to FNB); real intro
+  accepted through the masked relay 19 Aug (RG-0118); accept charges exactly once 22 Aug (RG-0142).
+  E2E_HMI_WALK_2026-09-24.html corrected: Works 11, Still open 0.
+- The walk fixed ~34 things but added no ledger entries. Added RG-0469 (contact scrub on every write
+  path), RG-0470 (Buzz tick never writes the Seller Terms), RG-0471 (non-live adverts 404 to strangers),
+  RG-0472 (Pause, Report, block/uphold, re-accept, held-photo, cancel wording; live ms.js half PROBED).
+  All four pass. Rate-edit 422 and the wallet live rate were already guarded.
+- Root cause of the miss: the walk judged only what it saw in the browser and never read the record.
+  CLAUDE.md now carries E2E-RECORD-1: read ledger/STATUS/CHANGELOG before calling a path untested.
+
+Cost model impact: none.
+
+## 2026-09-25 — Quick: examples follow her country and city (COUNTRY-PACK-1, RUL-170)
+
+David: *"we need to while we have this fixed also fix the other countries for these fixes? Will it be possible?"*
+Picture budget chosen: *"Destinations only (~US$7)"*.
+
+Found while checking: every Quick visitor — in every country, and in every ZA city except Pretoria — was offered
+Pretoria suburbs and prices in Rand.
+
+- **Country:** ?cc= > Cloudflare's country header (new `geo` in GET /quick/me, read-only, never stored) > phone
+  time zone > South Africa. **City:** ?city= > her account > Cloudflare's city > her earlier choice on this phone >
+  one "Which city?" tap (skipped where the country has one live city); a "Not in X? Change city" link on WHERE.
+- **Per country** (roles/quick_country_packs.json, injected as QPACK): areas for all 43 live cities, currency and
+  price bands (cars, collectables, stays, local market), the minimum-wage floor already built (RUL-168), trip
+  destinations per kind, example names from one local naming tradition per country, local words
+  (bakkie -> ute/pickup, matric -> Year 12/Form 4, body corporate -> strata/HOA ...).
+- **Pictures:** 118 destination pictures for the lodge / tour / self-drive lists of NA, BW, MZ, KE, GB, DE, AU, US
+  (~US$7, prepaid, RUL-164). Rail and fishing lists show pictures where they overlap, labelled buttons otherwise.
+- Languages untouched (RUL-165). "Which city?" and the change-city line added in the five ZA languages.
+- Rendered test before shipping: GB Manchester cleaner, KE game lodge, ZA Cape Town, ZA Pretoria unchanged.
+- Ledger RG-0482 also compares the pack with the live /cities list, so a new city without areas turns red.
+
+Cost model impact: ~US$7 one-off on the prepaid picture account.
+- Fix after the live check (25 Sep 10:35 UTC): a signed-in account city from another country (David's Pretoria account previewing ?cc=KE) set LOC.city behind the pack's back, so the advert would have been filed in Pretoria. The chosen city now always wins at every step, and an account city beats this phone's remembered city.
+- Live 25 Sep ~10:40 UTC, checked in Chrome: GB/Leeds city tap and areas, the GBP floor blocking £95 a day, KE Game lodge destinations with pictures and KSh bands. RG-0482 LOCKED.
+
+## CityLauncher brought up to the app — QUICK-LINK-1 + EMPLOYER-HARVEST-1 (25 Sep 2026)
+
+David: *"the CityLauncher has fallen behind with our design improvements… please check the app
+against our latest changes and update the app as well."* It had fallen behind by a whole business
+model, not by a few templates.
+
+**What was measured first.** The 6,748-row prospect list is entirely businesses that list
+themselves — sports clubs, teachers, outfitters, estate agents, tutors, car dealers — and carries
+**zero rows of any employer kind**, so `services_casuals_outreach.html` had never been sent to
+anybody. Every letter posted a bare `https://trustsquare.co/q/homehelp`: the pre-RUL-159 door name,
+no role, no language, no source tag. The emailer had **no** language handling at all while the door
+takes `?lang=` and the WhatsApp greeting already used all five SA languages. 4,672 prospects carry a
+phone number and every `channel` row still reads `email`.
+
+- **QUICK-LINK-1 (RG-0490).** New `CityLauncher/emailer/quick_door.py` builds the link the door
+  actually understands, reading MarketSquare's own `roles/role_registry.json` and
+  `roles/lang_countries.json` rather than keeping a second copy. A role attaches only on an exact
+  key or English-label match — a fuzzy match would put a welder's picture on a cleaner's letter.
+  Only RUL-162 `offered` languages appear; a `reader` language is drafted and unsigned (RUL-160) and
+  offering one promises a door that is not open. 14 templates moved to `{{quick_link}}`; the two
+  worker letters gained `{{language_row}}`. Measured before and after on all 16 templates for a ZA
+  prospect: 14 carried a door link, 14 still do, **0 lost one**. A ZA cleaner now opens
+  `/q/services?role=home_cleaner&src=<wave>` plus four language links; a US outfitter stays English
+  (RUL-165); a sports club stays doorless **by decision**, named in `DOORLESS`.
+  Two traps caught before shipping: `quick_door.py` was not in the deploy manifest and `emailer.py`
+  imports it; and the sibling is `MarketSquare` locally but `marketsquare` on the server — **which
+  also carries an empty `/var/www/MarketSquare`**, so a single hard-coded spelling resolves to a real
+  directory holding none of these files and silently drops every role and language.
+- **EMPLOYER-HARVEST-1 (RG-0492).** RUL-150 makes the employer the supply channel and
+  MarketSquare's employer door shipped the same morning (`org_enrol.py`), but nothing was looking
+  for the organisations. 24 OSM tags derived from the registry's own `employer_kinds`, ordered by
+  how many live roles each employs. Probed in Tshwane before being claimed: `tourism=hotel` 85 found
+  / 19 email / 37 website; `amenity=restaurant` 300 / 16 / 33; `office=government` 92 / 15 / 50;
+  `landuse=industrial` 182 / **1** / 2 — a dud, kept only because `source_health` kills a barren tag
+  per-tag. **`household` is the largest employer kind in the registry and is deliberately absent** —
+  private homes are not on a map and are never harvested; `EMPLOYER_KINDS_NOT_ON_A_MAP` records that
+  as a decision so nobody later "fixes" it by scraping addresses.
+- **RG-0344** went red on the way through: the Ops Dashboard's Email Templates preview mirrors the
+  sending copies, and 15 had drifted. Rebuilt with `scripts/build_email_templates_page.py`.
+
+Not done, and why: the employer **letter** is unwritten because its CTA must choose between the
+agency console and the hours-old enrolment door, and that lane is still being shaped (SO-5).
+RG-0391 (the Quick manifest id moving) is another session's locked file — recorded as DW-159.
+
+Cost model impact: none. SMS pricing was researched, nothing purchased.
+
+## 2026-09-25 — The Bee Lady's advert: Quick finds it, and nobody rewrites her words (LM-GROUP-FIND-1, ADVERT-WORDS-1)
+
+David, 25 Sep 2026, on the Misty Forest honey advert (listing 273, Local Market, Garsfontein): the Afrikaans view read
+"Misty Forest roupasteunings, propolis & byswas — deur die Bylady" ("raw honey is rou heuning"; "The Bee Lady is her
+called name, it should not be translated"), and "in the quick listing app i looked for honey locally and her live advert
+did not come up".
+
+- **LM-GROUP-FIND-1 (RG-0488)** — Quick's Find turned the tile "Food & preserves" into the one search word `preserv*`,
+  which her advert does not contain (`q=honey*` found it at once). A Local Market tile is a GROUP, not a word: Find now
+  asks for the whole Local Market category in the city and matches the group on the advert's own title and text (the
+  TRIP-TYPE-1 pattern). "Furniture" had the same fault against the teak sideboard. A typed word still searches as before.
+  quick.html and genie/HARNESS.html kept identical.
+- **ADVERT-WORDS-1 (RG-0489)** — the Afrikaans title was not hers and not an approved second language (listing 273 has
+  none): the page translator rewrote her advert. RUL-162 keeps an advert in the seller's language plus one extra language
+  only she approves, so every advert title and description now carries data-notranslate — main and Local Market cards
+  and detail pages (the Local Market pages had none; the main detail had it only with the language layer on). The advert
+  translator (her own second-language draft) now keeps nicknames ("deur die Bee Lady") and never invents a word; the
+  Afrikaans glossary carries rou heuning / byewas.
+
+## 2026-09-25 — Quick: a way out of the "Your advert is live" screen (ARRIVE-EXIT-1)
+
+David, with two screenshots: *"There is no go back button from this screen, is it by design or can the user go back?"*
+
+- Not by design: the arrival screen (ARRIVAL-1) offered only "See my advert" and "Send it to myself on WhatsApp",
+  so a seller who wanted to stay in Quick was stuck.
+- Added a close (×) top right and "List something else" under the buttons. Both go to a FRESH start on the
+  Quick front door, never back into the form she just published (that would only invite a duplicate advert).
+- New words in roles/quick_i18n.json, all five languages (preview, RUL-160 review).
+- Rendered test before shipping (phone size, publish mocked): arrival -> "List something else" -> front door,
+  nothing carried over, no page errors. Ledger entry added (OPEN until live).
+
+Cost model impact: none.
+- Live 25 Sep 07:25 UTC: checked in Chrome on trustsquare.co/q/ (publish answered in-page, no real advert): arrival screen shows the close and 'List something else'; tapping it returns to the front door with nothing carried over. RG-0476 LOCKED.
+
+# TERMS-HANDOVER-1 — the seller sent to the Terms now lands on the Terms (onboarding run 19)
+
+**24 Sep 2026 · ms.js · RG-0449 · found by walking the live journey, not by reading it.**
+
+The cold-seller journey was walked end to end on the live site in headless Chromium at phone
+size, as a seller with no acceptance on record arriving on a seven-day `?signin=&draft=` link —
+the journey the onboarding number counts, and the one the recoup letter to Rick Wemple sends a
+man down. It completes: the terms render (v1.18, 106k characters), the scroll gate opens, both
+boxes tick, the publish answers 200, and a logged-out reader sees the advert live. That is the
+sixth and last pre-send check on `RECOUP_RICK_LETTER.md`, and it now passes on live evidence.
+
+One defect was found on the way, two requests apart:
+
+* `PUT /listings/{id}/publish` answered **403** (EULA not accepted) — RG-0443 working as built.
+* The very next request, `GET /users/<him>`, answered **401**.
+
+That endpoint carries `Depends(auth.require_api_key)`. The one call in `sobInit()` that makes it
+sent no `X-Api-Key`, while every neighbouring call in the same file sends it. So `if (uRes.ok)`
+was false for **every** seller ever handed over: `_eulaSigned` was never read, the note that
+explains why he is on that screen stayed hidden, and `sobGoPhase(3)` never fired. `dashPublish`
+said *"One step first — please read and accept the Terms"* and then dropped him on phase 1, a
+listing preview whose only button reads "Looks good". Nothing there mentions terms; they are two
+taps further on, unexplained.
+
+**Fixed, two legs.** The lookup sends the key the endpoint asks for. And a gate that cannot read
+the truth now fails *towards* asking rather than past it: when the server has just refused the
+publish for want of an acceptance, a failed lookup still lands him on the Terms. Strictly
+tightening — no arrival that reaches the terms today stops reaching them.
+
+**Also recorded, not changed:** the terms box is 39,829 px in a 338 px window — about 118
+screenfuls to swipe on a phone before the confirm row appears. The scroll-to-the-end gate is
+deliberate (conspicuous *and* acknowledged), and the text is David's, so this is reported rather
+than adjusted.
+
+Harness: `scripts/smoke_harness/verify_terms_handover.mjs` (repeatable; archive the probe after).
+Probe listing 399 was live for about four minutes and is archived; it never appeared in a feed.
+
+## 2026-09-24 — STATUS-CARD-1: her WhatsApp Status card (proposal 2 of the casual-workers plan, inside RUL-146)
+
+One tap after publishing — on the You're-live screen and on every live advert in the Seller Hub ("Share to
+Status") — makes a 1080×1920 card: the role picture (or her own first photo), her first name (only when her own
+session asks; the public read never carries a name), area, days and rate, the trust badge, a QR and the link with
+`?src=status`. The share sheet gets the image + text on Android/iOS (Web Share with files); elsewhere the card opens
+in a new tab and the text is copied. Two doors on every card: *Ask me on TrustSquare* and *Make your own advert —
+free* (`/quick/?src=status`); services adverts also carry the "Make your own" line under the detail view
+(`?src=status-make`). Renderer `status_card.py` (Pillow + `qrcode`, installed in the venv), route
+`GET /listings/{id}/status-card.png` (live adverts only). Every arrival is counted by the existing `?src=` funnel.
+
+Also this fragment: the model's mid run now uses the measured click rate (`PM.click.obs = 0.0037`, 2 human
+clickers of 534 openers; David's decision 24 Sep) — the dashboard's pinned medians are the 29 Aug baseline and stay.
+Posters ×5 languages (A5, QR + `?src=poster`, number line blank until the WORK number exists), the WhatsApp Business
+greeting, the SA Youth / job-group texts and the Door 1 estate-gate pack are in CityLauncher/doors/.
+
+## 2026-09-24 — Security assessment (commercial live-app standard): breach closed, critical holes fixed
+
+- BACKUP-PRIVATE-1 (server): the nightly DB backups (users DB + CityLauncher prospects, 14 days, 31 files) were
+  uploaded into the PUBLIC media bucket and downloadable by date from the r2.dev URL. Copied and verified into the
+  private encrypted bucket (r2crypt:public_bucket_rescue_20260924) + Hetzner volume, then deleted from the public
+  bucket with David's approval (probe: 404). /usr/local/bin/backup_dbs_to_r2.py now writes only to r2crypt:daily.
+- UPLOAD-KEY-1 (bea_main.py _s3_upload): upload filenames could climb out of the media mirror (../) and, with the
+  app running as root, write any file on the server. Keys are now reduced to safe characters, flattened to
+  prefix/name, contained by realpath, and executable extensions are disarmed; non-image/pdf uploads are served as
+  application/octet-stream.
+- CONTENT-GATE-1 (security_gate.py step 7): user-written record fields (title, suburb, message ...) are plain text
+  and photo fields are plain https links on every JSON answer, so stored markup cannot run in ms.js, quick.html or
+  the admin console (covers the JSON-description bypass too). Stranger test PASS on the server venv (302 routes).
+- AA-AUTH-1 (AdvertAgent, deployed): /ai/run, /ai/jobs, /ai/jobs/{id}, /ai/ledger take identity only from the
+  signed-in session; examples are curated fixtures only. Probed: anonymous reads now 401.
+- CL-AUTH-2 (CityLauncher, deployed): /orchestration/control (ran systemctl as root for anyone), status, kpi and
+  pipeline reads now need the launch key or an enrolled device; LAUNCH_API_KEY rotated. Probed: 401.
+- nginx: /quick/, /quick.html and /q/ now carry the security headers; /media/ is sandboxed + nosniff;
+  server_tokens off; TLS 1.0/1.1 retired.
+- SEC-ASSESS-2 (bea_main.py): PAY-AMOUNT-1 -- Tuppence top-ups (verify + webhook), seller plans and the wishlist
+  plan are granted only when Paystack shows a ZAR charge of at least the asked price (metadata alone is set by
+  whoever starts the transaction); SMS-CAP-1 platform daily SMS ceiling (SMS_DAILY_CAP, default 300);
+  ADMIN-CEIL-1 master password compared in constant time with a platform-wide failure ceiling; enrol `next`
+  refuses backslash redirects; uploaded .doc/.docx keep their names, SVG is never served as an image.
+- Server: prod venv upgraded (Pillow 12.3, PyJWT 2.15, python-multipart 0.0.32, starlette 1.3.1 / FastAPI
+  0.135.3, aiohttp, cryptography, urllib3, requests, idna, anyio): pip-audit 0 known vulns, stranger test 302/302,
+  QA gate pass. AdvertAgent venv patched. BEA and strategist bound to 127.0.0.1. OS packages upgraded.
+- SEC-ASSESS-3 (David's approvals, 24 Sep): SESSION-END-1 sign-out (POST /auth/logout, called by ms.js signOut)
+  and account closure end every session of the account (users.session_version; no timer - an unchanged
+  version never lapses); SIGNIN-ONCE-1 sign-in links work once and never after 72 h; ID-MATCH-1 the 0.60-0.75
+  ID band earns only when the AI reports a match; VOUCH-OTHERS-1 employer confirmations count only from a
+  signed-in person other than the seller, and a second confirmation must come from a different person;
+  PRIVATE-DOCS-1 ID documents and certificates go to /var/lib/trustsquare-private (encrypted off-site nightly),
+  served only by /private-docs/ to owner, admin/enrolled device, or an accepted-intro buyer for post-intro docs;
+  the 14 existing files + 7 orphans migrate out of the public bucket. BASELINE_BATCH item 10 STRICT-CSP-1.
+- EDGE (David approved "yes, do the DNS changes"): duplicate resend._domainkey.mail TXT (the root key) deleted, so
+  mail.trustsquare.co DKIM verifies; DMARC p=quarantine on trustsquare.co, mail. and learn.; ORIGIN-LOCK-1 - a
+  Cloudflare request-header transform rule adds X-TS-Origin (secret held only in the rule and
+  /etc/nginx/ts_origin_secret) and nginx answers 403 without it, so no other Cloudflare account can reach the origin.
+
+## 2026-09-24 — SEC-GATE-1 (RG-0455): the whole security solution, not step one of fifteen
+
+David, 24 Sep 2026: "when i ask how can we be secure, then i would expect ... the safe solution, not step one
+of a 15 step process towards being safe." The 23 Sep audit fixed 17 holes one at a time; a full review of all
+292 routes on 24 Sep found 13 critical and 40 high more, because security lived in each handler separately.
+
+**The gate (`security_gate.py`, installed last in bea_main.py, innermost):**
+- Deny by default: every route is declared in `route_policy.json`; an undeclared route answers 403.
+- Levels checked before any handler: public / user / superuser / admin / maint / service / token / device / reviewer.
+- Act as yourself: declared actor params (path, query, JSON, form) are rewritten to the proven session email.
+- Ownership in one place: declared record ids must belong to the session (listing, agency, intro, document ...).
+- Private fields (street address, editor emails, api keys ...) are removed from public answers.
+- True client IP (CF-Connecting-IP only when the hop is Cloudflare) for every per-IP limit in the app.
+- Emergency lever: MS_GATE_ENFORCE=0 in the server environment = log-only.
+
+**TOKEN-TYPE-1:** every JWT here shares one secret; the admin checks accepted any of them. The public
+`GET /trust/employer-link` minted a 30-day token for any account that passed as X-Admin-Token. Admin tokens now
+carry scope "admin" and `_admin_claims()` is the only admin decode (pre-change 8-hour tokens still pass by shape).
+
+**60 handler fixes** from the review (six parallel reviewers, then an adversarial review of the combined diff):
+buyer-email dump on /intros, account takeover via /agencies/wave-prep, trust-point forgery, Tuppence drains by
+typed email, payment-reference replay, reflected XSS on /admin/enrol, open redirects, unmetered AI lanes, PIN
+brute force, agency api_key leaks, draft photo hijack (draft token, also as an HttpOnly ts_draft cookie) and more.
+
+**Front ends:** admin console + ops dashboard wrap fetch to send the page's admin token; `ms_gate.js` (loaded
+before ms.js) turns a "sign in first" refusal of an action the person started into the sign-in screen.
+
+**Deploy:** `scripts/stranger_test.py` runs in server_deploy.sh BEFORE any live file is touched, against the
+exact commit, a throwaway DB copy, made-up credentials and no network. Measured 24 Sep on the production venv:
+302 routes, 176 stranger + 474 forged-token + 72 admin-still-works + 95 wrong-user checks, PASS. Negative
+controls: the old code fails 659 checks; typing reverted fails 400.
+
+## 2026-09-24 — SCREEN-WALK-1: the daily loop now looks at the live app, in every language, the way a person does
+
+**24 Sep 2026 · scripts/screen_walk.py · scripts/maintenance_agent.py · RG-0456 · MAINTENANCE_AGENT.md**
+
+David, after the Afrikaans zero-tiles fix: building on a live app with constant change breaks things,
+and testing while live is hard -- "if we know what happens ... we can design for it and even leverage
+the new AI improvements to automate for it". The gap was specific: the regression ledger guards faults
+already NAMED; nothing looked at the screen a person sees, so David was the detector.
+
+**Built:** a real headless browser (Playwright + Chromium headless shell, cached outside the repo at
+`Projects/.tools/screen_walk` so no session downloads anything) opens the live app in en, af, zu, xh and
+nso and reads the home tiles, Featured count and each Browse screen's card count off the screen, plus
+any page error. English is the reference; a translation changes words, never quantities.
+
+**Paid for inside the hour (RETURNING-READER-1):** the first version walked a first visit and PASSED the
+broken build -- a cold dictionary paints late, so the counts came out right by luck. It now warms the
+dictionary, reloads and judges the returning visit. **Proof mode** (`--serve-ms-js=`) served the pre-fix
+ms.js through the walk: MISMATCH in all four languages, every tile 0 -- David's screenshot, found by a
+machine. Against the live build: OK, all five agree (19/3/2/29/1/4). ~30 s for five languages.
+
+**Wired so it cannot stop quietly:** `_screen_walk_lane()` runs inside every maintenance-agent run
+(Linux sandbox only; skipped on the origin and the Windows host; 120 s cap; never raises). RG-0456 reads
+the witness: MISMATCH or older than 72 h = red; NOT MEASURED = not evaluated, never green. Sabotage-tested
+both ways. Sibling of QA-BOT-1 (RG-0454, same day): that bot attacks the routes; this one reads the screens.
+
+## 2026-09-24 — David's three decisions from the bug sweep, built: RUL-142 ladder, Quick WHERE tap, suburb-level pins
+
+**24 Sep 2026 · bea_main.py · ms.js · quick.html · confirm.html · route_policy.json · roles/quick_i18n.json · test_trust_base40.py · test_trust_one_set.py**
+
+- **RUL-142 built (RG-0409).** Universal cap 30 -> 40 through one constant `_UNI_CAP` (formula, seller panel, `/users/{email}/trust`, breakdown). A SECOND employer confirmation stacks at 6 (`universal.employer_confirmed_2`): every employer link now carries its own nonce, one link = one confirmer, the same link tapped twice never stacks, legacy links earn only the first; `/trust/employer-link` says 12 or 6; `confirm.html` says "already confirmed" instead of claiming points. Verified CLIENTS pay 5 / 6 / 7 (1st / 3rd / 5th+ distinct clients): the buyer of an ACCEPTED introduction taps **I hired them** (My Space -> Intros; `POST /intros/{id}/hired`, buyer-only, once; `intro_requests.hired_confirmed_at`). Never a signup. The coach offers these steps now that they are earnable. Tested on a local rig: +5 per first client, 12 then 6 for employers, third link 0, same link 0, stranger 401, seller 403, pre-accept 409.
+- **Quick door WHERE tap (David).** Cars, Tutors, Collectors and Adventures ask "Where is it?" / "Where are you?" as their last tap, so a stranger's advert is filed where it is. Draft translations added for both questions (af/zu/st/xh/nso, for the readers).
+- **House pins at suburb level (David).** The street-address geocode is now actually saved (it was written on one connection and committed on another) — rounded to 0.005 deg (~500 m), so the public map shows the neighbourhood, never the house.
+- Also: My Space no longer offers Accept/Decline on a buyer's OWN pending requests (open actions now come from received intros only).
+- Tuppence race proven on the rig: 6 simultaneous intro requests on a 1T wallet -> old code 2 accepted, balance -1T; new code 1 accepted, balance 0.
+
+# 2026-09-24 — the way back to a saved draft was two letters, and the one we pointed at died in 20 minutes
+
+**RETURN-LANE-1 (RG-0444 assertion corrected) · RECOUP-LINK-TTL-1 (RG-0447) · RG-0429 rewritten**
+
+Run 18 of the onboarding goal (RUL-096). The number is still **0**; both probes agree.
+
+**What was wrong.** `goHandoff()` — the sell flow's "draft saved" step — POSTed
+`/auth/request-link` and told the seller on screen "we emailed you a link so you can finish
+anytime". `/auth/request-link` is the *interactive* sign-in lane: a **20-minute** token
+(`_SIGNIN_CODE_MIN = 20`) with no `&draft=` on it. So the letter that toast promised expired in
+twenty minutes, and inside those twenty minutes it dropped the seller on the hub's front page
+instead of the advert he had just written.
+
+The *right* letter was already being sent, and had been since SELLFLOW-RETURN-1 (18 Sep):
+`POST /listings` fires `_quick_draft_return` for the self-serve lanes — seven-day token,
+`&draft=<id>`, fails closed on an empty signing secret. PROBED 24 Sep 03:15Z, not read: a
+`source='sellflow'` draft logged `quick-return mail for draft 398: sent`.
+
+So the client call was a **second letter, worse than the first, arriving beside it** — and the one
+the seller was told to expect. Removed. The toast stays, because a letter really is sent; its
+wording now matches what is in it.
+
+**RG-0444's assertion was a proxy and is corrected, not weakened.** It read
+`"/auth/request-link" in ms.js` as proof that "the return path has a sender". It was pointing at
+the wrong sender — it proved present exactly the letter that fails. It now asserts the lane that
+actually carries him back (`_SELF_SERVE_LANES` carries `sellflow`, `_quick_draft_return` exists,
+`goHandoff` tags `source:'sellflow'`, and the block does **not** call the 20-minute lane).
+
+**RG-0447 RECOUP-LINK-TTL-1** makes the class explicit: a sign-in link that travels in a *letter*
+is never minted from the interactive lane. The code was already right in all six minting sites;
+the defect was in a written recipe. `RECOUP_RICK_LETTER.md` (23 Sep) instructed whoever sent it to
+mint the publish link from `/auth/request-link` — a 20-minute button posted to a Montana outfitter
+who opens his post when he opens it. It also carried no `&draft=382`. Both corrected. The entry
+FAILs against the 23 Sep letter on both legs and passes against the current one.
+
+**RG-0429 PUBLISH-WALL-1 rewritten.** As first written it claimed the wizard has *no* route past
+the account wall and that the wall is the defect. Both halves were false: `HANDOVER-PUBLISH-1`
+already implements RUL-145's shape, and RUL-166 (David, 23 Sep) rules that the EULA acceptance
+*moves* but never goes away — an entry demanding no-account publishing would have put the board in
+standing conflict with the later ruling. The entry now asserts the property that is actually
+load-bearing, in three legs: the road exists, something sends the link with no population exempted,
+and that link outlives the reading of the letter.
+
+**Two false reds caught in the writing, both the same shape.** The first draft of RG-0429's
+RETURN-LINK-1 leg searched the whole of `goHandoff` for `!magicLink.active`, matched the paragraph
+documenting its *removal*, and convicted the fixed tree. Ten minutes later the corrected RG-0444
+did it again with `/auth/request-link`. Every good fix leaves behind a comment naming what it
+removed, so a function-wide substring test on a fix marker is a trap by default, not a corner case.
+Both legs now read the condition line / the block forward from it. Caught by running each entry
+against pre-fix, post-fix and reverted trees rather than by reading them.
+
+**Also probed live this run:** the withdraw link in the recoup letter does exactly what the letter
+promises — a throwaway draft with a real uploaded photograph went `archived / withdrawn_by_seller`
+and the photograph answered **404** at its public URL afterwards (200 before). The 23 Sep
+publish hole stays closed: `PUT /listings/{id}/publish` answers 401 with and without
+`accepted_terms=1` for a caller with no session. A fresh Montana draft is born `country='US'`.
+
+Cost model impact: none.
+
+## 2026-09-24 — QA Bot: the independent security auditor (QA-BOT-1)
+
+David: "the tester should not be a human tester. I am a one man owner, i need you to create an
+independent QA Bot to perform the audit." Prompted by OpenAI's peer review of the 23 Sep bug audit
+(Records/PEER_REVIEW_2026-09-24-0753_full.md): the audit was self-graded — the same AI wrote,
+audited and declared the fixes done.
+
+- **qa_bot/qa_bot.py** — OpenAI rules what each of the app's ~297 routes should require (policy
+  kept only on the server); the bot attacks every protected route through the front door as a
+  stranger, a public-key holder and a signed-in intruder, against real QA objects, with every
+  victim-keyed row snapshotted, change-detected and restored. Appeals go to OpenAI, never around it.
+- **Deploy gate** — ops/autodeploy/server_deploy.sh runs `qa_bot.py gate` after the health check;
+  a release that opens a closed route (or ships an open new one) is rolled back and not retried.
+- **Nightly** — migration 050 installs trustsquare-qabot.timer (02:30 SAST): full attack + OpenAI
+  review of the day's diff; email to the ops address only when red.
+- **First runs (live, 24 Sep 08:17–08:33Z)**: baseline accepted with 41 routes open, 2 crashing,
+  146 closed, 52 unproven, 57 public by ruling. The fixes belong to the SEC-GATE-1 lane (work lock
+  on bea_main.py); the bot re-tests them on their deploy and every night.
+- Also: Quick's Afrikaans strap is now "'n Paar klikke, geen tikwerk nie." (David's wording), and
+  the project CLAUDE.md no longer tells agents that edits authenticate by `?email=`.
+- **The bot's first nightly review (OpenAI) flagged the bot itself** — RED: no hard cap on its own
+  OpenAI spend; AMBER: the gate waved a release through if the bot could not run. Both fixed the
+  same session: hard daily cap (QA_DAILY_USD, $3) and a fail-closed gate. The report email was
+  refused by Cloudflare (error 1010, Python's default user agent) — the bot now names itself.
+- **Email proven delivered** — the first two report emails (the full 98 KB route table) were
+  accepted by Resend but never reached Gmail. The bot now emails a compact red-only summary
+  (~3 KB: counts, each open route in one line, OpenAI's findings) and logs Resend's receipt; the
+  compact test arrived in David's inbox at 09:11Z. The full table stays on the server.
+- **After SEC-GATE-1 shipped** (gate let 03f6a78 and dadb5e0 through): 43 open/crashing -> 9 open,
+  all reachable with the public app key; the nightly email lists them until the list is empty.
+- **Owned**: at 08:55Z the bot crashed on SEC-GATE-1's newly closed /openapi.json and the gate read
+  the crash as "a route opened", rolling back 932e991. Fixed in 03f6a78 (admin-key route list +
+  cached copy; a crash exits 2, never 1).
+
+## 2026-09-24 — LINK-KEY-1 / PHONE-KEY-1 (RUL-167): the casual worker's key is a phone number or her private link
+
+David, 24 Sep 2026, approving D2 of the casual-workers plan: *"allow a phone number (one-time code) or the draft
+link itself as the account key for casual workers, EULA sign-off still mandatory in the app"*. RUL-166's gate is
+untouched — nothing goes live without a signed EULA, recorded server-side — only the KEY widened.
+
+- **Key accounts:** an ordinary `users` row with a synthetic, never-mailed identity `w-…@key.trustsquare.co`,
+  plus `users.phone` and/or `users.key_hash` (new columns, migrated on boot). Every mail sender skips a key
+  identity; when a phone is on file and an SMS provider is configured, the live letter, a new introduction
+  request and a relayed message become an SMS nudge instead ("open your TrustSquare link").
+- **The Quick door** offers three keys: **E-mail** (as before), **Phone** (six-digit code by SMS — shown only
+  while `/quick/me` reports `sms_ready`), **WhatsApp link** (default for the services door). The link key returns
+  a one-time `key_url`; the arrival screen shows it and the WhatsApp self-send carries it ("this is my KEY, keep
+  it"). `GET /k/<secret>` is her permanent key (no-lapse rule): each visit mints a 20-minute sign-in hop and lands
+  her in the app on her draft, where the hub's scroll-to-end Terms and `publish_listing`'s 403 gate stand as
+  before. A phone-code session gets the same hop from `/auth/session-link`.
+- **Phone codes:** `/auth/phone/start` (3 codes per number per hour, 10 per connection, 503 `sms_unavailable`
+  until `SMS_PROVIDER`/`SMS_TOKEN` are set in /etc/marketsquare/secrets.env — the door then falls back to the
+  link, never a dead end) and `/auth/phone/verify` (10 minutes, 5 tries, hashed at rest).
+- **sms_provider.py:** one door for every SMS — BulkSMS, Clickatell or SMSPortal, E.164 normalisation for ZA,
+  per-number throttle, numbers never logged in full. Fails dark.
+- Guard: RG-0450. HARNESS.html copied from quick.html (house rule). Still open on the human side: David's SMS
+  account (the key lands in .secrets, then the server env) and the WhatsApp Business number for the posters.
+- **Rendered walk, 24 Sep 07:4x UTC, 390 px:** /q/homehelp → Gardener → Centurion → Every day → R350 → *WhatsApp link* → Save → key link shown and
+  carried in the WhatsApp self-send → key link opened in a fresh browser → Seller Hub signed in as `w-…@key` with the draft in front →
+  Publish my advert → the scroll-to-end Terms + two consents → Go live → advert #401 live, no e-mail in the public read, `eula_accepted_at`
+  stamped on the key account by publish_listing; withdrawn again through the app's own route. The "You're live" screen now says where
+  requests land for a key account (Seller Hub / SMS) instead of "your email" (marketsquare.html ids + ms.js sobDone wording).
+
+## 2026-09-24 — Maintenance loop: three board reds cleared, four READY TO LOCK settled, two silent-pass instruments fixed
+
+**24 Sep 2026 · 07:40–08:20Z · maintenance loop (B2b brain, SHADOW) · RG-0351 · RG-0413 · RG-0431 · RG-0331 · RG-0429 · RG-0437 · RG-0447 · RG-0451 (new)**
+
+Board at start: 437 entries · 409 holding · **3 REGRESSED** · 21 open · 4 ready to lock · 0 unverified.
+Fault queue empty (0 new, 0 fix-shipped, 26 verified, 12 closed); heartbeat 20260924T075001Z read
+back from `/dashboard/maint`; backup lane skipped (newest archive 14.8 h old); no escalation brief.
+
+**One real regression, fixed in the product.**
+- **RG-0351 / pg ratchet (PG-PORTABLE-3).** PHONE-KEY-1 (commit 4300824, `phone_codes` +
+  `/auth/phone/start|verify`) put back three plain SQLite-clock calls and two modifier forms;
+  `test_pg_readiness.py` read 20 against a baseline of 15. `bea_main.py`: `CURRENT_TIMESTAMP` for the
+  three, `_sql_since(hours=1)` and `_sql_since(hours=-10/60)` as bound stamps for the two. Values proven
+  byte-identical in `:memory:` (expiry, created_at, the one-hour window and the used_at stamp).
+  `test_pg_readiness` PASS at 15; py_compile clean. RG-0351 now also FAILS on the modifier count, so the
+  next one is caught by the board and not only by the pre-deploy scan. Ships with the nightly TSL.
+
+**Two false reds -- assertions that checked a spelling, fixed to check the property (refs amended).**
+- **RG-0413** (door funnel): LINK-KEY-1 legitimately widened the publish beacon to `q_handover_link` /
+  `q_handover_phone`. Now a pattern: `q_published` when live, plain `q_handover` otherwise.
+- **RG-0431** (language layer): AUDIT-L3 rewrote the edit-reset as a CASE that also clears the stale
+  translation -- a stronger fix the literal needle read as REGRESSION. Now asserts the UPDATE drops
+  `extra_status` back to 'draft' in either form.
+Both proven to still convict: removing the beacon / the reset turns each red.
+
+**Four READY TO LOCK prints, settled one by one -- not promoted blind.**
+- **RG-0331** promoted LOCKED: LISTING-COUNTRY-1 (RG-0430) fixed it on the existing `listings.country`
+  column. Its column test was vacuous (a DOTALL regex matching any `listings(` followed anywhere by
+  `country_iso2`); now asserts the create INSERT names `country`, proven to fail when it does not.
+- **RG-0429, RG-0447** carried the DATE `"2026-09-24"` in the state slot; the judge reads any non-LOCKED
+  state as OPEN, so both shipped fixes could have rotted as "open". Set LOCKED, fixed_on 2026-09-24.
+  Class fix **LEDGER-STATE-1 (RG-0451, new)**: `entry()` refuses any state but LOCKED/OPEN at import.
+- **RG-0437** printed READY TO LOCK because its open case returned INFO (scored as a pass) -- the fix was
+  NOT built. Built it: `rulings_check._read` now goes through `safe_read.settled_read` (cached, one read
+  per file -- uncached it took the check from 2 s to 2 min; now ~37 s); an unsettled read prints NOT
+  CHECKED / UNSETTLED, never FAIL; an unsettled RULINGS.md exits 2. Harness now FAILS on the plain read.
+  Then promoted LOCKED.
+
+Board at end: **438 entries · 417 holding · 0 REGRESSED · 21 open · 0 ready to lock · 0 unverified.**
+rulings_check: 142 rulings, 0 FAIL, 25 WARN (unasserted rulings, pre-existing), 0 NOT CHECKED.
+Backups beside each edited file: `*.bak-maint-20260924-*`. Work lock taken for the three files and
+released at commit.
+
+## LM-NOSHOW-1 — Local Market no-show, designed into the app (24 Sep 2026)
+
+David: *"lets design this into the app ... Please proceed and then we can review and test it."*
+The rules existed (LM-T3/LM-T4/LM-16) and so did the server routes, but no screen reached them.
+
+- **Seller (hub):** each Local Market advert card lists its accepted introductions from the last
+  30 days with the buyer's first name and buyer trust, and a **"They didn't show"** button. A sheet
+  asks what happened (did not arrive / stopped replying / cancelled last minute / other + note)
+  and says plainly what follows. The card then shows *Reported — under review*, *Upheld · 1T back*
+  or *Report not upheld*. New `GET /local-market/my-accepted`, bound to the signed-in seller.
+- **Server rules on filing:** only on an ACCEPTED intro, once per intro, within 30 days, reason from
+  the fixed list. The buyer is emailed and has 7 days to give her side before ops decides.
+- **Ops (admin > Alerts):** pending reports with Uphold / Dismiss (the existing routes; uphold =
+  buyer −3 trust and 1T back to the seller if the advert is still active).
+- **LM-ACCEPT-1 (found on the way):** accepting a Local Market intro went through the standard door,
+  which charged the BUYER 1T (or refused with 402 for an empty wallet). LM-T1 says the seller paid at
+  request time; accepting an LM intro now charges nobody.
+
+Cost model impact: none.
+
+**Read-back pass (same day):** walked end to end on the live site with QA accounts — a pending LM
+intro accepted with **no Tuppence moving**, "They didn't show" reported, a second report refused
+(409), strangers refused (401), the report upheld from the admin Alerts queue, and the hub card
+reading "Upheld". It exposed that every buyer started at trust 0, so −3 changed nothing:
+**LM-BUYER-BASE-1** (David) — a buyer with no history starts at 40, like sellers. Also: a pending
+request no longer shows the buyer's email to the seller before acceptance (first name only).
+
+## 2026-09-24 — Four instruments that convicted from a vantage they could not see from
+
+Four separate boards spent the week printing red at things that were not wrong, and one of those
+reds was addressed to David personally. All four are now entries in the regression ledger with a
+test behind each, so a revert goes red instead of going quiet.
+
+**RG-0462 (ENVKEY-BLIND-1) — the one aimed at David.** RG-0426 failed with *"only 1 AI vendor key
+is live on the box"* and its scope told him to go and provision a vendor credential. He already
+owned it. The check read `/proc/<pid>/environ` alone, citing "check at the point of use" — but the
+point of use is `ai_provider.envkey()`, which by ENVKEY-1's design (17 Jul 2026) falls back to
+`/var/www/marketsquare/.env` *because the systemd unit does not export it*. A .env-sourced lane can
+never appear in that read, so the check could only ever fail, whatever the box actually carried.
+The independent corroboration needed no credential at all: `/dashboard/maint` published
+`brain_lane: openai`, `brain_keyed: true`, `brain_probe {ok: true, status: 200}` the same day. The
+probe now takes the **union** of both doors — unit-exported names from `/proc`, plus the lanes
+`ai_provider.configured_lanes()` resolves on the box. Re-aimed, not weakened: fewer than two
+reachable lanes still fails, and `scripts/test_envkey_blind1.py` drives a one-lane box to prove it.
+
+**RG-0459 (LEDGER-VANTAGE-BLIND-1).** The 23 Sep board printed "4 previously-fixed issue(s) HAVE
+COME BACK. Do not deploy over this." All four asserted on `../CityLauncher/…` or the Projects-root
+`CLAUDE.md` — present on David's machine, not mounted on the stand-up task. The instrument read its
+own blindness as four rotted fixes and carried a deploy block with it. `sibling_visible()` now
+separates "cannot see" from "gone".
+
+**RG-0460 (BIT-EDGE-BLIND-1).** The BIT board printed 7 FAIL including an S1, exit 2. `curl /health`
+answered 200 in the same minute; the runner's urllib client got 403, `Server: cloudflare`,
+`error code: 1010` — the edge refusing the default Python-urllib User-Agent. A named UA, and an edge
+refusal now exits **3 = NOT MEASURED**, which is neither healthy nor failed.
+
+**RG-0461 (BIT-NS-1).** `scripts/golden_seam_v2.py` died on `NameError: name 'os'` before reaching
+its own check. In a scheduled run a traceback and silence read identically — nobody is watching
+either. It now resolves stdlib on demand and otherwise says **THE BOARD DID NOT RUN**.
+
+The shared class, and the reason these are one entry-set rather than four unrelated bugs: *an
+instrument that could not measure must say so, not convict.* That doctrine was already in the ledger
+five times (RG-0187, RG-0401, RG-0420, RG-0423, VANTAGE-BLIND-1) and none of these four had
+inherited it.
+
+## 2026-09-24 — I18N-KEY-1: the home tiles read 0 in Afrikaans -- the counts were keyed off the translated word
+
+**24 Sep 2026 · ms.js · RG-0452 · from David's screenshot ("the app again does not update the numbers").**
+
+**Reproduced live** in David's Chrome (Afrikaans, Pretoria): 58 live listings loaded -- Property 19,
+Adventures 29, Cars 4, Tutors 3, Services 2, Collectors 1 -- and all six home tiles said
+"0 advertensies". The data was fine; the screen was wrong.
+
+**Cause.** The language layer paints translations straight into the page's text and keeps the English
+on each text node. `renderCatCounts()` found each tile's category by READING the tile's name off the
+page -- in Afrikaans that is "Eiendom", so it looked up a count for "Eiendom", found none, and wrote 0.
+When a recount happened to run before the translation was painted, the numbers appeared -- which is
+why a few clicks sometimes "fixed" it.
+
+**The class, not the instance.** The same grep found 13 places that read painted page text as a key.
+Besides the tiles: the filter sheet (section labels and chosen options -- in any other language every
+filter quietly returned nothing, so no filter applied), the "Any" option, the Area-section hide, both
+category-chip highlighters, the advert-agent category chip ("Please select a category first" with one
+selected) and the sell-flow category buttons. All 13 now go through one helper, `msEnText(el)`, which
+returns the English while the translation is on screen.
+
+**Proven before shipping:** the fixed count code, run inside the live page, turned 0/0/0/0/0/0 into
+19/3/2/29/1/4 with the Afrikaans labels unchanged ("19 advertensies", "1 advertensie").
+
+**Ledger RG-0452** (a ratchet at zero): any new `.textContent.trim()` / `.includes(` / `.startsWith(` /
+`textContent===` in ms.js trips it; the live leg checks the served ms.js carries the helper. Staged as
+HEAD + these hunks only -- the parallel STATUS-CARD-1 edits in the same file were left in the working
+tree for their own lane.
+
+## 2026-09-24 — I18N-COST-RAIL-1 (DW-142): the Translate button's AI call is inside the platform cost rail
+
+- `bea_main.py` `_i18n_ask` (inside `/i18n/translate`) now calls `_check_cost_ceiling("")` before every
+  `ai_provider.complete` and `_log_ai_spend("", "/i18n/translate", I18N_TASK, …, provider=, model=)` after it.
+  Over the ceiling the 429 is caught by the endpoint's existing try/except: the reader gets cache + English,
+  never an error. The 400/day `I18N_DAILY_CALL_CAP` is unchanged.
+- Applied by the staged, idempotent `scripts/apply_i18n_cost_rail.py` once the WORK-LOCK-1 lock cleared
+  (08:07Z). Commit `dfcafd4`, relayed 08:10Z, `DEPLOY OK · now live at dfcafd46 · health ok` 08:12:20Z,
+  post-deploy 5/5 ok.
+- PROBED: cost sweep re-run — `i18n_translate — ceiling ✓ spend-log ✓`, `_i18n_ask — ceiling ✓ spend-log ✓`,
+  0 CRITICAL (exit 1 only on the separate `_lang_ai` WARN, DW-149). Live `POST /i18n/translate` (af, fresh
+  sentence) → 200, translated 1, 2.7 s; the production `ai_spend_log` gained row 963
+  (`/i18n/translate`, reason, 604/37 tokens, $0.002367, cost_is_real=1, anthropic) at 08:13:55Z —
+  the Translate spend is now visible to the ceiling and the +1 page.
+
+## 2026-09-24 — GATE-SYNC-1: the board's checks now read locked pages as staff -- and a tripwire stops the next lock doing this silently
+
+**24 Sep 2026 · scripts/regression_ledger.py · CityLauncher/verify_optout_lane.py · RG-0457 (new)**
+
+The new security gate went live and correctly closed a set of pages to strangers. The fact board
+then went red or blind on checks that had been reading those pages AS a stranger: RG-0118, RG-0203,
+RG-0293, RG-0315, RG-0388, RG-0402 red; RG-0372 blind; after a later deploy RG-0019, RG-0060, RG-0061
+and RG-0229 red and RG-0222 / RG-0223 / RG-0373 / RG-0374 blind; and RG-0299, RG-0301, RG-0326 had gone
+quietly blind while still printing ok (their live halves say "not evaluated" in lower case, which the
+judge scores as a pass). Nothing in the app was broken. David: "if we dont fix them as we see them then
+we forget them."
+
+- Every such read now goes through the staff door (`_admin_json` / new `_admin_text`, X-Admin-Key).
+- RG-0388 asserts BOTH doors: a stranger is refused, and the handler reached as staff still answers 404
+  for a non-account. RG-0222 accepts an outright refusal as the stronger form of "no row reaches a
+  stranger". RG-0118 reads the public relay flag anonymously and the rail state (now a staff-only
+  /flags field) as staff. RG-0128 sends the admin key beside the ops key.
+- The opt-out verifier's register reads go as staff; its recipient-side gates stay anonymous (PROBED:
+  all gates pass, a confirmed opt-out moved the register 811 -> 812).
+- **Tripwire RG-0457:** every literal-path read in the board is matched to its rule in
+  route_policy.json; any non-public read without `# anon-on-purpose` fails. Second leg measures
+  anonymous-vs-staff /flags keys live and fails on any staff-only field read anonymously. Both legs
+  sabotage-tested red.
+
+Board after: 444 entries · 423 holding · 0 regressed · 21 open · 0 unverified.
+
+## E2E-HMI-1 — end-to-end walk of the human interface, TrustSquare + Quick (24 Sep 2026)
+
+David: *"please check the human interface end to end ... /crux"*, then *"Fix everything now"*.
+A real browser on the box walked stranger, seller, buyer and Quick-door journeys on the live site
+(QA accounts on the reserved .invalid domain). Fixed in this release:
+
+- **EULA escalation:** Buzz's s3.8 tick wrote `users.eula_accepted_at`, so one Buzz tick let the
+  Quick door publish live without the Terms ever shown. Now `POST /buzz/accept` writes its own
+  `buzz_accepted_at`; the full Terms still open Buzz, a Buzz tick never opens publishing.
+- **Contact details went live:** the hard anonymity strip ran on agency imports only. A private
+  advert with a phone number and email published untouched. `_private_text_scrub` now runs on
+  create (app + Quick), edit and the Listing Coach publish.
+- **Every Services/Tutors edit failed (422):** the edit form stripped "R450/hr" to "450" and the
+  server refuses a bare rate. The basis is kept; a bare amount inherits it; the description's
+  **Rate:** line follows; blank structured fields read back from the description header.
+- **Listing Coach dead end:** a first-time seller's Publish got a toast and no way to the Terms.
+  It now hands the saved draft to the hub's Publish (HUB-EULA-1), which opens the Terms step.
+- **Unverified sellers:** the app asked "continue?" and the server then refused. The buyer is
+  now told plainly before the form opens; the seller's go-live screen says ID verification is
+  what opens introductions.
+- **Money screens:** "test mode" on the live Paystack confirm removed; the wallet's fixed R36
+  now follows the live rate the checkout charges (R33 today); My Space no longer shows "5 T" for
+  an empty wallet; a cancelled checkout says nothing was charged; signed-in email pre-filled.
+- **Pause** works (`POST /listings/{id}/pause`, live <-> paused); **fade warning** shows on the
+  hub card with Keep live during the 7-day window; **archived** cards stop offering Edit/Share.
+- **Profile** saves to the account (`POST /users/me/profile`: name, headline, about, region,
+  tags, years) instead of localStorage only; the CV photo upload no longer dies on CSP; buyers
+  see the headline/about/tags on the seller card (never the name).
+- **Complaints:** "Report this listing" on every advert and "Lodge a complaint" now open the
+  support form pre-filled with the advert, so they land in the support queue, not a mailto.
+- **Drafts/archived adverts** are no longer readable by id by strangers (EULA s4.6).
+- **Showcase** ("Today on the Square") shows live adverts only (a QA-bot fixture was public).
+- **Listing Coach photos:** every photo is kept (only the first was stored).
+- **Location labels:** borderless adverts show their own city, not the viewer's ("Sydney" reef
+  dive read "London").
+- **AI search** relaxes the interpreter's words one at a time ("door lock" now finds Locksmith).
+- Copy: "Skip for testing" -> "Later"; AI coach free-session wording made consistent; support FAQ
+  trust-score range (0-100) and anonymity sentence corrected.
+
+Cost model impact: none.
+
+**Second pass (same day, after reading every fix back in the live app):** the Quick advert's plain
+"Rate: R250 / hour." sentence now follows a price edit too; a Listing Coach photo held back by the
+privacy check is now reported to the seller instead of vanishing (`photos_held`); the hub takes
+the server's state for adverts it already shows (a just-published advert read "Draft" until a
+reload); archived-card wording no longer assumes the 90-day path.
+
+**Third pass — David's four decisions acted on (24 Sep 2026):**
+- **Countries:** the app picker is canon. Support FAQ lists AU, BW, DE, KE, MZ, NA, ZA, UK, US and no
+  longer says "started in South Africa" (RUL-110). EULA schedules for BW, DE, KE, MZ, NA drafted as
+  `EULA_v1.19_DRAFT_country_schedules.md/.docx` for his review (not published).
+- **Draft expiry:** drafts do not expire; the s4.6 sentence is corrected in the v1.19 draft.
+- **EULA-VERSION-1:** acceptance now records its version (trigger on users.eula_accepted_at, table
+  eula_meta). Accounts that accepted before the material v1.16 re-accept once at their next
+  Publish/Edit, told what changed; the old acceptance is kept in eula_prev_accepted_at. Staff/seed
+  accounts untouched. Migration applied to the live DB before the deploy (1 account parked).
+- **TRUST-DUPE-1:** insurance and CIDB scored once each (services_tech ids) at 6 / 4; estate_agents.py
+  writes the same ids; the 2 demo credentials re-pointed.
+- **Removal for breach:** EULA 14.5 B3 (3+ introductions expired unanswered in 30 days) blocks the
+  seller's adverts in the daily sweep; staff `POST /admin/listings/{id}/block|unblock` (B1-B6) and
+  `POST /admin/complaints/uphold` (the first writer of seller_complaints).
+- Detail CTA reads "Introductions open once this seller verifies their ID" for unverified sellers.
+
+## 2026-09-24 — DEL-STUCK-2: delete button stuck on "Deleting..."
+
+David could not delete his temporary adverts: the button read "Deleting..." and nothing happened.
+The server log showed his first delete (listing 418) succeeded; every later attempt never left the
+browser. The edit screen's delete button is one shared element, and the success path never put it
+back — it stayed on "Deleting..." with clicks disabled for every listing opened afterwards until a
+page reload. Fix (ms.js): the button is reset whenever an edit screen opens and after a successful
+delete. Archived adverts had no Edit screen and so no way to delete them at all; their hub card now
+carries a Delete button on the same seller endpoint (DELETE /listings/{id}/seller, session-bound).
+
+## 2026-09-24 — SIM-CASUALS-1: Contagion Model v1.9, the Services lane re-based on the casual-workers research
+
+David, 24 Sep: *"audit the apps simulation and update it with the latest information, our new target group of
+prospects, a re-assessment of the contributing variables and statistics ... a much larger prospect group ... a
+better user / employer referral component."* Done in `docs/TrustSquare_Contagion_Model_v0.2.html` (deployed as
+`/orchestrator/simulation.html`); report `Visuals/MarketSquare/CONTAGION_V19_AUDIT_2026-09-24.html`.
+
+**Re-based (lo · mid · hi), grounded in CityLauncher/CASUALS_REACH_PROPOSALS_2026-09-23 and its sources:**
+svcDen 6·18·45 → 15·40·110 (854k domestic workers employed, 1.1m in private households, ~1.6m with the informal
+tail; gardeners, piece jobs, day labour, EPWP leavers, informal trades); svcInc .40·.65·.85 → .25·.45·.65;
+empSize 8·60·900 → 8·120·1,500 (estate gate desks 300–800 workers); svcRef .01·.05·.15 → .05·.20·.50 (the Status
+card + wa.me self-send; RUL-142 pays points, never cash); svcRefTake .15 → .18; svcPay .10·.35·.80 → .03·.12·.30
+($5 ≈ R82 against a R94 median monthly data spend). Lever svcLangW 13 → 3 (languages shipped 23 Sep, RUL-164/165).
+
+**New:** `svcMail` (share of invited casual workers who can finish an e-mail step, .15·.35·.60 — the RUL-166
+gate, multiplies the publish rate until a phone/link key ships); lever `svcKeyW` (week the phone / link key
+ships, 157 = never = today's truth); `svcChanW` / `svcChanN` / `svcChanConv` (the ground + air channels of
+proposals 4–6: ranks, listing mornings, radio, SA Youth, job groups — 157 = never until David decides).
+Six presets replace the four of 19 Sep; the with/without strip shows arrivals from the channels.
+
+**What it says (mid run, week 156):** e-mail key kept → 1,653 service workers listed; phone/link key wk 6 →
+99,771; + channels wk 8 → 108,319; + Growth Partner doubling the employer pace → 130,449. By March 2027 every
+scenario is under 600 workers — the lane is slow money and its revenue is the household's introduction.
+
+**Calibration recorded, not applied:** at week 3 the model expected 67 sellers (40 from letters); measured
+2,491 letters, 534 opened, 2 human clicks, 1 draft, 0 published. Pinning click at the measured 0.37% of openers
+is David's decision (it moves the BEAT THE MODEL card).
+
+**OFF is v1.7 draw for draw** — verified headless: identical series (91 / 150,917 / 168,093 sellers at weeks
+8 / 52 / 156) and identical stats apart from the new `svcChan` counter. Dashboard pin string moved to v1.9.
+Backup: `docs/TrustSquare_Contagion_Model_v0.2.html.bak-v18-20260924`.
+
+## 2026-09-24 — BUGSWEEP-24SEP: code bug sweep of the TrustSquare app and the Quick listing door
+
+**24 Sep 2026 · ms.js · bea_main.py · quick.html** — David: "please check your codes for bugs, for the trustsquare and Quick listing apps."
+Static analysis (ruff/pyflakes, node --check, eslint no-undef/const-assign/dupe rules) plus a traced
+review of every fetch against its route. Fixed:
+
+- **Search died after opening any listing**: `window._msRerender=false` overwrote the `_msRerender()` function; flag renamed `_msRerenderFlag`.
+- **Seller Accept/Decline never reached the server**: `apiPut` sent no X-Api-Key (401) while the screen said "Accepted, 1T deducted"; key + session now sent, screen changes only on success, no seller-side 1T (the server charges the buyer).
+- **Buyer "Request sent" shown before/without the server**: `/intros` POST now awaited, real outcome shown.
+- **Unverified-seller warning never shown** (seller email is stripped from listings): `/listings/{id}` now carries `seller_id_green_tick`; gate asks by listing id.
+- **Seller sign-in on a new device said "no account"** (route now needs a session): falls through to the emailed 6-digit code; stores the server's email, not the typed one.
+- Dashboard listed the seller's own buyer-side requests as incoming; Keep-live button threw (`bea_dl_123` unquoted); AI rewrite filled a non-existent field (`elf-description` -> `elf-desc`); Local Market success screen/reset threw on missing ids; LM intro showed success on 404/422/500; photo auto-save said "saved" on a refused save; LM seller documents never loaded (now found via the buyer's accepted intro, `/users/_/documents/public?intro_id=`); Buzz assigned a `const`; credential-claim and top-up called functions that never existed.
+- **Backend**: an intro the sweep already expired (hold returned) could still be accepted and charged -> now 409, and the sweep only expires rows still pending; Tuppence read-then-debit races closed with `BEGIN IMMEDIATE` (`_wallet_lock`) at the intro hold, boost, LM first intro (flag claimed atomically) and `_deduct_tuppence`; `/listings/mine` case-insensitive; webhook tasks kept referenced; `/quick/me` reports only the terms quick-publish checks; quick-publish rate-limits and validates before creating a link-key account; payment-ref claim made portable (pg ratchet back to baseline).
+- **Quick door**: Back from the advert left the old price saved (draft-screen 'speaks'/'fin_*' answers were popped instead); language switch on the advert screen now redraws it; typed "Per day" basis honoured; Home button uses the wrapped door; blocked storage no longer stops `/quick/me`; her profile city replaces the timezone guess; "terms accepted" shown only when true.
+- **View counter never counted main-app views**: `/listings/bea_275/view` was a 422 on every detail open (found walking the live app after the first deploy); the numeric id is sent now.
+- **Verified live** (headless browser, trustsquare.co): search still re-renders after opening a listing; Quick Back -> new price saved (R250 -> R350, no stray old price); isiZulu switch redraws the advert; Home keeps the language row; new-device sign-in sends the code, stores the server's lowercase email; dashboard Accept reaches the route (404 on a probe id, was 401); Keep-live button fires with the numeric id; no page errors.
+
+## 2026-09-24 — Security lane + email-identity write routes closed (AUTHZ-PROBE-1, IDENTITY-BIND-3, ADMIN-LOCALGUARD-1)
+
+David asked why the daily watch never caught the bug-audit vulnerabilities. Because every
+check it ran was a regression check — it re-proved known fixes; nothing tried the front door
+with the wrong key. Built the missing lane and closed the class it exposed.
+
+- **AUTHZ-PROBE-1** — `scripts/authz_probe.py`: calls the live site against every admin route
+  and every identity-bound write route with (a) the public app key shipped in ms.js and (b) no
+  credential, and asserts each REFUSES. Safe by construction (bogus/nonexistent targets, so no
+  real data is touched). stdlib-only, runs from any vantage. It found a real pre-existing hole
+  on its first run: `POST /admin/purge-cache` answered anonymous callers 200.
+- **ADMIN-LOCALGUARD-1** — `/admin/purge-cache` and `/admin/refresh-pois` failed OPEN when the
+  env key was unset. Now fail-closed via `_admin_local_or_key`: a valid admin key OR a request
+  with no `X-Forwarded-For` (only a local process — the deploy's own purge — can reach uvicorn
+  without nginx stamping that header). External callers always carry it, so the public door is shut;
+  the deploy's non-fatal auto-purge keeps working with no config change.
+- **IDENTITY-BIND-3** — eight write routes trusted an email in the request instead of the proven
+  session (the class AUDIT-AUTH-1 fixed for publish/edit/mine): keep-live, listing cities
+  add/remove, listing wonders, profile photo, self-declared experience (trust score), and saved
+  searches save/delete. All now bound to the signed-in session via `_actor`; admin key preserved;
+  BUZZ_BIND=0 escape hatch unchanged. The session rides a same-origin cookie, so no frontend change.
+
+## 2026-09-24 — authz_probe folded into the QA Bot (one probe, not two)
+
+Earlier today the attended CTO pass built `scripts/authz_probe.py` as a stop-gap live
+authorization probe (it found and got fixed the anonymous `/admin/purge-cache` hole,
+ADMIN-LOCALGUARD-1). The parallel QA-BOT-1 session then landed `qa_bot/qa_bot.py`, an
+independent auditor that supersedes it on every axis: OpenAPI-derived coverage of every
+route, three attack personas incl. a real signed-in intruder against a real victim account,
+OpenAI ruling each route's required class, on-box execution (behind Cloudflare, no UA trap),
+snapshot/restore of victim data, and a deploy gate + nightly run.
+
+Consolidated to one probe: `scripts/authz_probe.py` is now a deprecation stub that points to
+`qa_bot/qa_bot.py`. Confirmed no coverage lost — the server policy already rules every route
+the stop-gap probed, and its rulings match today's fixes (keep-live/cities/wonders/photo =
+owner; experience/zoom = session; agency verify/rename + trust-score/credential = admin).
+The three admin-intent routes the probe surfaced (AUTHZ-CONSOLE-KEY-1 / DW-153) are ruled
+`admin` by the bot and are now attacked and deploy-gated by it — the QA Bot is the authority
+on whether they are closed.
+
+## 2026-09-24 — ADMIN-BIND-1 (RG-0448): five admin routes were open to the public app key
+
+Found while lowering the platform AI ceiling David approved this morning. `POST/GET /admin/users`,
+`DELETE /admin/users/{id}`, `GET /admin/ai-spend` and `PUT /admin/ai-spend/config` were guarded by
+`auth.require_api_key` alone — and that key ships inside ms.js. PROBED LIVE before the fix: the public key
+returned the admin account list (200) and the AI-spend config with the alert e-mail (200); the PUT would have
+let anyone raise the per-user and platform AI ceilings. Same class as DELETE-BIND-1 (23 Sep).
+
+Each of the five handlers now calls `_require_admin_or_key(x_admin_token, x_admin_key)` before touching the
+database. No page or script called these five with the app key alone (the admin console and the spend gauge
+use the admin key / token on `/admin/ai-spend/summary`), so nothing visible changes. Guard: RG-0448, with a
+live probe that FAILs on a 200, passes on the app's 401, and reports BLIND on an edge 403.
+
+Then, as approved: `daily_platform_ceiling_usd` 100 → 10 (still ~300× today's spend), set through the
+admin route from the box with the admin key.
+
+## 2026-09-23 — daily-watch fix pass: DW-140 + DW-141 closed, DW-142 staged
+
+- Verified the maintenance loop's SSH (SANDBOX-EGRESS-1) and backup (BACKUP-IN-AGENT-1) fixes live.
+- BACKUP-ORIGIN-SKIP-1: backup lane skips when the agent runs on the origin.
+- I18N-COST-RAIL-1 staged as scripts/apply_i18n_cost_rail.py (bea_main.py under RUL-140 lock) —
+  applied and shipped 24 Sep (see 2026-09-24-i18n-cost-rail).
+
+## 2026-09-23 — David's go: languages ON, one-tap publish, ONE Quick door, arrival, free-lane AI cap (RUL-163 / RUL-164)
+
+- LANG-ON-1: migration 049 arms `launch_switches.lang_layer` for everybody (audited row; reversible via /admin/flags).
+- ONE-TAP-PUBLISH-1: `POST /listings/quick-publish` (not under /quick/ -- nginx serves that prefix as the app file; the first cut answered 405, caught by the live probe) creates the advert, records the terms accepted by the tap, and publishes it in one call; a signed-in member publishes as her session; slot limit, velocity and price-basis guards stand; a "your advert is live" letter carries her way back.
+- QUICK-ONE-DOOR-1: the reworked app is promoted into `quick.html`; the manifest serves it for every `/q/<category>` too (category from the path); `/quick_next.html` 301s to `/quick/`; `genie/HARNESS.html` kept identical to `quick.html`; `genie/q_index.html` retired.
+- ARRIVAL-1: after the tap her photo and title rise into a finished card with a tick, then "See my advert" and a WhatsApp note to herself (reduced motion respected).
+- QUICK-I18N: the draft, publish and arrival words drafted in isiZulu, isiXhosa, Afrikaans and Sepedi (RUL-160 readers).
+- RUL-164: the advert's second-language draft (a free feature) counts against the translation lane's daily ceiling and a 5-a-day per-advert cap.
+- Ledger: RG-0413/0414/INTL door entries now read quick.html (the one door); RG-0414 and RG-0436 LOCKED; RG-0435 re-aimed at /quick/; RG-0438 (OPEN until measured live), RG-0439 LOCKED.
+
+### Onboarding run 17 — the "registered" number was counting our own mailer (RG-0428)
+
+`reconcile_conversions()` stamped `prospects.onboarded_at` on the mere existence of a row in
+`marketsquare.users`. `/agencies/wave-prep` creates one of those rows *at send time* for every
+agency-class prospect, so ONBOARDED had become a re-count of our own sending — and a false
+"42 registered" had already reached David in the 20 September summary. Probed on the live
+databases: all 40 non-test rows were Estate Agents, created inside the 22:10 UTC wave minute on
+six consecutive nights, with every activation column NULL.
+
+Now a prospect counts as onboarded only when the account has been used (last_seen, accepted
+EULA, linked login, photo, buyer token) **or** they have built a listing in any status — the
+second leg matters, because the app upserts a bare account row when a listing is created, and
+without it the fix would have erased the one real seller in the funnel. Rows stamped under the
+old rule are unstamped, and the status they return to is read from `email_events` so a
+retraction cannot destroy a real open or click. Guard is RG-0428, which runs the reconciler over
+a synthetic pair rather than grepping it; proven to fail on the pre-fix code and on a
+leg-one-only variant.
+
+Measured on a copy of the live pair: 45 stamped → 5, 41 retracted, 1 correctly added, clicks
+preserved at 74, second pass a no-op. The goal number itself was never inflated — it demands
+published_at AND emailed_at AND a non-test source AND a public probe — and remains 0.
+
+Opened in the same run: RG-0429 (the publish wall — a seller can finish an entire advert as a
+stranger and is then asked to build an account before it goes live), RG-0430 (every
+wizard-created listing is born `country='ZA'`), RG-0437 (`rulings_check` can print a false FAIL
+from a mid-write read; the file is owned by another lane, so recorded not edited).
+
+## 2026-09-23 — David's airport brief reconciled: language layer rides the Q4 switch; handover, scorer and refresh fixes
+
+- LANG-Q4-1: `lang_layer` is now also ON when `baseline_q4` is armed — one switch-on for the batch (brief sequencing).
+- LANG-HDR-1: with the layer on, a globe + language-code button sits in the main app header beside Sign in (Part A3).
+- PUBLISH-REFRESH-1: after Publish succeeds the buyer feed and hub re-read, so the advert is in Browse without a reload (Part C4).
+- ONE-SCORER-1: `POST /quality/preview` runs THE server scorer on a draft; the Quick preview's strength ring shows it (Part C3).
+- QUICK-ANSWERS-1: the days she ticked travel as `availability` with the Quick draft (Part C2), live and preview.
+- genie/LANG_QUICK_BRIEF.md replaced by David's own brief text with per-item build status; genie/lang_quick_board.html saved.
+
+## 2026-09-23 — The language layer (RUL-162), South Africa's other three languages, and the Quick app reworked
+
+David, from Cape Town airport: "perform this design change ... set up the other three launch country
+languages ... review the quick listing app and fix/improve it -- easy/quick/fluid, but stunning."
+
+**LANG-LAYER-1 (RUL-162).** The app speaks the reader's language; the advert speaks the lister's.
+- `roles/lang_countries.json` — the nine approved country lists (David, 23 Sep); 'reader' languages
+  are drafted but never offered. South Africa: English, isiZulu, isiXhosa, Afrikaans, Sepedi
+  (Sepedi replaces Sesotho, census 2022; `st` stays accepted for readers who chose it before).
+- `bea_main.py` — `GET /lang/countries`; `POST /listings/{id}/lang/draft|approve|remove`
+  (original language, ONE extra language from her country's list, a back-translation into her own
+  words so she approves what it really says, and an English search layer); new listing columns
+  `lang_orig, lang_extra, title_extra, desc_extra, extra_back, extra_status, search_en`; editing
+  the original drops an approved extra back to draft; `GET /listings?q=` also matches `search_en`;
+  the public list never carries an unapproved extra; `POST /listings` stores `lang_orig`.
+- `launch_switches.lang_layer` (default OFF). `/flags` turns it ON for any reader holding the tester
+  cookie (`ts_review`), so David and his testers see it now; switching it on for everybody is David's.
+- `ms.js` — the globe menu offers the reader's country list with codes; the detail view shows the
+  advert in the reader's language when the seller approved one, else the original with a code chip
+  and "Also in XX — show it"; adverts are never machine-painted; cards carry the code chip; the
+  seller's edit screen gains an "Advert languages" panel.
+- LANG-PILL-CLEAR-1 — the globe pill no longer sits on the bottom nav (public fix).
+
+**I18N-SA5-1.** `roles/app_i18n_zu.json`, `app_i18n_xh.json`, `app_i18n_nso.json` — 1,569 phrases
+each, hand-drafted (RUL-160: the Language reviewer proofreads, users' flags correct), loaded by
+`migrations/048`. Probed the reason: the machine lane rendered "blue bicycle" as "white" in isiZulu.
+
+**Quick app — repair lane (live now, `quick.html`).** QUICK-ADTEXT-1: the advert's description was
+OUR coaching line ("Written from your N taps ... Change any word of it before it goes up") — the
+words a buyer reads; it now says only what she told us, in plain sentences. QUICK-EVERYDAY-1:
+seven ticked days read "Any day"; now "Every day". QUICK-DEMO-OFF-1: the "Demo: new here" switch
+was visible to every real visitor. QUICK-DRAFT-LAND-1 (`ms.js`): the Quick way back (`?draft=`,
+emailed and WhatsApp) now opens the hub on that advert with Publish in reach — nothing read it before.
+
+**QUICK-NEXT-1 — the reworked Quick app, for David's review at `/quick_next.html`.** Language on
+the first screen as big code buttons and in the top bar (never over the tiles), five SA languages;
+the advert written in HER language and sent with `lang_orig`; "Where can you work?" as place chips,
+not house interiors; Next right under the week and "Every day" moves straight on; trades name an
+amount after the basis (no more "POA"); the draft leads with the advert and ONE strength ring,
+score detail and what-happens-next folded away; "Save my advert" says what the button does;
+readable button text on every category colour; the next step's pictures fetched ahead; `?c=<cat>`
+with the /q/ aliases so one app can serve the outreach door. Replaces `/quick/` when David has seen it.
+
+Ledger: RG-0431..RG-0436 (OPEN until their live legs are measured after the deploy).
+Audit and screenshots: `genie/QUICK_NEXT_REVIEW.html`.
+
+### EULA-SIGNOFF-1 (RUL-166) — nothing goes live without a signed EULA
+
+David's own waiter-route test on the Quick door published live without him reading the EULA: the
+one-tap publish (RUL-163 b) treated the tap as acceptance and stamped `eula_accepted_at` for any new
+email. Now `/listings/quick-publish` publishes only for a signed-in member whose EULA is already
+signed; everyone else gets a draft plus the way-back letter and signs the terms in the TrustSquare
+app before publishing. The Quick door never records an acceptance. Guard: RG-0446.
+
+## 2026-09-23 — Bug audit of the day's work: fixes, ZA-only languages, --chunk ledger, app pictures (RUL-165)
+
+- AUDIT-Q1: one-tap publish never acts for an EXISTING account typed by a stranger — it gets a draft and a sign-in letter; a new address still publishes in one tap; per-connection limit (5/day).
+- AUDIT-Q2: the browser can no longer set trust score, image paths, specs or status on a Quick advert.
+- AUDIT-Q3: when publishing is refused (e.g. plan full) the way-back letter is really sent and the arrival button opens the draft.
+- AUDIT-AUTH-1: PUT /listings/{id}/publish, PUT /listings/{id} and GET /listings/mine act as the proven session (RUL-135), not ?email=.
+- AUDIT-L1: GET /listings/{id} hides the seller's email from everyone but the seller, and never returns language working data; the seller's panel reads GET /listings/{id}/lang (owner-only).
+- AUDIT-L2/L3: editing the original words (only after the owner check) clears the old translation, its back-translation and the English search layer.
+- AUDIT-L4/L5/L6/L7/Q4/S1/S2/S4: photo marker never translated; Back and view counts unaffected by a language re-render; translate lane only for offered languages; spend counted after success; quality preview never 500s; shorter AI timeouts; live letter lands on the hub card; AI text escaped.
+- AUDIT-XSS-1: titles/descriptions are stored as plain text (older stored-XSS class).
+- RUL-165: ZA languages live on Claude's drafts; the other eight countries' local languages "prepared", not offered.
+- LEDGER-CHUNK-1: `regression_ledger.py --chunk` — time-budgeted, resumable board; the full board ran in-session: 427 entries, 0 regressed.
+- APP-PICS-1: six street pictures for Quick's "Where do you work?" step (scripts/gen_app_pictures.py; app imagery only, never users' photos); pushed by the media lane; used only once each picture has loaded.
+
+## DELETE-BIND-1 (RG-0445)
+- `DELETE /listings/{id}` now requires admin credentials for every advert (the app key is public in ms.js).
+- `DELETE /listings/{id}/seller` and `DELETE /listings/{id}/wonders/{wid}` are bound to the signed-in session (`_actor`); the typed email alone no longer deletes.
+- Admin console delete sends its admin token; ms.js seller deletes send credentials.
+
+## REAL-PUBLISH-1 (23 Sep 2026, live)
+- Signed in as dmcontiki2 (code sign-in), walked /quick/ at 390px: Offer a service -> Home & care -> Gardener -> Centurion -> Every day -> R350 -> Publish.
+- Advert #394 "Gardener — Centurion" went live in one tap; arrival card shown; visible in Browse and on its public page to an anonymous visitor; no seller email in the public read.
+- Stranger with the right email -> 401; public app key raw delete -> 401; owner session delete -> 200; #394 now 404 and gone from Browse.
+- RG-0441 promoted to LOCKED after its live probes returned clean.
+
+## 2026-09-20 — Daily watch: four open items fixed to closure, and the blindness that hid a real fault
+
+David, on reading the morning's GREEN watch report: *"please fix all of them to closure"*. Four of
+the five were Claude's; the fifth is two sign-offs that are his. Every fix is ASSERTED, not just made.
+
+**DW-138 — RG-0238 promoted OPEN → LOCKED, and widened.** The rule that no listing surface may call a
+PERSON safe was passing but still filed as a known-broken item, so a real breach would have read as
+business as usual. Promoted, and strengthened rather than merely re-stated: **7 surfaces** instead of 2
+(both composer doors, both legal surfaces, plus `bea_main.py` where badge text now originates —
+*with comments stripped first*, because that file carries the word "vetted" in a design comment and a
+guard pinned to a spelling would have gone red against correct code). The **absence-of-record** half of
+its own scope — banned in words since 1 Sep, never implemented — is now checked. Proven to bite on four
+injections; the same word in a comment correctly does not fire.
+
+**DW-137 — SAFE-READ-1 (`scripts/safe_read.py`, RG-0421).** A read of a just-written file on this FUSE
+mount can come back short with no error (19 Sep: 29,737 bytes of a 318,127-byte file). That is dangerous
+because a `cp` backup is the only undo here, so a session that reads back short "restores" from a file it
+misread — the recovery step becomes the data loss. `settled_read` re-reads until two consecutive reads
+agree and raises rather than returning a short read; `verify_after_write` compares against the writer's
+own bytes; `safe_backup` proves the copy. Wired into `changelog_compile.py` and `status_compile.py`,
+which were both verifying folds on a single immediate read. A concurrent session hit the same fault
+through `inspect.getsource()` within the hour and its RG-0423 now reads through the same helper.
+
+**DW-136 — DEPLOY-GATE-ALL-1 (`.git/hooks/pre-push`, RG-0422).** On 18 Sep a deploy rode while the board
+read REGRESSION, via the raw `git push origin HEAD:deploy` lane the runbook documents. A pre-push hook now
+fires on `refs/heads/deploy` only, runs `predeploy_check.py` with `PREDEPLOY_MODE=strict` set *before* the
+scan, and refuses the push on DANGER. Proven on four legs: DANGER → exit 1 refused; `PREDEPLOY_MODE=warn`
+→ allowed; pushing `main` → untouched; real tree → REVIEW, allowed. Installed by
+`scripts/install_git_hooks.py` (idempotent, `--check`). Residual stated: hooks are local to a clone.
+
+**DW-111 — JOURNAL-READ-1 (migration 045, RG-0424), and the lesson of the day.** This sat OPEN for
+**nine days** as "a Resend lane failing every five minutes that no instrument here can see". Nine sessions
+re-probed the same wall and wrote the same honest, useless sentence. One group membership
+(`msdeploy` → `systemd-journal`) made the journal readable, and the question was answered in four minutes:
+**there is no failing lane.** `_infra_resend()` posts an empty body to Resend on purpose — 422 means
+*auth passed, nothing sent* — and the +1 dashboard polls it every five minutes. A second 422 class
+(`POST /app/fault`, 228× in 24h, zero successes) looked like a six-day tester outage until the nginx
+user-agent read `TrustSquare-RegressionLedger/1.0` — our own probe asserting the endpoint refuses
+unauthenticated reports. **Both 422 classes were instruments succeeding.** The blindness was the defect,
+not the thing it hid.
+
+**DW-139 — NEW, live, and handed over rather than fixed.** Within minutes of the journal opening:
+`POST /i18n/translate` returning **500 on ~87% of calls** (262 vs 39 in fifteen minutes),
+`sqlite3.OperationalError: database is locked` at `main.py:25082` — the translate cache is written on the
+request path. It belongs to the concurrent session that shipped I18N-TRANSLATE-1 at 17:10Z; editing
+`bea_main.py` underneath them is the CHANGELOG-COLLISION-1 class, so it was recorded, not touched.
+
+Coverage map: **86 green · 2 blue · 0 amber · 1 red · 11 grey** (was 82/3/3/0/11) — the amber column is
+empty for the first time. Ledger: 411 entries · 388 holding · 0 ready to lock · 0 UNVERIFIED.
+
+## 2026-09-20 — The failover was ranked but never provisioned (new OPEN ledger entry)
+
+David's Anthropic API organisation was switched off tonight over an unpaid balance of **US$0.19**.
+Checking what that breaks turned up something worse than the 19 cents.
+
+`AI_BASELINE.json` ranks a standby lane FIRST in every tier — openai rank 0, anthropic rank 1,
+scaleway rank 2 — so on paper the app rides straight through a dead vendor. It does not. Read at
+the point of use (`/proc/<pid>/environ` on the running service, per the RG-0147 rule), the live
+box carries `ANTHROPIC_API_KEY` and no standby key at all. Every tier has exactly one reachable
+lane. One vendor outage — or an unpaid balance of a few cents — takes the entire AI surface down
+with nothing to fall to.
+
+**A ranking is not a failover until the key behind the rank exists.** That gap is now an OPEN
+ledger entry, so the machinery carries it instead of a sentence in a chat: it passes the day a
+second vendor's key is present in the running process, and prints READY TO LOCK then.
+Provisioning it is David's — it is a vendor credential and the money behind it is his call.
+
+For the record, what the API credit actually went on: the app's own AI, ~2 cents a day, $3.47 in
+total across 853 calls since it started, 484 of them vision calls at $3.27. Console usage for the
+last 30 days shows Haiku 4.5 and Sonnet 4.6 only — the two models the app is configured to use.
+
+## 2026-09-20 — maintenance-loop: four false-RED classes closed, one assertion repointed
+
+**Fault queue: empty.** The shadow maintenance agent ran clean against the live site
+(`MS_BEA_URL=https://trustsquare.co`, SHADOW, kill switch OFF): 0 faults seen, 0 acted,
+report `.maint_agent/run_20260920T170421Z.json`, heartbeat confirmed on
+`GET /dashboard/maint` (run `20260920T170419Z`). Email lane census only: 24 total,
+6 held in 30d. Escalation brief: none written — no escalations in 24h.
+
+**The whole session's work came from the board, not the queue, and all of it was one
+shape: an instrument that could not see, printing a verdict anyway.**
+
+- **UPSTREAM-BLIND-1 (RG-0420, new, LOCKED).** The 17:04Z board printed
+  `1 previously-fixed issue HAVE COME BACK. Do not deploy over this` on RG-0342, reason
+  `/admin/device-ok answers 502 -- the enrolled-device check is not fail-closed`. An
+  immediate re-probe answered 401 with `{"detail":"Not an enrolled device."}`, `/health`
+  200, `/dashboard.html` 401+Basic. Nothing had rotted; the app was restarting when that
+  leg read it. Two halves fixed: (a) the device-ok leg re-probes a 5xx once and then
+  judges it against `/health` — app alive + device-ok 5xx is still a **FAIL**, app not
+  answering reads blind; (b) the GENERAL half in `_get()`, added when RG-0001, RG-0004
+  and RG-0007 all crashed on `<HTTPError 502>` in the next board while `/health` answered
+  200 three times running. `_status()` is deliberately untouched, so every entry asserting
+  "this endpoint must not 5xx" still convicts. Proven by forcing all three branches.
+- **SELFREAD-DIAG-1 (RG-0423, new, LOCKED).** RG-0355 reported all FOUR of its needles
+  missing at once, then judged HOLDING twice minutes later. Four guards do not vanish and
+  return together. Cause named, not guessed: this file was being appended to by a parallel
+  session mid-run (RG-0421/RG-0422 appeared in it while the shards ran, and this entry's
+  own first number collided), and that lane had just shipped **SAFE-READ-1** for a measured
+  9%-of-a-file short read through the virtiofs mount. `inspect.getsource()` is not immune —
+  it re-reads through linecache. The RG-0355 judge now reads via `safe_read.settled_read`
+  (two consecutive agreeing reads) and every FAIL names which read path it used and how
+  many characters came back. Nothing softened: all-four-missing still reads REGRESSION.
+- **FADE-90-2 (RG-0417 repointed).** The entry convicted `marketsquare.html`'s embedded
+  EULA of losing the one-window fade clause. That copy was deleted on purpose hours earlier
+  by EULA-FORK-2 (RG-0400) — the acceptance box now renders `ms.js`'s `_EULA_HTML` at
+  runtime. The assertion was wrong, not the app: it now reads the clause out of the text
+  the seller actually scrolls and ticks. A "has the fourth copy come back?" leg was written
+  and then **removed** — it keyed on `marketsquare.html` not mentioning `_EULA_HTML`, which
+  the page mentions precisely because the fix landed, so it could never fire. A guard that
+  cannot fire is worse than no guard. That property stays RG-0400's.
+
+**Board:** 412 entries · 388 holding · 22 open · 0 unverified. Two reds remain and both
+belong to the parallel lane's in-flight work, not to this run: RG-0157 (untracked
+`migrations/045_journal_read_for_msdeploy.py`) and RG-0425 (Adventures country chip, their
+fix not yet deployed). Not touched, not committed here.
+
+Not deployed and not pushed — the nightly TSL ships committed work through the gates.
+
+**RUL-158 repointed the same way (rulings_check).** `scripts/rulings_check.py` required the
+one-window fade clause in `marketsquare.html` and so read FAIL for the identical reason —
+the copy was correctly deleted. It now reads the clause from `ms.js`; `marketsquare.html`
+keeps the banned half (its tier cards may never advertise the 30/60-day windows).
+Rulings check: 137 checked, 0 FAIL.
+
+## 2026-09-20 — ADV-CO-CHIP-1c: the home-page market switch reaches Adventures again
+
+David, same evening, after ADV-CO-CHIP-1 shipped: *"i changed to US in the home page, then went
+to adventures where the switch did not happen, it was still anywhere with a rand value, or it
+was still stuck in ZA?"*
+
+**He is right, and it was this morning's fix that did it.** ADV-CO-CHIP-1 read the city sync in
+`selectDemoCity` as the thing pinning South Africa and removed it. That was wrong. The pin was
+the hardcoded ZA chip literal plus a boot default of Pretoria — both already fixed. Removing the
+sync as well cut the one link that makes a market switch mean anything: switching the home page
+to the United States left Adventures exactly where it was.
+
+**Restored, through one writer.** The explicit market switch — `selectDemoCity` and the real geo
+`selectCountry` — now calls `selectAdvCountry`, which persists the choice, repaints the chip and
+re-renders. No direct assignment to `advCountry` anywhere, so the markup and the filter cannot
+drift apart again (that split was the original fault).
+
+**BORDERLESS-COUNT-1 stands.** Nothing in that path runs at boot, so a visitor who has chosen no
+market still opens on *All countries*, and the ZA exemplars no longer sit in a block at the top
+(ADV-CO-CHIP-1b). The borderless default is what you get until you choose; choosing is what
+moves it.
+
+**RG-0425 amended the same day** — a design-phase amendment, not a broken rule. It now asserts
+BOTH halves: no hardcoded country in the markup, and the market switch actually reaching the
+adventures list. The earlier clause, which would have failed the restored sync, was replaced by a
+one-writer clause; the entry's ref records why.
+
+## 2026-09-20 — ADV-CO-CHIP-1: the Adventures country chip lied, so the currency fix looked lost
+
+David, 20 Sep: *"the trustsquare app are still showing the adventures examples with South African
+Prices. We did fix this, how did it reappear again?"*
+
+**It had not reappeared — a different fault wore its face.** Probed in the RENDERED app, not the API:
+ZA renders R3,200, Australia A$540, the UK £350, the US $420, and every live Adventures row carries a
+correct `country`. RG-0002..RG-0006 hold. The currency model is intact.
+
+**What David was actually looking at.** The country chip in the Adventures header is the only country
+statement a buyer reads, and it was a hardcoded `🇿🇦 South Africa` literal in `marketsquare.html`
+(Session 22, **19 Apr 2026** — never touched since). BORDERLESS-COUNT-1 (14 Aug) fixed the *state*
+— `advCountry = 'ALL'` — and never touched the *markup it renders into*. So on a cold load the header
+said South Africa while the grid was unfiltered, and the ZA exemplars that sort first under it read as
+rands everywhere. **A fix and the thing the user reads were never connected.**
+
+**Two further paths re-pinned it, both silent:**
+
+- `ms.js` city sync (3698) overwrote `advCountry` with the selected city's country — picking Pretoria
+  re-selected South Africa, defeating the borderless default without a tap on the picker.
+- `selectAdvCountry` persists to `localStorage.ms_adv_country` (COUNTRY-FILTER-1) and `advResetAll`
+  — "one-tap escape from any filter combination" — did **not** clear it. One accidental pick held that
+  browser on one country permanently, with no control on the screen able to take it back.
+
+**The fix (the class, not the instance).**
+
+- The chip is now PAINTED FROM THE STATE on every load (`advPaintCountryChip`), so markup can no
+  longer disagree with what is filtered; the literal in the HTML is `🌍 All countries` to match.
+- The city sync no longer touches `advCountry` — a buyer planning a trip is not local to the
+  destination (the BORDERLESS-COUNT-1 reasoning, now enforced where it was being contradicted).
+- `advResetAll` releases the country pin and removes its saved copy.
+
+**Why nothing caught it.** Every currency entry in the ledger asserts a *symbol*. None asserted what
+the picker *defaults to*, so the one control that decides which market a buyer sees had no guard at
+all. New entry added so this cannot rot back a third time.
+
 ## 2026-09-20 — DICTV: why a fixed word stayed wrong on David's screen
 
 David, minutes after the fix went live, with a screenshot: *"both 'Wereld Erfenis' and 'Uitgelicht'

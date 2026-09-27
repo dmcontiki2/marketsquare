@@ -5942,9 +5942,14 @@ function openDetail(id){
       if (b) { b.innerHTML = 'Demo example \u2014 no real product or service'; b.style.opacity = '.6'; b.style.fontSize = '13px'; }
       return;
     }
-    if (ok) return;
+    if (ok === true) return;
     const b = document.querySelector('#screen-detail .sticky-cta .cta-btn');
-    if (b) { b.innerHTML = '\ud83d\udd12 Introductions open once this seller verifies their ID'; b.style.opacity = '.6'; b.style.fontSize = '13px'; }
+    if (!b) return;
+    if (ok === 'unchecked') {   /* RUL-188: the button stays live; a small line says the ID is not yet checked */
+      if (!b.parentNode.querySelector('.ms-idnote')) { const n = document.createElement('div'); n.className = 'ms-idnote'; n.style.cssText = 'font-size:12px;opacity:.75;text-align:center;margin-top:4px'; n.textContent = 'Seller ID not yet checked'; b.parentNode.appendChild(n); }
+      return;
+    }
+    b.innerHTML = 'This listing cannot take introductions right now'; b.style.opacity = '.6'; b.style.fontSize = '13px';
   });
   loadDetailWonders(l);
   loadDetailPois(l);
@@ -6683,14 +6688,17 @@ async function _msSellerCanReceive(id){
     if (d && d.demo_example) return 'demo';   // DEMO-INACTIVE-1: an example, never a real seller
     /* INTRO-GATE-MATCH-1 (25 Sep 2026 inspection, ts4-01): gate on the server's own answer. The paid Home Affairs
        tick alone locked 44 of the 65 live adverts whose sellers the server accepts (verified ID document or agency). */
-    if (typeof d.seller_can_receive === 'boolean') return d.seller_can_receive;
-    return d.seller_id_green_tick !== false;
+    if (typeof d.seller_can_receive === 'boolean' && !d.seller_can_receive) return false;
+    /* ID-NEVER-BLOCKS-1 (RUL-188): an unchecked ID never holds an introduction; the buyer is warned instead. */
+    if (d.seller_id_checked === false) return 'unchecked';
+    return true;
   }catch(_){ return true; }   /* unknown never blocks a buyer; the server still decides */
 }
 function openModal(id){
   _msSellerCanReceive(id).then(function(ok){
     if(ok==='demo'){ showToast(DEMO_EXAMPLE_MSG, 7000); return; }   // DEMO-INACTIVE-1
-    if(!ok){ showToast('This seller has not verified their ID yet, so TrustSquare is holding introductions to them for your safety. Nothing was charged.', 7000); return; }
+    if(!ok){ showToast('This listing cannot take introductions right now. Nothing was charged.', 7000); return; }
+    if(ok==='unchecked') showToast("This seller's ID has not been checked yet. TrustSquare still introduces you — meet safely and never pay a deposit before you have seen the goods or the work.", 8000);   /* RUL-188: warn, never block */
     _openModalNow(id);
   });
 }
@@ -13120,6 +13128,20 @@ async function saveEditedListing(_termsJustAccepted) {
       ? payload.description.replace(/(\*\*Rate:\*\*\s*)[^\n]*/i, function(m, lbl){ return lbl + payload.price; })
       : payload.description.replace(/(^|[.!?]\s+|\n)(Rate:\s*)[^\n]*?(?=\.(?:\s|$)|\n|$)/,
           function(m, pre, lbl){ return pre + lbl + payload.price; });   // Quick's plain 'Rate: R250 / hour.'
+  /* PRICE-DESC-SYNC-1 (27 Sep 2026, Ripple E2E story 2 step 7): the Rate sync above had no Price twin, so a jar of
+     honey re-priced to R95 still read 'Price: Under R100.' in her description. Same rule, for goods. */
+  if (payload.price && fd.price) {
+    const _baseD = payload.description || (elCurrentRaw && elCurrentRaw.description) || '';
+    const _pShown = /^[\d.]+$/.test(String(payload.price))
+      ? ((typeof aaCurrency === 'function' ? aaCurrency().symbol : 'R') + Number(payload.price).toLocaleString('en-ZA'))
+      : String(payload.price);
+    if (_baseD && /(^|[.!?]\s+|\n)Price:\s*/.test(_baseD)) {
+      payload.description = _baseD.replace(/(^|[.!?]\s+|\n)(Price:\s*)[^\n]*?(?=\.(?:\s|$)|\n|$)/,
+        function(m, pre, lbl){ return pre + lbl + _pShown; });
+    } else if (_baseD && /\*\*Price:\*\*/i.test(_baseD)) {
+      payload.description = _baseD.replace(/(\*\*Price:\*\*\s*)[^\n]*/i, function(m, lbl){ return lbl + _pShown; });
+    }
+  }
   if (fd.suburb)       payload.suburb       = fd.suburb;
   if (fd.area)         payload.area         = fd.area;
   if (fd.prop_type)    payload.prop_type    = fd.prop_type;
@@ -13171,7 +13193,12 @@ async function saveEditedListing(_termsJustAccepted) {
       }
       throw new Error(err.detail || 'Save failed (' + res.status + ')');
     }
-    showToast('✓ Listing updated — changes are live');
+    /* DRAFT-TRUTH-1 (27 Sep 2026, Ripple E2E story 1 step 9): 'changes are live' was said of a Draft. */
+    let _elSt = String((elCurrentRaw && elCurrentRaw.listing_status) || 'live').toLowerCase();
+    try { const _g = await fetch(BEA_URL + '/listings/' + elCurrentId, { credentials: 'include' });
+          if (_g.ok) { const _gj = await _g.json(); if (_gj && _gj.listing_status) _elSt = String(_gj.listing_status).toLowerCase(); } } catch(_) {}
+    showToast(_elSt === 'live' ? '✓ Listing updated — changes are live'
+                               : '✓ Changes saved — this listing is still a draft, so tap Publish to put it live', 6000);
     const _wpSellEmail=(SELLERS[0]&&SELLERS[0]._email)||localStorage.getItem('ms_aa_email')||'';
     if(window._currentEditBeaId&&_wpSellEmail)wpSave(window._currentEditBeaId,_wpSellEmail);
     // Refresh both dashboard and buyer-side listing cache
@@ -19118,7 +19145,7 @@ function aiSel(id){
         ? `<select id="ai-p-${pp.key}">${pp.options.map(o=>`<option>${o}</option>`).join('')}</select>`
         : (pp.placeholder.includes('\n')||pp.key==='items'||pp.key==='inventory')
         ? `<textarea id="ai-p-${pp.key}" placeholder="${pp.placeholder.replace(/"/g,'&quot;')}"></textarea>`
-        : `<input id="ai-p-${pp.key}" placeholder="${pp.placeholder.replace(/"/g,'&quot;')}">`}
+        : `<input id="ai-p-${pp.key}" placeholder="${pp.placeholder.replace(/"/g,'&quot;')}" value="${_aiPrefill(pp.key).replace(/"/g,'&quot;')}">`}
     </label>`).join('');
   // NO-0T canon (David, 5 Jul 2026): the $0 sample-preview is a DEV tool, never a user
   // tier. Hidden + forced off unless localStorage.ms_dev==='1' (set in devtools to test).
@@ -19148,6 +19175,16 @@ document.addEventListener('change', e=>{
   }
 });
 
+/* AI-PREFILL-1 (27 Sep 2026, Ripple E2E story 3 step 3): City and Currency LOOKED filled in ('Pretoria', 'ZAR')
+   but were grey hints, so the run was refused until typed. They are now real values from the city she is in. */
+function _aiPrefill(key){
+  try{
+    if (key === 'city') return (activeCity && activeCity.name) || localStorage.getItem('ms_city') || '';
+    if (key === 'currency') return (typeof aaCurrency === 'function' ? aaCurrency().code : '') || '';
+    if (key === 'country') return (typeof activeCountry !== 'undefined' && activeCountry && activeCountry.name) || '';
+  }catch(_){}
+  return '';
+}
 async function aiAddPhotos(files){
   for(const f of files){
     if(AI_PHOTOS.length>=12) break;
@@ -22566,7 +22603,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
     if(listingId){
       // BUGSWEEP-24SEP: by listing - /listings/{id} carries seller_id_green_tick, never the email.
       const lr = await fetch(BEA_URL + '/listings/' + encodeURIComponent(listingId));
-      if(lr.ok){ const ld = await lr.json(); if(typeof ld.seller_can_receive === 'boolean') st = {green_tick: ld.seller_can_receive}; else if(typeof ld.seller_id_green_tick === 'boolean') st = {green_tick: ld.seller_id_green_tick}; }   /* INTRO-GATE-MATCH-1 */
+      if(lr.ok){ const ld = await lr.json(); if(typeof ld.seller_id_checked === 'boolean') st = {green_tick: ld.seller_id_checked}; else if(typeof ld.seller_id_green_tick === 'boolean') st = {green_tick: ld.seller_id_green_tick}; }   /* RUL-188: warning input only */
     } else if(sellerEmail){
       st = await msIdStatus(sellerEmail);
     }
@@ -22576,8 +22613,8 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
     // old Home Affairs warning text that was built here and never shown is removed.
     // E2E-HMI-1 (24 Sep 2026): the server refuses introductions to unverified sellers, so asking
     // "continue?" offered a choice that did not exist. Say what is happening instead.
-    showToast('This seller has not verified their ID yet, so TrustSquare is holding introductions to them for your safety. Nothing was charged.', 7000);
-    return false;
+    showToast("This seller's ID has not been checked yet. TrustSquare still introduces you — meet safely and never pay a deposit before you have seen the goods or the work.", 8000);   /* ID-NEVER-BLOCKS-1 (RUL-188): warn, never block */
+    return true;
   }catch(e){ return true; }   /* a warning failure must never block a buyer */
 }
 

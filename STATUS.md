@@ -8,9 +8,13 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-19 - sim services lane)
+## Last Completed (2026-09-27 - 27 Sep 2026 — Terms v1.19 PUBLISHED (R7))
 
-- 19 Sep 2026: Contagion Model v1.8 (SIM-SVC-1) - Services lane (RUL-150/151/152, SA employer enrolment) behind a teal toggle; OFF = v1.7 draw for draw, dashboard pins unmoved. ON, mid run: SA sellers wk156 32,181 vs 10,994.
+- **27 Sep 2026 — Terms v1.19 PUBLISHED (R7):** all eleven review decisions answered and built — everyone accepts again
+  from 12 Oct after the email + in-app notice; buyers accept once before committing money; a Property listing takes one
+  buyer at a time on the server; buyers can withdraw a request in the app; Kenya and Namibia schedules, Germany,
+  Botswana and Mozambique "coming soon"; Kenya's s.49 consent tick. Banking: nothing stored (RUL-176, the other
+  session). David's step: Kenya ODPC registration (L24). Ledger RG-0503 (amended), RG-0511..0518; RUL-181/182/183.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +39,229 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **27 Sep 2026 — Terms v1.19 PUBLISHED (R7):** all eleven review decisions answered and built — everyone accepts again
+  from 12 Oct after the email + in-app notice; buyers accept once before committing money; a Property listing takes one
+  buyer at a time on the server; buyers can withdraw a request in the app; Kenya and Namibia schedules, Germany,
+  Botswana and Mozambique "coming soon"; Kenya's s.49 consent tick. Banking: nothing stored (RUL-176, the other
+  session). David's step: Kenya ODPC registration (L24). Ledger RG-0503 (amended), RG-0511..0518; RUL-181/182/183.
+
+- 27 Sep 2026 — COMPLETED (David: "Mark this as completed"): RUL-185 Local Market seller pays + low-balance notice/warning (RG-0522..0524); GRANT-WHO-1 +1 grant card finds the person by name or email and shows who and balance (RG-0527); RUL-187 demo examples marked and refused for introductions (RG-0528). All live and verified in the rendered app; AdvertAgent and CityLauncher pushes confirmed on GitHub; v1.19 Terms notice verified in af/zu/xh/nso. Only scheduled follow-up: 12 Oct 2026 check that Terms v1.19 re-acceptance switches on.
+
+- 27 Sep 2026 — RUL-188 (David: "we have launched ... there is no excuse"; ID must not stop a flow): paid AI open to every signed-in customer in live mode, Pro gate dormant while no paid feed is on, unchecked ID warns and never blocks introductions, every AI call follows the AI Providers card (translations had been running on Claude). Ripple E2E bugs fixed: reference-link sign-in on the page, Buzz reply-to sender, AI form City/Currency prefilled, price sentence follows re-price, draft toast truthful, Quick save button. RG-0530. Re-run of the three Ripple stories in the rendered live app follows the deploy.
+
+- **27 Sep 2026 maintenance loop (probed):** fault queue empty (0 new / 0 fix-shipped / 26 verified / 12 closed). Fixed two ledger reds that appeared with no code change: the AI trust-plan referral step wording (COACH-HIRED-1, RG-0519 — ships with the next nightly deploy) and the stale wave-hygiene witness (WITNESS-IN-AGENT-1, RG-0520 — the loop now refreshes it). Ledger green, 21 open. Host queue reported 2 committed-not-pushed commits (2.2 h old) at 05:43Z.
+
+- 27 Sep 2026: RUL-185 built — Local Market seller-pays confirmed in canon A8; low-balance seller notified and warned; daily-limit wording fixed. AdvertAgent push re-queued after allowlist fix.
+
+- **27 Sep 2026 — FAULT-TEXT-1 (DW-162):** complaints and support messages now keep plain words only (letters, numbers, ordinary punctuation; 1,000-character limit), at the door and in the maintenance agent's AI prompts. RG-0521 / RUL-184.
+
+- 27 Sep 2026 — Regulars limits (10 / 50 / 200) built behind David's +1 switch, default OFF; STAGED in
+  `scripts/apply_circle_caps.py` because the banking-terms lane holds WORK-LOCK-1 on bea_main.py/ms.js.
+  Apply + deploy the moment the lock clears; RG-0510 tracks it.
+- 27 Sep 2026 — KEEP-CHOICE-1 approved by David: on any downgrade she chooses which regulars AND listings
+  stay active; the rest rest (never deleted), upgrading wakes them. Built into the same staged script.
+
+- **26 Sep 2026 maintenance loop (PROBED, 05:40–06:05 UTC):** ledger green after correcting RG-0391's stale
+  assertion (QUICK-SCOPE-1 moved Quick's start_url to /quick/ on 25 Sep; the old entry had not followed) and
+  locking RG-0485. Fault queue empty: 0 new, 0 fix-shipped, 26 verified, 12 closed. Heartbeat posted. No
+  escalations. Committed, not pushed — the nightly ship carries it.
+
+- **26 Sep 2026 — David's four answers carried (INSPECT-FIX-5):** one word 'listing' across both apps and the server
+  (RUL-040 amended: AI EXAMPLE GENERATED LISTING); a real banking form on the Billing tab and after publishing, saying the
+  details confirm who she is and are used when she buys Tuppence, never for payouts (migration 058, DICTV 6); the nine Quick
+  pictures kept for later; Terms v1.19 drafted (88 corrections, not published) with 11 points on
+  Visuals/MarketSquare/TERMS_v1.19_REVIEW.html for David. Ledger RG-0503..0505.
+
+- **26 Sep 2026 inspection fix wave (INSPECT-FIX-2):** the rest of the 25 Sep inspection register shipped in one deploy --
+  Quick (door fits small phones, amounts like '1,500', saved card, Back, kept answers, one account per phone, whole-sentence
+  translations), the app (real Terms on the edit gate, lazy map and trip data, photos shrunk in order, wording and grammar),
+  the server (sign-in needed to register, admin-only summary, loopback exemptions replaced by the running app's own key) and
+  the Afrikaans corrections (migration 055, DICTV 4). Six new ledger entries (RG-0495..0500); RG-0167 reopened honestly.
+  Per-item closure notes for all 282 items are on INSPECTION_2026-09-25.html.
+
+### Watch reds + ambers fixed — 25 Sep 2026
+
+David asked for the 25 Sep watch's two reds and four ambers fixed. The trust-plan red was a stale
+check (verified-client steps are earnable since RUL-142); the check was corrected. The SQL ratchet is
+back to baseline. The host now clears stranded git locks every night and every 20 minutes. The server's
+daily sensor catches up after a reboot. A network blip in the ledger now reads "not evaluated" instead
+of "broken". The Quick test harness matches the live page again. Three new ledger entries: RG-0466,
+RG-0467, RG-0468.
+
+- 25 Sep 2026: Contagion Model v2.0 (SIM-CHAIN-1) - Share Chain (RUL-171) behind a purple toggle; OFF = v1.9 draw for draw, dashboard pin v2.0. ON, mid run: sellers wk52 114,634 vs 84,474 (+36%), wk156 +2%; paired ensemble +2.2% wk52, never below twin from wk104. Speeds the curve, does not raise the market ceiling.
+
+### Quick ⇄ TrustSquare seam — 25 Sep 2026 (SEAM-1)
+
+- Audit board delivered (`QUICK_TS_SEAM_AUDIT_2026-09-25.html`, also in Visuals). David ruled: gate A (inside Sell),
+  both tiles at their moments, build "Pass Quick on" now, plan the Android shell now.
+- Built and rendered-tested (25/25): Back gesture inside Quick, real Find, city from area, language carry, Quick
+  scope /quick/, Quick tile offer, Sell-sheet door with a way back, Pass Quick on (server + client), push opens the app,
+  search OR/AND 500 fixed. Ledger RG-0477..RG-0480 OPEN until live.
+- Android shell plan: `genie/ANDROID_SHELL_PLAN.md` — the one money step (Google Play developer account) is David's.
+
+- 25 Sep 2026: QA-GATE-BLIND-1 — the QA Bot deploy gate graded 640/640 routes from a vantage that answered 403 before the app, passed, and then wrote that blind run over its own baseline (disarming the gate for every route). The bot now proves it can see the app first (public-route canary + a >=90%-one-status check); a run it could not see is NOT MEASURED, is never accepted, and exits 2 so server_deploy.sh fails closed. Rather than freezing every release, it first falls back to the app's own loopback port and names what that door does not cover (nginx and the edge). Test red on the pre-fix source. Cause of the 403 still needs server hands.
+
+### PROXY-OPEN-1 / FN-WINDOW-1 — 24–25 Sep 2026
+
+Onboarding run 20. The funnel's open rate was counting Gmail, Yahoo and Apple Mail fetching the
+tracking pixel as people reading the letter: 331 "human opens" are 34, with 365 recorded separately
+as delivered-but-unmeasurable. Clicks (9) unaffected. Separately, RG-0110's "both sign-in doors are
+broken" was a false red — it read a fixed 1400-byte window that a correct same-day security fix had
+outgrown. Board 452 entries · 429 holding · 3 regressed · 0 unverified; rulings 142 · 0 FAIL.
+The onboarding number is still **0** (target 20 by 31 Oct).
+
+### Employer door + Status card fit — 25 Sep 2026
+
+The employer door is built: an organisation enrols its people from a list, each person gets her own
+private link on a printable slip, and it opens the Quick door on her role in her language. A verified
+organisation's enrolment carries its 12-point confirmation. The importer cannot create an advert
+(ledger RG-0474). The Status card now shows long titles as words on two lines (RG-0475). Door 1 (which
+estate) and the SMS lane are David's to review today.
+
+### Maintenance loop — 25 Sep 2026 (scheduled)
+
+Ledger at start: 3 regressions (RG-0351, RG-0373, RG-0450). This loop fixed RG-0450 (the Quick
+prototype file had drifted from the live Quick page) and a new red it uncovered, RG-0223 (the brain
+could not read the customer-email counts after the 24 Sep security gate; it now reads them through
+the staff door, counts only). RG-0351 and RG-0373 were fixed by the concurrent CTO session.
+Fault queue: 0 new · 0 fix-shipped · 26 verified · 12 closed. No escalations.
+Still waiting: RG-0426 (second AI lane) prints READY TO LOCK — promotion belongs in the ledger
+file, which the CTO session held locked during this run.
+
+- 25 Sep 2026: HOSTQUEUE-WATCHDOG-1 — autodeploy_agent.bat (Claude's only hands outside the sandbox, RUL-095/092) stopped after 13:15:06Z and nothing noticed for 7h31m; by the evening stand-up 5 commits were stranded unpushed, including the inspection's criticals (eef4097). The ~20-min maintenance loop now watches that lane: a request queued past two ticks, or commits ahead of the mirror for more than a tick, reads STALLED and names the oldest item. Test red on the pre-fix source. Starting the agent still needs David's PC; the queued push self-heals on the next tick.
+
+### David's decisions on the 24 Sep do-list — 25 Sep 2026
+
+- Work lock: "Release" -- the cto-fix lane's work shipped with the employer door in one deploy (live 970181a, 06:48Z).
+- Daily heartbeat scheduled task: not yet ("Lets not add a new heartbeat as yet"). None created.
+- OpenAI / Grok monthly amounts: "Skip" -- the costing page stays as published 24 Sep.
+- SMS lane: David reviews it today -- "it is not 'if' but rather how and when". Ready on the Claude side: the
+  wave reads the key from MarketSquare/.secrets/sms.env (template in place, only the token line to fill),
+  sends only Mon-Sat 08:00-19:00 SAST, first wave 200 of Pretoria's 430 numbers, once per number ever.
+
+### CityLauncher brought up to the app — 25 Sep 2026
+
+Outreach letters now open the Quick door on the prospect's **role** (RUL-159), in the country's
+switched-on languages (RUL-162/165), carrying the wave source tag — previously every letter posted a
+bare pre-RUL-159 door name with none of the three. A new employer harvester hunts the 21 employer
+kinds RUL-150 makes the supply channel, probed tag-by-tag in Tshwane, with households named as
+never-harvested. Board 479 entries · 457 holding · 1 regressed (another session's locked file,
+DW-159) · 0 unverified; rulings 147 · 0 FAIL. The onboarding number is still **0** (target 20 by
+31 Oct). Waiting on David: an SMS provider, which is what unlocks 2,450 ZA phone numbers.
+
+- Onboarding run 19 walked the cold-seller publish journey on the live site in a real browser and
+  it completes end to end — the last pre-send check on the recoup letter now passes.
+- TERMS-HANDOVER-1 (RG-0449): the handover from a refused publish landed the seller on the
+  listing-preview step instead of the Terms, because the acceptance lookup answered 401 (no API
+  key) and the gate fell through. Fixed on both legs; ms.js.
+
+- STATUS-CARD-1 (24 Sep): Status card + share button live in the hub and on the You're-live screen; services adverts carry the "Make your own — free" loop; model mid run pinned to the measured click rate; door pack, posters ×5, WhatsApp greeting and SA Youth / group texts filed in CityLauncher/doors.
+
+### Board after SEC-GATE-1 went live (read 24 Sep 2026 ~09:10Z, by the screen-walk session)
+
+Six entries red, all HTTP 401 on reads the new gate now closes to non-admins: RG-0118 (inbound rail
+status), RG-0203 (/dashboard/ai-funds), RG-0293 + RG-0315 + RG-0402 (/onboard/funnel -- now admin +
+local), RG-0388 (/trust/employer-link now answers 401 where the entry expects 404); RG-0372 blind (401
+on /users/{email}/trust). PROBED: the public funnel beacon POST /onboard/step still answers 200, and
+the screen walk (all five languages) reads OK on the gated build. These are the ledger's probes
+following the new policy -- the SEC-GATE-1 lane's follow-through (it holds the work lock); not
+touched here so two sessions do not rewrite the same probes.
+
+- SEC-GATE-1 / RG-0455 (24 Sep): one security gate now stands in front of all 304 routes — undeclared routes refused, typed e-mails act as the signed-in person, record ownership checked in one table, admin tokens typed (an employer link no longer passes as admin), private fields hidden from strangers, true client IP for every rate limit; 60 handler fixes from the full review; the stranger test blocks any deploy that opens a route.
+
+### SCREEN-WALK-1 — 24 Sep 2026
+
+The daily loop now walks the live app in a real browser in all five South African languages, as a
+returning reader, and goes red when any language shows different numbers from English. Proven to catch
+this morning's zero-tiles build and pass the fixed one. Runs inside every agent run; ledger RG-0456.
+
+### RUL-142 + Quick WHERE + suburb pins — 24 Sep 2026
+
+David's three decisions from the bug sweep, built and deployed: universal cap 40, second employer 6, verified clients 5/6/7 via the buyer's "I hired them" (RG-0409); Quick asks WHERE in Cars/Tutors/Collectors/Adventures; street-address pins saved at ~500 m precision.
+
+### QA-BOT-1 — 24 Sep 2026
+
+The independent QA Bot is live. OpenAI rules what every route must require, and those rulings live
+only on the server. The bot attacks every protected route on every deploy (the gate rolls a release
+back if a closed route opens) and every night at 02:30 SAST, emailing David only when something is
+red. Baseline 08:43Z: 41 routes open to the wrong person and 2 crashing on a stranger. After SEC-GATE-1
+shipped (09:03Z) there were 9 open, all reachable with the public app key. SEC-GATE-1 holds the lock on
+bea_main.py and owns them. A route counts as closed only when the bot says so. Ledger RG-0454.
+
+- LINK-KEY-1 / PHONE-KEY-1 / RUL-167 (24 Sep): the Quick door's key is now e-mail, phone code (dark until an SMS provider is configured) or the private link; key accounts are never mailed; EULA gate unchanged (RG-0450). Waiting on David: SMS provider account, WhatsApp Business SIM.
+
+### Maintenance loop — 24 Sep 2026 (07:40–08:20Z)
+
+Fault queue empty (0 new · 0 fix-shipped · 26 verified · 12 closed); heartbeat 20260924T075001Z
+read back from `/dashboard/maint`; no escalation brief; backup lane skipped (archive 14.8 h old).
+
+Board started RED with 3 regressions and ends GREEN: 438 entries · 417 holding · 0 regressed ·
+21 open · 0 ready to lock · 0 unverified. One was real (PHONE-KEY-1 re-introduced the SQLite
+clock in `bea_main.py` -- fixed, rides tonight's TSL); two were spelling-checks broken by
+legitimate code changes (RG-0413, RG-0431 -- now assert the property). Of four READY TO LOCK
+prints, two were malformed entries (date in the state slot -- new guard RG-0451 refuses that at
+import) and one (RG-0437) was a false print over an unbuilt fix -- built it (rulings_check now
+reads through settled_read), then locked. Committed, not pushed (NIGHTLY-SHIP-1 ships it).
+
+### Instrument blindness — four false reds closed, 24 Sep 2026
+
+RG-0459/0460/0461/0462 lock the week's four instrument fixes (LEDGER-VANTAGE-BLIND-1,
+BIT-EDGE-BLIND-1, BIT-NS-1, ENVKEY-BLIND-1), each with a test that is red on the pre-fix source.
+The last of them, RG-0426, had been telling David to buy an AI key the box already resolves through
+the ENVKEY-1 door; it now reads both doors and still convicts a genuinely single-lane box.
+
+### I18N-KEY-1 — 24 Sep 2026
+
+Home tiles read 0 in every language but English (David's Afrikaans screenshot): the count lookup used
+the translated tile name. Fixed across the whole class -- 13 places read painted text as a key,
+including the filter sheet, which was silently doing nothing outside English. One helper, `msEnText`,
+now reads the English. Proven in the live page (19/3/2/29/1/4 in Afrikaans). Ledger RG-0452.
+
+### GATE-SYNC-1 — 24 Sep 2026
+
+The board checks that went red or blind when the security gate closed pages to strangers now read those
+pages as staff. Board back to 0 regressed, 0 unverified (444 entries). A new tripwire (RG-0457) fails the
+board the moment a check reads a locked page -- or a staff-only /flags field -- as a stranger, so the
+next lock change cannot do this silently.
+
+- SIM-CASUALS-1 (24 Sep): Contagion Model v1.9 — Services lane re-based on the casuals research (market ×3.5, Status-card referrals, e-mail-gate variable svcMail, new levers svcKeyW / svcChanW); lane OFF unchanged; decisions open: publish key (D2), pin measured click rate.
+
+### BUGSWEEP-24SEP — 24 Sep 2026
+
+Bug sweep of the TrustSquare app (ms.js, bea_main.py) and the Quick door (quick.html): 27 fixes, incl. search dying after any listing was opened, seller Accept/Decline never reaching the server, buyer intro toasts shown without a server result, and the Quick Back button keeping the old price. See changelog.d/2026-09-24-bugsweep.md.
+
+- ADMIN-BIND-1 / RG-0448 (24 Sep): admin user routes and the AI-spend config now require admin credentials — the public app key opened them until this morning; platform AI ceiling lowered $100 → $10 a day (David, 24 Sep).
+
+- 23 Sep 2026 evening: languages switched on for everyone (049); Quick publishes in one tap with an arrival screen; one Quick door (/quick/ = /q/<cat>); RUL-163, RUL-164.
+
+- 23 Sep 2026: RUL-162 language layer built (tester-only; public switch is David's), isiZulu/isiXhosa/Sepedi hand-drafted dictionaries (migration 048), Quick repair-lane fixes live-bound, reworked Quick app at /quick_next.html for David's review. Ledger RG-0431..0436 OPEN until measured live.
+
+- EULA-SIGNOFF-1 / RUL-166 (23 Sep): Quick door saves drafts for anyone without a signed EULA; one-tap publish only for signed members (RG-0446).
+
+### Maintenance loop — 20 Sep 2026 (17:00–17:40Z)
+
+Fault queue empty (0 seen, 0 acted); heartbeat posted and read back from
+`/dashboard/maint`; no escalation brief. Live site healthy: `/health` 200,
+`/flags` 200, ops gate 401+Basic, `/admin/device-ok` 401.
+
+Three instrument fixes, all the same class — a checker that could not see, convicting
+the app anyway. RG-0420 (origin 502 = blind, both in the device-ok leg and generally in
+`_get()`); RG-0423 (the RG-0355 judge now reads until the file settles, after a parallel
+session writing the same file produced a four-needle phantom red); RG-0417 repointed off
+the `marketsquare.html` EULA copy that EULA-FORK-2 correctly deleted, onto `ms.js`'s
+`_EULA_HTML` — the text the seller actually ticks. No assertion was weakened; each fix
+was proven to still convict its real fault before shipping.
+
+Board ends 412 entries · 388 holding · 22 open · 0 unverified. The two remaining reds are
+the parallel lane's uncommitted work (RG-0157 untracked migration 045; RG-0425 Adventures
+chip awaiting deploy) — left alone.
+
+NOTE FOR THE NEXT SESSION: two sessions were writing this repo at the same time this
+evening. `scripts/regression_ledger.py` changes made here were swept into commit a776d96
+by the other lane before this run could commit them. Nothing was lost, but the
+CHANGELOG-COLLISION-1 hazard now demonstrably reaches `.py` files, not just `.md` — read
+before writing, and prefer a settled read when verifying.
 
 - 19 Sep 2026: Contagion Model v1.8 (SIM-SVC-1) - Services lane (RUL-150/151/152, SA employer enrolment) behind a teal toggle; OFF = v1.7 draw for draw, dashboard pins unmoved. ON, mid run: SA sellers wk156 32,181 vs 10,994.
 
