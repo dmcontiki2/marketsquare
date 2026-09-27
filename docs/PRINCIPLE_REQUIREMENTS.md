@@ -70,7 +70,7 @@ When the Codex is updated, regenerate this file from Claude Chat and replace all
 
 ### A8 · Tuppence deductions are purchase-only — never punitive (CORE PRINCIPLE)
 - Tuppence is NEVER deducted from any wallet as a punishment, penalty, or deterrent.
-- The only valid reasons to deduct Tuppence are: (i) buyer pays an Introduction fee; (ii) seller or buyer purchases an AI service; (iii) seller purchases a Boost.
+- The only valid reasons to deduct Tuppence are: (i) buyer pays an Introduction fee; (ii) seller or buyer purchases an AI service; (iii) seller purchases a Boost; (iv) LOCAL MARKET — the seller pays the Introduction fee instead of the buyer: 1T (2T while boosted), ONCE per listing, when the first buyer asks; buyers ask free; (v) AGENTS — an agent pays 1T to accept an Introduction request that reached her free. Both (iv) and (v) are the Introduction fee paid by the other party, not a penalty (RUL-185, David 27 Sep 2026; matches EULA v1.19).
 - Negative behaviour (ignoring intros, declining without reason, no-shows, bad referrals) is penalised exclusively via Trust Score reduction and, in severe or repeat cases, Banishment (account suspension or permanent ban).
 - This principle is non-negotiable. No agent, architect, or future feature may introduce a Tuppence-deduction penalty under any framing (fee, bond, deposit, resubmission cost, etc.).
 - CLARIFICATION (17 Jun 2026): the non-rolling monthly grant reset (A7 / PRICING_CANON §5) is NOT a punitive deduction. It zeroes only UNSPENT GRANTED Tuppence at the moment a fresh grant is credited — a grant that resets rather than rolls over. No purchased or earned Tuppence is ever swept, and nothing is deducted in response to behaviour. A8-compliant by construction.

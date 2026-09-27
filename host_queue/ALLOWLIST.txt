@@ -3,6 +3,7 @@
 # Adding a line here is itself a change David sees in git; the agent refuses anything else.
 git_push   MarketSquare
 git_push   CityLauncher
+git_push   AdvertAgent
 run_bat    CityLauncher\exchange_sync.bat
 run_bat    CityLauncher\sync_to_server.bat
 run_bat    CityLauncher\clean_stoploss_cities.bat

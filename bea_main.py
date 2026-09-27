@@ -13148,6 +13148,16 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
     )
     new_id = cur.lastrowid
     conn.commit()
+    # LM-LOWBAL-1 (RUL-185): warn her now if she could not pay for her first buyer.
+    _lm_warn = None
+    try:
+        _lm_bal = conn.execute("SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
+                               (_lm_seller or listing.seller_email,)).fetchone()["bal"] or 0
+        if int(_lm_bal) < LM_INTRO_COST_T:
+            _lm_warn = ("Heads up: on Local Market you pay %sT when your first buyer asks, and your balance is %sT. "
+                        "Top up so buyers are not turned away." % (LM_INTRO_COST_T, int(_lm_bal)))
+    except Exception:
+        pass
     conn.close()
     if not _lm_live:
         # LM-GUARDS-1: 409, not 200 -- the Local Market form shows this line instead of "published" (as aa_publish does).
@@ -13157,7 +13167,7 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
             "detail": "Your listing is saved as a draft. Read and accept the TrustSquare Terms in the app to publish it."})
     # Run wishlist matching against this new LM listing — same engine as Wishlist Feed
     background_tasks.add_task(run_match_job, new_id)
-    return {"id": new_id, "message": "Local Market listing created"}
+    return {"id": new_id, "message": "Local Market listing created", "low_tuppence_warning": _lm_warn}   # LM-LOWBAL-1
 
 
 @app.get("/local-market/listings")
@@ -13234,6 +13244,36 @@ def lm_get_listing(listing_id: int):
 
 # SEC-GATE-1 (24 Sep 2026): per-buyer rolling-24h cap on Local Market intros (each first intro debits a seller).
 LM_INTRO_DAILY_CAP = 10
+
+# LM-LOWBAL-1 (RUL-185, David 27 Sep 2026): a Local Market seller pays 1T (2T boosted) when her FIRST buyer asks.
+# If she cannot, the buyer is turned away -- and until now she was never told. She is now told at once (at most
+# once a day per listing, however many buyers knock) and warned when she lists with less than 1T.
+_LM_LOWBAL_SENT = {}
+LM_LOWBAL_REPEAT_HOURS = 24
+
+
+def _lm_low_balance_notice(seller_email: str, listing_id: int, title: str, cost_T: int) -> None:
+    try:
+        now = datetime.now(timezone.utc)
+        last = _LM_LOWBAL_SENT.get(listing_id)
+        if last and (now - last) < timedelta(hours=LM_LOWBAL_REPEAT_HOURS):
+            return
+        _LM_LOWBAL_SENT[listing_id] = now
+        em = (seller_email or "").strip().lower()
+        t = (title or "your item")[:60]
+        if _is_key_identity(em):
+            _sms_key_seller(em, "TrustSquare: a buyer asked about '%s' but you need %sT to accept. Top up so the next buyer gets through." % (t[:40], cost_T), "lm-lowbal")
+            return
+        if "@" not in em:
+            return
+        plain = ("A buyer asked about your Local Market listing '%s', but the request could not reach you: "
+                 "the first buyer's introduction costs you %s Tuppence and your balance is lower than that. "
+                 "Top up your Tuppence in TrustSquare so the next buyer gets through. "
+                 "You pay once per listing, however many buyers follow." % (t, cost_T))
+        html = "<p>" + _ts_html.escape(plain) + "</p><p><a href=\"https://trustsquare.co/\">Open TrustSquare</a></p>"
+        _send_html_email(em, "A buyer asked about your listing - top up to receive it", html, plain)
+    except Exception as exc:
+        _log.error("LM-LOWBAL-1 notice failed for listing %s: %s", listing_id, exc)
 
 
 @app.post("/local-market/intro")
@@ -13327,6 +13367,7 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
         ).fetchone()["bal"] or 0
         if int(bal) < cost_T:
             conn.rollback(); conn.close()
+            _lm_low_balance_notice(seller_email, req.listing_id, listing.get("title", ""), cost_T)   # LM-LOWBAL-1
             raise HTTPException(
                 status_code=402,
                 detail=f"seller_insufficient_tuppence (needs {cost_T}T, has {bal}T)"

@@ -58,7 +58,11 @@ def execute(action: str, arg: str) -> tuple[int, str]:
         repo = ROOT / arg
         subprocess.run([str(HERE / 'git_unlock.bat')], cwd=str(repo), stdin=subprocess.DEVNULL,
                        capture_output=True)
-        return run(['git', 'push', 'origin', 'HEAD:main'], repo)
+        # PUSH-BRANCH-1 (27 Sep 2026): AdvertAgent's GitHub repo has only 'master'; pushing HEAD:main there would
+        # create a stray branch. Push to 'main' when the remote has it, else to 'master'.
+        rc, heads = run(['git', 'ls-remote', '--heads', 'origin', 'main'], repo)
+        branch = 'main' if (rc == 0 and 'refs/heads/main' in heads) else 'master'
+        return run(['git', 'push', 'origin', 'HEAD:' + branch], repo)
     if action == 'run_bat':
         bat = ROOT / arg
         return run(['cmd', '/c', 'call', str(bat)], bat.parent)

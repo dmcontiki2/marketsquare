@@ -13733,6 +13733,8 @@ async function feaLmSubmit() {
     // Success — close create modal, show success screen
     document.getElementById('fea-lm-create-modal').style.display = 'none';
     _feaLmShowSuccess(title, j.id);
+    /* LM-LOWBAL-1 (RUL-185): she pays 1T when her first buyer asks -- warn her now if she cannot, so no buyer is turned away unseen. */
+    if (j && j.low_tuppence_warning) setTimeout(function(){ showToast(j.low_tuppence_warning, 9000); }, 4200);
   } catch(e) {
     status.textContent = 'Connection error — please try again.';
     btn.disabled = false;
@@ -17120,7 +17122,12 @@ async function lmSubmitIntro(listingId, name, email, message) {
     }
     if (resp.status === 410) { showToast('This listing has been suspended and is no longer accepting introductions.'); return; }
     if (resp.status === 402) { showToast('The seller does not have enough Tuppence right now. Please try again later.'); return; }
-    if (resp.status === 429) { showToast('You already requested an introduction on this listing recently. Please wait 7 days.'); return; }
+    if (resp.status === 429) {   // LM-429-WORDING-1: two different limits answer 429 -- say the one that applied
+      const j = await resp.json().catch(()=>({}));
+      if (j && j.detail === 'cooldown_7_days') showToast('You already requested an introduction on this listing recently. Please wait 7 days.');
+      else showToast('You have sent a lot of Local Market introductions today. Please try again tomorrow.');
+      return;
+    }
     if (!resp.ok) { const j = await resp.json().catch(()=>({})); showToast('Introduction not sent — ' + ((j && typeof j.detail==='string' && j.detail) || (resp.status===401 ? 'please sign in first' : 'please try again'))); return; }
     showToast('✓ Introduction requested · seller has 48 hours to respond');
   } catch(e) {

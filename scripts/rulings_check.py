@@ -86,6 +86,12 @@ def _outside_repo(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-185": [
+   ("RULINGS.md", ["IN LOCAL MARKET THE SELLER PAYS"], []),
+   ("PRINCIPLE_REQUIREMENTS.md", ["(iv) LOCAL MARKET", "(v) AGENTS"], []),
+   ("bea_main.py", ["def _lm_low_balance_notice(", '"low_tuppence_warning": _lm_warn'], []),
+   ("ms.js", ["j.low_tuppence_warning", "j.detail === 'cooldown_7_days'"], []),
+ ],
  # R7 (27 Sep 2026): Terms v1.19 published with David's answers; the open countries; one buyer at a time on Property.
  "RUL-184": [
    ("RULINGS.md", ["A COMPLAINT CARRIES PLAIN WORDS ONLY"], []),

@@ -1,0 +1,1 @@
+- 27 Sep 2026: RUL-185 built — Local Market seller-pays confirmed in canon A8; low-balance seller notified and warned; daily-limit wording fixed. AdvertAgent push re-queued after allowlist fix.
