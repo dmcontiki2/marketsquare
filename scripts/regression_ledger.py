@@ -31650,7 +31650,7 @@ def rg_witness_in_agent_1():
 
 @entry("RG-0521", "FAULT-TEXT-1: a complaint carries plain words only -- letters, digits and ordinary punctuation, "
        "at most 1,000 characters -- at the door AND where the maintenance agent uses it",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="fault_text.py (the one cleaner, deployed beside main.py); bea_main.py POST /app/fault and POST "
              "/support/message (title 150, message 1,000, name 80, before anything is stored); "
              "scripts/maintenance_agent.py _complaint() (every AI prompt that carries a complaint: design, "
@@ -31661,7 +31661,7 @@ def rg_witness_in_agent_1():
              "hidden characters or a wall of text into a page, a file or an AI prompt. FOUND 27 Sep 2026 by the "
              "QA Bot's nightly code review (DW-162). David, 27 Sep 2026: 'No complaint should allow large amount "
              "of characters but only a limited set of characters, and how can we make it safe of hidden code?'",
-       ref="DW-162, RUL-184, QA-BOT-1 nightly 20260927-003507.")
+       ref="DW-162, RUL-184, QA-BOT-1 nightly 20260927-003507. LOCKED 27 Sep 2026 after the live check: 2c66601 went live ~06:46Z; a code-only message now answers 400 and an ordinary one is still accepted.")
 def rg_fault_text_1():
     out, bad = [], []
     src = repo_file("fault_text.py")
@@ -31730,6 +31730,73 @@ def rg_fault_text_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return out
+
+
+
+@entry("RG-0522", "LM-429-WORDING-1: a Local Market buyer who hits the daily limit is told 'try again tomorrow', "
+       "not 'wait 7 days' -- the two limits that answer 429 each say their own reason",
+       OPEN, fixed_on="2026-09-27",
+       scope="ms.js lmSubmitIntro (the only Local Market intro door). SCOPE: Local Market only; other intro doors "
+             "carry their own messages. CLASS: one status code, two causes -- the page must read the server's "
+             "detail, never guess from the code.",
+       ref="RUL-185 session, 27 Sep 2026. Promote to LOCKED after the live release.")
+def rg_lm_429_wording_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - ms.js not readable from here")]
+    i = js.find("async function lmSubmitIntro(")
+    body = js[i:i + 4000] if i >= 0 else ""
+    if not body:
+        return [(FAIL, "lmSubmitIntro is gone from ms.js")]
+    if "j.detail === 'cooldown_7_days'" not in body or "try again tomorrow" not in body:
+        return [(FAIL, "the Local Market 429 no longer tells the daily limit apart from the 7-day wait")]
+    return [(INFO, "the 7-day wait and the daily limit each give their own message")]
+
+
+@entry("RG-0523", "LM-LOWBAL-1: a Local Market seller who cannot pay for her first buyer is TOLD -- at once when "
+       "a buyer is turned away, and when she lists with less than 1T",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py lm_create_intro (402 path calls _lm_low_balance_notice: e-mail, or SMS for a key "
+             "identity; once a day per listing) and lm_create_listing (low_tuppence_warning in the reply); ms.js "
+             "shows the warning after publishing. SCOPE: Local Market -- the only category where the seller pays "
+             "(RUL-185). Agents pay at ACCEPT time and already see the 402 themselves. CLASS: a charge that can "
+             "fail silently on the payer's side turns customers away unseen.",
+       ref="RUL-185 (David, 27 Sep 2026: 'Tell and warn her'). Promote to LOCKED after the live release.")
+def rg_lm_lowbal_1():
+    bm = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    if bm is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+    i = bm.find("def lm_create_intro(")
+    seg = bm[i:i + 9000] if i >= 0 else ""
+    k = seg.find("seller_insufficient_tuppence")
+    if k < 0 or "_lm_low_balance_notice(" not in seg[max(0, k - 600):k]:
+        bad.append("the turned-away buyer no longer triggers a notice to the seller")
+    if "def _lm_low_balance_notice(" not in bm or "LM_LOWBAL_REPEAT_HOURS" not in bm:
+        bad.append("the seller notice (with its once-a-day limit) is gone")
+    if '"low_tuppence_warning": _lm_warn' not in bm:
+        bad.append("listing no longer warns a seller with less than 1T")
+    if "j.low_tuppence_warning" not in js:
+        bad.append("the page no longer shows the low-balance warning")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "seller is told when a buyer is turned away and warned at listing time")]
+
+
+@entry("RG-0524", "A8-SELLER-PAYS-1: the canon's list of allowed Tuppence charges names the Local Market seller "
+       "fee and the agent's accept fee, matching the Terms",
+       LOCKED, fixed_on="2026-09-27",
+       scope="PRINCIPLE_REQUIREMENTS.md A8 and its generated mirrors. SCOPE: canon text only. CLASS: a charge the "
+             "Terms allow but the canon omits invites a later session to 'fix' the app into breaking the Terms.",
+       ref="RUL-185, David 27 Sep 2026: 'Seller pays (Recommended)'.")
+def rg_a8_seller_pays_1():
+    pr = repo_file("PRINCIPLE_REQUIREMENTS.md")
+    if pr is None:
+        return [(INFO, "NOT EVALUATED - PRINCIPLE_REQUIREMENTS.md not readable from here")]
+    if "(iv) LOCAL MARKET" not in pr or "(v) AGENTS" not in pr:
+        return [(FAIL, "A8 no longer lists the Local Market seller fee and the agent accept fee")]
+    return [(INFO, "A8 lists both seller-side introduction fees")]
 
 if __name__ == "__main__":
     sys.exit(main())
