@@ -5376,6 +5376,27 @@
    "",
    "Ipapashiwe",
    "E phatlaladitšwe"
+  ],
+  "Pick the areas you work in": [
+   "Kies die areas waar jy werk",
+   "Khetha izindawo osebenza kuzo",
+   "",
+   "Khetha iindawo osebenza kuzo",
+   "Kgetha mafelo ao o šomago go ona"
+  ],
+  "area": [
+   "area",
+   "indawo",
+   "",
+   "indawo",
+   "lefelo"
+  ],
+  "areas": [
+   "areas",
+   "izindawo",
+   "",
+   "iindawo",
+   "mafelo"
   ]
  },
  "p": [

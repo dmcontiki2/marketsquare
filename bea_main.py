@@ -3633,8 +3633,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
             FROM listings l
             LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} {demo_filter} AND l.suburb = ?"""
-        params_a = [city, cat_param, suburb]
+            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} {demo_filter} AND (l.suburb = ? OR (',' || REPLACE(LOWER(COALESCE(l.area,'')), ', ', ',') || ',') LIKE ?)"""
+        params_a = [city, cat_param, suburb, "%," + (suburb or "").strip().lower() + ",%"]   # AREAS-MULTI-1: any area she works in
     else:
         branch_a = f"""
             SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
@@ -13278,8 +13278,8 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
         clauses.append("l.city = ?")
         params.append(city)
     if suburb:
-        clauses.append("l.suburb = ?")
-        params.append(suburb)
+        clauses.append("(l.suburb = ? OR (',' || REPLACE(LOWER(COALESCE(l.area,'')), ', ', ',') || ',') LIKE ?)")   # AREAS-MULTI-1
+        params.extend([suburb, "%," + (suburb or "").strip().lower() + ",%"])
     where = " AND ".join(clauses)
     rows = conn.execute(
         f"""SELECT l.id, l.title, l.price, l.suburb, l.city, l.area, l.seller_email, l.is_demo,  -- DEMO-INACTIVE-1: read for the flag, stripped before return
@@ -23816,6 +23816,8 @@ _CAT_TO_TIERKEY = {
     "trading cards": "cards", "collectibles": "cards", "collectables": "cards",
     "property": "property", "estate agents": "property", "accommodation": "property",
     "vehicles": "vehicles", "vehicle": "vehicles", "cars": "vehicles", "auto": "vehicles",
+    # FAIR-PRICE-LM-1 (RIPPLE-2): Collectors and Local Market get their own 1T check
+    "collectors": "collectors", "local_market": "local_market", "local market": "local_market",
 }
 
 def _listing_country_iso2(listing) -> str:
@@ -24228,7 +24230,19 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
                     "source": "payprop_tpn", "range_text": g["range_text"],
                     "assessment": assess, "provenance": g["source"] + " (" + str(g["date"]) + ")",
                     "date": g["date"]})
-        if tier == "1T" and tierkey in ("lego", "coins", "tcg", "cards", "comics", "watches"):
+        # FAIR-PRICE-LM-1 (RIPPLE-2): a Collectors listing is routed by its title to the catalogue feed that
+        # can price it; anything else, and every Local Market item, falls to the eBay asking band below.
+        if tier == "1T" and tierkey in ("collectors", "local_market"):
+            _tt = ((listing["title"] if "title" in listing.keys() else "") or "").lower()
+            if tierkey == "collectors" and re.search(r"krugerrand|\bcoins?\b|sovereign|\bmint\b|shilling|penny|\bcents?\b|proof set|numismatic", _tt):
+                tierkey = "coins"
+            elif tierkey == "collectors" and re.search(r"pok[eé]mon|yu-?gi-?oh|\btcg\b|trading card", _tt):
+                tierkey = "tcg"
+            elif tierkey == "collectors" and "lego" in _tt:
+                tierkey = "lego"
+            else:
+                tierkey = "_asking_band"
+        if tier == "1T" and tierkey in ("lego", "coins", "tcg", "cards", "comics", "watches", "_asking_band"):
             title = (listing["title"] if "title" in listing.keys() else "") or ""
             feed = None
             if tierkey == "lego":
@@ -30719,6 +30733,16 @@ def _gate_is_superuser(email) -> bool:
         return bool(row and row[0])
     except Exception:
         return False
+
+
+# RIPPLE-2 (David, 27 Sep 2026: "i really want it to work as advertised"): TESTER-INVITE-1 (a named tester's
+# single-use link: sign in by code, 200T at once) and BUZZ-JOIN-1 (a seller's own Buzz link for her regulars --
+# no employer reference). Built on this file's own helpers; mounted BEFORE the route gate so every route is declared.
+try:
+    import ripple_features as _ripple2
+    app.include_router(_ripple2.build_router(globals()))
+except Exception as _rp2_ex:   # pragma: no cover
+    print("[RIPPLE-2] not mounted: %r" % (_rp2_ex,), flush=True)
 
 
 SEC_GATE_UNDECLARED = _sec_gate.install(

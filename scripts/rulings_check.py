@@ -95,6 +95,13 @@ REFLECTIONS = {
    ("bea_main.py", ["if not _is_live and not (_su", "requires_paid_feed(function_id) and _paid_feed_gate_active()"], []),
    ("eula_clean.html", ["an unchecked ID never stops an Introduction"], ["Introduction requests to your listings are refused."]),
  ],
+ "RUL-191": [
+   ("RULINGS.md", ["THE RIPPLE STORIES WORK AS ADVERTISED, WITHOUT WORKAROUNDS"], []),
+   ("ripple_features.py", ['"/buzz/my-link"', '"/admin/tester-invite"', '"/listings/{listing_id}/attach-report"', '"regular-link"', "tester_grant"], []),
+   ("bea_main.py", ["_ripple2.build_router(globals())", "AREAS-MULTI-1", '"collectors": "collectors"'], []),
+   ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
+   ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
+ ],
  "RUL-190": [
    ("RULINGS.md", ["ONE STANDARD FLOW: A LOCAL MARKET BUYER IS NEVER TURNED AWAY"], []),
    ("bea_main.py", ["LM-STANDARD-FLOW-1", "A buyer is waiting. Accepting your first buyer"], ['detail=f"seller_insufficient_tuppence']),

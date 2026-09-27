@@ -1,3 +1,38 @@
+## 2026-09-27 — RUL-191 RIPPLE-2: the Ripple stories work as advertised (RG-0535)
+
+- **BUZZ-JOIN-1:** Buzz → "Send my Buzz link to my regulars": one link (WhatsApp / Copy) for all her regulars. A regular opens /join/<token>, signs in by 6-digit code on that page, ticks the Buzz terms (s3.8) and is connected — both can buzz straight away; either side can switch off or close. Her regulars limit applies; "Make a new link" retires the old. The employer reference is now shown as optional (Trust Score only).
+- **TESTER-INVITE-1:** POST /admin/tester-invite mints a named tester's single-use link; the person signs in by code on /join/<token> and 200T land at once as a tester_grant (tester under RUL-189). Links minted for Jacques and Kate.
+- **REPORT-KEEP-1:** AI Features shows "My reports": every paid report reopens on any device he signs in on. The customer's report view no longer carries the model, our cost or the hold. Running a report without being signed in now takes him to the email sign-in instead of a toast.
+- **REPORT-ATTACH-1:** "Attach your report?" on a delivered Collectables / Property / Car / Liquidation report attaches it to his own listing; buyers see the market range the report itself states, its name and date, beside his own asking price. Never his top bid or costs.
+- **FAIR-PRICE-LM-1:** "Is this a fair price?" (1T, charged only when a real figure returns) on Collectors (Numista / JustTCG / BrickLink by title, eBay asking band fallback) and Local Market (eBay asking band). The Wallet line now names where it is offered.
+- **AREAS-MULTI-1:** Quick's "Where can you work?" takes several areas for cleaners, tutors and services; the first is her suburb, the list her area, and a suburb search finds her under any of them (main listings and Local Market).
+- Server: nginx `location /join/` added (backup /root/nginx_marketsquare.bak-ripple2-20260927); AdvertAgent redeployed with REPORT-KEEP-1.
+
+### RUL-190 LM-STANDARD-FLOW-1 (RG-0532) + Terms v1.20 - 2026-09-27
+- A Local Market buyer is never turned away for the seller's balance: the request reaches her, she is told she has a buyer, and she pays 1T (2T boosted) once per listing when she accepts her first buyer. Short balance at accept = "top up, then accept"; the request waits. David, 27 Sep 2026: "We don't have exceptions to our standard flows."
+- Terms v1.20 (non-material, in the user's favour): 5.3A, section 1, the fee table and Schedules H3/I4 say so; 3.4/3.5/3.5A now say an unchecked ID never stops an introduction (RUL-188), which v1.19 still contradicted.
+- Rendered walk (live, phone width): 0T key seller's honey listing; Karin asked -> "Introduction requested" (no refusal); seller tapped Accept -> "A buyer is waiting ... top up, then accept" and the top-up opened; request stayed pending. Two fixes from the walk: the top-up sheet now carries the "buyer is waiting" line instead of a toast covering Confirm Purchase (the toast is cleared); INTRO-TIME-UTC-1 - the server's bare UTC times were read as local, so a minute-old request showed "2h ago" in South Africa.
+
+### RUL-189 TESTER-AI-OPEN-1 (RG-0531) - 2026-09-27
+- Testers (superusers, and anyone ever given a tester grant) can run every paid AI feature on any plan, for ever; the Pro gate never applies to them. No end date. David, 27 Sep 2026.
+
+### RELAY-BUMP-1 - 2026-09-27
+- request_deploy.py now runs the cache-buster (autobump.py) before a relay deploy and commits only the bump files. Found on the RUL-190 walk: relay deploys shipped a changed ms.js under the same ?v=814 stamp, which Cloudflare serves as "immutable, 1 year" - so returning visitors kept old code.
+- WITHDRAWN the same evening: server_deploy.sh already bumps ?v= monotonically on every deploy (log: ms.js?v=813 -> 816 today). The 'stale ms.js' was a read taken before the deploy landed. The relay-side bump is removed.
+
+## 2026-09-27 — RECV-REAL-1 + AI-QUOTE-1 (found in the rendered Ripple re-run)
+
+- **RECV-REAL-1:** My Space → Intros "Received" was a hard-coded empty list and its Accept/Decline only showed a toast ("Accepted!") without telling the server. It now reads the session-scoped GET /intros, splits sent/received, hides the buyer's address until she accepts, and Accept/Decline call PUT /intros/{id}/accept|decline (the Seller Hub's call) and say so only when the server agreed.
+- **AI-QUOTE-1:** AI reports' opening notice (date + estimates) rendered every line with a raw '>'; the report renderer now shows it as a quoted note.
+- Rendered re-run evidence (27 Sep, phone width, live trustsquare.co): Collectables 5T delivered in 32s on gpt-5.6-terra; Property Dossier 3T delivered in 116s; Quick housecleaner listing published with a "Published" button; reference link signs in by code on the page; Karin's request to an ID-unchecked seller went through with the "Seller ID not yet checked" note; Annatjie accepted in the Seller Hub and Karin's 1T burnt; honey listing typed as "Raw honey, 500 g jar" at R95, re-priced to R90 with the description following and the toast saying "still a draft"; a translation call ran on OpenAI.
+
+### RECEIPT-EMAIL-1 (RG-0534) - 2026-09-27
+- A top-up now credits the signed-in account and sends the Paystack receipt to the email typed in the sheet. A WhatsApp-link seller is asked for her real email for the receipt (her private key address is never prefilled or accepted); her Tuppence still lands on her key account. David, 27 Sep 2026: "Yes".
+
+### NO-MODEL-LABEL-1 + AI-LINK-TRUTH-1 - 2026-09-27
+- An AI report no longer names the AI model to the customer (it said "model gpt-5.6-terra"); it shows only the number of web searches (David's rule, 17 Sep 2026).
+- An AI report links "listing #N" only when that listing exists: Jacques's armoire report turned "auction lot 47" into a link to a MarketSquare listing #47.
+
 ## 2026-09-27 — TRUST-WORDS-1 (CC-005, RUL-186, RG-0526): Trust Score bands name the evidence, not the person
 
 - Labels everywhere: New · Some evidence (40+) · Strong evidence (70+) · Fullest evidence (90+) — replacing Established / Trusted / Highly Trusted (ms.js trustTier, sbScoreBadge, detail labels, tier showcase, filter chips in both filter rows, next-band nudge; quick.html trustBand; Terms table in eula_clean.html, terms.html and the embedded copy; bea_main.py TRUST_TIERS and the AI coach's labels and prompt).

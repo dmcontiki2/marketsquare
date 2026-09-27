@@ -8,13 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-27 - 27 Sep 2026 — Terms v1.19 PUBLISHED (R7))
+## Last Completed (2026-09-27 - rul191 ripple2)
 
-- **27 Sep 2026 — Terms v1.19 PUBLISHED (R7):** all eleven review decisions answered and built — everyone accepts again
-  from 12 Oct after the email + in-app notice; buyers accept once before committing money; a Property listing takes one
-  buyer at a time on the server; buyers can withdraw a request in the app; Kenya and Namibia schedules, Germany,
-  Botswana and Mozambique "coming soon"; Kenya's s.49 consent tick. Banking: nothing stored (RUL-176, the other
-  session). David's step: Kenya ODPC registration (L24). Ledger RG-0503 (amended), RG-0511..0518; RUL-181/182/183.
+- 27 Sep 2026 — RUL-191 RIPPLE-2 built (Buzz link for regulars, tester 200T invitation, My reports + attach report, 1T fair price on Collectors/Local Market, several areas in Quick). RG-0535 OPEN until the rendered re-run on live.
 
 <!-- DASH-FEED-1:END -->
 
@@ -39,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 27 Sep 2026 — RUL-191 RIPPLE-2 built (Buzz link for regulars, tester 200T invitation, My reports + attach report, 1T fair price on Collectors/Local Market, several areas in Quick). RG-0535 OPEN until the rendered re-run on live.
 
 - **27 Sep 2026 — Terms v1.19 PUBLISHED (R7):** all eleven review decisions answered and built — everyone accepts again
   from 12 Oct after the email + in-app notice; buyers accept once before committing money; a Property listing takes one

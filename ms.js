@@ -5869,6 +5869,7 @@ function openDetail(id){
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence</div><div class="tscale-note" style="font-size:11px;color:var(--text-3);margin-top:5px;line-height:1.45;"><span>Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.</span> <span>A new seller simply has less evidence — not a mark against them.</span></div></div>
       </div>
 
+      <div id="detail-report-${id}"></div>
       <div id="detail-price-check-${id}" style="margin-bottom:14px;display:none;">
         <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:2px;font-family:'Syne',sans-serif;">💡 Is this a fair price?</div>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Choose how precise you need it — you only pay if we return a real figure.</div>
@@ -5988,6 +5989,7 @@ function openDetail(id){
     b.innerHTML = 'This listing cannot take introductions right now'; b.style.opacity = '.6'; b.style.fontSize = '13px';
   });
   loadDetailWonders(l);
+  try{ msReportBadge(id); }catch(_){}   // REPORT-ATTACH-1
   loadDetailPois(l);
   tvsInitDetail(id, l.cat, l.listingType);
   if (photos.length > 1) {
@@ -15916,6 +15918,36 @@ function _bzChooseWire(box, c){
   };
 }
 
+/* BUZZ-JOIN-1 (RIPPLE-2): fetch her own Buzz link and offer WhatsApp + Copy. again=1 makes a NEW link and retires the old. */
+async function bzMyLink(btn, again){
+  const host = document.getElementById('bz-mylink'); if(!host) return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Getting your link\u2026'; }
+  try{
+    const r = await fetch(BEA_URL + '/buzz/my-link' + (again ? '?new=1' : ''), {credentials:'include'});
+    const j = await r.json().catch(function(){ return {}; });
+    if(!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+    const msg = 'Hi, it is ' + (j.name || 'me') + '. Tap this to connect with me on Buzz (TrustSquare) - '
+              + 'then we can send each other a quick line, straight to the phone. It is free: ' + j.url;
+    const old = document.getElementById('bz-mylink-box'); if(old) old.remove();
+    const box = document.createElement('div'); box.id = 'bz-mylink-box'; box.style.cssText = 'margin-top:10px;';
+    box.innerHTML = '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:9px;padding:9px 10px;font-size:11.5px;word-break:break-all;color:#374151;">' + _lmEsc(j.url) + '</div>'
+      + '<div style="display:flex;gap:7px;margin-top:8px;">'
+      +   '<a href="https://wa.me/?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener" style="flex:2;text-align:center;padding:11px;border-radius:10px;background:#25D366;color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;">Send on WhatsApp</a>'
+      +   '<button id="bz-mylink-copy" style="flex:1;padding:11px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;">Copy</button>'
+      + '</div>'
+      + '<div style="font-size:12px;color:#6b7280;margin-top:8px;">Link sent to the wrong person? <a href="#" onclick="bzMyLink(null,1);return false;">Make a new link</a> — the old one stops working.</div>';
+    host.appendChild(box);
+    document.getElementById('bz-mylink-copy').onclick = function(){
+      try { navigator.clipboard.writeText(j.url); showToast('Link copied', 2500); }
+      catch(_) { showToast('Press and hold the link to copy it', 4000); }
+    };
+    if(btn) btn.style.display = 'none';
+    if(again) showToast('New link made \u2014 the old one no longer works.', 4000);
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = 'Get my link'; }
+    showToast(e.message || 'Could not get your link just now.', 5000);
+  }
+}
 async function buzzRender(){
   const box = document.getElementById('bz-content');
   if(!box) return;
@@ -15955,6 +15987,13 @@ async function buzzRender(){
 
   h += '<div class="ms-section-lbl">People you are connected to</div>';
   h += _bzCircleCard(_bzCircle);
+  /* BUZZ-JOIN-1 (RIPPLE-2, David 27 Sep 2026: "the someone you worked for is not mandatory and never was"):
+     her own Buzz link for her regulars. One link, sent to as many regulars as she likes; each one who taps it
+     signs in, ticks the Buzz terms and is connected. No reference needed. */
+  h += '<div class="ms-card bz-route" id="bz-mylink"><b>Send my Buzz link to my regulars</b>'
+     + '<p>One link for all your regular customers. They tap it, sign in with their email and you are '
+     + 'connected — you can buzz each other straight away. Anyone can switch their side off or close it.</p>'
+     + '<button class="ms-btn-sm primary" style="width:100%;padding:12px;font-size:14px;" onclick="bzMyLink(this,0)">Get my link</button></div>';
   if(!_bzPairs.length){
     // BUZZ-EMPTY-1 (15 Sep 2026, David: "it is blank... this should look like a communicating
     // page, it should show a layout"). An empty list that only apologises teaches nothing. This
@@ -15980,9 +16019,9 @@ async function buzzRender(){
        + '<div class="bz-eghint">Example only — two switches, one line, no thread. Either of you '
        + 'can close it, and closing it closes it for both.</div></div>';
     h += '<div class="ms-card bz-route"><b>The fastest way to your first one</b>'
-       + '<p>Ask the person you already work for to write you a one-sentence reference. It takes '
-       + 'them four taps, it opens your trust score — and it connects the two of you here, so the '
-       + 'first buzz you ever send is to somebody who has already vouched for you.</p></div>';
+       + '<p>Send your Buzz link (above) to the people you already work for or sell to. '
+       + 'A reference from someone you worked for is optional — it adds to your trust score and connects '
+       + 'you here too.</p></div>';   /* BUZZ-JOIN-1: the reference is optional, never the only door */
   } else {
     _bzPairs.forEach(function(p0, i){
       /* BUZZ-ESC-1 (25 Sep 2026 inspection, ts3-04): names come from other people -- escaped before they touch the page. */
@@ -17012,6 +17051,14 @@ async function lmOpenDetail(listingId) {
           `<div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" style="width:${trust}%;background:${tColor};"></div></div><div class="tscale" style="color:${tColor};">0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence</div><div class="tscale-note" style="font-size:11px;color:var(--text-3);margin-top:5px;line-height:1.45;"><span>Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.</span> <span>A new seller simply has less evidence — not a mark against them.</span></div></div>` +
         `</div>` +
         `<div class="price-block"><div><div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>${priceHtml}</div></div>` +
+        /* REPORT-ATTACH-1 + FAIR-PRICE-LM-1 (RIPPLE-2): the seller's attached report range, and the buyer's own 1T check */
+        `<div id="detail-report-bea_${listingId}"></div>` +
+        `<div id="detail-price-check-bea_${listingId}" style="margin-bottom:14px;display:none;">` +
+          `<div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:2px;font-family:'Syne',sans-serif;">💡 Is this a fair price?</div>` +
+          `<div style="font-size:11px;color:#9ca3af;margin-bottom:6px;">You only pay if we return a real figure.</div>` +
+          `<div id="detail-pc-chips-bea_${listingId}"></div>` +
+          `<div id="detail-pc-result-bea_${listingId}" style="display:none;margin-top:8px;"></div>` +
+        `</div>` +
         `<div class="dsec"><h3>About this listing</h3><p data-notranslate="1" style="white-space:pre-wrap;font-size:14px;line-height:1.65;color:var(--text);">${_lmEsc((c.description || '').replace(/^\[photos:[^\]]*\]\n?/, ''))}</p></div>` +
         `<div style="margin-bottom:16px;">` +
           `<button onclick="openLMSellerProfile()" style="width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--t);">` +
@@ -17036,6 +17083,7 @@ async function lmOpenDetail(listingId) {
       (c.demo_example   // DEMO-INACTIVE-1
         ? `<div class="sticky-cta"><button class="cta-btn queue-cta" style="opacity:.6;font-size:13px" onclick="showToast(DEMO_EXAMPLE_MSG, 7000)">Demo example \u2014 no real product or service</button></div>`
         : `<div class="sticky-cta"><button class="cta-btn queue-cta" onclick="openLMModal()">👥 Request introduction <span class="cta-cost">· free for buyers</span></button></div>`);
+    try{ msReportBadge('bea_' + listingId); tvsInitDetail('bea_' + listingId, 'LocalMarket', ''); }catch(_){}   // RIPPLE-2
   } catch(e) {
     el.innerHTML = '<div style="padding:40px 16px;color:var(--text-3);font-size:13px;text-align:center;">Could not load this listing.</div>';
   }
@@ -19131,6 +19179,7 @@ function aiVideoTutor(id){
 
 async function aiBoot(){
   if (DEMO_MODE) return;
+  try{ aiLoadMyReports(); }catch(_){}   // REPORT-KEEP-1: every paid report stays reachable
   if (AI_FNS.length) return;
   try{
     AI_FNS = await (await fetch('/ai/functions')).json();
@@ -19150,6 +19199,96 @@ async function aiBoot(){
     document.getElementById('ai-grid').innerHTML =
       '<div class="ai-err-box">AI Features are unreachable right now — please try again shortly.</div>';
   }
+}
+
+/* ═══ RIPPLE-2 · REPORT-KEEP-1 + REPORT-ATTACH-1 (David 27 Sep 2026: "Jacques need to sign in with an email and then
+   his report should be usable to him as per our design") ═══
+   A paid report is his: listed under "My reports" on the AI Features screen, reopened any time on any device he
+   signs in on, and attachable to his own listing so buyers see the market range next to his price (design:
+   RIPPLE_FLOW_3 "Attach your report?"). His top bid and costs are never on the listing - only the range the
+   report itself states, the report's name and its date. */
+let AI_REOPEN = false;
+const AI_ATTACHABLE = new Set(['collectables_advert','property_dossier','car_dossier','collection_liquidation']);
+async function aiLoadMyReports(){
+  const grid = document.getElementById('ai-grid'); if(!grid) return;
+  let box = document.getElementById('ai-myreports');
+  if(!box){ box = document.createElement('div'); box.id = 'ai-myreports'; box.style.cssText = 'margin:0 0 14px;'; grid.parentNode.insertBefore(box, grid); }
+  let rows = [];
+  try{
+    const r = await fetch('/ai/jobs', {credentials:'include'});
+    if(!r.ok){ box.innerHTML = ''; return; }
+    rows = (await r.json()).filter(function(x){ return x.status === 'delivered'; });
+  }catch(_){ box.innerHTML = ''; return; }
+  if(!rows.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div style="font-weight:800;font-size:15px;margin:4px 2px 8px;">My reports</div>'
+    + rows.slice(0, 12).map(function(x){
+        return '<button onclick="aiOpenJob(\'' + _lmEsc(x.id) + '\',\'' + _lmEsc(x.function_id) + '\')" style="width:100%;text-align:left;background:var(--surface,#fff);border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:11px 13px;margin:0 0 7px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;">'
+          + '<span><b style="font-size:13.5px;">' + _lmEsc(x.name || 'AI report') + '</b><span style="display:block;font-size:12px;color:#6b7280;margin-top:2px;">' + _lmEsc(x.subject || '') + '</span></span>'
+          + '<span style="font-size:11.5px;color:#6b7280;white-space:nowrap;">' + _lmEsc(String(x.finished_at || x.created_at || '').slice(0,10)) + '</span></button>';
+      }).join('');
+}
+async function aiOpenJob(jobId, fnId){
+  try{ if(!AI_FNS.length) await aiBoot(); }catch(_){}
+  if(aiSel(fnId) === false) return;
+  AI_REOPEN = true; AI_T0 = Date.now();
+  const p = document.getElementById('ai-runpanel'); if(p){ try{ p.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){} }
+  await aiPoll(jobId);
+}
+function aiAttachOffer(jobId, fnId, paid){
+  const old = document.getElementById('ai-attach'); if(old) old.remove();
+  if(!paid || !AI_ATTACHABLE.has(fnId) || !String(jobId).startsWith('ai_')) return;
+  const anchor = document.getElementById('ai-listbtns'); if(!anchor) return;
+  const d = document.createElement('div'); d.id = 'ai-attach';
+  d.style.cssText = 'margin-top:10px;border:1.5px solid #bcd9f1;background:#f3f9fe;border-radius:12px;padding:12px 13px;';
+  d.innerHTML = '<b style="font-size:14px;color:#0f1417;">Attach your report?</b>'
+    + '<div style="font-size:12.5px;color:#475569;margin:3px 0 8px;">Buyers see the fair range next to your price. Your top bid and costs stay private.</div>'
+    + '<button class="ms-btn-sm primary" style="width:100%;padding:11px;font-size:14px;" onclick="aiAttachPick(\'' + _lmEsc(jobId) + '\')">Attach report to my listing</button>'
+    + '<div id="ai-attach-pick"></div>';
+  anchor.parentNode.insertBefore(d, anchor.nextSibling);
+}
+async function aiAttachPick(jobId){
+  const host = document.getElementById('ai-attach-pick'); if(!host) return;
+  const em = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';
+  host.innerHTML = '<div style="font-size:12.5px;color:#6b7280;margin-top:8px;">Finding your listings\u2026</div>';
+  let rows = [];
+  try{
+    const r = await fetch(BEA_URL + '/listings/mine?email=' + encodeURIComponent(em), {credentials:'include', headers:{'X-Api-Key':API_KEY}});
+    if(r.ok) rows = (await r.json()).filter(function(x){ return ['live','draft','paused'].indexOf(String(x.listing_status||'live').toLowerCase()) >= 0; });
+  }catch(_){}
+  if(!rows.length){
+    host.innerHTML = '<div style="font-size:12.5px;color:#475569;margin-top:8px;">You have no listing yet. List the lot first (the buttons above make it from this report, or use Quick), then come back to My reports and attach it.</div>';
+    return;
+  }
+  host.innerHTML = rows.slice(0, 10).map(function(x){
+    return '<button onclick="aiAttachDo(\'' + _lmEsc(jobId) + '\',' + parseInt(x.id,10) + ',this)" style="width:100%;text-align:left;margin-top:7px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;cursor:pointer;">'
+      + _lmEsc(x.title || ('Listing #' + x.id)) + (x.ai_report_job === jobId ? ' \u2014 attached' : '') + '</button>';
+  }).join('');
+}
+async function aiAttachDo(jobId, listingId, btn){
+  try{ if(btn) btn.disabled = true; }catch(_){}
+  try{
+    const r = await fetch(BEA_URL + '/listings/' + listingId + '/attach-report', {method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({job_id: jobId})});
+    const d = await r.json().catch(function(){ return {}; });
+    if(!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    showToast('\u2713 Report attached' + (d.range ? ' \u2014 buyers see ' + d.range : ''), 6000);
+    if(btn) btn.textContent = btn.textContent.replace(/ \u2014 attached$/, '') + ' \u2014 attached';
+  }catch(e){ try{ if(btn) btn.disabled = false; }catch(_){} showToast(e.message || 'Could not attach it just now.', 5000); }
+}
+/* The buyer's view: the seller's attached report range, next to the price. */
+async function msReportBadge(id){
+  const slot = document.getElementById('detail-report-' + id); if(!slot) return;
+  const n = parseInt(String(id).replace('bea_', ''), 10); if(!n) return;
+  try{
+    const r = await fetch(BEA_URL + '/listings/' + n); if(!r.ok) return;
+    const d = await r.json();
+    if(!d || !d.ai_report_fn) return;
+    slot.innerHTML = '<div style="margin:0 0 14px;border:1.5px solid #bcd9f1;background:#f3f9fe;border-radius:12px;padding:11px 13px;">'
+      + '<div style="font-size:12px;font-weight:700;color:#1b6fb5;">Seller attached an AI market report</div>'
+      + (d.ai_range_text ? '<div style="font-size:16px;font-weight:800;color:#0f1417;margin:3px 0;">Market range ' + _lmEsc(d.ai_range_text) + '</div>' : '')
+      + '<div style="font-size:11.5px;color:#6b7280;">' + _lmEsc(d.ai_report_fn) + (d.ai_report_at ? ' \u00b7 ' + _lmEsc(d.ai_report_at) : '')
+      + ' \u00b7 an estimate from public sources on that date. The price above is the seller\u2019s own asking price.</div></div>';
+  }catch(_){}
 }
 
 /* AI-POLL-ONE-1 (25 Sep 2026 inspection, ts4-17): each report polls on its own timer, and only the newest one may
@@ -19262,7 +19401,11 @@ async function aiRun(){
   if (DEMO_MODE) { showToast('AI Features run in live mode only'); return; }   // demo guard (belt & braces)
   if (!AI_SEL) return;
   const email = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '';   // app-standard chain
-  if (!email) { showToast('Open My Space and sign in first — your email identifies your Tuppence wallet'); return; }
+  if (!email) {   /* AI-SIGNIN-1 (RIPPLE-2): a toast with no door was a dead end -- take him to the email sign-in */
+    showToast('Sign in with your email first \u2014 your report is kept in your account, under My reports.', 5000);
+    try{ if(typeof goTo === 'function') goTo('signin'); }catch(_){}
+    return;
+  }
   aiStopPoll(false);   // AI-POLL-ONE-1
   const params = {};
   AI_SEL.params.forEach(pp=>{ const el=document.getElementById('ai-p-'+pp.key); params[pp.key]=el?el.value:''; });
@@ -19306,7 +19449,11 @@ async function aiPoll(jobId, t){
   clearInterval(t||AI_POLL); AI_POLL=null; AI_POLL_PAID=false;
   document.getElementById('ai-runbtn').disabled=false;
   if(j.status==='delivered'){
-    st.innerHTML = `<span class="ai-ok">&#10003; Done in ${el}s${j.cost_usd>0?` — ${AI_SEL.price_t}T used`:' — sample, nothing charged'}</span>`+(j.map_url?aiMapBtn(j.map_url):'');
+    const _paid = !!(j.charged || j.cost_usd>0);   // REPORT-KEEP-1: the service no longer sends our cost
+    st.innerHTML = (AI_REOPEN
+        ? `<span class="ai-ok">&#10003; Your report from ${_lmEsc(String(j.finished_at||j.created_at||'').slice(0,10))} — kept in My reports</span>`
+        : `<span class="ai-ok">&#10003; Done in ${el}s${_paid?` — ${AI_SEL.price_t}T used`:' — sample, nothing charged'}</span>`)+(j.map_url?aiMapBtn(j.map_url):'');
+    AI_REOPEN = false;
     let txt = j.result||'', wps=null;
     AI_ITEMS=null;
     const im = txt.match(/```json\s*(\{[\s\S]*?"items"[\s\S]*?\})\s*```/);
@@ -19325,14 +19472,15 @@ async function aiPoll(jobId, t){
     if(typeof aiOpts!=='undefined' && aiOpts && aiVerifiedOn()){ try{ document.getElementById('ai-result').insertAdjacentHTML('afterbegin', renderVerifiedCards(aiOpts)); }catch(e){} }
     aiDrawMap(wps);
     document.getElementById('ai-meta').textContent =
-      j.cost_usd>0 ? `${j.searches} web searches` : 'sample preview — superseded by the first real run';   // NO-MODEL-LABEL-1: never name the AI model to the customer (David, 17 Sep 2026)
+      _paid ? `${j.searches} web searches` : 'sample preview — superseded by the first real run';   // NO-MODEL-LABEL-1: never name the AI model to the customer (David, 17 Sep 2026)
     const sb=document.getElementById('ai-safetybox');
     const ml=document.querySelector('#ai-maplinks a');
     AI_LAST = { fn: AI_SEL?AI_SEL.name:'AI report',
                 text: txt,
                 html: document.getElementById('ai-result').innerHTML,
                 safety: (sb && sb.style.display!=='none') ? sb.innerHTML : '',
-                link: ml ? ml.href : '' };
+                link: ml ? ml.href : '', job_id: jobId, fn_id: (j.function_id || (AI_SEL && AI_SEL.id) || '') };
+    aiAttachOffer(jobId, AI_LAST.fn_id, _paid);   // REPORT-ATTACH-1
     aiWrapTables();
     document.getElementById('ai-savebtn').style.display='block';
     var _shb2=document.getElementById('ai-sharebtn'); if(_shb2)_shb2.style.display='block';

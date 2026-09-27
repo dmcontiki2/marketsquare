@@ -53,6 +53,12 @@ def served_tiers(service: str, tierkey: str, country: str,
             out["1T"] = True                       # UK=Land Registry / US,ZA,AU=comps
         elif tierkey == "vehicles":
             out["1T"] = True                       # internal comps
+        elif tierkey == "collectors":              # FAIR-PRICE-LM-1: any keyed catalogue feed, or eBay
+            if creds.get("numista") or creds.get("justtcg") or creds.get("bricklink") or creds.get("ebay"):
+                out["1T"] = True
+        elif tierkey == "local_market":            # FAIR-PRICE-LM-1: eBay asking band (keyed)
+            if creds.get("ebay"):
+                out["1T"] = True
         # S130: official eBay Browse asking-price band (free tier) lights ALL
         # collectible tierkeys incl. comics/watches once EBAY_APP_ID/EBAY_CERT_ID
         # are set; honest asking-not-sold wording enforced at the consumer.

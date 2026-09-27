@@ -143,6 +143,18 @@ def _t(tier, name, desc, providers, *, licence_ok=True, paid=False, min_comps=0)
 # service -> category -> country("*" = any) -> [candidate tiers]
 TIER_MATRIX: dict = {
     "fair_price": {
+        # ---- FAIR-PRICE-LM-1 (RIPPLE-2, David 27 Sep 2026: "they are 1T") ----
+        # Collectors listings route by title to the right catalogue feed (coins -> Numista, TCG -> JustTCG,
+        # LEGO -> BrickLink) with the eBay asking band as the fallback; Local Market uses the eBay asking band.
+        # 1T, charged ONLY when a real figure comes back (cannot_verify is free).
+        "collectors": {"*": [
+            _t(VERIFIED, "Verified price", "Catalogue or live market price for this item.",
+               ["numista", "justtcg_free", "bricklink", "ebay_browse"]),
+        ]},
+        "local_market": {"*": [
+            _t(VERIFIED, "Market check", "What comparable items are listed for right now.",
+               ["ebay_browse"]),
+        ]},
         # ---- collectibles ----
         "cards": {"*": [
             _t(VERIFIED, "Verified price", "Live market price for this exact card.",

@@ -24297,7 +24297,7 @@ def rg_quick_ready_2():
     out = []
     for needle, why in (("var PRICE_BASIS={homehelp:' / day', tutors:' / hour'", "the price basis per lane"),
                         ("price: price ? priceWithBasis(key, price.label) : 'POA'", "the basis on the way out"),
-                        ("suburb: where ? where.label : LOC.suburb,", "the required suburb"),
+                        ("suburb: where ? (where.areas ? where.areas[0] : where.label) : LOC.suburb,", "the required suburb (AREAS-MULTI-1: her first area)"),
                         ("seller_email: HANDOVER.email || null", "the draft's owner")):
         if needle not in qk:
             out.append((FAIL, "quick.html lost %r -- %s (QUICK-READY-2)" % (needle, why)))
@@ -31279,7 +31279,7 @@ def rg_buyer_terms_1():
     for pat, label in ((r"_tsWithTerms\(email, function\(\)\{ return fetch\(BEA_URL \+ '/intros'", "the introduction request"),
                        (r"_tsWithTerms\(email, function\(\)\{ return fetch\(BEA_URL \+ '/local-market/intro'",
                         "the Local Market request"),
-                       (r"_tsWithTerms\(email, function\(\)\{ return fetch\(url, \{method:'POST'\}\); \}\)", "the top-up")):
+                       (r"_tsWithTerms\(email, function\(\)\{ return fetch\(url, \{method:'POST'(?:, credentials:'include')?\}\); \}\)", "the top-up")):
         if not _re.search(pat, js):
             bad.append("%s no longer handles 'accept the Terms first'" % label)
     if js.count("}, { seller: true })") < 3:
@@ -32126,6 +32126,43 @@ def rg_receipt_email_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "top-up credits the session account; the receipt goes to a real inbox")]
+
+@entry("RG-0535", "RUL-191 RIPPLE-2: the Ripple stories work as advertised -- a seller's own Buzz link for her regulars, "
+       "paid reports kept (My reports) and attachable to his listing, a 1T fair-price check on Collectors and Local "
+       "Market, a tester's single-use 200T invitation, and several areas per worker in Quick",
+       OPEN, fixed_on="2026-09-27",
+       scope="ripple_features.py (TESTER-INVITE-1, BUZZ-JOIN-1, REPORT-ATTACH-1) mounted in bea_main.py before the route "
+             "gate + join.html at /join/<token> (nginx location); ms.js bzMyLink, aiLoadMyReports/aiOpenJob/aiAttachOffer/"
+             "msReportBadge, Local Market fair-price block; AdvertAgent jobs()/job() (REPORT-KEEP-1); ai_service_tiers + "
+             "tier_resolvers + _fair_price_resolve (FAIR-PRICE-LM-1); quick.html AREAS-MULTI-1 + suburb/area search.",
+       ref="David 27 Sep 2026 (RUL-191). Promote to LOCKED after the rendered re-run on live trustsquare.co.")
+def rg_ripple2_rul191():
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html")
+    rf = repo_file("ripple_features.py"); jh = repo_file("join.html")
+    ast = repo_file("ai_service_tiers.py"); tr = repo_file("tier_resolvers.py")
+    if None in (bea, js, q, rf, jh, ast, tr):
+        return [(FAIL, "a RIPPLE-2 file is missing from the repo (ripple_features.py / join.html / ...)")]
+    bad = []
+    if "_ripple2.build_router(globals())" not in bea or bea.find("_ripple2.build_router") > bea.find("SEC_GATE_UNDECLARED = _sec_gate.install("):
+        bad.append("the RIPPLE-2 router is not mounted before the route gate")
+    for need in ('"/admin/tester-invite"', '"/buzz/my-link"', '"/trust/join-who"', '"/trust/join-claim"', '"/listings/{listing_id}/attach-report"'):
+        if need not in rf:
+            bad.append("route %s is gone" % need)
+    if "tester_grant" not in rf or "claimed_by" not in rf:
+        bad.append("the tester invitation no longer grants once as a tester_grant")
+    if '"regular-link"' not in rf or "circle_status" not in rf:
+        bad.append("a Buzz join no longer records the regular-link source or checks her regulars limit")
+    if "function bzMyLink" not in js or "function aiLoadMyReports" not in js or "function msReportBadge" not in js:
+        bad.append("the app lost the Buzz link card, My reports or the buyer's report badge")
+    if "tvsInitDetail('bea_' + listingId, 'LocalMarket'" not in js:
+        bad.append("Local Market detail no longer offers the fair-price check")
+    if '"collectors": {"*"' not in ast or '"local_market": {"*"' not in ast or 'tierkey == "local_market"' not in tr:
+        bad.append("the Collectors / Local Market 1T fair-price tier is gone")
+    if "AREAS-MULTI-1" not in q or "where.areas ? where.areas[0]" not in q or "AREAS-MULTI-1" not in bea:
+        bad.append("Quick lost several areas per worker, or search no longer finds a second area")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Buzz link, tester invitation, My reports + attach, 1T fair price on Collectors/Local Market, several areas -- repo")]
 
 if __name__ == "__main__":
     sys.exit(main())

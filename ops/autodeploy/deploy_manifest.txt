@@ -302,6 +302,11 @@ quick.html | q/index.html
 # link; the person they worked for opens this page and confirms in one tap. nginx serves this
 # one file for /confirm/ and every /confirm/<token>, so the token never has to be a route.
 confirm.html | confirm/index.html
+
+# RIPPLE-2 (27 Sep 2026): one page for a tester's invitation (200T on sign-in) and a seller's Buzz link
+# for her regulars. nginx serves this one file for /join/<token>; the router lives beside main.py.
+join.html | join/index.html
+ripple_features.py         | ripple_features.py
 org_enrol.py               | org_enrol.py
 scripts/enrol_import.py    | enrol_import.py
 roles/role_registry.json   | roles/role_registry.json

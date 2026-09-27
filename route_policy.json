@@ -2157,6 +2157,33 @@
      "in": "query"
     }
    ]
+  },
+  {
+   "key": "POST /admin/tester-invite",
+   "level": "admin"
+  },
+  {
+   "key": "GET /buzz/my-link",
+   "level": "user"
+  },
+  {
+   "key": "GET /trust/join-who",
+   "level": "token"
+  },
+  {
+   "key": "POST /trust/join-claim",
+   "level": "user"
+  },
+  {
+   "key": "POST /listings/{listing_id}/attach-report",
+   "level": "user",
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
   }
  ]
 }
