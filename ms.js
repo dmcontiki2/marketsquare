@@ -492,6 +492,7 @@ function _msMapBeaListing(l){
           // isFounders() reads l.founders -- but this mapper never copied it, so the Ruby Spark
           // could not render on a single live listing. Repair lane.
           founders: !!l.founders,
+          demo_example: !!l.demo_example,   // DEMO-INACTIVE-1
           // FIDE-CLAIM-1: tier + title class only (the server never sends name / id / federation)
           credential_badges: Array.isArray(l.credential_badges) ? l.credential_badges : null,
           beaListingId: l.id
@@ -1613,8 +1614,15 @@ function isFounders(l){
   if(DEMO_MODE) return DEMO_FOUNDERS_IDS.has(String(l.id)); // demo branch: curated demo holders
   return !!l.founders;                                      // live branch: BEA founders flag
 }
+/* DEMO-INACTIVE-1 (RUL-187, David 27 Sep 2026): a demo example stays visible, is marked, and never takes an introduction. */
+const DEMO_EXAMPLE_MSG = 'This is a demo example that shows how TrustSquare works. There is no real product or service behind it, so no introduction can be made. Nothing was charged.';
+function _demoBadge(l){
+  return (l && l.demo_example)
+    ? '<span class="demo-ex-badge" onclick="event.stopPropagation();showToast(DEMO_EXAMPLE_MSG, 7000)" style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:10px;font-weight:800;vertical-align:middle;cursor:pointer;">Demo example</span>'
+    : '';
+}
 function fspark(l){
-  return (isFounders(l)
+  return _demoBadge(l) + (isFounders(l)
     ? `<img src="/static/founders_spark.svg" alt="Founders Badge" style="width:16px;height:16px;vertical-align:middle;margin-left:4px;cursor:pointer;flex:none;" onclick="event.stopPropagation();showToast('Founders Badge · minted at launch 2026 — never minted again',4000)">`
     : '') + credBadge(l);
 }
@@ -5929,6 +5937,11 @@ function openDetail(id){
   // E2E-HMI-1 (24 Sep 2026): the CTA offered 'Join Queue' on adverts whose seller has no verified
   // ID, which the server refuses. Say so on the button itself.
   _msSellerCanReceive(id).then(function(ok){
+    if (ok==='demo') {   // DEMO-INACTIVE-1: say it on the button; a tap explains
+      const b = document.querySelector('#screen-detail .sticky-cta .cta-btn');
+      if (b) { b.innerHTML = 'Demo example \u2014 no real product or service'; b.style.opacity = '.6'; b.style.fontSize = '13px'; }
+      return;
+    }
     if (ok) return;
     const b = document.querySelector('#screen-detail .sticky-cta .cta-btn');
     if (b) { b.innerHTML = '\ud83d\udd12 Introductions open once this seller verifies their ID'; b.style.opacity = '.6'; b.style.fontSize = '13px'; }
@@ -6667,6 +6680,7 @@ async function _msSellerCanReceive(id){
     const beaId=parseInt(String(l.id).replace('bea_',''),10); if(!beaId) return true;
     const r=await fetch(BEA_URL+'/listings/'+beaId); if(!r.ok) return true;
     const d=await r.json();
+    if (d && d.demo_example) return 'demo';   // DEMO-INACTIVE-1: an example, never a real seller
     /* INTRO-GATE-MATCH-1 (25 Sep 2026 inspection, ts4-01): gate on the server's own answer. The paid Home Affairs
        tick alone locked 44 of the 65 live adverts whose sellers the server accepts (verified ID document or agency). */
     if (typeof d.seller_can_receive === 'boolean') return d.seller_can_receive;
@@ -6675,6 +6689,7 @@ async function _msSellerCanReceive(id){
 }
 function openModal(id){
   _msSellerCanReceive(id).then(function(ok){
+    if(ok==='demo'){ showToast(DEMO_EXAMPLE_MSG, 7000); return; }   // DEMO-INACTIVE-1
     if(!ok){ showToast('This seller has not verified their ID yet, so TrustSquare is holding introductions to them for your safety. Nothing was charged.', 7000); return; }
     _openModalNow(id);
   });
@@ -16814,7 +16829,7 @@ async function lmLoadGrid() {
             `</div>` +
             `<div class="cbody">` +
               `<div class="ccat">Local Market</div>` +
-              `<div class="ctitle" data-notranslate="1">${_lmEsc(l.title || '')}</div>` +
+              `<div class="ctitle" data-notranslate="1">${_lmEsc(l.title || '')}</div>` + _demoBadge(l) +
               `<div class="cloc">📍 ${loc}</div>` +
               `<div class="cbot"><div class="cprice">${price}</div>` +
               `<div class="ctrust" style="color:${t.c};">${l.trust || 0} ${t.label}</div></div>` +
@@ -16852,7 +16867,7 @@ async function lmLoadGrid() {
         `</div>` +
         `<div class="cbody">` +
           `<div class="ccat">Local Market</div>` +
-          `<div class="ctitle" data-notranslate="1">${_lmEsc(c.title || '')}</div>` +
+          `<div class="ctitle" data-notranslate="1">${_lmEsc(c.title || '')}</div>` + _demoBadge(c) +
           `<div class="cloc">📍 ${loc}</div>` +
           `<div class="cbot"><div class="cprice">${price}</div>${t}</div>` +
           `<div class="seller-cv-badge" onclick="event.stopPropagation();lmOpenDetailAndProfile(${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View seller profile</div>` +
@@ -16926,7 +16941,7 @@ async function lmOpenDetail(listingId) {
       heroHtml +
       `<div class="dsheet">` +
         `<div class="dcat-row"><span class="dcat">Local Market</span></div>` +
-        `<div class="dtitle" data-notranslate="1">${_lmEsc(c.title || '')}</div>` +
+        `<div class="dtitle" data-notranslate="1">${_lmEsc(c.title || '')}</div>` + _demoBadge(c) +
         `<div class="dmeta"><div class="dmi"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(c.suburb || c.city || '')}</div></div>` +
         `<div class="trust-block" style="background:${tBg};border-color:${tColor}30;">` +
           `<div><div class="tscore" style="color:${tColor};">${trust}</div><div class="tlabel" style="color:${tColor};">${tLabel}</div><div class="tsub" style="color:${tColor};">Trust Score</div></div>` +
@@ -16954,7 +16969,9 @@ async function lmOpenDetail(listingId) {
         `</div>` +
         `<div class="anon-block"><div class="lock-icon">🔒</div><h4>Identity protected until introduction</h4><p>Seller name and contact details are only revealed after both parties accept.</p></div>` +
       `</div>` +
-      `<div class="sticky-cta"><button class="cta-btn queue-cta" onclick="openLMModal()">👥 Request introduction <span class="cta-cost">· free for buyers</span></button></div>`;
+      (c.demo_example   // DEMO-INACTIVE-1
+        ? `<div class="sticky-cta"><button class="cta-btn queue-cta" style="opacity:.6;font-size:13px" onclick="showToast(DEMO_EXAMPLE_MSG, 7000)">Demo example \u2014 no real product or service</button></div>`
+        : `<div class="sticky-cta"><button class="cta-btn queue-cta" onclick="openLMModal()">👥 Request introduction <span class="cta-cost">· free for buyers</span></button></div>`);
   } catch(e) {
     el.innerHTML = '<div style="padding:40px 16px;color:var(--text-3);font-size:13px;text-align:center;">Could not load this listing.</div>';
   }
@@ -16964,6 +16981,7 @@ async function lmOpenDetail(listingId) {
 // Open the standard intro modal for a Local Market listing.
 // Uses _lmCurrentListing (set in lmOpenDetail) — no ID argument needed.
 function openLMModal() {
+  if (_lmCurrentListing && _lmCurrentListing.demo_example) { showToast(DEMO_EXAMPLE_MSG, 7000); return; }   // DEMO-INACTIVE-1
   const c = _lmCurrentListing;
   if (!c) return;
   const loc = c.suburb || c.city || '';

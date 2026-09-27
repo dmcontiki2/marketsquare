@@ -5417,6 +5417,8 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
             _gc.close()
     except Exception:
         pass
+    if _is_demo_example(_d):           # DEMO-INACTIVE-1
+        _d["demo_example"] = True
     if not _me or _me != (_d.get("seller_email") or "").strip().lower():
         for _k in ("seller_email", "attested_email"):
             _d.pop(_k, None)
@@ -8565,6 +8567,9 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             raise HTTPException(status_code=409, detail="The seller is answering another buyer about this property. "
                                                         "It opens again as soon as they reply — within 4 days at most.")
         raise HTTPException(status_code=409, detail=f"Listing is not available for introductions (status: {listing_status})")
+    if _demo_refusal(listing, _session_email(ts_user) or intro.buyer_email):   # DEMO-INACTIVE-1 (RUL-187)
+        conn.close()
+        raise HTTPException(status_code=409, detail=DEMO_EXAMPLE_DETAIL)
     # LM-PAID-GUARD-1 (25 Sep 2026 inspection, ts1-03): Local Market introductions are free for buyers and run through
     # /local-market/intro. A paid request on a Local Market advert (an app page opened from a link) would hold and then
     # burn the buyer's 1T, so it is refused before anything is held.
@@ -12131,13 +12136,44 @@ def delete_all_wishlist_signals(buyer_token: str):
 # All responses scrub seller identity. Anonymity is absolute (PR-04).
 # These endpoints serve the bottom-half scroll feed in marketsquare.html.
 
+# DEMO-INACTIVE-1 (RUL-187, David 27 Sep 2026): "The demo examples should all be inactive and if users want to use
+# them they should be cautioned/warned that there is no product/service because it is only demo examples."
+# A demo example is any listing held by a TrustSquare house account (@trustsquare.co / @example.com) or flagged
+# is_demo. It stays visible as an example, carries demo_example=True, and every introduction door refuses it
+# before anything is held or charged. The family test accounts (superusers) may still walk the flow on it.
+DEMO_EXAMPLE_DETAIL = ("This is a demo example that shows how TrustSquare works. There is no real product or "
+                       "service behind it, so no introduction can be made. Nothing was charged.")
+
+
+def _is_demo_example(row) -> bool:
+    try:
+        d = dict(row)
+    except Exception:
+        return False
+    em = (d.get("seller_email") or "").strip().lower()
+    return bool(d.get("is_demo")) or em.endswith("@trustsquare.co") or em.endswith("@example.com")
+
+
+def _demo_refusal(row, buyer_email) -> bool:
+    """True when this introduction must be refused as a demo example."""
+    if not _is_demo_example(row):
+        return False
+    try:
+        return not _gate_is_superuser((buyer_email or "").strip().lower())
+    except Exception:
+        return True
+
+
 def _strip_seller_identity(row: dict) -> dict:
     """Remove every field that could identify a seller. Used on every row
     returned by feed/showcase endpoints. PR-29: no seller name, no seller_email,
     no aa_* fields, no buyer_token leakage."""
     forbidden = {"seller_email", "name", "email", "aa_free_used",
                  "aa_sessions_remaining", "photo_url"}
-    return {k: v for k, v in row.items() if k not in forbidden}
+    out = {k: v for k, v in row.items() if k not in forbidden}
+    if _is_demo_example(row):          # DEMO-INACTIVE-1: decided before the email leaves
+        out["demo_example"] = True
+    return out
 
 
 def _listing_age_label(published_at: Optional[str]) -> str:
@@ -13193,7 +13229,8 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
         params.append(suburb)
     where = " AND ".join(clauses)
     rows = conn.execute(
-        f"""SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
+        f"""SELECT l.id, l.title, l.price, l.suburb, l.city, l.area, l.seller_email, l.is_demo,  -- DEMO-INACTIVE-1: read for the flag, stripped before return
+                  
                    l.thumb_url, l.medium_url, l.description, l.published_at,
                    l.view_count, l.boost_until, l.super_example,
                    COALESCE(u.trust_score, 0) AS trust_score
@@ -13226,7 +13263,8 @@ def lm_get_listing(listing_id: int):
     Trust score read live from joined users table — never the listing column."""
     conn = database.get_db()
     row = conn.execute(
-        """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area,
+        """SELECT l.id, l.title, l.price, l.suburb, l.city, l.area, l.seller_email, l.is_demo,  -- DEMO-INACTIVE-1: read for the flag, stripped before return
+                  
                   l.thumb_url, l.medium_url, l.photo_urls, l.description, l.published_at,
                   l.view_count, l.boost_until,
                   COALESCE(u.country, 'ZA') AS country,
@@ -13306,6 +13344,9 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
     if not seller_email:
         conn.close()
         raise HTTPException(status_code=409, detail="Listing has no seller — cannot accept intros")
+    if _demo_refusal(listing, _session_email(ts_user) or req.buyer_email):   # DEMO-INACTIVE-1 (RUL-187)
+        conn.close()
+        raise HTTPException(status_code=409, detail=DEMO_EXAMPLE_DETAIL)
     # Seller ID-verification gate (23 Jul 2026) — see _seller_intro_gate above.
     _gate = _seller_intro_gate(conn, seller_email)
     if _gate:

@@ -86,6 +86,11 @@ def _outside_repo(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-187": [
+   ("RULINGS.md", ["DEMO EXAMPLES ARE INACTIVE"], []),
+   ("bea_main.py", ["DEMO_EXAMPLE_DETAIL", "def _demo_refusal(", "raise HTTPException(status_code=409, detail=DEMO_EXAMPLE_DETAIL)"], []),
+   ("ms.js", ["function _demoBadge(", "DEMO_EXAMPLE_MSG", "demo_example: !!l.demo_example"], []),
+ ],
  "RUL-186": [
    ("RULINGS.md", ["TRUST SCORE BANDS NAME THE STRENGTH OF EVIDENCE"], []),
    ("ms.js", ["label:'Fullest evidence'", "It is a score, not a guarantee or an assessment of character."], ["label:'Highly Trusted'", "Trusted+ (70)"]),

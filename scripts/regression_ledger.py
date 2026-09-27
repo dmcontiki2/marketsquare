@@ -31916,5 +31916,46 @@ def rg_grant_who_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the grant card finds a person by name or email and shows who, and balance, before crediting")]
 
+
+
+@entry("RG-0528", "DEMO-INACTIVE-1: demo examples stay visible but are marked, and no introduction can be made to one "
+       "-- the buyer is told there is no real product or service, before anything is held or charged",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py: _is_demo_example (house accounts @trustsquare.co / @example.com, or is_demo), demo_example "
+             "flag on /listings, /listings/{id}, the Local Market list and detail, zoom; /intros and /local-market/intro "
+             "refuse with DEMO_EXAMPLE_DETAIL (family test accounts exempt). ms.js: badge on cards and pages, the "
+             "request button says so, the modal refuses. SCOPE: every category. CLASS: a showcase advert that behaves "
+             "like a real one turns a real buyer away with a wrong reason.",
+       ref="RUL-187, David 27 Sep 2026. Found while checking which Local Market sellers had under 1T: all were house accounts.")
+def rg_demo_inactive_1():
+    bm = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if bm is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+    def handler(sig):
+        i = bm.find(sig)
+        if i < 0: return ""
+        j = bm.find("\n@app.", i + 10)
+        return bm[i:j if j > 0 else None]
+    for sig, label in (('@app.post("/intros")', "/intros"), ('@app.post("/local-market/intro")', "/local-market/intro")):
+        h = handler(sig)
+        k = h.find("_demo_refusal(")
+        if k < 0:
+            bad.append("%s no longer refuses a demo example" % label)
+        elif "_wallet_lock(conn)" in h and h.find("_wallet_lock(conn)") < k:
+            bad.append("%s refuses a demo example only after the wallet is touched" % label)
+    if 'out["demo_example"] = True' not in bm or '_d["demo_example"] = True' not in bm:
+        bad.append("the listing no longer tells the app it is a demo example")
+    if bm.count("l.seller_email, l.is_demo,") < 2:
+        bad.append("the Local Market list/detail no longer read the seller to decide the demo flag")
+    for needle, what in (("function _demoBadge(", "the Demo example badge"), ("demo_example: !!l.demo_example", "the mapper flag"),
+                         ("if(ok==='demo'){ showToast(DEMO_EXAMPLE_MSG", "the intro modal warning"),
+                         ("if (_lmCurrentListing && _lmCurrentListing.demo_example)", "the Local Market modal warning")):
+        if needle not in js:
+            bad.append("ms.js lost %s" % what)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "demo examples are marked and both introduction doors refuse them first")]
+
 if __name__ == "__main__":
     sys.exit(main())
