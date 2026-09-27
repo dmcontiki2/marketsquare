@@ -408,7 +408,8 @@ body{background:#04070a;color:#eaf3ee;
    headline ran up over the top bar and 'Pass Quick on' / the saved-advert card fell off the bottom with no way to
    scroll to them. It now scrolls, stays centred when it fits (the auto margins), and short portrait screens get a
    compact door. #screen-prefixed so these win over the later QUICK-NEXT sheet whatever the order. */
-#screen.screen.door{justify-content:flex-start;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+#screen.screen.door{justify-content:flex-start;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#screen.screen.door::-webkit-scrollbar{display:none}   /* DOOR-DECLUTTER-1: no scrollbar on the door */
 #screen.screen.door>:first-child{margin-top:auto}
 #screen.screen.door>:last-child{margin-bottom:auto}
 @media (max-height:760px){
@@ -423,7 +424,7 @@ body{background:#04070a;color:#eaf3ee;
   #screen.door .acts{margin-top:16px}
   #screen.door .btn{padding:14px 10px}
   #screen.door .langrow{margin-top:14px}
-  #screen.door .qs-passlink{margin-top:8px}
+  #screen.door .qs-foot{margin-top:10px}
 }
 /* REDUCED-MOTION-1 (25 Sep 2026 inspection, shell-22): a phone set to reduce motion gets no pulsing halo, no
    rising tiles and no card flight -- everything lands in its final place at once. */
@@ -2620,11 +2621,11 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
    '.promise{text-align:center;margin:0 0 20px;padding:0 8px}',
    '.promise b{display:block;font-size:25px;font-weight:800;letter-spacing:-.4px;line-height:1.15}',
    '.promise span{display:block;margin-top:6px;font-size:15px;color:var(--dim)}',
-   '.langrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:22px;max-width:360px}',
+   '.langrow{display:flex;gap:4px;justify-content:center;flex-wrap:nowrap;margin-top:22px;max-width:100%}',   /* DOOR-DECLUTTER-1 (27 Sep 2026): all five on one line */
    /* LANG-NAMES-1 (25 Sep 2026 inspection, langq-33): names, compact enough for two rows on a 360px phone */
-   '.langrow button{min-width:0;height:36px;padding:0 11px;border-radius:12px;border:1.5px solid var(--line);',
+   '.langrow button{min-width:0;flex:0 1 auto;height:34px;padding:0 8px;border-radius:11px;white-space:nowrap;border:1.5px solid var(--line);',
    ' background:var(--panel);color:var(--bright);display:flex;align-items:center;justify-content:center;',
-   ' font:700 13px system-ui,sans-serif;cursor:pointer}',
+   ' font:700 clamp(10.5px,3.2vw,12.5px) system-ui,sans-serif;cursor:pointer}',
    '.langrow button.on{background:var(--c);border-color:var(--c);color:var(--onc,#fff)}',
    '.qlbw{position:relative;flex:0 0 auto}',
    '.langhint{font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}',
@@ -3477,6 +3478,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
    '.qs-saved{margin:10px auto 0;max-width:340px;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;background:var(--panel);border:1px solid var(--c);font-size:13px;color:#e6f2ec}',
    '.qs-saved a{color:var(--bright);font-weight:800;text-decoration:none;white-space:nowrap}.qs-saved span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
    '.qs-saved u{cursor:pointer;opacity:.7;text-decoration:none;font-size:16px}',
+   '.qs-foot{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:nowrap;margin:14px auto 0;max-width:100%}',
+   '.qs-foot .qs-saved{margin:0;padding:6px 10px;gap:6px;white-space:nowrap}',
+   '.qs-foot .qs-passlink{margin:0;white-space:nowrap}',
    '.qs-passlink{display:block;margin:12px auto 0;background:none;border:0;color:var(--dim);font:600 13px system-ui,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px}',
    '#qpass,#qaccept{position:absolute;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;overflow-y:auto;',
    ' padding:calc(env(safe-area-inset-top) + 18px) 22px calc(env(safe-area-inset-bottom) + 22px);background:rgba(4,8,10,.97);color:#e6f2ec;text-align:center}',
@@ -3719,24 +3723,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
         if(lg0) lg0.style.visibility='hidden';
       }
       var scr=$('screen');
-      var sv=null; try{ sv=JSON.parse(ss('ts_q_saved')||'null'); }catch(e){}
-      var nav=''; try{ nav=(performance.getEntriesByType('navigation')[0]||{}).type||''; }catch(e){}
-      if(sv && sv.id && (nav==='back_forward' || sv.shown)){
-        sv.shown=1; ss('ts_q_saved', JSON.stringify(sv));
-        /* SAVED-LINK-1 (25 Sep 2026 inspection, quick-17): 'Open it' follows HER way in -- her private key link when
-           she has one; for a phone-code worker a fresh sign-in hop minted from this phone's session; otherwise the
-           advert's own page. Never an email sign-in she cannot complete. */
-        var href=sv.key||((sv.live?'/?listing=':'/?draft=')+encodeURIComponent(sv.id));
-        scr.insertAdjacentHTML('beforeend','<div class="qs-saved" id="qssaved"><span>&#10003; '+E(sv.title||T('Your listing'))+'</span>'
-          +'<a id="qsopen" href="'+E(href)+'">'+E(T('Open it'))+' &rsaquo;</a><button type="button" class="qs-x" id="qssx" aria-label="'+E(T('Close'))+'">&times;</button></div>');
-        $('qssx').onclick=function(){ ss('ts_q_saved', null); var b=$('qssaved'); if(b) b.parentNode.removeChild(b); };
-        if(!sv.key && sv.ident==='phone' && !sv.live) $('qsopen').onclick=function(ev){
-          ev.preventDefault(); var fallback=this.getAttribute('href');
-          fetch('/auth/session-link?draft='+encodeURIComponent(sv.id),{credentials:'include'}).then(function(r){ return r.ok?r.json():null; })
-            .then(function(d){ location.href=(d && d.url) ? d.url : fallback; }).catch(function(){ location.href=fallback; });
-        };
-      }
-      scr.insertAdjacentHTML('beforeend','<button class="qs-passlink" id="qspass" type="button">'+E(T('Pass Quick on to someone'))+' &rsaquo;</button>');
+      /* DOOR-DECLUTTER-1 (27 Sep 2026, David): the saved-listing card ('SUV -- Isuzu  Open it') is gone from the door;
+         the arrival screen already hands her the listing and her key. */
+      scr.insertAdjacentHTML('beforeend','<div class="qs-foot" id="qsfoot"><button class="qs-passlink" id="qspass" type="button">'+E(T('Pass Quick on'))+' &rsaquo;</button></div>');
       $('qspass').onclick=function(){ openPass(); };
       try{ qTranslate(scr); }catch(e){}
     }catch(e){}
@@ -4272,7 +4261,7 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
       if(!w || !w.picks || !w.picks.length || (Date.now()-(w.t||0))>WIP_MAX_MS) return;
       if(!CATS.some(function(c){ return c.key===w.cat; })) return;
       var scr=$('screen');
-      var html='<div class="qs-saved" id="qswip"><span>&#9998; '+(w.mode==='find'?'Your unfinished search':'Your unfinished listing')+'</span>'
+      var html='<div class="qs-saved" id="qswip" title="'+(w.mode==='find'?'Your unfinished search':'Your unfinished listing')+'"><span aria-hidden="true">&#9998;</span>'
         +'<a href="#" id="qswipgo">Carry on &rsaquo;</a><button type="button" class="qs-x" id="qswipx" aria-label="Close">&times;</button></div>';
       var pass=$('qspass'); if(pass) pass.insertAdjacentHTML('beforebegin', html); else scr.insertAdjacentHTML('beforeend', html);
       $('qswipx').onclick=function(){ qWipClear(); var b=$('qswip'); if(b) b.parentNode.removeChild(b); };
