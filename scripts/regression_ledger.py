@@ -31907,6 +31907,9 @@ def rg_grant_who_1():
     bm = repo_file("bea_main.py") or ""
     if '@app.get("/admin/tuppence/lookup")' not in bm or "def admin_tuppence_lookup(q: str = \"\", admin=Depends(_require_admin))" not in bm:
         bad.append("the admin-only lookup route is gone or no longer admin-guarded")
+    rp = repo_file("route_policy.json") or ""
+    if '"key": "GET /admin/tuppence/lookup"' not in rp:
+        bad.append("the lookup route is not declared in route_policy.json -- the deploy gate refuses the release")
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the grant card finds a person by name or email and shows who, and balance, before crediting")]

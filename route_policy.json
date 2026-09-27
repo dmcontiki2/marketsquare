@@ -1354,6 +1354,10 @@
    "level": "admin"
   },
   {
+   "key": "GET /admin/tuppence/lookup",
+   "level": "admin"
+  },
+  {
    "key": "GET /admin/users",
    "level": "admin"
   },
