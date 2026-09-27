@@ -32019,5 +32019,25 @@ def rg_rul188_open():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "paid AI open in live mode; Pro gate dormant with feeds off; ID warns never blocks; lanes follow the card")]
 
+@entry("RG-0531", "RUL-189 TESTER-AI-OPEN-1: testers (superuser or any tester_grant) run every paid AI feature on any "
+       "plan, for ever - the Pro paid-feed gate never applies to them",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py _ai_is_tester(); /tuppence/ai-commit Pro gate condition. CLASS: tester access that lapses "
+             "or is plan-bound, so the people David trusts to test cannot run what they are testing.",
+       ref="David 27 Sep 2026 (RUL-189). Promote to LOCKED after a tester runs a paid report on the live app.")
+def rg_rul189_tester():
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = bea.find("def _ai_is_tester"); fn = bea[i:i + 1200] if i > 0 else ""
+    bad = []
+    if not fn or "is_superuser" not in fn or "tester_grant" not in fn:
+        bad.append("_ai_is_tester no longer recognises superusers and tester_grant holders")
+    if "_paid_feed_gate_active() and not _ai_is_tester(conn, email)" not in bea:
+        bad.append("the Pro gate at /tuppence/ai-commit applies to testers again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "testers skip the Pro gate on every paid AI feature, with no end date")]
+
 if __name__ == "__main__":
     sys.exit(main())

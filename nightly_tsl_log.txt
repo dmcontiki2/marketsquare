@@ -145,3 +145,93 @@ Sun 09/20/2026  5:45:05.87  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files
 Thu 09/24/2026  5:45:05.89  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Fri 09/25/2026  5:45:05.98  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Sat 09/26/2026  5:45:05.47  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
+Sun 09/27/2026  5:45:05.75  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
+Sun 09/27/2026 18:35:13.92  SHIPPING - DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: ai_provider.py, bea_main.py, ms.js | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Sun 09/27/2026 18:35:13.98
+ ============================================================
+
+  [autobump] ts_report.js changed -> DEFENCE_COVERAGE_MAP.html ref ?v=2
+  [autobump] ts_report.js changed -> INSPECTION_2026-09-25.html ref ?v=2
+  [autobump] ts_report.js changed -> WAVE_PLAN_LAUNCH_2026.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_au_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_au_rail_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_bw_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_c2c_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_de_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_gb_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_gb_rail_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_ke_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_mz_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_na_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_reserve_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_uk_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_us_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_us_rail_map.html ref ?v=7
+  [autobump] ts_report.js changed -> adventures_za_map.html ref ?v=7
+  [autobump] ts_report.js changed -> agency_import_guide.html ref ?v=6
+  [autobump] ts_report.js changed -> agents_as_a_service.html ref ?v=6
+  [autobump] ts_report.js changed -> confirm.html ref ?v=7
+  [autobump] ts_report.js changed -> dashboard.server.html ref ?v=6
+  [autobump] ts_report.js changed -> marketsquare.html ref ?v=9
+  [autobump] ts_report.js changed -> marketsquare_admin.html ref ?v=7
+  [autobump] ts_report.js changed -> orchestrator.html ref ?v=7
+  [autobump] ts_report.js changed -> privacy.html ref ?v=7
+  [autobump] ts_report.js changed -> quick.html ref ?v=9
+  [autobump] ts_report.js changed -> quick_next.html ref ?v=7
+  [autobump] ts_report.js changed -> ranking_explainer.html ref ?v=6
+  [autobump] ts_report.js changed -> studyabroad_teaser.html ref ?v=7
+  [autobump] ts_report.js changed -> studywork_hu_map.html ref ?v=7
+  [autobump] ts_report.js changed -> studywork_us_map.html ref ?v=7
+  [autobump] ts_report.js changed -> support.html ref ?v=9
+  [autobump] ts_report.js changed -> terms.html ref ?v=7
+  [autobump] adventures_au_map.html changed -> ms.js ref ?v=24
+  [autobump] adventures_au_rail_map.html changed -> ms.js ref ?v=16
+  [autobump] adventures_bw_map.html changed -> ms.js ref ?v=25
+  [autobump] adventures_c2c_map.html changed -> ms.js ref ?v=27
+  [autobump] adventures_de_map.html changed -> ms.js ref ?v=14
+  [autobump] adventures_gb_map.html changed -> ms.js ref ?v=25
+  [autobump] adventures_gb_rail_map.html changed -> ms.js ref ?v=16
+  [autobump] adventures_ke_map.html changed -> ms.js ref ?v=17
+  [autobump] adventures_mz_map.html changed -> ms.js ref ?v=25
+  [autobump] adventures_na_map.html changed -> ms.js ref ?v=26
+  [autobump] adventures_us_map.html changed -> ms.js ref ?v=24
+  [autobump] adventures_us_rail_map.html changed -> ms.js ref ?v=16
+  [autobump] adventures_za_map.html changed -> ms.js ref ?v=6
+  [autobump] ranking_explainer.html changed -> ms.js ref ?v=7
+  [autobump] ms.js changed -> marketsquare.html ref ?v=502
+  [autobump] ms.css changed -> marketsquare.html ref ?v=296
+  [autobump] 50 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+no pending fragments.
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-09-27T16:35:16Z   mode=strict
+  Working tree: 50 file(s) uncommitted; 7 deploy target(s) changed.
+    - marketsquare.html                  288142 B      0 min ago  [modified, RECENT(<25m)]
+    - ms.js                             1629887 B      0 min ago  [modified, RECENT(<25m)]
+    - terms.html                         143651 B      0 min ago  [modified, RECENT(<25m)]
+    - privacy.html                        25750 B      0 min ago  [modified, RECENT(<25m)]
+    - support.html                        29762 B      0 min ago  [modified, RECENT(<25m)]
+    - marketsquare_admin.html            290132 B      0 min ago  [modified, RECENT(<25m)]
+    - bea_main.py                       1675194 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 7 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html, marketsquare_admin.html, ms.js, privacy.html, terms.html, support.html, bea_main.py
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Verdict: REVIEW   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 22880), TTL 30 min.

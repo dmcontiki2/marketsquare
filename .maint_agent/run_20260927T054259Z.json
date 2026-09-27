@@ -1,0 +1,53 @@
+{
+  "run": "20260927T054257Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 0,
+  "intake": {
+    "app_faults_new": 0,
+    "email_lane": {
+      "lane": "email_triage",
+      "total": 24,
+      "by_category_30d": {
+        "legal": 1,
+        "other": 4,
+        "spam": 1,
+        "support": 3
+      },
+      "by_status_30d": {
+        "drafted": 5,
+        "sent": 2,
+        "skipped": 1,
+        "system": 1
+      },
+      "held_30d": 5,
+      "door": "staff",
+      "note": "counts only (RG-0222); rows are never copied into the report"
+    }
+  },
+  "actions": [],
+  "backup": {
+    "ran": true,
+    "outcome": "ok: OK  archive 2026-09-27_0543.zip (1837768 bytes), restores clean, users=124 listings=126"
+  },
+  "standup": {
+    "ran": true,
+    "state": "FRESH",
+    "reason": "newest pulse line is dated 2026-09-26 (5.7 h)",
+    "age_h": 5.7
+  },
+  "host_queue": {
+    "ran": true,
+    "state": "STALLED",
+    "pending": 0,
+    "oldest_pending_h": null,
+    "last_result_h": 3.48,
+    "ahead": 2,
+    "oldest_unpushed_h": 2.23,
+    "reason": "2 commit(s) committed but never pushed, oldest 2.2 h -- they are not on the mirror, so the origin cannot pull them and nothing they fix is live"
+  },
+  "screen_walk": {
+    "ran": true,
+    "state": "OK",
+    "outcome": "[screen-walk] walked 5 languages in 41s | [screen-walk] OK"
+  }
+}

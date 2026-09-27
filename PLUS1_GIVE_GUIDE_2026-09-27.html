@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>+1 Page — Giving Guide</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1b2333;--mut:#5b6475;--g:#15803d;--gbg:#dcfce7;--a:#b45309;--abg:#fef3c7;--r:#b91c1c;--rbg:#fee2e2;--navy:#1e3a5f;--line:#e3e6ee}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141c;--card:#171e2a;--ink:#e7ebf2;--mut:#9aa4b5;--gbg:#123a22;--abg:#3d2c0c;--rbg:#3f1515;--line:#2a3345;--navy:#8fb3e0;--g:#4ade80;--a:#fbbf24;--r:#f87171}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+.w{max-width:1000px;margin:0 auto;padding:24px 16px}
+h1{color:var(--navy);margin:0 0 4px;font-size:24px}.sub{color:var(--mut);margin:0 0 20px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;font-size:13px}
+.pill{padding:4px 10px;border-radius:99px;font-weight:700}
+.ok{background:var(--gbg);color:var(--g)}.half{background:var(--abg);color:var(--a)}.no{background:var(--rbg);color:var(--r)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;border-top:6px solid}
+.c.g{border-top-color:var(--g)}.c.a{border-top-color:var(--a)}.c.r{border-top-color:var(--r)}
+.c h2{margin:6px 0 8px;font-size:18px}
+ul{margin:6px 0;padding-left:18px}li{margin:3px 0}
+.steps{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--g);border-radius:14px;padding:16px;margin-top:18px}
+.steps h2{margin:0 0 8px;color:var(--navy);font-size:18px}
+ol{margin:0;padding-left:20px}ol li{margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}td,th{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600}.note{color:var(--mut);font-size:13px;margin-top:14px}
+</style></head><body><div class="w">
+<h1>+1 page — what you can give, and how</h1>
+<p class="sub">Checked on the live server, 27 September 2026.</p>
+<div class="legend"><span class="pill ok">Ready — a button on the +1 page</span><span class="pill half">Works, but no button yet</span><span class="pill no">Does not exist yet</span></div>
+<div class="grid">
+ <div class="c g"><span class="pill ok">Ready</span><h2>Tuppence allowances</h2>
+  <ul><li>Card: <b>First-lister bonus · Tuppence grant</b>.</li><li>Three kinds: first-lister bonus (once per person), tester grant, goodwill.</li><li>1 to 500T per grant.</li><li>Never expires and never counts as sales income.</li><li>Every grant is written to an audit log with your name.</li><li>Used so far: one 25T first-lister bonus and one 500T tester grant.</li></ul></div>
+ <div class="c a"><span class="pill half">No button</span><h2>Approvals</h2>
+  <ul><li>Confirm or reject a seller's ID document.</li><li>Approve or reject a licence / qualification claim.</li><li>Uphold a buyer's complaint (lowers the seller's Trust Score).</li><li>The server has all three, but only a technical call reaches them — nothing on the +1 page.</li></ul></div>
+ <div class="c r"><span class="pill no">Missing</span><h2>Services and plans</h2>
+  <ul><li>No way to give someone a paid plan or more listing slots for free.</li><li>No way to give free AI services to one person (a Tuppence grant does the same job today).</li><li>"Full access" accounts are fixed in code for your four family test accounts plus one more.</li></ul></div>
+</div>
+<div class="steps"><h2>How to give Tuppence — step by step</h2><ol>
+ <li>Open your dashboard and sign in with your admin PIN.</li>
+ <li>Click the <b>Launch Switch</b> tab (the +1 page).</li>
+ <li>Scroll to the card <b>First-lister bonus · Tuppence grant</b>. It lists real people who listed for the first time in the last 30 days, marked <i>no bonus yet</i> or <i>25T paid</i>.</li>
+ <li>Type part of the person's <b>name or email</b> (any email used in the app) and <b>choose</b> her from the list.</li>
+ <li>Check the box that appears: her name, plan, balance now, live listings, ID status and grants already given.</li>
+ <li>Enter the amount, choose the kind, click <b>Credit Tuppence</b>. The confirm shows her balance now and after.</li></ol>
+ <table><tr><th>Kind</th><th>When to use it</th><th>Rule</th></tr>
+ <tr><td>First-lister bonus</td><td>Thank-you to an early seller</td><td>Once per email; a second try is refused, not paid twice</td></tr>
+ <tr><td>Tester grant</td><td>Someone testing the app for you</td><td>Any number of times</td></tr>
+ <tr><td>Goodwill</td><td>Making up for a problem, or a favour</td><td>Any number of times</td></tr></table>
+ <p class="note">The person must already have an account. If your session has timed out, the card says so — reload and sign in again.</p></div>
+</div></body></html>

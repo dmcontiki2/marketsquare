@@ -27312,6 +27312,20 @@ def _paid_feed_gate_active():
         return True
 
 
+def _ai_is_tester(conn, email):
+    """TESTER-AI-OPEN-1 (RUL-189, David 27 Sep 2026: "they should be open to the tester for ever to
+    perform testing"). A tester is a superuser or anyone ever given a tester_grant. Testers may run
+    every paid AI feature on any plan, with no end date; only deliberate revocation ends it."""
+    try:
+        r = conn.execute("SELECT is_superuser FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if r and int(r["is_superuser"] or 0) == 1:
+            return True
+        return conn.execute("SELECT 1 FROM transactions WHERE LOWER(user_email)=? AND type='tester_grant' LIMIT 1",
+                            (email,)).fetchone() is not None
+    except Exception:
+        return False
+
+
 @app.post("/tuppence/ai-commit")
 def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key)):
     """Place a hold: balance check + negative 'ai_hold' row, atomically."""
@@ -27348,7 +27362,7 @@ def tuppence_ai_commit(payload: dict, _key: str = Depends(auth.require_api_key))
         # feed. Canon (ai_service_tiers note) says it is dormant while every paid feed is off; the
         # code enforced it anyway, so buyers could never run a report. It now bites only when a paid
         # feed or the paid-tier master switch is actually on (fails closed if flags cannot be read).
-        if ai_service_tiers.requires_paid_feed(function_id) and _paid_feed_gate_active():
+        if ai_service_tiers.requires_paid_feed(function_id) and _paid_feed_gate_active() and not _ai_is_tester(conn, email):  # RUL-189 testers for ever
             _trow = conn.execute(
                 "SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
             _stier = (_trow["seller_tier"] if _trow else "free") or "free"
