@@ -31883,5 +31883,33 @@ def rg_trust_words_1():
         return [(FAIL, "; ".join(bad[:6]))]
     return [(INFO, "evidence-strength labels only, the two standing lines present, four languages carried")]
 
+
+
+@entry("RG-0527", "GRANT-WHO-1: the +1 page Tuppence card shows WHO a grant goes to (name + current balance) and "
+       "lets David find a person by name, before he confirms -- today it takes a bare email only",
+       OPEN, fixed_on="2026-09-27",
+       scope="dashboard.server.html #ls-grant (lsGrant confirm) + a read-only admin lookup in bea_main.py. SCOPE: the "
+             "+1 grant card. CLASS: an operator control that asks for an identifier the operator does not carry "
+             "in his head -- David, 27 Sep 2026, typing 'admin': 'how do i identify the person i want to send it to?'",
+       ref="Found 27 Sep 2026 while crediting Marietjie (The Bee Lady). Blocked that session: bea_main.py held by "
+           "another lane's work lock. A new admin route also needs a QA Bot policy ruling before the deploy gate passes.")
+def rg_grant_who_1():
+    d = repo_file("dashboard.server.html")
+    if d is None:
+        return [(INFO, "NOT EVALUATED - dashboard.server.html not readable from here")]
+    i = d.find('id="ls-grant"')
+    seg = d[i:i + 6000] if i >= 0 else ""
+    bad = []
+    if "/admin/tuppence/lookup" not in d or "function lsWhoPick(" not in d:
+        bad.append("the grant card no longer looks the person up by name or email")
+    if "choose the person from the list" not in d or "Balance now '+_lsWho.balance" not in d:
+        bad.append("the grant can be sent without a picked person, or the confirm no longer shows name and balance")
+    bm = repo_file("bea_main.py") or ""
+    if '@app.get("/admin/tuppence/lookup")' not in bm or "def admin_tuppence_lookup(q: str = \"\", admin=Depends(_require_admin))" not in bm:
+        bad.append("the admin-only lookup route is gone or no longer admin-guarded")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the grant card finds a person by name or email and shows who, and balance, before crediting")]
+
 if __name__ == "__main__":
     sys.exit(main())

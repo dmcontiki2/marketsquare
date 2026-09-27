@@ -22322,6 +22322,40 @@ def admin_tuppence_grant(body: _TuppenceGrant, admin=Depends(_require_admin)):
     return {"granted": True, "already": False, "tx_id": tx_id, "amount": int(body.amount), "kind": kind,
             "email": email, "name": u["name"], "tier": u["seller_tier"], "balance": int(bal)}
 
+@app.get("/admin/tuppence/lookup")
+def admin_tuppence_lookup(q: str = "", admin=Depends(_require_admin)):
+    """GRANT-WHO-1 (David, 27 Sep 2026: 'how do i identify the person i want to send it to?').
+    Read-only. Finds up to 8 accounts by part of a name or email, and shows WHO each one is --
+    name, tier, verified ID, live listings, current balance, grants already given -- so the +1 grant
+    card never credits a bare email blind. Any email used in the app is findable here."""
+    q = (q or "").strip().lower()
+    if len(q) < 2:
+        return {"q": q, "people": []}
+    like = "%" + q.replace("%", "").replace("_", "") + "%"
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT email, name, seller_tier, id_verified_at, country, created_at FROM users "
+            "WHERE lower(email) LIKE ? OR lower(COALESCE(name,'')) LIKE ? "
+            "ORDER BY (lower(email) = ?) DESC, created_at DESC LIMIT 8", (like, like, q)).fetchall()
+        people = []
+        for r in rows:
+            em = (r["email"] or "").lower()
+            bal = conn.execute("SELECT COALESCE(SUM(amount),0) b FROM transactions WHERE lower(user_email)=?",
+                               (em,)).fetchone()["b"]
+            live = conn.execute("SELECT COUNT(*) n FROM listings WHERE lower(seller_email)=? "
+                                "AND (listing_status IS NULL OR listing_status='live')", (em,)).fetchone()["n"]
+            grants = [dict(x) for x in conn.execute(
+                "SELECT type AS kind, amount, created_at FROM transactions WHERE lower(user_email)=? "
+                "AND type IN ('first_lister_bonus','tester_grant','goodwill') ORDER BY id", (em,)).fetchall()]
+            people.append({"email": em, "name": r["name"] or "", "tier": r["seller_tier"] or "free",
+                           "id_verified": bool(r["id_verified_at"]), "country": r["country"] or "",
+                           "joined": (r["created_at"] or "")[:10], "live_listings": int(live or 0),
+                           "balance": int(bal or 0), "grants": grants})
+    finally:
+        conn.close()
+    return {"q": q, "people": people}
+
 @app.get("/admin/tuppence/recent-listers")
 def admin_recent_listers(days: int = 30, admin=Depends(_require_admin)):
     """Sellers whose FIRST live listing landed in the last N days, excluding demo/seed
