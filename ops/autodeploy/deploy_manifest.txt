@@ -107,6 +107,11 @@ database.py                | database.py
 storage.py                 | storage.py
 payments.py                | payments.py
 ai_service_tiers.py        | ai_service_tiers.py
+# FAIR-PRICE-LM-1 (27 Sep 2026): the resolvers the tier matrix depends on were never in this list -- the server
+# held a hand-copied older tier_resolvers.py, so a new tier row could never become ready. They ship with it now.
+tier_resolvers.py          | tier_resolvers.py
+value_benchmarks.py        | value_benchmarks.py
+feature_flags.py           | feature_flags.py
 ai_provider.py             | ai_provider.py
 # PHONE-KEY-1 (24 Sep 2026): the one SMS door (phone codes, key-seller nudges); fails dark without SMS_PROVIDER/SMS_TOKEN
 sms_provider.py            | sms_provider.py

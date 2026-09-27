@@ -90,7 +90,7 @@ def build_router(g):
     SECRET, ALGO = g["_JWT_SECRET"], g["_JWT_ALGO"]
     APP_URL = g["APP_URL"]
     session_email = g["_session_email"]
-    require_admin = g["_require_admin"]
+    require_admin = g["_require_admin_or_key"]   # the dashboard's admin token, or the server's admin key
     buzz_accepted = g["_buzz_accepted"]
     buzz_key = g["_buzz_key"]
     buzz_pair = g["_buzz_pair"]
@@ -110,6 +110,7 @@ def build_router(g):
         conn.execute("""CREATE TABLE IF NOT EXISTS buzz_links (
             email TEXT PRIMARY KEY, nonce TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_buzz_links_nonce ON buzz_links(nonce)")
 
     def _decode(token):
         try:
@@ -165,7 +166,8 @@ def build_router(g):
             name = buzz_name(conn, me)
         finally:
             conn.close()
-        tok = jwt.encode({"purpose": "buzz_join", "e": me, "n": nonce}, SECRET, algorithm=ALGO)
+        # the link carries ONLY a random nonce -- never her address; the server looks her up by it
+        tok = jwt.encode({"purpose": "buzz_join", "n": nonce}, SECRET, algorithm=ALGO)
         return {"url": APP_URL + "/join/" + tok, "name": name}
 
     # ── shared page: who is asking, and what the link does ───────────────────
@@ -182,10 +184,10 @@ def build_router(g):
                     raise HTTPException(status_code=400, detail="That invitation is not valid.")
                 return {"kind": "tester", "name": _first(row["label"], ""), "amount": int(row["amount"]),
                         "used": bool(row["claimed_by"])}
-            em = (c.get("e") or "").lower()
-            row = conn.execute("SELECT nonce FROM buzz_links WHERE email=?", (em,)).fetchone()
-            if not row or row["nonce"] != c.get("n"):
+            row = conn.execute("SELECT email FROM buzz_links WHERE nonce=?", (c.get("n"),)).fetchone()
+            if not row:
                 raise HTTPException(status_code=400, detail="This link has been replaced by a newer one - ask for the new link.")
+            em = row["email"]
             return {"kind": "buzz", "name": _first(buzz_name(conn, em), em)}
         finally:
             conn.close()
@@ -226,9 +228,9 @@ def build_router(g):
                 return {"kind": "tester", "granted": amt, "balance": int(bal or 0)}
 
             # buzz_join
-            seller = (c.get("e") or "").lower()
-            row = conn.execute("SELECT nonce FROM buzz_links WHERE email=?", (seller,)).fetchone()
-            if not row or row["nonce"] != c.get("n"):
+            row = conn.execute("SELECT email FROM buzz_links WHERE nonce=?", (c.get("n"),)).fetchone()
+            seller = (row["email"] if row else "").lower()
+            if not row:
                 raise HTTPException(status_code=400, detail="This link has been replaced by a newer one - ask for the new link.")
             if seller == me:
                 raise HTTPException(status_code=400, detail="This is your own Buzz link - send it to your regulars.")
