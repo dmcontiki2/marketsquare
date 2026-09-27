@@ -24198,7 +24198,8 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
         site = (str(cp.get("site") or "") or _wc_norm(url).split("/")[0])[:40]
         kept.append({"title": str(cp.get("title") or "")[:80], "zar": zar, "site": site, "url": url})
     if len(kept) < 3:
-        _log.info("FAIR-PRICE-WEB-1: %r -> %d named comparables (need 3) - nothing charged", title[:60], len(kept))
+        _log.info("FAIR-PRICE-WEB-1: %r -> %d named comparables (need 3; %d proposed, %d search pages, %d chars) - nothing charged",
+                  title[:60], len(kept), len(comps), len(seen), len(text or ""))
         return None
     vals = sorted(k["zar"] for k in kept)
     today = datetime.now(timezone.utc).strftime("%d %b %Y")
