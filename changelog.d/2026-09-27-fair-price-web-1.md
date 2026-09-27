@@ -1,0 +1,3 @@
+### FAIR-PRICE-WEB-1 (RG-0539) - 2026-09-27
+- "Is this a fair price?" (1T) on Local Market, and on Collectors items with no catalogue match, now works without eBay: comparable asking prices read on named pages. Only pages the search itself returned count, at least three are needed, the band is our own arithmetic, and nothing is charged otherwise. David, 27 Sep 2026: "Named source definitely, the users will pay Tuppence for it - not for a guess".
+- Live proof: Local Market honey #426 -> 8 comparables on named sites (Superhub, PriceCheck, Online Health Shop, Bryanston Organic Market, Truffle Pig Pantry, Honey Pot...), R75-R120, median R96, 1T charged.

@@ -32233,5 +32233,32 @@ def rg_ai_utm_1():
         return [(FAIL, "AI report links show '?utm_source=openai' again (aiUtm not applied in aiMd/aiShare)")]
     return [(INFO, "report links carry no provider tag")]
 
+@entry("RG-0539", "FAIR-PRICE-WEB-1: the 1T 'Is this a fair price?' on Local Market and Collectors (no catalogue, no eBay) "
+       "uses comparable asking prices READ on named pages -- only pages the search itself returned, at least three, "
+       "band computed by us -- and charges nothing otherwise",
+       OPEN, fixed_on="2026-09-27",
+       scope="bea_main.py _web_comps_band + _wc_norm (called from _fair_price_resolve after the eBay fallback); "
+             "ai_provider.web_search_json (the one Responses call, through the seam, RG-0017); tier_resolvers.creds_from_env "
+             "'web' readiness for collectors/local_market. CLASS: a price the buyer pays for must have a named source.",
+       ref="David 27 Sep 2026: 'Named source definitely, the users will pay Tuppence for it - not for a guess'. Live: Local "
+           "Market honey #426 -> 8 comparables on named sites, R75-R120, median R96, 1T charged.")
+def rg_fair_price_web_1():
+    b = repo_file("bea_main.py"); ap = repo_file("ai_provider.py"); tr = repo_file("tier_resolvers.py")
+    if None in (b, ap, tr):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = b.find("async def _web_comps_band("); seg = b[i:i + 6000] if i >= 0 else ""
+    if not seg or "not in seen" not in seg or "len(kept) < 3" not in seg:
+        bad.append("the web comparables accept a page the search did not return, or fewer than three")
+    if "api.openai.com" in b:
+        bad.append("bea_main.py calls the vendor directly instead of ai_provider.web_search_json")
+    if "def web_search_json(" not in ap:
+        bad.append("ai_provider lost web_search_json")
+    if '"web":' not in tr or 'creds.get("web")' not in tr:
+        bad.append("Local Market / Collectors no longer light the check from named web sources")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "fair price from named pages only, 3+, our arithmetic, nothing charged otherwise")]
+
 if __name__ == "__main__":
     sys.exit(main())
