@@ -32219,11 +32219,12 @@ def rg_ripple_walk_3():
 
 @entry("RG-0538", "AI-UTM-1: an AI report's source links no longer carry '?utm_source=openai' -- the web-search lane "
        "tags every cited URL with the provider's name, and the app names no AI model or provider to its users",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="ms.js aiUtm() applied in aiMd (shown, attached and printed reports) and aiShare (shared text). "
              "CLASS: a provider's tracking tag leaking through third-party URLs in generated content.",
        ref="Ripple progress re-run, 27 Sep 2026: Jacques's reopened report linked Strauss & Co lots as "
-           "'...?utm_source=openai'. LOCK after the rendered check.")
+           "'...?utm_source=openai'. LOCKED 27 Sep after the rendered check on live trustsquare.co (015e549): Jacques "
+           "reopened the report from My reports; both Strauss & Co links end at the lot, no provider tag.")
 def rg_ai_utm_1():
     js = repo_file("ms.js")
     if js is None:
