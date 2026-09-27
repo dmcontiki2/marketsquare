@@ -31887,12 +31887,14 @@ def rg_trust_words_1():
 
 @entry("RG-0527", "GRANT-WHO-1: the +1 page Tuppence card shows WHO a grant goes to (name + current balance) and "
        "lets David find a person by name, before he confirms -- today it takes a bare email only",
-       OPEN, fixed_on="2026-09-27",
+       LOCKED, fixed_on="2026-09-27",
        scope="dashboard.server.html #ls-grant (lsGrant confirm) + a read-only admin lookup in bea_main.py. SCOPE: the "
              "+1 grant card. CLASS: an operator control that asks for an identifier the operator does not carry "
              "in his head -- David, 27 Sep 2026, typing 'admin': 'how do i identify the person i want to send it to?'",
        ref="Found 27 Sep 2026 while crediting Marietjie (The Bee Lady). Blocked that session: bea_main.py held by "
-           "another lane's work lock. A new admin route also needs a QA Bot policy ruling before the deploy gate passes.")
+           "another lane's work lock, then built the same session. 34b9f2b refused by the stranger test (route undeclared); "
+           "76b6a90 live 07:42Z: lookup answers 401 to a stranger, served dashboard.html carries the card. The card itself "
+           "is behind David's PIN sign-in and was not clicked through by Claude.")
 def rg_grant_who_1():
     d = repo_file("dashboard.server.html")
     if d is None:
