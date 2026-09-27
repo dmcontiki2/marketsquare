@@ -24218,7 +24218,9 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
         if k["site"] not in names:
             names.append(k["site"])
     prov = ("Asking prices of %d comparable items read on %s on %s: " % (len(kept), ", ".join(names[:5]), today)
-            + "; ".join("%s R%s (%s)" % (k["site"], format(k["zar"], ",.0f"), k["url"]) for k in kept[:6]))
+            + "; ".join("%s R%s (%s)" % (k["site"], format(k["zar"], ",.0f"), _wc_norm(k["url"]).split("/")[0])
+                        for k in kept[:6]))   # the page's own site, readable on a phone; full addresses in the log
+    _log.info("FAIR-PRICE-WEB-1 sources for %r: %s", title[:60], " | ".join(k["url"] for k in kept))
     return {"n": len(kept), "low": vals[0], "high": vals[-1], "median": _st.median(vals),
             "provenance": prov, "comps": kept}
 
