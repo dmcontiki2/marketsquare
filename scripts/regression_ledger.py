@@ -32164,5 +32164,26 @@ def rg_ripple2_rul191():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "Buzz link, tester invitation, My reports + attach, 1T fair price on Collectors/Local Market, several areas -- repo")]
 
+@entry("RG-0536", "EMAIL-ANCHOR-1: e-mail is every new account's anchor -- Quick offers Email (and Phone only while SMS "
+       "is switched on); the no-email WhatsApp-link key is dormant until WhatsApp is subscribed; existing link keys work",
+       OPEN, fixed_on="2026-09-27",
+       scope="quick.html (+ genie/HARNESS.html) QUICK_LINK_KEY_ON=false, sms_unavailable falls back to e-mail; bea_main.py "
+             "quick_publish refuses a NEW link key while LINK_KEY_NEW_ON is False. Direction, not a new rule: WhatsApp is "
+             "on the plan; flip both flags when it is subscribed.",
+       ref="David 27 Sep 2026: 'email is the anchor, whatsapp is being planned and is on the plan, but until then we need to "
+           "stick to the email'. Amends the RUL-167 door; /k/<secret> for existing keys unchanged.")
+def rg_email_anchor_1():
+    q = repo_file("quick.html"); b = repo_file("bea_main.py")
+    if q is None or b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "var QUICK_LINK_KEY_ON = false;" not in q or "setMode('link')" in q:
+        bad.append("Quick offers (or falls back to) the no-email WhatsApp-link key again while WhatsApp is on hold")
+    if "LINK_KEY_NEW_ON = False" not in b or 'key_mode == "link" and not LINK_KEY_NEW_ON' not in b:
+        bad.append("the server mints new no-email link keys again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "new accounts anchor on e-mail; the WhatsApp-link key is dormant until WhatsApp is subscribed")]
+
 if __name__ == "__main__":
     sys.exit(main())

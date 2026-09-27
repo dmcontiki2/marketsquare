@@ -1,0 +1,2 @@
+### EMAIL-ANCHOR-1 (RG-0536) - 2026-09-27
+- E-mail is the anchor for every new account (David, 27 Sep 2026: "email is the anchor, whatsapp is being planned and is on the plan, but until then we need to stick to the email"). Quick offers Email, and Phone only while SMS is switched on; the no-email WhatsApp-link key is dormant (QUICK_LINK_KEY_ON / LINK_KEY_NEW_ON) until WhatsApp is subscribed. Existing link keys keep working.

@@ -4607,6 +4607,11 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         Listing(**{k: v for k, v in _probe.items() if k in Listing.__fields__})
     except Exception as exc:
         raise HTTPException(status_code=422, detail="That listing is missing something: %s" % str(exc)[:160])
+    # EMAIL-ANCHOR-1 (David 27 Sep 2026: "email is the anchor, whatsapp is being planned and is on the plan, but until then
+    # we need to stick to the email"): no NEW private-link (no-email) accounts while WhatsApp is on hold. Existing link keys
+    # (/k/<secret>) keep working. Flip LINK_KEY_NEW_ON when WhatsApp is subscribed.
+    if not sess and key_mode == "link" and not LINK_KEY_NEW_ON:
+        raise HTTPException(status_code=422, detail="Please use your email address - it is how buyers and TrustSquare reach you.")
     if not sess and key_mode == "link":
         # LINK-KEY-1 (RUL-167, David 24 Sep 2026): no e-mail -- the private link IS her key. The key
         # account is created first so the draft has an owner; the secret goes back to her once and only
@@ -7972,6 +7977,9 @@ def _shown_name(name, email):
     if _is_key_identity(email):
         return None if (not n or re.match(r"^w-[0-9a-f]{6,}$", n, re.I)) else n
     return n or (email or "").split("@")[0]
+
+LINK_KEY_NEW_ON = False   # EMAIL-ANCHOR-1: new no-email (link-key) accounts stay off until WhatsApp is subscribed
+
 
 def _new_key_identity() -> str:
     import secrets as _sk
