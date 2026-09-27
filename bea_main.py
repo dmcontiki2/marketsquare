@@ -304,14 +304,40 @@ def _demand_norm_category(raw):
     return None
 
 
-EULA_CURRENT_VERSION = "1.18"
-# The last version whose changes are MATERIAL (everyone who accepted an earlier one re-accepts once,
-# at her next Publish or Edit). v1.16 added s3.8 Buzz. Raise this ONLY when David marks a version
-# material; a non-material version just bumps EULA_CURRENT_VERSION.
-EULA_MATERIAL_VERSION = "1.16"
-EULA_MATERIAL_DATE = "2026-09-14"          # the day EULA_MATERIAL_VERSION went live
-EULA_MATERIAL_NOTE = ("Since you last accepted, the Terms added Section 3.8 (Buzz), named your data "
-                      "rights by country (v1.17) and updated the AI disclosure (v1.18).")
+EULA_CURRENT_VERSION = "1.19"
+# The last version whose changes are MATERIAL (everyone who accepted an earlier one re-accepts once, at her next
+# Publish or Edit -- and, from v1.19, a Buyer at her next introduction request or top-up). Raise it ONLY when David
+# marks a version material; a non-material version just bumps EULA_CURRENT_VERSION.
+# EULA-1.19 (David, 26 Sep 2026: "Publish; all re-accept"): v1.19 is material. Clause 15.1 promises an email and an
+# in-app notice at least 14 days before a material change takes effect, so the switch is DATED: until
+# EULA_V119_EFFECTIVE the material version stays 1.16 and nobody is parked; from that day it is 1.19. New
+# acceptances from publication on are already of 1.19 (the trigger stamps EULA_CURRENT_VERSION), so only accounts
+# that accepted an earlier text are asked again.
+EULA_V119_EFFECTIVE = "2026-10-12"
+EULA_V119_SUMMARY = ("They now say exactly how TrustSquare works: 1 Tuppence is held when you request an "
+                     "introduction and returned in full if the seller declines or does not answer within 96 hours; "
+                     "a seller's free ID check comes before any introduction; a Property listing takes one buyer at "
+                     "a time; Local Market sellers pay 1T when the first buyer asks; buyers accept the Terms once; "
+                     "which identity checks we record (never your bank details); what AI help costs; and country "
+                     "rules for Kenya and Namibia.")
+_EULA_MATERIAL_STEPS = (
+    ("1.16", "2026-09-14", "Since you last accepted, the Terms added Section 3.8 (Buzz), named your data "
+                           "rights by country (v1.17) and updated the AI disclosure (v1.18)."),
+    ("1.19", EULA_V119_EFFECTIVE, "Since you last accepted, the Terms changed (version 1.19). " + EULA_V119_SUMMARY),
+)
+
+
+def _eula_material():
+    """(version, date, note) of the material version in force TODAY -- the last step whose date has come."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    cur = _EULA_MATERIAL_STEPS[0]
+    for step in _EULA_MATERIAL_STEPS:
+        if today >= step[1]:
+            cur = step
+    return cur
+
+
+EULA_MATERIAL_VERSION, EULA_MATERIAL_DATE, EULA_MATERIAL_NOTE = _eula_material()   # boot-time snapshot (read-only)
 
 
 def _eula_vkey(v):
@@ -328,9 +354,10 @@ def _eula_apply_material(conn):
     no recorded version are dated: on/after EULA_MATERIAL_DATE they saw the material text, and are
     stamped with it. Staff/seed accounts (@trustsquare.co, @example.com, superusers) are left alone:
     their adverts are platform content, not a person's agreement. Idempotent."""
+    _mv, _md, _mn = _eula_material()
     conn.execute("""UPDATE users SET eula_version = ? WHERE eula_accepted_at IS NOT NULL
                     AND (eula_version IS NULL OR eula_version = '') AND eula_accepted_at >= ?""",
-                 (EULA_MATERIAL_VERSION, EULA_MATERIAL_DATE))
+                 (_mv, _md))
     rows = conn.execute("""SELECT id, eula_accepted_at, eula_version FROM users
                            WHERE eula_accepted_at IS NOT NULL AND COALESCE(is_superuser, 0) = 0
                              AND LOWER(email) NOT LIKE '%@trustsquare.co'
@@ -338,15 +365,55 @@ def _eula_apply_material(conn):
                              AND LOWER(email) NOT LIKE '%.invalid'""").fetchall()
     n = 0
     for r in rows:
-        if _eula_vkey(r["eula_version"]) < _eula_vkey(EULA_MATERIAL_VERSION):
+        if _eula_vkey(r["eula_version"]) < _eula_vkey(_mv):
             conn.execute("UPDATE users SET eula_prev_accepted_at = eula_accepted_at, "
                          "eula_prev_version = COALESCE(eula_version, 'pre-' || ?), "
                          "eula_accepted_at = NULL, eula_version = NULL WHERE id = ?",
-                         (EULA_MATERIAL_VERSION, r["id"]))
+                         (_mv, r["id"]))
             n += 1
     if n:
-        _log.info("EULA-VERSION-1: %d account(s) re-accept v%s at their next publish/edit", n, EULA_MATERIAL_VERSION)
+        _log.info("EULA-VERSION-1: %d account(s) re-accept v%s at their next publish/edit", n, _mv)
     return n
+
+
+def _eula_meta_sync(conn):
+    """Keep eula_meta (read by the version-stamp trigger) on the current text and the material version in force,
+    and park older acceptances the day a dated material version comes into force. Idempotent; called at boot and
+    by the daily sweep, so a dated switch lands within a day without a deploy."""
+    _mv, _md, _mn = _eula_material()
+    conn.execute("INSERT INTO eula_meta (id, current_version, material_version, material_note) "
+                 "VALUES (1, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET current_version=excluded.current_version, "
+                 "material_version=excluded.material_version, material_note=excluded.material_note",
+                 (EULA_CURRENT_VERSION, _mv, _mn))
+    parked = _eula_apply_material(conn)      # idempotent: parks only acceptances older than the version in force
+    return {"current": EULA_CURRENT_VERSION, "material": _mv, "parked": parked}
+
+
+# ── BUYER-TERMS-1 (David, 26 Sep 2026: "a one-tap acceptance for Buyers at their first introduction request or first
+# Tuppence top-up") -- before, only Sellers ever accepted the Terms, so "by accepting this EULA" never bound a Buyer.
+# Every money- or contact-committing step a Buyer takes now needs an accepted Terms on her account, recorded with its
+# time and version exactly like a Seller's (the same eula_accepted_at + trigger). Staff and seed accounts are exempt,
+# as in _eula_apply_material.
+TERMS_REQUIRED_DETAIL = {"code": "terms_required",
+                         "message": "Please read and accept the TrustSquare Terms first — one tap, once."}
+
+
+def _terms_exempt(email: str) -> bool:
+    em = (email or "").strip().lower()
+    return (em.endswith("@trustsquare.co") or em.endswith("@example.com") or em.endswith(".invalid")
+            or em.endswith("@key.trustsquare.co"))
+
+
+def _terms_missing(conn, email: str) -> bool:
+    """True when this account must accept the Terms before committing (no acceptance on record)."""
+    em = (email or "").strip().lower()
+    if not em or "@" not in em or _terms_exempt(em):
+        return False
+    row = conn.execute("SELECT eula_accepted_at, COALESCE(is_superuser, 0) AS su FROM users WHERE LOWER(email) = ?",
+                       (em,)).fetchone()
+    if row and int(row["su"] or 0):
+        return False
+    return not (row and row["eula_accepted_at"])
 
 
 # PRICE-NUM-1 (25 Sep 2026 inspection, backend-10): the numeric mirror of a price is its FIRST amount, with a k / m
@@ -456,6 +523,9 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE listings ADD COLUMN seller_email TEXT")
     if "updated_at" not in listing_cols:
         conn.execute("ALTER TABLE listings ADD COLUMN updated_at TEXT")
+    # PROPERTY-ONE-1 (27 Sep 2026): which pending introduction paused a Property listing (NULL = not system-paused)
+    if "auto_paused_intro_id" not in listing_cols:
+        conn.execute("ALTER TABLE listings ADD COLUMN auto_paused_intro_id INTEGER")
     # ── Category-specific edit fields (ListingUpdate) ────────────
     for _col, _type in [
         ("trust_score",  "INTEGER"),
@@ -1526,10 +1596,6 @@ def run_migrations(conn):
             conn.execute("ALTER TABLE users ADD COLUMN %s TEXT" % _c)
     conn.execute("CREATE TABLE IF NOT EXISTS eula_meta (id INTEGER PRIMARY KEY CHECK (id = 1), "
                  "current_version TEXT NOT NULL, material_version TEXT NOT NULL, material_note TEXT)")
-    conn.execute("INSERT INTO eula_meta (id, current_version, material_version, material_note) "
-                 "VALUES (1, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET current_version=excluded.current_version, "
-                 "material_version=excluded.material_version, material_note=excluded.material_note",
-                 (EULA_CURRENT_VERSION, EULA_MATERIAL_VERSION, EULA_MATERIAL_NOTE))
     conn.execute("""CREATE TRIGGER IF NOT EXISTS trg_eula_version_stamp
                     AFTER UPDATE OF eula_accepted_at ON users
                     WHEN NEW.eula_accepted_at IS NOT NULL AND OLD.eula_accepted_at IS NULL
@@ -1539,7 +1605,13 @@ def run_migrations(conn):
                     AFTER INSERT ON users WHEN NEW.eula_accepted_at IS NOT NULL
                     BEGIN UPDATE users SET eula_version = (SELECT current_version FROM eula_meta WHERE id = 1)
                           WHERE id = NEW.id; END""")
-    _eula_apply_material(conn)
+    conn.execute("""CREATE TABLE IF NOT EXISTS eula_notices (email TEXT NOT NULL, version TEXT NOT NULL,
+                    sent_at TEXT NOT NULL, outcome TEXT, PRIMARY KEY (email, version))""")
+    _eula_meta_sync(conn)
+    # KENYA-CONSENT-1 (27 Sep 2026): the explicit consent Kenya's Data Protection Act s.49 asks for before sensitive
+    # personal data (an identity document, property details) is processed outside Kenya -- when it was given.
+    if "xborder_consent_at" not in user_cols_eula:
+        conn.execute("ALTER TABLE users ADD COLUMN xborder_consent_at TEXT")
     # E2E-HMI-1: the seller profile (headline, about, region, tags) lived only in one browser.
     if "profile_json" not in user_cols_eula:
         conn.execute("ALTER TABLE users ADD COLUMN profile_json TEXT")
@@ -4503,6 +4575,16 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     price-basis rule, the free-plan slot limit (a full plan returns 402 and the advert stays a draft)."""
     if not body.accept_terms:
         raise HTTPException(status_code=400, detail="The Save/Publish button must be tapped to send the listing.")
+    # COUNTRY-OPEN-1: no accounts or listings are made for a coming-soon country (Quick shows it before this).
+    _qcc = (str((body.listing or {}).get("country") or (body.listing or {}).get("cc") or "")).strip().upper()
+    if not _qcc:
+        _qc = database.get_db()
+        try:
+            _qcc = _city_country(_qc, (body.listing or {}).get("city"))
+        finally:
+            _qc.close()
+    if _qcc in COMING_SOON_COUNTRIES:
+        raise HTTPException(status_code=409, detail=_coming_soon_detail(_qcc, "listings"))
     sess = _session_email(ts_user)
     key_mode = (body.key_mode or "email").strip().lower()
     key_secret = None
@@ -5054,6 +5136,14 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
                 "SELECT trust_score, eula_accepted_at, is_superuser FROM users WHERE email = ?",
                 (email,)).fetchone()
     user_trust = int(user_row["trust_score"] or 0) if user_row else 0
+    _pcc = _listing_country(conn, existing)
+    if _pcc in COMING_SOON_COUNTRIES and not is_super:   # COUNTRY-OPEN-1: the draft is kept, nothing goes live
+        conn.close()
+        raise HTTPException(status_code=409, detail=_coming_soon_detail(_pcc, "listings") + " Your draft is kept.")
+    if (_pcc == "KE" and (existing["category"] or "").strip().lower() == "property" and not is_super
+            and not _ke_consent_given(conn, email)):   # KENYA-CONSENT-1: property details leave Kenya on publish
+        conn.close()
+        raise HTTPException(status_code=428, detail=CONSENT_REQUIRED_DETAIL)
 
     # ── CARS-SPEC-1 (D3): vehicle attestation gate ────────────────────────
     # 409 ONLY for cars drafts that actually carry spec data and are not
@@ -5634,7 +5724,8 @@ def geo_get_countries():
         "SELECT iso2, name, region_label FROM geo_countries WHERE active=1 ORDER BY name"
     ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    # COUNTRY-OPEN-1: the list says which countries are coming soon (browse only).
+    return [dict(dict(r), coming_soon=(str(r["iso2"] or "").upper() in COMING_SOON_COUNTRIES)) for r in rows]
 
 @app.get("/geo/regions")
 def geo_get_regions(country: str = "ZA"):
@@ -7060,7 +7151,14 @@ def get_user(email: str, _key: str = Depends(auth.require_api_key),
     # EULA-VERSION-1: a returning seller whose acceptance was parked is told what changed.
     if not data.get("eula_accepted_at") and data.get("eula_prev_accepted_at"):
         data["eula_reaccept"] = True
-        data["eula_changes"] = EULA_MATERIAL_NOTE
+        data["eula_changes"] = _eula_material()[2]
+    # EULA-1.19: an account that accepted an earlier text is told in the app, before the change takes effect
+    # (clause 15.1: at least 14 days' notice).
+    elif (data.get("eula_accepted_at") and _eula_vkey(data.get("eula_version")) < _eula_vkey("1.19")
+          and datetime.now(timezone.utc).strftime("%Y-%m-%d") < EULA_V119_EFFECTIVE):
+        data["eula_notice"] = {"version": "1.19", "effective": EULA_V119_EFFECTIVE,
+                               "summary": "On 12 October 2026 the TrustSquare Terms change. " + EULA_V119_SUMMARY,
+                               "url": "/terms"}
     # C1/H2 (audit 16 Jul 2026): never expose identity-document internals over this
     # public-by-email read. Hashed ID number, legal ID name and the AI match score
     # are PII; verified STATUS still travels via id_verified_at.
@@ -7596,6 +7694,7 @@ async def upload_user_photo(email: str, file: UploadFile = File(...),
 
 @app.post("/users/{email}/upload-id")
 async def upload_user_id(email: str, file: UploadFile = File(...),
+                         xborder_consent: str = Form(default=""),
                          _key: str = Depends(auth.require_api_key),
                          ts_user: str = Cookie(default=None),
                          x_admin_key: str = Header(default=None)):
@@ -7617,6 +7716,19 @@ async def upload_user_id(email: str, file: UploadFile = File(...),
         raise HTTPException(status_code=400, detail="File too small — please upload a clear photo")
 
     email = email.lower().strip()
+    # KENYA-CONSENT-1: a Kenyan seller consents before her identity document is stored outside Kenya.
+    _kc = database.get_db()
+    try:
+        if str(xborder_consent).strip().lower() in ("1", "true", "yes"):
+            _kc.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING", (email,))
+            _kc.execute("UPDATE users SET xborder_consent_at = COALESCE(xborder_consent_at, ?) WHERE LOWER(email) = ?",
+                        (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), email))
+            _kc.commit()
+        _need_ke = _user_in_kenya(_kc, email) and not _ke_consent_given(_kc, email)
+    finally:
+        _kc.close()
+    if _need_ke:
+        raise HTTPException(status_code=428, detail=CONSENT_REQUIRED_DETAIL)
 
     # TS-0012: this path stores the RAW bytes (no re-encode), so a HEIC must be
     # converted here or ops/vision would receive an unviewable file.
@@ -8318,6 +8430,125 @@ def intro_relay_inbound(req: _RelayInbound, x_relay_secret: str = Header(default
     return {"relayed": True}
 
 
+# ── COUNTRY-OPEN-1 (David, 27 Sep 2026: "we decided to not add Germany and Botswana for now, please proceed with your
+# option 1") -- Namibia and Kenya are open with their Country Schedules (Terms v1.19). Germany, Botswana and Mozambique
+# stay in the country list as COMING SOON: browsing is open, but nothing goes live there and no introduction is
+# requested there until David funds their steps (Germany: a company phone number, an EU representative, withdraw and
+# cancel buttons; Botswana: Pula prices, a tick per liability term, a local representative, a copy of data kept
+# there; Mozambique: prices in meticais and a Portuguese version). Remove a code here to open that country.
+COMING_SOON_COUNTRIES = {"DE": "Germany", "BW": "Botswana", "MZ": "Mozambique"}
+
+
+def _city_country(conn, city_name) -> str:
+    """ISO code of a city name when the geo table knows exactly one country for it, else ''."""
+    try:
+        rows = conn.execute("SELECT DISTINCT UPPER(r.country_iso2) AS cc FROM geo_cities c "
+                            "JOIN geo_regions r ON r.id = c.region_id WHERE LOWER(c.name) = LOWER(?)",
+                            ((city_name or "").strip(),)).fetchall()
+        return rows[0]["cc"] if len(rows) == 1 else ""
+    except Exception:
+        return ""
+
+
+def _listing_country(conn, listing) -> str:
+    """The listing's country: its own country field (Adventures), its geo city, or its city name."""
+    try:
+        d = dict(listing)
+    except Exception:
+        return ""
+    cc = (d.get("country") or "").strip().upper()
+    if len(cc) == 2:
+        return cc
+    gid = d.get("geo_city_id")
+    if gid:
+        try:
+            r = conn.execute("SELECT UPPER(r.country_iso2) AS cc FROM geo_cities c JOIN geo_regions r "
+                             "ON r.id = c.region_id WHERE c.id = ?", (gid,)).fetchone()
+            if r and r["cc"]:
+                return r["cc"]
+        except Exception:
+            pass
+    return _city_country(conn, d.get("city"))
+
+
+def _coming_soon_detail(cc: str, what: str) -> str:
+    return ("TrustSquare opens in %s soon — %s there start when it does." % (COMING_SOON_COUNTRIES.get(cc, cc), what))
+
+
+# ── KENYA-CONSENT-1 (David, 27 Sep 2026, option 1: "I build Kenya's consent tick") -- Kenya's Data Protection Act s.49
+# lets sensitive personal data (an identity document, property details) be processed outside Kenya only with the data
+# subject's consent; our servers are in the EU. A Kenyan seller gives it once, explicitly, before her ID document is
+# uploaded or a Kenyan property listing goes live; the time is kept on her account (users.xborder_consent_at).
+CONSENT_REQUIRED_DETAIL = {"code": "consent_required", "country": "KE",
+                           "message": "Kenya's data law asks for your consent before your ID or property details "
+                                      "are processed outside Kenya — one tick, once."}
+
+
+def _ke_consent_given(conn, email) -> bool:
+    try:
+        r = conn.execute("SELECT xborder_consent_at FROM users WHERE LOWER(email) = ?",
+                         ((email or "").strip().lower(),)).fetchone()
+        return bool(r and r["xborder_consent_at"])
+    except Exception:
+        return False
+
+
+def _user_in_kenya(conn, email) -> bool:
+    """True when any of her listings is in Kenya -- the one place the server knows her country from."""
+    try:
+        rows = conn.execute("SELECT * FROM listings WHERE LOWER(seller_email) = ? LIMIT 50",
+                            ((email or "").strip().lower(),)).fetchall()
+        return any(_listing_country(conn, r) == "KE" for r in rows)
+    except Exception:
+        return False
+
+
+@app.post("/users/{email}/xborder-consent")
+def give_xborder_consent(email: str, _key: str = Depends(auth.require_api_key),
+                         ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """KENYA-CONSENT-1: record the explicit consent, bound to her own session. Idempotent (the first time stands)."""
+    email = (_actor(ts_user, email, "xborder-consent", x_admin_key) or "").strip().lower()
+    if "@" not in email:
+        raise HTTPException(status_code=401, detail="Please sign in first.")
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING", (email,))
+        conn.execute("UPDATE users SET xborder_consent_at = COALESCE(xborder_consent_at, ?) WHERE LOWER(email) = ?",
+                     (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), email))
+        conn.commit()
+        return {"consent": True}
+    finally:
+        conn.close()
+
+
+# ── PROPERTY-ONE-1 (David, 26 Sep 2026: "One at a time"; canon A3; EULA 5.3; LISTING_STATE_MACHINE s3 (A)) ──
+# A Property listing takes one Buyer at a time: an introduction request pauses it (hidden from other buyers, no new
+# requests) and the listing goes live again the moment that request is resolved -- accepted, declined, or closed
+# unanswered at 96 hours. Until 27 Sep the server never paused anything while the Terms, the canon and the listing
+# screen all said it did. A Seller's own pause is never undone by this: resuming only touches a listing paused BY
+# that request (auto_paused_intro_id), and the Seller's pause/resume button clears the marker. Cars keep their queue.
+_COMMITMENT_CATEGORIES = ("property",)
+
+
+def _is_commitment_listing(listing) -> bool:
+    try:
+        return (listing["category"] or "").strip().lower() in _COMMITMENT_CATEGORIES
+    except Exception:
+        return False
+
+
+def _commitment_resume(conn, intro_id) -> int:
+    """Put back live a listing that THIS introduction paused. Runs on the caller's open transaction."""
+    try:
+        cur = conn.execute("UPDATE listings SET listing_status = 'live', auto_paused_intro_id = NULL, status_changed_at = ? "
+                           "WHERE auto_paused_intro_id = ? AND listing_status = 'paused'",
+                           (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), intro_id))
+        return cur.rowcount
+    except Exception as _cre:
+        _log.warning("PROPERTY-ONE-1: resume after intro %s failed: %s", intro_id, _cre)
+        return 0
+
+
 @app.post("/intros")
 def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
                  ts_user: str = Cookie(default=None)):
@@ -8330,6 +8561,9 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     listing_status = listing["listing_status"] if listing["listing_status"] else "live"
     if listing_status != "live":
         conn.close()
+        if listing_status == "paused" and _is_commitment_listing(listing) and listing["auto_paused_intro_id"]:
+            raise HTTPException(status_code=409, detail="The seller is answering another buyer about this property. "
+                                                        "It opens again as soon as they reply — within 4 days at most.")
         raise HTTPException(status_code=409, detail=f"Listing is not available for introductions (status: {listing_status})")
     # LM-PAID-GUARD-1 (25 Sep 2026 inspection, ts1-03): Local Market introductions are free for buyers and run through
     # /local-market/intro. A paid request on a Local Market advert (an app page opened from a link) would hold and then
@@ -8337,6 +8571,10 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     if (listing["category"] or "").strip().lower() in ("local_market", "local market"):
         conn.close()
         raise HTTPException(status_code=409, detail="Local Market introductions are free for buyers \u2014 open the listing in Local Market to ask.")
+    _lcc = _listing_country(conn, listing)
+    if _lcc in COMING_SOON_COUNTRIES:   # COUNTRY-OPEN-1
+        conn.close()
+        raise HTTPException(status_code=409, detail=_coming_soon_detail(_lcc, "introductions"))
     # Self-intro guard — buyer cannot intro their own listing
     if listing["seller_email"] and intro.buyer_email and        listing["seller_email"].lower() == intro.buyer_email.lower():
         conn.close()
@@ -8356,7 +8594,18 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     # and the ECT Act s44 argument ("until delivery it is only held, not spent") had no
     # implementation behind it. The hold is a real -1 ledger row, so the buyer sees the
     # commitment in their balance immediately, exactly as they were told.
+    # BUYER-TERMS-1: a Buyer accepts the Terms once, before her first introduction request -- nothing is held first.
+    if _terms_missing(conn, intro.buyer_email):
+        conn.close()
+        raise HTTPException(status_code=428, detail=TERMS_REQUIRED_DETAIL)
     _wallet_lock(conn)   # BUGSWEEP-24SEP: two requests at 1T both passed this check
+    # PROPERTY-ONE-1: re-read the status under the write lock -- two buyers tapping at once must not both get in.
+    if _is_commitment_listing(listing):
+        _st_now = conn.execute("SELECT listing_status FROM listings WHERE id = ?", (intro.listing_id,)).fetchone()
+        if not _st_now or (_st_now["listing_status"] or "live") != "live":
+            conn.rollback(); conn.close()
+            raise HTTPException(status_code=409, detail="The seller is answering another buyer about this property. "
+                                                        "It opens again as soon as they reply — within 4 days at most.")
     _hold_balance = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
         (intro.buyer_email,)).fetchone()["bal"]
@@ -8377,6 +8626,11 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
         "VALUES (?, 'intro_hold', -1, ?)",
         (intro.buyer_email, "Introduction requested · 1T held · listing #%s · intro #%s"
                             % (intro.listing_id, _new_intro_id)))
+    if _is_commitment_listing(listing):
+        # PROPERTY-ONE-1: this request now holds the listing; it goes live again when the request is resolved.
+        conn.execute("UPDATE listings SET listing_status = 'paused', auto_paused_intro_id = ?, status_changed_at = ? "
+                     "WHERE id = ? AND listing_status = 'live'",
+                     (_new_intro_id, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), intro.listing_id))
     if _notice.get("warn"):
         # Evidence that the buyer was told, and whether they confirmed it.
         try:
@@ -8968,6 +9222,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
             conn.rollback(); conn.close()
             raise HTTPException(status_code=409,
                                 detail="This introduction was just accepted elsewhere.")
+        _commitment_resume(conn, intro_id)   # PROPERTY-ONE-1: answered -- the listing opens to the next buyer
         if _lm:
             pass   # LM-ACCEPT-1: nothing to charge - the seller paid at request time (LM-T1)
         elif not _burn_on:
@@ -9062,6 +9317,39 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
                 "seller_unreachable": True, "charged": False}
     return {"message": "Introduction accepted — 1T charged"}
 
+@app.post("/intros/{intro_id}/withdraw")
+def withdraw_intro(intro_id: int, ts_user: str = Cookie(default=None)):
+    """INTRO-WITHDRAW-1 (27 Sep 2026). Terms 5.4: before the Seller accepts, the Buyer may withdraw her request; only a
+    hold was placed, so it is released in full and nothing is burned. The only way was an email to support, and no tool
+    performed it -- a Property listing she had paused (PROPERTY-ONE-1) would have stayed closed to every other buyer for
+    up to 96 hours. Only the Buyer, signed in as herself; the release is the same exactly-once release as a decline."""
+    me = _session_email(ts_user)
+    if not me:
+        raise HTTPException(status_code=401, detail="Please sign in to withdraw your request.")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT buyer_email FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Introduction not found.")
+        if (row["buyer_email"] or "").strip().lower() != me:
+            raise HTTPException(status_code=403, detail="Only the buyer who asked can withdraw this request.")
+        _wallet_lock(conn)
+        upd = conn.execute("UPDATE intro_requests SET status = 'withdrawn' WHERE id = ? AND status = 'pending'",
+                           (intro_id,))
+        if upd.rowcount != 1:
+            st = conn.execute("SELECT status FROM intro_requests WHERE id = ?", (intro_id,)).fetchone()
+            conn.rollback()
+            if st and (st["status"] or "") == "accepted":
+                raise HTTPException(status_code=409, detail="The seller has already accepted — the introduction is made.")
+            raise HTTPException(status_code=409, detail="This request is already closed.")
+        released = _release_intro_hold(conn, intro_id, "withdrawn by the buyer")
+        _commitment_resume(conn, intro_id)   # PROPERTY-ONE-1: the property opens to the next buyer
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "released": bool(released)}
+
+
 @app.post("/intros/{intro_id}/hired")
 def intro_hired(intro_id: int, ts_user: str = Cookie(default=None)):
     """RUL-142: the BUYER of an accepted introduction confirms they actually hired the seller.
@@ -9138,6 +9426,7 @@ def decline_intro(intro_id: int, background_tasks: BackgroundTasks,
     # INTRO-HOLD-1: a declined introduction returns the hold in full, as promised.
     if _dupd.rowcount == 1:
         _release_intro_hold(conn, intro_id, "declined by seller")
+        _commitment_resume(conn, intro_id)   # PROPERTY-ONE-1: answered -- the listing opens to the next buyer
     conn.commit()
     if _dupd.rowcount != 1:
         conn.close()
@@ -9217,6 +9506,14 @@ def _paystack_paid_enough(data, expected_rands, ref=""):
 
 @app.post("/payment/initialize")
 def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, callback_url: str = ""):
+    # BUYER-TERMS-1: accepted Terms before the first Tuppence top-up (a positive act before money is committed).
+    _tc = database.get_db()
+    try:
+        _need_terms = _terms_missing(_tc, email)
+    finally:
+        _tc.close()
+    if _need_terms:
+        raise HTTPException(status_code=428, detail=TERMS_REQUIRED_DETAIL)
     # FX-LIVE-1 (RUL-022): Tuppence is USD-canon ($2/T); the ZAR charge floats on
     # the live rate (12h-cached, parachute-backed) — the R36 hardcode is retired.
     amount_rands = usd_to_zar_amount(tuppence * 2)
@@ -9470,6 +9767,14 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
         raise HTTPException(status_code=400,
                             detail="The Agency plan is free — no payment needed. "
                                    "Apply via agency verification instead.")
+    # BUYER-TERMS-1: nobody pays for a plan before accepting the Terms.
+    _tc = database.get_db()
+    try:
+        _need_terms = _terms_missing(_tc, email)
+    finally:
+        _tc.close()
+    if _need_terms:
+        raise HTTPException(status_code=428, detail=TERMS_REQUIRED_DETAIL)
     # TIER-PURGE-1: only the Simpler Model tiers are payable. The retired five-tier names were
     # in this tuple until 7 Sep 2026, so a caller could be charged R1,800/mo for "Elite (legacy)"
     # -- the "existing users only" in the docstring was never enforced anywhere in the code.
@@ -12932,7 +13237,7 @@ LM_INTRO_DAILY_CAP = 10
 
 
 @app.post("/local-market/intro")
-def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
+def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: str = Cookie(default=None)):
     """Buyer submits an intro on a Local Market listing. Server-side gates:
     - listing must exist, be Local Market, not suspended
     - buyer Trust Score ≥ 20 (LM-15)
@@ -12965,6 +13270,14 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks):
     if _gate:
         conn.close()
         raise _gate
+    _lcc = _listing_country(conn, listing)
+    if _lcc in COMING_SOON_COUNTRIES:   # COUNTRY-OPEN-1
+        conn.close()
+        raise HTTPException(status_code=409, detail=_coming_soon_detail(_lcc, "introductions"))
+    # BUYER-TERMS-1: a Local Market request is an introduction request too -- the Buyer accepts the Terms once first.
+    if _terms_missing(conn, _session_email(ts_user) or req.buyer_email or ""):
+        conn.close()
+        raise HTTPException(status_code=428, detail=TERMS_REQUIRED_DETAIL)
 
     # DESIGN NOTE (Session 28 hotfix): Buyer trust is no longer a hard gate
     # for submitting intros. New buyers must be able to participate from day
@@ -27039,6 +27352,57 @@ def _seller_responsiveness_penalties(conn, email: str) -> list:
             for r in rows]
 
 
+def _eula_notice_recipients(conn) -> list:
+    """EULA-1.19 (clause 15.1): who must hear of a material change BEFORE it takes effect -- every account that
+    accepted an earlier text, and every buyer who has bought Tuppence (a customer, even without a recorded
+    acceptance). Staff, seed, key and superuser accounts are not written to."""
+    rows = conn.execute("""SELECT DISTINCT LOWER(u.email) AS em FROM users u
+        WHERE u.email LIKE '%@%' AND COALESCE(u.is_superuser, 0) = 0
+          AND NOT (u.eula_accepted_at IS NOT NULL AND COALESCE(u.eula_version, '') = '1.19')
+          AND (u.eula_accepted_at IS NOT NULL
+               OR u.eula_prev_accepted_at IS NOT NULL
+               OR EXISTS (SELECT 1 FROM transactions t WHERE LOWER(t.user_email) = LOWER(u.email)
+                          AND t.type = 'topup'))""").fetchall()
+    return [r["em"] for r in rows if not _terms_exempt(r["em"])]
+
+
+def _eula_notice_html() -> str:
+    link = APP_URL.rstrip("/") + "/terms"
+    return ("<div style='font-family:Inter,Arial,sans-serif;max-width:460px;margin:auto'>"
+            "<h2 style='color:#0c1a2e;margin-bottom:6px'>Our Terms change on 12 October 2026</h2>"
+            "<p>The TrustSquare Terms of Use (version 1.19) take effect on <b>12 October 2026</b>. "
+            + EULA_V119_SUMMARY + "</p>"
+            "<p>The version you accepted applies until then. From 12 October you will be asked to accept the new "
+            "version once &mdash; at your next listing, edit, introduction request or top-up. If you do not agree, "
+            "you can close your account before 12 October (Terms, clause 15.1).</p>"
+            "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
+            "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Read the new Terms &rarr;</a></p>"
+            "<p style='color:#6b7280;font-size:12px'>You are getting this because you have a TrustSquare account. "
+            "It is a notice about your agreement with us, not marketing.</p></div>")
+
+
+def _eula_send_notices(conn, mail, dry_run: bool) -> dict:
+    """Send the 15.1 notice for v1.19 once per account, before the effective date. Idempotent through eula_notices
+    (PRIMARY KEY email+version); a capped or failed send writes nothing, so the next daily pass tries again."""
+    out = {"due": 0, "sent": 0, "skipped": 0}
+    if datetime.now(timezone.utc).strftime("%Y-%m-%d") >= EULA_V119_EFFECTIVE:
+        return out
+    done = {r["email"] for r in conn.execute("SELECT email FROM eula_notices WHERE version = '1.19'").fetchall()}
+    for em in _eula_notice_recipients(conn):
+        if em in done:
+            continue
+        out["due"] += 1
+        if dry_run:
+            continue
+        res = mail(em, "Our Terms change on 12 October 2026", _eula_notice_html())
+        if res in ("sent", "skipped"):
+            conn.execute("INSERT OR IGNORE INTO eula_notices (email, version, sent_at, outcome) VALUES (?, '1.19', ?, ?)",
+                         (em, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), res))
+            conn.commit()
+            out["sent" if res == "sent" else "skipped"] += 1
+    return out
+
+
 def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
     """Daily sweep: fade-out warn/hide/archive + responsiveness penalty/removal.
     Idempotent — safe to run any number of times. Own connection."""
@@ -27060,6 +27424,14 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
            "resp_penalised": 0, "resp_removed": 0, "emails_sent": 0, "dry_run": dry_run}
     conn = database.get_db()
     try:
+        # ── EULA-1.19: the dated material switch lands here within a day, and the clause 15.1 notice goes out ──
+        try:
+            if not dry_run:
+                res["eula"] = _eula_meta_sync(conn)
+                conn.commit()
+            res["eula_notices"] = _eula_send_notices(conn, _mail, dry_run)
+        except Exception as _eex:
+            res["eula_error"] = str(_eex)[:200]
         # ── FADE: warn / hide / clear-stamp ──
         cands = conn.execute(
             """SELECT l.id, l.title, l.seller_email, l.listing_status, l.fade_nudge_sent_at,
@@ -27181,6 +27553,7 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                 # INTRO-HOLD-1: the buyer's email below says "You were not charged." With a
                 # hold in place that is only true if we actually return it here.
                 _release_intro_hold(conn, ir["id"], "request expired")
+                _commitment_resume(conn, ir["id"])   # PROPERTY-ONE-1: closed unanswered -- open to the next buyer
             res["resp_removed"] += 1
             if ir["buyer_email"]:
                 _mail(ir["buyer_email"], "We couldn\u2019t make this introduction",
@@ -28356,7 +28729,7 @@ def pause_listing(listing_id: int, req: _PauseIn,
     actor = (_actor(ts_user, req.email, "pause", x_admin_key) or "").strip().lower()
     conn = database.get_db()
     try:
-        row = conn.execute("SELECT id, seller_email, listing_status FROM listings WHERE id=?",
+        row = conn.execute("SELECT id, seller_email, listing_status, auto_paused_intro_id, category FROM listings WHERE id=?",
                            (listing_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Listing not found")
@@ -28365,11 +28738,25 @@ def pause_listing(listing_id: int, req: _PauseIn,
         st = (row["listing_status"] or "live").lower()
         want = "paused" if req.pause else "live"
         if st == want:
+            if want == "paused" and row["auto_paused_intro_id"]:
+                # PROPERTY-ONE-1: pausing a listing the system already paused makes the pause hers -- it stays
+                # paused after the waiting request is answered.
+                conn.execute("UPDATE listings SET auto_paused_intro_id = NULL WHERE id = ?", (listing_id,))
+                conn.commit()
             return {"listing_id": listing_id, "listing_status": st}
         if st not in ("live", "paused"):
             raise HTTPException(status_code=409, detail="Only a live listing can be paused (this one is %s)." % st)
+        if want == "live" and _is_commitment_listing(row):
+            # PROPERTY-ONE-1 (Terms 5.3: one Buyer at a time): while a Buyer waits for an answer, the listing cannot be
+            # reopened around her. Answering (accept or decline) reopens it -- never a lock-out.
+            _w = conn.execute("SELECT 1 FROM intro_requests WHERE listing_id = ? AND status = 'pending' LIMIT 1",
+                              (listing_id,)).fetchone()
+            if _w:
+                raise HTTPException(status_code=409, detail="A buyer is waiting for your answer on this property. "
+                                                            "Accept or decline the request and the listing opens again.")
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        conn.execute("UPDATE listings SET listing_status=?, status_changed_at=? WHERE id=?",
+        # PROPERTY-ONE-1: a Seller who pauses it herself keeps it paused after the request is answered.
+        conn.execute("UPDATE listings SET listing_status=?, status_changed_at=?, auto_paused_intro_id=NULL WHERE id=?",
                      (want, now_iso, listing_id))
         conn.commit()
         return {"listing_id": listing_id, "listing_status": want}

@@ -218,11 +218,11 @@
    "source": "consistency"
   },
   {
-   "section": "9.2 (banking details)",
-   "old": "Banking details (Sellers): account holder, bank, last 4 digits of the account number, branch code — drafted 26 Sep as a NEW row in the 9.2 data table.",
-   "new": "ROW REMOVED. The Terms no longer mention banking details at all.",
-   "why": "David's ruling, 27 Sep 2026: \"we don't store the customers banking details, because that was an earlier option before we had Paystack, we don't need it now\". This answers review decisions 2 (legal basis) and 3 (whether Tuppence purchases are a real purpose) by removing the subject: Paystack takes payment details itself and no code read the stored details at purchase. Data minimisation — the strongest POPIA answer is not to hold it.",
-   "source": "David 27 Sep"
+   "section": "9.2 (NEW row: banking details)",
+   "old": "<tr>\n<td>Transaction data: Tuppence earned/spent, Introduction history</td>\n<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>\n</tr>",
+   "new": "<tr>\n<td>Transaction data: Tuppence earned/spent, Introduction history</td>\n<td>Tuppence Wallet management; dispute resolution; FICA records. Legal basis: contractual necessity; legal obligation.</td>\n</tr>\n<tr>\n<td>Banking details (Sellers): account holder, bank, last 4 digits of the account number, branch code</td>\n<td>Confirmation of the Seller's identity (the account holder is matched to the verified ID name); Tuppence purchases. The Platform never pays money out to this account, and Tuppence is not redeemable for cash. Legal basis: consent (given when you add them).</td>\n</tr>",
+   "why": "NEW — David's addition of 26 Sep 2026, matching the app: POST /users/{email}/banking keeps holder, bank, last 4 digits and branch code and matches the holder to the verified ID name, and the in-app form says the details confirm who you are and are used when you buy Tuppence, with nothing paid out (row inserted after 'Transaction data').",
+   "source": "David 26 Sep"
   },
   {
    "section": "9.6",
@@ -603,18 +603,151 @@
    "source": "LEGAL_VERSIONS.md v1.17; 15.9 contact table"
   },
   {
-   "section": "6.3",
-   "old": "Unused Tuppence expires after 24 consecutive months of account inactivity (no login, no Introduction, no purchase). The Platform will notify you by email not less than 30 days before expiry. ",
-   "new": "Tuppence you buy or earn does not expire; granted Tuppence does not roll over (Section 5.2). ",
-   "why": "6.3 said unused Tuppence expires after 24 months of inactivity, while 5.2 says bought or earned Tuppence never expires. Canon agrees with 5.2 (only unspent monthly grants are reset) and no code expires a balance. [review]",
-   "source": "PRICING_CANON.md (monthly grant is non-rolling; purchased and earned Tuppence is never swept); PRINCIPLE_REQUIREMENTS.md A8; launch_redemption.grant_monthly_tuppence"
+   "section": "5.2 (no expiry)",
+   "old": "<li><p>No expiry of purchased or earned Tuppence (current state): Tuppence you buy or earn does not expire unless the Platform closes or your account is terminated for breach.",
+   "new": "<li><p>No expiry of purchased or earned Tuppence while your account is in use: Tuppence you buy or earn expires only after 24 consecutive months of account inactivity, and only after the email warning described in Section 6.3, or if the Platform closes. On termination it is forfeited only for payment or identity fraud (Section 14.2).",
+   "why": "5.2 said bought Tuppence never expires and is lost on any termination for breach; 6.3 says it expires after 24 months of inactivity with 30 days' email warning (your 21 Aug decision, built as the dormancy sweep) and 14.2 forfeits only for payment or identity fraud (your 21 Aug ruling). 5.2 now says the same as 6.3 and 14.2. [review]",
+   "source": "scripts/tuppence_dormancy.py (TUPPENCE-DORMANCY-1, 21 Aug 2026); 14.2; RG-0129"
   },
   {
-   "section": "5.2 (no expiry)",
-   "old": "<li><p>No expiry of purchased or earned Tuppence (current state): Tuppence you buy or earn does not expire",
-   "new": "<li><p>No expiry of purchased or earned Tuppence: Tuppence you buy or earn does not expire",
-   "why": "'(current state)' hinted at an expiry to come; canon says bought and earned Tuppence is never removed (same fix as the non-redeemable bullet). [review]",
-   "source": "editorial; PRICING_CANON.md"
+   "section": "5.3 (Casuals row)",
+   "old": "the seeker of the service pays on the Helper's acceptance.</td>\n<td>No Trust Score penalty</td>",
+   "new": "the seeker of the service pays on the Helper's acceptance.</td>\n<td>−5 points for ignoring; no penalty for declining</td>",
+   "why": "Your decision: Casuals Sellers are not exempt from the penalty for ignoring an Introduction. The app gives every category except Local Market −5 when an Introduction is left unanswered for 48 hours, removes the Introduction at 96 hours, and gives no penalty for declining. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:26593-26595 (RESP_PENALTY_AT_H = 48, RESP_REMOVE_AT_H = 96, RESP_PENALTY_PTS = -5), 26765-26793 (_lifecycle_sweep: -5 at 48 h in every category, only local_market excluded at 26773), 26795-26830 (Introduction removed at 96 h, Buyer's hold released at 26815); bea_main.py:9055-9114 (declining carries no penalty)"
+  },
+  {
+   "section": "5.3 (Adventures Accommodation row)",
+   "old": "<td>Adventures Accommodation</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>No Trust Score penalty — seasonal and capacity constraints acknowledged</td>",
+   "new": "<td>Adventures Accommodation</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>",
+   "why": "Your decision: Adventures Accommodation Sellers are not exempt. The app gives every category except Local Market −5 at 48 hours unanswered and removes the Introduction at 96 hours, and its own 'How introductions work' table already shows −5 for Accommodation. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:26593-26595 (RESP_PENALTY_AT_H = 48, RESP_REMOVE_AT_H = 96, RESP_PENALTY_PTS = -5), 26765-26793 (_lifecycle_sweep: -5 at 48 h in every category, only local_market excluded at 26773), 26795-26830 (Introduction removed at 96 h, Buyer's hold released at 26815); ms.js:17051 and 17076-17079 (app table: 'No response within 48 hours — Trust Score −5' for Accommodation)"
+  },
+  {
+   "section": "5.3 (Adventures Experiences row)",
+   "old": "<td>Adventures Experiences</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>No Trust Score penalty — seasonal and capacity constraints acknowledged</td>",
+   "new": "<td>Adventures Experiences</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>",
+   "why": "Your decision: Adventures Experiences Sellers are not exempt. The app gives every category except Local Market −5 at 48 hours unanswered and removes the Introduction at 96 hours, and its own 'How introductions work' table already shows −5 for Experiences. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:26593-26595 (RESP_PENALTY_AT_H = 48, RESP_REMOVE_AT_H = 96, RESP_PENALTY_PTS = -5), 26765-26793 (_lifecycle_sweep: -5 at 48 h in every category, only local_market excluded at 26773), 26795-26830 (Introduction removed at 96 h, Buyer's hold released at 26815); ms.js:17052 and 17076-17079 (app table: 'No response within 48 hours — Trust Score −5' for Experiences)"
+  },
+  {
+   "section": "5.3 ('Adventures — No Trust Score Penalty' box)",
+   "old": "<td><p><strong>Adventures — No Trust Score Penalty</strong></p>\n<p>Adventures Sellers (both Accommodation and Experiences) are exempt from Trust Score penalties for non-response to Introductions. This reflects the legitimate seasonal, capacity, and availability constraints specific to accommodation and experiences operators, and is a deliberate departure from the Tutors/Services Soft Queue model.</p></td>",
+   "new": "<td><p><strong>Ignoring an Introduction — Every Category Except the Local Market</strong></p>\n<p>In every category except the Local Market, including Casuals and Adventures, an Introduction left unanswered for 48 hours costs the Seller 5 Trust Score points, and an Introduction still unanswered at 96 hours is removed and the Buyer's hold is released in full (Section 4.9). Declining an Introduction carries no penalty. The Local Market has no penalty for ignoring an Introduction; its own rules are in Section 5.3A.</p></td>",
+   "why": "Your decision: the box promised Adventures Sellers an exemption the app never gives, so it now states what the app does — −5 at 48 hours unanswered and removal at 96 hours in every category except Local Market, and no penalty for declining. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:26593-26595 (RESP_PENALTY_AT_H = 48, RESP_REMOVE_AT_H = 96, RESP_PENALTY_PTS = -5), 26765-26793 (_lifecycle_sweep: -5 at 48 h in every category, only local_market excluded at 26773), 26795-26830 (Introduction removed at 96 h, Buyer's hold released at 26815); bea_main.py:9055-9114 (declining carries no penalty)"
+  },
+  {
+   "section": "4.9 (first paragraph)",
+   "old": "<p>The introduction model requires Sellers to respond to introduction requests within 48 hours. An introduction left unanswered for 48 hours incurs a 5-point Trust Score penalty, applied to the displayed score",
+   "new": "<p>In every category except the Local Market (Section 5.3A), the introduction model requires Sellers to respond to introduction requests within 48 hours. In each of those categories, including Casuals and Adventures, an introduction left unanswered for 48 hours incurs a 5-point Trust Score penalty, applied to the displayed score",
+   "why": "Your decision: 4.9 now says the 48-hour rule and the −5 apply in every category except Local Market, and names Casuals and Adventures so the old exemption cannot be read as still standing. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:26593-26595 (RESP_PENALTY_AT_H = 48, RESP_REMOVE_AT_H = 96, RESP_PENALTY_PTS = -5), 26765-26793 (_lifecycle_sweep: -5 at 48 h in every category, only local_market excluded at 26773), 26795-26830 (Introduction removed at 96 h, Buyer's hold released at 26815)"
+  },
+  {
+   "section": "10.6 (Sellers' liability cap)",
+   "old": "<li><p>For Sellers: the total Tuppence earned and credited to your Wallet during that period, valued at USD $2 per Tuppence; or</p></li>",
+   "new": "<li><p>For Sellers: the greater of ZAR 500 and the value of the Tuppence you bought or spent on the Platform in the 12 months before the claim, valued at USD $2.00 per Tuppence; or</p></li>",
+   "why": "Your decision: a Seller is never credited Tuppence for an Introduction, so a cap of 'Tuppence earned and credited' was in practice about zero. The Sellers' cap is now the greater of ZAR 500 and the value of the Tuppence the Seller bought or spent on the Platform in the 12 months before the claim, at USD $2.00 per Tuppence; the rest of 10.6 is unchanged. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:8947-8954 (accepting an Introduction burns the Buyer's hold and credits the Seller nothing)"
+  },
+  {
+   "section": "11.4 (deleted) and 11.5 (renumbered 11.4)",
+   "old": "<p><strong>11.4 Account Suspension for Low Score</strong></p>\n<p>If your Trust Score falls below 0, your account is automatically suspended. To request reactivation, contact compliance@trustsquare.co after 30 days. You may alternatively delete your account and re-register after a 90-day waiting period.</p>\n<p><strong>11.5 Public Display</strong></p>",
+   "new": "<p><strong>11.4 Public Display</strong></p>",
+   "why": "Your decision: 11.4 is deleted. It suspended an account whose Trust Score 'falls below 0', which cannot happen because the score is held between 0 and 100, and nothing in the app suspends an account for a low score except in the Local Market, whose rule is now in 5.3A; 10.2 and 14.5 cover suspension. Nothing in the draft refers to 11.4 or 11.5 by number, so 'Public Display' is renumbered from 11.5 to 11.4 and Section 11 has no gap. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:13295-13303 (_trust_math holds the score between 0 and 100), 12608-12709 (the only low-score suspension is Local Market's: below 30 with an upheld complaint); the draft was searched for '11.4', '11.5', '11.6' and 'Section 11.' — only whole-Section-11 references exist (4.2, 4.4)"
+  },
+  {
+   "section": "7.3 (Adventures bonus table)",
+   "old": "<tr>\n<td><strong>Certification</strong></td>\n<td><strong>Indicative Bonus</strong></td>\n</tr>\n<tr>\n<td>TGCSA grading — 1 star</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>TGCSA grading — 2 star</td>\n<td>+10 points</td>\n</tr>\n<tr>\n<td>TGCSA grading — 3 star</td>\n<td>+15 points</td>\n</tr>\n<tr>\n<td>TGCSA grading — 4 star</td>\n<td>+20 points</td>\n</tr>\n<tr>\n<td>TGCSA grading — 5 star</td>\n<td>+25 points</td>\n</tr>\n<tr>\n<td>SATSA membership</td>\n<td>+10 points</td>\n</tr>\n<tr>\n<td>FEDHASA membership</td>\n<td>+8 points</td>\n</tr>\n<tr>\n<td>CATHSSETA registered tourism guide</td>\n<td>+10 points</td>\n</tr>\n<tr>\n<td>SA Mountain Club / UIAA guide certification</td>\n<td>+12 points</td>\n</tr>\n<tr>\n<td>PADI / NAUI / SAMSA diving/marine certification</td>\n<td>+12 points</td>\n</tr>\n<tr>\n<td>Liquor licence (WSET or national)</td>\n<td>+6 points</td>\n</tr>\n<tr>\n<td>Wilderness first aid / first aid certification</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>PDP / SABOA transport operator licence</td>\n<td>+8 points</td>\n</tr>",
+   "new": "<tr>\n<td><strong>Subcategory</strong></td>\n<td><strong>Certification</strong></td>\n<td><strong>Indicative Bonus</strong></td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>TGCSA grading — 1 star</td>\n<td>+6 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>TGCSA grading — 2 star (replaces the 1-star points)</td>\n<td>+10 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>TGCSA grading — 3 star (replaces the 2-star points)</td>\n<td>+14 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>TGCSA grading — 4 star (replaces the 3-star points)</td>\n<td>+18 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>TGCSA grading — 5 star (replaces the 4-star points)</td>\n<td>+22 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>Municipal licence to operate</td>\n<td>+6 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>Health and safety compliance certificate</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>Fire clearance certificate</td>\n<td>+4 points</td>\n</tr>\n<tr>\n<td>Accommodation</td>\n<td>AA Travel, TripAdvisor or Booking.com award</td>\n<td>+3 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Activity-specific guide certification (e.g. FGASA for wildlife, PADI Divemaster or higher for diving, MCSA for climbing, SACAA for aviation, SAMSA for maritime)</td>\n<td>+12 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Operator permit or concession licence</td>\n<td>+6 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Sector regulator compliance certificate, in addition to the guide certification (e.g. SACAA Part 135, SAMSA, MCSA)</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Current first aid / emergency response certificate</td>\n<td>+6 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Guided experience — 3 to 7 years</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Guided experience — 7 years or more (in addition to the 3–7 years points)</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Additional safety certification (e.g. Wilderness First Responder, swift water rescue)</td>\n<td>+4 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Liability / indemnity insurance</td>\n<td>+5 points</td>\n</tr>\n<tr>\n<td>Experiences</td>\n<td>Secondary qualification in the declared activity</td>\n<td>+3 points</td>\n</tr>",
+   "why": "Your decision: the table now carries the live catalogue's Adventures credentials and points — the list the app shows each Seller. TGCSA grading is 6/10/14/18/22 with one grading counted at a time, first aid is 6, and the Experiences credentials the table lacked (operator permit 6, sector regulator compliance 5, experience, insurance, safety and secondary qualifications) are added. SATSA, FEDHASA, liquor licence and PDP/SABOA are removed because the app never awards them, and the two separate guide rows become the catalogue's single 12-point activity-specific guide certification. CATHSSETA is removed too: it exists only in the catalogue's Tour_Guides set, which no Adventures listing reaches (the app resolves Adventures only to the Accommodation or Experiences set). A Subcategory column shows which set each credential belongs to. The 'Bonus Values Are Indicative' box is kept. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:13545-13557 (_CATEGORY_SIGNALS['Adventures-Accommodation'], TGCSA replaces chain), 13534-13544 (_CATEGORY_SIGNALS['Adventures-Experiences']), 13702-13704 and 13912-13938 (Adventures resolves only to Adventures-Accommodation or Adventures-Experiences), 13610-13618 (Tour_Guides set, never reached: users.primary_category is only created at 1113-1116 and never written), 13954-13972 (/trust/catalogue serves these sets to the app); docs/TRUST_SCORE_CRITERIA.md:192-230"
+  },
+  {
+   "section": "2.1 (Local Market)",
+   "old": "Adventures (accommodation and experiences), and Collectors (physical collectibles).</p>",
+   "new": "Adventures (accommodation and experiences), Collectors (physical collectibles), and the Local Market (physical items of every kind, such as furniture and clothing).</p>",
+   "why": "Your decision to fold Local Market into the Terms: it is a live category, so 2.1 names it, in the words of the app's own sell-flow tile. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; marketsquare.html:63 (CATS.LocalMarket), 688 (home tile), 1971 (category picker), 2536 (sell-flow tile 'Local Market — Sell a physical item — furniture, collectibles, clothing, anything')"
+  },
+  {
+   "section": "2.6 (Introduction fee: Local Market exception)",
+   "old": "<li><p>The Introduction fee is a single, fixed, once-off charge of 1 Tuppence (USD $2.00). No further fee,",
+   "new": "<li><p>The Introduction fee is a single, fixed, once-off charge of 1 Tuppence (USD $2.00), paid by the party seeking the service. The one exception is the Local Market, where the Seller pays instead — 1 Tuppence (2 Tuppence if the listing is boosted), once per listing, when the first Introduction request on it arrives — and Buyers pay nothing (Section 5.3A). No further fee,",
+   "why": "Your decision: 2.6 states the Seller-pays exception. In every other category the party seeking the service pays; in the Local Market the Seller pays 1T (2T if the listing is boosted) once per listing, when the first request arrives, and Buyers pay nothing. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:12483-12485 (LM_INTRO_COST_T = 1, LM_BOOST_COST_T = 2), 12916-12976 (/local-market/intro: 2T when boost_until is in the future, charged once per listing via lm_intro_charged, request refused below the amount at 12930-12941, Seller debited at 12970-12976, no Buyer debit), 8288-8293 (a paid request on a Local Market listing is refused before anything is held), 8872-8876 and 8925-8926 (accepting a Local Market Introduction charges nobody)"
+  },
+  {
+   "section": "4.4 (category list)",
+   "old": "Adventures Accommodation, Adventures Experiences, and Collectors. New categories may be added",
+   "new": "Adventures Accommodation, Adventures Experiences, Collectors, and Local Market. New categories may be added",
+   "why": "Your decision to fold Local Market into the Terms: 4.4 names it among the current categories. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; marketsquare.html:63 (CATS.LocalMarket), 688 (home tile), 1971 (category picker), 2536 (sell-flow tile 'Local Market — Sell a physical item — furniture, collectibles, clothing, anything')"
+  },
+  {
+   "section": "4.4 (pointer to category rules)",
+   "old": "introduction models, and Trust Score mechanics as described in Sections 5.3 and 11.</p>",
+   "new": "introduction models, and Trust Score mechanics as described in Sections 5.3, 5.3A and 11.</p>",
+   "why": "Local Market's own rules are in the new Section 5.3A, so 4.4 points to it. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026"
+  },
+  {
+   "section": "4.9 (second paragraph: Local Market)",
+   "old": "Three or more ignored introductions within any rolling 30-day window constitute blocking cause B3 under Section 14.5.</p>",
+   "new": "Three or more ignored introductions within any rolling 30-day window constitute blocking cause B3 under Section 14.5. A Local Market Introduction left unanswered carries no Trust Score penalty and does not count towards cause B3; the Local Market has its own suspension rules (Section 5.3A).</p>",
+   "why": "Your decision to fold Local Market into the Terms: the app gives Local Market no −5 for ignoring, does not remove a Local Market Introduction at 96 hours, and leaves Local Market out of the B3 count, because Local Market has its own suspension ladder. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:26773, 26803 and 26841 (local_market excluded from the −5, the 96-hour removal and the B3 count; 26832-26835 'Local Market has its own ladder (LM-14e)')"
+  },
+  {
+   "section": "5.1 (lead-in: Local Market exception)",
+   "old": "<p>The Tuppence model works as follows:</p>",
+   "new": "<p>The Tuppence model works as follows in every category except the Local Market, where the Seller pays and Buyers pay nothing (Section 5.3A):</p>",
+   "why": "Your decision: 5.1 states the Seller-pays exception — the model below applies everywhere except the Local Market, where the Seller pays and Buyers pay nothing. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:12483-12485 (LM_INTRO_COST_T = 1, LM_BOOST_COST_T = 2), 12916-12976 (/local-market/intro: 2T when boost_until is in the future, charged once per listing via lm_intro_charged, request refused below the amount at 12930-12941, Seller debited at 12970-12976, no Buyer debit), 8288-8293 (a paid request on a Local Market listing is refused before anything is held), 8872-8876 and 8925-8926 (accepting a Local Market Introduction charges nobody)"
+  },
+  {
+   "section": "5.1 (step 1)",
+   "old": "The Tuppence mechanics are identical — the party seeking the service always pays, the listed party always accepts.</p></li>",
+   "new": "The Tuppence mechanics are identical — the party seeking the service pays, the listed party accepts.</p></li>",
+   "why": "Your decision: 'the party seeking the service pays', not 'always pays', since the Local Market is the exception stated in the 5.1 lead-in. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026"
+  },
+  {
+   "section": "5.3 (NEW row: Local Market)",
+   "old": "<td>Cars</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>\n</tr>",
+   "new": "<td>Cars</td>\n<td>Soft Queue: listing stays live; multiple Buyers can queue; 48-hour window.</td>\n<td>−5 points for ignoring; no penalty for declining</td>\n</tr>\n<tr>\n<td>Local Market</td>\n<td>Seller pays: listing stays live; multiple Buyers can request. The Seller pays 1T (2T if the listing is boosted) once, when the first request on the listing arrives; Buyers pay nothing. See Section 5.3A.</td>\n<td>No Trust Score penalty for ignoring; the Local Market's own suspension rules apply (Section 5.3A)</td>\n</tr>",
+   "why": "Your decision: 5.3 gets a Local Market row — Seller pays 1T (2T if boosted) once per listing on the first request, Buyers pay nothing, no −5 for ignoring, and its own suspension ladder instead. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:12483-12485 (LM_INTRO_COST_T = 1, LM_BOOST_COST_T = 2), 12916-12976 (/local-market/intro: 2T when boost_until is in the future, charged once per listing via lm_intro_charged, request refused below the amount at 12930-12941, Seller debited at 12970-12976, no Buyer debit), 8288-8293 (a paid request on a Local Market listing is refused before anything is held), 8872-8876 and 8925-8926 (accepting a Local Market Introduction charges nobody); bea_main.py:26773, 26803 and 26841 (local_market excluded from the −5, the 96-hour removal and the B3 count; 26832-26835 'Local Market has its own ladder (LM-14e)')"
+  },
+  {
+   "section": "5.3A (NEW: Local Market — the Seller Pays)",
+   "old": "<p><strong>5.4 ECT Act §44 — Scope and Applicability to TrustSquare</strong></p>",
+   "new": "<p><strong>5.3A Local Market — the Seller Pays</strong></p>\n<p>The Local Market is the category for selling physical items of every kind, locally and person to person. Its Introductions follow different rules from every other category:</p>\n<ul>\n<li><p><strong>Its own acceptance.</strong> Before your first Local Market listing goes live, the Platform's app shows you the Local Market terms and asks you to accept them, separately from your acceptance of this EULA. The date and time of that acceptance are recorded on your account.</p></li>\n<li><p><strong>The Seller pays; Buyers pay nothing.</strong> When the first Introduction request on a Local Market listing arrives, 1T is debited from the Seller's Tuppence balance, or 2T if the listing is boosted at that moment. This is charged once per listing: further requests on the same listing cost the Seller nothing more. If the Seller's balance is below the amount due, the request is refused. A Buyer pays nothing to request or receive a Local Market Introduction, and nothing is held from the Buyer's balance.</p></li>\n<li><p><strong>Declining or not answering.</strong> The Seller's payment is not refunded if the Seller declines a request or does not answer it. Not answering a Local Market Introduction carries no Trust Score penalty, and Section 4.9 and blocking cause B3 do not apply to it.</p></li>\n<li><p><strong>Buyer no-shows.</strong> If a Buyer does not follow through on an Introduction the Seller has accepted, the Seller may report it once, within 30 days of the Introduction. The Platform's staff then uphold or dismiss the report; where the Buyer can be reached by email, the Buyer is told of the report first and may give their side. If the report is upheld, 3 points are taken off the Buyer's Trust Score and, if the listing is not suspended, 1T is credited to the Seller's Tuppence balance. A dismissed report changes nothing.</p></li>\n<li><p><strong>Trust Score, suspension and ban.</strong> You may publish a Local Market listing whatever your Trust Score, and Buyers may filter Local Market listings by the Seller's Trust Score. If your Trust Score falls below 30 while an upheld complaint against you is on record, all your Local Market listings are suspended (hidden from Buyers) and are restored automatically once your score is 30 or more again. If you are suspended a second time within 90 days of an earlier suspension, a 30-day cooling-off period also applies: your Local Market listings stay suspended, and you cannot publish new ones, until it has ended and your score is 30 or more again. A third suspension, at any time, is a permanent ban from the Local Market. A suspension or ban takes no Tuppence from your balance and does not affect your listings in any other category.</p></li>\n</ul>\n<p>For Local Market listings, this Section applies in place of Section 4.9 and of any provision of this EULA under which the Buyer pays for an Introduction or Tuppence is held from the Buyer's balance (including Sections 1.1, 2.6, 5.1, 5.4, 6.1 and 6.3). This Section is changed in the same way as the rest of this EULA (Section 15.1).</p>\n<p><strong>5.4 ECT Act §44 — Scope and Applicability to TrustSquare</strong></p>",
+   "why": "Your decision to fold Local Market into the Terms: a short subsection carries the substance of the six in-app Local Market clauses, stating only what the code does — its own acceptance in the app; the Seller pays 1T (2T if boosted) once per listing on the first request and Buyers pay nothing; no refund on decline or silence and no −5 or B3; the no-show report (once, within 30 days, staff decide; upheld = Buyer −3 and 1T back to the Seller if the listing is not suspended); and the suspension ladder (below 30 with an upheld complaint; second within 90 days adds a 30-day cooling-off; third is a permanent Local Market ban; no Tuppence taken, other categories untouched). Numbered 5.3A so no other section moves. The in-app promise that a suspended Seller's Tuppence is 'frozen' is left out because no code freezes a balance. Changes follow 15.1 (14 days' notice, matching in-app clause 6). [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; marketsquare.html:3850-3869 (the six in-app 'Local Market — Terms' clauses, 3857-3862); ms.js:13354-13375 (Local Market acceptance box before the first Local Market listing) and bea_main.py:13232-13246 (/local-market/eula/accept records lm_eula_accepted_at); bea_main.py:12483-12485 (LM_INTRO_COST_T = 1, LM_BOOST_COST_T = 2), 12916-12976 (/local-market/intro: 2T when boost_until is in the future, charged once per listing via lm_intro_charged, request refused below the amount at 12930-12941, Seller debited at 12970-12976, no Buyer debit), 8288-8293 (a paid request on a Local Market listing is refused before anything is held), 8872-8876 and 8925-8926 (accepting a Local Market Introduction charges nobody); bea_main.py:26773, 26803 and 26841 (local_market excluded from the −5, the 96-hour removal and the B3 count; 26832-26835 'Local Market has its own ladder (LM-14e)'); bea_main.py:9055-9114 (decline refunds the Seller nothing); 13005-13076 (no-show report: accepted Introductions only 13029-13031, once 13032-13034, within 30 days 13042-13044, Buyer emailed 13063-13075); 13112-13155 (upheld: Buyer −3 at 13131, 1T to the Seller if the listing is not suspended 13128-13141); 13158-13173 (dismissed: nothing); 12577-12605 (no Trust Score publish gate; cooling-off and ban block publishing); 12608-12653 (_lm_apply_suspension: second within 90 days → 30-day cooling-off 12638-12640, third ever → permanent ban 12632-12637, Local Market listings hidden 12647-12651, no Tuppence touched); 12656-12709 (restored at 30+ after any cooling-off; suspended only below 30 with a complaint on record); 26921-26938 (complaints against a Seller are recorded only when staff uphold them); 12779-12792 and ms.js:16409 (Buyer's Trust Score filter); docs/LOCAL_MARKET_REQUIREMENTS.md section 11"
+  },
+  {
+   "section": "6.1 (NEW bullet: Local Market fee)",
+   "old": "The hold is released on decline, expiry or non-response — no Tuppence is burned in those cases;</p></li>",
+   "new": "The hold is released on decline, expiry or non-response — no Tuppence is burned in those cases;</p></li>\n<li><p>Local Market introduction fee (Sellers only): 1T, or 2T if the listing is boosted, debited from the Seller's balance once per listing when the first Introduction request on it arrives; Buyers pay nothing in the Local Market (Section 5.3A);</p></li>",
+   "why": "Your decision to fold Local Market into the Terms: 6.1 says the Platform charges 'only for the following', so the Seller-paid Local Market fee joins that list; without it 6.1 would be untrue for Local Market Sellers. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:12483-12485 (LM_INTRO_COST_T = 1, LM_BOOST_COST_T = 2), 12916-12976 (/local-market/intro: 2T when boost_until is in the future, charged once per listing via lm_intro_charged, request refused below the amount at 12930-12941, Seller debited at 12970-12976, no Buyer debit), 8288-8293 (a paid request on a Local Market listing is refused before anything is held), 8872-8876 and 8925-8926 (accepting a Local Market Introduction charges nobody)"
+  },
+  {
+   "section": "7.1 (NEW row: Local Market)",
+   "old": "(e.g. PADI for diving, SAMSA for marine activities)</td>\n</tr>",
+   "new": "(e.g. PADI for diving, SAMSA for marine activities)</td>\n</tr>\n<tr>\n<td>Local Market</td>\n<td>No licence for the category itself; any permit or registration that applies to what you sell (for example, a municipal trading permit, or a certificate of acceptability for food premises when selling food)</td>\n</tr>",
+   "why": "Your decision: 7.1 gets a Local Market row. The examples are the permits the app's own Local Market credential list names. [decision 26 Sep]",
+   "source": "David, 26 Sep 2026; bea_main.py:13660-13661 (Local Market credentials: municipal trading / market permit; certificate of acceptability for food premises, R638)"
+  },
+  {
+   "section": "9.2 (banking details)",
+   "old": "Banking details (Sellers): account holder, bank, last 4 digits of the account number, branch code — drafted 26 Sep as a NEW row in the 9.2 data table.",
+   "new": "ROW REMOVED. The Terms no longer mention banking details at all.",
+   "why": "David's ruling, 27 Sep 2026: \"we don't store the customers banking details, because that was an earlier option before we had Paystack, we don't need it now\". This answers review decisions 2 (legal basis) and 3 (whether Tuppence purchases are a real purpose) by removing the subject: Paystack takes payment details itself and no code read the stored details at purchase. Data minimisation — the strongest POPIA answer is not to hold it.",
+   "source": "David 27 Sep"
   },
   {
    "section": "4.6 Listing Lifecycle",
@@ -627,22 +760,22 @@
    "section": "13.5 Scheduled Countries",
    "old": "South Africa, the United Kingdom, the United States, Australia, France, Portugal, New Zealand, and Argentina.",
    "new": "South Africa, Australia, Botswana, Germany, Kenya, Mozambique, Namibia, the United Kingdom and the United States, together with France, Portugal, New Zealand and Argentina.",
-   "why": "Matches the app's country picker canon. France, Portugal, New Zealand and Argentina keep their schedules so no existing user loses a protection.",
-   "source": "David 24 Sep · merged 27 Sep"
+   "why": "Matches the app's country picker canon. France, Portugal, New Zealand and Argentina keep their schedules so no existing user loses a protection. SUPERSEDED on publication (David, 27 Sep, option 1): only Kenya and Namibia got Schedules (H and I, the researched texts); Botswana, Germany and Mozambique show \"coming soon\".",
+   "source": "David 24 Sep · merged 27 Sep · superseded 27 Sep"
   },
   {
    "section": "13.6 Country Schedules",
    "old": "Schedules A–G.",
    "new": "Schedules A–L: adds Schedule H — Botswana; I — Germany; J — Kenya; K — Mozambique; L — Namibia.",
-   "why": "Five countries had a localised Quick page and no Country Schedule. Closes review decision 11, which asked whether they needed one after they had already been drafted.",
-   "source": "David 24 Sep · merged 27 Sep"
+   "why": "Five countries had a localised Quick page and no Country Schedule. Closes review decision 11, which asked whether they needed one after they had already been drafted. SUPERSEDED on publication (David, 27 Sep, option 1): only Kenya and Namibia got Schedules (H and I, the researched texts); Botswana, Germany and Mozambique show \"coming soon\".",
+   "source": "David 24 Sep · merged 27 Sep · superseded 27 Sep"
   },
   {
    "section": "Schedules H–L (new)",
    "old": "—",
    "new": "Botswana (4 clauses: Consumer Protection Act 2018, ECT Act 2014, Data Protection Act 18 of 2024, unfair terms) · Germany (7: BGB 305–310/312–312k, 14-day withdrawal, liability, GDPR+BDSG, VSBG s36, DDG s5 provider identification, BGB 307–309) · Kenya (4: Consumer Protection Act 2012, KICA, Data Protection Act 2019/ODPC, unfair terms) · Mozambique (3: Law 22/2009, Law 3/2017 + Constitution art. 71, Portuguese language) · Namibia (3: mandatory rights, Electronic Transactions Act 2019, Constitution art. 13).",
-   "why": "Carried verbatim from the 24 Sep draft, whose law status was checked that day. Mozambique and Namibia have no dedicated data protection act in force, and both clauses say so and bind us to the coming law on commencement.",
-   "source": "David 24 Sep · merged 27 Sep"
+   "why": "Carried verbatim from the 24 Sep draft, whose law status was checked that day. Mozambique and Namibia have no dedicated data protection act in force, and both clauses say so and bind us to the coming law on commencement. SUPERSEDED on publication (David, 27 Sep, option 1): only Kenya and Namibia got Schedules (H and I, the researched texts); Botswana, Germany and Mozambique show \"coming soon\".",
+   "source": "David 24 Sep · merged 27 Sep · superseded 27 Sep"
   },
   {
    "section": "9.2 (identity checks — replaces the withdrawn banking row)",
@@ -650,58 +783,148 @@
    "new": "A much narrower row: only the YES/NO and the date of two identity checks are held, and the row states in bold that we do not store the account number, account name, bank, branch code or cardholder name. Legal basis: consent, declinable.",
    "why": "CONSEQUENCE OF DAVID'S APPROVAL of option 4 on 27 Sep. Removing the old row was right, but the bank-name check does PROCESS an account number transiently (one call to Paystack's /bank/resolve), and POPIA requires the Terms to say what is processed even when nothing is kept. Saying nothing would have been the same defect as the old row in reverse.",
    "source": "Claude, from David's 27 Sep approval"
-  }
- ],
- "needs_david": [
-  {
-   "section": "5.3 (Casuals and Adventures rows, 'Adventures — No Trust Score Penalty' box) and 4.9",
-   "question": "Should Casuals and Adventures Sellers be exempt from the −5 for ignoring an Introduction? The Terms promise them no penalty, but the code gives every category except Local Market the same −5 (bea_main.py _lifecycle_sweep), and the app's own 'How introductions work' table shows −5 for Accommodation and Experiences. Options: (a) Drop the exemption from 5.3 (the Casuals and Adventures rows and the 'Adventures — No Trust Score Penalty' box), so the Terms match the code and the app. (b) Build the exemption into the code (skip the −5 for Casuals and Adventures in _lifecycle_sweep) and correct the app's table. Recommended: (a), because your RESP-1 ruling of 23 Jul 2026 (docs/TRUST_SCORE_CRITERIA.md, Amendment v1.3) applies the −5 to every standard Introduction and the app already tells Adventures Sellers so. The text is left as it stands in this draft."
   },
   {
-   "section": "Publishing v1.19",
-   "question": "Should v1.19 be marked a material change? bea_main.py has EULA_CURRENT_VERSION = '1.18' and EULA_MATERIAL_VERSION = '1.16'. Options: (a) Material: set EULA_MATERIAL_VERSION to '1.19', so every Seller accepts again at their next publish or edit, after the 14 days' notice that Section 15.1 requires. (b) Not material: bump only EULA_CURRENT_VERSION to '1.19'. Recommended: (a), because v1.19 rewrites what Sellers agreed to on identity checks (3.4–3.5), how Tuppence moves (5.1, 6.3) and AI prices (5.5), and re-acceptance is what binds existing Sellers to the corrected text. Nothing outside the two draft files was touched."
+   "section": "Header (version line)",
+   "old": "Version 1.19 · Last updated 26 September 2026 · … Country Schedules: … Argentina",
+   "new": "Version 1.19 · Last updated 27 September 2026 · In force at once for accounts opened from that day, and from 12 October 2026 for accounts opened earlier (Section 15.1) · … Argentina · Kenya · Namibia",
+   "why": "Published 27 Sep; the 15.1 notice runs 14+ days; everyone accepts again from 12 Oct (David: 'Publish; all re-accept').",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
   },
   {
-   "section": "10.6 (Sellers' liability cap)",
-   "question": "What should the Sellers' liability cap in 10.6 be? It is 'the total Tuppence earned and credited to your Wallet' in the 12-month period, but a Seller is never credited Tuppence for an Introduction (bea_main.py accept_intro burns the Buyer's hold; only Local Market no-show credits exist), so the cap is in practice about zero. Options: (a) The same as Buyers: ZAR 500. (b) The Tuppence the Seller bought or spent on the Platform in that period, valued at USD $2 each. (c) The greater of (a) and (b). Recommended: (c), because a cap of about zero risks being struck out as unfair under the CPA, while (c) keeps a floor and tracks what the Seller actually paid. The text is left as it stands; 5.1, 6.3 and 12.3 were corrected."
+   "section": "2.4 (Buyer acceptance)",
+   "old": "You must read and accept this EULA before any listing of yours goes live on the Platform.",
+   "new": "…before any listing of yours goes live, before your first Introduction request, and before you first buy Tuppence or pay for a subscription plan. Nothing is held or charged before you accept. (+ new item: the Buyer's one-tap Terms sheet)",
+   "why": "David 26 Sep: a one-tap acceptance for Buyers at the first Introduction request or top-up; built (the server refuses first, nothing is held).",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
+  },
+  {
+   "section": "9.3 (who consents)",
+   "old": "By accepting this EULA, you give informed, specific, opt-in consent…",
+   "new": "By accepting this EULA (Section 2.4: as a Seller, before your first listing goes live; as a Buyer, before your first Introduction request or Tuppence purchase), you give…",
+   "why": "Consent needs a positive act; now every Buyer gives one.",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
   },
   {
    "section": "5.3 (Property row)",
-   "question": "Should a Property listing really pause and take one Buyer at a time? The Terms, canon A3 (PRINCIPLE_REQUIREMENTS.md) and docs/LISTING_STATE_MACHINE.md say so, but the server never pauses the listing or limits requests (bea_main.py create_intro): only the requesting Buyer's own screen shows it paused, and the app's 'How introductions work' table says 'Up to 3' and groups Cars with Property. Options: (a) Build it: the server pauses a Property listing on a request and refuses others until it is answered, and the 'Up to 3' copy is corrected. (b) Retire the Commitment model: Property runs Soft Queue, and the Terms, canon A3 and the app copy say so. (c) Cap it at 3 open requests per Property listing, enforced by the server, with the Terms and canon changed to match. Recommended: (a), because canon A3 may not change without full council review and the Terms, listing screen and state machine already describe it, so only the server is out of line. The Property row is left as it stands; this draft adds Cars as Soft Queue, as the sell flow runs it (marketsquare.html CATS.Cars), so if you choose (a) or (c), say whether Cars follows Property."
+   "old": "Commitment: listing pauses on Introduction; one Buyer at a time; 48-hour window. Seller ignores: Trust Score −5; listing unpauses automatically.",
+   "new": "Commitment: one Buyer at a time. A request pauses the listing; it opens again when the Seller accepts or declines, or the Buyer withdraws; the Seller cannot reopen it by hand while a Buyer waits; −5 at 48 hours; at 96 hours the request is removed, the hold released and the listing opens again.",
+   "why": "David 27 Sep: 'One at a time' — the server now does what the Terms said.",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
   },
   {
-   "section": "2.1, 4.4, 5.3, 7.1 (Local Market)",
-   "question": "How should the Terms cover Local Market? It is live but runs under its own six in-app clauses (marketsquare.html, 'Local Market — Terms') with a Seller-pays model: the Seller pays 1T (2T if boosted) when the first request on a listing arrives, Buyers pay nothing, and there are no-show credits and a suspension ladder (bea_main.py /local-market/intro; docs/LOCAL_MARKET_REQUIREMENTS.md). The EULA never mentions it, and the model conflicts with 2.6 and 5.1 ('the party seeking the service always pays') and with canon A8's list of allowed deductions. Options: (a) Fold Local Market into the EULA: name it in 2.1 and 4.4, add 5.3 and 7.1 rows, and state the Seller-pays exception in 2.6 and 5.1. (b) Keep it separate: name it in 2.2 as governed by supplemental Local Market Terms, and publish those clauses alongside the EULA. Recommended: (a), because a Seller who pays should find the fee in the Terms they accept, and the six clauses are short enough to fold in. Cars was added in this draft; Local Market was not."
+   "section": "5.4 (withdrawal)",
+   "old": "…the Buyer may withdraw the request by emailing support@trustsquare.co…",
+   "new": "…the Buyer may withdraw the request in the app (My Space → Intros → Withdraw) or by emailing support@trustsquare.co…",
+   "why": "The app now has a Withdraw button; the hold is returned in full, once.",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
   },
   {
-   "section": "7.3 (bonus table)",
-   "question": "Should the Adventures bonus table match what the app actually awards? The live catalogue (bea_main.py _CATEGORY_SIGNALS; docs/TRUST_SCORE_CRITERIA.md) gives TGCSA 1–5 star 6/10/14/18/22 (table: 5/10/15/20/25), first aid 6 (table: 5) and CATHSSETA 8 (table: 10), and has no SATSA, FEDHASA, liquor-licence or PDP/SABOA credential at all. Options: (a) Replace the table with the catalogue's Adventures credentials and points. (b) Change the app to the table: add the four missing credentials to the catalogue and use the table's values. (c) Drop the table and rely on the 'Bonus Values Are Indicative' box, which already says the in-app criteria govern. Recommended: (a), because the Terms should not promise bonuses the app never awards, and the catalogue is the canon the app shows each Seller."
+   "section": "15.1 (re-acceptance)",
+   "old": "Continued use of the Platform after the effective date constitutes acceptance of the updated EULA.",
+   "new": "…except where a Country Schedule or the law of your country requires your express acceptance. After a material change you are also asked to accept the updated EULA expressly, once, the next time you publish or edit a listing, request an Introduction or buy Tuppence.",
+   "why": "What the app now does on 12 October.",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
+  },
+  {
+   "section": "1.1, 9.1, 13.5, 13.6, 15.9 (countries)",
+   "old": "Scheduled Countries: … Argentina (+ the merged draft's Botswana, Germany, Kenya, Mozambique, Namibia)",
+   "new": "Scheduled Countries: … Argentina, Kenya and Namibia; Schedules A–I; Kenya and Namibia privacy law named; 13.5 adds the 'coming soon' rule (look around, nothing listed or introduced until the country opens).",
+   "why": "David 27 Sep: 'we decided to not add Germany and Botswana for now, please proceed with your option 1'.",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
+  },
+  {
+   "section": "Schedules H and I (new)",
+   "old": "— (the merged draft's short Schedules H–L, placed between G6 and G7)",
+   "new": "Schedule H — Kenya (H1–H6, with the section 49 consent the app now asks for); Schedule I — Namibia (I1–I7). G7 is back after G6.",
+   "why": "The researched texts of 26 Sep; the merge had put five schedules between Argentina's G6 and G7.",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
+  },
+  {
+   "section": "D8 / E9 (EU ODR)",
+   "old": "…and to the European Online Dispute Resolution platform.",
+   "new": "(reference removed)",
+   "why": "The EU ODR platform closed on 20 July 2025 (Regulation (EU) 2024/3228).",
+   "source": "David, 26-27 Sep 2026 · published 27 Sep"
+  }
+ ],
+ "needs_david": [],
+ "answered_by_david": [
+  {
+   "section": "Casuals and Adventures penalty exemption",
+   "answer": "Drop the promise (26 Sep, 'Accept all 8')."
+  },
+  {
+   "section": "9.2 banking legal basis",
+   "answer": "Nothing stored (27 Sep, RUL-176): the question fell away; 9.2 lists only the yes/no identity checks."
+  },
+  {
+   "section": "9.2 banking purpose",
+   "answer": "Nothing stored (27 Sep, RUL-176) — replaces the 26 Sep 'Identity only'."
+  },
+  {
+   "section": "Publishing v1.19",
+   "answer": "Publish; everyone accepts again from 12 October (26 Sep)."
+  },
+  {
+   "section": "10.6 Sellers' liability cap",
+   "answer": "The greater of R500 and the Tuppence bought or spent in 12 months at $2 each (26 Sep)."
+  },
+  {
+   "section": "5.3 Property row",
+   "answer": "One at a time — built (27 Sep)."
+  },
+  {
+   "section": "Local Market in the Terms",
+   "answer": "Fold it in as 5.3A (26 Sep)."
+  },
+  {
+   "section": "7.3 bonus table",
+   "answer": "Match what the app awards (26 Sep)."
   },
   {
    "section": "11.4",
-   "question": "What should 11.4 say? It suspends an account whose Trust Score 'falls below 0', which cannot happen because the score is held between 0 and 100 (bea_main.py _trust_math), and no code suspends an account for a low score except in Local Market, which suspends a Local Market Seller below 30 with an active complaint (_lm_apply_suspension). Options: (a) Delete 11.4, because 10.2 and the blocking causes in 14.5 already cover suspension. (b) Keep a low-score suspension but make it real: pick a reachable threshold and build it. (c) Replace it with the Local Market rule once Local Market is in the Terms. Recommended: (a), because a clause that can never trigger protects nobody, and 14.5 already lists every cause for blocking an account."
+   "answer": "Delete it (26 Sep)."
   },
   {
-   "section": "2.5, 9.3 (Buyer acceptance)",
-   "question": "Should Buyers formally accept the Terms somewhere? Only Sellers do today (before a listing goes live, plus the separate Buzz and Local Market acceptances: bea_main.py /users/{email}/eula, /buzz/accept, /local-market/eula/accept), so 'By accepting this EULA' in 2.5 (age and capacity warranties) and 9.3 (POPIA consent) never binds a Buyer. Options: (a) Add a one-tap Buyer acceptance, recorded with timestamp and version like the Seller's, at the first Introduction request or first Tuppence top-up. (b) Reword 2.5 and 9.3 to 'By using the Platform', relying on use alone. Recommended: (a), because POPIA consent and an ECT Act signature both need a positive act, and the first request or top-up is where a Buyer first commits money."
+   "section": "2.5, 9.3 Buyer acceptance",
+   "answer": "One tap at the first Introduction request or top-up — built (26 Sep)."
+  },
+  {
+   "section": "13.5, 13.6 country schedules",
+   "answer": "Kenya and Namibia now; Botswana, Germany and Mozambique 'coming soon' (27 Sep, option 1)."
   }
  ],
- "noticed_not_changed": [],
- "answered_by_david": [
+ "noticed_not_changed": [
   {
-   "section": "9.2 (new banking row)",
-   "question": "Which legal basis should the new banking row give? Options: (a) Consent, given when the Seller adds the details (as drafted, like the certification-documents row). (b) Contractual necessity. (c) Legitimate interest. Recommended: (a), because adding banking details is optional in the app (a 2-point trust signal, POST /users/{email}/banking) and nothing in the contract depends on them.",
-   "ruling": "David 27 Sep 2026: banking details are not stored at all — an earlier option from before Paystack. The row is removed, so neither the legal basis nor the purpose needs answering."
+   "section": "5.3A (Local Market) — boost",
+   "note": "'2T if the listing is boosted' is what the code charges, but the boost itself (2T for 7 days via POST /wishlist/boost) is offered on no app screen and is not listed as a charge in 6.1.",
+   "source": "bea_main.py:12026-12087, 12916-12924"
   },
   {
-   "section": "9.2 (new banking row)",
-   "question": "Should the banking row keep 'Tuppence purchases' as a purpose? It is your wording and the in-app form says the details are used 'when you buy Tuppence', but no purchase code reads the stored banking details — Paystack takes the payment details itself. Options: (a) Keep the purpose as worded. (b) Drop it from this row and from the in-app form text, leaving confirmation of identity as the purpose. Recommended: (b), because POPIA requires the stated purpose to be the real one, and today the details are used only for the name match against the verified ID and as a trust signal.",
-   "ruling": "David 27 Sep 2026: banking details are not stored at all — an earlier option from before Paystack. The row is removed, so neither the legal basis nor the purpose needs answering."
+   "section": "5.3A (Local Market) — no-show credit",
+   "note": "An upheld no-show always credits the Seller 1T, even when she paid 2T for a boosted listing.",
+   "source": "bea_main.py:13134-13141"
   },
   {
-   "section": "13.5, 13.6 (Quick country packs)",
-   "question": "Do the countries the Quick page is set up for need a Country Schedule? Quick packs exist for ZA, NA, BW, MZ, KE, GB, DE, AU and US (roles/quick_country_packs.json), so Namibia, Botswana, Mozambique, Kenya and Germany get a localised Quick page but no Schedule, while France, Portugal, New Zealand and Argentina have a Schedule but no Quick pack. Options: (a) Add Country Schedules for the five Quick-pack countries (Germany can follow the France and Portugal GDPR pattern). (b) Switch those five Quick packs off until Schedules exist. (c) Leave both and rely on 13.5's own-initiative, own-risk clause. Recommended: (a), because a localised Quick page shows the Platform deliberately offers itself there, which undercuts 13.5's own-risk clause; the missing Quick packs for the four Scheduled countries are a product gap, not a legal one.",
-   "ruling": "David 27 Sep 2026: merge the two v1.19 drafts before he reads it — Schedules H–L were already drafted on 24 Sep, so this was never an open question."
+   "section": "5.3A (Local Market) — no expiry",
+   "note": "docs/LOCAL_MARKET_REQUIREMENTS.md LM-F2 (−1 per ignored request, auto-close at 48 hours) is not built: a Local Market Introduction never expires or closes on its own. 5.3A promises no expiry.",
+   "source": "bea_main.py:26773, 26803 (sweep skips local_market); docs/LOCAL_MARKET_REQUIREMENTS.md:100-116"
+  },
+  {
+   "section": "Canon A8",
+   "note": "Canon A8 allows only a Buyer-paid Introduction fee, AI purchases and a Boost as Tuppence deductions; the Seller-paid Local Market fee now in 2.6, 5.1, 5.3A and 6.1 is not in that list. Canon was not touched (outside the two files, and a canon change goes through change control).",
+   "source": "PRINCIPLE_REQUIREMENTS.md:71-79"
+  },
+  {
+   "section": "7.3 (bonus table) — criteria doc and Tour_Guides",
+   "note": "docs/TRUST_SCORE_CRITERIA.md section 4e lacks two Experiences credentials the code awards (operator permit 6, sector regulator compliance 5); 7.3 follows the code. The catalogue's Tour_Guides set (including CATHSSETA 8) is reached by no category, so it is dead weight.",
+   "source": "bea_main.py:13536-13537, 13610-13618, 13912-13938; docs/TRUST_SCORE_CRITERIA.md:198-211"
+  },
+  {
+   "section": "Translations",
+   "note": "The app's EULA translation files still carry v1.18 strings (for example '11.5 Public Display'); every sentence changed in v1.19 needs its translations regenerated when v1.19 is published.",
+   "source": "roles/app_i18n_af.json:1696 (and the nso, zu, xh files); i18n/inventory.json:1819"
   }
  ]
 }

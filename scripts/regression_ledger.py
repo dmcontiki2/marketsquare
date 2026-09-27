@@ -30609,7 +30609,10 @@ def _py_message_literals(src):
            "OLD form, so it printed REGRESSION over a ruled change. Now asserts the ruled state: the form posts only an "
            "account number and bank code to /verify-bank-name, sends no holder name or branch code, the retired route is "
            "gone from route_policy, and the signal's line says the number is never stored. Not weakened: every nudge, "
-           "Billing-card and no-payout-words check stands unchanged.")
+           "Billing-card and no-payout-words check stands unchanged. R7 (27 Sep 2026): the three screens still said 'Add your "
+           "banking details ... when you buy Tuppence' while the sheet they open says nothing is stored -- their copy now "
+           "describes the name check, and this entry refuses the old words, the old route handler and a sheet that stops "
+           "saying the number is not stored.")
 def rg_banking_form_1():
     import json as _j, re as _re
     js = repo_file("ms.js"); h = repo_file("marketsquare.html"); b = repo_file("bea_main.py"); rp = repo_file("route_policy.json")
@@ -30672,9 +30675,22 @@ def rg_banking_form_1():
                 bad.append("the retired POST /users/{email}/banking is still declared (RUL-176)")
         except Exception as e:
             bad.append("route_policy.json unreadable: %s" % e)
+    # R7 (27 Sep 2026): the words around the check say what it does -- nothing about her bank is kept.
+    if b is not None and '@app.post("/users/{email}/banking")' in b:
+        bad.append("the retired banking-details route handler is back (RUL-176)")
+    if i2 >= 0 and "We do not store your account number" not in js[i2:i2 + 6000]:
+        bad.append("the name check no longer tells her the account number is not stored")
+    for nid in ("sob-banking-nudge", "sb-banking-nudge", "ms-banking-card"):
+        k = h.find('id="%s"' % nid)
+        blk2 = h[k:k + 2200] if k >= 0 else ""
+        if blk2 and _re.search(r"Add (your )?banking details|when you buy Tuppence", blk2):
+            bad.append("#%s still asks for banking details -- RUL-176: nothing is stored" % nid)
+    for name, text in (("ms.js", js), ("marketsquare.html", h)):
+        if _re.search(r"when you buy Tuppence", text):
+            bad.append("%s says banking details are used when she buys Tuppence (RUL-176)" % name)
     if bad:
         return [(FAIL, "; ".join(bad[:6]))]
-    return [(INFO, "the bank check asks her bank and stores nothing; nudges and the Billing card open it; no payout or card-check words")]
+    return [(INFO, "the bank check asks her bank and stores nothing; nudges and the Billing card open it and say so; no payout or card-check words")]
 
 
 @entry("RG-0504", "LISTING-WORD-1: one word for the thing a seller makes -- 'listing' -- on every screen of both apps "
@@ -31132,6 +31148,437 @@ def rg_circle_caps_1():
     if not out:
         return [(INFO, "switch present and reported live; limits 10/50/200; display gated on the switch")]
     return out
+
+
+@entry("RG-0511", "PROPERTY-ONE-1: a Property listing takes one buyer at a time -- a request pauses it, the next buyer "
+       "is told why, and it opens again when the seller answers or the request is removed at 96 hours; Cars keep their queue",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py _COMMITMENT_CATEGORIES / _is_commitment_listing / _commitment_resume; create_intro (the pause is "
+             "written under the wallet lock after a re-read, and the next buyer gets a 409 that says why and when); "
+             "accept_intro, decline_intro and the lifecycle sweep's 96-hour removal reopen it; pause_listing will not "
+             "reopen it around a waiting buyer; listings.auto_paused_intro_id. ms.js HIW_CATS / HIW_FEATURES (Property "
+             "'One at a time', Cars in their own queue column), renderDashCard's note, _msPropertyReopened. FOUND 25 Sep "
+             "2026 (langt-27): the app and Terms 5.3 promised a Property listing pauses on a request; the server never "
+             "paused anything. David, 27 Sep 2026: 'One at a time'.",
+       ref="Terms 5.3 (Property: Commitment -- one Buyer at a time); RESP-1 (48 h penalty, 96 h removal); "
+           "INSPECTION_2026-09-25.html langt-27.")
+def rg_property_one_1():
+    import re as _re
+    b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+
+    def handler(sig, size=16000):
+        k = b.find(sig)
+        if k < 0:
+            return ""
+        body = b[k:k + size]
+        nxt = body.find("\n@app.", 10)
+        return body[:nxt] if nxt > 0 else body
+    m = _re.search(r"_COMMITMENT_CATEGORIES\s*=\s*\(([^)]*)\)", b)
+    cats = m.group(1).replace('"', "'") if m else ""
+    if "'property'" not in cats:
+        bad.append("Property is no longer a one-buyer-at-a-time category (_COMMITMENT_CATEGORIES)")
+    elif _re.search(r"'cars?'", cats):
+        bad.append("Cars became one-at-a-time -- David kept their queue")
+    ci = handler('@app.post("/intros")')
+    if not ci:
+        bad.append("create_intro is gone")
+    else:
+        w = ci.find("_wallet_lock(conn)")
+        p = ci.find("SET listing_status = 'paused', auto_paused_intro_id = ?")
+        if p < 0:
+            bad.append("a request on a Property listing no longer pauses it")
+        elif w < 0 or p < w:
+            bad.append("the pause is written outside the wallet lock -- two buyers at once could both get in")
+        if not _re.search(r"_wallet_lock\(conn\)[\s\S]{0,700}?_is_commitment_listing\(listing\)[\s\S]{0,300}?"
+                          r"SELECT listing_status FROM listings", ci):
+            bad.append("create_intro no longer re-reads the listing under the lock before letting a second buyer in")
+        if "The seller is answering another buyer about this property" not in ci:
+            bad.append("the next buyer is no longer told why the property is closed and when it opens")
+    for sig, label in (('@app.put("/intros/{intro_id}/accept")', "accepting"),
+                       ('@app.put("/intros/{intro_id}/decline")', "declining")):
+        if "_commitment_resume(conn, intro_id)" not in handler(sig, 20000):
+            bad.append("%s no longer opens the Property listing to the next buyer" % label)
+    s = b.find("def _lifecycle_sweep(")
+    if s < 0 or '_commitment_resume(conn, ir["id"])' not in b[s:s + 40000]:
+        bad.append("the 96-hour removal no longer opens the Property listing again")
+    pb = handler('@app.post("/listings/{listing_id}/pause")', 5000)
+    if not _re.search(r"want == \"live\" and _is_commitment_listing\(row\)[\s\S]{0,500}?status = 'pending'", pb):
+        bad.append("the seller can reopen a Property listing by hand while a buyer waits")
+    if not _re.search(r"label:\s*'Multiple buyers at once',\s*ans:\s*\['One at a time',\s*'Unlimited',\s*'Unlimited',"
+                      r"\s*'Unlimited'\]", js):
+        bad.append("How-it-works no longer says Property takes one buyer at a time and every other group queues")
+    if not _re.search(r"label:\s*'\U0001F697 Cars',\s*group:\s*3", js):
+        bad.append("Cars no longer have their own queue column in How-it-works")
+    if "Paused while you answer a buyer" not in js:
+        bad.append("the seller's card no longer says why her Property listing is paused")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "a request pauses a Property listing under the lock; accepting, declining and the 96-hour removal "
+                   "reopen it; the app says so; Cars queue")]
+
+
+@entry("RG-0512", "BUYER-TERMS-1: a Buyer accepts the Terms once -- one tap on the real text -- before her first "
+       "introduction request or Tuppence top-up; nothing is held or charged first",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py TERMS_REQUIRED_DETAIL / _terms_missing and the 428 gates in create_intro (before the wallet "
+             "lock), lm_create_intro, initialize_payment and init_seller_subscription; ms.js _tsBuyerTermsGate (shows "
+             "_EULA_HTML, records through POST /users/{email}/eula), _tsWithTerms around each request the server can "
+             "refuse; a plan payment goes through the Seller Terms sheet (scroll + two ticks). FOUND 26 Sep 2026 (Terms "
+             "review; David: 'Accept all 8'): only Sellers ever accepted, so no clause that starts 'by accepting this "
+             "EULA' bound a Buyer.",
+       ref="Terms 2.4 / 2.5 / 9.3 (v1.19); CPA s49 (drawn to her attention, assent by act); RUL-166(d) (the Seller's "
+           "scroll and two ticks).")
+def rg_buyer_terms_1():
+    import re as _re
+    b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+
+    def handler(sig):
+        k = b.find(sig)
+        if k < 0:
+            return ""
+        body = b[k:k + 14000]
+        nxt = body.find("\n@app.", 10)
+        return body[:nxt] if nxt > 0 else body
+    if not _re.search(r'TERMS_REQUIRED_DETAIL\s*=\s*\{"code":\s*"terms_required"', b):
+        bad.append("the server's 'terms_required' answer is gone")
+    ci = handler('@app.post("/intros")')
+    t = ci.find("_terms_missing(conn, intro.buyer_email)")
+    w = ci.find("_wallet_lock(conn)")
+    if t < 0:
+        bad.append("an introduction request no longer asks for the Terms first")
+    elif w >= 0 and t > w:
+        bad.append("the Terms are asked for after the wallet lock -- a hold could be written first")
+    for sig, label in (('@app.post("/local-market/intro")', "a Local Market request"),
+                       ('@app.post("/payment/initialize")', "a Tuppence top-up"),
+                       ('@app.post("/payment/seller-subscription/initialize")', "a plan payment")):
+        h = handler(sig)
+        if "_terms_missing(" not in h or "TERMS_REQUIRED_DETAIL" not in h:
+            bad.append("%s no longer asks for the Terms first" % label)
+    g = js.find("function _tsBuyerTermsGate(")
+    gb = js[g:g + 6000] if g >= 0 else ""
+    if not gb:
+        bad.append("the one-tap Terms sheet is gone")
+    else:
+        if "_EULA_HTML" not in gb:
+            bad.append("the Terms sheet no longer shows the real Terms text")
+        if not _re.search(r"'/users/'\s*\+\s*encodeURIComponent\(em\)\s*\+\s*'/eula'", gb):
+            bad.append("the Terms sheet no longer records the acceptance on her account")
+    k = js.find("async function _tsWithTerms(")
+    wb = js[k:k + 1400] if k >= 0 else ""
+    if "code === 'terms_required'" not in wb or "_tsBuyerTermsGate(" not in wb or "_tsSellerTermsGate(" not in wb:
+        bad.append("the app no longer answers 'accept the Terms first' with the right sheet")
+    for pat, label in ((r"_tsWithTerms\(email, function\(\)\{ return fetch\(BEA_URL \+ '/intros'", "the introduction request"),
+                       (r"_tsWithTerms\(email, function\(\)\{ return fetch\(BEA_URL \+ '/local-market/intro'",
+                        "the Local Market request"),
+                       (r"_tsWithTerms\(email, function\(\)\{ return fetch\(url, \{method:'POST'\}\); \}\)", "the top-up")):
+        if not _re.search(pat, js):
+            bad.append("%s no longer handles 'accept the Terms first'" % label)
+    if js.count("}, { seller: true })") < 3:
+        bad.append("a plan payment no longer goes through the Seller Terms sheet (scroll + two ticks)")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "requests, top-ups and plans ask for the Terms first; the sheet shows the real text and records it")]
+
+
+@entry("RG-0513", "EULA-1.19: the new Terms reach existing accounts the way clause 15.1 promises -- an email and an "
+       "in-app notice at least 14 days ahead, then one re-acceptance on the day they take effect",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py EULA_CURRENT_VERSION / EULA_V119_EFFECTIVE / _EULA_MATERIAL_STEPS / _eula_material / "
+             "_eula_meta_sync / _eula_notice_recipients / _eula_send_notices (daily in the lifecycle sweep, once per "
+             "account through eula_notices) / GET /users/{email} eula_notice; ms.js _tsTermsNotice and _EULA_HTML; "
+             "eula_clean.html and terms.html (the version line). David, 26 Sep 2026: 'Publish; all re-accept'.",
+       ref="Terms 15.1 (a material change: 14 days' notice by email and in the app); EULA-VERSION-1 (the material "
+           "switch); LEGAL_VERSIONS.md v1.19.")
+def rg_eula_119_notice():
+    import re as _re
+    from datetime import date as _date
+    b = repo_file("bea_main.py"); js = repo_file("ms.js"); eu = repo_file("eula_clean.html"); tm = repo_file("terms.html")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+    mv = _re.search(r'^EULA_CURRENT_VERSION\s*=\s*"([\d.]+)"', b, _re.M)
+    me = _re.search(r'^EULA_V119_EFFECTIVE\s*=\s*"(\d{4})-(\d{2})-(\d{2})"', b, _re.M)
+    if not mv or mv.group(1) != "1.19":
+        bad.append("the running Terms version is not 1.19")
+    if not me:
+        bad.append("v1.19 has no effective date")
+    if not _re.search(r'\("1\.19",\s*EULA_V119_EFFECTIVE,', b):
+        bad.append("v1.19 is not a dated material step -- existing accounts would be parked at once, with no notice")
+    months = {"September": 9, "October": 10, "November": 11}
+    mp = _re.search(r"Version 1\.19 \u00b7 Last updated (\d{1,2}) (September|October|November) (\d{4})", eu or "")
+    if me and mp:
+        eff = _date(int(me.group(1)), int(me.group(2)), int(me.group(3)))
+        pub = _date(int(mp.group(3)), months[mp.group(2)], int(mp.group(1)))
+        if (eff - pub).days < 14:
+            bad.append("the effective date %s is less than 14 days after publication (%s) -- clause 15.1" % (eff, pub))
+    s = b.find("def _lifecycle_sweep(")
+    if s < 0 or "_eula_send_notices(conn" not in b[s:s + 40000]:
+        bad.append("the daily sweep no longer sends the 15.1 notice emails")
+    if "CREATE TABLE IF NOT EXISTS eula_notices" not in b or "PRIMARY KEY (email, version)" not in b:
+        bad.append("notices are no longer recorded once per account and version")
+    k = b.find("def _eula_notice_recipients(")
+    rb = b[k:k + 1600] if k >= 0 else ""
+    if not rb or "is_superuser" not in rb or "_terms_exempt(" not in rb:
+        bad.append("the notice list no longer leaves out staff, seed and superuser accounts")
+    u = b.find('@app.get("/users/{email}")')
+    if u < 0 or '"eula_notice"' not in b[u:u + 20000]:
+        bad.append("her account read no longer carries the in-app notice")
+    n = js.find("function _tsTermsNotice(")
+    if n < 0 or "u.eula_notice" not in js[n:n + 2500] or "setTimeout(_tsTermsNotice" not in js:
+        bad.append("the app no longer shows the in-app notice")
+    if eu is not None and not mp:
+        bad.append("the v1.19 header has no 'Last updated' publication date to count the 14 days from")
+    for name, text in (("eula_clean.html", eu), ("terms.html", tm), ("ms.js (_EULA_HTML)", js)):
+        if text is None:
+            continue
+        if "Version 1.19" not in text or "12 October 2026" not in text:
+            bad.append("%s does not carry the v1.19 version line with its 12 October 2026 date" % name)
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "v1.19 is dated, noticed by email and in the app, and switches on its day")]
+
+
+@entry("RG-0514", "KENYA-CONSENT-1: a Kenyan seller consents once, with her own tick, before her ID document or a "
+       "Kenyan property listing is processed outside Kenya (Data Protection Act 2019 s.49)",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py CONSENT_REQUIRED_DETAIL / _ke_consent_given / _user_in_kenya / POST "
+             "/users/{email}/xborder-consent (users.xborder_consent_at) and the 428 gates in publish_listing (Kenyan "
+             "Property) and upload-id (a Kenyan seller); route_policy.json; ms.js _tsConsentSheet (an unticked box, the "
+             "button stays off until she ticks it); the Terms' Kenya schedule. David, 27 Sep 2026 ('option 1'): Namibia "
+             "and Kenya open now, Claude builds Kenya's consent tick.",
+       ref="Kenya Data Protection Act 2019 s.49 (transfer of sensitive personal data outside Kenya needs consent) and "
+           "s.2 (sensitive data); Terms v1.19 Kenya schedule.")
+def rg_kenya_consent_1():
+    import json as _j, re as _re
+    b = repo_file("bea_main.py"); js = repo_file("ms.js"); rp = repo_file("route_policy.json"); eu = repo_file("eula_clean.html")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+
+    def handler(sig):
+        k = b.find(sig)
+        if k < 0:
+            return ""
+        body = b[k:k + 16000]
+        nxt = body.find("\n@app.", 10)
+        return body[:nxt] if nxt > 0 else body
+    if not _re.search(r'CONSENT_REQUIRED_DETAIL\s*=\s*\{"code":\s*"consent_required",\s*"country":\s*"KE"', b):
+        bad.append("the server's 'consent_required' answer is gone")
+    cb = handler('@app.post("/users/{email}/xborder-consent")')
+    if not cb or "xborder_consent_at" not in cb:
+        bad.append("there is no route that records her consent")
+    if "CONSENT_REQUIRED_DETAIL" not in handler('@app.put("/listings/{listing_id}/publish")'):
+        bad.append("a Kenyan property listing can go live without her consent")
+    ub = handler('@app.post("/users/{email}/upload-id")')
+    if "CONSENT_REQUIRED_DETAIL" not in ub or "xborder_consent" not in ub:
+        bad.append("a Kenyan seller's ID can be uploaded without her consent")
+    if rp is not None:
+        try:
+            P = _j.loads(rp); rows = P if isinstance(P, list) else P.get("routes", [])
+            r = [x for x in rows if isinstance(x, dict) and x.get("key") == "POST /users/{email}/xborder-consent"]
+            if not r or r[0].get("level") != "user" or not any(x.get("name") == "email" for x in r[0].get("bind", [])):
+                bad.append("POST /users/{email}/xborder-consent is not a signed-in route bound to her own address")
+        except Exception as e:
+            bad.append("route_policy.json unreadable: %s" % e)
+    g = js.find("function _tsConsentSheet(")
+    gb = js[g:g + 5000] if g >= 0 else ""
+    if not gb:
+        bad.append("the consent sheet is gone")
+    else:
+        if 'id="ts-xb-chk"' not in gb or ("id=\"ts-xb-chk\" checked" in gb):
+            bad.append("the consent box is missing or comes ticked")
+        if 'id="ts-xb-ok" disabled' not in gb or "ok.disabled = !chk.checked" not in gb:
+            bad.append("the consent button works before she ticks the box")
+        if "/xborder-consent'" not in gb:
+            bad.append("the consent sheet no longer records her consent")
+    if eu is not None and not _re.search(r"Kenya[\s\S]{0,6000}?(?:section 49|s\.\s?49)[\s\S]{0,600}?consent|"
+                                         r"consent[\s\S]{0,600}?(?:section 49|s\.\s?49)", eu):
+        bad.append("the Terms' Kenya schedule does not tell her about the section 49 consent")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "a Kenyan seller ticks consent herself, once, before her ID or a Kenyan property listing is processed")]
+
+
+@entry("RG-0515", "COUNTRY-OPEN-1: a country TrustSquare has not opened yet (Germany, Botswana, Mozambique) is "
+       "browse-only -- no listing goes live and no introduction is made there -- while South Africa, Namibia and "
+       "Kenya stay open",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py COMING_SOON_COUNTRIES / _listing_country / _coming_soon_detail and the refusals in "
+             "create_intro, lm_create_intro, publish_listing and quick_publish; /geo/countries 'coming_soon'; ms.js "
+             "country list chip + toast; quick.html qComingSoon. David, 27 Sep 2026: 'we decided to not add Germany "
+             "and Botswana for now, please proceed with your option 1' (Mozambique waits too).",
+       ref="Terms v1.19 Schedules (Namibia, Kenya); OPEN_LOOPS (the steps each country needs before it opens).")
+def rg_country_open_1():
+    import re as _re
+    b = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); eu = repo_file("eula_clean.html")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+    m = _re.search(r"^COMING_SOON_COUNTRIES\s*=\s*\{([^}]*)\}", b, _re.M)
+    codes = set(_re.findall(r'"([A-Z]{2})"\s*:', m.group(1))) if m else set()
+    if not {"DE", "BW", "MZ"} <= codes:
+        bad.append("Germany, Botswana or Mozambique opened (COMING_SOON_COUNTRIES = %s) -- that is David's call, "
+                   "after its steps are done" % sorted(codes))
+    if codes & {"ZA", "NA", "KE"}:
+        bad.append("an open country is marked coming soon: %s" % sorted(codes & {"ZA", "NA", "KE"}))
+
+    def handler(sig):
+        k = b.find(sig)
+        if k < 0:
+            return ""
+        body = b[k:k + 16000]
+        nxt = body.find("\n@app.", 10)
+        return body[:nxt] if nxt > 0 else body
+    for sig, label in (('@app.post("/intros")', "an introduction"), ('@app.post("/local-market/intro")', "a Local Market request"),
+                       ('@app.put("/listings/{listing_id}/publish")', "publishing"),
+                       ('@app.post("/listings/quick-publish")', "a Quick publish")):
+        h = handler(sig)
+        if "COMING_SOON_COUNTRIES" not in h or "_coming_soon_detail(" not in h:
+            bad.append("%s is not refused in a coming-soon country" % label)
+    if "coming_soon=" not in handler('@app.get("/geo/countries")'):
+        bad.append("the country list no longer says which countries are coming soon")
+    if "c.coming_soon ?" not in js or "_msComingSoon[iso2]" not in js:
+        bad.append("the app's country list no longer marks and explains a coming-soon country")
+    if q is not None:
+        for cc in ("DE", "BW", "MZ"):
+            if not _re.search(r"qComingSoon[\s\S]{0,1200}?\b%s\b" % cc, q):
+                bad.append("Quick no longer stops at the door in %s" % cc)
+                break
+    if eu is not None:
+        for name in ("Namibia", "Kenya"):
+            if not _re.search(r"Schedule [A-Z]\b[^<]{0,80}%s" % name, eu):
+                bad.append("the Terms have no schedule for %s, an open country" % name)
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "Germany, Botswana and Mozambique are browse-only; South Africa, Namibia and Kenya are open")]
+
+
+@entry("RG-0516", "LM-WORDS-1: the Local Market says what its code does -- the seller pays 1T when the first buyer "
+       "asks and buyers pay nothing; a Local Market suspension never takes or freezes Tuppence",
+       LOCKED, fixed_on="2026-09-27",
+       scope="marketsquare.html the two Local Market category tiles (.cbt-model) and the Local Market terms box "
+             "(clauses 1 and 4). FOUND 26 Sep 2026 (Terms review): the tile said the buyer pays on connection (the "
+             "seller does, LM-FEE), clause 1 promised a balance freeze no code performs, clause 4 promised the buyer's "
+             "score 'on every introduction request' -- it shows on accepted introductions.",
+       ref="Terms v1.19 5.3A (Local Market -- the Seller pays); LM_INTRO_COST_T / LM_BOOST_COST_T in bea_main.py.")
+def rg_lm_words_1():
+    import re as _re
+    h = repo_file("marketsquare.html")
+    if h is None:
+        return [(INFO, "NOT EVALUATED - marketsquare.html not readable from here")]
+    bad = []
+    tiles = _re.findall(r'<div class="cbt-name">Local Market</div>[\s\S]{0,300}?<div class="cbt-model"[^>]*>([^<]*)</div>', h)
+    if not tiles:
+        bad.append("the Local Market tile is gone")
+    for t in tiles:
+        if "the seller pays 1T when the first buyer asks" not in t or "buyers pay nothing" not in t:
+            bad.append("a Local Market tile says something else about who pays: %r" % t.strip()[:90])
+            break
+    if _re.search(r"buyer pays introduction fee", h, _re.I):
+        bad.append("a screen still says the Local Market buyer pays")
+    if _re.search(r"Balances may be frozen", h):
+        bad.append("the Local Market terms promise a balance freeze no code performs")
+    if _re.search(r"Trust Score is shown to you on every introduction request", h):
+        bad.append("the Local Market terms promise the buyer's score on every request -- it shows on accepted ones")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "the Local Market tiles and terms say the seller pays and nothing is frozen")]
+
+
+@entry("RG-0517", "INTRO-WITHDRAW-1: a Buyer can withdraw her own request before the seller answers -- in the app, "
+       "not only by email -- and the 1T hold comes back in full, once; a Property listing it paused opens again",
+       LOCKED, fixed_on="2026-09-27",
+       scope="bea_main.py withdraw_intro (POST /intros/{intro_id}/withdraw: her own session, only a pending request, "
+             "_release_intro_hold exactly once, _commitment_resume); route_policy.json (user, own intro_buyer); ms.js "
+             "msRenderIntroList (Withdraw on a pending sent request; Expired / Withdrawn chips) and msIntroWithdraw; "
+             "Terms 5.4. FOUND 27 Sep 2026 building PROPERTY-ONE-1: Terms 5.4 promised withdrawal only by an email to "
+             "support, no tool performed it, and an expired or withdrawn request read 'Pending' in My Space.",
+       ref="Terms 5.4 (v1.19: 'in the app (My Space -> Intros -> Withdraw) or by emailing support'); INTRO-HOLD-1 / "
+           "RG-0145 (the exactly-once release); PROPERTY-ONE-1 / RG-0511.")
+def rg_intro_withdraw_1():
+    import json as _j, re as _re
+    b = repo_file("bea_main.py"); js = repo_file("ms.js"); rp = repo_file("route_policy.json"); eu = repo_file("eula_clean.html")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / ms.js not readable from here")]
+    bad = []
+    k = b.find('@app.post("/intros/{intro_id}/withdraw")')
+    wb = b[k:k + 4000] if k >= 0 else ""
+    nxt = wb.find("\n@app.", 10)
+    if nxt > 0:
+        wb = wb[:nxt]
+    if not wb:
+        bad.append("there is no way for a Buyer to withdraw her request in the app")
+    else:
+        if "_session_email(ts_user)" not in wb or "!= me" not in wb:
+            bad.append("the withdrawal is not bound to the Buyer's own session")
+        if "WHERE id = ? AND status = 'pending'" not in wb or "upd.rowcount != 1" not in wb:
+            bad.append("a request the seller already answered could be withdrawn")
+        if "_release_intro_hold(conn, intro_id" not in wb:
+            bad.append("withdrawing no longer returns the held 1T")
+        if "_commitment_resume(conn, intro_id)" not in wb:
+            bad.append("withdrawing no longer reopens a Property listing it paused")
+    if rp is not None:
+        try:
+            P = _j.loads(rp); rows = P if isinstance(P, list) else P.get("routes", [])
+            r = [x for x in rows if isinstance(x, dict) and x.get("key") == "POST /intros/{intro_id}/withdraw"]
+            if not r or r[0].get("level") != "user" or not any(o.get("resource") == "intro_buyer" for o in r[0].get("own", [])):
+                bad.append("POST /intros/{intro_id}/withdraw is not a signed-in route owned by the request's Buyer")
+        except Exception as e:
+            bad.append("route_policy.json unreadable: %s" % e)
+    i = js.find("function msRenderIntroList(")
+    lb = js[i:i + 4500] if i >= 0 else ""
+    if "msIntroWithdraw(" not in lb:
+        bad.append("My Space no longer offers Withdraw on a pending sent request")
+    if "expired:" not in lb or "withdrawn:" not in lb:
+        bad.append("an expired or withdrawn request reads 'Pending' again")
+    j = js.find("async function msIntroWithdraw(")
+    if j < 0 or "'/withdraw'" not in js[j:j + 1500]:
+        bad.append("the Withdraw button no longer calls the server")
+    if eu is not None and "withdraw the request in the app" not in eu:
+        bad.append("Terms 5.4 no longer tells the Buyer she can withdraw in the app")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "her own Withdraw returns the hold once and reopens a Property listing; Terms 5.4 says so")]
+
+
+@entry("RG-0518", "SENT-LIST-1: a Buyer's sent introduction requests show in My Space -- a numeric listing id never "
+       "crashes the list back to 'Introductions you send will appear here'",
+       LOCKED, fixed_on="2026-09-27",
+       scope="ms.js msInitials (strings only) and msRenderIntroList (a sent request names the listing, escaped; the "
+             "seller stays anonymous). FOUND 27 Sep 2026 walking INTRO-WITHDRAW-1 in a real browser: the sent row used "
+             "the listing id -- a NUMBER -- as its name, msInitials called (77).split and threw, and msLoadIntros' catch "
+             "painted the empty fallback, so no Buyer ever saw a request she had sent (or its Withdraw button).",
+       ref="INTRO-WITHDRAW-1 / RG-0517; INTRO-ESC-1 (text from another person is escaped).")
+def rg_sent_list_1():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - ms.js not readable from here")]
+    bad = []
+    k = js.find("function msInitials(")
+    body = js[k:k + 600] if k >= 0 else ""
+    if not body:
+        bad.append("msInitials is gone")
+    elif "String(" not in body or _re.search(r"\(email\|\|''\)\.split", body):
+        bad.append("msInitials splits its argument without making it a string -- a numeric id throws again")
+    i = js.find("function msRenderIntroList(")
+    lb = js[i:i + 4500] if i >= 0 else ""
+    if not _re.search(r"const ident = String\(", lb):
+        bad.append("the sent list's name is no longer forced to a string")
+    if "i.listing_title" not in lb:
+        bad.append("a sent request no longer names the listing she asked about")
+    if "_lmEsc(ident)" not in lb:
+        bad.append("the listing title (another person's text) is painted unescaped")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "sent requests render: string names, the listing title, escaped")]
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -202,13 +202,15 @@ Adventures has two sub-classes: **Experiences** (guided activities) and **Accomm
 | Signal | Pts | Verification |
 |---|---|---|
 | Activity-specific guide certification (FGASA, MCSA, PADI Divemaster+, SACAA, etc.) | 12 | Certificate number checked against issuing body register — must be current |
+| Operator permit / concession licence (SANParks, Ezemvelo, private reserves — per venue) | 6 | Permit with expiry uploaded |
+| Sector regulator compliance certificate beyond the guide licence (SACAA Part 135, SAMSA, MCSA) | 5 | Certificate uploaded |
 | Current First Aid / Emergency Response certificate (valid, not expired) | 6 | Certificate with expiry date uploaded |
 | Years of guided experience in declared activity: 3–7 years | 5 | CV reviewed |
 | Years of guided experience: 7+ years | +5 (cumulative 10) | CV reviewed |
 | Additional safety certification (Wilderness First Responder, swift water rescue, etc.) | 4 | Certificate uploaded |
 | Liability / public indemnity insurance for activity (current) | 5 | Policy summary with expiry uploaded |
 | Secondary qualification or endorsement in declared activity | 3 | Certificate reviewed |
-| **Max** | **40** | |
+| **Max** | **40** | The signals add up to 51; the category score is capped at 40 (bea_main.py `min(40, …)`). Permit and regulator rows added 27 Sep 2026 — the live catalogue (`category.adv_exp.permit`, `.regulator_compliance`) awarded them before this table listed them. |
 
 ---
 

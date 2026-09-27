@@ -2350,9 +2350,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div id="sob-banking-nudge" style="display:none;background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.35);border-radius:12px;padding:14px 16px;display:none;gap:12px;align-items:flex-start;">
           <div style="font-size:20px;flex-shrink:0;">🏦</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">We use them to confirm who you are and when you buy Tuppence. Nothing is ever paid out to this account. Takes 30 seconds.</div>
-            <button onclick="sobAddBanking()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
+            <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Confirm the name on your bank account</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Your bank tells us the name on your account and we check it against your ID. We keep only whether it matched, never your bank details. Worth 2 Trust Score points.</div>
+            <button onclick="sobAddBanking()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Check the name →</button>
             <button onclick="document.getElementById('sob-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
           </div>
         </div>
@@ -2533,7 +2533,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div class="cbt-icon">🚗</div><div class="cbt-body"><div class="cbt-name">Cars</div><div class="cbt-desc">Vehicle for sale or hire</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
         <div class="cat-big-tile" id="pa-cbt-LocalMarket" onclick="paSelCat('LocalMarket')">
-          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays introduction fee on connection</div></div><div class="cbt-check">✓</div>
+          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — the seller pays 1T when the first buyer asks; buyers pay nothing</div></div><div class="cbt-check">✓</div>
         </div>
       </div>
       <div class="field">
@@ -2762,7 +2762,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
           <div class="cbt-icon">🚗</div><div class="cbt-body"><div class="cbt-name">Cars</div><div class="cbt-desc">Vehicle for sale or hire</div><div class="cbt-model" style="color:var(--purple);">👥 Soft queue — listing stays live, buyers queue</div></div><div class="cbt-check">✓</div>
         </div>
         <div class="cat-big-tile" id="sb-cbt-LocalMarket" onclick="sbSelCat('LocalMarket')">
-          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — buyer pays introduction fee on connection</div></div><div class="cbt-check">✓</div>
+          <div class="cbt-icon">🛍️</div><div class="cbt-body"><div class="cbt-name">Local Market</div><div class="cbt-desc">Sell a physical item — furniture, collectibles, clothing, anything</div><div class="cbt-model" style="color:var(--green);">🏷️ Peer-to-peer — the seller pays 1T when the first buyer asks; buyers pay nothing</div></div><div class="cbt-check">✓</div>
         </div>
       </div>
       <!-- Agent/private gate — shown only for Property and Cars -->
@@ -2979,9 +2979,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <div style="font-size:20px;flex-shrink:0;">🏦</div>
           <div style="flex:1;">
-            <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Add your banking details</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">We use them to confirm who you are and when you buy Tuppence. Nothing is ever paid out to this account. Takes 30 seconds.</div>
-            <button onclick="msOpenBankingSheet()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add banking details →</button>
+            <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:4px;">Confirm the name on your bank account</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:10px;">Your bank tells us the name on your account and we check it against your ID. We keep only whether it matched, never your bank details. Worth 2 Trust Score points.</div>
+            <button onclick="msOpenBankingSheet()" style="background:#fbbf24;color:#1e2a3a;border:none;border-radius:50px;padding:8px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Check the name →</button>
             <button onclick="document.getElementById('sb-banking-nudge').style.display='none';" style="background:none;border:1px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.8);border-radius:50px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;margin-left:8px;">Later</button>
           </div>
         </div>
@@ -3433,12 +3433,12 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
 
       <!-- Plans -->
-      <!-- BANKING-FORM-1 (26 Sep 2026): the one place a seller gives or updates her banking details -->
-      <div class="ms-section-lbl">Banking details</div>
+      <!-- BANKRESOLVE-1 / RUL-176 (27 Sep 2026): no banking details are stored -- this card runs the bank name check -->
+      <div class="ms-section-lbl">Bank name check</div>
       <div class="ms-card" id="ms-banking-card" style="margin-bottom:20px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:4px;" id="ms-banking-state">Not added yet</div>
-        <div style="font-size:11.5px;color:var(--text-3);line-height:1.5;margin-bottom:10px;">We use them to confirm who you are and when you buy Tuppence. TrustSquare never pays money out to this account.</div>
-        <button type="button" class="ms-ai-btn" id="ms-banking-btn" onclick="msOpenBankingSheet()">Add banking details →</button>
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:4px;" id="ms-banking-state">Not confirmed yet</div>
+        <div style="font-size:11.5px;color:var(--text-3);line-height:1.5;margin-bottom:10px;">Your bank tells us the name on your account and we check it against your ID. We keep only whether it matched, never your bank details.</div>
+        <button type="button" class="ms-ai-btn" id="ms-banking-btn" onclick="msOpenBankingSheet()">Check the name →</button>
       </div>
       <div class="ms-section-lbl">Plans</div>
       <div id="billing-plans-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
@@ -3854,10 +3854,10 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <h2 style="font-size:20px;font-weight:800;color:var(--text);margin:6px 0 10px;">Before your first Local Market listing goes live</h2>
     <p style="font-size:13.5px;color:var(--text-2);line-height:1.6;margin-bottom:12px;">By activating a Local Market listing, you confirm you have read and accept the following terms:</p>
     <div style="font-size:13px;color:var(--text);line-height:1.55;">
-      <div style="margin-bottom:12px;"><strong>1. Tuppence is non-refundable platform currency.</strong> Balances may be frozen if your account is suspended but are never confiscated. Frozen Tuppence is restored automatically when your account is reinstated.</div>
+      <div style="margin-bottom:12px;"><strong>1. Tuppence is non-refundable platform currency.</strong> A Local Market suspension never takes or freezes your Tuppence — it only hides your Local Market listings until your score recovers.</div>
       <div style="margin-bottom:12px;"><strong>2. Trust Score and visibility.</strong> You may publish from day one with no minimum Trust Score. Buyers may filter Local Market listings by seller Trust Score. Sellers below 40 are visible to buyers using the default "Any seller" filter.</div>
       <div style="margin-bottom:12px;"><strong>3. Repeat-offender escalation.</strong> First suspension: until score recovers. Second within 90 days: 30-day mandatory cooling-off. Third: permanent ban from Local Market (other categories remain available).</div>
-      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. The buyer's current Trust Score is shown to you on every introduction request.</div>
+      <div style="margin-bottom:12px;"><strong>4. Buyer no-show accountability.</strong> Buyers who do not follow through on accepted introductions lose 3 Trust Score points per upheld complaint. You see the buyer's Trust Score on each introduction you accept.</div>
       <div style="margin-bottom:12px;"><strong>5. Seller pays on introduction.</strong> Your Tuppence balance is debited 1T (or 2T if boosted) when a buyer submits the first introduction request on a listing. This is non-refundable if you decline or ignore.</div>
       <div style="margin-bottom:12px;"><strong>6. Terms updates.</strong> These terms may be updated with 14 days' in-app notice. Continued use after the notice period constitutes acceptance.</div>
     </div>

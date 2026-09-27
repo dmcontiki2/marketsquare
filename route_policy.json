@@ -403,6 +403,17 @@
    ]
   },
   {
+   "key": "POST /intros/{intro_id}/withdraw",
+   "level": "user",
+   "own": [
+    {
+     "name": "intro_id",
+     "in": "path",
+     "resource": "intro_buyer"
+    }
+   ]
+  },
+  {
    "key": "POST /intros/{intro_id}/hired",
    "level": "user",
    "own": [
@@ -921,6 +932,17 @@
    "key": "GET /payment/banks",
    "level": "public",
    "note": "BANKRESOLVE-1: Paystack's bank list so the picker carries real bank codes rather than a guessed table. Public, cached a day, no customer data."
+  },
+  {
+   "key": "POST /users/{email}/xborder-consent",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ],
+   "note": "KENYA-CONSENT-1 (27 Sep 2026): the explicit consent Kenya's DPA s.49 asks for before an ID or property details are processed outside Kenya; bound to her own session."
   },
   {
    "key": "POST /users/{email}/verify-bank-name",

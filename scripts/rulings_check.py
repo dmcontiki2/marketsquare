@@ -86,6 +86,41 @@ def _outside_repo(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ # R7 (27 Sep 2026): Terms v1.19 published with David's answers; the open countries; one buyer at a time on Property.
+ "RUL-183": [
+   ("RULINGS.md", ["A PROPERTY LISTING TAKES ONE BUYER AT A TIME"], []),
+   ("bea_main.py", ['_COMMITMENT_CATEGORIES = ("property",)', "SET listing_status = 'paused', auto_paused_intro_id = ?"], []),
+   ("eula_clean.html", ["Commitment: one Buyer at a time."], ["listing unpauses automatically"]),
+   ("ms.js", ["ans: ['One at a time','Unlimited','Unlimited','Unlimited']"], []),
+ ],
+ "RUL-182": [
+   ("RULINGS.md", ["KENYA AND NAMIBIA OPEN NOW"], []),
+   ("bea_main.py", ['COMING_SOON_COUNTRIES = {"DE": "Germany", "BW": "Botswana", "MZ": "Mozambique"}', "CONSENT_REQUIRED_DETAIL"], []),
+   ("eula_clean.html", ["Schedule H \u2014 Kenya", "Schedule I \u2014 Namibia", "\u201ccoming soon\u201d"], ["Schedule H \u2014 Botswana", "Schedule I \u2014 Germany"]),
+   ("quick.html", ["var SOON={'DE':'Germany','BW':'Botswana','MZ':'Mozambique'}"], []),
+ ],
+ # RUL-176/178 (27 Sep 2026, landed by the other session; reflections added in R7 so the rulings are guarantees).
+ "RUL-178": [
+   ("RULINGS.md", ["THE 5 TRUST SCORE POINTS BANKING CARRIED ARE REPLACED"], []),
+   ("bea_main.py", ['"category.lm.bank_name_verified"', '"category.lm.payment_name_verified"', '@app.post("/users/{email}/verify-bank-name")'], []),
+ ],
+ "RUL-177": [
+   ("RULINGS.md", ["The two v1.19 EULA drafts are ONE draft"], []),
+   ("eula_clean.html", ["remain available to the Seller until the Seller publishes or deletes them"], ["expire automatically after 30 days"]),
+ ],
+ "RUL-176": [
+   ("RULINGS.md", ["BANKING DETAILS ARE NOT STORED AT ALL"], []),
+   ("bea_main.py", [], ['@app.post("/users/{email}/banking")']),
+   ("eula_clean.html", ["We do not store your bank account number"], ["Banking details (Sellers)"]),
+   ("marketsquare.html", [], ["when you buy Tuppence", "Add your banking details"]),
+ ],
+ "RUL-181": [
+   ("RULINGS.md", ["TERMS v1.19 PUBLISHED"], []),
+   ("bea_main.py", ['EULA_CURRENT_VERSION = "1.19"', 'EULA_V119_EFFECTIVE = "2026-10-12"', "TERMS_REQUIRED_DETAIL"], []),
+   ("eula_clean.html", ["Version 1.19 \u00b7 Last updated 27 September 2026", "I accept the Terms", "withdraw the request in the app"], ["expire automatically after 30 days"]),
+   ("LEGAL_VERSIONS.md", ["| **EULA** | **v1.19** |"], []),
+   ("canon.yml", ['eula: "v1.19"'], []),
+ ],
  "RUL-126": [
    # THE BASELINE CHANGES ONCE (14 Sep): one flag for the whole batch, dark by default, armed by
    # David. A second flag per item, or a default of 1, or the plan file vanishing, trips here.
