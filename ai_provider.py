@@ -364,3 +364,43 @@ def complete(messages, *, task="fast", max_tokens=700, system=None, provider=Non
         if res is None:
             res = r   # report the FIRST failure (the requested lane's) when all lanes fail
     return res
+
+
+def web_search_json(instructions, user, *, task="reason", max_tool_calls=4, max_output_tokens=3000, timeout=120):
+    """FAIR-PRICE-WEB-1 (27 Sep 2026): one OpenAI Responses call WITH web search, through this seam (RG-0017).
+    Returns (text, sources, in_tok, out_tok, model): sources is the set of page URLs the SEARCH itself returned
+    (web_search_call sources + url_citation annotations) -- the caller trusts a URL only if it is in that set.
+    Never raises; ('', set(), None, None, model) on any failure."""
+    import httpx
+    model = TASK_MODEL.get("openai", {}).get(task) or "gpt-5.6-terra"
+    key = envkey("OPENAI_API_KEY")
+    if not key:
+        return "", set(), None, None, model
+    body = {"model": model, "instructions": instructions, "input": user, "tools": [{"type": "web_search"}],
+            "include": ["web_search_call.action.sources"], "max_tool_calls": max_tool_calls,
+            "max_output_tokens": max_output_tokens}
+    hdr = {"Authorization": "Bearer " + key, "content-type": "application/json"}
+    try:
+        with httpx.Client(timeout=timeout) as c:
+            r = c.post("https://api.openai.com/v1/responses", headers=hdr, json=body)
+            if r.status_code == 400:
+                body.pop("max_tool_calls", None); body.pop("include", None)
+                r = c.post("https://api.openai.com/v1/responses", headers=hdr, json=body)
+        j = r.json()
+    except Exception:
+        return "", set(), None, None, model
+    urls, text = set(), ""
+    for it in (j.get("output") or []):
+        if it.get("type") == "web_search_call":
+            for src in ((it.get("action") or {}).get("sources") or []):
+                if src.get("url"):
+                    urls.add(src["url"])
+        if it.get("type") == "message":
+            for part in (it.get("content") or []):
+                if part.get("type") == "output_text":
+                    text += part.get("text") or ""
+                    for a in (part.get("annotations") or []):
+                        if a.get("type") == "url_citation" and a.get("url"):
+                            urls.add(a["url"])
+    u = j.get("usage") or {}
+    return text, urls, u.get("input_tokens"), u.get("output_tokens"), model

@@ -54,10 +54,11 @@ def served_tiers(service: str, tierkey: str, country: str,
         elif tierkey == "vehicles":
             out["1T"] = True                       # internal comps
         elif tierkey == "collectors":              # FAIR-PRICE-LM-1: any keyed catalogue feed, or eBay
-            if creds.get("numista") or creds.get("justtcg") or creds.get("bricklink") or creds.get("ebay"):
+            if creds.get("numista") or creds.get("justtcg") or creds.get("bricklink") or creds.get("ebay") \
+                    or creds.get("web"):               # FAIR-PRICE-WEB-1: named-source web comparables
                 out["1T"] = True
         elif tierkey == "local_market":            # FAIR-PRICE-LM-1: eBay asking band (keyed)
-            if creds.get("ebay"):
+            if creds.get("ebay") or creds.get("web"):  # FAIR-PRICE-WEB-1: or named-source web comparables
                 out["1T"] = True
         # S130: official eBay Browse asking-price band (free tier) lights ALL
         # collectible tierkeys incl. comics/watches once EBAY_APP_ID/EBAY_CERT_ID
@@ -83,7 +84,27 @@ def creds_from_env() -> dict:
         "justtcg":   bool(os.environ.get("JUSTTCG_API_KEY")),
         "ebay":      bool(os.environ.get("EBAY_APP_ID")
                           and os.environ.get("EBAY_CERT_ID")),
+        # FAIR-PRICE-WEB-1 (David 27 Sep 2026: "Named source definitely"): web comparables read on named pages
+        "web":       _has_key("OPENAI_API_KEY"),
     }
+
+
+def _has_key(name: str) -> bool:
+    """True when the key is in the environment or in the .env beside this module (the systemd unit does not
+    export the server .env -- the ENVKEY-1 class)."""
+    if os.environ.get(name):
+        return True
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"), encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line.startswith("export "):
+                    line = line[7:].strip()
+                if line.startswith(name + "=") and line.split("=", 1)[1].strip().strip('"').strip("'"):
+                    return True
+    except Exception:
+        return False
+    return False
 
 
 def net_cost_band(country_iso2: str) -> dict:

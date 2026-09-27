@@ -24135,6 +24135,83 @@ def _comp_amounts(category, city, exclude_id, rentals_only=False, ref_title=None
         return []
     return out
 
+def _wc_norm(u: str) -> str:
+    """FAIR-PRICE-WEB-1: a page address compared without its tracking tail, scheme or trailing slash."""
+    try:
+        from urllib.parse import urlsplit, parse_qsl, urlencode
+        p = urlsplit((u or "").strip())
+        q = urlencode([(k, v) for k, v in parse_qsl(p.query) if not k.lower().startswith("utm_")])
+        return (p.netloc.lower().removeprefix("www.") + p.path.rstrip("/") + ("?" + q if q else "")).lower()
+    except Exception:
+        return (u or "").strip().lower()
+
+
+async def _web_comps_band(title: str, city, country) -> dict | None:
+    """FAIR-PRICE-WEB-1 (David, 27 Sep 2026: "Named source definitely, the users will pay Tuppence for it - not
+    for a guess"). Comparable ASKING prices read on named web pages. The model searches and reports what each page
+    shows; the system keeps only pages the search itself returned, needs at least three, converts USD at the live
+    rate, and computes the band. None (so nothing is charged) when that bar is not met."""
+    import httpx, json as _wj, statistics as _st, re as _wr
+    key = ai_provider.envkey("OPENAI_API_KEY")
+    title = (title or "").strip()
+    if not key or not title:
+        return None
+    try:
+        _check_cost_ceiling("")   # platform daily rail, like every AI lane
+    except HTTPException:
+        return None
+    instr = ("You find what comparable second-hand items are listed for right now. Search the web for items comparable "
+             "to the one described, preferably offered in South Africa in rand. Return ONLY JSON: "
+             '{"comps":[{"title":"...","price":1234,"currency":"ZAR","url":"https://...","site":"..."}]} with 3 to 8 '
+             "items. Every price must be one you READ on that exact page; never estimate, never average, never invent a "
+             "page. currency is ZAR or USD only. If you cannot find at least 3, return {\"comps\":[]}.")
+    import asyncio as _wa
+    text, _urls, _it, _ot, model = await _wa.to_thread(
+        ai_provider.web_search_json, instr, "Item: %s\nWhere: %s, %s" % (title[:160], city or "", country or "ZA"))
+    seen = {_wc_norm(x) for x in _urls}
+    try:
+        _log_ai_spend("", "/listings/price-check#web-comps", "reason", _it, _ot, provider="openai", model=model)
+    except Exception:
+        pass
+    m = _wr.search(r"\{[\s\S]*\}", text or "")
+    try:
+        comps = (_wj.loads(m.group(0)) if m else {}).get("comps") or []
+    except Exception:
+        comps = []
+    rate = None
+    kept = []
+    for cp in comps[:10]:
+        try:
+            url = str(cp.get("url") or ""); price = float(str(cp.get("price")).replace(",", "").replace(" ", ""))
+            cur = str(cp.get("currency") or "ZAR").upper()
+        except Exception:
+            continue
+        if price <= 0 or not url or _wc_norm(url) not in seen:
+            continue   # a page the search did not return is not a source
+        if cur == "USD":
+            rate = rate or await live_usd_zar()
+            zar = price * rate
+        elif cur == "ZAR":
+            zar = price
+        else:
+            continue
+        site = (str(cp.get("site") or "") or _wc_norm(url).split("/")[0])[:40]
+        kept.append({"title": str(cp.get("title") or "")[:80], "zar": zar, "site": site, "url": url})
+    if len(kept) < 3:
+        _log.info("FAIR-PRICE-WEB-1: %r -> %d named comparables (need 3) - nothing charged", title[:60], len(kept))
+        return None
+    vals = sorted(k["zar"] for k in kept)
+    today = datetime.now(timezone.utc).strftime("%d %b %Y")
+    names = []
+    for k in kept:
+        if k["site"] not in names:
+            names.append(k["site"])
+    prov = ("Asking prices of %d comparable items read on %s on %s: " % (len(kept), ", ".join(names[:5]), today)
+            + "; ".join("%s R%s (%s)" % (k["site"], format(k["zar"], ",.0f"), k["url"]) for k in kept[:6]))
+    return {"n": len(kept), "low": vals[0], "high": vals[-1], "median": _st.median(vals),
+            "provenance": prov, "comps": kept}
+
+
 async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, category, city, asking_zar):
     """STEP 3 fair-price resolver for non-card categories (FREE/owned sources only).
     Returns ('verified', {...}) | ('area_guide', {...}) | None. The NUMBER always
@@ -24261,7 +24338,7 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
             elif tierkey == "collectors" and "lego" in _tt:
                 tierkey = "lego"
             else:
-                tierkey = "_asking_band"
+                tierkey = "_asking_band"   # every Local Market item, and Collectors items with no catalogue
         if tier == "1T" and tierkey in ("lego", "coins", "tcg", "cards", "comics", "watches", "_asking_band"):
             title = (listing["title"] if "title" in listing.keys() else "") or ""
             feed = None
@@ -24275,6 +24352,23 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
             # collectible fallback (free tier, credential-gated, B7-safe).
             if (not feed or not feed.get("value")) and _tier_providers().get("ebay_browse"):
                 feed = await tier_resolvers.ebay_asking_band(title)
+            # FAIR-PRICE-WEB-1 (David, 27 Sep 2026: "Named source definitely, the users will pay Tuppence for it -
+            # not for a guess"): no catalogue and no eBay -> comparable asking prices READ on named web pages. Only
+            # pages the search actually returned count, at least three of them, and the band is our arithmetic.
+            if not feed or not feed.get("value"):
+                _wc = await _web_comps_band(title, city, country)
+                if _wc:
+                    return ("verified", {
+                        "source": "web_comps", "floor_zar": _wc["median"],
+                        "official_range": ("R" + format(_wc["low"], ",.0f") + "-R" + format(_wc["high"], ",.0f")
+                                           + " asking (median R" + format(_wc["median"], ",.0f") + ", "
+                                           + str(_wc["n"]) + " comparable items)"),
+                        "official_ctx": _wc["provenance"],
+                        "block": ("MARKET ASKING-PRICE BAND (use these EXACT figures, do not alter; these are ASKING "
+                                  "prices of comparable items read on the named pages today - NOT sold prices, so "
+                                  "treat as an upper-leaning guide): " + _wc["provenance"]
+                                  + " | Median asking R" + format(_wc["median"], ",.0f")
+                                  + "; band R" + format(_wc["low"], ",.0f") + "-R" + format(_wc["high"], ",.0f") + ".")})
             if feed and feed.get("value"):
                 rate = await live_usd_zar()
                 usd = float(feed["value"]); zar = usd * rate
