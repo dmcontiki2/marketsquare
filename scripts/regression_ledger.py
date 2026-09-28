@@ -32260,5 +32260,157 @@ def rg_fair_price_web_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "fair price from named pages only, 3+, our arithmetic, nothing charged otherwise")]
 
+
+@entry("RG-0540", "SENDABLE-REACH-1: the supply figure on the ops dashboard counts only people "
+       "the wave can actually reach -- a city with no home on the live site is named and held, "
+       "never counted as runway",
+       LOCKED, fixed_on="2026-09-28",
+       scope="CityLauncher/scripts/publish_sendable.py, the whole city loop and the published "
+             "payload. FOUND 28 Sep 2026 by run 23 of the onboarding goal, auditing forwards "
+             "from the nightly log rather than backwards from the register. The file's own "
+             "docstring promises 'what the send chokepoint would ACTUALLY accept tonight' and "
+             "it applied armed + gates_green + disarmed_by -- but not GEO-REACH-1, the gate in "
+             "scripts/wave_cities.py that has decided which cities are ASKED since 26 Sep 2026. "
+             "MEASURED ON THE SERVER against the live register, both directions: the deployed "
+             "file printed '365 sendable, 3/95 cities, runway 28' and the fixed file prints "
+             "'21 sendable, 2/40 cities, runway 1, 344 held unreachable: Maine 344'. So 344 of "
+             "the 365 (94%) were in MAINE -- a state whose sellers cannot say where they are on "
+             "the site, that no wave has visited in two days, and whose letters could not end "
+             "in a published listing however good the letter was. The honest supply was 21: "
+             "Pretoria 20, Cape Town 1. THE COST: this payload is installed to "
+             "/var/www/marketsquare/static/comms_sendable.json and is what the comms dashboard "
+             "shows David, so a campaign with under two nights of reach read as four weeks of "
+             "runway. FIX: the reachability gate is IMPORTED from wave_cities (one "
+             "implementation, in the file that owns it -- the WAVE-CITIES-DISCOVER-1 lesson), "
+             "an unreachable city is bucketed into unreachable_sendable / unreachable_by_city "
+             "with its count rather than silently dropped (the HELD-BLIND-1 lesson, one night "
+             "old), and because GEO-REACH-1 fails OPEN by design the payload publishes "
+             "reachability_state so a fail-open reads as NOT MEASURED instead of silently "
+             "restoring the flattering number (the RG-0133 rule applied to the runway).",
+       ref="CLASS: an instrument that measures at one chokepoint while the decision is taken "
+           "at another. Seventh of the flattering numbers on this goal, after FUNNEL-DENOM-1, "
+           "ONBOARD-REAL-1, the contract's naive probe, PROXY-OPEN-1, '2,587 emailed' and '96 "
+           "reachable South Africans'. Every one of the seven read high; none was found by a "
+           "check aimed at it.")
+def rg_sendable_reach_1():
+    src = _cl_read(os.path.join("scripts", "publish_sendable.py"))
+    if src is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    # Judge the CODE, not the prose: this fix's own comment names Maine, the 365 and the
+    # gate it adds, so a needle test over the whole file would convict a correct fix for
+    # explaining itself -- RG-0494 and RG-0508, two nights running, same trap.
+    code = "\n".join(ln for ln in src.splitlines()
+                     if not ln.lstrip().startswith("#") and '"""' not in ln)
+    bad = []
+    if "_is_reachable" not in code:
+        bad.append("the reachability gate is gone from the supply figure -- unreachable cities "
+                   "count as runway again, which is the whole fault")
+    if "wave_cities" not in code:
+        bad.append("reachability is no longer imported from wave_cities -- a second copy of a "
+                   "moving state, which is how GEO-REACH-1's own list went stale")
+    if "unreachable_sendable" not in code or "unreachable_by_city" not in code:
+        bad.append("an unreachable city is dropped without being named -- a silent shrink, "
+                   "which is HELD-BLIND-1 exactly")
+    if "reachability_state" not in code:
+        bad.append("the payload no longer says whether reachability was measured, so "
+                   "GEO-REACH-1 failing open silently restores the flattering number")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "supply counts reachable cities only; what is held is named; a fail-open "
+                   "reads as NOT MEASURED, never as runway")]
+
+
+@entry("RG-0541", "RELEASE-STAMP-SERVER-1: a stop-loss release is stamped with the wave number "
+       "the SERVER's gate will compare against, or it is not stamped at all -- a release that "
+       "cannot be proven never prints as done",
+       LOCKED, fixed_on="2026-09-28",
+       scope="CityLauncher/clean_city_list.py (server_last_wave, release_wave, and main's "
+             "refusal to stamp) and CityLauncher/clean_stoploss_cities.bat (pull first, fail "
+             "closed). FOUND 28 Sep 2026 by run 23, checking a release path before using it "
+             "rather than after. clean_city_list.py is HOST-SIDE and stamped "
+             "stop_loss_released_wave from last_wave() on the LAPTOP database; the gate that "
+             "reads that stamp (wave_runner.gate_check, `released == stats['last_wave']`) runs "
+             "ON THE SERVER, where the nightly wave has run since WAVE-SERVER-1 (18 Sep 2026). "
+             "Every send the laptop has not pulled down makes the two numbers disagree, and a "
+             "stamp that matches no wave releases nothing -- while the cleaner prints "
+             "'stamped waves_policy ... The next wave judges itself'. MEASURED on both machines "
+             "28 Sep 2026 across the three latched cities: Pretoria host 8 / server 8 (would "
+             "have worked), Cape Town host 13 / server 14, Port Elizabeth host 8 / server 9. "
+             "TWO OF THE THREE RELEASES WOULD HAVE BEEN A NO-OP WITH A SUCCESS LINE OVER THEM, "
+             "and with both cities latched the nightly wave sends nothing at all: the 27 Sep "
+             "wave rendered 13 letters and sent zero. The laptop was 123 sends behind because "
+             "pull_from_server.py had not run; WAVE-SERVER-1's own note already named "
+             "clean_city_list as one of the four tools that over-count without it. FIX: the "
+             "stamp is read from the server through the same ssh_rows() the pull uses (one "
+             "mechanism, not two), a host/server disagreement is REPORTED rather than averaged "
+             "away, an unreadable server means NOT STAMPED rather than a guessed number, and "
+             "THE ORDINAL IS NOT RE-DERIVED -- scripts/server_wave_no.py calls the gate's own "
+             "wave_history() on the box. The first cut of this fix was WRONG TWICE and both "
+             "were caught by probing it instead of trusting it: it tested ssh_rows() for "
+             "state=='ok' when that function returns 'read', so it refused to stamp every "
+             "city and released nothing on its first live run; and its own SQL "
+             "(COUNT(DISTINCT date(created_at))) returned Pretoria 7 / Cape Town 12 against "
+             "the gate's 8 / 14, because a wave is a day in the SEND TIMEZONE and a 22:10 UTC "
+             "send belongs to the next SAST day. Wrong counter, wrong machine, wrong "
+             "arithmetic: three ways to compute one ordinal is three faults, so now there is "
+             "one. And "
+             "clean_stoploss_cities.bat runs the pull first and exits non-zero if it fails, the "
+             "way sync_to_server.bat and exchange_sync.bat already do.",
+       ref="WAVE-COUNTER-1 (8 Sep 2026) fixed this stamp when it was computed from the wrong "
+           "COUNTER. This is the same fault one layer out: the right counter, on the wrong "
+           "MACHINE. CLASS: a value written on one machine and compared on another, with no "
+           "check that the two agree -- and the failure is silent success, the most expensive "
+           "shape this project keeps finding.")
+def rg_release_stamp_server_1():
+    src = _cl_read("clean_city_list.py")
+    bat = _cl_read("clean_stoploss_cities.bat")
+    if src is None or bat is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
+    code = "\n".join(ln for ln in src.splitlines()
+                     if not ln.lstrip().startswith("#") and '"""' not in ln)
+    bad = []
+    if "def server_last_wave(" not in code:
+        bad.append("the server's wave number is no longer read -- the stamp is the laptop's "
+                   "again and cannot match the gate")
+    if "def release_wave(" not in code:
+        bad.append("release_wave is gone -- nothing reconciles the host and server numbers")
+    body = fn_body(src, "def main(")
+    if body and "release_wave(" not in body:
+        bad.append("main() stamps without going through release_wave -- the host number is "
+                   "back in the stamp")
+    if body and "NOT STAMPED" not in body:
+        bad.append("main() no longer refuses to stamp when the server cannot be read -- a "
+                   "guessed stamp is exactly the silent no-op being fixed")
+    if "pull_from_server" not in bat:
+        bad.append("clean_stoploss_cities.bat no longer pulls the server's sends down first, "
+                   "so it judges a stale wave history")
+    if bat and "exit /b 1" not in bat:
+        bad.append("the cleaner no longer fails closed on a failed pull")
+    # THE ORDINAL IS NOT RE-DERIVED. The first cut of this fix asked the server for
+    # COUNT(DISTINCT date(created_at)) and got 7/12 where the gate's wave_history() says
+    # 8/14 -- a wave is a day in the SEND TIMEZONE, and a 22:10 UTC send falls in the next
+    # SAST day. Wrong counter (WAVE-COUNTER-1), wrong machine (this entry), wrong
+    # arithmetic (that first cut): three ways to compute one ordinal is three faults.
+    helper = _cl_read(os.path.join("scripts", "server_wave_no.py"))
+    if helper is None:
+        bad.append("scripts/server_wave_no.py is gone -- the gate's own wave_history() is no "
+                   "longer what the stamp is read from")
+    elif "wave_history(" not in helper:
+        bad.append("server_wave_no.py no longer calls wave_history() -- the ordinal is being "
+                   "re-derived, which is how 7/12 was mistaken for 8/14")
+    if "COUNT(DISTINCT date(" in code or "SELECT DISTINCT date(" in code:
+        bad.append("clean_city_list.py re-derives the wave ordinal in SQL again instead of "
+                   "asking the gate's own function -- UTC days, not send-timezone days")
+    dep = _cl_read("deploy_citylauncher.bat")
+    if dep is not None and "server_wave_no.py" not in dep:
+        bad.append("server_wave_no.py is not on the deploy manifest, so the box never gets it "
+                   "and every release refuses to stamp -- a manifest line has been the "
+                   "difference between a fix and the appearance of one three times here")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the release is stamped with the number the gate reads, or not stamped; the "
+                   "cleaner pulls first and fails closed")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

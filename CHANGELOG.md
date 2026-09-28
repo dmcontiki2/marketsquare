@@ -1,3 +1,7 @@
+### FAIR-PRICE-WEB-1 (RG-0539) - 2026-09-27
+- "Is this a fair price?" (1T) on Local Market, and on Collectors items with no catalogue match, now works without eBay: comparable asking prices read on named pages. Only pages the search itself returned count, at least three are needed, the band is our own arithmetic, and nothing is charged otherwise. David, 27 Sep 2026: "Named source definitely, the users will pay Tuppence for it - not for a guess".
+- Live proof: Local Market honey #426 -> 8 comparables on named sites (Superhub, PriceCheck, Online Health Shop, Bryanston Organic Market, Truffle Pig Pantry, Honey Pot...), R75-R120, median R96, 1T charged.
+
 ### SYNC-GUARD-1 + SYNC-CHECK-1 - 2026-09-27 (stand-up, 19:00Z slot)
 - **SYNC-GUARD-1: an informational call must never write.** `scripts/sync_quick_roles.py` ignored `sys.argv` entirely, so `--help` ran the full sync and rewrote quick.html's 771-key QI18N block - which is what happened during this stand-up while asking the script what it did (reverted; the change was one line and zero content). `--help` / `-h` now prints usage and writes nothing, an unknown argument refuses with the usage text, and the default no-argument behaviour is unchanged. Verified by md5 on quick.html across all three call shapes.
 - **SYNC-CHECK-1: `--check` reports drift by CONTENT and writes nothing.** Exit 0 in step, 1 real drift, 2 could not measure. It parses the QI18N object on both sides and compares order-independently, naming missing keys, extra keys and same-key-different-translation counts when they genuinely differ, and returns NOT MEASURED rather than agreement if either side will not parse (RG-0187's contract).
@@ -27043,4 +27047,70 @@ residual was amended with the replacement measurement. D8 is withdrawn from Davi
 Boards: pre-work 493 entries / 472 holding / 1 REGRESSED / 20 open; post-work 496 / 475 /
 0 REGRESSED / 21 open / 0 ready to lock / 0 UNVERIFIED. rulings_check 150 / 0 FAIL / 25 WARN,
 before and after. Both new entries proven to FAIL on a reverted tree and pass on this one.
+Cost model impact: none.
+
+## Session — onboarding goal run 23 (RUL-096), 27–28 Sep 2026, Opus 5
+
+**The number is still 0** (both probes; the contract's raw query says 3, all three `e2e_test`
+seeds barred by §3). 2,588 emailed, unchanged from run 22 — because the nightly campaign is
+now sending nothing at all, which is what this run found and fixed the machinery for.
+
+**Run 22's handover item is DISCHARGED.** The 27 Sep 22:10 wave was the first under RG-0507.
+It visited Pretoria and Cape Town, rendered 13 letters, and **not one was an Estate Agent and
+not one came from property24** — so the source hard-stop reaches the emailer's own chokepoint,
+not merely the planner. Checked, and cleared, one thing that looked like a fault on the way:
+the letters render to organisation desks (`info@christalhopebookstore.com`,
+`books@kalkbaybooks.co.za`), which is the RUL-059 agency lane working as designed —
+`_looks_org_name`/`_looks_role_address` apply only to `person_only_categories`, and Collector
+Shops / Tutor Institutions / Service Companies are deliberately not among them. A false red
+costs what a false green costs.
+
+**RG-0540 SENDABLE-REACH-1 (shipped).** `publish_sendable.py` promises "what the send
+chokepoint would ACTUALLY accept tonight" and applied armed + gates_green + disarmed_by but
+not GEO-REACH-1, the gate that has decided which cities are *asked* since 26 Sep. Measured on
+the server in both directions: the deployed file printed **365 sendable, runway 28 nights**;
+the fixed file prints **21 sendable, runway 1**, with **344 held unreachable: Maine 344**. So
+94% of the supply on David's comms dashboard was people in a state whose sellers cannot say
+where they are on the site, in a city no wave has visited since 26 Sep. The gate is now
+imported from `wave_cities` (one implementation), an unreachable city is named with its count
+rather than silently dropped, and because GEO-REACH-1 fails open the payload carries
+`reachability_state` so a fail-open reads as NOT MEASURED instead of quietly restoring 365.
+Seventh flattering number on this goal; like the other six, it read high and nothing was
+aimed at it.
+
+**RG-0541 RELEASE-STAMP-SERVER-1 (shipped).** The stop-loss release was stamped with the wave
+number computed on the **laptop**, and the gate that reads the stamp runs on the **server**.
+Measured on both machines: Pretoria host 8 / server 8, Cape Town host 13 / server 14, Port
+Elizabeth host 8 / server 9 — **two of the three releases would have been a no-op with a
+success line over them**, leaving every remaining city latched and the wave sending zero. The
+laptop was 123 sends behind because `pull_from_server.py` had not run, and WAVE-SERVER-1's own
+note already named `clean_city_list` as one of the four tools that over-count without it.
+`clean_city_list.py` now reads the server's number through the same `ssh_rows()` the pull uses,
+reports a host/server disagreement instead of averaging it away, and **refuses to stamp** when
+the server cannot be read; `clean_stoploss_cities.bat` pulls first and exits non-zero if the
+pull fails. WAVE-COUNTER-1 fixed this stamp when it was the wrong *counter*; this is the same
+fault one layer out — the right counter on the wrong *machine*.
+
+**The latches were then released on measured evidence, not on a hunch.** The sources that
+latched Pretoria (`osm:shop=motorcycle` 2 of 3, `osm:shop=car`) have **zero unsent rows left**
+— exhausted, so they cannot re-latch it — and Cape Town's and Port Elizabeth's latches were
+100% property24, which RG-0507 now holds. Pretoria's 20 remaining sendable rows are Tutor
+Institutions, Service Companies, Collector Shops, Travel Agencies and Tour Operators from OSM
+and Google Maps, none of them from a bouncing source.
+
+**Employer lane hand-off (`EMPLOYER_LANE_SUPPLY.md`, OPEN_LOOPS L27).** Probed fresh rather
+than inherited: **1,354 never-emailed, no-verdict `teachers_trainers` rows, every one `mx_ok`**,
+1,267 school-named, in nine cities that are all armed, gates_green and reachable — Durban 596,
+Pietermaritzburg 535 (84% in KwaZulu-Natal, so isiZulu first). Run 22 recorded 1,091. They stay
+correctly held as sellers by PERSON-ONLY-1 and ORG-NAME-1, and they are exactly the employer
+kind `org_enrol.py` was built for. `org_enrol.py` was **not touched** — SO-5, its owner ships it.
+
+**The arithmetic that now decides the goal:** the reachable seller pool is 21 people and the
+goal needs 20 published listings. That is not a copy problem or a funnel problem; it is a
+supply problem, and the employer door is the only lane that owns its own supply.
+
+Boards: pre-work 526 entries / 499 holding / 0 REGRESSED / 22 open / 5 ready to lock /
+0 UNVERIFIED; rulings_check 166 / 0 FAIL / 25 WARN. Both new entries proven to FAIL on a
+reverted tree (`git show HEAD:`) and pass on this one. The 5 ready-to-lock are the parallel
+Ripple lane's own entries from 27 Sep and were left to their owner (SO-5).
 Cost model impact: none.
