@@ -30863,7 +30863,20 @@ def _code_only(src):
             continue
         out.append(src[i])
         i += 1
-    return "\n".join(ln for ln in "".join(out).splitlines()
+    txt = "".join(out)
+    # JS/C block comments too. _code_only was written for Python and silently did NOTHING to a
+    # JavaScript file, so the FOURTH proxy-assertion failure in three days was a check reading
+    # its own /* ... */ explanation as if it were code (RG-0494, RG-0508, RG-0541, RG-0542).
+    # `/*` cannot begin a comment in Python, so this is safe for both languages. Line comments
+    # are deliberately NOT stripped: '//' appears inside every https:// URL.
+    res, k = [], 0
+    while k < len(txt):
+        if txt.startswith("/*", k):
+            e = txt.find("*/", k + 2)
+            k = len(txt) if e < 0 else e + 2
+            continue
+        res.append(txt[k]); k += 1
+    return "\n".join(ln for ln in "".join(res).splitlines()
                      if not ln.lstrip().startswith("#"))
 
 
