@@ -11406,7 +11406,14 @@ function hubWelcome(){
   try{ seen = localStorage.getItem(HUB_WELCOME_KEY) === '1'; }catch(e){}
   // Only a genuinely new seller: anybody with a listing has been here before, whatever
   // this device remembers.
-  var fresh = !(window.dashState && dashState.listings && dashState.listings.length);
+  /* HUB-WELCOME-BLIND-1 (28 Sep 2026): this tested `window.dashState`, but dashState is a
+     top-level `const` (line ~11353) and a const is NOT a property of window -- so the test was
+     undefined on every call, `fresh` was true for everybody, and the first-timer greeting showed
+     to every seller on every device however many adverts she had. Its own comment promised
+     "anybody with a listing has been here before, whatever this device remembers"; it never once
+     did that. MEASURED 28 Sep: greeting shown directly above the seller's own draft advert.
+     typeof-guarded so a change in load order raises no ReferenceError. */
+  var fresh = !(typeof dashState !== 'undefined' && dashState.listings && dashState.listings.length);
   el.style.display = (!seen && fresh) ? 'block' : 'none';
 }
 function hubWelcomeDone(){

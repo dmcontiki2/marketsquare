@@ -32498,6 +32498,11 @@ def rg_key_account_hub_1():
                    "e-mail on 23 Sep (AUDIT-AUTH-1)")
     if "/listings/mine" not in code:
         bad.append("loadLiveDash no longer fetches /listings/mine at all")
+    # HUB-WELCOME-BLIND-1: the greeting's own freshness test must read the real binding.
+    hw = src[src.find("function hubWelcome("):src.find("function hubWelcome(") + 1400]
+    if "window.dashState" in _code_only(hw):
+        bad.append("hubWelcome() tests window.dashState again -- dashState is a top-level const "
+                   "and is not on window, so every seller is greeted as a first-timer for ever")
     if "updateDashStats(" not in code:
         bad.append("the hub is not repainted after the listings load -- the counters and the "
                    "first-timer greeting keep their pre-load values over real adverts "
