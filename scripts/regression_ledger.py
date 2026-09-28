@@ -32439,5 +32439,74 @@ def rg_release_stamp_server_1():
                    "cleaner pulls first and fails closed")]
 
 
+
+@entry("RG-0542", "KEY-ACCOUNT-HUB-1 / HUB-REFRESH-1: a seller's own hub asks for her listings "
+       "whether or not the device holds an e-mail, and repaints once they arrive",
+       LOCKED, fixed_on="2026-09-28",
+       scope="ms.js loadLiveDash() -- the /listings/mine guard and the repaint at the end of the "
+             "load. FOUND 28 Sep 2026 walking the employer door (org_enrol) end to end on a "
+             "throttled phone, as a worker rather than as a designer. TWO PARTS, and the first "
+             "was shipped on a WRONG DIAGNOSIS, recorded here because a ledger that only keeps "
+             "the wins teaches nothing. (1) KEY-ACCOUNT-HUB-1: loadLiveDash fetched "
+             "/listings/mine ONLY inside `if (sellerEmail)`, sellerEmail being a demo record or "
+             "localStorage. A worker enrolled through the employer door signs in with a KEY -- a "
+             "session cookie and an identity of the form w-...@key.trustsquare.co -- and may hold "
+             "no e-mail on the device at all. I reported that this made her draft 'invisible and "
+             "unreachable'. IT DID NOT: the draft was on the hub the whole time with its Publish "
+             "button, below the fold, and I had read only the first few hundred characters of "
+             "body text. The guard is still worth removing -- /listings/mine has bound to the "
+             "proven session since AUDIT-AUTH-1 (23 Sep) and ignores a typed ?email=, so a client "
+             "that refuses to ask without one is asking permission it does not need -- but it "
+             "fixed no observed symptom. A LADDER, NOT A SECOND SOLUTION (David's condition): one "
+             "arbiter, server-side _actor(); two ways of asking, e-mail first, no-e-mail as the "
+             "fall-through; both reach the same arbiter, so the rungs cannot disagree. "
+             "(2) HUB-REFRESH-1, which IS the defect that was actually visible: loadLiveDash "
+             "filled dashState and told nobody. The hub kept what it had painted before the data "
+             "existed -- header '0 ACTIVE / 0 PENDING / 0 QUEUED' and hubWelcome() greeting a "
+             "seller with 'First time here' directly above her own draft advert. updateDashStats() "
+             "now runs at the end of the load; it also calls hubWelcome(), so the counters and the "
+             "greeting are both recomputed against data that exists. PROVEN on the live site the "
+             "same session: enrol 3 -> slips opened 3 -> journey walked in isiZulu and English -> "
+             "PUT 200 'Listing is now live' -> listing 435 live, published_at stamped, visible to "
+             "a logged-out stranger, employer dashboard PUBLISHED 1. The probe listing was then "
+             "returned to draft so no invented cleaner advertises to the public.",
+       ref="CLASS: state loaded asynchronously and rendered once, before it exists -- the render "
+           "is correct, the data is correct, and nobody reconciles them. The wrong diagnosis "
+           "belongs to the project's oldest family: I read a truncated view and reported it as "
+           "the world, one hour after writing 'audit the denominator' into a plan. A read that "
+           "was cut short is not evidence of absence; it is evidence that the reader stopped.")
+def rg_key_account_hub_1():
+    src = _cl_read_ms() if False else None
+    try:
+        with open(os.path.join(REPO, "ms.js"), encoding="utf-8", errors="replace") as fh:
+            src = fh.read()
+    except Exception:
+        return [(INFO, "NOT EVALUATED - ms.js is not readable from this vantage")]
+    # Bound the slice ourselves: fn_body()'s window ran 11,000 lines past the end of this
+    # function and swallowed an unrelated `if (sellerEmail)` on the edit screen, which would
+    # have made this check a permanent false FAIL (the RG-0465 fixed-byte-window residual).
+    i = src.find("async function loadLiveDash(")
+    if i < 0:
+        return [(FAIL, "loadLiveDash() is gone -- the hub has no loader at all")]
+    nxt = [j for j in (src.find("\nfunction ", i + 10), src.find("\nasync function ", i + 10)) if j > 0]
+    body = src[i:min(nxt)] if nxt else src[i:i + 8000]
+    code = _code_only(body)
+    bad = []
+    if "if (sellerEmail) {" in code:
+        bad.append("the hub refuses to ask for a seller's own listings without an e-mail again -- "
+                   "a key-account worker holds only a session, and the server stopped needing the "
+                   "e-mail on 23 Sep (AUDIT-AUTH-1)")
+    if "/listings/mine" not in code:
+        bad.append("loadLiveDash no longer fetches /listings/mine at all")
+    if "updateDashStats(" not in code:
+        bad.append("the hub is not repainted after the listings load -- the counters and the "
+                   "first-timer greeting keep their pre-load values over real adverts "
+                   "(HUB-REFRESH-1)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the hub asks with or without an e-mail, one server-side arbiter decides, and "
+                   "it repaints once the answer is in")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

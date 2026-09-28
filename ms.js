@@ -611,8 +611,15 @@ async function loadLiveDash() {
      confirmed, ZERO published, listing 435 sitting in 'draft' with no way back to it.
      The server stopped needing the e-mail on 23 Sep (AUDIT-AUTH-1 / IDENTITY-BIND-2:
      /listings/mine binds to the proven session and ignores a typed ?email=). The CLIENT
-     never stopped requiring one. So ask always -- the session is the identity; the e-mail
-     rides along only when we happen to have it, and the server ignores it either way. */
+     never stopped requiring one. So ask always.
+
+     A LADDER, NOT A SECOND SOLUTION (David's condition, 28 Sep 2026): there is exactly ONE
+     thing that decides who you are, and it is server-side -- _actor() on the BEA, which reads
+     the proven session and IGNORES any ?email= in the query string. This client has two ways
+     of ASKING, in order: send the e-mail when the device happens to hold one, and fall through
+     to asking with no e-mail at all when it does not. Both arrive at the same arbiter, so the
+     two rungs can never disagree or return different sellers -- if the first slips, the second
+     proceeds, and the answer is identical either way. */
   {
     try {
       const mine = await apiGet('/listings/mine' + (sellerEmail ? '?email=' + encodeURIComponent(sellerEmail) : ''));
@@ -709,6 +716,18 @@ async function loadLiveDash() {
   } catch(e) {
     console.warn('loadLiveDash intros failed:', e);
   }
+
+  /* HUB-REFRESH-1 (28 Sep 2026). loadLiveDash filled dashState and then told nobody, so the
+     hub kept whatever it had painted BEFORE the data arrived. MEASURED live 28 Sep on a worker
+     enrolled through the employer door: her draft advert was on the hub with its Publish button,
+     while the header above it still read '0 ACTIVE / 0 PENDING / 0 QUEUED' and hubWelcome()
+     greeted her with 'First time here' -- because `fresh` had been computed against an empty
+     list and was never recomputed. Both are fed by updateDashStats(), which also calls
+     hubWelcome(), so one call at the end of the load corrects the counters AND retires the
+     first-timer greeting. The numbers themselves were right (a draft is not 'active'); what was
+     wrong was that nothing recounted them. CLASS: state loaded asynchronously and rendered
+     once, before it exists. */
+  try{ updateDashStats(); }catch(e){}
 }
 
 // ── CURRENCY FORMATTER ────────────────────────────────────
