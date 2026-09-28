@@ -30838,6 +30838,35 @@ def rg_qa11_wave_prep_admin_only():
              + ("" if not notes else " (" + notes[0] + ")"))]
 
 
+
+def _code_only(src):
+    """Source with EVERY comment and docstring removed -- the CODE, not the prose.
+
+    RG-0494 (26 Sep), RG-0508 (27 Sep) and RG-0541 (28 Sep) were each convicted by their own
+    explanation: a needle test over a whole file matches the docstring that NAMES the thing
+    the fix removed. Three nights, three entries, same trap, and the third was written by a
+    session that had just read the lesson. A line filter is not enough -- a docstring's BODY
+    lines start with no hash and contain no quote marks. So strip triple-quoted blocks whole,
+    then hash comments, and assert against what is left.
+    """
+    quotes = ('"""', "'''")
+    out, i, n = [], 0, len(src)
+    while i < n:
+        hit = None
+        for q in quotes:
+            if src.startswith(q, i):
+                hit = q
+                break
+        if hit:
+            j = src.find(hit, i + 3)
+            i = n if j < 0 else j + 3
+            continue
+        out.append(src[i])
+        i += 1
+    return "\n".join(ln for ln in "".join(out).splitlines()
+                     if not ln.lstrip().startswith("#"))
+
+
 def _cl_read(rel):
     """Read a file out of the CityLauncher sibling, or None when it is not mounted."""
     fp = os.path.join(REPO, "..", "CityLauncher", rel)
@@ -32299,8 +32328,7 @@ def rg_sendable_reach_1():
     # Judge the CODE, not the prose: this fix's own comment names Maine, the 365 and the
     # gate it adds, so a needle test over the whole file would convict a correct fix for
     # explaining itself -- RG-0494 and RG-0508, two nights running, same trap.
-    code = "\n".join(ln for ln in src.splitlines()
-                     if not ln.lstrip().startswith("#") and '"""' not in ln)
+    code = _code_only(src)
     bad = []
     if "_is_reachable" not in code:
         bad.append("the reachability gate is gone from the supply figure -- unreachable cities "
@@ -32366,15 +32394,14 @@ def rg_release_stamp_server_1():
     bat = _cl_read("clean_stoploss_cities.bat")
     if src is None or bat is None:
         return [(INFO, "NOT EVALUATED - CityLauncher is not mounted on this vantage")]
-    code = "\n".join(ln for ln in src.splitlines()
-                     if not ln.lstrip().startswith("#") and '"""' not in ln)
+    code = _code_only(src)
     bad = []
     if "def server_last_wave(" not in code:
         bad.append("the server's wave number is no longer read -- the stamp is the laptop's "
                    "again and cannot match the gate")
     if "def release_wave(" not in code:
         bad.append("release_wave is gone -- nothing reconciles the host and server numbers")
-    body = fn_body(src, "def main(")
+    body = _code_only(fn_body(src, "def main(") or "")
     if body and "release_wave(" not in body:
         bad.append("main() stamps without going through release_wave -- the host number is "
                    "back in the stamp")
