@@ -1,5 +1,5 @@
 {
-  "next_id": 163,
+  "next_id": 167,
   "items": {
     "DW-001": {
       "first_seen": "2026-08-02",
@@ -1773,10 +1773,51 @@
       "next_action": "None - closed.",
       "closed": "2026-09-27",
       "closed_evidence": "Re-review run on demand 27 Sep ~07:2xZ on the server with the QA Bot's OWN reviewer (qa_bot.REVIEW_SYSTEM via qa_bot.openai_chat, OpenAI, $0.042) over the last 40h of scripts/maintenance_agent.py + fault_text.py - the flagged code and the fix together: verdict GREEN, 0 findings. Live probe: a code-only support message answers 400, an ordinary one is accepted. Ledger RG-0521 LOCKED and holding; full board 0 regressed."
+    },
+    "DW-163": {
+      "first_seen": "2026-09-28",
+      "last_seen": "2026-09-28",
+      "sev": "HIGH",
+      "source": "QA Bot nightly review 20260928-003628 (lead) + GitHub API probe + git ls-files",
+      "status": "OPEN",
+      "owner": "David",
+      "summary": "NEW, SEV-2 — the GitHub mirror dmcontiki2/marketsquare is PUBLIC (api.github.com: private=false, visibility=public; raw.githubusercontent.com answers 200 anonymously). It carries two tracked copies of the live database from 24 Jul (backups/_to_delete/marketsquare.db and backups/_to_delete/2026-07-24_0830/marketsquare.db, commit 181fca0 'Deploy auto-commit'), both downloadable. Counted read-only, no values printed: users 9 (emails), listings 68 (seller emails), admin_users 5 (pin_hash — short PINs, brute-forceable), email_triage 10 (support mail bodies), seller_documents 10, intro_requests 3 (buyer emails), demand_prospects 1,487 (emails encrypted, key not in repo). Banking/buyer_token/id_hash columns are EMPTY in this copy. Sibling repos CityLauncher and AdvertAgent are private (404). No prior record on disk says the repo was made public on purpose.",
+      "next_action": "David (yes/no): make the GitHub repository dmcontiki2/marketsquare private now? That stops the exposure in one step. Then Claude, in the next attended session: untrack both .db copies and add backups/ to .gitignore, force a change of all 5 admin PINs, add a ledger entry that fails if the repo is public or any .db is tracked; purging the files from git history is a deletion and stays David's call.",
+      "alert": "RED email delivered via worker lane, Resend id 01a0e65b-a4bd-742b-a40c-854bfa24c6c7, 04:52:39 UTC"
+    },
+    "DW-164": {
+      "first_seen": "2026-09-28",
+      "last_seen": "2026-09-28",
+      "sev": "MEDIUM",
+      "source": "QA Bot nightly review 20260928-003628 (OpenAI reviewer) — verdict RED",
+      "status": "OPEN",
+      "owner": "Claude",
+      "summary": "NEW — the QA Bot's code review is RED on docs/E2E_RIPPLE_PROGRESS_2026-09-27.html (commit 015e549): the page names Jacques, a real tester (RUL-191), and his account activity (a reopened report, sign-in links made). The page is NOT served by trustsquare.co (404 at /docs/…, /… and /static/…; not in the deploy manifest) but IS publicly readable through the public GitHub repo (DW-163).",
+      "next_action": "Claude fixes this in the next attended session: replace the tester's name with a role label in the progress page (and keep named-person progress pages out of the tracked tree), then let the QA Bot re-review. Closes when the nightly review is no longer RED on this file."
+    },
+    "DW-165": {
+      "first_seen": "2026-09-28",
+      "last_seen": "2026-09-28",
+      "sev": "MEDIUM",
+      "source": "regression ledger --chunk (5 calls)",
+      "status": "OPEN",
+      "owner": "Claude",
+      "summary": "NEW — 5 ledger entries print READY TO LOCK: RG-0532 (LM-STANDARD-FLOW-1), RG-0534 (RECEIPT-EMAIL-1), RG-0536 (EMAIL-ANCHOR-1), RG-0537 (RIPPLE-WALK-3), RG-0539 (FAIR-PRICE-WEB-1). They pass live but are still filed OPEN, so if any of them breaks the board prints 'open', never REGRESSION — shipped fixes with no tripwire (the DW-122/DW-138 class).",
+      "next_action": "Claude fixes this in the next attended session: flip the five to LOCKED in scripts/regression_ledger.py (no weakening) and re-run; closes when the ledger reads 0 ready to lock."
+    },
+    "DW-166": {
+      "first_seen": "2026-09-28",
+      "last_seen": "2026-09-28",
+      "sev": "LOW",
+      "source": "Monday deep scan (scripts/deep_scan.py, 4/4 tools) — delta vs SCAN_REPORT.json of 17 Sep",
+      "status": "OPEN",
+      "owner": "Claude",
+      "summary": "NEW — 324 findings, 48 new, 3 crash-class. Adjudicated read-only: (1) ruff F821 'io' undefined, scripts/regression_ledger.py:25270 in rg_edge_blind_1 — latent only: its guard ('__file__' in dir() inside a function) is always False, so the io branch never runs (dead fallback, still a bug); (2)+(3) eslint no-func-assign ms.js:6025 (_msSellerCanReceive) and :19158 (renderCatCounts) — deliberate typeof-guarded wrapper IIFEs, not faults. Rest: 45 LOW/MEDIUM lint (unused imports/vars incl. ripple_features.py:98 circle_full_detail bound but unused — bea_main enforces the circle cap itself, so no gap found). The 21 Sep Monday lane did not run, so this delta covers 11 days.",
+      "next_action": "Claude fixes this in the next attended session: import io (or use open()) and fix the dead __file__ guard in rg_edge_blind_1; mark the two ms.js wrappers with an eslint-disable-line comment giving the reason; closes when next Monday's scan shows 0 new crash-class."
     }
   },
-  "last_run": "2026-09-27",
-  "last_verdict": "AMBER",
+  "last_run": "2026-09-28",
+  "last_verdict": "RED",
   "recheck_pass_2026_08_20": {
     "requested_by": "David: close all open actions",
     "items_rechecked": 15,
@@ -3791,5 +3832,68 @@
     ],
     "still_open": [],
     "checks_run": "12 of 12 applicable"
+  },
+  "watch_pass_2026_09_28": {
+    "verdict": "RED",
+    "reason": "site green, 0 regressed; SEV-2 data exposure: public GitHub repo carries two live-DB copies (DW-163)",
+    "site": {
+      "health": "ok",
+      "version": "1.3.1",
+      "root_seconds": 0.83,
+      "root_bytes": 284849,
+      "tls_days": 55,
+      "paystack_monitor": "UP key ok"
+    },
+    "ledger": {
+      "method": "--chunk, 5 calls",
+      "entries": 528,
+      "holding": 501,
+      "regressed": 0,
+      "open": 22,
+      "ready_to_lock": 5,
+      "unverified": 0
+    },
+    "audit": {
+      "findings": 2,
+      "new": 0,
+      "all": "INFO"
+    },
+    "cost_sweep": {
+      "exit": 0
+    },
+    "daily_checks": "DEPLOY DRIFT clean, 156/156",
+    "server": {
+      "ssh": "SSH_OK msdeploy",
+      "fea": "ok, 0 alerts",
+      "subscriptions": {
+        "UP": 35,
+        "HELD": 15,
+        "PLANNED": 1,
+        "DOWN": 0
+      },
+      "issues": [],
+      "disk": "50% used",
+      "queue": [],
+      "staged": [],
+      "qa_bot_nightly": "PASS 244 / SKIP 61 / UNPROVEN 25 / 0 FAIL via loopback (edge 403); review RED docs/E2E_RIPPLE_PROGRESS_2026-09-27.html"
+    },
+    "cron_parity": "holds - loop_date 2026-09-28, smoke 39/39 vs 40/40, health ok/1.3.1, spend $0.0009 of $10, month $4.74/1757 calls",
+    "smoke": "40 OK / 0 FAIL",
+    "monday": {
+      "canon_pointers": "ALL IN LINE",
+      "pricing_canon": "ALL IN LINE",
+      "cc_age": "none aged",
+      "deep_scan": "324 findings, 48 new, 3 crash-class (DW-166)"
+    },
+    "ai_watch": "all-clear for ZA; Claude elevated errors on Mythos/Fable 5.1 (app pins sonnet-4-6); Codex outage 25 Sep 56 min resolved; GPT-5.6 Sol promo $4/$20 already on file",
+    "alert": "RED delivered via worker, Resend id 01a0e65b-a4bd-742b-a40c-854bfa24c6c7",
+    "new": [
+      "DW-163",
+      "DW-164",
+      "DW-165",
+      "DW-166"
+    ],
+    "closed": [],
+    "phase_d": "SKIPPED - secret material (admin PIN hashes) sitting in the tracked tree; rule: flag SEV-2, commit nothing"
   }
 }

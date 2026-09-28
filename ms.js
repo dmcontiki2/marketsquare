@@ -598,9 +598,24 @@ async function loadLiveDash() {
 
   // ── Step 1: Load seller\'s own listings ──────────────────
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
-  if (sellerEmail) {
+  /* KEY-ACCOUNT-HUB-1 (28 Sep 2026). The hub used to fetch a seller's listings ONLY when it
+     could put an e-mail in the query string. A worker enrolled through the employer door
+     (org_enrol) signs in with a KEY -- she has a session cookie and a key identity
+     (w-...@key.trustsquare.co) and no e-mail anywhere on the device, so sellerEmail was ''
+     and this whole block was skipped. /listings/mine was never called, dashState.listings
+     stayed empty, and her hub read '0 ACTIVE / 0 PENDING / 0 QUEUED' over the top of the
+     draft she had just made -- with hubWelcome() greeting her as a first-time seller.
+     Her Quick advert was saved, was hers, and was unreachable: the Sign-the-terms-and-publish
+     link points here, so the draft could never be published and the advert never went live.
+     MEASURED 28 Sep on the live site: three workers enrolled, three slips opened, three
+     confirmed, ZERO published, listing 435 sitting in 'draft' with no way back to it.
+     The server stopped needing the e-mail on 23 Sep (AUDIT-AUTH-1 / IDENTITY-BIND-2:
+     /listings/mine binds to the proven session and ignores a typed ?email=). The CLIENT
+     never stopped requiring one. So ask always -- the session is the identity; the e-mail
+     rides along only when we happen to have it, and the server ignores it either way. */
+  {
     try {
-      const mine = await apiGet('/listings/mine?email=' + encodeURIComponent(sellerEmail));
+      const mine = await apiGet('/listings/mine' + (sellerEmail ? '?email=' + encodeURIComponent(sellerEmail) : ''));
       if (mine && mine.length) {
         mine.forEach(l => {
           let dl = dashState.listings.find(d => d.beaListingId === l.id);

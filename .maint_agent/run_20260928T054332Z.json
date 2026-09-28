@@ -1,0 +1,58 @@
+{
+  "run": "20260928T054331Z",
+  "mode": "SHADOW (kill switch OFF \u2014 default, cannot commit)",
+  "seen": 0,
+  "intake": {
+    "app_faults_new": 0,
+    "email_lane": {
+      "lane": "email_triage",
+      "total": 24,
+      "by_category_30d": {
+        "legal": 1,
+        "other": 4,
+        "spam": 1,
+        "support": 3
+      },
+      "by_status_30d": {
+        "drafted": 5,
+        "sent": 2,
+        "skipped": 1,
+        "system": 1
+      },
+      "held_30d": 5,
+      "door": "staff",
+      "note": "counts only (RG-0222); rows are never copied into the report"
+    }
+  },
+  "actions": [],
+  "backup": {
+    "ran": true,
+    "outcome": "ok: OK  archive 2026-09-28_0544.zip (1898345 bytes), restores clean, users=136 listings=131"
+  },
+  "standup": {
+    "ran": true,
+    "state": "FRESH",
+    "reason": "newest pulse line is dated 2026-09-27 (5.7 h)",
+    "age_h": 5.7
+  },
+  "host_queue": {
+    "ran": true,
+    "state": "STALLED",
+    "pending": 0,
+    "oldest_pending_h": null,
+    "last_result_h": 4.82,
+    "ahead": 1,
+    "oldest_unpushed_h": 2.24,
+    "reason": "1 commit(s) committed but never pushed, oldest 2.2 h -- they are not on the mirror, so the origin cannot pull them and nothing they fix is live"
+  },
+  "screen_walk": {
+    "ran": true,
+    "state": "OK",
+    "outcome": "[screen-walk] walked 5 languages in 28s | [screen-walk] OK"
+  },
+  "wave_witness": {
+    "ran": true,
+    "state": "OK",
+    "outcome": "intl_pass    ok | source_tags  ok | suppression  ok | witness rewritten: /sessions/sweet-friendly-maxwell/mnt/Projects/MarketSquare/wave_hygiene_status.json (2026-09-28T05:44:44.599623+00:00)"
+  }
+}
