@@ -32569,5 +32569,44 @@ def rg_story_walk_fix_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "names not addresses; confirm asks a name; nonce-only confirm link")]
 
+@entry("RG-0545", "BUZZ-ANON-1: Buzz names people by anonymous IDs, never by address -- /buzz/pairs and every Buzz reply "
+       "carry pair_id + an anonymous member ID (other_id) and no other_email; the screen acts by pair_id; a pair ID is "
+       "honoured only for one of its own two people",
+       OPEN, fixed_on="2026-09-29",
+       scope="bea_main.py _buzz_pair_view / _buzz_other / _buzz_member_id / _buzz_pair_by_id / _buzz_resolve, POST /buzz, "
+             "/buzz/allow, /buzz/close, /buzz/keep, GET /buzz/pairs; ms.js Buzz list, keep list and the four actions.",
+       ref="David, 29 Sep 2026: 'Please do the Buzz to anonymous ID's Claude, then make it live.' RUL-171(d): no private "
+           "information of either side is ever divulged. The home cleaner walk showed the names fixed but the API still "
+           "handed every browser the other person's address in other_email.")
+def rg_buzz_anon_1():
+    js = repo_file("ms.js"); b = repo_file("bea_main.py")
+    if None in (js, b):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = b.find("def _buzz_pair_view("); v = b[i:i + 1400] if i >= 0 else ""
+    if not v or '"other_email"' in v or '"other_id": _buzz_member_id(' not in v:
+        bad.append("the pair view hands out the other person's address again")
+    for fn in ("def _buzz_member_id(", "def _buzz_pair_by_id(", "def _buzz_resolve(", "def _buzz_other("):
+        if fn not in b:
+            bad.append(fn[4:-1] + " is gone")
+    k = b.find("def _buzz_pair_by_id(")
+    if k >= 0 and "(a_email=? OR b_email=?)" not in b[k:k + 700]:
+        bad.append("a pair ID is honoured for somebody who is not in the pair")
+    m = b.find("def _buzz_member_id(")
+    if m >= 0 and "_JWT_SECRET" not in b[m:m + 900]:
+        bad.append("the member ID is computable from an address (no secret)")
+    if 'v["other_email"]' in b:
+        bad.append("/buzz/pairs reads other_email again")
+    if "other_email" in js:
+        bad.append("ms.js reads or sends other_email again")
+    for need in ("{pair_id: p.pair_id, allow:", "{pair_id: p.pair_id, close: true}", "{pair_id: p.pair_id, close: false}",
+                 "{pair_id: p.pair_id, text: text}", "data-keep=\"' + (+p.pair_id||0)"):
+        if need not in js:
+            bad.append("a Buzz action no longer names the pair by ID (" + need[:24] + ")")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Buzz carries pair IDs and anonymous member IDs; no address leaves the server")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -28203,14 +28203,60 @@ def _buzz_pair(conn, x: str, y: str):
         "SELECT * FROM buzz_pairs WHERE a_email=? AND b_email=?", (a, b)).fetchone()
 
 
-def _buzz_pair_view(row, me: str):
-    """The pair as ONE side sees it — never the raw a/b columns."""
+def _buzz_other(row, me: str) -> str:
+    """The other side's address -- for the SERVER only (names, notices, delivery). Never returned."""
     me = (me or "").strip().lower()
-    other = row["b_email"] if row["a_email"] == me else row["a_email"]
+    return row["b_email"] if row["a_email"] == me else row["a_email"]
+
+
+def _buzz_member_id(email: str) -> str:
+    """BUZZ-ANON-1 (29 Sep 2026, RUL-171(d)): a stable anonymous member ID ('TS-7Q4KXM') for a person
+    on somebody else's Buzz screen. Keyed off MS_JWT_SECRET so nobody can compute it from an address
+    to test whether that address is on TrustSquare; no secret -> no ID (fail closed, never a guessable one)."""
+    e = (email or "").strip().lower()
+    if not e or not _JWT_SECRET:
+        return ""
+    import hmac as _bz_hm
+    d = _bz_hm.new(_JWT_SECRET.encode(), ("BUZZ-ANON-1:" + e).encode(), hashlib.sha256).digest()
+    abc, n, out = "ABCDEFGHJKMNPQRSTUVWXYZ23456789", int.from_bytes(d[:6], "big"), ""
+    for _ in range(6):
+        out = abc[n % len(abc)] + out
+        n //= len(abc)
+    return "TS-" + out
+
+
+def _buzz_pair_by_id(conn, pair_id, me: str):
+    """BUZZ-ANON-1: a pair named by its ID -- only if `me` is one of its two people, so an ID
+    somebody else's pair carries is simply 'no pair' (never a 403 that confirms it exists)."""
+    try:
+        pid = int(pair_id)
+    except Exception:
+        return None
+    me = (me or "").strip().lower()
+    return conn.execute("SELECT * FROM buzz_pairs WHERE id=? AND (a_email=? OR b_email=?)",
+                        (pid, me, me)).fetchone()
+
+
+def _buzz_resolve(conn, me: str, pair_id=None, other_email=None):
+    """BUZZ-ANON-1: the screen names a pair by pair_id. An address is still ACCEPTED (older cached
+    screens) but never RETURNED -- accepting one leaks nothing the caller did not already hold."""
+    if pair_id is not None and str(pair_id).strip() != "":
+        return _buzz_pair_by_id(conn, pair_id, me)
+    if other_email and "@" in other_email:
+        return _buzz_pair(conn, me, other_email)
+    return None
+
+
+def _buzz_pair_view(row, me: str):
+    """The pair as ONE side sees it — never the raw a/b columns.
+    BUZZ-ANON-1 (29 Sep 2026, RUL-171(d)): and never the other side's address -- the pair is named by
+    pair_id and the person by an anonymous member ID; the address stays on the server."""
+    me = (me or "").strip().lower()
+    other = _buzz_other(row, me)
     i_allow    = row["a_allows"] if row["a_email"] == me else row["b_allows"]
     they_allow = row["b_allows"] if row["a_email"] == me else row["a_allows"]
     closed_by = (row["closed_by"] or "") if "closed_by" in row.keys() else ""
-    return {"pair_id": row["id"], "other_email": other,
+    return {"pair_id": row["id"], "other_id": _buzz_member_id(other),
             "i_allow_them": bool(i_allow), "they_allow_me": bool(they_allow),
             "closed": bool(closed_by),
             "closed_by_me": bool(closed_by) and closed_by == me,
@@ -28400,14 +28446,18 @@ class BuzzPairReq(BaseModel):
 
 
 class BuzzAllowReq(BaseModel):
-    email:       str
-    other_email: str
+    # BUZZ-ANON-1: pair_id names the pair; the session names the caller. The address fields are
+    # accepted from older cached screens only and are never required.
+    email:       Optional[str] = None
+    other_email: Optional[str] = None
+    pair_id:     Optional[int] = None
     allow:       bool = True
 
 
 class BuzzSendReq(BaseModel):
-    from_email: str
-    to_email:   str
+    from_email: Optional[str] = None
+    to_email:   Optional[str] = None
+    pair_id:    Optional[int] = None
     text:       str
 
 
@@ -28548,9 +28598,8 @@ def buzz_allow(req: BuzzAllowReq, _key: str = Depends(auth.require_api_key),
     onboarding asks for, and it is per PERSON, never global — the pair is the
     unit of consent. Turning it off stops their buzzes and nothing else."""
     me = _buzz_who(ts_user, req.email, "allow")
-    a, b = _buzz_key(me, req.other_email)
     conn = database.get_db()
-    row = _buzz_pair(conn, a, b)
+    row = _buzz_resolve(conn, me, req.pair_id, req.other_email)   # BUZZ-ANON-1
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="no pair between these two")
@@ -28559,14 +28608,15 @@ def buzz_allow(req: BuzzAllowReq, _key: str = Depends(auth.require_api_key),
     conn.execute("UPDATE buzz_pairs SET " + col + "=? WHERE id=?",
                  (1 if req.allow else 0, row["id"]))
     conn.commit()
-    out = _buzz_pair_view(_buzz_pair(conn, a, b), me)
+    out = _buzz_pair_view(_buzz_pair_by_id(conn, row["id"], me), me)
     conn.close()
     return out
 
 
 class BuzzCloseReq(BaseModel):
-    email:       str
-    other_email: str
+    email:       Optional[str] = None
+    other_email: Optional[str] = None
+    pair_id:     Optional[int] = None
     close:       bool = True
 
 
@@ -28606,20 +28656,19 @@ def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key),
     that Buzz is closed and that they still have each other's number, which they
     always did. Only the closer can reopen, or the close means nothing."""
     me = _buzz_who(ts_user, req.email, "close")
-    a, b = _buzz_key(me, req.other_email)
     conn = database.get_db()
-    row = _buzz_pair(conn, a, b)
+    row = _buzz_resolve(conn, me, req.pair_id, req.other_email)   # BUZZ-ANON-1
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="no pair between these two")
     closed_by = (row["closed_by"] or "")
     if req.close:
         if closed_by:
-            out = _buzz_pair_view(_buzz_pair(conn, a, b), me); conn.close(); return out
+            out = _buzz_pair_view(_buzz_pair_by_id(conn, row["id"], me), me); conn.close(); return out
         conn.execute("UPDATE buzz_pairs SET closed_by=?, closed_at=? WHERE id=?",
                      (me, datetime.now(timezone.utc).isoformat(), row["id"]))
         conn.commit()
-        other = row["b_email"] if row["a_email"] == me else row["a_email"]
+        other = _buzz_other(row, me)
         mine  = _buzz_name(conn, me)
         # One last notice, then the channel is quiet. Not a buzz FROM them - a fact.
         try:
@@ -28647,7 +28696,7 @@ def buzz_close(req: BuzzCloseReq, _key: str = Depends(auth.require_api_key),
         conn.execute("UPDATE buzz_pairs SET closed_by=NULL, closed_at=NULL WHERE id=?",
                      (row["id"],))
         conn.commit()
-    out = _buzz_pair_view(_buzz_pair(conn, a, b), me)
+    out = _buzz_pair_view(_buzz_pair_by_id(conn, row["id"], me), me)
     conn.close()
     return out
 
@@ -28685,7 +28734,7 @@ def buzz_pairs(email: str = None, _key: str = Depends(auth.require_api_key),
         # pair with any address, so otherwise this is a name lookup; fall back to _buzz_name's own local part.
         # STORY-WALK-FIX-1 (29 Sep 2026, RUL-171(d)): a pair made through her own link or a reference is a consented
         # pair, so its name shows; otherwise 'Somebody' -- never a piece of the address.
-        v["other_name"] = (_buzz_name(conn, v["other_email"])
+        v["other_name"] = (_buzz_name(conn, _buzz_other(r, me))
                            if (v["they_allow_me"] or (v.get("source") in ("regular-link", "reference")))
                            else "Somebody")
         out.append(v)
@@ -28706,19 +28755,25 @@ def buzz_keep(req: BuzzKeepReq, _key: str = Depends(auth.require_api_key),
     other person's email for each one, at most what her plan holds. Everyone else in HER Circle rests:
     nothing deleted, they can still buzz her. She may change this any time; the customer is never told."""
     me = _buzz_who(ts_user, req.email, "keep")
-    want = set((e or "").strip().lower() for e in (req.keep or []) if isinstance(e, str) and (e or "").strip())
+    # BUZZ-ANON-1: `keep` carries pair IDs now; an address from an older cached screen still counts.
+    want_ids, want = set(), set()
+    for e in (req.keep or []):
+        if isinstance(e, int) or (isinstance(e, str) and e.strip().isdigit()):
+            want_ids.add(int(e))
+        elif isinstance(e, str) and "@" in e:
+            want.add(e.strip().lower())
     conn = database.get_db()
     try:
         st = _circle_status(conn, me)
-        if len(want) > st["allowance"]:
+        if len(want) + len(want_ids) > st["allowance"]:
             raise HTTPException(status_code=400,
                                 detail="Your plan holds %d regulars - untick %d first."
-                                       % (st["allowance"], len(want) - st["allowance"]))
+                                       % (st["allowance"], len(want) + len(want_ids) - st["allowance"]))
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         n = 0
         for r in _circle_rows(conn, me):
-            other = r["b_email"] if r["a_email"] == me else r["a_email"]
-            if other in want:
+            other = _buzz_other(r, me)
+            if r["id"] in want_ids or other in want:
                 conn.execute("UPDATE buzz_pairs SET kept_by_owner=1, kept_at=? WHERE id=?", (now_iso, r["id"]))
                 n += 1
             else:
@@ -28834,11 +28889,11 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
         raise HTTPException(status_code=400, detail="a buzz needs one line of text")
     sender = _buzz_who(ts_user, req.from_email, "send")
     conn = database.get_db()
-    row = _buzz_pair(conn, sender, req.to_email)
+    row = _buzz_resolve(conn, sender, req.pair_id, req.to_email)   # BUZZ-ANON-1
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="you are not connected to this person")
-    receiver = (req.to_email or "").strip().lower()
+    receiver = _buzz_other(row, sender)
     if (row["closed_by"] or ""):
         conn.close()
         raise HTTPException(status_code=403,

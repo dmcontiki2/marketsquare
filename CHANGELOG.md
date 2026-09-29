@@ -1,3 +1,5 @@
+- **BUZZ-ANON-1 (RG-0545):** Buzz no longer hands anyone the other person's email address. Every pair is named by its pair ID and every person by an anonymous member ID (e.g. `TS-7Q4KXM`, shown only when the person has no name yet); the Buzz screen allows, closes, reopens, keeps and sends by pair ID, and the server honours a pair ID only for one of that pair's two people (RUL-171(d)).
+
 ## 2026-09-29 — STORY-WALK-FIX-1 + REF-NONCE-1 (RG-0544)
 
 - **Names, never addresses (RUL-171(d)):** the Buzz list no longer shows the other person's email address, and nobody's name is ever made from the first part of an address.

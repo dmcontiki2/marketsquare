@@ -15986,7 +15986,7 @@ function _bzChooseCard(c, pairs){
   mine.forEach(function(p, k){
     h += '<label class="bz-row" style="cursor:pointer"><div class="bz-lbl"><b>' + _lmEsc(p.other_name||'') + '</b>'
        + '<span>' + (p.source==='reference' ? 'Confirmed you worked for them' : 'Your regular') + '</span></div>'   /* STORY-WALK-FIX-1: no address */
-       + '<input type="checkbox" data-keep="' + _lmEsc(p.other_email||'') + '"' + (!(p.resting||p.paused) ? ' checked' : '') + '></label>';
+       + '<input type="checkbox" data-keep="' + (+p.pair_id||0) + '"' + (!(p.resting||p.paused) ? ' checked' : '') + '></label>';
   });
   return h + '<div class="bz-note" id="bz-keep-count"></div>'
            + '<button class="mla-btn accent" id="bz-keep-save" style="margin-top:8px">Save my choice</button></div>';
@@ -16007,7 +16007,7 @@ function _bzChooseWire(box, c){
   boxes.forEach(function(b){ b.onchange = count; }); count();
   const save = card.querySelector('#bz-keep-save');
   if(save) save.onclick = async function(){
-    const keep = []; card.querySelectorAll('[data-keep]:checked').forEach(function(b){ keep.push(b.getAttribute('data-keep')); });
+    const keep = []; card.querySelectorAll('[data-keep]:checked').forEach(function(b){ keep.push(+b.getAttribute('data-keep')); });   /* BUZZ-ANON-1: pair IDs, never addresses */
     save.disabled = true; save.textContent = 'Saving…';
     try{ await bzApi('/buzz/keep', 'POST', {email: bzEmail(), keep: keep}); showToast('Saved. ' + keep.length + ' stay active.'); }
     catch(e){ showToast(e.message); }
@@ -16150,11 +16150,13 @@ async function buzzRender(){
   } else {
     _bzPairs.forEach(function(p0, i){
       /* BUZZ-ESC-1 (25 Sep 2026 inspection, ts3-04): names come from other people -- escaped before they touch the page. */
-      var p = Object.assign({}, p0, {other_name: _lmEsc(p0.other_name||''), other_email: _lmEsc(p0.other_email||'')});
+      var p = Object.assign({}, p0, {other_name: _lmEsc(p0.other_name||'')});
+      /* BUZZ-ANON-1 (29 Sep 2026, RUL-171(d)): no address reaches this screen; a person without a name is told apart by an anonymous member ID */
+      var _bzAnon = (p0.other_id && (p0.other_name==='A TrustSquare member' || p0.other_name==='Somebody')) ? ' \u00b7 '+_lmEsc(p0.other_id) : '';
       h += '<div class="ms-card" id="bz-card-'+i+'">'
         + '<div class="bz-who"><div class="bz-av">'+_lmEsc(bzInitials(p0.other_name||''))+'</div>'
         /* STORY-WALK-FIX-1 (29 Sep 2026, RUL-171(d)): the other person's address is never shown -- what they are to her instead */
-        + '<div class="bz-nm">'+p.other_name+'<span>'+(p0.mine ? (p0.source==='reference' ? 'Confirmed you worked for them' : 'Your regular') : 'You are their regular')+'</span></div></div>';
+        + '<div class="bz-nm">'+p.other_name+'<span>'+(p0.mine ? (p0.source==='reference' ? 'Confirmed you worked for them' : 'Your regular') : 'You are their regular')+_bzAnon+'</span></div></div>';
       if(p.closed){
         h += '<div class="bz-closed">Buzz is closed between you and '+p.other_name+'. '
            + 'You still have each other\u2019s number.'
@@ -16207,7 +16209,7 @@ async function buzzRender(){
       el.className = 'bz-sw busy';
       try{
         await bzApi('/buzz/allow', 'POST',
-          {email: bzEmail(), other_email: p.other_email, allow: !p.i_allow_them});
+          {pair_id: p.pair_id, allow: !p.i_allow_them});
       }catch(e){ showToast(e.message); }
       buzzRender();
     };
@@ -16228,7 +16230,7 @@ async function buzzRender(){
       el.textContent = 'Closing…';
       try{
         await bzApi('/buzz/close', 'POST',
-          {email: bzEmail(), other_email: p.other_email, close: true});
+          {pair_id: p.pair_id, close: true});
         showToast('Closed. ' + p.other_name + ' has been told.');
       }catch(e){ showToast(e.message); }
       buzzRender();
@@ -16240,7 +16242,7 @@ async function buzzRender(){
       el.textContent = 'Opening…';
       try{
         await bzApi('/buzz/close', 'POST',
-          {email: bzEmail(), other_email: p.other_email, close: false});
+          {pair_id: p.pair_id, close: false});
       }catch(e){ showToast(e.message); }
       buzzRender();
     };
@@ -16256,7 +16258,7 @@ async function buzzRender(){
       btn.disabled = true; btn.textContent = '…';
       try{
         const j = await bzApi('/buzz', 'POST',
-          {from_email: bzEmail(), to_email: p.other_email, text: text});
+          {pair_id: p.pair_id, text: text});
         inp.value = ''; document.getElementById('bz-left-'+i).textContent = '';
         said.innerHTML = '<div class="bz-said">Sent as <b>' + _lmEsc(j.from_name) + '</b> — '
           + (j.delivered==='push' ? ('it buzzed ' + _lmEsc(p.other_name) + '\'s phone.')
