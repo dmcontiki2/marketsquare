@@ -32717,13 +32717,13 @@ def rg_help_swap_1():
 
 @entry("RG-0549", "HELP-LANG-1: the story guides speak Quick's five languages (English, Afrikaans, isiZulu, isiXhosa, Sepedi) and "
        "quote the app's own English button words in colour, so a local-language sentence never reads as bad grammar",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="stories/home_cleaner.json (zu/xh/nso for label, title, gate_note, chapters, steps; [[Button]] quotes; translations: draft); "
              "stories/help.html + stories/index.html (LANGS, L()/rich(), q.ui, #qnote); quick.html + genie/HARNESS.html QHELP_WORD/qHelpLang; "
              "scripts/build_help.py OPTIONAL_LANGS and the [[ ]] balance check.",
        ref="David, 29 Sep 2026: 'lets go with the local languages, i am not so sure about the pictures though' -- screens stay English -- "
            "and 'Where the language quote the English examples words it could be shown in another color to clearly show it as a quote "
-           "and not bad grammar?'")
+           "and not bad grammar?' LOCKED 29 Sep after the live check (3699b52): the guide switches between EN, AF, ZU, XH and NSO with title, steps and the draft/quote note in each; the app's English button words show quoted in yellow (rgb 255,224,138); Quick in isiZulu shows 'Kanjani' and opens the gallery and guide in isiZulu; long card labels stay inside their cards. Full board clean apart from two 502s during the deploy restart, which passed on re-check.")
 def rg_help_lang_1():
     import json as _j
     hp = repo_file("stories/help.html"); ix = repo_file("stories/index.html"); q = repo_file("quick.html"); st = repo_file("stories/home_cleaner.json")
