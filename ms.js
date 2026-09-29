@@ -17496,6 +17496,7 @@ function msInit(){
      address's first part. The account's name (asked in Quick) comes from the session instead. */
   if(!name && email){ fetch('/quick/me',{credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
     if(!(j && j.signed_in && j.name && String(j.email||'').toLowerCase()===String(email).toLowerCase())) return;
+    if(String(j.name).trim()===String(j.email||'').split('@')[0]) return;   /* an address's first part is not a name */
     try{ localStorage.setItem('ms_user_name', j.name); }catch(_){}
     if(dispName) dispName.textContent = j.name;
     const _av = document.getElementById('ms-avatar-initials'); if(_av) _av.textContent = j.name.split(' ').filter(Boolean).slice(0,2).map(function(w){ return w[0].toUpperCase(); }).join('');

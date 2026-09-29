@@ -32561,7 +32561,9 @@ def rg_story_walk_fix_1():
         bad.append("the Accept toast promises a contact the app does not show")
     if 'split("@")[0] or "Somebody"' in b or '{"email": email, "purpose": "employer_confirm"' in b or "def _ref_email(" not in b:
         bad.append("an address fragment is used as a name, or the confirm link carries her address")
-    if 'id="nmbox"' not in cf:
+    if "an account created by sign-in carries the address's first part" not in b:
+        bad.append("an address's first part is shown as a Buzz name again")
+    if 'id="nmbox"' not in cf or "an address's first part is not a name" not in cf:
         bad.append("the confirmer is no longer asked a first name")
     if bad:
         return [(FAIL, "; ".join(bad))]

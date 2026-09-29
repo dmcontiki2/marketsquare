@@ -241,7 +241,8 @@
   /* STORY-WALK-FIX-1: a first name, asked once, only when the account has none yet */
   var askName = function(){
     fetch('/quick/me', {credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
-      if(!j || !j.signed_in || (j.name && String(j.name).trim())) return;
+      var _n = String((j && j.name) || '').trim();
+      if(!j || !j.signed_in || (_n && _n !== String(j.email || '').split('@')[0])) return;   /* an address's first part is not a name */
       var who = document.getElementById('who').textContent || 'they';
       document.getElementById('nmwhy').textContent = 'You are now connected with ' + who + ' on Buzz. What first name should ' + who + ' see?';
       document.getElementById('nmbox').className = '';

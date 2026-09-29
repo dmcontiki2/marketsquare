@@ -28187,8 +28187,10 @@ def _buzz_name(conn, email: str) -> str:
     try:
         r = conn.execute("SELECT name FROM users WHERE LOWER(email)=?",
                          ((email or "").lower(),)).fetchone()
-        if r and (r["name"] or "").strip():
-            return (r["name"] or "").strip()
+        _n = (r["name"] or "").strip() if r else ""
+        # STORY-WALK-FIX-1: an account created by sign-in carries the address's first part as its 'name' -- not a name
+        if _n and _n.lower() != (email or "").split("@")[0].lower():
+            return _n
     except Exception:
         pass
     # STORY-WALK-FIX-1 (29 Sep 2026, RUL-171(d)): never the first part of an address as a name
