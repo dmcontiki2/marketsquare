@@ -32752,12 +32752,12 @@ def rg_help_lang_1():
 @entry("RG-0550", "LM-WALK-FIX-1: the Local Market story walk's findings -- the first name typed in Quick survives the item "
        "line's redraw and reaches the account; the advert's words open with what she typed ('Raw honey, 500 g jar'), not "
        "the category; a signed-out buyer's Local Market request is kept through sign-in and opens again with her words",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="quick.html + genie/HARNESS.html #qpitem onchange (ITEM-KEEP-1) and qAdBody's first sentence; ms.js submitIntro's "
              "Local Market branch, _msLMIntroToSignIn, _msIntroResume's lm path and lmSubmitIntro's 401 (LM-INTRO-KEEP-1).",
        ref="Local Market (honey) story walk, 29 Sep 2026, QA accounts Elsabe (seller), Riana (regular), Elna (new buyer): "
            "Elsabe's name was sent empty (quick-publish body name:''), listing 438 read 'Food & preserves in Pretoria East', "
-           "and Elna's typed request was wiped, sent her to sign in, landed on Home and never reached the seller.")
+           "and Elna's typed request was wiped, sent her to sign in, landed on Home and never reached the seller. LOCKED 29 Sep after the live checks (34a47a0 / 5331160): typing the item, tapping the name field and typing 'Elsabe' keeps all three fields and the words read 'Raw honey, 500 g jar in Pretoria East'; Elna's signed-out request kept her email in the sign-in box, reopened after the code with her message, and reached Elsabe as intro on listing 438; full board clean.")
 def rg_lm_walk_fix_1():
     q = repo_file("quick.html"); js = repo_file("ms.js")
     if None in (q, js):
@@ -32779,12 +32779,12 @@ def rg_lm_walk_fix_1():
 
 @entry("RG-0551", "LM-STORY-1: the second story guide -- Local Market, Food & preserves (the honey seller), walked live and told in "
        "five languages; Quick's How opens it for a goods seller at the screen she is on; each step says who pays and when",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="stories/localmarket_food_preserves.json; stories/help.html costChip (1T_check / 1T_accept) and the who-legend filter; "
              "quick.html + genie/HARNESS.html qHelpType goods key (<door>_<group>); scripts/build_help.py cost check.",
        ref="David, 29 Sep 2026: 'Very good idea Claude, thank you. GO :-)' -- walk Local Market (the honey) next, then the other ten "
            "flows. Walked with QA accounts Elsabe (seller), Riana (regular), Elna (new buyer); listing 438; the three faults it "
-           "found are RG-0550.")
+           "found are RG-0550. LOCKED 29 Sep after the live check (c2dec07): /help/localmarket_food_preserves renders 20 steps in five languages with 'You / Your regulars / A new customer' and the buyer's '1T from her, only if real prices are found' chip; Quick's How opened steps 3, 4, 5 and 6 on the area, price, delivery and draft screens.")
 def rg_lm_story_1():
     import json as _j
     st = repo_file("stories/localmarket_food_preserves.json"); hp = repo_file("stories/help.html"); q = repo_file("quick.html")
