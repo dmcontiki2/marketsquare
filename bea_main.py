@@ -22237,6 +22237,12 @@ def get_flags(ts_review: str = Cookie(default=None)):
             out["effective"]["lang_layer_tester"] = True
     except Exception:
         pass
+    # HELP-LINK-1 (29 Sep 2026, David: "I like it Claude, please link it."): the story guides at /help/ are
+    # linked from Quick for TESTERS only while they are drafts -- the public app is unchanged.
+    try:
+        out["effective"]["help_guides"] = bool(_is_tester_cookie(ts_review))
+    except Exception:
+        out["effective"]["help_guides"] = False
     return out
 
 

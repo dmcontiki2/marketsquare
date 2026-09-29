@@ -166,5 +166,6 @@ fetch('/help/data/' + TYPE + '.json', {cache: 'no-cache'})
   })
   .catch(() => { $('t-brand').textContent = UI[lang].brand; $('t-back').textContent = UI[lang].back; $('t-title').textContent = UI[lang].missing; document.querySelector('section').hidden = true; document.querySelector('.nav').hidden = true; });
 </script>
+<script src="/static/ts_report.js?v=7" defer></script>   <!-- RG-0377: testers can report a fault from every page -->
 </body>
 </html>

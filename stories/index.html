@@ -82,5 +82,6 @@ $('l-af').onclick = () => { lang = 'af'; try { localStorage.setItem('ts_help_lan
 render();
 fetch('/help/data/index.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : {stories: []}).then(d => { IDX = d; render(); }).catch(() => render());
 </script>
+<script src="/static/ts_report.js?v=7" defer></script>   <!-- RG-0377: testers can report a fault from every page -->
 </body>
 </html>

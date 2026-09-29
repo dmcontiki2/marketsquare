@@ -32623,15 +32623,15 @@ def rg_help_stories_1():
     hp = repo_file("stories/help.html"); ix = repo_file("stories/index.html")
     if None in (hp, ix):
         return [(FAIL, "stories/help.html or stories/index.html is gone -- nothing renders the guides")]
+    if "ts_report.js" not in hp or "ts_report.js" not in ix:
+        out.append((FAIL, "a guide page has lost the tester fault widget (RG-0377)"))
     if "/help/data/" not in hp or "s.pass" not in hp or 'content="noindex' not in hp:
         out.append((FAIL, "the story page no longer loads from /help/data, no longer shows passed steps only, or is indexable"))
-    try:
-        r = subprocess.run([sys.executable, os.path.join(root, "scripts", "build_help.py"), "--check"],
-                           capture_output=True, text=True, timeout=60)
-        if r.returncode != 0:
-            out.append((FAIL, "build_help.py --check: " + (r.stdout or r.stderr).strip().replace("\n", "; ")[:400]))
-    except Exception as e:
-        out.append((INFO, "NOT EVALUATED - build_help.py --check did not run: %r" % (e,)))
+    ok, blind, detail = _harness([sys.executable, os.path.join(root, "scripts", "build_help.py"), "--check"], timeout=60)
+    if blind:
+        out.append((INFO, "NOT EVALUATED - build_help.py --check could not run: %s" % (detail,)))
+    elif not ok:
+        out.append((FAIL, "build_help.py --check: %s" % (str(detail).replace("\n", "; ")[:400],)))
     try:
         import urllib.request as _u, json as _j
         def _get(path):
@@ -32653,6 +32653,29 @@ def rg_help_stories_1():
     except Exception as e:
         out.append((FAIL, "the live /help/ probe failed: %r" % (getattr(e, 'code', None) or e,)))
     return out or [(INFO, "the guides, their story files and screens are served from trustsquare.co/help/")]
+
+
+@entry("RG-0547", "HELP-LINK-1: Quick links the story guides for TESTERS only -- a 'How it works' pill opens the guide for "
+       "the work she picked (or the gallery) in a new tab; the public Quick is unchanged while the guides are drafts",
+       OPEN, fixed_on="2026-09-29",
+       scope="bea_main.py GET /flags effective.help_guides (tester cookie only); quick.html + genie/HARNESS.html qHelpPill / qHelpHref.",
+       ref="David, 29 Sep 2026: 'I like it Claude, please link it.' -- after reviewing trustsquare.co/help/.")
+def rg_help_link_1():
+    b = repo_file("bea_main.py"); q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if None in (b, q):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = b.find('@app.get("/flags")'); seg = b[i:i + 2200] if i >= 0 else ""
+    if 'out["effective"]["help_guides"] = bool(_is_tester_cookie(ts_review))' not in seg:
+        bad.append("/flags no longer ties help_guides to the tester cookie -- the draft guides would reach the public, or nobody")
+    for need in ("function qHelpPill(", "f.effective.help_guides) qHelpPill()", "a.target='_blank'", "'/help/'+k"):
+        if need not in q:
+            bad.append("Quick's guide link lost: " + need)
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "testers see How it works in Quick; it opens the guide for the picked work in a new tab")]
 
 
 if __name__ == "__main__":

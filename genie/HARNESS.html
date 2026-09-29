@@ -1186,6 +1186,36 @@ var QFLAGS={};
 try{ fetch(location.origin+'/flags').then(function(r){ return r.ok ? r.json() : null; })
        .then(function(f){ if(f && f.effective) QFLAGS=f.effective; }).catch(function(){}); }catch(e){}
 function qCircleOn(){ return !!(QFLAGS && QFLAGS.circle_caps); }
+/* HELP-LINK-1 (29 Sep 2026, David: "I like it Claude, please link it."): while the story guides are drafts,
+   TESTERS (/flags effective.help_guides) see a "How it works" pill opposite the language pill. It opens the
+   guide for the work she picked -- or the gallery when there is none yet -- in a NEW tab, so Quick keeps her answers. */
+var QHELP={};
+function qHelpHref(){
+  var k=''; try{ var rp=svcPickIn(picks,'what'); k=(rp&&rp.r)||''; }catch(e){}
+  return (k && QHELP[k]) ? '/help/'+k : '/help/';
+}
+function qHelpLabel(){ return QLANG==='af' ? 'Hoe dit werk' : 'How it works'; }
+function qHelpPill(){
+  if(document.getElementById('qhelp')) return;
+  var st=document.createElement('style');
+  st.textContent='#qhelp{position:absolute;right:12px;bottom:12px;z-index:60;display:flex;align-items:center;gap:6px;'
+   +'padding:7px 11px;border-radius:999px;font:600 12px system-ui,sans-serif;text-decoration:none;'
+   +'background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(4px)}'
+   +'#qhelp i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;'
+   +'background:#16A97C;color:#04120f;font-size:11px;font-weight:800}'
+   +'@media(max-height:560px){#qhelp{position:fixed}}';
+  document.head.appendChild(st);
+  var a=document.createElement('a'); a.id='qhelp'; a.target='_blank'; a.rel='noopener'; a.href='/help/';
+  a.innerHTML='<i>?</i><span></span>'; a.lastChild.textContent=qHelpLabel();
+  a.addEventListener('pointerdown',function(){ a.href=qHelpHref(); a.lastChild.textContent=qHelpLabel(); });
+  a.addEventListener('focus',function(){ a.href=qHelpHref(); });
+  a.addEventListener('click',function(){ a.href=qHelpHref(); });
+  (document.getElementById('app')||document.body).appendChild(a);   /* inside the phone frame, like the language pill */
+  try{ fetch(location.origin+'/help/data/index.json').then(function(r){ return r.ok ? r.json() : null; })
+         .then(function(d){ ((d&&d.stories)||[]).forEach(function(s){ QHELP[s.type]=1; }); }).catch(function(){}); }catch(e){}
+}
+try{ fetch(location.origin+'/flags',{credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
+       .then(function(f){ if(f && f.effective && f.effective.help_guides) qHelpPill(); }).catch(function(){}); }catch(e){}
 var HANDOVER={url:'', key:'', email:''};   /* the host page fills these when signed in */
 /* QUICK-LIVE-1 (15 Sep 2026, David: "add it there and make it live"). The host page
    is now TrustSquare itself. Served from the app's own origin this fills the hand-over
