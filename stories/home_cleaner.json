@@ -68,6 +68,9 @@
    "af": [
     "Maak Quick oop, tik Offer a service",
     "Quick maak oop by die dienste-deur. Een tik begin jou advertensie."
+   ],
+   "quick": [
+    "door"
    ]
   },
   {
@@ -84,6 +87,10 @@
    "af": [
     "Kies Home & care, dan Home cleaner",
     "Kies die soort werk, dan jou werk."
+   ],
+   "quick": [
+    "group",
+    "what"
    ]
   },
   {
@@ -100,6 +107,9 @@
    "af": [
     "Merk elke area waar jy werk",
     "Jy kan meer as een merk, en 'n kliënt wat in enige van hulle soek, vind jou. Tik jou area in as dit nie gelys is nie."
+   ],
+   "quick": [
+    "where"
    ]
   },
   {
@@ -116,6 +126,9 @@
    "af": [
     "Kies jou dae",
     "Tik die dae waarop jy kan werk."
+   ],
+   "quick": [
+    "days"
    ]
   },
   {
@@ -132,6 +145,9 @@
    "af": [
     "Stel jou dagtarief",
     "Tik wat jou werk werd is. Quick wys die wetlike minimum loon, sodat niemand jou minder kan betaal nie."
+   ],
+   "quick": [
+    "price"
    ]
   },
   {
@@ -148,6 +164,9 @@
    "af": [
     "Gee jou voornaam en e-posadres, en stoor",
     "Geen wagwoord nie. Jou advertensie is gestoor, maar niemand kan dit nog sien nie."
+   ],
+   "quick": [
+    "draft"
    ]
   },
   {
@@ -164,6 +183,9 @@
    "af": [
     "Maak die e-pos oop, tik Open my listing",
     "Dit teken jou op jou foon in en maak jou konsep in TrustSquare oop."
+   ],
+   "quick": [
+    "saved"
    ]
   },
   {
@@ -229,6 +251,9 @@
    "af": [
     "Stuur jou Buzz-skakel aan jou vaste kliënte",
     "Maak Buzz in My Space oop en tik Get my link. Een skakel vir al jou vaste kliënte, per WhatsApp of Copy."
+   ],
+   "quick": [
+    "buzz"
    ]
   },
   {

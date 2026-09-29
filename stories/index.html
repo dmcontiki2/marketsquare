@@ -60,7 +60,10 @@ const UI = {
      none:'Niks pas nog nie. Meer gidse word nagestap.',foot:'Net stappe wat op die regte webwerf gewerk het, word gewys.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']}
 };
 let lang = 'en', IDX = {stories: []};
+const EMBED = new URLSearchParams(location.search).get('embed') === '1';   // HELP-SWAP-1: opened from Quick's How button
+
 try { const l = localStorage.getItem('ts_help_lang'); if (l === 'af' || l === 'en') lang = l; } catch (e) {}
+{ const hl = ((location.hash || '').match(/lang=(en|af)/) || [])[1]; if (hl) lang = hl; }
 const $ = id => document.getElementById(id);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const day = iso => { const u = UI[lang]; return `${Number(iso.slice(8))} ${u.months[Number(iso.slice(5,7)) - 1]} ${iso.slice(0,4)}`; };
@@ -70,7 +73,7 @@ function render(){
   $('t-brand').textContent = u.brand; $('t-title').textContent = u.title; $('t-sub').textContent = u.sub;
   $('t-count').textContent = u.count(IDX.stories.length, IDX.total_types); $('q').placeholder = u.q; $('t-foot').textContent = u.foot;
   const list = IDX.stories.filter(s => !q || (s.label.en + ' ' + s.label.af + ' ' + s.title.en + ' ' + s.title.af).toLowerCase().includes(q));
-  $('grid').innerHTML = list.map(s => `<a class="card" href="/help/${encodeURIComponent(s.type)}">
+  $('grid').innerHTML = list.map(s => `<a class="card" href="/help/${encodeURIComponent(s.type)}${EMBED ? '?embed=1#lang=' + lang : ''}">
       <img src="/help/img/${encodeURIComponent(s.type)}/${encodeURIComponent(s.cover)}.jpg" alt="" loading="lazy">
       <span class="b"><span class="t">${esc(s.label[lang])}</span><span class="m">${u.steps(s.steps)} · ${u.checked} ${day(s.walked_on)}</span>${s.status === 'draft' ? `<span class="d">${u.draft}</span>` : ''}</span></a>`).join('');
   $('empty').hidden = list.length > 0; $('empty').textContent = u.none;

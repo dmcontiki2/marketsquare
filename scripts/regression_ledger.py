@@ -32668,8 +32668,10 @@ def rg_help_link_1():
     i = b.find('@app.get("/flags")'); seg = b[i:i + 2200] if i >= 0 else ""
     if 'out["effective"]["help_guides"] = bool(_is_tester_cookie(ts_review))' not in seg:
         bad.append("/flags no longer ties help_guides to the tester cookie -- the draft guides would reach the public, or nobody")
-    for need in ("function qHelpPill(", "f.effective.help_guides) qHelpPill()", "a.target='_blank'", "'/help/'+k",
-                 "never over a step's own button"):
+    # HELP-SWAP-1 (29 Sep 2026, David's review): the floating pill became a "How" button in the top bar that swaps the
+    # guide in place -- the tester-only rule this entry locks is unchanged; the needles follow the new code.
+    for need in ("function qHelpButton(", "f.effective.help_guides) qHelpButton()", "bar.insertBefore(b",
+                 "'/help/'+t+'?embed=1#at='"):
         if need not in q:
             bad.append("Quick's guide link lost: " + need)
     if h is not None and h != q:
@@ -32677,6 +32679,40 @@ def rg_help_link_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "testers see How it works in Quick; it opens the guide for the picked work in a new tab")]
+
+
+@entry("RG-0548", "HELP-SWAP-1: Quick's 'How' sits in the top bar (covers nothing) and swaps the guide in place, opened at the "
+       "step for the screen she is on (previous, current, next cards); the same button reads 'Quick' and swaps back to the untouched live screen",
+       OPEN, fixed_on="2026-09-29",
+       scope="quick.html + genie/HARNESS.html qHelpAt/qHelpOpen/qHelpClose/qHelpButton; stories/help.html embed mode, hashArgs/placeFromHash, "
+             "hashchange; stories/<type>.json step.quick (Quick screen keys: door, group, what, where, days, price, draft, saved, buzz).",
+       ref="David, 29 Sep 2026: '1. The how it works button is slightly long, make it one word \"How\" and don't let it obstruct anything "
+           "as it in some screens now does ... 3. could it perhaps take the user to the point where they press it - then showing the "
+           "previous current and next cards, with a inter swap between the live and \"How\"?'")
+def rg_help_swap_1():
+    q = repo_file("quick.html"); hp = repo_file("stories/help.html")
+    import json as _j
+    st = repo_file("stories/home_cleaner.json")
+    if None in (q, hp, st):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need in ("function qHelpAt(", "return 'door'", "f.steps[step].key", "qHelpWord(true)", "'Quick' : (QLANG==='af' ? 'Hoe' : 'How')",
+                 "fr.contentWindow.location.hash"):
+        if need not in q:
+            bad.append("Quick's in-place guide lost: " + need)
+    if "position:absolute;right:12px;bottom:12px" in q:
+        bad.append("a floating help pill is back over the screen")
+    for need in ("classList.add('embed')", "function placeFromHash(", "(s.quick || []).includes(a.at)", "addEventListener('hashchange'"):
+        if need not in hp:
+            bad.append("the guide no longer opens at Quick's screen: " + need)
+    keys = set()
+    for s_ in _j.loads(st).get("steps", []):
+        keys.update(s_.get("quick", []))
+    if not {"door", "where", "days", "price", "draft"} <= keys:
+        bad.append("the home cleaner story no longer maps Quick's screens to its steps")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "How in the bar swaps the guide in place at her current step, and back to Quick")]
 
 
 if __name__ == "__main__":

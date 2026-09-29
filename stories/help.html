@@ -66,6 +66,9 @@ a.back::before{content:'\2039  '}
 .draft{border:1px dashed var(--gate);color:var(--gate);border-radius:12px;padding:8px 12px;font-size:13px}
 .draft[hidden]{display:none}
 .miss{padding:40px 0;color:var(--ink2)}
+/* HELP-SWAP-1: inside Quick (?embed=1) only the cards -- Quick's own bar is above it */
+html.embed body{padding-block:12px 32px}
+html.embed .top,html.embed a.back,html.embed #draft,html.embed header,html.embed #who,html.embed #t-foot{display:none}
 </style>
 </head>
 <body>
@@ -98,6 +101,19 @@ a.back::before{content:'\2039  '}
 // its screens from /help/img/<type>/. Nothing about one listing type lives in this file.
 const TYPE = ((location.pathname.match(/^\/help\/([a-z0-9_]+)\/?$/) || [])[1]) || (new URLSearchParams(location.search).get('t') || '').replace(/[^a-z0-9_]/g, '');
 let STORY = null, S = [];
+const EMBED = new URLSearchParams(location.search).get('embed') === '1';
+if (EMBED) document.documentElement.classList.add('embed');
+// HELP-SWAP-1: '#s12' opens step 12; '#at=<Quick screen>&lang=af' (from Quick's How button) opens the step for that screen
+function hashArgs(){ const h = (location.hash || '').slice(1), a = {};
+  if (/^s\d+$/.test(h)) a.s = +h.slice(1);
+  else h.split('&').forEach(kv => { const i = kv.indexOf('='); if (i > 0) a[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); });
+  return a; }
+function placeFromHash(){ const a = hashArgs();
+  if (a.lang === 'af' || a.lang === 'en') lang = a.lang;
+  let i = -1;
+  if (a.s) i = S.findIndex(s => s.n === a.s);
+  else if (a.at) i = S.findIndex(s => (s.quick || []).includes(a.at));
+  if (i >= 0) cur = i; }
 const img = k => `/help/img/${TYPE}/${k}.jpg`;
 const UI = {
  en:{brand:'How it works',back:'All guides',draft:'Draft: checked by us, not yet linked from the app.',missing:'This guide is not written yet.',sub:n=>`${n} steps. Tap any card to jump there.`,walked:d=>`Checked on the live site, ${d}`,
@@ -161,8 +177,9 @@ fetch('/help/data/' + TYPE + '.json', {cache: 'no-cache'})
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(d => {
     STORY = d; S = STORY.steps.filter(s => s.pass);   // truth only: a step that did not pass on the live site is never shown
-    const m = (location.hash || '').match(/^#s(\d+)$/); if (m) { const i = S.findIndex(s => s.n === +m[1]); if (i >= 0) cur = i; }
+    placeFromHash();
     render();
+    window.addEventListener('hashchange', () => { if (/^#(at=|lang=)/.test(location.hash)) { placeFromHash(); render(); window.scrollTo(0, 0); } });
   })
   .catch(() => { $('t-brand').textContent = UI[lang].brand; $('t-back').textContent = UI[lang].back; $('t-title').textContent = UI[lang].missing; document.querySelector('section').hidden = true; document.querySelector('.nav').hidden = true; });
 </script>
