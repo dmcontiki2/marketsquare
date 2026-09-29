@@ -32683,12 +32683,12 @@ def rg_help_link_1():
 
 @entry("RG-0548", "HELP-SWAP-1: Quick's 'How' sits in the top bar (covers nothing) and swaps the guide in place, opened at the "
        "step for the screen she is on (previous, current, next cards); the same button reads 'Quick' and swaps back to the untouched live screen",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="quick.html + genie/HARNESS.html qHelpAt/qHelpOpen/qHelpClose/qHelpButton; stories/help.html embed mode, hashArgs/placeFromHash, "
              "hashchange; stories/<type>.json step.quick (Quick screen keys: door, group, what, where, days, price, draft, saved, buzz).",
        ref="David, 29 Sep 2026: '1. The how it works button is slightly long, make it one word \"How\" and don't let it obstruct anything "
            "as it in some screens now does ... 3. could it perhaps take the user to the point where they press it - then showing the "
-           "previous current and next cards, with a inter swap between the live and \"How\"?'")
+           "previous current and next cards, with a inter swap between the live and \"How\"?' LOCKED 29 Sep after the live check (2c7613e): 'How' sits in the bar between the dots and EN on every screen; on 'Where can you work?' it opened step 3 'Tick every area you work in' with step 2 and step 4 beside it; the button read 'Quick' and swapped back to the untouched screen; one screen on, it opened step 4 'Choose your days'. The full board ran clean the same session.")
 def rg_help_swap_1():
     q = repo_file("quick.html"); hp = repo_file("stories/help.html")
     import json as _j
