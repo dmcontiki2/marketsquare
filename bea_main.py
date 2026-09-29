@@ -14893,9 +14893,19 @@ def trust_employer_link(email: str):
     if not row:
         raise HTTPException(status_code=404, detail="No TrustSquare account for that address.")
     import secrets as _ek
+    # REF-NONCE-1 (29 Sep 2026, story walk): the link carries a nonce only, never her address (as BUZZ-JOIN-1's link);
+    # the nonce is looked up in ref_links. Links minted before today still carry the address and still work.
+    _nonce = _ek.token_urlsafe(9)                 # RUL-142: one link = one confirmer
+    _rc = database.get_db()
+    try:
+        _rc.execute("CREATE TABLE IF NOT EXISTS ref_links (nonce TEXT PRIMARY KEY, email TEXT NOT NULL, "
+                    "created_at TEXT DEFAULT CURRENT_TIMESTAMP)")
+        _rc.execute("INSERT INTO ref_links (nonce, email) VALUES (?, ?) ON CONFLICT(nonce) DO NOTHING", (_nonce, email))
+        _rc.commit()
+    finally:
+        _rc.close()
     token = _pyjwt.encode(
-        {"email": email, "purpose": "employer_confirm",
-         "nonce": _ek.token_urlsafe(9),          # RUL-142: one link = one confirmer
+        {"purpose": "employer_confirm", "nonce": _nonce,
          "exp": datetime.now(timezone.utc) + timedelta(days=30),
          "iat": datetime.now(timezone.utc)},
         _JWT_SECRET, algorithm=_JWT_ALGO)
@@ -14912,6 +14922,26 @@ def trust_employer_link(email: str):
             "points": _pts}
 
 
+def _ref_email(claims) -> str:
+    """REF-NONCE-1: whose confirmation link this is -- the address in an older link, else the nonce's row."""
+    em = (claims.get("email") or "").strip().lower()
+    if em:
+        return em
+    _n = claims.get("nonce") or ""
+    if not _n:
+        raise HTTPException(status_code=400, detail="That link is not valid.")
+    c = database.get_db()
+    try:
+        r = c.execute("SELECT email FROM ref_links WHERE nonce = ?", (_n,)).fetchone()
+    except Exception:
+        r = None
+    finally:
+        c.close()
+    if not r:
+        raise HTTPException(status_code=400, detail="That link is not valid.")
+    return (r["email"] or "").strip().lower()
+
+
 @app.get("/trust/employer-who")
 def trust_employer_who(token: str):
     """What the confirmation page shows before anyone taps anything. Public on purpose -
@@ -14922,14 +14952,15 @@ def trust_employer_who(token: str):
         raise HTTPException(status_code=400, detail="That link has expired or is not valid.")
     if claims.get("purpose") != "employer_confirm":
         raise HTTPException(status_code=400, detail="That link is not a confirmation link.")
+    _rem = _ref_email(claims)                     # REF-NONCE-1
     conn = database.get_db()
     row = conn.execute("SELECT name FROM users WHERE LOWER(email) = ?",
-                       (claims["email"],)).fetchone()
+                       (_rem,)).fetchone()
     rows = conn.execute(
         "SELECT signal_id, status, verified_by FROM user_credentials WHERE LOWER(email) = ? AND signal_id IN "
-        "('universal.employer_confirmed', 'universal.employer_confirmed_2')", (claims["email"],)).fetchall()
+        "('universal.employer_confirmed', 'universal.employer_confirmed_2')", (_rem,)).fetchall()
     conn.close()
-    _nm = (row["name"] if row and row["name"] else claims["email"].split("@")[0])
+    _nm = (row["name"] if row and row["name"] else "Someone")   # STORY-WALK-FIX-1: never a piece of her address
     # RUL-142: THIS link is spent once it earned a confirmation; the seller is 'done' once both are earned.
     _nonce = claims.get("nonce")
     _earned = [r for r in rows if r["status"] == "earned"]
@@ -14952,7 +14983,7 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
         raise HTTPException(status_code=400, detail="That link has expired or is not valid.")
     if claims.get("purpose") != "employer_confirm":
         raise HTTPException(status_code=400, detail="That link is not a confirmation link.")
-    email = claims["email"]
+    email = _ref_email(claims)                    # REF-NONCE-1
     # VOUCH-OTHERS-1 (24 Sep 2026, David approved): a confirmation counts only from a SIGNED-IN person who
     # is not the seller. Before this, the seller could open her own link in a private window and confirm
     # herself for +12 trust points.
@@ -28160,7 +28191,8 @@ def _buzz_name(conn, email: str) -> str:
             return (r["name"] or "").strip()
     except Exception:
         pass
-    return (email or "").split("@")[0] or "Somebody"
+    # STORY-WALK-FIX-1 (29 Sep 2026, RUL-171(d)): never the first part of an address as a name
+    return "A TrustSquare member"
 
 
 def _buzz_pair(conn, x: str, y: str):
@@ -28649,8 +28681,11 @@ def buzz_pairs(email: str = None, _key: str = Depends(auth.require_api_key),
             v["kept"] = False
         # SEC-GATE-1 (24 Sep 2026): the registered name only once THEY have let me buzz them - anybody can
         # pair with any address, so otherwise this is a name lookup; fall back to _buzz_name's own local part.
-        v["other_name"] = (_buzz_name(conn, v["other_email"]) if v["they_allow_me"]
-                           else ((v["other_email"] or "").split("@")[0] or "Somebody"))
+        # STORY-WALK-FIX-1 (29 Sep 2026, RUL-171(d)): a pair made through her own link or a reference is a consented
+        # pair, so its name shows; otherwise 'Somebody' -- never a piece of the address.
+        v["other_name"] = (_buzz_name(conn, v["other_email"])
+                           if (v["they_allow_me"] or (v.get("source") in ("regular-link", "reference")))
+                           else "Somebody")
         out.append(v)
     conn.close()
     return out

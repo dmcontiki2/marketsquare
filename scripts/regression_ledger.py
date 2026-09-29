@@ -32539,5 +32539,33 @@ def rg_area_tick_1():
         return [(FAIL, "the area tick covers the area name on a chip again")]
     return [(INFO, "chip tick sits beside the name")]
 
+@entry("RG-0544", "STORY-WALK-FIX-1 + REF-NONCE-1: the home cleaner story walk's findings -- no address shown as a name or on "
+       "the Buzz list (RUL-171(d)), the confirmer is asked a first name, My Space shows the account's name, the ID note "
+       "sits inside the intro form, the Accept toast says the contact is the introduction email, and the someone-I-worked-for "
+       "link carries a nonce only",
+       OPEN, fixed_on="2026-09-29",
+       scope="ms.js Buzz list + keep list (no other_email shown), _introIdNote in openModal, accept toast, My Space name from "
+             "/quick/me; bea_main.py _buzz_name fallback, /buzz/pairs other_name, employer-link mint (ref_links) + _ref_email in "
+             "employer-who/confirm; confirm.html #nmbox + askName.",
+       ref="Home cleaner story walk, 29 Sep 2026 (Annatjie/Sannie/Hettie/Karin QA accounts). LOCK after the rendered re-walk.")
+def rg_story_walk_fix_1():
+    js = repo_file("ms.js"); b = repo_file("bea_main.py"); cf = repo_file("confirm.html")
+    if None in (js, b, cf):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "'<span>'+p.other_email+'</span>'" in js or "'<span>' + _lmEsc(p.other_email||'') + '</span>'" in js:
+        bad.append("the Buzz list shows the other person's address again")
+    if "function _introIdNote(" not in js or "_introIdNote(ok==='unchecked')" not in js:
+        bad.append("the ID note is a toast over the intro form again")
+    if "you can now see how to reach them" in js:
+        bad.append("the Accept toast promises a contact the app does not show")
+    if 'split("@")[0] or "Somebody"' in b or '{"email": email, "purpose": "employer_confirm"' in b or "def _ref_email(" not in b:
+        bad.append("an address fragment is used as a name, or the confirm link carries her address")
+    if 'id="nmbox"' not in cf:
+        bad.append("the confirmer is no longer asked a first name")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "names not addresses; confirm asks a name; nonce-only confirm link")]
+
 if __name__ == "__main__":
     sys.exit(main())

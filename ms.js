@@ -6770,9 +6770,21 @@ function openModal(id){
   _msSellerCanReceive(id).then(function(ok){
     if(ok==='demo'){ showToast(DEMO_EXAMPLE_MSG, 7000); return; }   // DEMO-INACTIVE-1
     if(!ok){ showToast('This listing cannot take introductions right now. Nothing was charged.', 7000); return; }
-    if(ok==='unchecked') showToast("This seller's ID has not been checked yet. TrustSquare still introduces you — meet safely and never pay a deposit before you have seen the goods or the work.", 8000);   /* RUL-188: warn, never block */
+    /* STORY-WALK-FIX-1 (29 Sep 2026): the ID note sat as a toast over the message box and the Join queue button -- it is now a line inside the form */   /* RUL-188: warn, never block */
     _openModalNow(id);
+    _introIdNote(ok==='unchecked');
   });
+}
+function _introIdNote(show){   /* STORY-WALK-FIX-1 */
+  try{
+    var old=document.getElementById('m-idnote'); if(old) old.remove();
+    if(!show) return;
+    var msg=document.getElementById('m-msg'); var fld=msg && msg.closest('.field'); if(!fld) return;
+    var d=document.createElement('div'); d.id='m-idnote';
+    d.style.cssText='margin:6px 0 10px;padding:10px 12px;border-radius:10px;background:#fff7e6;border:1px solid #f0c36d;color:#5c3d00;font-size:13px;line-height:1.45';
+    d.textContent="This seller's ID has not been checked yet. TrustSquare still introduces you \u2014 meet safely and never pay a deposit before you have seen the goods or the work.";
+    fld.parentNode.insertBefore(d, fld.nextSibling);
+  }catch(_){}
 }
 function _openModalNow(id, _fetched){
   /* INTRO-FIND-1 (25 Sep 2026 inspection, ts1-04): an advert that is not in the list any more (another city, a refresh)
@@ -15973,7 +15985,7 @@ function _bzChooseCard(c, pairs){
         + 'nothing is deleted, and you can change this any time.</div>';
   mine.forEach(function(p, k){
     h += '<label class="bz-row" style="cursor:pointer"><div class="bz-lbl"><b>' + _lmEsc(p.other_name||'') + '</b>'
-       + '<span>' + _lmEsc(p.other_email||'') + '</span></div>'
+       + '<span>' + (p.source==='reference' ? 'Confirmed you worked for them' : 'Your regular') + '</span></div>'   /* STORY-WALK-FIX-1: no address */
        + '<input type="checkbox" data-keep="' + _lmEsc(p.other_email||'') + '"' + (!(p.resting||p.paused) ? ' checked' : '') + '></label>';
   });
   return h + '<div class="bz-note" id="bz-keep-count"></div>'
@@ -16141,7 +16153,8 @@ async function buzzRender(){
       var p = Object.assign({}, p0, {other_name: _lmEsc(p0.other_name||''), other_email: _lmEsc(p0.other_email||'')});
       h += '<div class="ms-card" id="bz-card-'+i+'">'
         + '<div class="bz-who"><div class="bz-av">'+_lmEsc(bzInitials(p0.other_name||''))+'</div>'
-        + '<div class="bz-nm">'+p.other_name+'<span>'+p.other_email+'</span></div></div>';
+        /* STORY-WALK-FIX-1 (29 Sep 2026, RUL-171(d)): the other person's address is never shown -- what they are to her instead */
+        + '<div class="bz-nm">'+p.other_name+'<span>'+(p0.mine ? (p0.source==='reference' ? 'Confirmed you worked for them' : 'Your regular') : 'You are their regular')+'</span></div></div>';
       if(p.closed){
         h += '<div class="bz-closed">Buzz is closed between you and '+p.other_name+'. '
            + 'You still have each other\u2019s number.'
@@ -17479,6 +17492,15 @@ function msInit(){
 
   const dispSub = document.getElementById('ms-display-sub');
   if(dispSub) dispSub.textContent = _shownEm || 'TrustSquare member';
+  /* STORY-WALK-FIX-1 (29 Sep 2026): signed in by an email link, this phone had no stored name, so My Space showed the
+     address's first part. The account's name (asked in Quick) comes from the session instead. */
+  if(!name && email){ fetch('/quick/me',{credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
+    if(!(j && j.signed_in && j.name && String(j.email||'').toLowerCase()===String(email).toLowerCase())) return;
+    try{ localStorage.setItem('ms_user_name', j.name); }catch(_){}
+    if(dispName) dispName.textContent = j.name;
+    const _av = document.getElementById('ms-avatar-initials'); if(_av) _av.textContent = j.name.split(' ').filter(Boolean).slice(0,2).map(function(w){ return w[0].toUpperCase(); }).join('');
+    const _pd = document.getElementById('ms-pd-name'); if(_pd) _pd.textContent = j.name;
+  }).catch(function(){}); }
 
   // Wallet badge
   const tnBadge = document.getElementById('nav-tn-badge');
@@ -18482,7 +18504,7 @@ async function msIntroAction(introId, accept, btn){
   const ok = await _introAnswerPut(introId, accept);   // RUL-190: a short Local Market seller is sent to top up
   if(ok==='topup'){ try{ if(btn) btn.disabled = false; }catch(_){} return; }
   if(!ok){ try{ if(btn) btn.disabled = false; }catch(_){} showToast('That did not go through \u2014 please sign in and try again.'); return; }
-  showToast(accept ? '\u2713 Accepted \u2014 you can now see how to reach them.' : 'Declined \u2014 no penalty.');
+  showToast(accept ? '\u2713 Accepted \u2014 we have emailed you both. Reply to that email to talk.' : 'Declined \u2014 no penalty.');   /* STORY-WALK-FIX-1: the contact is the introduction email */
   if(accept) setTimeout(_msRefreshBalance, 400);   // BALANCE-AFTER-ACCEPT-1
   try{ const _em = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || ''; if(_em) msLoadIntros(_em); }catch(_){}
 }

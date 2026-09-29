@@ -86,6 +86,13 @@
 
   <div id="done" class="hide">
     <div class="ok"><b>Thank you.</b> <span id="donetxt">That is recorded.</span></div>
+    <!-- STORY-WALK-FIX-1 (29 Sep 2026): the confirmation also connects them on Buzz, so she is asked a first name
+         once when her account has none -- otherwise the other person saw the first part of her address. -->
+    <div id="nmbox" class="hide" style="margin-top:14px">
+      <p class="fine" id="nmwhy" style="margin:0 0 8px">You are now connected on Buzz. What first name should they see?</p>
+      <input id="nm" class="yrs" type="text" autocomplete="given-name" maxlength="40" placeholder="Your first name">
+      <button class="yes" id="nmsave">Save my first name</button>
+    </div>
   </div>
 
   <div id="nope" class="hide">
@@ -227,8 +234,29 @@
           ? 'This was already confirmed, so there is nothing more to do.'   /* RUL-142: one link = one confirmer */
           : 'Their trust score went up by ' + (res.j.points_awarded || 12) + ' points, and your name is not on it.';
         show('done');
+        askName();
       })
       .catch(function(){ b.disabled=false; b.textContent='Yes, they worked for me'; });
+  };
+  /* STORY-WALK-FIX-1: a first name, asked once, only when the account has none yet */
+  var askName = function(){
+    fetch('/quick/me', {credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
+      if(!j || !j.signed_in || (j.name && String(j.name).trim())) return;
+      var who = document.getElementById('who').textContent || 'they';
+      document.getElementById('nmwhy').textContent = 'You are now connected with ' + who + ' on Buzz. What first name should ' + who + ' see?';
+      document.getElementById('nmbox').className = '';
+    }).catch(function(){});
+  };
+  document.getElementById('nmsave').onclick = function(){
+    var b = this, v = (document.getElementById('nm').value || '').trim();
+    if(!v){ document.getElementById('nmwhy').textContent = 'Type your first name, then tap Save.'; return; }
+    b.disabled = true; b.textContent = 'Saving\u2026';
+    fetch('/users/me/name', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: v})})
+      .then(function(r){
+        if(r.ok){ document.getElementById('nmbox').innerHTML = '<p class="fine" style="margin:0">Saved \u2014 they will see <b></b>.</p>';
+          document.querySelector('#nmbox b').textContent = v; }
+        else { b.disabled = false; b.textContent = 'Save my first name'; document.getElementById('nmwhy').textContent = 'That did not save \u2014 please try again.'; }
+      }).catch(function(){ b.disabled = false; b.textContent = 'Save my first name'; });
   };
   document.getElementById('yes').onclick = function(){ sendYes(this); };
 })();
