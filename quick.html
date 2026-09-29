@@ -1205,7 +1205,10 @@ function qHelpAt(){
   }catch(e){ return ''; }
 }
 function qHelpType(){ var k=''; try{ var rp=svcPickIn(picks,'what'); k=(rp&&rp.r)||''; }catch(e){} return (k && QHELP[k]) ? k : ''; }
-function qHelpWord(open){ return open ? 'Quick' : (QLANG==='af' ? 'Hoe' : 'How'); }
+/* HELP-LANG-1 (29 Sep 2026): the guides speak Quick's five languages -- the button's one word does too */
+var QHELP_WORD={en:'How',af:'Hoe',zu:'Kanjani',xh:'Njani',nso:'Bjang'};
+function qHelpWord(open){ return open ? 'Quick' : (QHELP_WORD[QLANG] || 'How'); }
+function qHelpLang(){ return QHELP_WORD[QLANG] ? QLANG : 'en'; }
 function qHelpClose(){
   var o=document.getElementById('qhov'), b=document.getElementById('qhb');
   if(o) o.style.display='none';
@@ -1214,7 +1217,7 @@ function qHelpClose(){
 function qHelpOpen(){
   var app=document.getElementById('app'), bar=document.querySelector('.bar'), b=document.getElementById('qhb');
   if(!app || !bar || !b) return;
-  var t=qHelpType(), lang=(QLANG==='af' ? 'af' : 'en');
+  var t=qHelpType(), lang=qHelpLang();
   var src=t ? '/help/'+t+'?embed=1#at='+encodeURIComponent(qHelpAt())+'&lang='+lang : '/help/?embed=1#lang='+lang;
   var o=document.getElementById('qhov');
   if(!o){ o=document.createElement('div'); o.id='qhov'; o.innerHTML='<iframe title="How it works"></iframe>'; app.appendChild(o); }
@@ -2591,6 +2594,7 @@ function qTranslate(root){
   _qBusy=false;
 }
 function qSetLang(l){
+  setTimeout(function(){ try{ var hb=document.getElementById('qhb'); if(hb && hb.getAttribute('aria-pressed')!=='true') hb.textContent=qHelpWord(false); }catch(e){} },0);   /* HELP-LANG-1 */
   QLANG=l; try{ localStorage.setItem('ts_qlang', l); }catch(e){}
   document.documentElement.lang=l; qTranslate(document.getElementById('app')); qPill();
 }

@@ -66,6 +66,11 @@ a.back::before{content:'\2039  '}
 .draft{border:1px dashed var(--gate);color:var(--gate);border-radius:12px;padding:8px 12px;font-size:13px}
 .draft[hidden]{display:none}
 .miss{padding:40px 0;color:var(--ink2)}
+q.ui{color:#FFE08A;font-weight:700}
+.qnote{margin:0;font-size:12.5px;color:#FFE08A;opacity:.9}
+.qnote[hidden]{display:none}
+.lang button{padding:6px 9px}
+.brand{min-width:0}.brand span{overflow:hidden;text-overflow:ellipsis}
 /* HELP-SWAP-1: inside Quick (?embed=1) only the cards -- Quick's own bar is above it */
 html.embed body{padding-block:12px 32px}
 html.embed .top,html.embed a.back,html.embed #draft,html.embed header,html.embed #who,html.embed #t-foot{display:none}
@@ -74,7 +79,7 @@ html.embed .top,html.embed a.back,html.embed #draft,html.embed header,html.embed
 <body>
 <div class="wrap">
   <div class="top"><div class="brand"><i>TS</i><span id="t-brand"></span></div>
-    <div class="lang" role="group" aria-label="Language"><button type="button" id="l-en" aria-pressed="true">English</button><button type="button" id="l-af" aria-pressed="false">Afrikaans</button></div></div>
+    <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en" aria-label="English">EN</button><button type="button" data-l="af" aria-label="Afrikaans">AF</button><button type="button" data-l="zu" aria-label="isiZulu">ZU</button><button type="button" data-l="xh" aria-label="isiXhosa">XH</button><button type="button" data-l="nso" aria-label="Sepedi">NSO</button></div></div>
   <a class="back" id="t-back" href="/help/"></a>
   <div class="draft" id="draft" hidden></div>
   <header>
@@ -84,6 +89,7 @@ html.embed .top,html.embed a.back,html.embed #draft,html.embed header,html.embed
   </header>
   <div class="who" id="who"></div>
   <div class="gate" id="gate" hidden><span aria-hidden="true">◆</span><span id="gate-t"></span></div>
+  <p class="qnote" id="qnote" hidden></p>
   <section aria-live="polite">
     <div class="trio">
       <button type="button" class="side" id="prev"></button>
@@ -109,7 +115,7 @@ function hashArgs(){ const h = (location.hash || '').slice(1), a = {};
   else h.split('&').forEach(kv => { const i = kv.indexOf('='); if (i > 0) a[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); });
   return a; }
 function placeFromHash(){ const a = hashArgs();
-  if (a.lang === 'af' || a.lang === 'en') lang = a.lang;
+  if (LANGS.includes(a.lang)) lang = a.lang;
   let i = -1;
   if (a.s) i = S.findIndex(s => s.n === a.s);
   else if (a.at) i = S.findIndex(s => (s.quick || []).includes(a.at));
@@ -119,60 +125,83 @@ const UI = {
  en:{brand:'How it works',back:'All guides',draft:'Draft: checked by us, not yet linked from the app.',missing:'This guide is not written yet.',sub:n=>`${n} steps. Tap any card to jump there.`,walked:d=>`Checked on the live site, ${d}`,
      who:{you:'You',worked:'Someone you worked for',regular:'Your regulars',customer:'A new customer'},prev:'Previous',next:'Next',now:'Now',step:'Step',of:'of',
      free:'Free',paid:'1T from her, only if you accept',whole:'The whole story',gatePre:'Coming up: until someone you worked for confirms you, only people you send your link to can see your listing.',gateHere:'This is the step that opens your listing to new customers.',gateMark:'Opens your listing to new customers',
+     quote:'Words in yellow are the buttons you tap, as the app shows them.',
      foot:'Close this page to go back. Your answers in Quick stay where they were.',months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']},
  af:{brand:'Hoe dit werk',back:'Alle gidse',draft:'Konsep: deur ons nagegaan, nog nie in die app gekoppel nie.',missing:'Hierdie gids is nog nie geskryf nie.',sub:n=>`${n} stappe. Tik enige kaart om daarheen te gaan.`,walked:d=>`Nagegaan op die regte webwerf, ${d}`,
      who:{you:'Jy',worked:'Iemand vir wie jy gewerk het',regular:'Jou vaste kliënte',customer:"'n Nuwe kliënt"},prev:'Vorige',next:'Volgende',now:'Nou',step:'Stap',of:'van',
      free:'Gratis',paid:'1T van haar, net as jy aanvaar',whole:'Die hele storie',gatePre:'Binnekort: totdat iemand vir wie jy gewerk het jou bevestig, kan net mense aan wie jy jou skakel stuur jou advertensie sien.',gateHere:'Dit is die stap wat jou advertensie vir nuwe kliënte oopmaak.',gateMark:'Maak jou advertensie vir nuwe kliënte oop',
-     foot:'Maak hierdie bladsy toe om terug te gaan. Jou antwoorde in Quick bly waar hulle was.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']}
+     quote:'Woorde in geel is die knoppies wat jy tik, soos die app hulle wys.',
+     foot:'Maak hierdie bladsy toe om terug te gaan. Jou antwoorde in Quick bly waar hulle was.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']},
+ zu:{brand:'Kusebenza kanjani',back:'Yonke imihlahlandlela',draft:'Okusalungiswa: kuhlolwe yithi, akukaxhunyaniswa ne-app.',missing:'Lo mhlahlandlela awukabhalwa.',sub:n=>`Izinyathelo ezingu-${n}. Thepha noma yiliphi ikhadi ukuya kulo.`,walked:d=>`Kuhlolwe kusayithi langempela, ${d}`,
+     who:{you:'Wena',worked:'Umuntu owake wamsebenzela',regular:'Amakhasimende akho ajwayelekile',customer:'Ikhasimende elisha'},prev:'Okwedlule',next:'Okulandelayo',now:'Manje',step:'Isinyathelo',of:'/',
+     free:'Mahhala',paid:'1T kuye, kuphela uma wamukela',whole:'Yonke indaba',gatePre:'Kuyeza: kuze kube yilapho umuntu owake wamsebenzela ekuqinisekisa, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.',gateHere:'Yilesi isinyathelo esivulela amakhasimende amasha isikhangiso sakho.',gateMark:'Ivulela amakhasimende amasha isikhangiso sakho',
+     quote:'Amagama aphuzi yizinkinobho ozithephayo, njengoba i-app izibonisa ngesiNgisi.',tdraft:'Ukuhumusha okusalungiswa, kusahlolwa ngabafundi.',
+     foot:'Vala leli khasi ukuze ubuyele emuva. Izimpendulo zakho ku-Quick zihlala lapho zikhona.',months:['Jan','Feb','Mas','Apr','Mey','Jun','Jul','Aga','Sep','Okt','Nov','Dis']},
+ xh:{brand:'Isebenza njani',back:'Zonke izikhokelo',draft:'Idrafti: ihlolwe sithi, ayikaqhagamshelwa kwi-app.',missing:'Esi sikhokelo asikabhalwa.',sub:n=>`Amanyathelo angama-${n}. Cofa naliphi na ikhadi ukuya kulo.`,walked:d=>`Kuhlolwe kwisayithi yokwenyani, ${d}`,
+     who:{you:'Wena',worked:'Umntu owakhe wamsebenzela',regular:'Abathengi bakho abaqhelekileyo',customer:'Umthengi omtsha'},prev:'Elidlulileyo',next:'Elilandelayo',now:'Ngoku',step:'Inyathelo',of:'/',
+     free:'Simahla',paid:'1T kuye, kuphela ukuba uyamkela',whole:'Ibali lonke',gatePre:'Kuyeza: de kube umntu owakhe wamsebenzela akuqinisekise, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.',gateHere:'Eli linyathelo elivulela abathengi abatsha intengiso yakho.',gateMark:'Ivulela abathengi abatsha intengiso yakho',
+     quote:'Amagama amthubi ngamaqhosha owacofayo, njengoko i-app iwabonisa ngesiNgesi.',tdraft:'Uguqulelo oluyidrafti, lusahlolwa ngabafundi.',
+     foot:'Vala eli phepha ukuze ubuyele. Iimpendulo zakho kwi-Quick zihlala apho zikhoyo.',months:['Jan','Feb','Mat','Epr','Mey','Jun','Jul','Aga','Sep','Okt','Nov','Dis']},
+ nso:{brand:'Ka moo e šomago',back:'Ditlhahli ka moka',draft:'Kakanyo: e hlahlobilwe ke rena, ga e so kgokagane le app.',missing:'Tlhahli ye ga e so ngwalwe.',sub:n=>`Dikgato tše ${n}. Kgotla karata efe goba efe go ya go yona.`,walked:d=>`E hlahlobilwe weposaeteng ya nnete, ${d}`,
+     who:{you:'Wena',worked:'Motho yo o kilego wa mo šomela',regular:'Bareki ba gago ba ka mehla',customer:'Moreki yo moswa'},prev:'Pele',next:'Latelago',now:'Bjale',step:'Kgato',of:'/',
+     free:'Mahala',paid:'1T go yena, feela ge o amogela',whole:'Kanegelo ka moka',gatePre:'E a tla: go fihlela motho yo o kilego wa mo šomela a go netefatša, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago.',gateHere:'Ye ke kgato ye e bulelago bareki ba bafsa papatšo ya gago.',gateMark:'E bulela bareki ba bafsa papatšo ya gago',
+     quote:'Mantšu a serolwane ke dikonopo tšeo o di kgotlago, bjalo ka ge app e di bontšha ka Seisemane.',tdraft:'Phetolelo ya kakanyo, e sa hlahlobja ke babadi.',
+     foot:'Tswalela letlakala le go boela morago. Dikarabo tša gago go Quick di dula moo di lego.',months:['Jan','Feb','Mat','Apr','Mei','Jun','Jul','Ago','Set','Okt','Nof','Dis']}
+
 };
 let lang = 'en', cur = 0;
-try { const l = localStorage.getItem('ts_help_lang'); if (l === 'af' || l === 'en') lang = l; } catch (e) {}
+// HELP-LANG-1 (29 Sep 2026, David: "lets go with the local languages"): the five languages Quick speaks
+const LANGS = ['en', 'af', 'zu', 'xh', 'nso'];
+try { const l = localStorage.getItem('ts_help_lang'); if (LANGS.includes(l)) lang = l; } catch (e) {}
 const $ = id => document.getElementById(id);
 const col = w => `var(--${w})`;
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const L = o => (o && (o[lang] || o.en)) || '';                       // this language, else English
+const rich = t => esc(t).replace(/\[\[(.+?)\]\]/g, '<q class="ui">$1</q>');   // [[Button]] = the app's own words, quoted
+const plain = t => String(t).replace(/\[\[|\]\]/g, '');
 function day(iso){ const u = UI[lang]; return `${Number(iso.slice(8))} ${u.months.at(Number(iso.slice(5,7)) - 1)} ${iso.slice(0,4)}`; }
 function costChip(s){ const u = UI[lang]; return s.cost === 'free' ? `<span class="chip free">${u.free}</span>` : `<span class="chip paid">${u.paid}</span>`; }
 function side(el, s, label){
   if (!s) { el.disabled = true; el.innerHTML = `<span class="k">${label}</span>`; return; }
   el.disabled = false;
-  el.innerHTML = `<span class="k">${label}</span><img src="${img(s.img)}" alt=""><span class="t">${esc(s[lang][0])}</span>`;
+  el.innerHTML = `<span class="k">${label}</span><img src="${img(s.img)}" alt=""><span class="t">${rich(L(s)[0])}</span>`;
 }
 function render(){
   if (!STORY) return;
   const u = UI[lang], s = S[cur];
   document.documentElement.lang = lang;
-  $('t-brand').textContent = u.brand; $('t-title').textContent = STORY.title[lang]; document.title = STORY.title[lang] + ' · TrustSquare';
+  $('t-brand').textContent = u.brand; $('t-title').textContent = L(STORY.title); document.title = L(STORY.title) + ' · TrustSquare';
   $('t-back').textContent = u.back; const dr = $('draft'); dr.hidden = STORY.status !== 'draft'; dr.textContent = u.draft; $('t-sub').textContent = u.sub(S.length);
   $('t-walked').textContent = '✓ ' + u.walked(day(STORY.walked_on));
   $('who').innerHTML = Object.entries(u.who).map(([k,v]) => `<span><i class="dot" style="background:${col(k)}"></i>${v}</span>`).join('');
   const gi = S.findIndex(x => x.gate);
   const g = $('gate');
-  if (gi >= 0 && cur <= gi) { g.hidden = false; $('gate-t').innerHTML = `<b>${cur === gi ? u.gateHere : ((STORY.gate_note || {})[lang] || u.gatePre)}</b>`; } else g.hidden = true;
+  if (gi >= 0 && cur <= gi) { g.hidden = false; $('gate-t').innerHTML = `<b>${cur === gi ? u.gateHere : (L(STORY.gate_note) || u.gatePre)}</b>`; } else g.hidden = true;
   side($('prev'), S[cur - 1], u.prev); side($('next'), S[cur + 1], u.next);
   const now = $('now'); now.style.setProperty('--c', col(s.who));
   now.innerHTML = `<div class="k"><span>${u.now} · ${u.step} ${s.n} ${u.of} ${S.length}</span>${costChip(s)}</div>
     <span style="font-size:12px;font-weight:700;color:${col(s.who)}">${u.who[s.who]}</span>
-    <h2>${esc(s[lang][0])}</h2><p>${esc(s[lang][1])}</p><img src="${img(s.img)}" alt="${esc(s[lang][0])}">`;
+    <h2>${rich(L(s)[0])}</h2><p>${rich(L(s)[1])}</p><img src="${img(s.img)}" alt="${esc(plain(L(s)[0]))}">`;
   $('b-prev').textContent = '‹ ' + u.prev; $('b-next').textContent = u.next + ' ›';
   $('b-prev').disabled = cur === 0; $('b-next').disabled = cur === S.length - 1;
   $('t-whole').textContent = u.whole; $('t-foot').textContent = u.foot;
   let html = '';
   STORY.chapters.forEach(ch => {
     const items = S.filter(x => x.ch === ch.id); if (!items.length) return;
-    html += `<div class="chap">${esc(ch[lang])}</div><ol class="story">` + items.map(x => {
+    html += `<div class="chap">${esc(L(ch))}</div><ol class="story">` + items.map(x => {
       const i = S.indexOf(x);
-      return `<li><button type="button" data-i="${i}" ${i === cur ? 'aria-current="step"' : ''} style="--c:${col(x.who)}"><span class="num">${x.n}</span><span><span class="tt">${esc(x[lang][0])}</span>${x.gate ? `<span class="gt">◆ ${u.gateMark}</span>` : ''}</span>${x.cost === 'free' ? '' : '<span class="chip paid">1T</span>'}</button></li>`;
+      return `<li><button type="button" data-i="${i}" ${i === cur ? 'aria-current="step"' : ''} style="--c:${col(x.who)}"><span class="num">${x.n}</span><span><span class="tt">${rich(L(x)[0])}</span>${x.gate ? `<span class="gt">◆ ${u.gateMark}</span>` : ''}</span>${x.cost === 'free' ? '' : '<span class="chip paid">1T</span>'}</button></li>`;
     }).join('') + '</ol>';
   });
   $('whole').innerHTML = html;
   document.querySelectorAll('ol.story button').forEach(b => b.onclick = () => go(+b.dataset.i, true));
-  $('l-en').setAttribute('aria-pressed', lang === 'en'); $('l-af').setAttribute('aria-pressed', lang === 'af');
+  document.querySelectorAll('.lang [data-l]').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === lang));
+  const qn = $('qnote'); const qt = [lang === 'en' ? '' : u.quote, (STORY.translations || {})[lang] === 'draft' ? u.tdraft : ''].filter(Boolean).join(' '); qn.hidden = !qt; qn.textContent = qt;
 }
 function go(i, scroll){ cur = Math.max(0, Math.min(S.length - 1, i)); try { history.replaceState(null, '', '#s' + S[cur].n); } catch (e) {} render(); if (scroll) window.scrollTo({top: 0, behavior: 'smooth'}); }
 $('prev').onclick = () => go(cur - 1); $('next').onclick = () => go(cur + 1);
 $('b-prev').onclick = () => go(cur - 1); $('b-next').onclick = () => go(cur + 1);
-$('l-en').onclick = () => { lang = 'en'; try { localStorage.setItem('ts_help_lang', 'en'); } catch (e) {} render(); };
-$('l-af').onclick = () => { lang = 'af'; try { localStorage.setItem('ts_help_lang', 'af'); } catch (e) {} render(); };
+document.querySelectorAll('.lang [data-l]').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem('ts_help_lang', lang); } catch (e) {} render(); });
 fetch('/help/data/' + TYPE + '.json', {cache: 'no-cache'})
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(d => {

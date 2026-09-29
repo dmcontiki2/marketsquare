@@ -32696,7 +32696,7 @@ def rg_help_swap_1():
     if None in (q, hp, st):
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = []
-    for need in ("function qHelpAt(", "return 'door'", "f.steps[step].key", "qHelpWord(true)", "'Quick' : (QLANG==='af' ? 'Hoe' : 'How')",
+    for need in ("function qHelpAt(", "return 'door'", "f.steps[step].key", "qHelpWord(true)", "open ? 'Quick' : (QHELP_WORD[QLANG] || 'How')",   # HELP-LANG-1: the one word follows her language
                  "fr.contentWindow.location.hash"):
         if need not in q:
             bad.append("Quick's in-place guide lost: " + need)
@@ -32713,6 +32713,40 @@ def rg_help_swap_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "How in the bar swaps the guide in place at her current step, and back to Quick")]
+
+
+@entry("RG-0549", "HELP-LANG-1: the story guides speak Quick's five languages (English, Afrikaans, isiZulu, isiXhosa, Sepedi) and "
+       "quote the app's own English button words in colour, so a local-language sentence never reads as bad grammar",
+       OPEN, fixed_on="2026-09-29",
+       scope="stories/home_cleaner.json (zu/xh/nso for label, title, gate_note, chapters, steps; [[Button]] quotes; translations: draft); "
+             "stories/help.html + stories/index.html (LANGS, L()/rich(), q.ui, #qnote); quick.html + genie/HARNESS.html QHELP_WORD/qHelpLang; "
+             "scripts/build_help.py OPTIONAL_LANGS and the [[ ]] balance check.",
+       ref="David, 29 Sep 2026: 'lets go with the local languages, i am not so sure about the pictures though' -- screens stay English -- "
+           "and 'Where the language quote the English examples words it could be shown in another color to clearly show it as a quote "
+           "and not bad grammar?'")
+def rg_help_lang_1():
+    import json as _j
+    hp = repo_file("stories/help.html"); ix = repo_file("stories/index.html"); q = repo_file("quick.html"); st = repo_file("stories/home_cleaner.json")
+    if None in (hp, ix, q, st):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    d = _j.loads(st)
+    for lg in ("zu", "xh", "nso"):
+        miss = [s_["n"] for s_ in d.get("steps", []) if s_.get("pass") and not (isinstance(s_.get(lg), list) and len(s_[lg]) == 2)]
+        if miss or lg not in d.get("title", {}):
+            bad.append("the home cleaner guide lost %s (steps %s)" % (lg, miss[:5]))
+    if not any("[[" in t for s_ in d.get("steps", []) for t in s_.get("zu", [])):
+        bad.append("the local-language steps no longer mark the app's English words")
+    for need in ("const LANGS = ['en', 'af', 'zu', 'xh', 'nso']", "<q class=\"ui\">", "q.ui{color:", "u.quote", "(o[lang] || o.en)"):
+        if need not in hp:
+            bad.append("the guide page lost: " + need)
+    if "const LANGS = ['en', 'af', 'zu', 'xh', 'nso']" not in ix:
+        bad.append("the gallery no longer offers the five languages")
+    if "var QHELP_WORD={en:'How',af:'Hoe',zu:'Kanjani',xh:'Njani',nso:'Bjang'}" not in q or "lang=qHelpLang()" not in q:
+        bad.append("Quick no longer opens the guide in her language")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "guides in five languages; the app's English button words are quoted in colour")]
 
 
 if __name__ == "__main__":

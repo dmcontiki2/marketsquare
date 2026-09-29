@@ -7,11 +7,17 @@
    "flow": "F1",
    "label": {
     "en": "Home cleaner",
-    "af": "Huisskoonmaker"
+    "af": "Huisskoonmaker",
+    "zu": "Umhlanzi wasendlini",
+    "xh": "Umcoci wasekhaya",
+    "nso": "Mohlwekiši wa ka ntlong"
    },
    "title": {
     "en": "Home cleaner: from listing to your first customer",
-    "af": "Huisskoonmaker: van advertensie tot jou eerste kliënt"
+    "af": "Huisskoonmaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umhlanzi wasendlini: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umcoci wasekhaya: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlwekiši wa ka ntlong: go tloga papatšong go ya go moreki wa gago wa mathomo"
    },
    "walked_on": "2026-09-29",
    "steps": 17,

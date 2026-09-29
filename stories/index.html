@@ -16,7 +16,7 @@ body{margin:0;color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"S
 .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--bright)}
 .brand i{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#04120f;font-style:normal;font-size:11px;font-weight:800;display:grid;place-items:center}
 .lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.lang button{font:600 13px inherit;font-family:inherit;background:transparent;color:var(--ink2);border:0;padding:6px 12px;cursor:pointer}
+.lang button{font:600 13px inherit;font-family:inherit;background:transparent;color:var(--ink2);border:0;padding:6px 9px;cursor:pointer}
 .lang button[aria-pressed="true"]{background:var(--accent);color:#04120f}
 h1{font-size:28px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.01em;text-wrap:balance}
 .sub{margin:0;color:var(--ink2);font-size:15px}
@@ -38,7 +38,7 @@ input[type=search]::placeholder{color:var(--ink2)}
 <body>
 <div class="wrap">
   <div class="top"><div class="brand"><i>TS</i><span id="t-brand"></span></div>
-    <div class="lang" role="group" aria-label="Language"><button type="button" id="l-en" aria-pressed="true">English</button><button type="button" id="l-af" aria-pressed="false">Afrikaans</button></div></div>
+    <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en" aria-label="English">EN</button><button type="button" data-l="af" aria-label="Afrikaans">AF</button><button type="button" data-l="zu" aria-label="isiZulu">ZU</button><button type="button" data-l="xh" aria-label="isiXhosa">XH</button><button type="button" data-l="nso" aria-label="Sepedi">NSO</button></div></div>
   <header>
     <h1 id="t-title"></h1>
     <p class="sub" id="t-sub"></p>
@@ -57,13 +57,23 @@ const UI = {
      none:'Nothing matches yet. More guides are being walked.',foot:'Only steps that worked on the live site are shown.',months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']},
  af:{brand:'Hoe dit werk',title:'Stap vir stap, vir elke soort advertensie',sub:'Elke gids volg een werklike stap-deur op die regte webwerf, skerm vir skerm, van jou eerste antwoord tot jou eerste kliënt.',
      count:(n,t)=>`${n} gids${n===1?'':'e'} geskryf` + (t ? ` van ${t} soorte advertensies` : ''),q:'Soek jou soort werk of item',steps:n=>`${n} stappe`,checked:'nagegaan',draft:'Konsep',
-     none:'Niks pas nog nie. Meer gidse word nagestap.',foot:'Net stappe wat op die regte webwerf gewerk het, word gewys.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']}
+     none:'Niks pas nog nie. Meer gidse word nagestap.',foot:'Net stappe wat op die regte webwerf gewerk het, word gewys.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']},
+ zu:{brand:'Kusebenza kanjani',title:'Isinyathelo ngesinyathelo, kuzo zonke izinhlobo zezikhangiso',sub:'Umhlahlandlela ngamunye ulandela ukuhamba kwangempela kusayithi, isikrini ngesikrini, kusukela empendulweni yakho yokuqala kuya ekhasimendeni lakho lokuqala.',
+     count:(n,t)=>`Imihlahlandlela engu-${n} ibhaliwe`,q:'Thola uhlobo lomsebenzi wakho noma into',steps:n=>`izinyathelo ezingu-${n}`,checked:'kuhlolwe',draft:'Okusalungiswa',
+     none:'Akukho okufanayo okwamanje. Eminye imihlahlandlela isahanjwa.',foot:'Kuboniswa kuphela izinyathelo ezisebenzile kusayithi langempela.',months:['Jan','Feb','Mas','Apr','Mey','Jun','Jul','Aga','Sep','Okt','Nov','Dis']},
+ xh:{brand:'Isebenza njani',title:'Inyathelo ngenyathelo, kulo lonke uhlobo lwentengiso',sub:'Isikhokelo ngasinye silandela uhambo lokwenyani kwisayithi, isikrini ngesikrini, ukusuka kwimpendulo yakho yokuqala ukuya kumthengi wakho wokuqala.',
+     count:(n,t)=>`Izikhokelo ezi-${n} zibhaliwe`,q:'Fumana uhlobo lomsebenzi wakho okanye into',steps:n=>`amanyathelo angama-${n}`,checked:'kuhlolwe',draft:'Idrafti',
+     none:'Akukho nto ifanayo okwangoku. Ezinye izikhokelo zisahanjwa.',foot:'Kuboniswa kuphela amanyathelo asebenzileyo kwisayithi yokwenyani.',months:['Jan','Feb','Mat','Epr','Mey','Jun','Jul','Aga','Sep','Okt','Nov','Dis']},
+ nso:{brand:'Ka moo e šomago',title:'Kgato ka kgato, go mehuta ka moka ya dipapatšo',sub:'Tlhahli ye nngwe le ye nngwe e latela leeto la nnete weposaeteng, sekirini ka sekirini, go tloga karabong ya gago ya mathomo go ya go moreki wa gago wa mathomo.',
+     count:(n,t)=>`Ditlhahli tše ${n} di ngwadilwe`,q:'Hwetša mohuta wa mošomo wa gago goba selo',steps:n=>`dikgato tše ${n}`,checked:'e hlahlobilwe',draft:'Kakanyo',
+     none:'Ga go se se swanago ga bjale. Ditlhahli tše dingwe di sa sepelwa.',foot:'Go bontšhwa feela dikgato tšeo di šomilego weposaeteng ya nnete.',months:['Jan','Feb','Mat','Apr','Mei','Jun','Jul','Ago','Set','Okt','Nof','Dis']}
 };
 let lang = 'en', IDX = {stories: []};
 const EMBED = new URLSearchParams(location.search).get('embed') === '1';   // HELP-SWAP-1: opened from Quick's How button
 
-try { const l = localStorage.getItem('ts_help_lang'); if (l === 'af' || l === 'en') lang = l; } catch (e) {}
-{ const hl = ((location.hash || '').match(/lang=(en|af)/) || [])[1]; if (hl) lang = hl; }
+const LANGS = ['en', 'af', 'zu', 'xh', 'nso'];   // HELP-LANG-1
+try { const l = localStorage.getItem('ts_help_lang'); if (LANGS.includes(l)) lang = l; } catch (e) {}
+{ const hl = ((location.hash || '').match(/lang=(en|af|zu|xh|nso)/) || [])[1]; if (hl) lang = hl; }
 const $ = id => document.getElementById(id);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const day = iso => { const u = UI[lang]; return `${Number(iso.slice(8))} ${u.months[Number(iso.slice(5,7)) - 1]} ${iso.slice(0,4)}`; };
@@ -72,16 +82,16 @@ function render(){
   document.documentElement.lang = lang;
   $('t-brand').textContent = u.brand; $('t-title').textContent = u.title; $('t-sub').textContent = u.sub;
   $('t-count').textContent = u.count(IDX.stories.length, IDX.total_types); $('q').placeholder = u.q; $('t-foot').textContent = u.foot;
-  const list = IDX.stories.filter(s => !q || (s.label.en + ' ' + s.label.af + ' ' + s.title.en + ' ' + s.title.af).toLowerCase().includes(q));
+  const L = o => (o && (o[lang] || o.en)) || '';
+  const list = IDX.stories.filter(s => !q || (Object.values(s.label).join(' ') + ' ' + Object.values(s.title).join(' ')).toLowerCase().includes(q));
   $('grid').innerHTML = list.map(s => `<a class="card" href="/help/${encodeURIComponent(s.type)}${EMBED ? '?embed=1#lang=' + lang : ''}">
       <img src="/help/img/${encodeURIComponent(s.type)}/${encodeURIComponent(s.cover)}.jpg" alt="" loading="lazy">
-      <span class="b"><span class="t">${esc(s.label[lang])}</span><span class="m">${u.steps(s.steps)} · ${u.checked} ${day(s.walked_on)}</span>${s.status === 'draft' ? `<span class="d">${u.draft}</span>` : ''}</span></a>`).join('');
+      <span class="b"><span class="t">${esc(L(s.label))}</span><span class="m">${u.steps(s.steps)} · ${u.checked} ${day(s.walked_on)}</span>${s.status === 'draft' ? `<span class="d">${u.draft}</span>` : ''}</span></a>`).join('');
   $('empty').hidden = list.length > 0; $('empty').textContent = u.none;
-  $('l-en').setAttribute('aria-pressed', lang === 'en'); $('l-af').setAttribute('aria-pressed', lang === 'af');
+  document.querySelectorAll('.lang [data-l]').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === lang));
 }
 $('q').oninput = render;
-$('l-en').onclick = () => { lang = 'en'; try { localStorage.setItem('ts_help_lang', 'en'); } catch (e) {} render(); };
-$('l-af').onclick = () => { lang = 'af'; try { localStorage.setItem('ts_help_lang', 'af'); } catch (e) {} render(); };
+document.querySelectorAll('.lang [data-l]').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem('ts_help_lang', lang); } catch (e) {} render(); });
 render();
 fetch('/help/data/index.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : {stories: []}).then(d => { IDX = d; render(); }).catch(() => render());
 </script>

@@ -4,15 +4,24 @@
  "flow": "F1",
  "label": {
   "en": "Home cleaner",
-  "af": "Huisskoonmaker"
+  "af": "Huisskoonmaker",
+  "zu": "Umhlanzi wasendlini",
+  "xh": "Umcoci wasekhaya",
+  "nso": "Mohlwekiši wa ka ntlong"
  },
  "title": {
   "en": "Home cleaner: from listing to your first customer",
-  "af": "Huisskoonmaker: van advertensie tot jou eerste kliënt"
+  "af": "Huisskoonmaker: van advertensie tot jou eerste kliënt",
+  "zu": "Umhlanzi wasendlini: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+  "xh": "Umcoci wasekhaya: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+  "nso": "Mohlwekiši wa ka ntlong: go tloga papatšong go ya go moreki wa gago wa mathomo"
  },
  "gate_note": {
   "en": "Coming up at step 10: until someone you worked for confirms you, only people you send your link to can see your listing.",
-  "af": "By stap 10: totdat iemand vir wie jy gewerk het jou bevestig, kan net mense aan wie jy jou skakel stuur jou advertensie sien."
+  "af": "By stap 10: totdat iemand vir wie jy gewerk het jou bevestig, kan net mense aan wie jy jou skakel stuur jou advertensie sien.",
+  "zu": "Kuyeza esinyathelweni 10: kuze kube yilapho umuntu owake wamsebenzela ekuqinisekisa, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.",
+  "xh": "Kwinyathelo le-10: de kube umntu owakhe wamsebenzela akuqinisekise, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
+  "nso": "Kgatong ya 10: go fihlela motho yo o kilego wa mo šomela a go netefatša, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
  },
  "walked_on": "2026-09-29",
  "people": {
@@ -25,32 +34,50 @@
   {
    "id": "c1",
    "en": "List in Quick",
-   "af": "Lys in Quick"
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
   },
   {
    "id": "c2",
    "en": "Publish",
-   "af": "Publiseer"
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
   },
   {
    "id": "c3",
    "en": "Open the door to new customers",
-   "af": "Maak die deur oop vir nuwe kliënte"
+   "af": "Maak die deur oop vir nuwe kliënte",
+   "zu": "Vulela amakhasimende amasha umnyango",
+   "xh": "Vulela abathengi abatsha ucango",
+   "nso": "Bulela bareki ba bafsa lebati"
   },
   {
    "id": "c4",
    "en": "Your regulars",
-   "af": "Jou vaste kliënte"
+   "af": "Jou vaste kliënte",
+   "zu": "Amakhasimende akho ajwayelekile",
+   "xh": "Abathengi bakho abaqhelekileyo",
+   "nso": "Bareki ba gago ba ka mehla"
   },
   {
    "id": "c5",
    "en": "A new customer",
-   "af": "'n Nuwe kliënt"
+   "af": "'n Nuwe kliënt",
+   "zu": "Ikhasimende elisha",
+   "xh": "Umthengi omtsha",
+   "nso": "Moreki yo moswa"
   },
   {
    "id": "c6",
    "en": "Pass it on",
-   "af": "Gee dit aan"
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
   }
  ],
  "steps": [
@@ -62,15 +89,27 @@
    "img": "h2_01_start",
    "pass": true,
    "en": [
-    "Open Quick, tap Offer a service",
+    "Open Quick, tap [[Offer a service]]",
     "Quick opens on the services door. One tap starts your listing."
    ],
    "af": [
-    "Maak Quick oop, tik Offer a service",
+    "Maak Quick oop, tik [[Offer a service]]",
     "Quick maak oop by die dienste-deur. Een tik begin jou advertensie."
    ],
    "quick": [
     "door"
+   ],
+   "zu": [
+    "Vula i-Quick, thepha [[Offer a service]]",
+    "I-Quick ivula emnyango wezinsizakalo. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, cofa [[Offer a service]]",
+    "I-Quick ivula kucango leenkonzo. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, kgotla [[Offer a service]]",
+    "Quick e bula lebating la ditirelo. Go kgotla gatee go thoma papatšo ya gago."
    ]
   },
   {
@@ -81,16 +120,28 @@
    "img": "h2_03_roles",
    "pass": true,
    "en": [
-    "Pick Home & care, then Home cleaner",
+    "Pick [[Home & care]], then [[Home cleaner]]",
     "Choose the kind of work, then your job."
    ],
    "af": [
-    "Kies Home & care, dan Home cleaner",
+    "Kies [[Home & care]], dan [[Home cleaner]]",
     "Kies die soort werk, dan jou werk."
    ],
    "quick": [
     "group",
     "what"
+   ],
+   "zu": [
+    "Khetha [[Home & care]], bese [[Home cleaner]]",
+    "Khetha uhlobo lomsebenzi, bese kuba umsebenzi wakho."
+   ],
+   "xh": [
+    "Khetha [[Home & care]], emva koko [[Home cleaner]]",
+    "Khetha uhlobo lomsebenzi, emva koko umsebenzi wakho."
+   ],
+   "nso": [
+    "Kgetha [[Home & care]], ke moka [[Home cleaner]]",
+    "Kgetha mohuta wa mošomo, ke moka mošomo wa gago."
    ]
   },
   {
@@ -110,6 +161,18 @@
    ],
    "quick": [
     "where"
+   ],
+   "zu": [
+    "Maka zonke izindawo osebenza kuzo",
+    "Ungamaka ezingaphezu kweyodwa, futhi ikhasimende elisesha kunoma iyiphi yazo liyakuthola. Bhala indawo yakho uma ingekho ohlwini."
+   ],
+   "xh": [
+    "Phawula yonke imimandla osebenza kuyo",
+    "Ungaphawula engaphezu komnye, kwaye umthengi okhangela kuyo nayiphi na uyakufumana. Bhala indawo yakho ukuba ayikho kuluhlu."
+   ],
+   "nso": [
+    "Swaya mafelo ka moka ao o šomago go ona",
+    "O ka swaya a fetago le tee, gomme moreki yo a nyakago go le ge e le lefe la ona o a go hwetša. Ngwala lefelo la gago ge le se lenaneong."
    ]
   },
   {
@@ -129,6 +192,18 @@
    ],
    "quick": [
     "days"
+   ],
+   "zu": [
+    "Khetha izinsuku zakho",
+    "Thepha izinsuku ongasebenza ngazo."
+   ],
+   "xh": [
+    "Khetha iintsuku zakho",
+    "Cofa iintsuku onokusebenza ngazo."
+   ],
+   "nso": [
+    "Kgetha matšatši a gago",
+    "Kgotla matšatši ao o ka šomago ka ona."
    ]
   },
   {
@@ -148,6 +223,18 @@
    ],
    "quick": [
     "price"
+   ],
+   "zu": [
+    "Beka inani lakho losuku",
+    "Bhala ukuthi umsebenzi wakho ubiza malini. I-Quick ikhombisa iholo elincane elisemthethweni, ukuze kungabikho muntu okukhokhela ngaphansi kwalo."
+   ],
+   "xh": [
+    "Beka ixabiso lakho losuku",
+    "Bhala ukuba umsebenzi wakho uxabisa malini. I-Quick ibonisa umvuzo omncinci osemthethweni, ukuze kungabikho mntu ukuhlawula ngaphantsi kwawo."
+   ],
+   "nso": [
+    "Bea tefo ya gago ya letšatši",
+    "Ngwala gore mošomo wa gago o ja bokae. Quick e bontšha moputso wa fase wa semolao, gore go se be le yo a go lefago ka fase ga wona."
    ]
   },
   {
@@ -167,6 +254,18 @@
    ],
    "quick": [
     "draft"
+   ],
+   "zu": [
+    "Faka igama lakho lokuqala ne-imeyili, bese ulondoloza",
+    "Akukho phasiwedi. Isikhangiso sakho silondoloziwe, kodwa akekho ongasibona okwamanje."
+   ],
+   "xh": [
+    "Faka igama lakho lokuqala ne-imeyile, uze ugcine",
+    "Akukho phasiwedi. Intengiso yakho igciniwe, kodwa akukho mntu unokuyibona okwangoku."
+   ],
+   "nso": [
+    "Tsenya leina la gago la mathomo le imeile, ke moka o boloke",
+    "Ga go phasewete. Papatšo ya gago e bolokilwe, eupša ga go yo a ka e bonago ga bjale."
    ]
   },
   {
@@ -177,15 +276,27 @@
    "img": "h_10_draft",
    "pass": true,
    "en": [
-    "Open the email, tap Open my listing",
+    "Open the email, tap [[Open my listing]]",
     "It signs you in on your phone and opens your draft in TrustSquare."
    ],
    "af": [
-    "Maak die e-pos oop, tik Open my listing",
+    "Maak die e-pos oop, tik [[Open my listing]]",
     "Dit teken jou op jou foon in en maak jou konsep in TrustSquare oop."
    ],
    "quick": [
     "saved"
+   ],
+   "zu": [
+    "Vula i-imeyili, thepha [[Open my listing]]",
+    "Ikungenisa ocingweni lwakho futhi ivule uhlaka lwakho ku-TrustSquare."
+   ],
+   "xh": [
+    "Vula i-imeyile, cofa [[Open my listing]]",
+    "Ikungenisa kwifowuni yakho kwaye ivule idrafti yakho kwi-TrustSquare."
+   ],
+   "nso": [
+    "Bula imeile, kgotla [[Open my listing]]",
+    "E go tsenya mogaleng wa gago gomme e bula papatšo ya gago ya kakanyo go TrustSquare."
    ]
   },
   {
@@ -197,11 +308,23 @@
    "pass": true,
    "en": [
     "Add your own photo and sign the terms",
-    "Tap Edit, add a photo of your work with no writing on it, and save. Read and accept the seller terms once."
+    "Tap [[Edit]], add a photo of your work with no writing on it, and save. Read and accept the seller terms once."
    ],
    "af": [
     "Voeg jou eie foto by en teken die terme",
-    "Tik Edit, voeg 'n foto van jou werk by sonder skrif daarop, en stoor. Lees en aanvaar die verkopersterme een keer."
+    "Tik [[Edit]], voeg 'n foto van jou werk by sonder skrif daarop, en stoor. Lees en aanvaar die verkopersterme een keer."
+   ],
+   "zu": [
+    "Faka isithombe sakho futhi usayine imigomo",
+    "Thepha [[Edit]], faka isithombe somsebenzi wakho esingenakho ukubhala, bese ulondoloza. Funda futhi wamukele imigomo yomthengisi kanye."
+   ],
+   "xh": [
+    "Faka eyakho ifoto kwaye utyikitye imiqathango",
+    "Cofa [[Edit]], faka ifoto yomsebenzi wakho engenambhalo, uze ugcine. Funda kwaye wamkele imiqathango yomthengisi kube kanye."
+   ],
+   "nso": [
+    "Tsenya seswantšho sa gago o saene mabaka",
+    "Kgotla [[Edit]], tsenya seswantšho sa mošomo wa gago se se se nago mongwalo, o boloke. Bala o amogele mabaka a morekiši gatee."
    ]
   },
   {
@@ -218,6 +341,18 @@
    "af": [
     "Publiseer",
     "Jou advertensie is lewendig. Vir eers kan net mense aan wie jy jou skakel stuur dit sien. Dit hou jou veilig."
+   ],
+   "zu": [
+    "Shicilela",
+    "Isikhangiso sakho sesiphilayo. Okwamanje ngabantu kuphela obathumelela isixhumanisi sakho abangasibona. Lokho kukugcina uphephile."
+   ],
+   "xh": [
+    "Papasha",
+    "Intengiso yakho iphilile. Okwangoku ngabantu kuphela obathumelela ikhonkco lakho abanokuyibona. Oko kukugcina ukhuselekile."
+   ],
+   "nso": [
+    "Phatlalatša",
+    "Papatšo ya gago e a phela. Ga bjale ke batho feela bao o ba romelago kgokagano ya gago bao ba ka e bonago. Seo se go boloka o bolokegile."
    ]
   },
   {
@@ -229,12 +364,24 @@
    "pass": true,
    "gate": true,
    "en": [
-    "Someone you worked for taps Yes",
-    "Tap Get my link for someone I worked for and send it. They confirm with one tap and a code by email. New customers can find you from then on, and your Trust Score goes up."
+    "Someone you worked for taps [[Yes]]",
+    "Tap [[Get my link for someone I worked for]] and send it. They confirm with one tap and a code by email. New customers can find you from then on, and your Trust Score goes up."
    ],
    "af": [
-    "Iemand vir wie jy gewerk het, tik Ja",
-    "Tik Get my link for someone I worked for en stuur dit. Hulle bevestig met een tik en 'n kode per e-pos. Van dan af kan nuwe kliënte jou vind, en jou Trust Score gaan op."
+    "Iemand vir wie jy gewerk het, tik [[Yes]]",
+    "Tik [[Get my link for someone I worked for]] en stuur dit. Hulle bevestig met een tik en 'n kode per e-pos. Van dan af kan nuwe kliënte jou vind, en jou Trust Score gaan op."
+   ],
+   "zu": [
+    "Umuntu owake wamsebenzela uthepha [[Yes]]",
+    "Thepha [[Get my link for someone I worked for]] bese uyasithumela. Baqinisekisa ngokuthepha kanye nangekhodi nge-imeyili. Kusukela lapho amakhasimende amasha angakuthola, futhi i-Trust Score yakho iyakhuphuka."
+   ],
+   "xh": [
+    "Umntu owakhe wamsebenzela ucofa [[Yes]]",
+    "Cofa [[Get my link for someone I worked for]] uze ulithumele. Bayaqinisekisa ngokucofa kanye nangekhowudi nge-imeyile. Ukususela ngoko abathengi abatsha banokukufumana, kwaye i-Trust Score yakho iyanyuka."
+   ],
+   "nso": [
+    "Motho yo o kilego wa mo šomela o kgotla [[Yes]]",
+    "Kgotla [[Get my link for someone I worked for]] o e romele. Ba netefatša ka go kgotla gatee le khoutu ka imeile. Go tloga fao bareki ba bafsa ba ka go hwetša, gomme Trust Score ya gago e a hlatloga."
    ]
   },
   {
@@ -246,14 +393,26 @@
    "pass": true,
    "en": [
     "Send your Buzz link to your regulars",
-    "In My Space, open Buzz and tap Get my link. One link for all your regular customers, by WhatsApp or Copy."
+    "In [[My Space]], open [[Buzz]] and tap [[Get my link]]. One link for all your regular customers, by [[WhatsApp]] or [[Copy]]."
    ],
    "af": [
     "Stuur jou Buzz-skakel aan jou vaste kliënte",
-    "Maak Buzz in My Space oop en tik Get my link. Een skakel vir al jou vaste kliënte, per WhatsApp of Copy."
+    "Maak [[Buzz]] in [[My Space]] oop en tik [[Get my link]]. Een skakel vir al jou vaste kliënte, per [[WhatsApp]] of [[Copy]]."
    ],
    "quick": [
     "buzz"
+   ],
+   "zu": [
+    "Thumela isixhumanisi sakho se-Buzz kumakhasimende akho ajwayelekile",
+    "Ku-[[My Space]], vula i-[[Buzz]] bese uthepha [[Get my link]]. Isixhumanisi esisodwa sawo wonke amakhasimende akho ajwayelekile, nge-[[WhatsApp]] noma [[Copy]]."
+   ],
+   "xh": [
+    "Thumela ikhonkco lakho le-Buzz kubathengi bakho abaqhelekileyo",
+    "Kwi-[[My Space]], vula i-[[Buzz]] uze ucofe [[Get my link]]. Ikhonkco elinye labo bonke abathengi bakho abaqhelekileyo, nge-[[WhatsApp]] okanye [[Copy]]."
+   ],
+   "nso": [
+    "Romela kgokagano ya gago ya Buzz go bareki ba gago ba ka mehla",
+    "Go [[My Space]], bula [[Buzz]] o kgotle [[Get my link]]. Kgokagano e tee ya bareki ba gago ka moka ba ka mehla, ka [[WhatsApp]] goba [[Copy]]."
    ]
   },
   {
@@ -270,6 +429,18 @@
    "af": [
     "Jou vaste kliënt sluit aan",
     "Hulle tik die skakel, aanvaar die Buzz-terme en teken met 'n kode in. Julle is verbind, en dit kos niks."
+   ],
+   "zu": [
+    "Ikhasimende lakho elijwayelekile liyajoyina",
+    "Bathepha isixhumanisi, bamukele imigomo ye-Buzz bese bengena ngekhodi. Nixhumene, futhi akubizi lutho."
+   ],
+   "xh": [
+    "Umthengi wakho oqhelekileyo uyajoyina",
+    "Bacofa ikhonkco, bamkele imiqathango ye-Buzz baze bangene ngekhowudi. Niqhagamshelene, kwaye akubizi nto."
+   ],
+   "nso": [
+    "Moreki wa gago wa ka mehla o a tsena",
+    "Ba kgotla kgokagano, ba amogela mabaka a Buzz gomme ba tsena ka khoutu. Le kgokagane, gomme ga go bitše selo."
    ]
   },
   {
@@ -286,6 +457,18 @@
    "af": [
     "Buzz 'n vaste kliënt",
     "Een reël, reguit na hulle foon, met jou naam daarop."
+   ],
+   "zu": [
+    "Buzz ikhasimende elijwayelekile",
+    "Umugqa owodwa, uqonde ocingweni lwabo, unegama lakho."
+   ],
+   "xh": [
+    "Buzz umthengi oqhelekileyo",
+    "Umgca omnye, ngqo kwifowuni yakhe, unegama lakho."
+   ],
+   "nso": [
+    "Buzz moreki wa ka mehla",
+    "Mothalo o tee, thwii mogaleng wa gagwe, o na le leina la gago."
    ]
   },
   {
@@ -297,11 +480,23 @@
    "pass": true,
    "en": [
     "A new customer finds you",
-    "She finds you under Services by area, and sees your rate, your days and your Trust Score."
+    "She finds you under [[Services]] by area, and sees your rate, your days and your Trust Score."
    ],
    "af": [
     "'n Nuwe kliënt vind jou",
-    "Sy vind jou onder Services volgens area, en sien jou tarief, jou dae en jou Trust Score."
+    "Sy vind jou onder [[Services]] volgens area, en sien jou tarief, jou dae en jou Trust Score."
+   ],
+   "zu": [
+    "Ikhasimende elisha liyakuthola",
+    "Ukuthola ngaphansi kwe-[[Services]] ngendawo, abone inani lakho, izinsuku zakho ne-Trust Score yakho."
+   ],
+   "xh": [
+    "Umthengi omtsha uyakufumana",
+    "Ukufumana phantsi kwe-[[Services]] ngendawo, abone ixabiso lakho, iintsuku zakho kunye ne-Trust Score yakho."
+   ],
+   "nso": [
+    "Moreki yo moswa o a go hwetša",
+    "O go hwetša ka fase ga [[Services]] go ya ka lefelo, a bona tefo ya gago, matšatši a gago le Trust Score ya gago."
    ]
   },
   {
@@ -318,6 +513,18 @@
    "af": [
     "Sy vra vir 'n bekendstelling",
     "Sy skryf 'n kort boodskap. 1 Tuppence word van haar gehou, en net gebruik as jy aanvaar."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Ubhala umlayezo omfushane. I-Tuppence engu-1 iyabanjwa kuye, isetshenziswe kuphela uma wamukela."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ubhala umyalezo omfutshane. I-Tuppence e-1 iyabanjwa kuye, isetyenziswe kuphela ukuba uyamkela."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O ngwala molaetša o mokopana. Tuppence e 1 e swarwa go yena, gomme e šomišwa feela ge o amogela."
    ]
   },
   {
@@ -329,11 +536,23 @@
    "pass": true,
    "en": [
     "You accept",
-    "Open My Space, then Intros, and tap Accept. You both get an email: reply to it to talk. Your email address stays private."
+    "Open [[My Space]], then [[Intros]], and tap [[Accept]]. You both get an email: reply to it to talk. Your email address stays private."
    ],
    "af": [
     "Jy aanvaar",
-    "Maak My Space oop, dan Intros, en tik Accept. Julle kry albei 'n e-pos: antwoord daarop om te praat. Jou e-posadres bly privaat."
+    "Maak [[My Space]] oop, dan [[Intros]], en tik [[Accept]]. Julle kry albei 'n e-pos: antwoord daarop om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Uyamukela",
+    "Vula i-[[My Space]], bese [[Intros]], bese uthepha [[Accept]]. Nobabili nithola i-imeyili: phendula kuyo ukuze nikhulume. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Uyamkela",
+    "Vula i-[[My Space]], emva koko [[Intros]], uze ucofe [[Accept]]. Nobabini nifumana i-imeyile: phendula kuyo ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "O a amogela",
+    "Bula [[My Space]], ke moka [[Intros]], o kgotle [[Accept]]. Le hwetša imeile ka bobedi: e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
    ]
   },
   {
@@ -345,12 +564,29 @@
    "pass": true,
    "en": [
     "Pass Quick on",
-    "Tap Pass Quick on to someone and share it with a friend who works like you."
+    "Tap [[Pass Quick on to someone]] and share it with a friend who works like you."
    ],
    "af": [
     "Gee Quick aan",
-    "Tik Pass Quick on to someone en deel dit met 'n vriendin wat werk soos jy."
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriendin wat werk soos jy."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Thepha [[Pass Quick on to someone]] bese uyabelana ngayo nomngane osebenza njengawe."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Cofa [[Pass Quick on to someone]] uze wabelane ngayo nomhlobo osebenza njengawe."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Kgotla [[Pass Quick on to someone]] o e abelane le mogwera yo a šomago bjalo ka wena."
    ]
   }
- ]
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
 }
