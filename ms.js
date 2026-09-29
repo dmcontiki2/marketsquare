@@ -1709,6 +1709,10 @@ function updateTuppenceUI(){
   const bd=document.getElementById('tn-balance-display');   if(bd) bd.textContent=tuppence;
   const hb=document.getElementById('tn-home-bal');          if(hb) hb.textContent=tuppence;  // LM-19: element removed but check defensively
   const d =document.getElementById('dash-tn');              if(d) d.textContent=tuppence;
+  /* LM-WALK-FIX-1 (Local Market story walk, 29 Sep 2026): My Space kept showing 1T after the 1T was spent on Accept --
+     its pill and wallet number were only painted when the page opened, never by the balance refresh. */
+  const mp=document.getElementById('ms-tn-pill');           if(mp) mp.textContent=tuppence+' T';
+  const mw=document.getElementById('ms-wallet-balance');    if(mw) mw.textContent=tuppence;
 }
 // ── FX-LIVE-1 (16 Aug 2026, RUL-022): live forex via /api/fx — free keyless feed ──
 // USD is canon (1T=$2). Server caches 12h; statics below are the PARACHUTE only,

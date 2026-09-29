@@ -1,0 +1,655 @@
+{
+ "type": "localmarket_food_preserves",
+ "status": "draft",
+ "flow": "F2",
+ "label": {
+  "en": "Food & preserves",
+  "af": "Kos en inmaak",
+  "zu": "Ukudla nokulondoloziwe",
+  "xh": "Ukutya nokutya okugciniweyo",
+  "nso": "Dijo le dijo tše di bolokilwego"
+ },
+ "title": {
+  "en": "Selling at Local Market: from listing to your first buyer",
+  "af": "Verkoop by die Plaaslike mark: van advertensie tot jou eerste koper",
+  "zu": "Ukuthengisa eMakethe yendawo: kusukela esikhangisweni kuya kumthengi wakho wokuqala",
+  "xh": "Ukuthengisa kwiMarike yasekuhlaleni: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+  "nso": "Go rekiša Mmarakeng wa selegae: go tloga papatšong go ya go moreki wa gago wa mathomo"
+ },
+ "walked_on": "2026-09-29",
+ "people": {
+  "you": "Elsabe",
+  "regular": "Riana",
+  "customer": "Elna"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "Your regulars",
+   "af": "Jou vaste kliënte",
+   "zu": "Amakhasimende akho ajwayelekile",
+   "xh": "Abathengi bakho abaqhelekileyo",
+   "nso": "Bareki ba gago ba ka mehla"
+  },
+  {
+   "id": "c4",
+   "en": "A new buyer",
+   "af": "'n Nuwe koper",
+   "zu": "Umthengi omusha",
+   "xh": "Umthengi omtsha",
+   "nso": "Moreki yo moswa"
+  },
+  {
+   "id": "c5",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_01_door",
+   "pass": true,
+   "en": [
+    "Open Quick, go to [[Local Market]] and tap [[Sell something]]",
+    "Swipe the Quick door to Local Market. One tap starts your listing."
+   ],
+   "af": [
+    "Maak Quick oop, gaan na [[Local Market]] en tik [[Sell something]]",
+    "Swiep die Quick-deur na Local Market. Een tik begin jou advertensie."
+   ],
+   "zu": [
+    "Vula i-Quick, iya ku-[[Local Market]] bese uthepha [[Sell something]]",
+    "Swayipha umnyango we-Quick uye ku-Local Market. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, yiya kwi-[[Local Market]] uze ucofe [[Sell something]]",
+    "Tyibilikisa ucango lwe-Quick uye kwi-Local Market. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, eya go [[Local Market]] o kgotle [[Sell something]]",
+    "Šutiša lebati la Quick go ya go Local Market. Go kgotla gatee go thoma papatšo ya gago."
+   ],
+   "quick": [
+    "door"
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_02_what",
+   "pass": true,
+   "en": [
+    "Pick [[Food & preserves]]",
+    "Choose the kind of thing you sell."
+   ],
+   "af": [
+    "Kies [[Food & preserves]]",
+    "Kies die soort ding wat jy verkoop."
+   ],
+   "zu": [
+    "Khetha [[Food & preserves]]",
+    "Khetha uhlobo lwento oyithengisayo."
+   ],
+   "xh": [
+    "Khetha [[Food & preserves]]",
+    "Khetha uhlobo lwento oyithengisayo."
+   ],
+   "nso": [
+    "Kgetha [[Food & preserves]]",
+    "Kgetha mohuta wa selo seo o se rekišago."
+   ],
+   "quick": [
+    "what"
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_04_where",
+   "pass": true,
+   "en": [
+    "Tap your area",
+    "A buyer looking in your area finds you. Tap [[Another option]] to type yours if it is not listed."
+   ],
+   "af": [
+    "Tik jou area",
+    "'n Koper wat in jou area soek, vind jou. Tik [[Another option]] om joune in te tik as dit nie gelys is nie."
+   ],
+   "zu": [
+    "Thepha indawo yakho",
+    "Umthengi osesha endaweni yakho uyakuthola. Thepha [[Another option]] ukuze ubhale eyakho uma ingekho ohlwini."
+   ],
+   "xh": [
+    "Cofa indawo yakho",
+    "Umthengi okhangela kwindawo yakho uyakufumana. Cofa [[Another option]] ukuze ubhale eyakho ukuba ayikho kuluhlu."
+   ],
+   "nso": [
+    "Kgotla lefelo la gago",
+    "Moreki yo a nyakago lefelong la gago o a go hwetša. Kgotla [[Another option]] go ngwala la gago ge le se lenaneong."
+   ],
+   "quick": [
+    "where"
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_05_price",
+   "pass": true,
+   "en": [
+    "Type your exact price",
+    "Tap [[Another option]], type your price, like R95, and tap [[Next]]. Buyers see exactly what you type."
+   ],
+   "af": [
+    "Tik jou presiese prys",
+    "Tik [[Another option]], tik jou prys, soos R95, en tik [[Next]]. Kopers sien presies wat jy tik."
+   ],
+   "zu": [
+    "Bhala inani lakho eliqondile",
+    "Thepha [[Another option]], bhala inani lakho, njenge-R95, bese uthepha [[Next]]. Abathengi babona khona kanye lokho okubhalayo."
+   ],
+   "xh": [
+    "Bhala ixabiso lakho elichanekileyo",
+    "Cofa [[Another option]], bhala ixabiso lakho, njenge-R95, uze ucofe [[Next]]. Abathengi babona kanye le nto uyibhalayo."
+   ],
+   "nso": [
+    "Ngwala theko ya gago ye e nepagetšego",
+    "Kgotla [[Another option]], ngwala theko ya gago, bjalo ka R95, o kgotle [[Next]]. Bareki ba bona seo o se ngwalago tlwa."
+   ],
+   "quick": [
+    "price"
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_06_get",
+   "pass": true,
+   "en": [
+    "Say how they get it",
+    "[[Collect]], [[I deliver]], [[Post it]] or [[Market day]]."
+   ],
+   "af": [
+    "Sê hoe hulle dit kry",
+    "[[Collect]], [[I deliver]], [[Post it]] of [[Market day]]."
+   ],
+   "zu": [
+    "Yisho ukuthi bakuthola kanjani",
+    "[[Collect]], [[I deliver]], [[Post it]] noma [[Market day]]."
+   ],
+   "xh": [
+    "Yitsho ukuba bayifumana njani",
+    "[[Collect]], [[I deliver]], [[Post it]] okanye [[Market day]]."
+   ],
+   "nso": [
+    "Bolela gore ba e hwetša bjang",
+    "[[Collect]], [[I deliver]], [[Post it]] goba [[Market day]]."
+   ],
+   "quick": [
+    "ship"
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_07_draft",
+   "pass": true,
+   "en": [
+    "Say exactly what it is, add your first name and email, then save",
+    "Type what you sell, like 'Raw honey, 500 g jar': it becomes your title and the first words of your listing. Then tap [[Save my listing]]. No password."
+   ],
+   "af": [
+    "Sê presies wat dit is, gee jou voornaam en e-pos, en stoor",
+    "Tik wat jy verkoop, soos 'Rou heuning, 500 g-fles': dit word jou titel en die eerste woorde van jou advertensie. Tik dan [[Save my listing]]. Geen wagwoord nie."
+   ],
+   "zu": [
+    "Yisho ukuthi kuyini ngqo, faka igama lakho lokuqala ne-imeyili, bese ulondoloza",
+    "Bhala lokho okuthengisayo, njengokuthi 'Uju oluluhlaza, imbiza engu-500 g': kuba yisihloko sakho namagama okuqala esikhangiso sakho. Bese uthepha [[Save my listing]]. Akukho phasiwedi."
+   ],
+   "xh": [
+    "Yitsho kanye ukuba yintoni, faka igama lakho lokuqala ne-imeyile, uze ugcine",
+    "Bhala oko ukuthengisayo, njengokuthi 'Ubusi obukrwada, ingqayi ye-500 g': iba sisihloko sakho namagama okuqala entengiso yakho. Emva koko cofa [[Save my listing]]. Akukho phasiwedi."
+   ],
+   "nso": [
+    "Bolela gore ke eng tlwa, tsenya leina la gago la mathomo le imeile, o boloke",
+    "Ngwala seo o se rekišago, bjalo ka 'Todi ya tlhago, nkgwana ya 500 g': e ba hlogo ya gago le mantšu a mathomo a papatšo ya gago. Ke moka o kgotle [[Save my listing]]. Ga go phasewete."
+   ],
+   "quick": [
+    "draft"
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_08_saved",
+   "pass": true,
+   "en": [
+    "Saved: now sign the terms and publish",
+    "Tap [[Sign the terms and publish]], or open the email we sent you. Nobody can see your listing yet."
+   ],
+   "af": [
+    "Gestoor: teken nou die terme en publiseer",
+    "Tik [[Sign the terms and publish]], of maak die e-pos oop wat ons gestuur het. Niemand kan jou advertensie nog sien nie."
+   ],
+   "zu": [
+    "Kulondoloziwe: manje sayina imigomo bese ushicilela",
+    "Thepha [[Sign the terms and publish]], noma uvule i-imeyili esikuthumelele yona. Akekho ongasibona isikhangiso sakho okwamanje."
+   ],
+   "xh": [
+    "Kugciniwe: ngoku tyikitya imiqathango uze upapashe",
+    "Cofa [[Sign the terms and publish]], okanye uvule i-imeyile esikuthumelele yona. Akukho mntu unokuyibona intengiso yakho okwangoku."
+   ],
+   "nso": [
+    "E bolokilwe: bjale saena mabaka o phatlalatše",
+    "Kgotla [[Sign the terms and publish]], goba o bule imeile yeo re go romeletšego yona. Ga go yo a ka bonago papatšo ya gago ga bjale."
+   ],
+   "quick": [
+    "saved"
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_10_photo",
+   "pass": true,
+   "en": [
+    "Add your own photo",
+    "In TrustSquare tap [[Edit]], add a photo of your jar with no writing on it, and tap [[Save Changes]]."
+   ],
+   "af": [
+    "Voeg jou eie foto by",
+    "Tik in TrustSquare [[Edit]], voeg 'n foto van jou fles sonder skrif daarop by, en tik [[Save Changes]]."
+   ],
+   "zu": [
+    "Faka isithombe sakho",
+    "Ku-TrustSquare thepha [[Edit]], faka isithombe sembiza yakho esingenakho ukubhala, bese uthepha [[Save Changes]]."
+   ],
+   "xh": [
+    "Faka eyakho ifoto",
+    "Kwi-TrustSquare cofa [[Edit]], faka ifoto yengqayi yakho engenambhalo, uze ucofe [[Save Changes]]."
+   ],
+   "nso": [
+    "Tsenya seswantšho sa gago",
+    "Go TrustSquare kgotla [[Edit]], tsenya seswantšho sa nkgwana ya gago se se se nago mongwalo, o kgotle [[Save Changes]]."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_11_terms",
+   "pass": true,
+   "en": [
+    "Accept the seller terms once",
+    "Read them, tick both boxes at the end and tap [[I accept]]."
+   ],
+   "af": [
+    "Aanvaar die verkopersterme een keer",
+    "Lees dit, merk albei blokkies aan die einde en tik [[I accept]]."
+   ],
+   "zu": [
+    "Yamukela imigomo yomthengisi kanye",
+    "Yifunde, maka omabhokisi ababili ekugcineni bese uthepha [[I accept]]."
+   ],
+   "xh": [
+    "Yamkela imiqathango yomthengisi kube kanye",
+    "Yifunde, phawula iibhokisi ezimbini ekugqibeleni uze ucofe [[I accept]]."
+   ],
+   "nso": [
+    "Amogela mabaka a morekiši gatee",
+    "A bale, swaya mapokisi a mabedi mafelelong o kgotle [[I accept]]."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_12_published",
+   "pass": true,
+   "en": [
+    "Publish",
+    "Tap [[Publish my listing]]. It is live at once: anyone looking in Local Market can find it."
+   ],
+   "af": [
+    "Publiseer",
+    "Tik [[Publish my listing]]. Dit is dadelik lewendig: enigiemand wat in Local Market soek, kan dit vind."
+   ],
+   "zu": [
+    "Shicilela",
+    "Thepha [[Publish my listing]]. Siphila ngokushesha: noma ubani obheka ku-Local Market angasithola."
+   ],
+   "xh": [
+    "Papasha",
+    "Cofa [[Publish my listing]]. Iphila kwangoko: nabani na okhangela kwi-Local Market unokuyifumana."
+   ],
+   "nso": [
+    "Phatlalatša",
+    "Kgotla [[Publish my listing]]. E phela gateetee: mang le mang yo a nyakago go Local Market a ka e hwetša."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_14_mylink",
+   "pass": true,
+   "en": [
+    "Send your Buzz link to your regulars",
+    "In [[My Space]], open [[Buzz]], add your first name once and tap [[Get my link]]. One link for all your regular customers: [[Send on WhatsApp]] or [[Copy]]."
+   ],
+   "af": [
+    "Stuur jou Buzz-skakel aan jou vaste kliënte",
+    "Maak [[Buzz]] in [[My Space]] oop, gee jou voornaam een keer en tik [[Get my link]]. Een skakel vir al jou vaste kliënte: [[Send on WhatsApp]] of [[Copy]]."
+   ],
+   "zu": [
+    "Thumela isixhumanisi sakho se-Buzz kumakhasimende akho ajwayelekile",
+    "Ku-[[My Space]], vula i-[[Buzz]], faka igama lakho lokuqala kanye bese uthepha [[Get my link]]. Isixhumanisi esisodwa sawo wonke amakhasimende akho: [[Send on WhatsApp]] noma [[Copy]]."
+   ],
+   "xh": [
+    "Thumela ikhonkco lakho le-Buzz kubathengi bakho abaqhelekileyo",
+    "Kwi-[[My Space]], vula i-[[Buzz]], faka igama lakho lokuqala kube kanye uze ucofe [[Get my link]]. Ikhonkco elinye labo bonke abathengi bakho: [[Send on WhatsApp]] okanye [[Copy]]."
+   ],
+   "nso": [
+    "Romela kgokagano ya gago ya Buzz go bareki ba gago ba ka mehla",
+    "Go [[My Space]], bula [[Buzz]], tsenya leina la gago la mathomo gatee o kgotle [[Get my link]]. Kgokagano e tee ya bareki ba gago ka moka: [[Send on WhatsApp]] goba [[Copy]]."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c3",
+   "who": "regular",
+   "cost": "free",
+   "img": "lm_15_join",
+   "pass": true,
+   "en": [
+    "Your regular joins",
+    "She taps the link, ticks the Buzz terms, adds her first name and signs in with a code. You are connected, and it costs nothing."
+   ],
+   "af": [
+    "Jou vaste kliënt sluit aan",
+    "Sy tik die skakel, merk die Buzz-terme, gee haar voornaam en teken met 'n kode in. Julle is verbind, en dit kos niks."
+   ],
+   "zu": [
+    "Ikhasimende lakho elijwayelekile liyajoyina",
+    "Uthepha isixhumanisi, amake imigomo ye-Buzz, afake igama lakhe lokuqala bese engena ngekhodi. Nixhumene, futhi akubizi lutho."
+   ],
+   "xh": [
+    "Umthengi wakho oqhelekileyo uyajoyina",
+    "Ucofa ikhonkco, aphawule imiqathango ye-Buzz, afake igama lakhe lokuqala aze angene ngekhowudi. Niqhagamshelene, kwaye akubizi nto."
+   ],
+   "nso": [
+    "Moreki wa gago wa ka mehla o a tsena",
+    "O kgotla kgokagano, a swaya mabaka a Buzz, a tsenya leina la gagwe la mathomo gomme a tsena ka khoutu. Le kgokagane, gomme ga go bitše selo."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c3",
+   "who": "regular",
+   "cost": "free",
+   "img": "lm_17_order_full",
+   "pass": true,
+   "en": [
+    "She buzzes you an order",
+    "One line, straight to your phone, with her name on it: 'Two jars please, I collect on Saturday'."
+   ],
+   "af": [
+    "Sy buzz vir jou 'n bestelling",
+    "Een reël, reguit na jou foon, met haar naam daarop: 'Twee flesse asseblief, ek haal Saterdag'."
+   ],
+   "zu": [
+    "Ukuthumelela i-oda nge-Buzz",
+    "Umugqa owodwa, uqonde ocingweni lwakho, unegama lakhe: 'Izimbiza ezimbili ngicela, ngizolanda ngoMgqibelo'."
+   ],
+   "xh": [
+    "Ukuthumelela iodolo nge-Buzz",
+    "Umgca omnye, ngqo kwifowuni yakho, unegama lakhe: 'Iingqayi ezimbini nceda, ndiza kuzilanda ngoMgqibelo'."
+   ],
+   "nso": [
+    "O go romela odara ka Buzz",
+    "Mothalo o tee, thwii mogaleng wa gago, o na le leina la gagwe: 'Dinkgwana tše pedi hle, ke tla di tšea ka Mokibelo'."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "lm_20_detail",
+   "pass": true,
+   "en": [
+    "A new buyer finds you",
+    "She finds your honey in Local Market by area, and sees your price and your Trust Score."
+   ],
+   "af": [
+    "'n Nuwe koper vind jou",
+    "Sy vind jou heuning in Local Market volgens area, en sien jou prys en jou Trust Score."
+   ],
+   "zu": [
+    "Umthengi omusha uyakuthola",
+    "Uthola uju lwakho ku-Local Market ngendawo, abone inani lakho ne-Trust Score yakho."
+   ],
+   "xh": [
+    "Umthengi omtsha uyakufumana",
+    "Ufumana ubusi bakho kwi-Local Market ngendawo, abone ixabiso lakho ne-Trust Score yakho."
+   ],
+   "nso": [
+    "Moreki yo moswa o a go hwetša",
+    "O hwetša todi ya gago go Local Market go ya ka lefelo, a bona theko ya gago le Trust Score ya gago."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "1T_check",
+   "img": "lm_20c_fair_result",
+   "pass": true,
+   "en": [
+    "She can check your price",
+    "[[Market check]] reads real shop prices for items like yours and names every shop. It costs her 1T, and only if it finds real prices."
+   ],
+   "af": [
+    "Sy kan jou prys nagaan",
+    "[[Market check]] lees regte winkelpryse vir items soos joune en noem elke winkel. Dit kos haar 1T, en net as dit regte pryse vind."
+   ],
+   "zu": [
+    "Angahlola inani lakho",
+    "I-[[Market check]] ifunda amanani angempela ezitolo ezintweni ezifana nezakho futhi isho isitolo ngasinye. Kumbiza i-1T, kuphela uma ithola amanani angempela."
+   ],
+   "xh": [
+    "Angalijonga ixabiso lakho",
+    "I-[[Market check]] ifunda amaxabiso okwenyani eevenkile kwizinto ezifana nezakho kwaye ichaza ivenkile nganye. Imbiza i-1T, kuphela ukuba ifumana amaxabiso okwenyani."
+   ],
+   "nso": [
+    "A ka lekola theko ya gago",
+    "[[Market check]] e bala ditheko tša nnete tša mabenkele tša dilo tše bjalo ka tša gago gomme e bolela lebenkele le lengwe le le lengwe. E mo bitša 1T, feela ge e hwetša ditheko tša nnete."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "lm_21_ask",
+   "pass": true,
+   "en": [
+    "She asks for an introduction",
+    "She writes a short message; it is free for her. If she is not signed in yet, she signs in with a code and her message is kept."
+   ],
+   "af": [
+    "Sy vra vir 'n bekendstelling",
+    "Sy skryf 'n kort boodskap; dit is gratis vir haar. As sy nog nie ingeteken is nie, teken sy met 'n kode in en haar boodskap word gehou."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Ubhala umlayezo omfushane; kumahhala kuye. Uma engakangeni, ungena ngekhodi futhi umlayezo wakhe uyagcinwa."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ubhala umyalezo omfutshane; simahla kuye. Ukuba akakangeni, ungena ngekhowudi kwaye umyalezo wakhe uyagcinwa."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O ngwala molaetša o mokopana; ke mahala go yena. Ge a sešo a tsena, o tsena ka khoutu gomme molaetša wa gagwe o a bolokwa."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_25_intros",
+   "pass": true,
+   "en": [
+    "You see her request",
+    "Open [[My Space]], then [[Intros]]."
+   ],
+   "af": [
+    "Jy sien haar versoek",
+    "Maak [[My Space]] oop, dan [[Intros]]."
+   ],
+   "zu": [
+    "Ubona isicelo sakhe",
+    "Vula i-[[My Space]], bese [[Intros]]."
+   ],
+   "xh": [
+    "Ubona isicelo sakhe",
+    "Vula i-[[My Space]], emva koko [[Intros]]."
+   ],
+   "nso": [
+    "O bona kgopelo ya gagwe",
+    "Bula [[My Space]], ke moka [[Intros]]."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c4",
+   "who": "you",
+   "cost": "1T_accept",
+   "img": "lm_26_accept_short",
+   "pass": true,
+   "en": [
+    "Accept: 1T for your first buyer",
+    "Tap [[Accept]]. Your first buyer on this listing costs you 1T. If your wallet is empty, top up and then accept; her request waits for you."
+   ],
+   "af": [
+    "Aanvaar: 1T vir jou eerste koper",
+    "Tik [[Accept]]. Jou eerste koper op hierdie advertensie kos jou 1T. As jou beursie leeg is, laai op en aanvaar dan; haar versoek wag vir jou."
+   ],
+   "zu": [
+    "Yamukela: i-1T yomthengi wakho wokuqala",
+    "Thepha [[Accept]]. Umthengi wakho wokuqala kulesi sikhangiso ukubiza i-1T. Uma isikhwama sakho singenalutho, faka imali bese wamukela; isicelo sakhe siyakulinda."
+   ],
+   "xh": [
+    "Yamkela: i-1T yomthengi wakho wokuqala",
+    "Cofa [[Accept]]. Umthengi wakho wokuqala kule ntengiso ukubiza i-1T. Ukuba isipaji sakho asinanto, faka imali uze wamkele; isicelo sakhe siyakulinda."
+   ],
+   "nso": [
+    "Amogela: 1T ya moreki wa gago wa mathomo",
+    "Kgotla [[Accept]]. Moreki wa gago wa mathomo papatšong ye o go bitša 1T. Ge sepatšhe sa gago se se na selo, tlatša gomme o amogele; kgopelo ya gagwe e a go letela."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_27_accepted",
+   "pass": true,
+   "en": [
+    "You are introduced",
+    "You both get an email: reply to it to talk. Your email address stays private."
+   ],
+   "af": [
+    "Julle is voorgestel",
+    "Julle kry albei 'n e-pos: antwoord daarop om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Nethuliwe",
+    "Nobabili nithola i-imeyili: phendula kuyo ukuze nikhulume. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Niyaziswa",
+    "Nobabini nifumana i-imeyile: phendula kuyo ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "Le tsebišitšwe",
+    "Le hwetša imeile ka bobedi: e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "lm_08_saved",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "Tap [[Pass Quick on to someone]] and share it with a friend who sells like you."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriendin wat verkoop soos jy."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Thepha [[Pass Quick on to someone]] bese uyabelana ngayo nomngane othengisa njengawe."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Cofa [[Pass Quick on to someone]] uze wabelane ngayo nomhlobo othengisa njengawe."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Kgotla [[Pass Quick on to someone]] o e abelane le mogwera yo a rekišago bjalo ka wena."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}

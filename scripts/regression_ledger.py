@@ -32768,12 +32768,48 @@ def rg_lm_walk_fix_1():
         if need not in q:
             bad.append("Quick lost: " + need[:60])
     for need in ("if(!_msSignedEmail()){ _msLMIntroToSignIn(pendingLMIntroId, name, email, msg); return; }",
-                 "function _msLMIntroToSignIn(", "if(p.lm){", "if (resp.status === 401) { _msLMIntroToSignIn("):
+                 "function _msLMIntroToSignIn(", "if(p.lm){", "if (resp.status === 401) { _msLMIntroToSignIn(",
+                 "const mp=document.getElementById('ms-tn-pill');           if(mp) mp.textContent=tuppence+' T';"):
         if need not in js:
             bad.append("the Local Market request is no longer kept through sign-in: " + need[:50])
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "Quick keeps her name and uses her item words; a Local Market request survives sign-in")]
+
+
+@entry("RG-0551", "LM-STORY-1: the second story guide -- Local Market, Food & preserves (the honey seller), walked live and told in "
+       "five languages; Quick's How opens it for a goods seller at the screen she is on; each step says who pays and when",
+       OPEN, fixed_on="2026-09-29",
+       scope="stories/localmarket_food_preserves.json; stories/help.html costChip (1T_check / 1T_accept) and the who-legend filter; "
+             "quick.html + genie/HARNESS.html qHelpType goods key (<door>_<group>); scripts/build_help.py cost check.",
+       ref="David, 29 Sep 2026: 'Very good idea Claude, thank you. GO :-)' -- walk Local Market (the honey) next, then the other ten "
+           "flows. Walked with QA accounts Elsabe (seller), Riana (regular), Elna (new buyer); listing 438; the three faults it "
+           "found are RG-0550.")
+def rg_lm_story_1():
+    import json as _j
+    st = repo_file("stories/localmarket_food_preserves.json"); hp = repo_file("stories/help.html"); q = repo_file("quick.html")
+    if None in (st, hp, q):
+        return [(FAIL, "the Local Market story, the guide page or Quick is missing")]
+    bad = []
+    d = _j.loads(st)
+    steps = [x for x in d.get("steps", []) if x.get("pass")]
+    if len(steps) < 15:
+        bad.append("the Local Market story lost steps (%d)" % len(steps))
+    for lg in ("en", "af", "zu", "xh", "nso"):
+        if any(lg not in x for x in steps):
+            bad.append("a step lost its %s text" % lg)
+    keys = set(k for x in steps for k in x.get("quick", []))
+    if not {"door", "what", "where", "price", "ship", "draft", "saved"} <= keys:
+        bad.append("the story no longer maps every Quick screen")
+    if not any(x.get("cost") == "1T_accept" for x in steps) or not any(x.get("cost") == "1T_check" for x in steps):
+        bad.append("the story no longer says who pays for the price check and the first accept")
+    if "s.cost === '1T_check' ? u.paidCheck" not in hp or "filter(([k]) => S.some(x => x.who === k))" not in hp:
+        bad.append("the guide page lost the per-step payer chips or the legend filter")
+    if "k=cat().key+'_'+String(rp.label).toLowerCase()" not in q:
+        bad.append("Quick's How no longer finds a goods guide")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Local Market guide: 20 steps, five languages, opened from Quick at her screen")]
 
 
 if __name__ == "__main__":

@@ -22,6 +22,28 @@
    "walked_on": "2026-09-29",
    "steps": 17,
    "cover": "h2_01_start"
+  },
+  {
+   "type": "localmarket_food_preserves",
+   "status": "draft",
+   "flow": "F2",
+   "label": {
+    "en": "Food & preserves",
+    "af": "Kos en inmaak",
+    "zu": "Ukudla nokulondoloziwe",
+    "xh": "Ukutya nokutya okugciniweyo",
+    "nso": "Dijo le dijo tše di bolokilwego"
+   },
+   "title": {
+    "en": "Selling at Local Market: from listing to your first buyer",
+    "af": "Verkoop by die Plaaslike mark: van advertensie tot jou eerste koper",
+    "zu": "Ukuthengisa eMakethe yendawo: kusukela esikhangisweni kuya kumthengi wakho wokuqala",
+    "xh": "Ukuthengisa kwiMarike yasekuhlaleni: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Go rekiša Mmarakeng wa selegae: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 20,
+   "cover": "lm_01_door"
   }
  ]
 }
