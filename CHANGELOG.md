@@ -1,3 +1,5 @@
+- **HELP-STORIES-1 (RG-0546):** the story guides now live on trustsquare.co, not on a laptop. `/help/` is the gallery of every guide, `/help/<type>` renders any story from `stories/<type>.json` (one page for all of them, English/Afrikaans, deep links `#s<N>`, only steps that passed on the live site), and the screens are served from the server. `scripts/build_help.py` validates every story, writes the gallery index and the deploy-manifest block, and `--push-images` copies new screens to the server (media never enters git). Still a draft: marked as one, not indexed, and not linked from the apps until David approves. Nginx: `/help/` locations added on the server.
+
 - **BUZZ-ANON-1 (RG-0545):** Buzz no longer hands anyone the other person's email address. Every pair is named by its pair ID and every person by an anonymous member ID (e.g. `TS-7Q4KXM`, shown only when the person has no name yet); the Buzz screen allows, closes, reopens, keeps and sends by pair ID, and the server honours a pair ID only for one of that pair's two people (RUL-171(d)).
 
 ## 2026-09-29 — STORY-WALK-FIX-1 + REF-NONCE-1 (RG-0544)

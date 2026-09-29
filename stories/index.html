@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#061715">
+<title>How it works · TrustSquare</title>
+<style>
+:root{color-scheme:dark;--bg:#061715;--panel:#0c2824;--panel2:#0f302b;--line:#155444;--ink:#e7f4ef;--ink2:#9fc4b8;--accent:#16A97C;--bright:#96d8c4;--gate:#E0A43A}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--bright)}
+.brand i{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#04120f;font-style:normal;font-size:11px;font-weight:800;display:grid;place-items:center}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang button{font:600 13px inherit;font-family:inherit;background:transparent;color:var(--ink2);border:0;padding:6px 12px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--accent);color:#04120f}
+h1{font-size:28px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.01em;text-wrap:balance}
+.sub{margin:0;color:var(--ink2);font-size:15px}
+.count{display:inline-flex;margin-top:10px;font-size:12.5px;color:var(--bright);background:rgba(22,169,124,.12);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+input[type=search]{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+input[type=search]::placeholder{color:var(--ink2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;color:inherit;text-decoration:none}
+.card:hover,.card:focus-visible{border-color:var(--bright);outline:none}
+.card img{width:100%;height:170px;object-fit:cover;object-position:top;display:block;border-bottom:1px solid var(--line);background:var(--panel2)}
+.card .b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.card .t{font-weight:700;font-size:15px;line-height:1.25}
+.card .m{font-size:12.5px;color:var(--ink2)}
+.card .d{align-self:flex-start;font-size:11px;font-weight:700;color:var(--gate);border:1px dashed var(--gate);border-radius:999px;padding:1px 8px;margin-top:2px}
+.empty{color:var(--ink2);font-size:14px}
+.foot{font-size:13px;color:var(--ink2);border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand"><i>TS</i><span id="t-brand"></span></div>
+    <div class="lang" role="group" aria-label="Language"><button type="button" id="l-en" aria-pressed="true">English</button><button type="button" id="l-af" aria-pressed="false">Afrikaans</button></div></div>
+  <header>
+    <h1 id="t-title"></h1>
+    <p class="sub" id="t-sub"></p>
+    <span class="count" id="t-count"></span>
+  </header>
+  <input type="search" id="q" autocomplete="off">
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden></p>
+  <p class="foot" id="t-foot"></p>
+</div>
+<script>
+// HELP-STORIES-1 (29 Sep 2026): the gallery of every story guide, from /help/data/index.json (built by scripts/build_help.py).
+const UI = {
+ en:{brand:'How it works',title:'Step by step, for every kind of listing',sub:'Each guide follows one real walk on the live site, screen by screen, from your first answer to your first customer.',
+     count:(n,t)=>`${n} guide${n===1?'':'s'} written` + (t ? ` of ${t} listing types` : ''),q:'Find your kind of work or item',steps:n=>`${n} steps`,checked:'checked',draft:'Draft',
+     none:'Nothing matches yet. More guides are being walked.',foot:'Only steps that worked on the live site are shown.',months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']},
+ af:{brand:'Hoe dit werk',title:'Stap vir stap, vir elke soort advertensie',sub:'Elke gids volg een werklike stap-deur op die regte webwerf, skerm vir skerm, van jou eerste antwoord tot jou eerste kliënt.',
+     count:(n,t)=>`${n} gids${n===1?'':'e'} geskryf` + (t ? ` van ${t} soorte advertensies` : ''),q:'Soek jou soort werk of item',steps:n=>`${n} stappe`,checked:'nagegaan',draft:'Konsep',
+     none:'Niks pas nog nie. Meer gidse word nagestap.',foot:'Net stappe wat op die regte webwerf gewerk het, word gewys.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']}
+};
+let lang = 'en', IDX = {stories: []};
+try { const l = localStorage.getItem('ts_help_lang'); if (l === 'af' || l === 'en') lang = l; } catch (e) {}
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const day = iso => { const u = UI[lang]; return `${Number(iso.slice(8))} ${u.months[Number(iso.slice(5,7)) - 1]} ${iso.slice(0,4)}`; };
+function render(){
+  const u = UI[lang], q = ($('q').value || '').trim().toLowerCase();
+  document.documentElement.lang = lang;
+  $('t-brand').textContent = u.brand; $('t-title').textContent = u.title; $('t-sub').textContent = u.sub;
+  $('t-count').textContent = u.count(IDX.stories.length, IDX.total_types); $('q').placeholder = u.q; $('t-foot').textContent = u.foot;
+  const list = IDX.stories.filter(s => !q || (s.label.en + ' ' + s.label.af + ' ' + s.title.en + ' ' + s.title.af).toLowerCase().includes(q));
+  $('grid').innerHTML = list.map(s => `<a class="card" href="/help/${encodeURIComponent(s.type)}">
+      <img src="/help/img/${encodeURIComponent(s.type)}/${encodeURIComponent(s.cover)}.jpg" alt="" loading="lazy">
+      <span class="b"><span class="t">${esc(s.label[lang])}</span><span class="m">${u.steps(s.steps)} · ${u.checked} ${day(s.walked_on)}</span>${s.status === 'draft' ? `<span class="d">${u.draft}</span>` : ''}</span></a>`).join('');
+  $('empty').hidden = list.length > 0; $('empty').textContent = u.none;
+  $('l-en').setAttribute('aria-pressed', lang === 'en'); $('l-af').setAttribute('aria-pressed', lang === 'af');
+}
+$('q').oninput = render;
+$('l-en').onclick = () => { lang = 'en'; try { localStorage.setItem('ts_help_lang', 'en'); } catch (e) {} render(); };
+$('l-af').onclick = () => { lang = 'af'; try { localStorage.setItem('ts_help_lang', 'af'); } catch (e) {} render(); };
+render();
+fetch('/help/data/index.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : {stories: []}).then(d => { IDX = d; render(); }).catch(() => render());
+</script>
+</body>
+</html>

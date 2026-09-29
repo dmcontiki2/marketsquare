@@ -1,0 +1,21 @@
+{
+ "generated_by": "scripts/build_help.py",
+ "stories": [
+  {
+   "type": "home_cleaner",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Home cleaner",
+    "af": "Huisskoonmaker"
+   },
+   "title": {
+    "en": "Home cleaner: from listing to your first customer",
+    "af": "Huisskoonmaker: van advertensie tot jou eerste kliënt"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start"
+  }
+ ]
+}

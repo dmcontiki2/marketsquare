@@ -32572,12 +32572,12 @@ def rg_story_walk_fix_1():
 @entry("RG-0545", "BUZZ-ANON-1: Buzz names people by anonymous IDs, never by address -- /buzz/pairs and every Buzz reply "
        "carry pair_id + an anonymous member ID (other_id) and no other_email; the screen acts by pair_id; a pair ID is "
        "honoured only for one of its own two people",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="bea_main.py _buzz_pair_view / _buzz_other / _buzz_member_id / _buzz_pair_by_id / _buzz_resolve, POST /buzz, "
              "/buzz/allow, /buzz/close, /buzz/keep, GET /buzz/pairs; ms.js Buzz list, keep list and the four actions.",
        ref="David, 29 Sep 2026: 'Please do the Buzz to anonymous ID's Claude, then make it live.' RUL-171(d): no private "
            "information of either side is ever divulged. The home cleaner walk showed the names fixed but the API still "
-           "handed every browser the other person's address in other_email.")
+           "handed every browser the other person's address in other_email. LOCKED 29 Sep after the live check (55e33f1): /buzz/pairs for Annatjie carries no '@' at all; the list shows Hettie / Sannie / 'A TrustSquare member · TS-GGPE7B'; allow toggled on and off, a buzz reached Hettie by email, close and reopen and keep all worked by pair_id; a pair ID that is not hers answers 'no pair between these two'.")
 def rg_buzz_anon_1():
     js = repo_file("ms.js"); b = repo_file("bea_main.py")
     if None in (js, b):
@@ -32606,6 +32606,53 @@ def rg_buzz_anon_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "Buzz carries pair IDs and anonymous member IDs; no address leaves the server")]
+
+
+@entry("RG-0546", "HELP-STORIES-1: the story guides live on trustsquare.co -- /help/ gallery, /help/<type> one page for "
+       "every story, story files and screens served from the server; built and validated by scripts/build_help.py",
+       OPEN, fixed_on="2026-09-29",
+       scope="stories/help.html, stories/index.html, stories/<type>.json, stories/gallery.json, scripts/build_help.py, "
+             "the HELP-STORIES-1 block of ops/autodeploy/deploy_manifest.txt, nginx /help/ (server), screens at "
+             "/var/www/marketsquare/help/img (pushed, never in git).",
+       ref="David, 29 Sep 2026: 'complete the Story file/folder/gallery with its links. But it need to be all live and "
+           "reside on the server not the local computer please.' Still a DRAFT (banner, noindex, not linked from the "
+           "apps) until David approves the testers-only links.")
+def rg_help_stories_1():
+    out = []
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    hp = repo_file("stories/help.html"); ix = repo_file("stories/index.html")
+    if None in (hp, ix):
+        return [(FAIL, "stories/help.html or stories/index.html is gone -- nothing renders the guides")]
+    if "/help/data/" not in hp or "s.pass" not in hp or 'content="noindex' not in hp:
+        out.append((FAIL, "the story page no longer loads from /help/data, no longer shows passed steps only, or is indexable"))
+    try:
+        r = subprocess.run([sys.executable, os.path.join(root, "scripts", "build_help.py"), "--check"],
+                           capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            out.append((FAIL, "build_help.py --check: " + (r.stdout or r.stderr).strip().replace("\n", "; ")[:400]))
+    except Exception as e:
+        out.append((INFO, "NOT EVALUATED - build_help.py --check did not run: %r" % (e,)))
+    try:
+        import urllib.request as _u, json as _j
+        def _get(path):
+            resp = _u.urlopen(_u.Request(BASE + path, headers=dict(UA)), timeout=15)
+            return resp.getcode(), resp.read()
+        for path in ("/help/", "/help/home_cleaner"):
+            c, b = _get(path)
+            if c != 200 or b"TrustSquare" not in b:
+                out.append((FAIL, "%s answers %r" % (path, c)))
+        c, b = _get("/help/data/index.json")
+        g = _j.loads(b.decode("utf-8"))
+        for st in g.get("stories", []):
+            c2, b2 = _get("/help/data/%s.json" % st["type"])
+            c3, _ = _get("/help/img/%s/%s.jpg" % (st["type"], st["cover"]))
+            if c2 != 200 or c3 != 200:
+                out.append((FAIL, "%s: story file %r, cover screen %r" % (st["type"], c2, c3)))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        out.append((FAIL, "the live /help/ probe failed: %r" % (getattr(e, 'code', None) or e,)))
+    return out or [(INFO, "the guides, their story files and screens are served from trustsquare.co/help/")]
 
 
 if __name__ == "__main__":
