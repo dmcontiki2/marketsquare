@@ -6844,6 +6844,13 @@ function _msIntroToSignIn(id, name, email, msg){
   showToast('Sign in to send it — one email, no password. Your message is kept and opens again straight after.', 6000);
   goTo('signin');
 }
+function _msLMIntroToSignIn(id, name, email, msg){
+  try{ sessionStorage.setItem('ts_intro_pending', JSON.stringify({id:String(id), lm:1, why:'signin', name:name||'', msg:msg||'', t:Date.now()})); }catch(_){}
+  _msIntroClose(false);
+  try{ const si=document.getElementById('si-email'); if(si && !si.value && email) si.value=email; }catch(_){}
+  showToast('Sign in to send it — one email, no password. Your message is kept and opens again straight after.', 6000);
+  goTo('signin');
+}
 function _msIntroResume(tries){
   let p=null; try{ p=JSON.parse(sessionStorage.getItem('ts_intro_pending')||'null'); }catch(_){ p=null; }
   if(!p || !p.id) return;
@@ -6852,6 +6859,18 @@ function _msIntroResume(tries){
   const ready = !!_msSignedEmail() && (p.why!=='topup' || tuppence>=1) && (listed || tries<20);
   if(!ready){ if(tries>0) setTimeout(function(){ _msIntroResume(tries-1); }, 1000); return; }
   try{ sessionStorage.removeItem('ts_intro_pending'); }catch(_){}
+  if(p.lm){   // LM-INTRO-KEEP-1: a Local Market request reopens on its own screen and modal
+    (async function(){
+      try{ await lmOpenDetail(p.id); }catch(_){}
+      if(_lmCurrentListing && String(_lmCurrentListing.id)===String(p.id)){
+        openLMModal();
+        try{ const mn=document.getElementById('m-name'), mm=document.getElementById('m-msg');
+          if(mn && p.name && !mn.value) mn.value=p.name; if(mm && p.msg && !mm.value) mm.value=p.msg; }catch(_){}
+        showToast('Signed in. Your request is ready — tap Request introduction to send it.', 5000);
+      }
+    })();
+    return;
+  }
   try{ goTo('browse'); openDetail(p.id); }catch(_){}
   (function open(n){
     if(findListing(p.id)){
@@ -6880,6 +6899,11 @@ function submitIntro(){
     try{ localStorage.setItem('ms_user_name', name); }catch(_){} } }catch(_){}
   if(pendingLMIntroId!==null){
     // Local Market intro — goes via /local-market/intro (seller-pays model)
+    /* LM-INTRO-KEEP-1 (Local Market story walk, 29 Sep 2026): a signed-out buyer filled in her name, email and message,
+       tapped the button, and the form was wiped before the server refused her; the sign-in then landed on Home and the
+       request was gone. INTRO-KEEP-1 already kept a paid introduction -- a Local Market one is kept the same way now:
+       sign in first, with her email already in the box, and the request opens again with her words in it. */
+    if(!_msSignedEmail()){ _msLMIntroToSignIn(pendingLMIntroId, name, email, msg); return; }
     _msIntroClose(true);
     const lmId = pendingLMIntroId;
     pendingLMIntroId = null;
@@ -17386,7 +17410,8 @@ async function lmSubmitIntro(listingId, name, email, message) {
       else showToast('You have sent a lot of Local Market introductions today. Please try again tomorrow.');
       return;
     }
-    if (!resp.ok) { const j = await resp.json().catch(()=>({})); showToast('Introduction not sent — ' + ((j && typeof j.detail==='string' && j.detail) || (resp.status===401 ? 'please sign in first' : 'please try again'))); return; }
+    if (resp.status === 401) { _msLMIntroToSignIn(listingId, name, email, message); return; }   // LM-INTRO-KEEP-1: signed out since
+    if (!resp.ok) { const j = await resp.json().catch(()=>({})); showToast('Introduction not sent — ' + ((j && typeof j.detail==='string' && j.detail) || 'please try again')); return; }
     showToast('✓ Introduction requested · seller has 48 hours to respond');
   } catch(e) {
     showToast('Could not submit introduction: ' + e.message);

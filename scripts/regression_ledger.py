@@ -32749,5 +32749,32 @@ def rg_help_lang_1():
     return [(INFO, "guides in five languages; the app's English button words are quoted in colour")]
 
 
+@entry("RG-0550", "LM-WALK-FIX-1: the Local Market story walk's findings -- the first name typed in Quick survives the item "
+       "line's redraw and reaches the account; the advert's words open with what she typed ('Raw honey, 500 g jar'), not "
+       "the category; a signed-out buyer's Local Market request is kept through sign-in and opens again with her words",
+       OPEN, fixed_on="2026-09-29",
+       scope="quick.html + genie/HARNESS.html #qpitem onchange (ITEM-KEEP-1) and qAdBody's first sentence; ms.js submitIntro's "
+             "Local Market branch, _msLMIntroToSignIn, _msIntroResume's lm path and lmSubmitIntro's 401 (LM-INTRO-KEEP-1).",
+       ref="Local Market (honey) story walk, 29 Sep 2026, QA accounts Elsabe (seller), Riana (regular), Elna (new buyer): "
+           "Elsabe's name was sent empty (quick-publish body name:''), listing 438 read 'Food & preserves in Pretoria East', "
+           "and Elna's typed request was wiped, sent her to sign in, landed on Home and never reached the seller.")
+def rg_lm_walk_fix_1():
+    q = repo_file("quick.html"); js = repo_file("ms.js")
+    if None in (q, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need in ("['qpname','qpmail','qpphone'].forEach(function(id){ var e=$(id); if(e && e.value) keep[id]=e.value; });",
+                 "var item=(QUICK.itemName && /^(localmarket|collectors)$/.test(c.key)) ? QUICK.itemName : '';", "A.at(wl, where.label)"):
+        if need not in q:
+            bad.append("Quick lost: " + need[:60])
+    for need in ("if(!_msSignedEmail()){ _msLMIntroToSignIn(pendingLMIntroId, name, email, msg); return; }",
+                 "function _msLMIntroToSignIn(", "if(p.lm){", "if (resp.status === 401) { _msLMIntroToSignIn("):
+        if need not in js:
+            bad.append("the Local Market request is no longer kept through sign-in: " + need[:50])
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick keeps her name and uses her item words; a Local Market request survives sign-in")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

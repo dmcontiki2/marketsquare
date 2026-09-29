@@ -3063,10 +3063,14 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     var season=(c.key==='adventures') ? by('when') : null;
     var days=by('days')||(season?null:by('when'));
     var s=[];
-    if(what) s.push(where ? ((WORKCAT[c.key] || !/^(zu|xh|nso)$/.test(QLANG)) ? A.at(T(what.label), where.label)
-                                                                          : T(what.label)+' — '+where.label+'.')
-                          : T(what.label)+'.');
-    else if(pk[0]) s.push(T(pk[0].label)+(pk[1]?' — '+T(pk[1].label):'')+(where?', '+where.label:'')+'.');
+    /* ITEM-KEEP-1: what she typed ("Raw honey, 500 g jar") opens her advert's words too, not only its title --
+       the words used to say "Food & preserves in Pretoria East" under a honey title. */
+    var item=(QUICK.itemName && /^(localmarket|collectors)$/.test(c.key)) ? QUICK.itemName : '';
+    var wl=what ? (item || T(what.label)) : '';
+    if(what) s.push(where ? ((WORKCAT[c.key] || !/^(zu|xh|nso)$/.test(QLANG)) ? A.at(wl, where.label)
+                                                                          : wl+' — '+where.label+'.')
+                          : wl+'.');
+    else if(pk[0]) s.push((item || (T(pk[0].label)+(pk[1]?' — '+T(pk[1].label):'')))+(where?', '+where.label:'')+'.');
     if(days) s.push(days.label==='Every day' ? A.every : A.days+Tlist(days.label)+'.');
     var rest=pk.filter(function(p){ return p!==what && p!==where && p!==days && p!==price && p!==season && (what || (p!==pk[0] && p!==pk[1]))
                                      && !(price && p===how) && p.key!=='group' && p.key!=='speaks'; });
@@ -3390,7 +3394,17 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     if(mode==='sell' && /^(localmarket|collectors)$/.test(cat().key) && !$('qpitem')){
       foot.insertAdjacentHTML('afterbegin','<div class="qpbox" id="qpitembox"><input id="qpitem" type="text" maxlength="60" placeholder="'
         +qTr('What exactly is it? e.g. Raw honey, 500 g jar')+'" value="'+String(QUICK.itemName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'"></div>');
-      $('qpitem').onchange=function(){ QUICK.itemName=String(this.value||'').trim().slice(0,60); try{ drawDraft(); }catch(e){} };
+      $('qpitem').onchange=function(){
+        QUICK.itemName=String(this.value||'').trim().slice(0,60);
+        /* ITEM-KEEP-1 (Local Market story walk, 29 Sep 2026): the change fires as she taps the NEXT field, and the
+           redraw used to rebuild the form under her finger -- the first name she then typed was dropped before the
+           save (users.name stayed empty). Keep what she typed below it, and the field she tapped. */
+        var keep={}, act=(document.activeElement && document.activeElement.id) || '';
+        ['qpname','qpmail','qpphone'].forEach(function(id){ var e=$(id); if(e && e.value) keep[id]=e.value; });
+        try{ drawDraft(); }catch(e){}
+        Object.keys(keep).forEach(function(id){ var e=$(id); if(e && !e.value) e.value=keep[id]; });
+        if(act && act!=='qpitem'){ var f=$(act); if(f){ try{ f.focus(); }catch(e){} } }
+      };
     }
     /* EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026): only a signed-in member who has already signed the EULA
        publishes in one tap. Everyone else SAVES a draft here and publishes in the TrustSquare app, after
