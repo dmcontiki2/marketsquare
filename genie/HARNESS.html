@@ -1211,6 +1211,16 @@ function qHelpPill(){
   a.addEventListener('focus',function(){ a.href=qHelpHref(); });
   a.addEventListener('click',function(){ a.href=qHelpHref(); });
   (document.getElementById('app')||document.body).appendChild(a);   /* inside the phone frame, like the language pill */
+  /* never over a step's own button: when one sits under the pill, the pill rises just above it */
+  setInterval(function(){
+    a.style.bottom='12px';
+    var r=a.getBoundingClientRect(), lift=0;
+    document.querySelectorAll('button').forEach(function(b){
+      if(!b.offsetParent) return; var q=b.getBoundingClientRect();
+      if(q.width && q.bottom>r.top-6 && q.top<r.bottom+6 && q.right>r.left && q.left<r.right) lift=Math.max(lift, r.bottom-q.top+8);
+    });
+    if(lift) a.style.bottom=(12+lift)+'px';
+  },500);
   try{ fetch(location.origin+'/help/data/index.json').then(function(r){ return r.ok ? r.json() : null; })
          .then(function(d){ ((d&&d.stories)||[]).forEach(function(s){ QHELP[s.type]=1; }); }).catch(function(){}); }catch(e){}
 }

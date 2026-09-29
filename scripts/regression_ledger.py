@@ -32668,7 +32668,8 @@ def rg_help_link_1():
     i = b.find('@app.get("/flags")'); seg = b[i:i + 2200] if i >= 0 else ""
     if 'out["effective"]["help_guides"] = bool(_is_tester_cookie(ts_review))' not in seg:
         bad.append("/flags no longer ties help_guides to the tester cookie -- the draft guides would reach the public, or nobody")
-    for need in ("function qHelpPill(", "f.effective.help_guides) qHelpPill()", "a.target='_blank'", "'/help/'+k"):
+    for need in ("function qHelpPill(", "f.effective.help_guides) qHelpPill()", "a.target='_blank'", "'/help/'+k",
+                 "never over a step's own button"):
         if need not in q:
             bad.append("Quick's guide link lost: " + need)
     if h is not None and h != q:
