@@ -3396,14 +3396,14 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
         +qTr('What exactly is it? e.g. Raw honey, 500 g jar')+'" value="'+String(QUICK.itemName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'"></div>');
       $('qpitem').onchange=function(){
         QUICK.itemName=String(this.value||'').trim().slice(0,60);
-        /* ITEM-KEEP-1 (Local Market story walk, 29 Sep 2026): the change fires as she taps the NEXT field, and the
-           redraw used to rebuild the form under her finger -- the first name she then typed was dropped before the
-           save (users.name stayed empty). Keep what she typed below it, and the field she tapped. */
-        var keep={}, act=(document.activeElement && document.activeElement.id) || '';
-        ['qpname','qpmail','qpphone'].forEach(function(id){ var e=$(id); if(e && e.value) keep[id]=e.value; });
-        try{ drawDraft(); }catch(e){}
-        Object.keys(keep).forEach(function(id){ var e=$(id); if(e && !e.value) e.value=keep[id]; });
-        if(act && act!=='qpitem'){ var f=$(act); if(f){ try{ f.focus(); }catch(e){} } }
+        /* ITEM-KEEP-1 (Local Market story walk, 29 Sep 2026): the change fires as she taps the NEXT field, and a full
+           redraw rebuilt the form under her finger -- the name field she tapped vanished and her first name went
+           nowhere (users.name stayed empty). The advert card above is updated in place; the form is never rebuilt. */
+        try{
+          var c=cat(), h=document.querySelector('#screen .card .pad h3'), p=document.querySelector('#screen .card .pad p');
+          if(!h || !p) throw 0;
+          h.textContent=qItemTitle(c); p.innerHTML=c.draftBody(picks);
+        }catch(e){ try{ drawDraft(); }catch(_){} }
       };
     }
     /* EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026): only a signed-in member who has already signed the EULA

@@ -32763,7 +32763,7 @@ def rg_lm_walk_fix_1():
     if None in (q, js):
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = []
-    for need in ("['qpname','qpmail','qpphone'].forEach(function(id){ var e=$(id); if(e && e.value) keep[id]=e.value; });",
+    for need in ("h.textContent=qItemTitle(c); p.innerHTML=c.draftBody(picks);",
                  "var item=(QUICK.itemName && /^(localmarket|collectors)$/.test(c.key)) ? QUICK.itemName : '';", "A.at(wl, where.label)"):
         if need not in q:
             bad.append("Quick lost: " + need[:60])
