@@ -32657,9 +32657,9 @@ def rg_help_stories_1():
 
 @entry("RG-0547", "HELP-LINK-1: Quick links the story guides for TESTERS only -- a 'How it works' pill opens the guide for "
        "the work she picked (or the gallery) in a new tab; the public Quick is unchanged while the guides are drafts",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="bea_main.py GET /flags effective.help_guides (tester cookie only); quick.html + genie/HARNESS.html qHelpPill / qHelpHref.",
-       ref="David, 29 Sep 2026: 'I like it Claude, please link it.' -- after reviewing trustsquare.co/help/.")
+       ref="David, 29 Sep 2026: 'I like it Claude, please link it.' -- after reviewing trustsquare.co/help/. LOCKED 29 Sep after the live check (ec9c2ac): without a tester cookie /flags says help_guides false and Quick shows no pill; with one the pill shows, rises above the step's own button, and after Offer a service > Home & care > Home cleaner it opens /help/home_cleaner in a new tab while Quick stays where it was.")
 def rg_help_link_1():
     b = repo_file("bea_main.py"); q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
     if None in (b, q):
