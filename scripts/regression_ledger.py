@@ -32610,13 +32610,13 @@ def rg_buzz_anon_1():
 
 @entry("RG-0546", "HELP-STORIES-1: the story guides live on trustsquare.co -- /help/ gallery, /help/<type> one page for "
        "every story, story files and screens served from the server; built and validated by scripts/build_help.py",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="stories/help.html, stories/index.html, stories/<type>.json, stories/gallery.json, scripts/build_help.py, "
              "the HELP-STORIES-1 block of ops/autodeploy/deploy_manifest.txt, nginx /help/ (server), screens at "
              "/var/www/marketsquare/help/img (pushed, never in git).",
        ref="David, 29 Sep 2026: 'complete the Story file/folder/gallery with its links. But it need to be all live and "
            "reside on the server not the local computer please.' Still a DRAFT (banner, noindex, not linked from the "
-           "apps) until David approves the testers-only links.")
+           "apps) until David approves the testers-only links. LOCKED 29 Sep after the live check (c023772): /help/ shows the gallery with Home cleaner (17 steps, Draft); the card opens /help/home_cleaner; #s12 opens step 12; Afrikaans switches title and steps; all screens answer 200; an unknown guide says it is not written yet; noindex and a 5-minute cache.")
 def rg_help_stories_1():
     out = []
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
