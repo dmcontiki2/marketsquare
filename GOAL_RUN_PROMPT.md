@@ -72,6 +72,8 @@ Watch for the thing a checker cannot see: the step where a real person would giv
 nothing errored. Silence, a blank screen, a wait with no feedback, a word she would not
 recognise, a form asking something she does not have. That is the material for section 4.
 
+**Seen 29 Sep 2026 (run 24):** the unattended run's own safety layer refused the click that publishes a public advert on the live site. Walk to the Publish button, record that the rest was not walked, and report it in one line; do not look for a way round it. David decides whether that changes.
+
 State at 28 Sep 2026 — verify, do not trust: walk-3 items 1, 2, 4, 5, 6 closed 27 Sep (RG-0537);
 item 3, fair price on **Local Market**, waits on `EBAY_APP_ID` / `EBAY_CERT_ID`, which are David's.
 If it is still open, one line, move on.

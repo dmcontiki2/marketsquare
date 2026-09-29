@@ -1,0 +1,22 @@
+--- /sessions/rcw-013tt5sst6ahr6za1pcnbxow/mnt/Projects/MarketSquare/marketsquare.html	2026-09-28 00:01:28.175552500 +0000
++++ marketsquare.html	2026-09-29 21:04:29.411600313 +0000
+@@ -3019,8 +3019,8 @@
+     <button type="button" onclick="hubWelcomeDone()">Got it</button>
+   </div>
+ 
+-  <!-- AGENT-SVC-1: Estate Agent Hub entry -->
+-  <div style="margin:10px 14px 0;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;" onclick="goTo('agent-suite')">
++  <!-- AGENT-SVC-1: Estate Agent Hub entry. HUB-AGENT-FIT-1 (GI-0001): hidden by agentHubFit() for a seller whose adverts are all outside estate/car/tour -->
++  <div id="agent-hub-entry" style="margin:10px 14px 0;background:linear-gradient(120deg,#0c1a2e,#1e3a5f);color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;" onclick="goTo('agent-suite')">
+     <div style="min-width:0;"><div style="font-weight:800;font-size:13.5px;">Agent Hub — estate, car &amp; tour agents</div><div style="font-size:11px;opacity:.75;">List yourself as a professional agent · seller leads land here — accept at 1T</div></div>
+     <div style="flex:0 0 auto;background:rgba(255,255,255,.14);border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:700;">Open →</div>
+   </div>
+@@ -3728,7 +3728,7 @@
+     <button class="modal-cta commit" onclick="sellSheetContinue()" style="margin-bottom:8px;">Continue with this account →</button>
+     <button class="modal-cancel" onclick="sellSheetNewAccount()">Use a different account</button>
+     <!-- QUICK-GATE-A (SEAM-1, David 25 Sep 2026: "we do need it in the app somewhere but small and unobtrusive" -> option A, inside Sell). Quick now carries the way back (?from=app). -->
+-    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>In a hurry? Quick listing in about a minute &rsaquo;</a>
++    <a class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:13px;font-weight:600;color:#7C3AED;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#7C3AED;display:inline-block;"></span>Cleaner, gardener, nanny, driver? Quick listing &rsaquo;</a>
+   </div>
+ </div>
+ 

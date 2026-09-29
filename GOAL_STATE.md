@@ -5,6 +5,31 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 24 — Tue 29 Sep 2026, 20:56–21:3x UTC, first run under GOAL_RUN_PROMPT v2 (Opus 5.5)
+
+- **Acting:** folder mounted and writable; server reachable by ssh from the device shell.
+- **Walk (casual/services, `docs/E2E_2026-09-29.md`):** Quick → email link → Seller Hub draft #440 worked,
+  email in under a minute. **Publish NOT walked** — the session's safety layer refused publishing a public
+  advert on the live site from an unattended run. Steps after Publish were last proven 27 Sep (walk 3).
+  Where she'd stop: Sell has no door that names a cleaner (Quick is a small "In a hurry?" line); her hub
+  opens with an "Agent Hub — estate, car & tour agents" card above her own draft.
+- **Number: 0** (`onboarding_number.py`, server): 6,748 listed · 2,601 emailed · 5 registered · 0 qualifying.
+  Live adverts 108 = 85 super-examples + 18 David/family + **5 QA adverts public** (GI-0002). By a stranger's hand: **0**.
+- **Outreach, 28 Sep wave (first live send in 10 days):** 13 sent, 1 bounce, 0 human clicks (scanner click +
+  2 scanner Quick sessions within 60 s; 3 Google-proxy opens). 12 of 13 to schools/colleges/universities.
+  `[sendable]` **9 · runway 0.** onboard_steps marks those scanner sessions bot=0 — the funnel counts machines.
+- **The prize (§7):** 1,111 phone-only Gumtree South Africans advertising their own services; 0 phone-only rows
+  in `prospects` (the scraper drops them). Cold SMS/WhatsApp to them is a POPIA s69 question — David's (GI-0004).
+- **Built:** GI-0001 (hub agent card fit + Quick line wording) — **not live**: `ms.js` and the ledger are under
+  `lm-walk`'s work lock (21:03Z). Patch in `docs/goal_patches/`. Follow-up scheduled to ship it.
+- **REVIEW NOW:** GI-0002 archive QA adverts · GI-0003 full-size Quick card in Sell (changes RG-0478) ·
+  GI-0004 SMS account ≈ R100–135/month + legal read on the 1,111.
+- **First-run check (§9):** "Daily Agent Stand-up (with Pulse)" and "trustsquare-onboarding-goal" are OFF;
+  "D-U-N-S email watch" ON.
+- **Not reached:** Publish and everything after it; ledger/rulings boards (ledger locked by another lane);
+  deploy (waits for the lock and for the tree to go quiet, SO-5).
+- **Stray file:** `.goalrun_write_test` (empty, repo root) — my write probe; `rm` is not permitted from this shell.
+
 ## SUNDAY SUMMARY — written by run 22, Sunday 27 September 2026
 
 **The number is 0.** Both probes agree: nobody we contacted cold has published a listing.
@@ -96,6 +121,7 @@ If SSH is dead, queue it host-side: `run_py MarketSquare\scripts\onboarding_numb
 | 2026-09-26 (run 21, 04:15–05:30) | **0** | 0 | 0 | 2,587 emailed · **1,499 of 1,911 US letters had no home on the site** · ZA pool MX-cleaned |
 | 2026-09-27 (run 22, 23:07–00:15) | **0** | 0 | 0 | 2,588 emailed — the 26 Sep wave sent ONE letter · true sendable ZA pool ≈ 20 · a source was inventing addresses · D8 withdrawn |
 | 2026-09-28 (run 23, 23:08–01:0x) | **0** | 0 | 0 | 2,588 emailed — **the campaign was sending ZERO, both cities latched** · dashboard said 365 sendable, truth is **21** · **both latches released, gates now clear** |
+| 2026-09-29 (run 24, 20:56–21:3x) | **0** | 0 | 0 | 2,601 emailed · 28 Sep wave: 13 sent, 0 human clicks · **sendable 9, runway 0** · 5 QA adverts public |
 
 Target: **20 by Fri 31 Oct 2026** — 33 days. Runs 5–8, 11, 12 Fable 5.1; runs 9–10, 13–23 Opus 5.
 
