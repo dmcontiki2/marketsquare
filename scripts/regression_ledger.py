@@ -32543,11 +32543,11 @@ def rg_area_tick_1():
        "the Buzz list (RUL-171(d)), the confirmer is asked a first name, My Space shows the account's name, the ID note "
        "sits inside the intro form, the Accept toast says the contact is the introduction email, and the someone-I-worked-for "
        "link carries a nonce only",
-       OPEN, fixed_on="2026-09-29",
+       LOCKED, fixed_on="2026-09-29",
        scope="ms.js Buzz list + keep list (no other_email shown), _introIdNote in openModal, accept toast, My Space name from "
              "/quick/me; bea_main.py _buzz_name fallback, /buzz/pairs other_name, employer-link mint (ref_links) + _ref_email in "
              "employer-who/confirm; confirm.html #nmbox + askName.",
-       ref="Home cleaner story walk, 29 Sep 2026 (Annatjie/Sannie/Hettie/Karin QA accounts). LOCK after the rendered re-walk.")
+       ref="Home cleaner story walk, 29 Sep 2026 (Annatjie/Sannie/Hettie/Karin QA accounts). LOCKED 29 Sep after the rendered re-walk (6d2931f): My Space says Annatjie; Buzz list shows Hettie / Sannie / A TrustSquare member with no address; a new confirm link carries only a nonce; Riana was asked and saved her first name; the ID note sits inside the intro form; Accept says we have emailed you both.")
 def rg_story_walk_fix_1():
     js = repo_file("ms.js"); b = repo_file("bea_main.py"); cf = repo_file("confirm.html")
     if None in (js, b, cf):
