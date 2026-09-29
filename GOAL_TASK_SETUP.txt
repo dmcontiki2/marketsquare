@@ -1,0 +1,86 @@
+=========================================================
+  SET UP THE "Goal" SCHEDULED TASK  -  3 STEPS
+  Keep this file open beside the Claude app.
+  28 Sep 2026
+=========================================================
+
+STEP 1 - switch OFF this task (toggle off, do NOT delete):
+
+      Daily Agent Stand-up (with Pulse)
+
+   Then CLOSE the panel before doing step 2.
+   (Closing it avoids the bug where the dropdown acts on
+   the task you had selected before.)
+
+
+STEP 2 - switch OFF this task (toggle off, do NOT delete):
+
+      trustsquare-onboarding-goal
+
+   Then CLOSE the panel again.
+
+   NOTE: switching these off loses nothing. They stay in
+   your list, greyed out, one toggle from back on.
+
+
+STEP 3 - create ONE new task:
+
+   Name:      Goal
+   Schedule:  daily at 20:55 UTC   (= 22:55 South Africa)
+   Requires this computer:  YES
+   Folder:    C:\Users\David\Projects\MarketSquare
+
+   Prompt - copy everything between the lines below
+   (click in this file, select it, Ctrl+C):
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+You are the daily Goal run for MarketSquare / trustsquare.co, acting as CTO/COO
+under STANDING_ORDERS.md. Fresh session.
+Folder: C:\Users\David\Projects\MarketSquare
+
+FIRST ACTION: read C:\Users\David\Projects\MarketSquare\GOAL_RUN_PROMPT.md and
+follow it exactly. That file is this task's contract - it is kept in git so it
+cannot be lost with a session. If you would change how this run works, change
+that file in the same session and commit it.
+
+Do not proceed on memory or assumption if that file is missing or unreadable:
+say so in one line at the top of your report and stop.
+
+Start now.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=========================================================
+  WHEN YOU ARE DONE, YOUR LIST SHOULD SHOW:
+=========================================================
+
+   Goal                            daily 20:55 UTC   ON
+   D-U-N-S email watch             daily 08:45 SAST  ON
+   Check Terms v1.19 re-acceptance 12 Oct            ON
+   Re-check eBay dev approval      today 17:04 UTC   ON
+                                   (disables itself after it fires)
+
+   Daily Agent Stand-up            OFF
+   trustsquare-onboarding-goal     OFF
+
+   Anything else in the list is a one-shot that already
+   fired. It can never fire again. Ignore it.
+
+
+=========================================================
+  WHY THE PROMPT IS SO SHORT
+=========================================================
+
+The real instructions - walk the product before analysing
+it, build by default, bring me only money / legal / schema
+/ big direction calls, no health-flag reporting, phone and
+WhatsApp sign-up still to come - are all in
+
+      C:\Users\David\Projects\MarketSquare\GOAL_RUN_PROMPT.md
+
+which is committed to git. Three copies of it exist now, so
+the thing that happened yesterday cannot happen again.
+
+Keeping the task itself short means Claude can change how
+the run works by editing that file, with no approval prompt
+and no risk of the task and the file drifting apart.
