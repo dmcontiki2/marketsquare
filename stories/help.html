@@ -60,7 +60,9 @@ ol.story .gt{display:block;font-size:12px;font-weight:600;color:var(--gate)}
 .foot{font-size:13px;color:var(--ink2);border-top:1px solid var(--line);padding-top:12px}
 @media (max-width:380px){.trio{grid-template-columns:1fr 2.6fr 1fr}.side .t{font-size:11px}}
 @media (prefers-reduced-motion:no-preference){.now{transition:border-color .2s}}
-.top a.back{color:var(--ink2);font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 10px}
+a.back{align-self:flex-start;color:var(--bright);font-size:14px;font-weight:600;text-decoration:none;margin-bottom:-8px}
+a.back::before{content:'\2039  '}
+.brand span{white-space:nowrap}
 .draft{border:1px dashed var(--gate);color:var(--gate);border-radius:12px;padding:8px 12px;font-size:13px}
 .draft[hidden]{display:none}
 .miss{padding:40px 0;color:var(--ink2)}
@@ -68,8 +70,9 @@ ol.story .gt{display:block;font-size:12px;font-weight:600;color:var(--gate)}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="brand"><i>TS</i><span id="t-brand"></span></div><a class="back" id="t-back" href="/help/"></a>
+  <div class="top"><div class="brand"><i>TS</i><span id="t-brand"></span></div>
     <div class="lang" role="group" aria-label="Language"><button type="button" id="l-en" aria-pressed="true">English</button><button type="button" id="l-af" aria-pressed="false">Afrikaans</button></div></div>
+  <a class="back" id="t-back" href="/help/"></a>
   <div class="draft" id="draft" hidden></div>
   <header>
     <h1 id="t-title"></h1>

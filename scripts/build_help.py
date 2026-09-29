@@ -110,6 +110,9 @@ def push_images(stories):
                      + ["%s:%s/%s/" % (SERVER, REMOTE_IMG, t)])
             if r.returncode != 0:
                 sys.exit("FAIL  scp %s: %s" % (t, (r.stderr or r.stdout).strip()[:300]))
+        # a file copied from Windows arrives rwx------ and nginx answers 403 -- make every screen world-readable
+        _run(["ssh", "-o", "ConnectTimeout=20", SERVER,
+              "chmod 755 %s %s/%s && chmod 644 %s/%s/*.jpg" % (REMOTE_IMG, REMOTE_IMG, t, REMOTE_IMG, t)])
         sent += len(todo)
         print("%-24s %d screen(s), %d sent" % (t, len(local), len(todo)))
     print("pushed %d screen(s)" % sent)
