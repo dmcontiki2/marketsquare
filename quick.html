@@ -707,9 +707,13 @@ function drawStep(){
         nodes[q].style.boxShadow = on ? 'inset 0 0 0 5px var(--c,#16A97C)' : '';
         var tick=nodes[q].querySelector('.qtick');
         if(on && !tick){ tick=document.createElement('span'); tick.className='qtick'; tick.textContent='\u2713';
-          tick.style.cssText='position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:var(--c,#16A97C);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:17px;z-index:2';
+          /* AREA-TICK-1 (29 Sep 2026, story walk): on a chip (no photo) the 30px tick sat over the area name ('Menl✓'); a chip gets a small tick on its corner instead */
+          var _chip=nodes[q].offsetHeight<64;
+          tick.style.cssText=_chip?'position:absolute;top:50%;right:10px;margin-top:-9px;width:18px;height:18px;border-radius:50%;background:var(--c,#16A97C);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:2'
+            :'position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:var(--c,#16A97C);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:17px;z-index:2';
+          if(_chip) nodes[q].style.paddingRight='36px';   /* AREA-TICK-1: room for the tick, so the name is never covered */
           if(getComputedStyle(nodes[q]).position==='static') nodes[q].style.position='relative'; nodes[q].appendChild(tick); }
-        if(!on && tick) tick.remove(); }
+        if(!on && tick){ tick.remove(); nodes[q].style.paddingRight=''; } }
     };
     nb.onclick=function(){
       if(!window.QAREAS.length) return;

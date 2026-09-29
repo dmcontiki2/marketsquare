@@ -32526,5 +32526,18 @@ def rg_key_account_hub_1():
                    "it repaints once the answer is in")]
 
 
+@entry("RG-0543", "AREA-TICK-1: in Quick's several-areas step the tick never covers an area's name -- on a chip it sits "
+       "inside the chip's right edge with room made for it (it covered 'Menlyn' as 'Menl')",
+       OPEN, fixed_on="2026-09-29",
+       scope="quick.html + genie/HARNESS.html _qMultiWhere tick: chip branch (_chip) with paddingRight room; photo tiles keep the corner tick.",
+       ref="Story walk for the home cleaner help page, 29 Sep 2026. LOCK after the rendered check.")
+def rg_area_tick_1():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "AREA-TICK-1" not in q or "nodes[q].style.paddingRight='36px'" not in q:
+        return [(FAIL, "the area tick covers the area name on a chip again")]
+    return [(INFO, "chip tick sits beside the name")]
+
 if __name__ == "__main__":
     sys.exit(main())
