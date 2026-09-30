@@ -33327,5 +33327,19 @@ def rg_my_intros_1():
 
 
 
+@entry("RG-0606", "ADV-CARD-PIC-1: the F12 story walk (a guest house) -- a stay's or a trip's WhatsApp Status card shows the door's "
+       "lodge or landscape picture, not a suburban lounge",
+       OPEN, fixed_on="2026-09-30",
+       scope="status_card.py _role_picture() category fallback (adventures_accommodation -> adv_lodge, adventures_experiences -> adv_main).",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Elsabe's Share to Status card for a thatched guest house outside "
+           "Cullinan showed room_lounge -- a lounge with a jacaranda garden. The card never fetches her own photo (by design).")
+def rg_adv_card_pic_1():
+    sc = repo_file("status_card.py")
+    if sc is None:
+        return [(FAIL, "status_card.py is missing")]
+    if '"adventures_accommodation": "adv_lodge"' not in sc or '"adventures_experiences": "adv_main"' not in sc:
+        return [(FAIL, "a stay's Status card falls back to the suburban lounge picture again")]
+    return [(INFO, "stays and trips get the lodge / landscape picture on their Status card")]
+
 if __name__ == "__main__":
     sys.exit(main())
