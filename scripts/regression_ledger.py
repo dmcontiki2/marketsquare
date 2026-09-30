@@ -33423,5 +33423,32 @@ def rg_adv_level_season_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "experiences show difficulty and best season")]
 
+
+@entry("RG-0574", "CAR-HIRE-1: the F9 story walk (vehicle for hire) -- Sell's guided Cars flow asks 'For sale or for hire?'; "
+       "for hire the price is a day rate and the Condition step asks the hire terms (deposit, shortest hire, free km, who may drive), "
+       "which the advert shows; the buyer's page labels the price 'For hire - hire rate'",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js SF_CATS.Cars row ltype, SF_CAR_HIRE_SEC_B, sfIsCarHire()/sfFlow(), sfListingFields() listing_type "
+             "'For Hire / Rental' (Edit's words), sfUpd re-render, detail price label via carDeal.",
+       ref="F9 cloud walk 30 Sep 2026 (Tebogo): the guided Sell had no hire choice at all (Property has Listing type), and a car "
+           "set to hire in Edit showed a plain 'Price' with no terms -- the flow's proof 'hire terms shown' could not pass.")
+def rg_car_hire_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "['ltype','For sale or for hire?','select','For Sale|For Hire']" not in ms:
+        bad.append("Sell no longer asks whether the car is for sale or for hire")
+    if "var SF_CAR_HIRE_SEC_B" not in ms or "if(sfIsCarHire()){" not in ms or "priceUnit:'/ day'" not in ms:
+        bad.append("a car for hire no longer gets a day rate and the hire-terms step")
+    if "'For Hire / Rental':'For Sale')" not in ms:
+        bad.append("a car for hire is stored as For Sale")
+    if "'🔑 For hire · hire rate' : 'Price'" not in ms:
+        bad.append("the buyer's page no longer says the car is for hire")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a car for hire is listed, priced and shown as a hire")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

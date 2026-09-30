@@ -5941,7 +5941,7 @@ function openDetail(id){
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(l.area)}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||_lmEsc(l.country.toUpperCase())}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">${(l.cat==='Cars' && /hire|rent/i.test(l.carDeal||'')) ? '🔑 For hire · hire rate' : 'Price'}</div>
           ${isAdv && advPriceDisplay
             ? `<div class="pamount">${advPriceDisplay}</div>${l.per?`<div class="pper">${_lmEsc(l.per)}</div>`:''}`
             : l.price
@@ -20195,6 +20195,7 @@ Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Ask
          ['engine','Engine bay','Bonnet open, well lit','🔧']],
   sections:[
    {key:'A',title:'Vehicle Details',pts:20,coach:'<b>The AI pre-fills what it can see</b> — make, model and variant come from your photos. Confirm or correct each one.',rows:[
+    ['ltype','For sale or for hire?','select','For Sale|For Hire'],   // CAR-HIRE-1
     ['make','Make','text','e.g. BMW'],['model','Model','text','e.g. X1'],['variant','Variant / trim','text','e.g. sDrive18i Auto'],
     ['year','Year','number','e.g. 2016'],['colour','Colour','text','e.g. White'],
     ['body','Body type','select','Sedan|Hatchback|SUV|Bakkie|Coupe|Convertible|MPV|Wagon|Crossover']]},
@@ -20735,6 +20736,20 @@ var SF_PROP_RENTAL_SEC_C = {key:'C',title:'Tenant Costs & Responsibilities',pts:
   ['tenant_fees','Other tenant fees','text','e.g. R150/m prepaid meter admin — blank if none'],
   ['fibre','Fibre available','select','Yes|No'],
   ['security','Security','select','None|Alarm|Security estate|Armed response']]};
+/* CAR-HIRE-1 (30 Sep 2026, F9 story walk): a car offered for hire had no way to say so in Sell (only Edit's Listing
+   type), and its advert never showed it. Hire: the price is a day rate, and Condition asks the terms a hirer needs;
+   sfComposeDescription() writes them into the advert, where the buyer reads them before asking. */
+var SF_CAR_HIRE_SEC_B = {key:'B',title:'Hire terms',pts:20,
+  coach:'<b>What every hirer asks first.</b> Say it here and it shows on your advert, before anyone asks.',rows:[
+  ['mileage','Mileage (km)','number','e.g. 85 000'],
+  ['deposit','Deposit (R)','number','e.g. 3 000'],
+  ['min_days','Shortest hire (days)','number','e.g. 2'],
+  ['km_day','Free km per day','text','e.g. 200 km, then R3 a km'],
+  ['driver','Who may drive','text','e.g. licence held 2+ years, age 23+'],
+  ['notes','Other terms and condition','textarea','Delivery, fuel policy, cross-border, condition…']]};
+function sfIsCarHire(){
+  return !!(sfState && sfState.cat==='Cars' && /hire/i.test(String((sfState.A&&sfState.A.ltype)||'')));
+}
 function sfIsRental(){
   return !!(sfState && sfState.cat==='Property' && /rent|let/i.test(String((sfState.A&&sfState.A.ltype)||'')));
 }
@@ -20748,6 +20763,10 @@ function sfFlow(){
     return {label:b.label, aiCap:b.aiCap, priceLabel:b.priceLabel, slots:b.lmSlots[t],
       sections:[{key:'A',title:b.sections[0].title,pts:20,coach:b.sections[0].coach,rows:b.lmRowsA[t]},
                 b.sections[1], b.sections[2]], feats:b.lmFeats[t]};
+  }
+  if(sfIsCarHire()){   // CAR-HIRE-1
+    return {label:c.label, aiCap:c.aiCap, priceLabel:'Hire rate per day', priceUnit:'/ day', slots:c.slots,
+      sections:[c.sections[0], SF_CAR_HIRE_SEC_B, c.sections[2]], feats:c.feats};
   }
   // RENTAL-COSTS-1: To Rent property → tenant-cost section C replaces levies/rates
   if(sfState.cat==='Property' && sfIsRental()){
@@ -20880,7 +20899,8 @@ function sfListingFields(){   // the ONE place the flow's answers become listing
   // canonical 'For Rent'/'For Sale' the browse mapping and filters expect.
   if(A.parking) fields.garages=A.parking;
   if(A.ptype) fields.prop_type=A.ptype;
-  if(A.ltype) fields.listing_type=/rent|let/i.test(String(A.ltype))?'For Rent':'For Sale';
+  if(A.ltype) fields.listing_type=sfState.cat==='Cars' ? (/hire/i.test(String(A.ltype))?'For Hire / Rental':'For Sale')   // CAR-HIRE-1: Edit's own words
+                                                      : (/rent|let/i.test(String(A.ltype))?'For Rent':'For Sale');
   if(A.subjects) fields.subject=A.subjects;
   if(A.levels) fields.level=A.levels;
   if(A.trade) fields.service_type=A.trade;
@@ -21866,7 +21886,7 @@ function sfSpecS(secKey){
 }
 function sfUpd(scope,id,v){
   if(scope==='__root__') sfState[id]=v; else sfState[scope][id]=v;
-  if(id==='ltype' && sfState.cat==='Property'){ sfRender(); return; }  // PRICE-LABEL-1: refresh price label
+  if(id==='ltype' && (sfState.cat==='Property' || sfState.cat==='Cars')){ sfRender(); return; }  // PRICE-LABEL-1 / CAR-HIRE-1: refresh price label and steps
   sfMeterUpdate();      // ONE-SCORE-1: the server's number follows as soon as it answers
   sfDraftSaveSoon();    // SF-DRAFT-KEEP-1
 }
