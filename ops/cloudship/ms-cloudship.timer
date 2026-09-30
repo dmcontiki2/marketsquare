@@ -1,0 +1,13 @@
+# CLOUD-SHIP-1
+[Unit]
+Description=Every 2 min: ship new [ship] commits on claude/* branches
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Persistent=true
+Unit=ms-cloudship.service
+
+[Install]
+WantedBy=timers.target

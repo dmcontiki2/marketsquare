@@ -32844,5 +32844,52 @@ def rg_hub_agent_fit_1():
     return [(INFO, "Agent Hub card fits the seller; Quick line names cleaners, gardeners, nannies, drivers")]
 
 
+@entry("RG-0553", "QA-CLOUD-1 + CLOUD-SHIP-1: the story walks run in Claude Code cloud sessions with the laptop closed -- "
+       "key-guarded /qa/ping, /qa/signin, /qa/grant, /qa/help-image, /qa/ship-status (404 without the key, QA addresses only, "
+       "5T a call and 20T a day), and a server job that ships a claude/* branch's [ship] commit after the gates",
+       LOCKED, fixed_on="2026-09-30",
+       scope="bea_main.py QA-CLOUD-1 block + route_policy.json; scripts/build_help.py TS_HELP_IMG; ops/cloudship/* (installed to "
+             "/usr/local/sbin + systemd ms-cloudship.timer); scripts/request_deploy.py merges origin/main cleanly; stories/cloud_kit.py, "
+             "stories/CLOUD_WALK.md.",
+       ref="David 30 Sep 2026: 'we have to use the cloud before it expires' ($250 credit, 4 Nov). The cloud has no Gmail, admin token "
+           "or SSH; the key sits in the environment's API credential, so the session never sees it (Anthropic's proxy adds X-QA-Key).")
+def rg_qa_cloud_1():
+    import json as _j
+    py = repo_file("bea_main.py"); rp = repo_file("route_policy.json"); sh = repo_file("ops/cloudship/cloud_branch_ship.sh")
+    bh = repo_file("scripts/build_help.py"); kit = repo_file("stories/cloud_kit.py")
+    if None in (py, rp, sh, bh, kit):
+        return [(FAIL, "a QA-CLOUD-1 / CLOUD-SHIP-1 file is missing")]
+    code = py; bad = []   # the checks read string literals, which _code_only blanks
+    for r in ('@app.get("/qa/ping")', '@app.post("/qa/signin")', '@app.post("/qa/grant")', '@app.post("/qa/help-image")',
+              '@app.get("/qa/ship-status")'):
+        if r not in code:
+            bad.append("route gone: " + r)
+    if code.count("_qa_guard(request") < 5:
+        bad.append("a /qa route no longer checks the key")
+    if 'raise HTTPException(status_code=404, detail="Not Found")' not in code or "compare_digest(k, got)" not in code:
+        bad.append("a wrong key no longer answers a plain 404 (or the compare is not constant-time)")
+    if r'^dmcontiki2\+qa-' not in code:
+        bad.append("the QA routes are no longer limited to the QA test addresses")
+    if "if not (1 <= amt <= 5)" not in code or "if int(got) + amt > 20" not in code:
+        bad.append("test Tuppence lost its 5-a-call / 20-a-day cap")
+    keys = {x.get("key") for x in _j.loads(rp).get("routes", [])}
+    for k in ("GET /qa/ping", "POST /qa/signin", "POST /qa/grant", "POST /qa/help-image", "GET /qa/ship-status"):
+        if k not in keys:
+            bad.append("route_policy.json lacks " + k)
+    if "grep -q '\\[ship\\]'" not in sh or "merge-base --is-ancestor origin/main" not in sh or "^(ops/|\\.github/)" not in sh:
+        bad.append("the ship job lost its [ship] marker, fast-forward check or ops/ guard")
+    if 'os.environ.get("TS_HELP_IMG")' not in bh:
+        bad.append("build_help.py can no longer check screens where /qa/help-image writes them")
+    try:
+        live = _get("/qa/ping")          # no key from here: 404 is the pass
+    except Exception:
+        live = None
+    if live and '"qa_key"' in live:
+        bad.append("LIVE /qa/ping answered without the key")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "QA routes key-guarded and QA-only; cloud [ship] branches gated and shipped by the server")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

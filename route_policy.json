@@ -2188,6 +2188,31 @@
      "resource": "listing"
     }
    ]
+  },
+  {
+   "key": "GET /qa/ping",
+   "level": "public",
+   "note": "QA-CLOUD-1 (30 Sep 2026): guarded in the handler by the MS_QA_KEY header (404 without it) and limited to dmcontiki2+qa-* test addresses -- cloud story walks."
+  },
+  {
+   "key": "POST /qa/signin",
+   "level": "public",
+   "note": "QA-CLOUD-1 (30 Sep 2026): guarded in the handler by the MS_QA_KEY header (404 without it) and limited to dmcontiki2+qa-* test addresses -- cloud story walks."
+  },
+  {
+   "key": "POST /qa/grant",
+   "level": "public",
+   "note": "QA-CLOUD-1 (30 Sep 2026): guarded in the handler by the MS_QA_KEY header (404 without it) and limited to dmcontiki2+qa-* test addresses -- cloud story walks."
+  },
+  {
+   "key": "POST /qa/help-image",
+   "level": "public",
+   "note": "QA-CLOUD-1 (30 Sep 2026): guarded in the handler by the MS_QA_KEY header (404 without it) and limited to dmcontiki2+qa-* test addresses -- cloud story walks."
+  },
+  {
+   "key": "GET /qa/ship-status",
+   "level": "public",
+   "note": "CLOUD-SHIP-1 (30 Sep 2026): guarded in the handler by the MS_QA_KEY header (404 without it); the last 20 lines of the server's cloud-branch ship job."
   }
  ]
 }

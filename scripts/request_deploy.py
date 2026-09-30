@@ -38,7 +38,14 @@ def relay(head):
             print('relay: SSH closed right now -- falling back to the host agent'); return False
         git('fetch', '-q', 'origin', 'main', 'deploy')
         if subprocess.run(['git', 'merge-base', '--is-ancestor', 'origin/main', 'HEAD'], cwd=REPO, env=ENV).returncode:
-            print('relay: HEAD does not fast-forward origin/main -- refusing to diverge; host agent will handle it'); return False
+            # CLOUD-SHIP-1 (30 Sep 2026): cloud story walks land on main from the server, so main can move
+            # under the laptop. Take it in with a clean merge; a conflict is aborted and left to the host agent.
+            m = subprocess.run(['git', 'merge', '--no-edit', '-q', 'origin/main'], cwd=REPO, env=ENV, capture_output=True, text=True)
+            if m.returncode:
+                subprocess.run(['git', 'merge', '--abort'], cwd=REPO, env=ENV, capture_output=True)
+                print('relay: HEAD does not fast-forward origin/main and the merge conflicts -- refusing to diverge; host agent will handle it'); return False
+            head = git('rev-parse', '--short', 'HEAD')
+            print('relay: merged origin/main (a cloud branch shipped meanwhile) -> %s' % head)
         r = subprocess.run(['git', 'push', '-q', 'ssh://%s%s' % (SERVER, SERVER_REPO), 'HEAD:refs/heads/claude-relay'],
                            cwd=REPO, env=ENV, capture_output=True, text=True, timeout=120)
         if r.returncode:

@@ -1,0 +1,10 @@
+# CLOUD-SHIP-1 -- see /usr/local/sbin/ms-cloudship.sh
+[Unit]
+Description=Ship [ship] commits from Claude Code cloud branches (claude/*) after the gates
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ms-cloudship.sh
+TimeoutStartSec=300

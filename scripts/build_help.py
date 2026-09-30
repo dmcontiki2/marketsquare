@@ -30,6 +30,8 @@ TYPE_RE = re.compile(r"^[a-z0-9_]+$")
 OPTIONAL_LANGS = ("zu", "xh", "nso")   # HELP-LANG-1: Quick's other languages; [[Button]] = the app's own words, quoted
 SERVER = "root@178.104.73.239"
 REMOTE_IMG = "/var/www/marketsquare/help/img"
+# QA-CLOUD-1: the server's cloud-ship gate checks the screens where /qa/help-image put them (the clone has none)
+IMG_ROOT = os.environ.get("TS_HELP_IMG") or os.path.join(ST, "img")
 
 
 def load_stories():
@@ -66,7 +68,7 @@ def load_stories():
                     errs.append("%s step %s: '%s' has an unclosed [[button]] quote" % (fn, s.get("n"), lg))
             if s.get("cost", "free") not in ("free", "1T", "1T_check", "1T_accept"):
                 errs.append("%s step %s: cost must be free, 1T, 1T_check or 1T_accept" % (fn, s.get("n")))
-            if not os.path.isfile(os.path.join(ST, "img", t, "%s.jpg" % s.get("img"))):
+            if not os.path.isfile(os.path.join(IMG_ROOT, t, "%s.jpg" % s.get("img"))):
                 errs.append("%s step %s: screen stories/img/%s/%s.jpg is missing" % (fn, s.get("n"), t, s.get("img")))
         out.append((t, d, steps))
     return out, errs

@@ -28792,6 +28792,155 @@ def buzz_keep(req: BuzzKeepReq, _key: str = Depends(auth.require_api_key),
     return out
 
 
+
+# ══ QA-CLOUD-1 (30 Sep 2026) — the story walks run in Claude Code cloud sessions ══
+# David, 30 Sep 2026: the remaining flow walks run on the Claude Code cloud credit, laptop closed. A cloud
+# session has no Gmail (sign-in codes), no admin token (test Tuppence) and no SSH (guide screens), so these
+# four routes give it exactly those three things and nothing else:
+#   * guarded by MS_QA_KEY (server secret). The cloud never sees the key: Anthropic's proxy adds the
+#     X-QA-Key header to requests for trustsquare.co after they leave the session (API credentials).
+#   * a wrong or missing key answers 404, so the routes do not advertise themselves;
+#   * only the QA test addresses (dmcontiki2+qa-...@gmail.com) -- never a real person's account;
+#   * test Tuppence is small (1..5 per call, 20 per address per day) and written as tester_grant with an audit row;
+#   * a guide screen is a JPEG under 400 KB, written only under /help/img/<type>/.
+_QA_EMAIL_RE = re.compile(r"^dmcontiki2\+qa-[a-z0-9][a-z0-9-]{0,30}@gmail\.com$")
+_QA_SLUG_RE = re.compile(r"^[a-z0-9_]{3,60}$")
+_QA_HELP_IMG = "/var/www/marketsquare/help/img"
+
+
+def _qa_key_ok(request: Request) -> bool:
+    import hmac as _qa_hm
+    k = os.environ.get("MS_QA_KEY", "")
+    got = (request.headers.get("x-qa-key") or "").strip()
+    return bool(k) and len(got) >= 20 and _qa_hm.compare_digest(k, got)
+
+
+def _qa_guard(request: Request, email: str = None) -> str:
+    if not _qa_key_ok(request):
+        raise HTTPException(status_code=404, detail="Not Found")
+    if email is None:
+        return ""
+    em = (email or "").strip().lower()
+    if not _QA_EMAIL_RE.match(em):
+        raise HTTPException(status_code=403, detail="QA routes serve the QA test addresses only")
+    return em
+
+
+@app.get("/qa/ping")
+def qa_ping(request: Request):
+    """Proves the cloud session's key arrives -- and nothing else."""
+    _qa_guard(request)
+    return {"ok": True, "qa_key": True}
+
+
+class _QASignIn(BaseModel):
+    email: str
+    name: str = ""
+    review: bool = False
+
+
+@app.post("/qa/signin")
+def qa_signin(body: _QASignIn, request: Request, response: Response):
+    """Sign a QA test address in without the emailed code (the code's inbox is not reachable from the cloud).
+    review=true also sets the tester cookie, so Quick shows the How button as it does for testers."""
+    em = _qa_guard(request, body.email)
+    out = _establish_user_session(em, response)
+    nm = _plain_text(str(body.name or ""))[:40].strip()
+    if nm and nm.lower() != em.split("@")[0]:
+        conn = database.get_db()
+        try:
+            conn.execute("UPDATE users SET name=? WHERE email=? AND (name IS NULL OR TRIM(name)='' OR LOWER(name)=?)",
+                         (nm, em, em.split("@")[0]))
+            conn.commit()
+        finally:
+            conn.close()
+    if body.review:
+        _grant_review_cookie(response, "qa-cloud")
+    _log.info("QA-CLOUD-1 signin %s", em)
+    return {"ok": True, "email": em, "name": nm or out.get("name")}
+
+
+class _QAGrant(BaseModel):
+    email: str
+    amount: int = 1
+    reason: str = ""
+
+
+@app.post("/qa/grant")
+def qa_grant(body: _QAGrant, request: Request):
+    """Test Tuppence for a QA address -- stands in for a Paystack top-up on a walk."""
+    em = _qa_guard(request, body.email)
+    amt = int(body.amount or 0)
+    if not (1 <= amt <= 5):
+        raise HTTPException(status_code=400, detail="amount must be 1..5")
+    conn = database.get_db()
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        got = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM transactions WHERE lower(user_email)=? AND type='tester_grant' "
+                           "AND description LIKE 'QA-CLOUD-1%' AND substr(created_at,1,10)=?", (em, today)).fetchone()["s"]
+        if int(got) + amt > 20:
+            raise HTTPException(status_code=429, detail="20T per QA address per day")
+        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (em,))
+        desc = "QA-CLOUD-1 tester grant — %dT%s" % (amt, (" (" + _plain_text(body.reason)[:120] + ")") if body.reason.strip() else "")
+        conn.execute("INSERT INTO transactions (user_email, type, amount, description, created_at) VALUES (?, 'tester_grant', ?, ?, CURRENT_TIMESTAMP)",
+                     (em, amt, desc))
+        conn.execute("CREATE TABLE IF NOT EXISTS admin_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT, "
+                     "action TEXT, field TEXT, prior TEXT, new TEXT, reason TEXT)")
+        conn.execute("INSERT INTO admin_audit (ts, actor, action, field, prior, new, reason) VALUES (CURRENT_TIMESTAMP,?,?,?,?,?,?)",
+                     ("qa-cloud", "tuppence_grant", em, "", "tester_grant:%d" % amt, desc))
+        conn.commit()
+        bal = conn.execute("SELECT COALESCE(SUM(amount),0) b FROM transactions WHERE lower(user_email)=?", (em,)).fetchone()["b"]
+    finally:
+        conn.close()
+    return {"granted": amt, "balance": int(bal), "email": em}
+
+
+class _QAHelpImage(BaseModel):
+    type: str
+    name: str
+    jpeg_b64: str
+
+
+@app.post("/qa/help-image")
+def qa_help_image(body: _QAHelpImage, request: Request):
+    """One guide screen from a cloud walk -> /help/img/<type>/<name>.jpg (the repo never holds media)."""
+    _qa_guard(request)
+    t, n = (body.type or "").strip(), (body.name or "").strip()
+    if not _QA_SLUG_RE.match(t) or not _QA_SLUG_RE.match(n):
+        raise HTTPException(status_code=400, detail="type and name: a-z 0-9 _ only, 3..60")
+    import base64 as _qa_b64
+    try:
+        raw = _qa_b64.b64decode(body.jpeg_b64 or "", validate=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="jpeg_b64 is not base64")
+    if len(raw) > 400_000 or raw[:3] != b"\xff\xd8\xff":
+        raise HTTPException(status_code=400, detail="a JPEG under 400 KB")
+    d = os.path.join(_QA_HELP_IMG, t)
+    os.makedirs(d, exist_ok=True)
+    try:
+        os.chmod(d, 0o755)
+    except Exception:
+        pass
+    p = os.path.join(d, n + ".jpg")
+    tmp = p + ".tmp"
+    with open(tmp, "wb") as fh:
+        fh.write(raw)
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, p)
+    return {"ok": True, "path": "/help/img/%s/%s.jpg" % (t, n), "bytes": len(raw)}
+
+
+@app.get("/qa/ship-status")
+def qa_ship_status(request: Request):
+    """CLOUD-SHIP-1: what the server's ship job did with the cloud branches (SHIPPED / REFUSED + why), newest last."""
+    _qa_guard(request)
+    try:
+        lines = open("/var/lib/ms-cloudship/status.txt", encoding="utf-8").read().splitlines()[-20:]
+    except Exception:
+        lines = []
+    return {"lines": lines}
+
+
 class ListingKeepReq(BaseModel):
     keep: list = []
 
