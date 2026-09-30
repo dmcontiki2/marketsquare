@@ -506,6 +506,7 @@ function _msMapBeaListing(l){
           drivetrain:    l.drivetrain    || null,
           colour:        l.colour        || null,
           vehicle_specs: l.vehicle_specs || null,
+          carDeal:       l.category && /car|vehicle/i.test(l.category) ? (l.listing_type || null) : null,   // CAR-DOSSIER-DOOR-1
           attested_at:   l.attested_at   || null,
           collectibleType: l.collectible_type || '',
           condition:       l.condition || '',
@@ -1626,6 +1627,28 @@ function vehSpecPanel(l){
   return '<div class="dsec veh-spec-panel"><h3>Vehicle Specs</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+cards.join('')+'</div>'+attest+'</div>';
 }
 
+
+/* CAR-DOSSIER-DOOR-1 (30 Sep 2026, F8 story walk): the Car Purchase Dossier (3T) lived only on the AI Features screen
+   behind the Wallet -- a buyer looking at a car never learnt it existed. A car for sale now offers it, filled in with
+   this car. Not on a hire listing, a demo or an AI example. Charged only when the report arrives (aiRun). */
+function carDossierDoor(l){
+  if(DEMO_MODE || l.super_example || l.is_demo || /hire|rent/i.test(l.carDeal||'')) return '';
+  return `<div style="border:1.5px solid #bcd9f1;background:#f3f9fe;border-radius:12px;padding:12px 14px;margin-bottom:14px;">`
+    + `<div style="font-size:13px;font-weight:800;color:#1b6fb5;font-family:'Syne',sans-serif;">\ud83d\ude97 Car Purchase Dossier \u00b7 3T</div>`
+    + `<div style="font-size:12px;color:#374151;line-height:1.5;margin:4px 0 9px;">Before you ask: the market price for this car, known faults for its model and year, and a test-drive checklist. You pay only when your report arrives.</div>`
+    + `<button onclick="carDossierOpen('${l.id}')" style="width:100%;background:#1b6fb5;color:#fff;border:none;border-radius:50px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;">Get the dossier for this car</button></div>`;
+}
+async function carDossierOpen(id){
+  const l = findListing(id); if(!l) return;
+  goTo('ai-features');
+  try{ await aiBoot(); }catch(_){}
+  try{ if(aiSel('car_dossier')===false) return; }catch(_){ return; }
+  const veh = [l.vehicle_year, l.make, l.model, l.variant].filter(Boolean).join(' ')
+    + ((l.mileage_km||l.mileage_km===0) ? ', ' + Number(l.mileage_km).toLocaleString('en-ZA') + ' km' : '');
+  const set = (k,v)=>{ const e=document.getElementById('ai-p-'+k); if(e && v) e.value=v; };
+  set('vehicle', veh.trim() || l.title || '');
+  set('price', (typeof formatZAR==='function' && formatZAR(l.price)) || l.price || '');
+}
 
 // ── HMI-1 (18 Jul 2026): category summary tile grid — the WeBuyCars-style block for non-Cars
 // categories, driven by fields the DB stores today. Falls back to legacy chips when <3 tiles.
@@ -5902,6 +5925,7 @@ function openDetail(id){
         </div>
       </div>
       ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
+      ${l.cat==='Cars' ? carDossierDoor(l) : ''}
       <div class="trust-block" id="trustblk-${l.id}" style="background:${t.bg};border-color:${t.c}30;">
         <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=7" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence</div><div class="tscale-note" style="font-size:11px;color:var(--text-3);margin-top:5px;line-height:1.45;"><span>Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.</span> <span>A new seller simply has less evidence — not a mark against them.</span></div></div>

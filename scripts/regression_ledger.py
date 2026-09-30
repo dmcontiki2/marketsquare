@@ -33105,5 +33105,30 @@ def rg_id_live_card_1():
     return [(INFO, "the live card tells the truth about the ID: a buyer warning, not a hold")]
 
 
+@entry("RG-0572", "CAR-DOSSIER-DOOR-1: the F8 story walk -- a buyer looking at a car for sale is offered the Car Purchase "
+       "Dossier (3T) on the advert itself, filled in with that car; it used to live only on the AI Features screen behind the Wallet",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js carDossierDoor()/carDossierOpen() on the Cars detail; carDeal carries listing_type so hire adverts do not offer it.",
+       ref="F8 cloud walk 30 Sep 2026 (Pieter, bakkie #444): the advert offered no dossier and no price check (the 1T fair price "
+           "is hidden until 8 comparable cars are listed -- by design); CLOUD_WALK F8 requires the buyer to reach the 3T dossier.")
+def rg_car_dossier_door_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "${l.cat==='Cars' ? carDossierDoor(l) : ''}" not in ms:
+        bad.append("the car detail no longer offers the Car Purchase Dossier")
+    f = ms.find("function carDossierOpen(")
+    body = ms[f:f + 900] if f >= 0 else ""
+    if "aiSel('car_dossier')" not in body or "set('vehicle'" not in body:
+        bad.append("the dossier no longer opens filled in with the car")
+    g = ms.find("function carDossierDoor(")
+    if "/hire|rent/i.test(l.carDeal" not in ms[g:g + 400]:
+        bad.append("a hire advert offers a purchase dossier")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a car for sale offers its own Car Purchase Dossier")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
