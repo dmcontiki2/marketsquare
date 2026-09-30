@@ -33299,5 +33299,33 @@ def rg_intro_msg_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the seller sees the buyer's message before Accept / Decline")]
 
+
+@entry("RG-0582", "MY-INTROS-1: the F6 story walk (house for sale) -- the Hub's My Requests lists the introductions the "
+       "signed-in buyer asked for, from the server, each with where it stands (waiting / accepted -- check your email / "
+       "declined or no answer -- nothing was charged); it said 'No requests yet' after an accepted introduction",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js renderMyRequests -> msMyIntros(el, empty) reading GET /intros?status=all&buyer_email= (session-scoped "
+             "by SEC-GATE-1); live mode only.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Jacoba's request for #446 was accepted; My Requests read only "
+           "this phone's wishlist/acceptedIntros memory.")
+def rg_my_intros_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "async function msMyIntros(el, empty){" not in js:
+        bad.append("msMyIntros is gone")
+    if js.count("msMyIntros(el, ") < 2:
+        bad.append("My Requests no longer asks the server for her introductions")
+    if "'/intros?status=all&buyer_email='" not in js:
+        bad.append("the introductions no longer come from the server")
+    if "if(DEMO_MODE || !BEA_ENABLED) return;" not in js[js.find("async function msMyIntros"):][:200]:
+        bad.append("msMyIntros lost its demo guard")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "My Requests shows the buyer's own introductions and where each stands")]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

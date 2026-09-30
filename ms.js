@@ -14285,6 +14285,7 @@ function renderMyRequests(){
   });
   if(!interacted.length){
     el.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>No requests yet</h3><p>When you save a listing or send an introduction request, it will appear here.</p></div>`;
+    msMyIntros(el, true);   // MY-INTROS-1
     return;
   }
   el.innerHTML=`<div class="lgrid">${interacted.map(l=>{
@@ -14299,6 +14300,34 @@ function renderMyRequests(){
       </div>
     </div>`;
   }).join('')}</div>`;
+  msMyIntros(el, false);   // MY-INTROS-1
+}
+/* MY-INTROS-1 (F6 walk, 30 Sep 2026): Jacoba asked to be introduced to a house, the seller accepted, and her My Requests
+   still said "No requests yet" -- the tab only read this phone's memory. The introductions she asked for now come from
+   the server (her own, session-bound), newest first, each saying where it stands. */
+async function msMyIntros(el, empty){
+  if(DEMO_MODE || !BEA_ENABLED) return;
+  const me = _msSignedEmail(); if(!me) return;
+  let rows = [];
+  try{
+    const r = await fetch(BEA_URL + '/intros?status=all&buyer_email=' + encodeURIComponent(me), {credentials:'include'});
+    if(!r.ok) return;
+    rows = (await r.json()).filter(x => String(x.buyer_email||'').toLowerCase() === me.toLowerCase());
+  }catch(_){ return; }
+  if(!rows.length || !el.isConnected) return;
+  const WORD = {pending:['Waiting for the seller','#92400e','#fef3c7'], accepted:['Accepted — check your email','#065f46','#d1fae5'],
+                declined:['Declined — nothing was charged','#6b7280','#f3f4f6'], expired:['No answer — nothing was charged','#6b7280','#f3f4f6'],
+                withdrawn:['You withdrew it — nothing was charged','#6b7280','#f3f4f6']};
+  const box = document.createElement('div'); box.id = 'my-intros';
+  box.innerHTML = '<div style="font-weight:800;font-size:15px;margin:4px 2px 8px;">Introductions you asked for</div>'
+    + rows.slice(0, 20).map(x => { const w = WORD[String(x.status||'').toLowerCase()] || [_lmEsc(x.status||''),'#374151','#f3f4f6'];
+        return '<button onclick="openDetail(\'bea_' + parseInt(x.listing_id,10) + '\')" style="width:100%;text-align:left;background:var(--surface,#fff);border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:11px 13px;margin:0 0 8px;cursor:pointer;">'
+          + '<b style="font-size:14px;color:var(--navy,#0f172a);">' + _lmEsc(x.listing_title || ('Listing #' + x.listing_id)) + '</b>'
+          + '<span style="display:block;font-size:12px;color:#6b7280;margin:2px 0 6px;">' + _lmEsc([x.category, x.city].filter(Boolean).join(' · ')) + ' · ' + _lmEsc(String(x.created_at||'').slice(0,10)) + '</span>'
+          + '<span style="font-size:11.5px;font-weight:700;color:' + w[1] + ';background:' + w[2] + ';border-radius:20px;padding:3px 10px;">' + w[0] + '</span></button>'; }).join('');
+  const old = el.querySelector('#my-intros'); if(old) old.remove();
+  if(empty) el.innerHTML = '';
+  el.insertBefore(box, el.firstChild);
 }
 
 // ── ADVERT AGENT ─────────────────────────────────────────────
