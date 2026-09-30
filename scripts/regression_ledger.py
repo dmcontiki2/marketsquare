@@ -33400,5 +33400,28 @@ def rg_yield_read_1():
 
 
 
+@entry("RG-0607", "ADV-LEVEL-SEASON-1: the F13 story walk (a guided bush walk) -- an experience says how hard it is and when it "
+       "is best: the Sell flow asks 'Best season' beside 'Fitness level', and the card and the advert show them (difficulty was "
+       "one line in a long list; season was never asked)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js SF_FLOWS Adventures experiences (season row), _msMapBeaListing difficulty / season, _advSeasonText, the "
+             "advert's adv-stat-strip and the Adventures card.",
+       ref="F13 walk 30 Sep 2026 (docs/E2E_2026-09-30_F13.md): Lerato opened Mpho's walk and read 'Fitness level: Moderate' "
+           "tenth in a list; 'best in winter' was only there because Mpho happened to type it.")
+def rg_adv_level_season_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "['season','Best season','select','All year|Summer|Autumn|Winter|Spring']" not in js:
+        bad.append("the Sell flow no longer asks an experience's best season")
+    if "season: l.season || _msDescLine(desc, ['Best season'])" not in js or "difficulty: l.difficulty ||" not in js:
+        bad.append("a live experience's difficulty / season never reach the page")
+    if "level-stat" not in js or "season-stat" not in js:
+        bad.append("the advert no longer shows difficulty and season")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "experiences show difficulty and best season")]
+
 if __name__ == "__main__":
     sys.exit(main())

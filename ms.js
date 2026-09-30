@@ -389,6 +389,7 @@ function _msDescLine(desc, labels){   // ADV-ENV-1: 'Label: value' or '**Label:*
   }
   return '';
 }
+function _advSeasonText(s){ s = String(s||'').trim(); return /^all year$/i.test(s) ? 'All year' : (s ? 'Best in ' + s.toLowerCase() : ''); }   // ADV-LEVEL-SEASON-1
 function _advEnvKey(v){ return String(v||'').toLowerCase().replace(/\s*&\s*/g,'_').replace(/\s+/g,'_'); }   // 'Farm & Rural' -> farm_rural
 function _msPriceNum(l){
   if (l && typeof l.price_num === 'number' && l.price_num > 0) return l.price_num;
@@ -493,6 +494,9 @@ function _msMapBeaListing(l){
              '**Environment:** ...' into the description -- there is no column. Without this no live stay or
              experience ever carried environment_type, so every Environment filter showed 'No Adventures yet'. */
           environment_type: l.environment_type || _msDescLine(desc, ['Environment']) || null,
+          /* ADV-LEVEL-SEASON-1 (30 Sep 2026 F13 walk): how hard a trip is and when it is best, from the advert's own lines */
+          difficulty: l.difficulty || String(_msDescLine(desc, ['Fitness level', 'Difficulty level', 'Difficulty']) || '').split(' \u2014 ')[0] || null,
+          season: l.season || _msDescLine(desc, ['Best season']) || null,
           accommodation_type: String(l.category||'').toLowerCase().indexOf('accommodation') > -1
             ? (l.accommodation_type || _msDescLine(desc, ['Accommodation type']) || l.prop_type || _msDescLine(desc, ['Type']) || null) : (l.accommodation_type || null),
           propType, beds, baths, garages, listingType, furnished, pets, features,
@@ -4140,6 +4144,7 @@ function renderAdvGrid(){
           <span style="font-size:11px;color:#6b7280;margin-left:auto;">${flag}</span>
         </div>
         <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;line-height:1.3;">${esc(l.title||l.name||'Untitled')}</div>
+        ${(l.difficulty||l.season) ? `<div style="font-size:12px;color:#4b5563;">${[l.difficulty?'🥾 '+esc(l.difficulty):'', l.season?'📅 '+esc(_advSeasonText(l.season)):''].filter(Boolean).join(' · ')}</div>` : ''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
           <div>
             <span style="font-size:14px;font-weight:700;color:#111827;">${priceLabel}</span>
@@ -5980,6 +5985,8 @@ function openDetail(id){
           var parts = [];   // SELLER-TEXT-ESC-1 (ts1-01): the seller-chosen types, sizes and codes are escaped
           if(typeLabel) parts.push('<span class="adv-stat price-stat">'+_lmEsc(typeLabel)+'</span>');
           if(envL) parts.push('<span class="adv-stat env-stat">'+envL+'</span>');
+          if(l.difficulty) parts.push('<span class="adv-stat level-stat">🥾 '+_lmEsc(l.difficulty)+'</span>');   // ADV-LEVEL-SEASON-1
+          if(l.season) parts.push('<span class="adv-stat season-stat">📅 '+_lmEsc(_advSeasonText(l.season))+'</span>');
           if(l.groupSize) parts.push('<span class="adv-stat group-stat">👥 '+_lmEsc(l.groupSize)+'</span>');
           if(l.duration) parts.push('<span class="adv-stat duration-stat">⏱ '+_lmEsc(l.duration)+'</span>');
           if(countryCode && countryCode !== 'ZA') parts.push('<span class="adv-stat country-stat">'+flag+' '+_lmEsc(countryCode)+'</span>');
@@ -20312,6 +20319,7 @@ Adventures: { label:'Adventures',
      {key:'B',title:'Included & Level',pts:20,coach:'<b>Included vs excluded is the #1 buyer question.</b> Be explicit and disputes disappear.',rows:[
       ['incl',"What's included",'text','e.g. Guide, permits, lunch'],['excl','Not included','text','e.g. Transport to start point'],
       ['fit','Fitness level','select','Easy|Moderate|Challenging'],
+      ['season','Best season','select','All year|Summer|Autumn|Winter|Spring'],   // ADV-LEVEL-SEASON-1
       ['notes','Describe the day','textarea','Hour by hour, what makes it special…']]},
      {key:'C',title:'Safety & Credentials',pts:10,coach:'<b>Registered guides earn Trust Score bonuses</b> — declare now, upload proof later.',rows:[
       ['guide','Registered guide','select','Yes — provincial registration|In process|No'],
