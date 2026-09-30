@@ -11470,6 +11470,21 @@ function updateDashStats(){
   const qd=document.getElementById('dash-queue');   if(qd)qd.textContent=dashState.listings.filter(dl=>!dl.isCommit).reduce((a,dl)=>a+dl.intros.filter(i=>i.status==='pending').length,0);
   const td=document.getElementById('dash-tn');      if(td)td.textContent=tuppence;
   try{ hubWelcome(); }catch(e){}
+  try{ agentHubFit(); }catch(e){}
+}
+
+/* HUB-AGENT-FIT-1 (GI-0001, Goal run 24, 29 Sep 2026). Walked as a new home cleaner from Quick:
+   the first thing her Seller Hub showed, above her own draft, was "Agent Hub -- estate, car &
+   tour agents ... accept at 1T". Nothing on it is for her, and it is the loudest card on the
+   screen. The hub is still one tap away for anyone who is an agent (Sell > Services > agents,
+   AGENT-SVC-4b), so it is hidden ONLY when she has adverts and none of them is Property, Cars
+   or Adventures. No adverts yet -> shown, exactly as before. Reversible: delete this call. */
+function agentHubFit(){
+  var el=document.getElementById('agent-hub-entry'); if(!el) return;
+  var L=(typeof dashState!=='undefined' && dashState.listings) ? dashState.listings : [];
+  if(!L.length){ el.style.display='flex'; return; }
+  var agentish=L.some(function(dl){ var c=String(dl.cat||'')+' '+String(dl.advType||''); return /property|cars|adventure/i.test(c); });
+  el.style.display = agentish ? 'flex' : 'none';
 }
 
 // 7-state listing lifecycle chip for the seller hub (mirrors the BEA listing_status machine).
@@ -21016,7 +21031,7 @@ function sfHomeS(){
   // someone who has chosen to sell. Quick carries the way back (?from=app), so this is no longer a one-way door.
   /* QUICK-LEAVE-1 (25 Sep 2026 inspection, ts4-08): with a listing in progress the Quick line asks first, and the
      listing is kept (SF-DRAFT-KEEP-1) so Sell carries on with it when she comes back. */
-  h+='<a class="sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:flex;align-items:center;justify-content:center;gap:7px;margin:14px 0 2px;font-size:13px;font-weight:600;color:#c4b5fd;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#8b5cf6;display:inline-block;"></span>In a hurry? 5-tap Quick listing &rsaquo;</a>';
+  h+='<a class="sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:flex;align-items:center;justify-content:center;gap:7px;margin:14px 0 2px;font-size:13px;font-weight:600;color:#c4b5fd;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#8b5cf6;display:inline-block;"></span>Cleaner, gardener, nanny, driver? Quick listing &rsaquo;</a>';
   h+='<div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
   return h;
 }

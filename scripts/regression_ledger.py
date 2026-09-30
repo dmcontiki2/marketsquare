@@ -32812,5 +32812,35 @@ def rg_lm_story_1():
     return [(INFO, "Local Market guide: 20 steps, five languages, opened from Quick at her screen")]
 
 
+@entry("RG-0552", "HUB-AGENT-FIT-1 (GI-0001): a new home cleaner's Seller Hub no longer opens with 'Agent Hub -- estate, car & "
+       "tour agents' above her own draft -- the card shows only when she has no adverts yet or one of them is Property, Cars "
+       "or Adventures; the app's Quick line names who it is for ('Cleaner, gardener, nanny, driver? Quick listing')",
+       OPEN, fixed_on="2026-09-30",
+       scope="marketsquare.html #agent-hub-entry + .sell-quick-line text; ms.js updateDashStats -> agentHubFit(), sfHomeS .sf-quick-line text.",
+       ref="Goal run 24 walk, 29 Sep 2026 (docs/E2E_2026-09-29.md): fresh identity qa-thandi0929, Quick -> email link -> Seller Hub; "
+           "the loudest card above draft #440 was the agents' hub. Size of the Quick line unchanged (RG-0478, David 25 Sep 'small "
+           "and unobtrusive'); only its words. GOAL_IMPROVEMENTS.md GI-0001.")
+def rg_hub_agent_fit_1():
+    html = repo_file("marketsquare.html"); js = repo_file("ms.js")
+    if None in (html, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    code = _code_only(js)
+    bad = []
+    if 'id="agent-hub-entry"' not in html:
+        bad.append("the Agent Hub card lost its id, so nothing can hide it")
+    if "agentHubFit();" not in code or "function agentHubFit(" not in code:
+        bad.append("the hub no longer fits the Agent Hub card to the seller")
+    if "/property|cars|adventure/i.test(c)" not in code:
+        bad.append("agentHubFit no longer keys on Property / Cars / Adventures")
+    if "In a hurry?" in html or "In a hurry?" in code:
+        bad.append("a Quick line still says 'In a hurry?' instead of naming who it is for")
+    live = _get("/")
+    if live and 'id="agent-hub-entry"' not in live:
+        bad.append("live app lacks #agent-hub-entry (not deployed?)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Agent Hub card fits the seller; Quick line names cleaners, gardeners, nannies, drivers")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
