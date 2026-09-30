@@ -33089,7 +33089,7 @@ def rg_asking_price_1():
     return [(INFO, "Quick asks a property seller her price (or rent a month) before the area")]
 
 
-@entry("RG-0557", "PRICE-PLUS-1: the F3 story walk (plumber) -- a price of two amounts ('R450 / call-out + R350 / hour + parts', "
+@entry("RG-0601", "PRICE-PLUS-1: the F3 story walk (plumber) -- a price of two amounts ('R450 / call-out + R350 / hour + parts', "
        "as Quick writes a trade's call-out + hourly rate) is shown as the seller gave it; it read R450,350 'per hour + parts' "
        "on the advert",
        OPEN, fixed_on="2026-09-30",
@@ -33114,7 +33114,7 @@ def rg_price_plus_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a call-out + hourly price shows as the seller gave it")]
 
-@entry("RG-0558", "INTRO-TOAST-TRUTH-1: the F3 story walk -- after Accept the seller is told the truth: both of you get an "
+@entry("RG-0602", "INTRO-TOAST-TRUTH-1: the F3 story walk -- after Accept the seller is told the truth: both of you get an "
        "email, reply to it to talk, your address stays private (it said the buyer's 'contact revealed', and nothing is shown)",
        OPEN, fixed_on="2026-09-30",
        scope="ms.js handleIntro accept toast.",
@@ -33129,7 +33129,7 @@ def rg_intro_toast_truth_1():
         return [(FAIL, "the accept toast no longer says how the two of you talk")]
     return [(INFO, "accept says: you both get an email")]
 
-@entry("RG-0559", "EDIT-AI-STRIP-1: the F3 story walk -- Edit's 'AI tools' label takes its own line on a phone (it wrapped one "
+@entry("RG-0603", "EDIT-AI-STRIP-1: the F3 story walk -- Edit's 'AI tools' label takes its own line on a phone (it wrapped one "
        "word per line beside the buttons; seen in F2 too)",
        OPEN, fixed_on="2026-09-30",
        scope="ms.css .el-ai-strip flex-wrap + p flex-basis 100%; marketsquare.html ms.css?v bump.",
