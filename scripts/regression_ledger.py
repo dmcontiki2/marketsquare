@@ -32949,6 +32949,10 @@ def rg_clearance_check_1():
         bad.append("the Hub card tells a nanny the wrong gate (employer confirmation / ID)")
     if "['category.services_cas.clearance'," not in js or "function msClearanceUpload(" not in js:
         bad.append("Edit has no 'Police clearance' document choice / the card's upload button is gone")
+    if '"Services": "category.services",' not in py:
+        bad.append("a nanny's own police clearance drops out of her Services document list")
+    if "status = document.getElementById('el-dh-status') || status;" not in js:
+        bad.append("Edit's upload no longer says the document went to our team")
     if "CLEARANCE-CHECK-1" not in q or (h is not None and h != q):
         bad.append("Quick's draft screen lost the police-clearance line (or HARNESS differs)")
     if bad:

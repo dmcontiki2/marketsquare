@@ -15880,7 +15880,9 @@ def list_seller_documents(
         "Tutors": "category.tutors.",
         "Services-Technical": "category.services_tech.",
         "Services-Casuals": "category.services_cas.",
-        "Services": "category.services_tech.",
+        # CLEARANCE-CHECK-1 (F2 walk): Edit sends "Services" for every service advert -- a nanny's police clearance
+        # (services_cas) was left out of her own list, so her upload seemed to vanish.
+        "Services": "category.services",
         "Adventures-Experiences": "category.adv_exp.",
         "Adventures-Accommodation": "category.adv_acc.",
         "Adventures": "category.adv_exp.",

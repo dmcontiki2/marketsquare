@@ -12850,7 +12850,7 @@ async function elDocHubUpload(email) {
   const docType   = document.getElementById('el-dh-type')?.value || 'other';
   const label     = document.getElementById('el-dh-label')?.value.trim() || '';
   const postIntro = document.getElementById('el-dh-postintro')?.checked;
-  const status    = document.getElementById('el-dh-status');
+  let status      = document.getElementById('el-dh-status');
   if (!fileInput?.files?.length) { if (status) status.textContent = 'Please choose a file first.'; return; }
   const isIdDoc = docType === 'id_doc';
   if (status) status.textContent = isIdDoc ? '⏳ Uploading — AI verification in progress…' : '⏳ Uploading…';
@@ -12886,6 +12886,13 @@ async function elDocHubUpload(email) {
       allItemsUp.forEach(it => { if (it.has_declaration && it.status !== 'earned') declarableItemsUp.push(it); });
     }
     if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email, declarableItemsUp);
+    // CLEARANCE-CHECK-1 (F2 walk): the redraw replaced the status line, so 'uploaded' was never seen. Say it on the new one.
+    status = document.getElementById('el-dh-status') || status;
+    if (_sig && !uploadData.auto_earned) {
+      if (status) status.textContent = '✅ Sent to our team. A person checks it, then your points are added'
+        + (/clearance$/.test(_sig) ? ' and strangers can see your listing.' : '.');
+      return;   // nothing changes in the score until then, and a second redraw would wipe this line again
+    }
     // AI comment on this upload
     try {
       const commentRes = await apiPostAuth('/trust-score/upload-comment', {
