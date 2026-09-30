@@ -33064,9 +33064,9 @@ def rg_vehicle_prov_1():
 
 
 @entry("RG-0559", "ASKING-PRICE-1: the F6 story walk (house for sale) -- Quick's Property door asks her asking price (or, to "
-       "let, the rent a month) after the bedrooms; it was the one door that never asked a price, so a house went live with none",
+       "let, the rent a month) as its last question; it was the one door that never asked a price, so a house went live with none",
        OPEN, fixed_on="2026-09-30",
-       scope="quick.html isAsk/drawAsk + the flow() wrapper that puts a 'price' step before 'where' for Property sell "
+       scope="quick.html isAsk/drawAsk + the flow() wrapper that adds a last 'price' step (after the area, so the currency is known) for Property sell "
              "(= genie/HARNESS.html); QI18N for the two questions and notes; UNITS af ' / month'.",
        ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): the door says 'A few taps and your price'; House -> To sell -> "
            "3 -> Centurion saved 'House -- To sell' with no price, and the buyer's 'Is this a fair price?' had nothing to check.")
@@ -33086,7 +33086,7 @@ def rg_asking_price_1():
         bad.append("genie/HARNESS.html differs from quick.html")
     if bad:
         return [(FAIL, "; ".join(bad))]
-    return [(INFO, "Quick asks a property seller her price (or rent a month) before the area")]
+    return [(INFO, "Quick asks a property seller her price (or rent a month) after the area")]
 
 @entry("RG-0571", "ID-LIVE-CARD-1: the F8 story walk -- the 'You're live' card no longer tells a seller with no checked ID that "
        "buyers can only send introductions once her ID is verified; since RUL-188 introductions arrive and the buyer is warned",

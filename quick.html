@@ -3616,7 +3616,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   }
   /* ASKING-PRICE-1 (F6 walk, 30 Sep 2026): Property was the one door that never asked her price -- "a few taps and your
      price" on the door, then a house went live with none, and a buyer's "Is this a fair price?" had nothing to check.
-     After the bedrooms Quick now asks the asking price (or, to let, the rent a month): one amount, typed as she says
+     After the area Quick now asks the asking price (or, to let, the rent a month): one amount, typed as she says
      it ("2 450 000", "2.45m", "13 990"), saved the way the app shows prices ("R2 450 000", "R13 990 / month"). */
   function isAsk(s){ return !!(s && s.key==='price' && mode==='sell' && cat().key==='property'); }
   function drawAsk(s){
@@ -3653,10 +3653,8 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   var _flAsk=flow;
   flow=function(){ var f=_flAsk(); if(!f || !f.steps || mode!=='sell' || cat().key!=='property') return f;
     for(var i=0;i<f.steps.length;i++) if(f.steps[i] && f.steps[i].key==='price') return f;
-    var st=f.steps.slice(), at=-1;
-    for(var j=0;j<st.length;j++) if(st[j] && st[j].key==='where'){ at=j; break; }
-    st.splice(at<0?st.length:at, 0, {q:'What is your asking price?', key:'price', kind:'chip', tiles:[]});
-    return {steps:st}; };
+    /* asked last, after the area -- the country (and so the currency) is settled by then, as for every rate */
+    return {steps:f.steps.concat([{q:'What is your asking price?', key:'price', kind:'chip', tiles:[]}])}; };
   window.QUICK_DRAW_RATE=drawRate;
   var _dsR=drawStep;
   drawStep=function(){
