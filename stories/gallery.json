@@ -2,6 +2,28 @@
  "generated_by": "scripts/build_help.py",
  "stories": [
   {
+   "type": "adventures_guest_house",
+   "status": "draft",
+   "flow": "F12",
+   "label": {
+    "en": "Guest house",
+    "af": "Gastehuis",
+    "zu": "Indlu yezivakashi",
+    "xh": "Indlu yeendwendwe",
+    "nso": "Ntlo ya baeng"
+   },
+   "title": {
+    "en": "Guest house: from listing to the guests who find you",
+    "af": "Gastehuis: van advertensie tot die gaste wat jou vind",
+    "zu": "Indlu yezivakashi: kusukela esikhangisweni kuya ezivakashini ezikutholayo",
+    "xh": "Indlu yeendwendwe: ukusuka kwintengiso ukuya kwiindwendwe ezikufumanayo",
+    "nso": "Ntlo ya baeng: go tloga papatšong go ya go baeng bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 19,
+   "cover": "f12_01_sell"
+  },
+  {
    "type": "cars_bakkie",
    "status": "draft",
    "flow": "F8",
