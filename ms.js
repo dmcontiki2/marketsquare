@@ -8263,10 +8263,15 @@ function sobRenderAttest(){
   sobState._attest = data ? { draftId:data.draftId, confirmed:{}, sections:Object.keys(data.sections) } : null;
   if(!data){ wrap.style.display='none'; host.innerHTML=''; sobCheckEula(); return; }
   wrap.style.display='block';
+  // VEHICLE-PROV-1 (30 Sep 2026, F8 walk): only a value the AI read off the photos is an 'AI draft'. What she typed in
+  // Quick or Edit carries no provenance at all -- it was labelled 'AI draft ... read from your photos', which is untrue.
+  const _ai=k=>data.prov[k]==='ai_guess';
+  const _note=document.getElementById('sob-attest-ai-note');
+  if(_note) _note.style.display=Object.keys(data.sections).some(sec=>data.sections[sec].some(([k])=>_ai(k)))?'block':'none';
   host.innerHTML = Object.keys(data.sections).map(sec=>{
     const def=VEHICLE_SECTIONS_JS[sec];
     const rows=data.sections[sec].map(([k,v])=>{
-      const chip = data.prov[k]==='seller_entered'
+      const chip = !_ai(k)
         ? '<span style="font-size:9px;color:#86efac;border:1px solid rgba(134,239,172,.35);border-radius:8px;padding:1px 6px;margin-left:6px;white-space:nowrap;">You entered</span>'
         : '<span style="font-size:9px;color:#fcd34d;border:1px solid rgba(252,211,77,.35);border-radius:8px;padding:1px 6px;margin-left:6px;white-space:nowrap;">AI draft</span>';
       return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;"><span style="color:rgba(255,255,255,.55);">'+(VEHICLE_SPEC_LABELS[k]||k)+'</span><span style="color:rgba(255,255,255,.85);text-align:right;">'+String(v).replace(/</g,'&lt;')+chip+'</span></div>';

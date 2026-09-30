@@ -2307,7 +2307,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
              exactly why an uncommon variant can come back confidently wrong. Saying so at the
              moment of attestation is the honest half of that fault; whether to ground the lane in
              real vehicle data is David's design call (BACKLOG). -->
-        <div style="font-size:11px;color:rgba(251,191,36,.75);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;">⚠️ These were read from your photos &mdash; nothing was looked up in a vehicle database. On less common models the AI can be confidently wrong, so please check every figure against your own papers before confirming.</div>
+        <div id="sob-attest-ai-note" style="font-size:11px;color:rgba(251,191,36,.75);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;">⚠️ These were read from your photos &mdash; nothing was looked up in a vehicle database. On less common models the AI can be confidently wrong, so please check every figure against your own papers before confirming.</div>
         <div id="sob-attest-sections"></div>
         <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-top:12px;">
           <input type="checkbox" id="sob-attest-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">

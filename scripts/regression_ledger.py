@@ -32993,5 +32993,29 @@ def rg_sms_codes_only_1():
     return [(INFO, "our SMS account is outreach-only; the app sends none")]
 
 
+@entry("RG-0557", "VEHICLE-PROV-1: the F8 story walk (bakkie for sale) -- the confirm-your-vehicle screen before Go live only "
+       "calls a value 'AI draft' (and only warns 'these were read from your photos') when the AI really read it off the photos; "
+       "what the seller typed in Quick or Edit shows 'You entered'",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js sobRenderAttest(): chip is 'AI draft' only for _prov == 'ai_guess'; marketsquare.html #sob-attest-ai-note "
+             "is hidden when no value is an AI guess.",
+       ref="F8 cloud walk 30 Sep 2026: Johan typed make, model, year, mileage and colour into Edit; the Go-live screen said "
+           "'These were read from your photos' with every value marked 'AI draft'. Values with no provenance are hers.")
+def rg_vehicle_prov_1():
+    ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    f = ms.find("function sobRenderAttest(")
+    body = ms[f:f + 2500] if f >= 0 else ""
+    if "data.prov[k]==='ai_guess'" not in body or "const chip = !_ai(k)" not in body:
+        bad.append("values she typed are labelled 'AI draft' again")
+    if "sob-attest-ai-note" not in body or 'id="sob-attest-ai-note"' not in h:
+        bad.append("the 'read from your photos' warning shows when nothing was read from photos")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "only real AI guesses are called AI draft on the vehicle confirm screen")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
