@@ -12597,7 +12597,12 @@ async function elAddPhoto(event) {
           body: JSON.stringify(photoPayload) });
       if (!_sr.ok) {   // BUGSWEEP-24SEP: a refused save used to show "added and saved"
         const _sj = await _sr.json().catch(() => ({}));
-        showToast('Photo added but NOT saved — ' + ((_sj && typeof _sj.detail==='string' && _sj.detail) || ('error ' + _sr.status)), 5000);
+        const _sd = (_sj && typeof _sj.detail==='string' && _sj.detail) || '';
+        /* PHOTO-TERMS-TOAST-1 (30 Sep 2026, F8 walk): a first-time seller adds her photo before she has signed the seller
+           terms. The photo stays on the screen and is saved with Save Changes, right after the terms -- 'NOT saved' told
+           her it was lost. Other refusals keep their plain reason. */
+        if (/eula|terms/i.test(_sd)) showToast('Photo added. Tap Save Changes and accept the seller terms to keep it.', 5000);
+        else showToast('Photo added but NOT saved — ' + (_sd || ('error ' + _sr.status)), 5000);
         event.target.value = '';
         return;
       }

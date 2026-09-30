@@ -43,7 +43,7 @@ list the email in the report under **Checked next on the laptop**.
 | F13 Adventures experience | hiking, water sports, wildlife … sky & extreme | difficulty and season shown; intro; accept |
 | F14 Agency-listed | estate agency for owners; placement agency for workers | an agent lists for someone else; the right person receives the intro |
 
-Done already: F1 (`stories/home_cleaner.json`), F11 (`stories/localmarket_food_preserves.json`). Walk
+Done already: F1 (`stories/home_cleaner.json`), F2 (`stories/nanny.json`, family half waits on L28), F8 (`stories/cars_bakkie.json`), F11 (`stories/localmarket_food_preserves.json`). Walk
 one flow per session, picking the first one here with no `stories/<type>.json` yet.
 
 ## 3. The walk (the story template)
@@ -71,7 +71,7 @@ Rules that come from David:
 
 Copy `stories/localmarket_food_preserves.json` as the pattern: `type` = `<category key>_<slug of the
 type label>` (as Quick's How finds it), `flow`, `label`/`title` in **en, af, zu, xh, nso**, `people`,
-`chapters`, `steps`. Each step: `n`, `ch`, `who`, `cost` (free | 1T | 1T_check | 1T_accept), `img`,
+`chapters`, `steps`. Each step: `n`, `ch`, `who`, `cost` (free | 1T | 1T_check | 1T_accept | <n>T_report for a paid AI report such as the 3T dossier), `img`,
 `pass` (true only if it passed this walk — a failed step stays false and the guide hides it),
 `quick` (the Quick screen keys it belongs to: door, what, where, days, price, ship, draft, saved, buzz),
 and `[title, text]` in all five languages. App words the user taps stay English inside `[[ ]]`

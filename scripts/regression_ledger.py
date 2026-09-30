@@ -33341,5 +33341,21 @@ def rg_adv_card_pic_1():
         return [(FAIL, "a stay's Status card falls back to the suburban lounge picture again")]
     return [(INFO, "stays and trips get the lodge / landscape picture on their Status card")]
 
+
+@entry("RG-0573", "PHOTO-TERMS-TOAST-1: the F8 story walk -- a first-time seller who adds a photo in Edit before signing the seller "
+       "terms is told to tap Save Changes and accept the terms to keep it, not 'Photo added but NOT saved -- EULA not accepted'",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js Edit photo auto-save refusal toast; other refusal reasons still show 'NOT saved' with the server's reason.",
+       ref="F8 cloud walk 30 Sep 2026 (Johan, bakkie #444/#448): the photo stayed and was saved with Save Changes after the terms, "
+           "but the toast said it was not saved.")
+def rg_photo_terms_toast_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "Photo added. Tap Save Changes and accept the seller terms to keep it." not in ms or "/eula|terms/i.test(_sd)" not in ms:
+        return [(FAIL, "a photo added before the terms is reported as lost again")]
+    return [(INFO, "a photo added before the terms says how to keep it")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

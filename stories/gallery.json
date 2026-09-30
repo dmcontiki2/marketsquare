@@ -2,6 +2,28 @@
  "generated_by": "scripts/build_help.py",
  "stories": [
   {
+   "type": "cars_bakkie",
+   "status": "draft",
+   "flow": "F8",
+   "label": {
+    "en": "Bakkie for sale",
+    "af": "Bakkie te koop",
+    "zu": "I-bakkie edayiswayo",
+    "xh": "Ibhakkie ethengiswayo",
+    "nso": "Bakkie ye e rekišwago"
+   },
+   "title": {
+    "en": "Selling a car: from Quick to your first buyer",
+    "af": "Verkoop 'n motor: van Quick tot jou eerste koper",
+    "zu": "Ukuthengisa imoto: kusukela ku-Quick kuya kumthengi wakho wokuqala",
+    "xh": "Ukuthengisa imoto: ukusuka kwi-Quick ukuya kumthengi wakho wokuqala",
+    "nso": "Go rekiša koloi: go tloga go Quick go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 22,
+   "cover": "f8_01_door"
+  },
+  {
    "type": "home_cleaner",
    "status": "draft",
    "flow": "F1",

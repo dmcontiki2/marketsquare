@@ -66,8 +66,9 @@ def load_stories():
                     errs.append("%s step %s: '%s' needs [title, text]" % (fn, s.get("n"), lg))
                 elif any(t.count("[[") != t.count("]]") for t in s[lg]):
                     errs.append("%s step %s: '%s' has an unclosed [[button]] quote" % (fn, s.get("n"), lg))
-            if s.get("cost", "free") not in ("free", "1T", "1T_check", "1T_accept"):
-                errs.append("%s step %s: cost must be free, 1T, 1T_check or 1T_accept" % (fn, s.get("n")))
+            if s.get("cost", "free") not in ("free", "1T", "1T_check", "1T_accept") \
+                    and not re.match(r"^[1-9]T_report$", str(s.get("cost"))):   # STORY-REPORT-COST-1: 3T dossier, 5T report
+                errs.append("%s step %s: cost must be free, 1T, 1T_check, 1T_accept or <n>T_report" % (fn, s.get("n")))
             if not os.path.isfile(os.path.join(IMG_ROOT, t, "%s.jpg" % s.get("img"))):
                 errs.append("%s step %s: screen stories/img/%s/%s.jpg is missing" % (fn, s.get("n"), t, s.get("img")))
         out.append((t, d, steps))
