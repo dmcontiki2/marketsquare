@@ -33495,6 +33495,8 @@ def rg_car_hire_1():
         bad.append("a car for hire no longer gets a day rate and the hire-terms step")
     if "'For Hire / Rental':'For Sale')" not in ms:
         bad.append("a car for hire is stored as For Sale")
+    if "if(c==='Cars') return sfIsCarHire() ? null : 'cars';" not in ms:
+        bad.append("a car for hire is shown the sale paperwork (change of ownership) again")
     if "'🔑 For hire · hire rate' : 'Price'" not in ms:
         bad.append("the buyer's page no longer says the car is for hire")
     if bad:

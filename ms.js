@@ -21956,7 +21956,7 @@ var SF_LEGAL_NOTES = {
 function sfLegalCat(){
   var c = sfState.cat;
   if(c==='Property') return 'property';
-  if(c==='Cars') return 'cars';
+  if(c==='Cars') return sfIsCarHire() ? null : 'cars';   // CAR-HIRE-1: the sale paperwork (change of ownership, RC1) is not a hire's -- no card rather than the wrong one
   if(c==='Tutors') return 'tutors';
   if(c==='Services') return 'services';
   if(c==='Collectors') return 'collectors';
