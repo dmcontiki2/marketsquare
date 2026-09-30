@@ -1,0 +1,597 @@
+{
+ "type": "cars_for_hire",
+ "status": "draft",
+ "flow": "F9",
+ "label": {
+  "en": "Car for hire",
+  "af": "Motor te huur",
+  "zu": "Imoto eqashwayo",
+  "xh": "Imoto eqeshwayo",
+  "nso": "Koloi ye e hirišwago"
+ },
+ "title": {
+  "en": "Hiring out a car: from Sell to your first hirer",
+  "af": "Verhuur 'n motor: van Sell tot jou eerste huurder",
+  "zu": "Ukuqashisa imoto: kusukela ku-Sell kuya kumqashi wakho wokuqala",
+  "xh": "Ukuqeshisa imoto: ukusuka kwi-Sell ukuya kumqeshi wakho wokuqala",
+  "nso": "Go hiriša koloi: go tloga go Sell go ya go mohiri wa gago wa mathomo"
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Tebogo",
+  "customer": "Lerato"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Sell",
+   "af": "Lys in Sell",
+   "zu": "Faka ku-Sell",
+   "xh": "Faka kwi-Sell",
+   "nso": "Tsenya go Sell"
+  },
+  {
+   "id": "c2",
+   "en": "Go live",
+   "af": "Gaan regstreeks",
+   "zu": "Yiba bukhoma",
+   "xh": "Yiba bukhoma",
+   "nso": "Phela"
+  },
+  {
+   "id": "c3",
+   "en": "A hirer",
+   "af": "'n Huurder",
+   "zu": "Umqashi",
+   "xh": "Umqeshi",
+   "nso": "Mohiri"
+  },
+  {
+   "id": "c4",
+   "en": "You accept",
+   "af": "Jy aanvaar",
+   "zu": "Uyamukela",
+   "xh": "Uyamkela",
+   "nso": "O a amogela"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_01_sell",
+   "pass": true,
+   "en": [
+    "Tap [[Sell]] and [[Continue with this account]]",
+    "In TrustSquare, the Sell button at the bottom opens your seller account."
+   ],
+   "af": [
+    "Tik [[Sell]] en [[Continue with this account]]",
+    "In TrustSquare maak die Sell-knoppie onder aan jou verkopersrekening oop."
+   ],
+   "zu": [
+    "Thepha [[Sell]] bese [[Continue with this account]]",
+    "Ku-TrustSquare, inkinobho ethi Sell ngezansi ivula i-akhawunti yakho yokuthengisa."
+   ],
+   "xh": [
+    "Cofa [[Sell]] uze [[Continue with this account]]",
+    "Kwi-TrustSquare, iqhosha elithi Sell ezantsi livula iakhawunti yakho yokuthengisa."
+   ],
+   "nso": [
+    "Kgotla [[Sell]] le [[Continue with this account]]",
+    "Go TrustSquare, konopo ya Sell ka tlase e bula akhaonto ya gago ya go rekiša."
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_02_cats",
+   "pass": true,
+   "en": [
+    "Pick [[Cars]]",
+    "A car for hire is listed under Cars, like a car for sale."
+   ],
+   "af": [
+    "Kies [[Cars]]",
+    "'n Motor te huur word onder Cars gelys, soos 'n motor te koop."
+   ],
+   "zu": [
+    "Khetha [[Cars]]",
+    "Imoto eqashwayo ifakwa ngaphansi kwe-Cars, njengemoto edayiswayo."
+   ],
+   "xh": [
+    "Khetha [[Cars]]",
+    "Imoto eqeshwayo ifakwa phantsi kwe-Cars, njengemoto ethengiswayo."
+   ],
+   "nso": [
+    "Kgetha [[Cars]]",
+    "Koloi ye e hirišwago e tsenywa ka fase ga Cars, bjalo ka koloi ye e rekišwago."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_03_photo",
+   "pass": true,
+   "en": [
+    "Add your main photo",
+    "Front three-quarter. The AI reads it, blurs number plates and fills in what it can see."
+   ],
+   "af": [
+    "Voeg jou hooffoto by",
+    "Van voor, skuins. Die KI lees dit, maak nommerplate vaag en vul in wat dit kan sien."
+   ],
+   "zu": [
+    "Engeza isithombe sakho esikhulu",
+    "Ngaphambili, ngasohlangothini. I-AI iyasifunda, ifiphaze amapuleti bese igcwalisa lokho engakubona."
+   ],
+   "xh": [
+    "Faka ifoto yakho ephambili",
+    "Ngaphambili, ecaleni kancinci. I-AI iyayifunda, ifiphalise iipleyiti ize izalise oko inokukubona."
+   ],
+   "nso": [
+    "Tsenya seswantšho sa gago se segolo",
+    "Ka pele, ka lehlakoreng. AI e a se bala, e fifatša dipoleiti gomme e tlatša seo e ka se bonago."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_04_details_top",
+   "pass": true,
+   "en": [
+    "Choose [[For Hire]]",
+    "The first question is \"For sale or for hire?\". Choose For Hire: the price becomes a rate per day."
+   ],
+   "af": [
+    "Kies [[For Hire]]",
+    "Die eerste vraag is \"For sale or for hire?\". Kies For Hire: die prys word 'n tarief per dag."
+   ],
+   "zu": [
+    "Khetha [[For Hire]]",
+    "Umbuzo wokuqala uthi \"For sale or for hire?\". Khetha For Hire: intengo iba yinani ngosuku."
+   ],
+   "xh": [
+    "Khetha [[For Hire]]",
+    "Umbuzo wokuqala uthi \"For sale or for hire?\". Khetha For Hire: ixabiso liba lixabiso ngosuku."
+   ],
+   "nso": [
+    "Kgetha [[For Hire]]",
+    "Potšišo ya mathomo ke \"For sale or for hire?\". Kgetha For Hire: theko e ba tefo ka letšatši."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_05_details_rate",
+   "pass": true,
+   "en": [
+    "Check the car and type your day rate",
+    "Correct make, model, year and colour if the AI got them wrong, then type your rate per day and your area."
+   ],
+   "af": [
+    "Kontroleer die motor en tik jou dagtarief",
+    "Maak fabrikaat, model, jaar en kleur reg as die KI dit verkeerd het, tik dan jou tarief per dag en jou area."
+   ],
+   "zu": [
+    "Hlola imoto bese ubhala inani lakho losuku",
+    "Lungisa uhlobo, imodeli, unyaka nombala uma i-AI iphazamile, bese ubhala inani lakho ngosuku nendawo yakho."
+   ],
+   "xh": [
+    "Jonga imoto uze ubhale ixabiso lakho losuku",
+    "Lungisa uhlobo, imodeli, unyaka nombala ukuba i-AI iphosisile, uze ubhale ixabiso lakho ngosuku nendawo yakho."
+   ],
+   "nso": [
+    "Lekola koloi o ngwale tefo ya gago ya letšatši",
+    "Lokiša mohuta, modele, ngwaga le mmala ge AI e fošitše, ke moka o ngwale tefo ya gago ka letšatši le lefelo la gago."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_06_terms",
+   "pass": true,
+   "en": [
+    "Write your hire terms",
+    "Deposit, shortest hire, free km a day, who may drive, and anything else. They show on your advert."
+   ],
+   "af": [
+    "Skryf jou huurvoorwaardes",
+    "Deposito, kortste huur, gratis km per dag, wie mag bestuur, en enigiets anders. Dit wys op jou advertensie."
+   ],
+   "zu": [
+    "Bhala imigomo yakho yokuqasha",
+    "Idiphozi, isikhathi esifushane sokuqasha, ama-km amahhala ngosuku, ongashayela, nokunye. Kuvela esikhangisweni sakho."
+   ],
+   "xh": [
+    "Bhala imiqathango yakho yokuqesha",
+    "Idiphozithi, elona xesha lifutshane lokuqesha, ii-km zasimahla ngosuku, onokuqhuba, nokunye. Ziyabonakala kwintengiso yakho."
+   ],
+   "nso": [
+    "Ngwala melawana ya gago ya go hiriša",
+    "Tipositi, nako ye kopana ya go hira, dikhilomithara tša mahala ka letšatši, yo a ka otlelago, le tše dingwe. Di bonagala papatšong ya gago."
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_07_perf",
+   "pass": true,
+   "en": [
+    "Gearbox and fuel",
+    "Pick manual or automatic and the fuel. Then tap the features the car has."
+   ],
+   "af": [
+    "Ratkas en brandstof",
+    "Kies handrat of outomaties en die brandstof. Tik dan die kenmerke wat die motor het."
+   ],
+   "zu": [
+    "Igiya nophethiloli",
+    "Khetha i-manual noma i-automatic nophethiloli. Bese uthepha izici imoto enazo."
+   ],
+   "xh": [
+    "Igiya nepetroli",
+    "Khetha i-manual okanye i-automatic nepetroli. Emva koko cofa iimpawu imoto enazo."
+   ],
+   "nso": [
+    "Giya le makhura",
+    "Kgetha manual goba automatic le makhura. Ke moka o kgotle dikarolo tšeo koloi e nago le tšona."
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_09_review",
+   "pass": true,
+   "en": [
+    "Tap [[Publish now — I accept the Terms]]",
+    "Your score shows first. Publishing on the free plan costs nothing."
+   ],
+   "af": [
+    "Tik [[Publish now — I accept the Terms]]",
+    "Jou telling wys eers. Publiseer op die gratis plan kos niks."
+   ],
+   "zu": [
+    "Thepha [[Publish now — I accept the Terms]]",
+    "Amaphuzu akho avela kuqala. Ukushicilela ohlelweni lwamahhala akukhokhelwa lutho."
+   ],
+   "xh": [
+    "Cofa [[Publish now — I accept the Terms]]",
+    "Amanqaku akho avela kuqala. Ukupapasha kwisicwangciso sasimahla akuhlawulelwa nto."
+   ],
+   "nso": [
+    "Kgotla [[Publish now — I accept the Terms]]",
+    "Dintlha tša gago di tšwelela pele. Go phatlalatša ka leano la mahala ga go lefelwe selo."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_11_pub1",
+   "pass": true,
+   "en": [
+    "Confirm the car's details",
+    "[[You entered]] marks what you typed, [[AI draft]] what the AI read from the photo. Check both against your papers, tap [[Confirm ✓]] on each section and tick the box."
+   ],
+   "af": [
+    "Bevestig die motor se besonderhede",
+    "[[You entered]] wys wat jy getik het, [[AI draft]] wat die KI van die foto gelees het. Vergelyk albei met jou papiere, tik [[Confirm ✓]] by elke afdeling en merk die blokkie."
+   ],
+   "zu": [
+    "Qinisekisa imininingwane yemoto",
+    "[[You entered]] ikhombisa okubhalile, [[AI draft]] okufundwe yi-AI esithombeni. Qhathanisa kokubili namaphepha akho, thepha [[Confirm ✓]] esigabeni ngasinye bese umaka ibhokisi."
+   ],
+   "xh": [
+    "Qinisekisa iinkcukacha zemoto",
+    "[[You entered]] ibonisa oko ukubhalileyo, [[AI draft]] oko i-AI ikufunde kwifoto. Thelekisa zombini namaphepha akho, cofa [[Confirm ✓]] kwicandelo ngalinye uze uphawule ibhokisi."
+   ],
+   "nso": [
+    "Netefatša dintlha tša koloi",
+    "[[You entered]] e bontšha seo o se ngwadilego, [[AI draft]] seo AI e se badilego seswantšhong. Bapetša ka bobedi le dipampiri tša gago, kgotla [[Confirm ✓]] karolong ye nngwe le ye nngwe o swaye lepokisi."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_12_live",
+   "pass": true,
+   "en": [
+    "Tap [[Go live]]",
+    "Your car is live for hire. Hirers can ask for an introduction straight away."
+   ],
+   "af": [
+    "Tik [[Go live]]",
+    "Jou motor is regstreeks te huur. Huurders kan dadelik vir 'n voorstelling vra."
+   ],
+   "zu": [
+    "Thepha [[Go live]]",
+    "Imoto yakho isibukhoma ukuze iqashwe. Abaqashi bangacela ukwethulwa ngokushesha."
+   ],
+   "xh": [
+    "Cofa [[Go live]]",
+    "Imoto yakho iphilayo ukuze iqeshwe. Abaqeshi banokucela ukwaziswa ngoko nangoko."
+   ],
+   "nso": [
+    "Kgotla [[Go live]]",
+    "Koloi ya gago e phela go hirišwa. Bahiri ba ka kgopela go tsebišwa gona bjale."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f9_20_browse",
+   "pass": true,
+   "en": [
+    "A hirer browses [[Cars]] in her city",
+    "She opens Browse and taps Cars."
+   ],
+   "af": [
+    "'n Huurder blaai deur [[Cars]] in haar stad",
+    "Sy maak Browse oop en tik Cars."
+   ],
+   "zu": [
+    "Umqashi ubheka ku-[[Cars]] edolobheni lakhe",
+    "Uvula i-Browse bese ethepha u-Cars."
+   ],
+   "xh": [
+    "Umqeshi ukhangela kwi-[[Cars]] kwisixeko sakhe",
+    "Uvula i-Browse aze acofe u-Cars."
+   ],
+   "nso": [
+    "Mohiri o lebelela [[Cars]] toropong ya gagwe",
+    "O bula Browse gomme a kgotla Cars."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f9_21_card",
+   "pass": true,
+   "en": [
+    "Your car shows its rate per day",
+    "The card reads R450 per day, so she knows it is a hire."
+   ],
+   "af": [
+    "Jou motor wys sy tarief per dag",
+    "Die kaart sê R450 per day, so sy weet dit is te huur."
+   ],
+   "zu": [
+    "Imoto yakho ibonisa inani layo ngosuku",
+    "Ikhadi lithi R450 per day, ngakho uyazi ukuthi iyaqashwa."
+   ],
+   "xh": [
+    "Imoto yakho ibonisa ixabiso layo ngosuku",
+    "Ikhadi lithi R450 per day, ngoko uyazi ukuba iyaqeshwa."
+   ],
+   "nso": [
+    "Koloi ya gago e bontšha tefo ya yona ka letšatši",
+    "Karata e re R450 per day, ka gona o a tseba gore e a hirišwa."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f9_22_detail",
+   "pass": true,
+   "en": [
+    "She sees [[For hire · hire rate]]",
+    "Above the price the advert says it is for hire. Mileage, gearbox and fuel follow."
+   ],
+   "af": [
+    "Sy sien [[For hire · hire rate]]",
+    "Bo die prys sê die advertensie dit is te huur. Kilometers, ratkas en brandstof volg."
+   ],
+   "zu": [
+    "Ubona [[For hire · hire rate]]",
+    "Ngaphezu kwentengo isikhangiso sithi iyaqashwa. Amakhilomitha, igiya nophethiloli kuyalandela."
+   ],
+   "xh": [
+    "Ubona [[For hire · hire rate]]",
+    "Ngaphezu kwexabiso intengiso ithi iyaqeshwa. Iikhilomitha, igiya nepetroli ziyalandela."
+   ],
+   "nso": [
+    "O bona [[For hire · hire rate]]",
+    "Ka godimo ga theko papatšo e re e a hirišwa. Dikhilomithara, giya le makhura di a latela."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f9_23_terms",
+   "pass": true,
+   "en": [
+    "She reads your hire terms",
+    "Deposit, shortest hire, free km and who may drive, before she asks."
+   ],
+   "af": [
+    "Sy lees jou huurvoorwaardes",
+    "Deposito, kortste huur, gratis km en wie mag bestuur, voordat sy vra."
+   ],
+   "zu": [
+    "Ufunda imigomo yakho yokuqasha",
+    "Idiphozi, isikhathi esifushane, ama-km amahhala nongashayela, ngaphambi kokuba acele."
+   ],
+   "xh": [
+    "Ufunda imiqathango yakho yokuqesha",
+    "Idiphozithi, elona xesha lifutshane, ii-km zasimahla nonokuqhuba, phambi kokuba acele."
+   ],
+   "nso": [
+    "O bala melawana ya gago ya go hiriša",
+    "Tipositi, nako ye kopana, dikhilomithara tša mahala le yo a ka otlelago, pele a kgopela."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f9_25_ask_sheet",
+   "pass": true,
+   "en": [
+    "She asks for an introduction",
+    "She taps [[Join queue]], writes her dates and sends. 1T is held from her and only spent if you accept."
+   ],
+   "af": [
+    "Sy vra vir 'n voorstelling",
+    "Sy tik [[Join queue]], skryf haar datums en stuur. 1T word van haar teruggehou en net gebruik as jy aanvaar."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Uthepha [[Join queue]], abhale izinsuku zakhe bese ethumela. U-1T uyabanjwa kuye futhi usetshenziswa kuphela uma wamukela."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ucofa [[Join queue]], abhale imihla yakhe aze athumele. I-1T iyabanjwa kuye kwaye isetyenziswa kuphela ukuba uyamkela."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O kgotla [[Join queue]], a ngwala matšatši a gagwe gomme a romela. 1T e swarwa go yena gomme e šomišwa feela ge o amogela."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f9_25b_buyer_terms",
+   "pass": true,
+   "en": [
+    "The first time, she accepts the terms once",
+    "Before her first request she reads the TrustSquare terms and taps [[I accept the Terms]]."
+   ],
+   "af": [
+    "Die eerste keer aanvaar sy die voorwaardes een keer",
+    "Voor haar eerste versoek lees sy die TrustSquare-voorwaardes en tik [[I accept the Terms]]."
+   ],
+   "zu": [
+    "Okokuqala, wamukela imigomo kanye",
+    "Ngaphambi kwesicelo sakhe sokuqala ufunda imigomo ye-TrustSquare bese ethepha [[I accept the Terms]]."
+   ],
+   "xh": [
+    "Okokuqala, wamkela imigaqo kube kanye",
+    "Phambi kwesicelo sakhe sokuqala ufunda imigaqo ye-TrustSquare aze acofe [[I accept the Terms]]."
+   ],
+   "nso": [
+    "La mathomo, o amogela melawana gatee",
+    "Pele ga kgopelo ya gagwe ya mathomo o bala melawana ya TrustSquare gomme a kgotla [[I accept the Terms]]."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_30_request",
+   "pass": true,
+   "en": [
+    "You see her request and her dates",
+    "Your Seller Hub shows [[1 request waiting]] with her first name and message."
+   ],
+   "af": [
+    "Jy sien haar versoek en haar datums",
+    "Jou Seller Hub wys [[1 request waiting]] met haar voornaam en boodskap."
+   ],
+   "zu": [
+    "Ubona isicelo sakhe nezinsuku zakhe",
+    "I-Seller Hub yakho ibonisa [[1 request waiting]] negama lakhe lokuqala nomlayezo."
+   ],
+   "xh": [
+    "Ubona isicelo sakhe nemihla yakhe",
+    "I-Seller Hub yakho ibonisa [[1 request waiting]] negama lakhe lokuqala nomyalezo."
+   ],
+   "nso": [
+    "O bona kgopelo ya gagwe le matšatši a gagwe",
+    "Seller Hub ya gago e bontšha [[1 request waiting]] le leina la gagwe la pele le molaetša."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f9_31_accepted",
+   "pass": true,
+   "en": [
+    "Tap [[Accept]]",
+    "You pay nothing: her 1T is spent now. You both get an email; reply to it to agree the hire. Your email address stays private."
+   ],
+   "af": [
+    "Tik [[Accept]]",
+    "Jy betaal niks: haar 1T word nou gebruik. Julle kry albei 'n e-pos; antwoord dit om die huur te reël. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Thepha [[Accept]]",
+    "Awukhokhi lutho: u-1T wakhe usetshenziswa manje. Nobabili nithola i-imeyili; yiphendule ukuze nivumelane ngokuqasha. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Cofa [[Accept]]",
+    "Awuhlawuli nto: i-1T yakhe isetyenziswa ngoku. Nobabini nifumana i-imeyile; yiphendule ukuze nivumelane ngokuqesha. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "Kgotla [[Accept]]",
+    "Ga o lefe selo: 1T ya gagwe e šomišwa bjale. Ka bobedi le hwetša imeile; e arabe gore le kwane ka go hira. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f9_32_buyer_intros",
+   "pass": true,
+   "en": [
+    "She sees it accepted",
+    "In My Space, under Intros, her request shows [[Accepted]]. After the hire she can tap [[I hired them]], which adds to your Trust Score."
+   ],
+   "af": [
+    "Sy sien dit is aanvaar",
+    "In My Space, onder Intros, wys haar versoek [[Accepted]]. Ná die huur kan sy [[I hired them]] tik, wat by jou Trust Score tel."
+   ],
+   "zu": [
+    "Ubona ukuthi samukelwe",
+    "Ku-My Space, ngaphansi kwe-Intros, isicelo sakhe sibonisa [[Accepted]]. Ngemva kokuqasha angathepha [[I hired them]], okwengeza ku-Trust Score yakho."
+   ],
+   "xh": [
+    "Ubona ukuba samkelwe",
+    "Kwi-My Space, phantsi kwe-Intros, isicelo sakhe sibonisa [[Accepted]]. Emva kokuqesha angacofa [[I hired them]], nto leyo eyongeza kwi-Trust Score yakho."
+   ],
+   "nso": [
+    "O bona gore e amogetšwe",
+    "Go My Space, ka fase ga Intros, kgopelo ya gagwe e bontšha [[Accepted]]. Ka morago ga go hira a ka kgotla [[I hired them]], se se oketšago Trust Score ya gago."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}

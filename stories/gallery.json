@@ -68,6 +68,28 @@
    "cover": "f8_01_door"
   },
   {
+   "type": "cars_for_hire",
+   "status": "draft",
+   "flow": "F9",
+   "label": {
+    "en": "Car for hire",
+    "af": "Motor te huur",
+    "zu": "Imoto eqashwayo",
+    "xh": "Imoto eqeshwayo",
+    "nso": "Koloi ye e hirišwago"
+   },
+   "title": {
+    "en": "Hiring out a car: from Sell to your first hirer",
+    "af": "Verhuur 'n motor: van Sell tot jou eerste huurder",
+    "zu": "Ukuqashisa imoto: kusukela ku-Sell kuya kumqashi wakho wokuqala",
+    "xh": "Ukuqeshisa imoto: ukusuka kwi-Sell ukuya kumqeshi wakho wokuqala",
+    "nso": "Go hiriša koloi: go tloga go Sell go ya go mohiri wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 19,
+   "cover": "f9_01_sell"
+  },
+  {
    "type": "electrician",
    "status": "draft",
    "flow": "F4",
