@@ -33254,5 +33254,26 @@ def rg_intro_once_1():
     return [(INFO, "one waiting request per buyer per advert")]
 
 
+@entry("RG-0605", "INTRO-MSG-1: the F12 story walk (a guest house) -- the seller reads the buyer's message before she answers: "
+       "My Space's Intros list and Open actions show it under the request (it reached the server and her email, never the screen)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js msIntroMsg() in msRenderIntroList (received) and msRenderOpenActions; .ms-intro-item wraps.",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Riana asked 'Is breakfast served on Sunday too?'; Elsabe's "
+           "Intros tab showed 'Riana - Guest house' with Accept and Decline and nothing else.")
+def rg_intro_msg_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "function msIntroMsg(i, dir){" not in js:
+        bad.append("msIntroMsg is gone")
+    if "+chip+hired+withdraw+answer+msIntroMsg(i, dir)+" not in js:
+        bad.append("the Intros list no longer shows the buyer's message")
+    if "+'</div>'+msIntroMsg(i, 'received')+'</div>';" not in js:
+        bad.append("Open actions no longer shows the buyer's message")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the seller sees the buyer's message before Accept / Decline")]
+
 if __name__ == "__main__":
     sys.exit(main())

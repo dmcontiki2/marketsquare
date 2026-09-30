@@ -18588,8 +18588,19 @@ function msRenderIntroList(elId, items, dir){
       +'<div class="ms-intro-avatar '+colour+'">'+_lmEsc(initials)+'</div>'
       +'<div style="flex:1;min-width:0;"><div class="ms-intro-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_lmEsc(ident)+'</div>'
       +'<div class="ms-intro-meta">'+meta+'</div></div>'
-      +chip+hired+withdraw+answer+'</div>';
+      +chip+hired+withdraw+answer+msIntroMsg(i, dir)+'</div>';
   }).join('');
+}
+
+/* INTRO-MSG-1 (30 Sep 2026, F12 walk): the buyer's message ('Is breakfast served on Sunday too?') reached the server and
+   the seller's email, but the Intros list never showed it -- she chose Accept or Decline without reading what was asked. */
+(function(){ try{ var s=document.createElement('style'); s.textContent='.ms-intro-item{flex-wrap:wrap}'; document.head.appendChild(s); }catch(e){} })();
+function msIntroMsg(i, dir){
+  var m = String((i && i.message) || '').trim();
+  if(!m || dir === 'sent') return '';
+  /* its own full-width line under the row (the row wraps): beside Accept and Decline it was squeezed to one word a line */
+  return '<div class="ms-intro-msg" style="flex:0 0 100%;order:9;box-sizing:border-box;padding-left:46px;font-size:13px;'
+    + 'line-height:1.4;margin-top:6px;color:inherit;opacity:.85;white-space:normal;overflow-wrap:anywhere;">\u201c' + _lmEsc(m.length > 280 ? m.slice(0, 277) + '\u2026' : m) + '\u201d</div>';
 }
 
 async function msIntroWithdraw(introId, btn){
@@ -18639,7 +18650,7 @@ function msRenderOpenActions(items){
       +'<div class="ms-action-btns">'
       +'<button class="ms-btn-sm" onclick="msIntroAction('+parseInt(i.id,10)+',0,this)">Decline</button>'
       +'<button class="ms-btn-sm primary" onclick="msIntroAction('+parseInt(i.id,10)+',1,this)">Accept</button>'
-      +'</div></div>';
+      +'</div>'+msIntroMsg(i, 'received')+'</div>';
   }).join('');
 }
 
