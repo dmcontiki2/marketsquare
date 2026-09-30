@@ -32891,6 +32891,31 @@ def rg_qa_cloud_1():
     return [(INFO, "QA routes key-guarded and QA-only; cloud [ship] branches gated and shipped by the server")]
 
 
+@entry("RG-0600", "EBAY-DROP-1: eBay is no longer a price source (it rejected the developer registration; David 30 Sep: "
+       "'Lets drop eBay') -- the 1T fair-price check on Local Market and Collectors still shows, served by catalogues or by "
+       "named-shop asking prices (web_comps)", LOCKED, fixed_on="2026-09-30",
+       scope="ai_service_tiers.py DEFAULT_PROVIDERS + fair_price rows; feature_flags.py FREE_PROVIDERS; feature_flags.json.",
+       ref="Numbered RG-0600 to stay clear of the numbers the parallel cloud walks take on 30 Sep. A tier shows only if one of its "
+           "providers is live, and Local Market's only provider was ebay_browse -- switching eBay off without web_comps would have "
+           "hidden the check.")
+def rg_ebay_drop_1():
+    t = repo_file("ai_service_tiers.py"); f = repo_file("feature_flags.py"); j = repo_file("feature_flags.json")
+    if None in (t, f, j):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '"ebay_browse":     False' not in t or '"web_comps":       True' not in t:
+        bad.append("eBay is back on, or web_comps is off, in DEFAULT_PROVIDERS")
+    if '["web_comps"]),' not in t:
+        bad.append("Local Market's fair-price row no longer names web_comps -- the check would disappear")
+    if '"ebay_browse",' in f or '"web_comps",' not in f:
+        bad.append("feature_flags.py still treats eBay as a free provider, or lost web_comps")
+    if '"ebay_browse": true' in j:
+        bad.append("feature_flags.json switches eBay on")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "eBay dropped; Local Market and Collectors fair price served by catalogues or named-shop asking prices")]
+
+
 @entry("RG-0554", "SMS-DAILY-CAP-1: the server can never send more than SMS_DAILY_CAP text messages a day (default 40), counted "
        "across every worker under a file lock, and it sends nothing when it cannot count -- so a prepaid SMS balance cannot run away",
        OPEN, fixed_on="2026-09-30",

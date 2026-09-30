@@ -13,7 +13,7 @@
     "us_assessor": true,
     "payprop_tpn": true,
     "internal_comps": true,
-    "ebay_browse": true,
+    "web_comps": true,
 
     "pricecharting": false,
     "pcgs": false,

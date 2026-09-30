@@ -101,7 +101,8 @@ DEFAULT_PROVIDERS: dict[str, bool] = {
     "us_assessor":     True,   # US county assessor / FHFA, public
     "payprop_tpn":     True,   # ZA aggregate rent/price benchmarks (free reports)
     "internal_comps":  True,   # our own marketplace comps (still needs sample!)
-    "ebay_browse":     True,   # eBay Browse asking-price band - official free tier (S130)
+    "ebay_browse":     False,  # EBAY-DROP-1 (30 Sep 2026): eBay rejected the developer registration; David: "Lets drop eBay".
+    "web_comps":       True,   # FAIR-PRICE-WEB-1: asking prices read on named shop pages (median of >=3)
 
     # --- paid / contract (OFF until revenue + B7 + contract) ---
     "pricecharting":   False,  # collectibles multi-category (flat sub)
@@ -145,15 +146,15 @@ TIER_MATRIX: dict = {
     "fair_price": {
         # ---- FAIR-PRICE-LM-1 (RIPPLE-2, David 27 Sep 2026: "they are 1T") ----
         # Collectors listings route by title to the right catalogue feed (coins -> Numista, TCG -> JustTCG,
-        # LEGO -> BrickLink) with the eBay asking band as the fallback; Local Market uses the eBay asking band.
+        # LEGO -> BrickLink) with named-shop asking prices (web_comps) as the fallback; Local Market uses web_comps. (eBay dropped, EBAY-DROP-1)
         # 1T, charged ONLY when a real figure comes back (cannot_verify is free).
         "collectors": {"*": [
             _t(VERIFIED, "Verified price", "Catalogue or live market price for this item.",
-               ["numista", "justtcg_free", "bricklink", "ebay_browse"]),
+               ["numista", "justtcg_free", "bricklink", "web_comps"]),
         ]},
         "local_market": {"*": [
             _t(VERIFIED, "Market check", "What comparable items are listed for right now.",
-               ["ebay_browse"]),
+               ["web_comps"]),
         ]},
         # ---- collectibles ----
         "cards": {"*": [
