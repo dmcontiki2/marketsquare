@@ -22413,7 +22413,7 @@ function _asProfileHtml(p,tpl){
       ? '<div style="font-size:12.5px;line-height:1.5;">'+_agency.name+
         (_agency.verified?' <span style="font-size:10px;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:2px 7px;font-weight:700;">✓ verified agency</span>':'')+
         '<div style="color:var(--text-3);margin-top:3px;">'+(_agency.listing_cap||10)+' listing slots on your seat. Your FFC and PPRA stay personal to you — every practising agent holds their own.</div></div>'
-      : '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">Not linked to an agency yet. Agencies are set up by us after verification — ask your principal to email <b>hello@trustsquare.co</b> and we will add the firm and invite each agent. Until then you are listed as an independent agent.</div>')+
+      : '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">Not linked to an agency yet. Agencies are set up by us after verification — ask your principal to email <b>support@trustsquare.co</b> and we will add the firm and invite each agent. Until then you are listed as an independent agent.</div>')+
     '</div>';
   h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
     '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Your certificates</div>'+

@@ -24,6 +24,28 @@
    "cover": "f12_01_sell"
   },
   {
+   "type": "adventures_guided_walk",
+   "status": "draft",
+   "flow": "F13",
+   "label": {
+    "en": "Guided walk",
+    "af": "Begeleide staptog",
+    "zu": "Uhambo oluholwayo",
+    "xh": "Uhambo olukhokelwayo",
+    "nso": "Leeto le le hlahlwago"
+   },
+   "title": {
+    "en": "Guided walk: from listing to the guests who book you",
+    "af": "Begeleide staptog: van advertensie tot die gaste wat jou bespreek",
+    "zu": "Uhambo oluholwayo: kusukela esikhangisweni kuya ezivakashini ezikubhukhayo",
+    "xh": "Uhambo olukhokelwayo: ukusuka kwintengiso ukuya kwiindwendwe ezikubhukishayo",
+    "nso": "Leeto le le hlahlwago: go tloga papatšong go ya go baeng bao ba go beeletšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 19,
+   "cover": "f13_01_sell"
+  },
+  {
    "type": "cars_bakkie",
    "status": "draft",
    "flow": "F8",

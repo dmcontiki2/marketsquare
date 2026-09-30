@@ -33521,6 +33521,8 @@ def rg_agency_apply_1():
     body = js[i:i + 3000] if i >= 0 else ""
     if "mailto:support@trustsquare.co" not in body or "Apply by email" not in body:
         return [(FAIL, "the agency console's no-agency screen names no way to apply again")]
+    if "ask your principal to email <b>support@trustsquare.co</b>" not in js:
+        return [(FAIL, "the Agent Hub sends agencies to a different address than the console does")]
     return [(INFO, "an organisation without an agency is shown how to apply")]
 
 @entry("RG-0575", "ITEM-HINT-1: the F10 story walk (collectors) -- Quick's 'What exactly is it?' box on a Collectors advert gives a "
