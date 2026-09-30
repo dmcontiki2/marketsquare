@@ -5432,6 +5432,41 @@
    "Ke eng hantle? mohl. Krugerrand ya 1974, kgauta ya 1 oz",
    "Yintoni kanye kanye? umz. iKrugerrand ka-1974, igolide eli-1 oz",
    "Ke eng tlwa? mohl. Krugerrand ya 1974, gauta ya 1 oz"
+  ],
+  "a month": [
+   "per maand",
+   "ngenyanga",
+   "ka kgwedi",
+   "ngenyanga",
+   "ka kgwedi"
+  ],
+  "What is your asking price?": [
+   "Wat is jou vraprys?",
+   "Ufuna malini ngayo?",
+   "",
+   "Ufuna malini ngayo?",
+   "O e rekiša ka bokae?"
+  ],
+  "What is the rent a month?": [
+   "Wat is die huur per maand?",
+   "Irenti ingakanani ngenyanga?",
+   "",
+   "Irente ingakanani ngenyanga?",
+   "Rente ke bokae ka kgwedi?"
+  ],
+  "Your price, your call. It shows on your listing.": [
+   "Jou prys, jou besluit. Dit wys op jou advertensie.",
+   "Intengo yakho, isinqumo sakho. Ivela esikhangisweni sakho.",
+   "",
+   "Ixabiso lakho, isigqibo sakho. Liyabonakala kwintengiso yakho.",
+   "Theko ya gago, kgetho ya gago. E bonala papatšong ya gago."
+  ],
+  "Your rent, your call. It shows on your listing.": [
+   "Jou huur, jou besluit. Dit wys op jou advertensie.",
+   "Irenti yakho, isinqumo sakho. Ivela esikhangisweni sakho.",
+   "",
+   "Irente yakho, isigqibo sakho. Iyabonakala kwintengiso yakho.",
+   "Rente ya gago, kgetho ya gago. E bonala papatšong ya gago."
   ]
  },
  "p": [
