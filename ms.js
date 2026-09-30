@@ -382,6 +382,14 @@ async function _introAnswerPut(introId, accept){
    (the FIRST amount of the price, with k/m) -- or, when a row carries none, the same reading of the price text (the
    port of bea_main._price_number). Gluing every digit together read 'R1 000–R5 000' as 10 005 000 and
    'R350 / call-out + R300 / hour' as 350 300. */
+function _msDescLine(desc, labels){   // ADV-ENV-1: 'Label: value' or '**Label:** value' at the start of a line
+  for (var i = 0; i < labels.length; i++){
+    var m = String(desc||'').match(new RegExp('^\\*{0,2}' + labels[i] + ':\\*{0,2}[ \\t]*([^\\n]+)', 'mi'));
+    if (m && m[1].trim()) return m[1].trim();
+  }
+  return '';
+}
+function _advEnvKey(v){ return String(v||'').toLowerCase().replace(/\s*&\s*/g,'_').replace(/\s+/g,'_'); }   // 'Farm & Rural' -> farm_rural
 function _msPriceNum(l){
   if (l && typeof l.price_num === 'number' && l.price_num > 0) return l.price_num;
   const m = String((l && l.price) || '').match(/(\d{1,3}(?:[ ,\u00a0\u202f'](?=\d{3}(?!\d))\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)\s*(k|m|mil|mill?ion|bn|billion)?(?![a-z])/i);
@@ -481,6 +489,12 @@ function _msMapBeaListing(l){
           showcase: l.showcase || 0,   // SHOWCASE-BANNER-1 (11 Aug 2026): banner without the pin
           suburb_lat: l.suburb_lat || null,
           suburb_lng: l.suburb_lng || null,
+          /* ADV-ENV-1 (30 Sep 2026 F12 walk): the Sell flow writes 'Environment: ...' and the Edit form
+             '**Environment:** ...' into the description -- there is no column. Without this no live stay or
+             experience ever carried environment_type, so every Environment filter showed 'No Adventures yet'. */
+          environment_type: l.environment_type || _msDescLine(desc, ['Environment']) || null,
+          accommodation_type: String(l.category||'').toLowerCase().indexOf('accommodation') > -1
+            ? (l.accommodation_type || _msDescLine(desc, ['Accommodation type']) || l.prop_type || _msDescLine(desc, ['Type']) || null) : (l.accommodation_type || null),
           propType, beds, baths, garages, listingType, furnished, pets, features,
           floor_area:   l.floor_area   || null,
           erf_size:     l.erf_size     || null,
@@ -3815,7 +3829,7 @@ const ADV_PINS = {
 
 // Label lookup for cards
 function advCatLabel(l){
-  const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
+  const isAccom = ((l.advType||'')+' '+(l.cat||'')).toLowerCase().includes('accommodation');   // ADV-ENV-1: live rows carry it in advType
   const cats = isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS;
   const match = cats.find(c=>c.key===(l.experience_type||l.accommodation_type||''));
   return match ? match.icon+' '+match.name : (isAccom ? ADV_SUBCAT_LABELS.adventures_accommodation : ADV_SUBCAT_LABELS.adventures_experiences);
@@ -4037,8 +4051,8 @@ function renderAdvGrid(){
 
     // Category filter (experience_type or accommodation_type)
     if(advCat !== 'all'){
-      const isAccom = cat.includes('accommodation');
-      const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+      const isAccom = _sub.includes('accommodation');   // ADV-ENV-1: a live row's sub-type is in advType
+      const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
       if(!typeVal || typeVal !== advCat) return false;
     }
 
@@ -5850,11 +5864,12 @@ function openDetail(id){
   // Adventures category display label + price formatting
   const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences'||l.cat==='Adventures';
   const isCars = l.cat==='Cars';   // CARS-SPEC-1: cars share the gallery thumb strip
-  const catDisplayLabel = l.cat==='adventures_accommodation' ? ADV_SUBCAT_LABELS.adventures_accommodation
-    : l.cat==='adventures_experiences' ? ADV_SUBCAT_LABELS.adventures_experiences
+  const _advSub = (l.advType && l.advType.indexOf('adventures_')===0) ? l.advType : l.cat;   // ADV-ENV-1
+  const catDisplayLabel = _advSub==='adventures_accommodation' ? ADV_SUBCAT_LABELS.adventures_accommodation
+    : _advSub==='adventures_experiences' ? ADV_SUBCAT_LABELS.adventures_experiences
     : l.cat;
   const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
-  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
+  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[_advEnvKey(l.environment_type)]||'') : '';
   // JNR-FIX-3 (22 Jul 2026, David Jnr feedback): never RNaN on the detail page.
   // Same treatment as the card's ADV-FIX-1 — numeric parse with fallback to the seller's own string.
   const _isAccomDetail = ((l.advType||l.cat||'')+'').toLowerCase().includes('accommodation');
@@ -5954,7 +5969,7 @@ function openDetail(id){
           var expLabel = l.experience_type ? (ADV_EXP_TYPE_LABELS[l.experience_type] || l.experience_type.replace(/_/g,' ')) : '';
           var accLabel = l.accommodation_type ? (ADV_ACC_TYPE_LABELS[l.accommodation_type] || l.accommodation_type.replace(/_/g,' ')) : '';
           var typeLabel = expLabel || accLabel;
-          var envKey = (l.environment_type||'').toLowerCase().replace(/\s+/g,'_');
+          var envKey = _advEnvKey(l.environment_type);   // ADV-ENV-1: 'Farm & Rural' -> farm_rural
           var envL = ADV_ENV_LABELS[envKey] || ADV_ENV_LABELS[(l.environment_type||'').toLowerCase()] || '';
           var countryCode = (l.country||'ZA').toUpperCase();
           var flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
@@ -20213,7 +20228,8 @@ Adventures: { label:'Adventures',
      {key:'A',title:'Experience Details',pts:20,coach:'<b>Duration and group size</b> are the first two filters buyers apply.',rows:[
       ['atype','Activity','text','e.g. Guided Magaliesberg day hike'],['dur','Duration','text','e.g. Full day, 6–8 hrs'],
       ['gmin','Min group','number','e.g. 2'],['gmax','Max group','number','e.g. 12'],
-      ['area','General area','text','e.g. Magaliesberg — exact meeting point stays private']]},
+      ['area','General area','text','e.g. Magaliesberg — exact meeting point stays private'],
+      ['env','Environment','select','Bush & Wildlife|Mountain & Highlands|Coastal & Beach|Garden & Winelands|Wetlands & Lakes|Desert & Karoo|Forest & Fynbos|Urban & Township|Farm & Rural']]},   // ADV-ENV-1: buyers filter Adventures by environment
      {key:'B',title:'Included & Level',pts:20,coach:'<b>Included vs excluded is the #1 buyer question.</b> Be explicit and disputes disappear.',rows:[
       ['incl',"What's included",'text','e.g. Guide, permits, lunch'],['excl','Not included','text','e.g. Transport to start point'],
       ['fit','Fitness level','select','Easy|Moderate|Challenging'],
@@ -20228,7 +20244,7 @@ Adventures: { label:'Adventures',
            ['common','Common area / deck','Where guests live','🔥'],['view','The view','What they wake up to','🌄']],
     sections:[
      {key:'A',title:'Property Details',pts:20,coach:'<b>Sleeps-count and type</b> drive every search. TGCSA grading earns Trust Score bonuses when verified.',rows:[
-      ['ptype','Type','select','Guest house|B&B|Bush camp|Self-catering|Boutique hotel|Cottage'],
+      ['ptype','Type','select','Guest house|B&B|Bush camp|Chalet|Hostel|Self-catering|Camp site|Mountain hut|Boutique hotel|Cottage'],
       ['units','Rooms / units','number','e.g. 5'],['sleeps','Sleeps (total)','number','e.g. 12'],
       ['grading','TGCSA grading','select','None|1-star|2-star|3-star|4-star|5-star']]},
      {key:'B',title:'Amenities & Rules',pts:20,coach:'<b>Pets and kids policies</b> — answer once here instead of in every enquiry.',rows:[
@@ -20237,6 +20253,7 @@ Adventures: { label:'Adventures',
       ['notes','What makes a stay special','textarea','The fire at night, the birdlife, the silence…']]},
      {key:'C',title:'Location & Access',pts:10,coach:'<b>Access honesty prevents 1-star reviews.</b> If it needs a bakkie, say so.',rows:[
       ['area','General area','text','e.g. Waterberg, 2h from Pretoria'],
+      ['env','Environment','select','Bush & Wildlife|Mountain & Highlands|Coastal & Beach|Garden & Winelands|Wetlands & Lakes|Desert & Karoo|Forest & Fynbos|Urban & Township|Farm & Rural'],   // ADV-ENV-1
       ['access','Road access','select','Sedan friendly|High clearance|4x4 only'],
       ['dist','Distance to landmark','text','e.g. 20 min from park gate']]}],
     feats:['Pool','Braai','WiFi','Off-grid solar','Game drives','Fireplace','Hot tub','Pet-friendly','Fenced for kids']}}},

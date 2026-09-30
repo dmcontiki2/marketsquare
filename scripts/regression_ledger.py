@@ -33183,6 +33183,32 @@ def rg_edit_ai_strip_1():
         return [(FAIL, "Edit's 'AI tools' label is squeezed beside the buttons again")]
     return [(INFO, "the AI tools label has its own line")]
 
+@entry("RG-0560", "ADV-ENV-1: the F12 story walk (a guest house) -- a stay is found by place AND environment: the Sell flow asks "
+       "'Environment' for stays and experiences, the advert keeps it, and the buyer's Environment filter finds it (it found no live "
+       "advert at all); stay cards say 'Stays' (every live stay said 'Experiences'); the stays types include chalet, hostel, camp "
+       "site and mountain hut",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js SF_FLOWS Adventures (env row, ptype options), _msDescLine/_advEnvKey + _msMapBeaListing environment_type / "
+             "accommodation_type, advCatLabel + detail catDisplayLabel read advType, the type-pin filter reads advType "
+             "(the you're-live ID note it also found is ID-LIVE-CARD-1, RG-0571.)",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Riana picked 'Farm & Rural' and got 'No Adventures yet' -- the "
+           "listing mapper never set environment_type and the Sell flow never asked it.")
+def rg_adv_env_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if js.count("['env','Environment','select'") < 2:
+        bad.append("the Sell flow no longer asks a stay's / experience's environment")
+    if "environment_type: l.environment_type || _msDescLine(desc, ['Environment'])" not in js:
+        bad.append("a live advert's environment never reaches the buyer's Environment filter")
+    if "Chalet|Hostel|Self-catering|Camp site|Mountain hut" not in js:
+        bad.append("the stays types lost chalet / hostel / camp site / mountain hut")
+    if "((l.advType||'')+' '+(l.cat||'')).toLowerCase().includes('accommodation')" not in js:
+        bad.append("live stay cards say 'Experiences' again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "stays found by place and environment; stay cards say Stays")]
 
 if __name__ == "__main__":
     sys.exit(main())
