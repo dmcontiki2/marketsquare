@@ -21927,7 +21927,11 @@ function sfSpecS(secKey){
 }
 function sfUpd(scope,id,v){
   if(scope==='__root__') sfState[id]=v; else sfState[scope][id]=v;
-  if(id==='ltype' && (sfState.cat==='Property' || sfState.cat==='Cars')){ sfRender(); return; }  // PRICE-LABEL-1 / CAR-HIRE-1: refresh price label and steps
+  if(id==='ltype' && (sfState.cat==='Property' || sfState.cat==='Cars')){
+    /* CAR-HIRE-1: the photo's price guess is a SALE value -- it must not stay in the box as a rate per day */
+    var _sg=String((sfState.visionDraft&&sfState.visionDraft.suggested_price)||'');
+    if(sfState.cat==='Cars' && /hire/i.test(String(v)) && _sg && String(sfState.price).trim()===_sg) sfState.price='';
+    sfRender(); return; }  // PRICE-LABEL-1 / CAR-HIRE-1: refresh price label and steps
   sfMeterUpdate();      // ONE-SCORE-1: the server's number follows as soon as it answers
   sfDraftSaveSoon();    // SF-DRAFT-KEEP-1
 }

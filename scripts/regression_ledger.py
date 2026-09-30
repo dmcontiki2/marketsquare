@@ -33499,6 +33499,8 @@ def rg_car_hire_1():
         bad.append("a car for hire is shown the sale paperwork (change of ownership) again")
     if "if(to==='agents' && sfIsCarHire()) return 'scorecard';" not in ms:
         bad.append("a car for hire is offered a car sales agent again")
+    if "if(sfState.cat==='Cars' && /hire/i.test(String(v)) && _sg && String(sfState.price).trim()===_sg) sfState.price='';" not in ms:
+        bad.append("the photo's sale-price guess stays in the day-rate box of a car for hire")
     if "'🔑 For hire · hire rate' : 'Price'" not in ms:
         bad.append("the buyer's page no longer says the car is for hire")
     if bad:
