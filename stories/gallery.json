@@ -220,6 +220,28 @@
    "walked_on": "2026-09-30",
    "steps": 25,
    "cover": "f6_01_door"
+  },
+  {
+   "type": "tutors_maths",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Maths tutor",
+    "af": "Wiskunde-tutor",
+    "zu": "Umfundisi wezibalo",
+    "xh": "Umfundisi weMathematika",
+    "nso": "Morutiši wa dipalo"
+   },
+   "title": {
+    "en": "Maths tutor: from listing to the parents who find you",
+    "af": "Wiskunde-tutor: van advertensie tot die ouers wat jou vind",
+    "zu": "Umfundisi wezibalo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umfundisi weMathematika: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Morutiši wa dipalo: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 23,
+   "cover": "f5_01_door"
   }
  ]
 }
