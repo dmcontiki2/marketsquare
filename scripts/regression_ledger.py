@@ -32984,6 +32984,135 @@ def rg_clearance_check_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "police clearance checked by a person; nanny told her real gate in Quick, the Hub and Edit")]
 
+# ── F3/F4/F5 cloud story walks, 30 Sep 2026: kept here, not at the end, so parallel walks appending there do not collide ──
+@entry("RG-0601", "PRICE-PLUS-1: the F3 story walk (plumber) -- a price of two amounts ('R450 / call-out + R350 / hour + parts', "
+       "as Quick writes a trade's call-out + hourly rate) is shown as the seller gave it; it read R450,350 'per hour + parts' "
+       "on the advert",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js _priceIsCompound(); formatZAR returns it whole; _priceBasisSuffix and the mapper's per-line stay empty for it.",
+       ref="F3 walk 30 Sep 2026 (docs/E2E_2026-09-30_F3.md), advert #443: the buyer's detail price box said R450,350.")
+def rg_price_plus_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "function _priceIsCompound(p)" not in js:
+        bad.append("_priceIsCompound is gone")
+    i = js.find("function formatZAR(")
+    if i < 0 or "if (_priceIsCompound(s)) return _lmEsc(s.trim());" not in js[i:i + 2500]:
+        bad.append("formatZAR squeezes a two-amount price into one number again")
+    j = js.find("function _priceBasisSuffix(")
+    if j < 0 or "if(_priceIsCompound(p)) return '';" not in js[j:j + 300]:
+        bad.append("the basis suffix repeats the second half of a two-amount price")
+    if "per: (function(){var p=String(l.price||'');if(_priceIsCompound(p))return '';" not in js:
+        bad.append("the card's per-line repeats the second half of a two-amount price")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a call-out + hourly price shows as the seller gave it")]
+
+
+@entry("RG-0602", "INTRO-TOAST-TRUTH-1: the F3 story walk -- after Accept the seller is told the truth: both of you get an "
+       "email, reply to it to talk, your address stays private (it said the buyer's 'contact revealed', and nothing is shown)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js handleIntro accept toast.",
+       ref="F3 walk 30 Sep 2026: Pieter accepted Marietjie and looked for a number that is not on any screen.")
+def rg_intro_toast_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "'s contact revealed." in js:
+        return [(FAIL, "the accept toast says the buyer's contact is revealed again")]
+    if "both get an email now. Reply to it to talk; your email address stays private." not in js:
+        return [(FAIL, "the accept toast no longer says how the two of you talk")]
+    return [(INFO, "accept says: you both get an email")]
+
+
+@entry("RG-0603", "EDIT-AI-STRIP-1: the F3 story walk -- Edit's 'AI tools' label takes its own line on a phone (it wrapped one "
+       "word per line beside the buttons; seen in F2 too)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.css .el-ai-strip flex-wrap + p flex-basis 100%; marketsquare.html ms.css?v bump.",
+       ref="F2 report 'Not fixed, noted'; F3 walk 30 Sep 2026.")
+def rg_edit_ai_strip_1():
+    css = repo_file("ms.css")
+    if css is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if ".el-ai-strip p{flex:1 1 100%;" not in css or "display:flex;flex-wrap:wrap;align-items:center;gap:10px;}" not in css:
+        return [(FAIL, "Edit's 'AI tools' label is squeezed beside the buttons again")]
+    return [(INFO, "the AI tools label has its own line")]
+
+
+@entry("RG-0604", "INTRO-ONCE-1: the F3 story walk -- one waiting introduction request per buyer per advert; a second tap on "
+       "Join queue queued her twice and held 2T for the same seller",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py create_intro: pending (listing_id, buyer_email) read under _wallet_lock -> 409 before any hold.",
+       ref="F3 walk 30 Sep 2026, advert #443: qa-anneke0930 held 2T in two pending requests to Pieter.")
+def rg_intro_once_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = py.find("def create_intro(")
+    body = py[i:i + 9000] if i >= 0 else ""
+    d = body.find("AND lower(buyer_email) = lower(?) AND status = 'pending'")
+    lock = body.find("_wallet_lock(conn)")
+    hold = body.find("'intro_hold', -1")
+    if d < 0 or "You have already asked this seller." not in body:
+        return [(FAIL, "a buyer can queue twice on the same advert again (and 2T are held)")]
+    if lock < 0 or hold < 0 or not (lock < d < hold):
+        return [(FAIL, "the one-request check no longer runs under the wallet lock, before the hold")]
+    return [(INFO, "one waiting request per buyer per advert")]
+
+
+@entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
+       "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js handleIntro decline toast (auto_paused_intro_id decides the second sentence).",
+       ref="F3 walk 30 Sep 2026: Pieter declined a duplicate request on open-queue advert #443.")
+def rg_decline_toast_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "notified. Listing reactivated." in js:
+        return [(FAIL, "Decline says 'Listing reactivated' for every advert again")]
+    if "any Tuppence held for this request goes back to them." not in js or "(_wasHeld ? ' Your listing is open again.' : '')" not in js:
+        return [(FAIL, "the decline message lost its plain words")]
+    return [(INFO, "decline tells the truth about the listing and the held Tuppence")]
+
+
+@entry("RG-0642", "LICENCE-GATE-1: the F4 story walk (electrician) -- RUL-156 built: a role whose work the law licenses "
+       "(electrician, gas installer, air-con, CCTV, gate, locksmith, drivers, PSIRA roles) is shown to strangers only once "
+       "a person has checked its licence; the Hub card names the licence with an upload button, Edit offers 'Licence to "
+       "practise', and Quick says it above Save",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py _gate_licence_roles / _GATE_LICENCE_SIGNALS in _stranger_hidden_sql; category.services_tech.coc in "
+             "_LEGAL_SIGNALS; /listings/mine gate 'licence' + licence_status. ms.js msHiddenCasualNote licence branch, "
+             "msClearanceUpload(lid,'licence'), EL_CRED_SIGNALS Services. quick.html (= HARNESS) draft line + QI18N from "
+             "roles/quick_i18n.json.",
+       ref="F4 walk 30 Sep 2026 (docs/E2E_2026-09-30_F4.md): an electrician's advert went public with no licence asked; the "
+           "role registry carried gate 'licence' (RUL-156) and nothing read it.")
+def rg_licence_gate_1():
+    py = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if None in (py, js, q):
+        return [(FAIL, "bea_main.py, ms.js or quick.html is missing")]
+    bad = []
+    if '_GATE_LICENCE_SIGNALS = ("category.services_tech.coc",)' not in py or "def _gate_licence_roles():" not in py:
+        bad.append("the licence gate's roles / signal are gone")
+    i = py.find("def _stranger_hidden_sql(")
+    if i < 0 or "st, lic_in, _has(_GATE_LICENCE_SIGNALS)," not in py[i:i + 3500]:
+        bad.append("strangers see a licensed role's advert before its licence is checked again")
+    j = py.find("_LEGAL_SIGNALS = {")
+    if j < 0 or '"category.services_tech.coc",' not in py[j:py.find("}", j)]:
+        bad.append("a licence upload is self-earned again (no person checks it)")
+    if 'd["gate"] = "licence"' not in py:
+        bad.append("/listings/mine no longer tells the Hub the licence holds the advert")
+    if "raw.gate === 'licence'" not in js or "['category.services_tech.coc', 'Licence to practise" not in js:
+        bad.append("the Hub card / Edit no longer ask for the licence")
+    if "once your licence is verified in TrustSquare." not in q or (h is not None and h != q):
+        bad.append("Quick's draft screen lost the licence line (or HARNESS differs)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a licensed trade is public only once a person has checked its licence (RUL-156)")]
+
+
 @entry("RG-0556", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
        "a customer does in the app -- no sign-in codes, no Buzz, relay, listing-live or low-balance messages; Quick offers no Phone option",
        OPEN, fixed_on="2026-09-30",
@@ -33128,61 +33257,6 @@ def rg_car_dossier_door_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a car for sale offers its own Car Purchase Dossier")]
-
-
-@entry("RG-0601", "PRICE-PLUS-1: the F3 story walk (plumber) -- a price of two amounts ('R450 / call-out + R350 / hour + parts', "
-       "as Quick writes a trade's call-out + hourly rate) is shown as the seller gave it; it read R450,350 'per hour + parts' "
-       "on the advert",
-       OPEN, fixed_on="2026-09-30",
-       scope="ms.js _priceIsCompound(); formatZAR returns it whole; _priceBasisSuffix and the mapper's per-line stay empty for it.",
-       ref="F3 walk 30 Sep 2026 (docs/E2E_2026-09-30_F3.md), advert #443: the buyer's detail price box said R450,350.")
-def rg_price_plus_1():
-    js = repo_file("ms.js")
-    if js is None:
-        return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    bad = []
-    if "function _priceIsCompound(p)" not in js:
-        bad.append("_priceIsCompound is gone")
-    i = js.find("function formatZAR(")
-    if i < 0 or "if (_priceIsCompound(s)) return _lmEsc(s.trim());" not in js[i:i + 2500]:
-        bad.append("formatZAR squeezes a two-amount price into one number again")
-    j = js.find("function _priceBasisSuffix(")
-    if j < 0 or "if(_priceIsCompound(p)) return '';" not in js[j:j + 300]:
-        bad.append("the basis suffix repeats the second half of a two-amount price")
-    if "per: (function(){var p=String(l.price||'');if(_priceIsCompound(p))return '';" not in js:
-        bad.append("the card's per-line repeats the second half of a two-amount price")
-    if bad:
-        return [(FAIL, "; ".join(bad))]
-    return [(INFO, "a call-out + hourly price shows as the seller gave it")]
-
-@entry("RG-0602", "INTRO-TOAST-TRUTH-1: the F3 story walk -- after Accept the seller is told the truth: both of you get an "
-       "email, reply to it to talk, your address stays private (it said the buyer's 'contact revealed', and nothing is shown)",
-       OPEN, fixed_on="2026-09-30",
-       scope="ms.js handleIntro accept toast.",
-       ref="F3 walk 30 Sep 2026: Pieter accepted Marietjie and looked for a number that is not on any screen.")
-def rg_intro_toast_truth_1():
-    js = repo_file("ms.js")
-    if js is None:
-        return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    if "'s contact revealed." in js:
-        return [(FAIL, "the accept toast says the buyer's contact is revealed again")]
-    if "both get an email now. Reply to it to talk; your email address stays private." not in js:
-        return [(FAIL, "the accept toast no longer says how the two of you talk")]
-    return [(INFO, "accept says: you both get an email")]
-
-@entry("RG-0603", "EDIT-AI-STRIP-1: the F3 story walk -- Edit's 'AI tools' label takes its own line on a phone (it wrapped one "
-       "word per line beside the buttons; seen in F2 too)",
-       OPEN, fixed_on="2026-09-30",
-       scope="ms.css .el-ai-strip flex-wrap + p flex-basis 100%; marketsquare.html ms.css?v bump.",
-       ref="F2 report 'Not fixed, noted'; F3 walk 30 Sep 2026.")
-def rg_edit_ai_strip_1():
-    css = repo_file("ms.css")
-    if css is None:
-        return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    if ".el-ai-strip p{flex:1 1 100%;" not in css or "display:flex;flex-wrap:wrap;align-items:center;gap:10px;}" not in css:
-        return [(FAIL, "Edit's 'AI tools' label is squeezed beside the buttons again")]
-    return [(INFO, "the AI tools label has its own line")]
-
 @entry("RG-0560", "ADV-ENV-1: the F12 story walk (a guest house) -- a stay is found by place AND environment: the Sell flow asks "
        "'Environment' for stays and experiences, the advert keeps it, and the buyer's Environment filter finds it (it found no live "
        "advert at all); stay cards say 'Stays' (every live stay said 'Experiences'); the stays types include chalet, hostel, camp "
@@ -33254,30 +33328,6 @@ def rg_dossier_ref_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a listing number reaches the dossier as the advert's own place and facts")]
-
-
-
-@entry("RG-0604", "INTRO-ONCE-1: the F3 story walk -- one waiting introduction request per buyer per advert; a second tap on "
-       "Join queue queued her twice and held 2T for the same seller",
-       OPEN, fixed_on="2026-09-30",
-       scope="bea_main.py create_intro: pending (listing_id, buyer_email) read under _wallet_lock -> 409 before any hold.",
-       ref="F3 walk 30 Sep 2026, advert #443: qa-anneke0930 held 2T in two pending requests to Pieter.")
-def rg_intro_once_1():
-    py = repo_file("bea_main.py")
-    if py is None:
-        return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    i = py.find("def create_intro(")
-    body = py[i:i + 9000] if i >= 0 else ""
-    d = body.find("AND lower(buyer_email) = lower(?) AND status = 'pending'")
-    lock = body.find("_wallet_lock(conn)")
-    hold = body.find("'intro_hold', -1")
-    if d < 0 or "You have already asked this seller." not in body:
-        return [(FAIL, "a buyer can queue twice on the same advert again (and 2T are held)")]
-    if lock < 0 or hold < 0 or not (lock < d < hold):
-        return [(FAIL, "the one-request check no longer runs under the wallet lock, before the hold")]
-    return [(INFO, "one waiting request per buyer per advert")]
-
-
 @entry("RG-0605", "INTRO-MSG-1: the F12 story walk (a guest house) -- the seller reads the buyer's message before she answers: "
        "My Space's Intros list and Open actions show it under the request (it reached the server and her email, never the screen)",
        OPEN, fixed_on="2026-09-30",
