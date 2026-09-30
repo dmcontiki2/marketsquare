@@ -335,3 +335,5 @@ Sun 09/27/2026 18:35:45.81  SHIPPED rc=0 - server now runs migrations + health i
 Sun 09/27/2026 21:41:32.56  IN SYNC - DEPLOY DRIFT: clean - all 19 tracked files match live
 Mon 09/28/2026  5:45:06.24  IN SYNC - DEPLOY DRIFT: clean - all 156 tracked files match live
 Tue 09/29/2026  5:45:07.00  IN SYNC - DEPLOY DRIFT: clean - all 156 tracked files match live
+Wed 09/30/2026  5:45:06.56  IN SYNC - DEPLOY DRIFT: clean - all 161 tracked files match live
+Wed 09/30/2026  7:15:15.27  BLOCKED - gate rc=2 | DEPLOY DRIFT: 5 file(s) local-ahead of live - run /ship: bea_main.py, ms.js, quick.html, sms_provider.py, stories/gallery.json | ship withheld

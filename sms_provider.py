@@ -126,19 +126,26 @@ def _throttled(to: str, per_hour: int = 6) -> bool:
     return False
 
 
-# SMS-CODES-ONLY-1 (David, 30 Sep 2026): "For the users Buzz usage they must not use my account ... After that all
-# buzz comms must take place between the two users on their account." TrustSquare's paid SMS account sends ONE kind
-# of message: the one-time sign-in code. Buzz, relay nudges, listing-live and low-balance notices never go by our SMS
-# (RUL-122: push and e-mail are the notification channels). Enforced HERE, at the only door, so no new caller can
-# quietly start spending on notifications. 'setup-test' is the operator's own delivery test.
-SMS_PURPOSES = ("phone-code", "setup-test")
+# SMS-OUTREACH-ONLY-1 (David, 30 Sep 2026): "this is only for our outreach and not for customer use in the app ...
+# our budget setup and design goals are to not use sms costs." TrustSquare's paid SMS account is for OUR OUTREACH to
+# prospects who have only a phone number -- never for anything a customer does in the app: no sign-in codes, no Buzz,
+# no relay nudges, no listing-live or low-balance notices (RUL-122). Buyer and seller text each other from their own
+# phones at their own cost. Enforced HERE, at the only door. 'setup-test' is the operator's own delivery test.
+# (Supersedes SMS-CODES-ONLY-1 from earlier the same morning, which still allowed 'phone-code'.)
+SMS_PURPOSES = ("outreach", "setup-test")
+
+
+def codes_ready() -> bool:
+    """True only if the app may send a sign-in code by our SMS. False while 'phone-code' is not a permitted purpose,
+    so Quick never offers a Phone option that would dead-end."""
+    return ready() and "phone-code" in SMS_PURPOSES
 
 
 def send(to: str, text: str, purpose: str = "") -> tuple:
     """Send one SMS. Returns (status, info): status in 'sent' | 'skipped' | 'failed'."""
     if purpose not in SMS_PURPOSES:
-        _log.info("sms refused (%s): our SMS account sends sign-in codes only (SMS-CODES-ONLY-1)", purpose)
-        return ("skipped", "sign-in codes only")
+        _log.info("sms refused (%s): our SMS account is for outreach only (SMS-OUTREACH-ONLY-1)", purpose)
+        return ("skipped", "outreach only")
     e164 = normalise(to)
     if not e164:
         return ("failed", "number not recognised")

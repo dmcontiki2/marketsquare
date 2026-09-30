@@ -132,3 +132,20 @@ silent (no other lane writing) and then commit and deploy ONCE via `scripts/requ
 Never commit from the server checkout to get a deploy out — that bypasses the host lane and forces
 a merge later (17 Sep 2026). Tiers are functions, never models (RUL-139); on cost the maintenance
 agent steps down and never halts (RUL-138).
+
+## SO-6 · No small yes may carry a big change  (30 Sep 2026, David)
+
+David's words: *"if i ever said yes to some on the spot question ... then i did not understand that you at that point
+actually are asking me to change our whole costing project model and schema, i trust you to not DRIFT in a manner which
+is to not inform me fully of that implication ... I absolutely depend on you to not allow this."*
+Found the same morning: RUL-167 (24 Sep, phone sign-in by SMS code) was put to him as a small step for casual workers,
+and nobody said it put a per-message cost into the app against RUL-122 (SMS is not on the plans) and the zero-cost
+pricing model. Corrected by RUL-192.
+
+Before ANY question goes to David, Claude checks it against RULINGS.md, PRICING_CANON.md and the budgets, and the
+question itself must say, in plain words and before the yes/no:
+- **what it costs** — any new per-use, per-message or monthly cost, with a real figure, and whose money it is;
+- **which ruling it changes or contradicts** — by number, quoting the old rule in one line;
+- **what it changes in the business model or the schema** — or "nothing" if nothing.
+If any of the three is not "nothing", the question is labelled **"This changes a rule / the cost model"** at the top.
+A question that omits this is not a valid approval, and anything built on it is reopened and put to him again.

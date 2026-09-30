@@ -27,6 +27,7 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   "D-U-N-S email watch" ON.
 - **Not reached:** Publish and everything after it; ledger/rulings boards (ledger locked by another lane);
   deploy (waits for the lock and for the tree to go quiet, SO-5).
+- **FOR RUN 25 (David asked, 30 Sep morning):** under new SO-6, sweep RULINGS.md for every ruling David approved that quietly adds a per-use/monthly cost or contradicts an earlier ruling (the RUL-167 vs RUL-122 SMS case, now corrected by RUL-192); list each in GOAL_IMPROVEMENTS REVIEW NOW with the cost, the ruling it collides with, and a recommendation. Also: BulkSMS account trustsquare_sms is OUTREACH-ONLY (RUL-192); the test texts failed NOT_SENT pending BulkSMS support.
 - **Stray file:** `.goalrun_write_test` (empty, repo root) — my write probe; `rm` is not permitted from this shell.
 
 ## SUNDAY SUMMARY — written by run 22, Sunday 27 September 2026

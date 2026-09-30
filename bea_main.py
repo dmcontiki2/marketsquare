@@ -4843,7 +4843,7 @@ def auth_phone_start(body: _PhoneStart, request: Request):
         if _ph_cc != "ZA":
             raise HTTPException(status_code=400, detail="Please type your number with its country code, starting with + (for example +254 712 345 678).")
         raise HTTPException(status_code=400, detail="Please type a phone number we can send a code to (for example 082 123 4567).")
-    if not sms_provider.ready():
+    if not sms_provider.codes_ready():      # SMS-OUTREACH-ONLY-1: our SMS is not spent on app sign-in codes
         raise HTTPException(status_code=503, detail="sms_unavailable")
     ip = _qp_client_ip(request); now = _t.time()
     hits = [t for t in _PH_IP_LOG.get(ip, []) if now - t < 3600]
@@ -6609,7 +6609,7 @@ def quick_me(request: Request, ts_user: str = Cookie(default=None)):
            "trust_score": _QUICK_BASE_TRUST}
     try:
         import sms_provider
-        out["sms_ready"] = bool(sms_provider.ready())     # PHONE-KEY-1: the door offers the phone code only when it can send one
+        out["sms_ready"] = bool(sms_provider.codes_ready())   # PHONE-KEY-1 / SMS-OUTREACH-ONLY-1: off while our SMS is outreach-only
     except Exception:
         out["sms_ready"] = False
     out["key_identity"] = _is_key_identity(em)
