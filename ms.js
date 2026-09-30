@@ -19465,7 +19465,7 @@ async function msAreaDossier(id){
   if (DEMO_MODE) return;
   try{ goTo('ai-features'); await aiBoot(); }catch(_){}
   try{ if(aiSel('property_dossier') === false) return; }catch(_){ return; }
-  const el = document.getElementById('ai-p-listing'); if(el) el.value = String(id);
+  const el = document.getElementById('ai-p-listing'); if(el){ el.value = String(id); el.value = await aiListingRef(id); }   // DOSSIER-REF-1: she sees what is sent
   const it = document.getElementById('ai-p-intent'); if(it && !it.value) it.value = 'live';
 }
 async function aiBoot(){
@@ -19688,6 +19688,26 @@ function aiThumbs(){
   t.innerHTML = AI_PHOTOS.map((p,i)=>`<div class="ai-ph"><img src="${p}"><span aria-label="Remove this photo" onclick="AI_PHOTOS.splice(${i},1);aiThumbs()">&times;</span></div>`).join('');
 }
 
+/* DOSSIER-REF-1 (F6 walk, 30 Sep 2026): the dossier form asks for a "Listing #" and shows 'bea_42' as its example,
+   but the report service cannot look a TrustSquare number up -- Jacoba's Area Dossier for bea_446 came back "could not
+   be matched to a suburb" and still cost 3T. A listing number is now turned into the advert's own facts (what, where,
+   asking price) before the report is asked for; anything else she typed is sent as she typed it. */
+async function aiListingRef(v){
+  const m = /^\s*(?:bea_|#|listing\s*#?\s*)?(\d+)\s*$/i.exec(String(v||''));
+  if (!m) return v;
+  try{
+    const r = await fetch(BEA_URL + '/listings/' + m[1]); if (!r.ok) return v;
+    const d = await r.json();
+    const CN = {ZA:'South Africa',NA:'Namibia',BW:'Botswana',MZ:'Mozambique',KE:'Kenya',GB:'United Kingdom',UK:'United Kingdom',DE:'Germany',AU:'Australia',US:'United States'};
+    const what = [d.beds ? d.beds + '-bedroom' : '', String(d.prop_type || '').toLowerCase(), [d.vehicle_year, d.make, d.model].filter(Boolean).join(' ')].filter(Boolean).join(' ');
+    const where = [d.suburb || d.area, d.city, CN[String(d.country||'ZA').toUpperCase()] || d.country].filter(Boolean).join(', ');
+    const deal = /rent|let/i.test(String(d.listing_type||'')) ? 'rent ' : 'asking ';
+    const bits = [what || d.title || '', where ? 'in ' + where : '', d.price ? deal + String(d.price).replace(/\s/g,' ') : '',
+                  d.floor_area ? d.floor_area + ' m2 floor' : '', d.erf_size ? d.erf_size + ' m2 erf' : '',
+                  d.mileage ? d.mileage + ' km' : '', 'TrustSquare listing #' + m[1]];
+    return bits.filter(Boolean).join(', ');
+  }catch(_){ return v; }
+}
 async function aiRun(){
   if (DEMO_MODE) { showToast('AI Features run in live mode only'); return; }   // demo guard (belt & braces)
   if (!AI_SEL) return;
@@ -19700,6 +19720,7 @@ async function aiRun(){
   aiStopPoll(false);   // AI-POLL-ONE-1
   const params = {};
   AI_SEL.params.forEach(pp=>{ const el=document.getElementById('ai-p-'+pp.key); params[pp.key]=el?el.value:''; });
+  if (params.listing) params.listing = await aiListingRef(params.listing);   // DOSSIER-REF-1
   if (AI_PHOTOS.length) params.photos = AI_PHOTOS;
   const dry = document.getElementById('ai-dryrun').checked;
   if (dry && AI_PHOTOS.length) showToast('Sample mode: your photos are not analysed — untick Sample preview for the full report.');

@@ -33232,6 +33232,30 @@ def rg_area_dossier_link_1():
     return [(INFO, "a house for sale offers its Area Dossier from the advert")]
 
 
+@entry("RG-0581", "DOSSIER-REF-1: the F6 story walk (house for sale) -- a dossier asked for a listing number (bea_446, #446, "
+       "446 -- the form's own example format) is sent the advert's facts (what, suburb, city, country, asking price), not the "
+       "bare number the report service cannot look up",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js aiListingRef(v), called in aiRun for params.listing and by msAreaDossier so she sees what is sent.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Jacoba's Property Area Dossier for 'bea_446' said the area "
+           "'could not be matched to a publicly identifiable suburb' and still cost 3T. The charge on a no-data report is "
+           "the /ai service's (not in this repo) -- parked for David.")
+def rg_dossier_ref_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "async function aiListingRef(v){" not in js:
+        bad.append("aiListingRef is gone")
+    if "if (params.listing) params.listing = await aiListingRef(params.listing);" not in js:
+        bad.append("aiRun sends a bare listing number to the report service again")
+    if "el.value = await aiListingRef(id);" not in js:
+        bad.append("the advert's dossier button no longer shows her what is sent")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a listing number reaches the dossier as the advert's own place and facts")]
+
+
 
 @entry("RG-0604", "INTRO-ONCE-1: the F3 story walk -- one waiting introduction request per buyer per advert; a second tap on "
        "Join queue queued her twice and held 2T for the same seller",
