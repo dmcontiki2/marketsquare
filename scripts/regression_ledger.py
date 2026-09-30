@@ -32992,7 +32992,7 @@ def rg_sms_codes_only_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "our SMS account is outreach-only; the app sends none")]
 
-@entry("RG-0557", "PRICE-CARD-1: the F6 story walk (house for sale) -- Quick's search results show a price saved as bare digits "
+@entry("RG-0558", "PRICE-CARD-1: the F6 story walk (house for sale) -- Quick's search results show a price saved as bare digits "
        "the way the AI examples beside it are ('R2 450 000', not '2450000'), and a property to let says 'a month'",
        OPEN, fixed_on="2026-09-30",
        scope="quick.html drawLookup paint() cardPrice (= genie/HARNESS.html); QI18N 'a month' in five languages.",
@@ -33036,6 +33036,32 @@ def rg_vehicle_prov_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "only real AI guesses are called AI draft on the vehicle confirm screen")]
+
+
+@entry("RG-0559", "ASKING-PRICE-1: the F6 story walk (house for sale) -- Quick's Property door asks her asking price (or, to "
+       "let, the rent a month) after the bedrooms; it was the one door that never asked a price, so a house went live with none",
+       OPEN, fixed_on="2026-09-30",
+       scope="quick.html isAsk/drawAsk + the flow() wrapper that puts a 'price' step before 'where' for Property sell "
+             "(= genie/HARNESS.html); QI18N for the two questions and notes; UNITS af ' / month'.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): the door says 'A few taps and your price'; House -> To sell -> "
+           "3 -> Centurion saved 'House -- To sell' with no price, and the buyer's 'Is this a fair price?' had nothing to check.")
+def rg_asking_price_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(FAIL, "quick.html is missing")]
+    bad = []
+    for need in ("function isAsk(s){ return !!(s && s.key==='price' && mode==='sell' && cat().key==='property'); }",
+                 "if(isAsk(s)){ drawAsk(s); return; }", "var _flAsk=flow;",
+                 "'What is the rent a month?':'What is your asking price?'", "money(cc,a)+(rent?' / month':'')"):
+        if need not in q:
+            bad.append("missing: " + need[:50])
+    if '"What is your asking price?": {"af": "Wat is jou vraprys?"' not in q:
+        bad.append("the price question lost its translations")
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick asks a property seller her price (or rent a month) before the area")]
 
 
 if __name__ == "__main__":
