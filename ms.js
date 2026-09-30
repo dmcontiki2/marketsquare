@@ -466,7 +466,7 @@ function _msMapBeaListing(l){
           suburb: l.suburb || l.area || l.city || activeCity.name,
           trust: l.trust_score || 40,
           price: l.price || 'POA',
-          per: (function(){var p=String(l.price||'');if(p.indexOf('/')>-1){var u=p.split('/').pop().trim().toLowerCase();var M={hr:'hour',hrs:'hour',hour:'hour',day:'day',visit:'visit','call-out':'call-out',callout:'call-out',call:'call-out',month:'month',mo:'month',week:'week',wk:'week',night:'night',pp:'person',person:'person',session:'session',lesson:'lesson',km:'km'};return u?('per '+(M[u]||u)):'';}if(/\bpp\b/i.test(p))return 'per person';return '';})(),
+          per: (function(){var p=String(l.price||'');if(_priceIsCompound(p))return '';if(p.indexOf('/')>-1){var u=p.split('/').pop().trim().toLowerCase();var M={hr:'hour',hrs:'hour',hour:'hour',day:'day',visit:'visit','call-out':'call-out',callout:'call-out',call:'call-out',month:'month',mo:'month',week:'week',wk:'week',night:'night',pp:'person',person:'person',session:'session',lesson:'lesson',km:'km'};return u?('per '+(M[u]||u)):'';}if(/\bpp\b/i.test(p))return 'per person';return '';})(),
           priceNum: _msPriceNum(l),   // PRICE-NUM-1 (25 Sep 2026 inspection, backend-10): the server's price_num / first amount
           desc: desc,
           photo: l.thumb_url || (photos[0] || null),
@@ -745,6 +745,9 @@ function formatZAR(value) {
      shown as the seller gave it (any '/ basis' after it is shown by the card's own per-line). */
   const rangeM = s.match(/^\s*[^\d\s]{0,3}\s*\d[\d\s.,]*[kKmM]?\s*(?:–|—|-|\bto\b)\s*[^\d\s]{0,3}\s*\d[\d\s.,]*[kKmM]?/);
   if (rangeM) return _lmEsc(rangeM[0].trim());
+  /* PRICE-PLUS-1 (30 Sep 2026, F3 plumber walk): Quick's trade prices join two amounts ('R450 / call-out + R350 / hour
+     + parts'). Squeezed to its digits it read R450,350 on the advert. A price of two amounts is shown as the seller gave it. */
+  if (_priceIsCompound(s)) return _lmEsc(s.trim());
   const numStr = s.replace(/[^0-9.]/g, '');
   if (!numStr) return null;
   const n = parseFloat(numStr);
@@ -754,7 +757,9 @@ function formatZAR(value) {
   return 'R' + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
 }
 
+function _priceIsCompound(p){ return /\d[^+\d]*\+\s*[^\d\s]{0,3}\s*\d/.test(String(p||'')); }   // PRICE-PLUS-1
 function _priceBasisSuffix(p){
+  if(_priceIsCompound(p)) return '';   // PRICE-PLUS-1: the whole price is already shown
   // JNR-FIX-5C (22 Jul 2026): formatZAR ate the basis ("R 50 per person" -> "R50").
   // Recover the textual basis after the amount so cards/detail never show a bare rate.
   var m=String(p||'').match(/^[^0-9]*[\d\s.,]+(.*)$/);
@@ -11913,7 +11918,9 @@ async function handleIntro(dlId, introId, action){
     const _keySeller = /@key\.trustsquare\.co$/i.test(String(_msSignedEmail() || ''));
     showToast(_keySeller
       ? `✓ Accepted — ${intro.name} has been told by email. Their replies cannot reach a WhatsApp-link account yet.`
-      : `✓ Accepted — ${intro.name}'s contact revealed.`, _keySeller ? 8000 : 2600);
+      /* INTRO-TOAST-TRUTH-1 (30 Sep 2026, F3 walk): nothing is shown on this screen -- the introduction is an email to
+         both of you, and your address stays private. 'contact revealed' sent a plumber looking for a number that is not there. */
+      : `✓ Accepted — you and ${intro.name} both get an email now. Reply to it to talk; your email address stays private.`, _keySeller ? 8000 : 6000);
   } else {
     if(BEA_ENABLED && intro.beaId){
       const ok = await apiPut('/intros/'+intro.beaId+'/decline');
