@@ -323,6 +323,7 @@ stories/gallery.json       | help/data/index.json
 stories/adventures_guest_house.json | help/data/adventures_guest_house.json
 stories/adventures_guided_walk.json | help/data/adventures_guided_walk.json
 stories/cars_bakkie.json | help/data/cars_bakkie.json
+stories/electrician.json | help/data/electrician.json
 stories/home_cleaner.json | help/data/home_cleaner.json
 stories/localmarket_food_preserves.json | help/data/localmarket_food_preserves.json
 stories/nanny.json | help/data/nanny.json
