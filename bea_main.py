@@ -8659,6 +8659,15 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             conn.rollback(); conn.close()
             raise HTTPException(status_code=409, detail="The seller is answering another buyer about this property. "
                                                         "It opens again as soon as they reply — within 4 days at most.")
+    # INTRO-ONCE-1 (30 Sep 2026, F3 plumber walk): one waiting request per buyer per advert. A second tap on Join queue
+    # queued her twice and held 2T for the same seller. Read under the write lock, so two quick taps cannot both pass.
+    _dup = conn.execute(
+        "SELECT id FROM intro_requests WHERE listing_id = ? AND lower(buyer_email) = lower(?) AND status = 'pending'",
+        (intro.listing_id, intro.buyer_email or "")).fetchone()
+    if _dup:
+        conn.rollback(); conn.close()
+        raise HTTPException(status_code=409, detail="You have already asked this seller. Your request is waiting for "
+                                                    "their answer, and nothing more is held.")
     _hold_balance = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
         (intro.buyer_email,)).fetchone()["bal"]

@@ -33233,5 +33233,26 @@ def rg_area_dossier_link_1():
 
 
 
+@entry("RG-0604", "INTRO-ONCE-1: the F3 story walk -- one waiting introduction request per buyer per advert; a second tap on "
+       "Join queue queued her twice and held 2T for the same seller",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py create_intro: pending (listing_id, buyer_email) read under _wallet_lock -> 409 before any hold.",
+       ref="F3 walk 30 Sep 2026, advert #443: qa-anneke0930 held 2T in two pending requests to Pieter.")
+def rg_intro_once_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = py.find("def create_intro(")
+    body = py[i:i + 9000] if i >= 0 else ""
+    d = body.find("AND lower(buyer_email) = lower(?) AND status = 'pending'")
+    lock = body.find("_wallet_lock(conn)")
+    hold = body.find("'intro_hold', -1")
+    if d < 0 or "You have already asked this seller." not in body:
+        return [(FAIL, "a buyer can queue twice on the same advert again (and 2T are held)")]
+    if lock < 0 or hold < 0 or not (lock < d < hold):
+        return [(FAIL, "the one-request check no longer runs under the wallet lock, before the hold")]
+    return [(INFO, "one waiting request per buyer per advert")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
