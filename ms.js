@@ -11618,12 +11618,25 @@ function msHiddenCasualNote(lid, raw){
           + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ')">Upload my police clearance</button>')
       + '</div>';
   }
+  /* LICENCE-GATE-1 (F4 story walk, 30 Sep 2026): for work the law licenses -- an electrician's DoEL registration, a
+     gas or refrigerant SAQCC card, PSIRA, a driving licence -- it is that licence, checked by our team (RUL-156). */
+  if(raw && raw.gate === 'licence'){
+    const lw = raw.licence_status === 'pending';
+    return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
+      + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
+      + (lw
+        ? '<div style="font-size:12px;color:#78350f;margin:3px 0 0;line-height:1.45;">Your licence is with our team. Customers see your listing once we have checked it.</div>'
+        : '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">The law says this work needs a licence or registration. Customers see your listing once our team has checked yours.</div>'
+          + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ',\'licence\')">Upload my licence</button>')
+      + '</div>';
+  }
   return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
     + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
     + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
     + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
 }
-function msClearanceUpload(lid){
+function msClearanceUpload(lid, kind){
+  const _lic = kind === 'licence';   // LICENCE-GATE-1: the same shortcut chooses the licence credential
   openEditListing(lid);
   let n = 0;
   const t = setInterval(function(){
@@ -11631,9 +11644,9 @@ function msClearanceUpload(lid){
     if(sel || ++n > 40){
       clearInterval(t);
       if(!sel) return;
-      sel.value = 'category.services_cas.clearance';
+      sel.value = _lic ? 'category.services_tech.coc' : 'category.services_cas.clearance';
       const ty = document.getElementById('el-dh-type'); if(ty){ ty.value = 'other'; if(typeof elUpdateDocHint === 'function') elUpdateDocHint('other'); }
-      const lb = document.getElementById('el-dh-label'); if(lb && !lb.value) lb.value = 'Police clearance';
+      const lb = document.getElementById('el-dh-label'); if(lb && !lb.value) lb.value = _lic ? 'Licence to practise' : 'Police clearance';
       sel.scrollIntoView({block:'center'});
     }
   }, 250);
@@ -11954,8 +11967,11 @@ async function handleIntro(dlId, introId, action){
     }
     intro.status = 'declined';
     dl.status = 'active';
+    /* DECLINE-TOAST-TRUTH-1 (30 Sep 2026, F3 walk): only a listing her request had paused is 'reactivated'; an open-queue
+       advert never stopped. A held 1T goes back either way. */
+    const _wasHeld = !!(dl && dl._raw && String(dl._raw.auto_paused_intro_id||'') === String(intro.beaId||''));
     _msPropertyReopened(dl, intro);
-    showToast(`Declined — ${intro.name} notified. Listing reactivated.`);
+    showToast(`Declined — ${intro.name} is told, and any Tuppence held for this request goes back to them.` + (_wasHeld ? ' Your listing is open again.' : ''), 5000);
   }
   renderDash();
   updateTuppenceUI();
@@ -12726,6 +12742,7 @@ const EL_CRED_SIGNALS = {
      advert waits for -- the general upload filed it as a Local-Market certificate. */
   Services: [
     ['category.services_cas.clearance', 'Police clearance (+10)'],
+    ['category.services_tech.coc', 'Licence to practise (+5) — DoEL, SAQCC, PSIRA, PrDP'],   // LICENCE-GATE-1
   ],
   Tutors: [
     ['category.tutors.clearance', 'Police clearance (+8)'],
@@ -12734,7 +12751,7 @@ const EL_CRED_SIGNALS = {
 function EL_SIGNAL_OPTS_HTML(){
   const list = EL_CRED_SIGNALS[elCurrentCat] || [];
   if (!list.length) return '';
-  return '<select id="el-dh-signal" onchange="if(/clearance$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
+  return '<select id="el-dh-signal" onchange="if(/clearance$|\.coc$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
     'border-radius:8px;padding:8px 10px;font-size:13px;">'+
     '<option value="">What is this document? (general — no credential)</option>'+
     list.map(s => '<option value="'+s[0]+'">'+s[1]+'</option>').join('')+
@@ -12959,7 +12976,7 @@ async function elDocHubUpload(email) {
     status = document.getElementById('el-dh-status') || status;
     if (_sig && !uploadData.auto_earned) {
       if (status) status.textContent = '✅ Sent to our team. A person checks it, then your points are added'
-        + (/clearance$/.test(_sig) ? ' and strangers can see your listing.' : '.');
+        + (/clearance$|\.coc$/.test(_sig) ? ' and strangers can see your listing.' : '.');
       return;   // nothing changes in the score until then, and a second redraw would wipe this line again
     }
     // AI comment on this upload

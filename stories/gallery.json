@@ -112,6 +112,28 @@
    "cover": "f2_01_door"
   },
   {
+   "type": "plumber",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Plumber",
+    "af": "Loodgieter",
+    "zu": "Umkhandi wamapayipi",
+    "xh": "Umlungisi wemibhobho",
+    "nso": "Mošomi wa dipeipi"
+   },
+   "title": {
+    "en": "Plumber: from listing to your first customer",
+    "af": "Loodgieter: van advertensie tot jou eerste kliënt",
+    "zu": "Umkhandi wamapayipi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungisi wemibhobho: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mošomi wa dipeipi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door"
+  },
+  {
    "type": "property_house",
    "status": "draft",
    "flow": "F6",

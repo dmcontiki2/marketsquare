@@ -3392,6 +3392,32 @@ _GATE_VOUCH_SIGNALS = ("universal.employer_confirmed", "universal.employer_confi
 _GATE_ID_SIGNALS = ("universal.id_verified", "category.lm.id_ai_verified")
 _GATE_CLEARANCE_SIGNALS = ("category.services_cas.clearance", "category.tutors.clearance")
 _GATE_ROLES = {"casual": None, "clearance": None}
+# LICENCE-GATE-1 (30 Sep 2026, F4 story walk): RUL-156 -- a role whose work legally needs a licence or registration
+# (DoEL electrician, SAQCC gas / refrigerant, PSIRA, driving licence + PrDP) is listed at once and reachable through
+# her own link, but shown to strangers only once that licence is VERIFIED. The gate existed in the role registry and
+# nothing read it, so an electrician went public unchecked. The licence is handed in as the existing
+# 'Primary industry licence / CoC' credential, which a person now checks (_LEGAL_SIGNALS).
+_GATE_LICENCE_SIGNALS = ("category.services_tech.coc",)
+_GATE_LIC = {"roles": None}
+
+
+def _gate_licence_roles():
+    """Lowercased names (English label + aliases) of the roles whose registry gate is a licence (RUL-156)."""
+    if _GATE_LIC["roles"] is None:
+        lic = set()
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"),
+                      encoding="utf-8") as _fh:
+                for _r in json.load(_fh).get("roles", []):
+                    if (_r.get("gate") or {}).get("type") == "licence":
+                        _names = {str((_r.get("label") or {}).get("en") or "").strip().lower()}
+                        _names |= {str(_a).strip().lower() for _a in (_r.get("aliases") or [])}
+                        _names.discard("")
+                        lic |= _names
+        except Exception as _rex:
+            _log.warning("LICENCE-GATE-1: role registry unreadable (%s) -- no licence gate", _rex)
+        _GATE_LIC["roles"] = lic - _gate_role_names()[1]
+    return _GATE_LIC["roles"]
 
 
 def _gate_role_names():
@@ -3438,14 +3464,17 @@ def _stranger_hidden_sql(p: str = "l.") -> str:
     _id_on_file = ("%s IN (SELECT LOWER(TRIM(_gu.email)) FROM users _gu WHERE _gu.id_verified_at IS NOT NULL)" % who)
     clr_in = ",".join(_sql_lit(x) for x in sorted(clearance)) or "''"
     cas_in = ",".join(_sql_lit(x) for x in sorted(casual)) or "''"
+    lic_in = ",".join(_sql_lit(x) for x in sorted(_gate_licence_roles())) or "''"   # LICENCE-GATE-1 (RUL-156)
     return ("(LOWER(COALESCE(%scategory,'')) IN (%s) AND COALESCE(%sis_demo,0) = 0 AND COALESCE(%ssuper_example,0) = 0 "
             "AND COALESCE(%sshowcase,0) = 0 AND (CASE "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
             "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE 1 END) "
             "ELSE 0 END) = 1)" % (
                 p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
                 st, clr_in, _has(_GATE_CLEARANCE_SIGNALS),
+                st, lic_in, _has(_GATE_LICENCE_SIGNALS),
                 p, st, cas_in,
                 _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file))
 
@@ -5353,6 +5382,14 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
         _clr = _clr["status"] if _clr else None
     except Exception:
         _clr = None
+    _lic_roles = _gate_licence_roles()
+    try:
+        _lic = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id IN (%s) "
+                            "ORDER BY CASE status WHEN 'earned' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END LIMIT 1"
+                            % ",".join("?" * len(_GATE_LICENCE_SIGNALS)), (email,) + _GATE_LICENCE_SIGNALS).fetchone()
+        _lic = _lic["status"] if _lic else None
+    except Exception:
+        _lic = None
     conn.close()
     out = []
     for r in rows:
@@ -5361,6 +5398,9 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
         if d["hidden_from_strangers"] and (d.get("service_type") or "").strip().lower() in _clr_roles:
             d["gate"] = "police_clearance"
             d["clearance_status"] = _clr
+        elif d["hidden_from_strangers"] and (d.get("service_type") or "").strip().lower() in _lic_roles:
+            d["gate"] = "licence"          # LICENCE-GATE-1: her card names the licence and where it is
+            d["licence_status"] = _lic
         if (d.get("category") or "").lower() == "property":
             d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
         out.append(d)
@@ -15699,6 +15739,9 @@ _LEGAL_SIGNALS = {
     # auto-earned it, so a photo of anything opened the child-care gate. A person checks it first now.
     "category.services_cas.clearance",
     "category.tutors.clearance",
+    # LICENCE-GATE-1 (F4 story walk): a licence to practise opens a licensed trade's advert to strangers (RUL-156),
+    # so a person checks it first instead of any upload earning it.
+    "category.services_tech.coc",
 }
 # A mandate is granted per property, so it must arrive with the listing it covers.
 _PER_LISTING_SIGNALS = {"category.property.mandate"}
