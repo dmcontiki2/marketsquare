@@ -33089,5 +33089,59 @@ def rg_asking_price_1():
     return [(INFO, "Quick asks a property seller her price (or rent a month) before the area")]
 
 
+@entry("RG-0557", "PRICE-PLUS-1: the F3 story walk (plumber) -- a price of two amounts ('R450 / call-out + R350 / hour + parts', "
+       "as Quick writes a trade's call-out + hourly rate) is shown as the seller gave it; it read R450,350 'per hour + parts' "
+       "on the advert",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js _priceIsCompound(); formatZAR returns it whole; _priceBasisSuffix and the mapper's per-line stay empty for it.",
+       ref="F3 walk 30 Sep 2026 (docs/E2E_2026-09-30_F3.md), advert #443: the buyer's detail price box said R450,350.")
+def rg_price_plus_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "function _priceIsCompound(p)" not in js:
+        bad.append("_priceIsCompound is gone")
+    i = js.find("function formatZAR(")
+    if i < 0 or "if (_priceIsCompound(s)) return _lmEsc(s.trim());" not in js[i:i + 2500]:
+        bad.append("formatZAR squeezes a two-amount price into one number again")
+    j = js.find("function _priceBasisSuffix(")
+    if j < 0 or "if(_priceIsCompound(p)) return '';" not in js[j:j + 300]:
+        bad.append("the basis suffix repeats the second half of a two-amount price")
+    if "per: (function(){var p=String(l.price||'');if(_priceIsCompound(p))return '';" not in js:
+        bad.append("the card's per-line repeats the second half of a two-amount price")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a call-out + hourly price shows as the seller gave it")]
+
+@entry("RG-0558", "INTRO-TOAST-TRUTH-1: the F3 story walk -- after Accept the seller is told the truth: both of you get an "
+       "email, reply to it to talk, your address stays private (it said the buyer's 'contact revealed', and nothing is shown)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js handleIntro accept toast.",
+       ref="F3 walk 30 Sep 2026: Pieter accepted Marietjie and looked for a number that is not on any screen.")
+def rg_intro_toast_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "'s contact revealed." in js:
+        return [(FAIL, "the accept toast says the buyer's contact is revealed again")]
+    if "both get an email now. Reply to it to talk; your email address stays private." not in js:
+        return [(FAIL, "the accept toast no longer says how the two of you talk")]
+    return [(INFO, "accept says: you both get an email")]
+
+@entry("RG-0559", "EDIT-AI-STRIP-1: the F3 story walk -- Edit's 'AI tools' label takes its own line on a phone (it wrapped one "
+       "word per line beside the buttons; seen in F2 too)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.css .el-ai-strip flex-wrap + p flex-basis 100%; marketsquare.html ms.css?v bump.",
+       ref="F2 report 'Not fixed, noted'; F3 walk 30 Sep 2026.")
+def rg_edit_ai_strip_1():
+    css = repo_file("ms.css")
+    if css is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if ".el-ai-strip p{flex:1 1 100%;" not in css or "display:flex;flex-wrap:wrap;align-items:center;gap:10px;}" not in css:
+        return [(FAIL, "Edit's 'AI tools' label is squeezed beside the buttons again")]
+    return [(INFO, "the AI tools label has its own line")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
