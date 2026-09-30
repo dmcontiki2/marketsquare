@@ -17128,6 +17128,7 @@ async function initLMHomeTile() {
       const d = document.createElement('div');
       d.style.cssText = 'position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity 0.8s ease;opacity:0;z-index:' + z + ';';
       catBg.style.position = 'relative';
+      catBg.style.zIndex = '0';   // LM-TILE-LABEL-1 (30 Sep 2026, Goal run 25): the photo layers stay inside the picture, under the "Local Market · N listings" label -- they were painting over it
       catBg.appendChild(d);
       return d;
     };

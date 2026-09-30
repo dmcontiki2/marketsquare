@@ -18060,6 +18060,17 @@ async def onboard_step(request: Request):
     magic = 1 if body.get("magic") else 0
     ua = (request.headers.get("user-agent") or "")[:200]          # FUNNEL-HUMAN-1
     bot = 1 if _ob_is_bot(ua) else 0
+    # FUNNEL-QA-1 (30 Sep 2026, Goal run 25): our own walks are not strangers. A beacon carrying the QA key,
+    # the tester cookie (ts_review) or a QA test address is stored as bot=2 -- every reader that counts bot=0
+    # leaves it out, and it is not counted as a link scanner (bot=1) either. Measured 30 Sep: of 31 'human'
+    # Quick drafts since 1 Sep, every one came from an emulated phone in a scripted burst.
+    if not bot:
+        try:
+            if (_qa_key_ok(request) or _is_tester_cookie(request.cookies.get('ts_review'))
+                    or (email and _QA_EMAIL_RE.match(email))):
+                bot = 2
+        except Exception:
+            pass
     # SEC-GATE-1 (24 Sep 2026): the per-sid cap is caller-chosen, so also cap rows per client IP per hour.
     import time as _obt
     _ob_ip = (request.client.host if request.client else "?") or "?"

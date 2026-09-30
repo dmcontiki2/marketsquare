@@ -33062,6 +33062,40 @@ def rg_intro_once_1():
     return [(INFO, "one waiting request per buyer per advert")]
 
 
+@entry("RG-0643", "LM-TILE-LABEL-1: Home's wide Local Market tile shows its words ('Local Market · N listings') over the "
+       "photos -- the crossfading photo layers (z-index 1 and 2) painted over the label, so a stranger saw a jar of honey "
+       "and no word saying what the tile was",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js home Local Market tile crossfade mkLayer (catBg stacking context)",
+       ref="Goal run 25 walk, 30 Sep 2026 (docs/E2E_2026-09-30.md): elementFromPoint at the label's centre returned the photo "
+           "layer, not the label; every other category tile carried its name.")
+def rg_lm_tile_label_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    i = js.find("const mkLayer = (z) => {")
+    if i < 0 or "catBg.style.zIndex = '0';" not in js[i:i + 700]:
+        return [(FAIL, "the Local Market tile's photo layers can paint over its label again")]
+    return [(INFO, "the photo layers stay inside the tile's picture, under its label")]
+
+
+@entry("RG-0644", "FUNNEL-QA-1: a sell-flow beacon from our own walks (the QA key, the tester cookie, or a QA test address) "
+       "is stored bot=2, so the stranger funnel (bot=0) stops counting our scripted phones as people",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py onboard_step bot verdict",
+       ref="Goal run 25, 30 Sep 2026: of the Quick sessions since 1 Sep the funnel called human, every one that reached a "
+           "draft came from an emulated phone (Pixel 7/8, iPhone 17_0/17_5) in a scripted burst minutes apart.")
+def rg_funnel_qa_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(FAIL, "bea_main.py is missing")]
+    i = py.find("async def onboard_step(")
+    seg = py[i:i + 4000] if i >= 0 else ""
+    if "bot = 2" not in seg or "_qa_key_ok(request)" not in seg or "_is_tester_cookie(request.cookies.get('ts_review'))" not in seg:
+        return [(FAIL, "our own walks are counted as strangers in the sell funnel again")]
+    return [(INFO, "QA and tester beacons are kept out of the stranger funnel")]
+
+
 @entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
        "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
        OPEN, fixed_on="2026-09-30",
