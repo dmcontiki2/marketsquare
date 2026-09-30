@@ -33161,6 +33161,8 @@ def rg_price_card_1():
         bad.append("Quick's result cards print the raw price again")
     if '"a month": {"af": "per maand"' not in q:
         bad.append("'a month' lost its translations")
+    if "pr.replace(/\\s*\\/\\s*month$/i, ' '+T('a month'))" not in q:
+        bad.append("a rent saved as 'R12 500 / month' reads differently from its neighbours")
     if h is not None and h != q:
         bad.append("genie/HARNESS.html differs from quick.html")
     if bad:
