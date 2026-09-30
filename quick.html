@@ -3846,7 +3846,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       var wp=pickOf('what'), fb=PH[(wp && wp.photo) || c.hero[0]] || PH[c.hero[0]];
       /* PRICE-CARD-1 (F6 walk, 30 Sep 2026): a price saved as bare digits ("2450000") is shown the way the examples
          beside it are -- with the currency and spaced thousands -- and a property to let says it is a month's rent. */
-      var cardPrice=function(l){ var pr=String(l.price||'').trim(); if(!/^\d+(\.\d+)?$/.test(pr)) return pr;
+      var cardPrice=function(l){ var pr=String(l.price||'').trim(); if(!/^\d+(\.\d+)?$/.test(pr)) return pr.replace(/\s*\/\s*month$/i, ' '+T('a month'));
         var cc=String(l.country||'ZA').toUpperCase(); if(cc==='GB') cc='UK';
         var M=window.QUICK_MINW||{}, sy=(M[cc]&&M[cc].s)||'R';
         var t=sy+String(Math.round(+pr)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
