@@ -33088,6 +33088,22 @@ def rg_asking_price_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "Quick asks a property seller her price (or rent a month) before the area")]
 
+@entry("RG-0571", "ID-LIVE-CARD-1: the F8 story walk -- the 'You're live' card no longer tells a seller with no checked ID that "
+       "buyers can only send introductions once her ID is verified; since RUL-188 introductions arrive and the buyer is warned",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js publish success (sob-success-sub) for a seller whose /id-status has no green tick.",
+       ref="F8 cloud walk 30 Sep 2026 (Johan, bakkie #444): the card read 'Buyers can send you introductions once your ID is "
+           "verified'; _seller_intro_gate() refuses nothing since ID-NEVER-BLOCKS-1 (RUL-188, David 27 Sep 2026).")
+def rg_id_live_card_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "Buyers can send you introductions once your ID is verified" in ms:
+        return [(FAIL, "the live card says introductions wait for her ID again (untrue since RUL-188)")]
+    if "Your listing is live and buyers can send you introductions." not in ms:
+        return [(FAIL, "the live card no longer tells her introductions can arrive")]
+    return [(INFO, "the live card tells the truth about the ID: a buyer warning, not a hold")]
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -8550,7 +8550,9 @@ async function _sobGoLiveInner() {
     fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/id-status').then(function(r){ return r.ok ? r.json() : null; }).then(function(st){
       if (!st || st.green_tick) return;
       const sub = document.getElementById('sob-success-sub');
-      if (sub) sub.innerHTML = 'Your listing is live and buyers can see it. <strong style="color:#fbbf24">Buyers can send you introductions once your ID is verified</strong> \u2014 do it in My Space \u2192 Trust \u2192 Upload ID. It is what keeps scammers out.';
+      /* ID-LIVE-CARD-1 (30 Sep 2026, F8 walk): since RUL-188 an unchecked ID never holds an introduction -- the buyer is
+         told it is not checked yet. The card said introductions wait for her ID, which sent her off to the wrong task. */
+      if (sub) sub.innerHTML = 'Your listing is live and buyers can send you introductions. <strong style="color:#fbbf24">Until your ID is checked, buyers are told TrustSquare has not confirmed who you are</strong> \u2014 upload it in My Space \u2192 Trust \u2192 Upload ID to take that warning away.';
     }).catch(function(){});
   } catch (e) {}
   obTrack('publish_ok',{n:successCount});   // ONBOARD-FUNNEL-1: the number's own event
