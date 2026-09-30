@@ -32891,5 +32891,36 @@ def rg_qa_cloud_1():
     return [(INFO, "QA routes key-guarded and QA-only; cloud [ship] branches gated and shipped by the server")]
 
 
+@entry("RG-0554", "SMS-DAILY-CAP-1: the server can never send more than SMS_DAILY_CAP text messages a day (default 40), counted "
+       "across every worker under a file lock, and it sends nothing when it cannot count -- so a prepaid SMS balance cannot run away",
+       OPEN, fixed_on="2026-09-30",
+       scope="sms_provider.py daily_cap / _over_daily_cap, called from send() after the per-number throttle; add_sms_key.bat "
+             "writes SMS_DAILY_CAP=40 beside the token.",
+       ref="David, 30 Sep 2026, opening the BulkSMS account for phone sign-up: 'i will need to add about R350 to it, i dont want a "
+           "run-away scenario'. Before this the only limit was 6 an hour per phone number -- nothing on the total.")
+def rg_sms_daily_cap_1():
+    src = repo_file("sms_provider.py")
+    if src is None:
+        return [(FAIL, "sms_provider.py is missing")]
+    code = _code_only(src)
+    bad = []
+    if "def _over_daily_cap(" not in code or "fcntl.flock(f, fcntl.LOCK_EX)" not in code:
+        bad.append("no shared, locked daily count")
+    if 'os.environ.get("SMS_DAILY_CAP") or "40"' not in code:
+        bad.append("the daily cap lost its default of 40")
+    i_send = code.find("def send(")
+    i_cap = code.find("if _over_daily_cap():", i_send)
+    i_post = code.find("httpx.post(", i_send)
+    if i_send < 0 or i_cap < 0 or (i_post >= 0 and i_cap > i_post):
+        bad.append("send() no longer checks the daily cap before it posts")
+    j = code.find("def _over_daily_cap(")
+    body = code[j:code.find("def ", j + 10)] if j >= 0 else ""
+    if "except Exception as exc:" not in body or "return True" not in body.split("except Exception as exc:")[-1]:
+        bad.append("the cap no longer fails closed when it cannot count")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "SMS total capped per day (default 40), fails closed")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

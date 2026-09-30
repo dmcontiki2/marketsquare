@@ -75,6 +75,47 @@ def ready() -> bool:
     return provider() in ("bulksms", "clickatell", "smsportal") and bool((os.environ.get("SMS_TOKEN") or "").strip())
 
 
+# SMS-DAILY-CAP-1 (David, 30 Sep 2026: "i will need to add about R350 to it, i dont want a run-away scenario").
+# The per-number throttle above stops one phone being flooded; it does nothing about the TOTAL. This is the
+# total: at most SMS_DAILY_CAP messages per UTC day across the whole server (default 40, about R10/day at
+# R0.20-0.27 each), counted in a small file every worker shares under a file lock. It FAILS CLOSED -- if the
+# count cannot be read or written, nothing is sent. Prepaid credit with no auto top-up is the outer wall;
+# this is the inner one, so a bug or a flood can spend at most one day's cap before anyone looks.
+_CAP_FILE = os.environ.get("SMS_CAP_FILE") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "sms_daily_count.json")
+
+
+def daily_cap() -> int:
+    try:
+        return max(0, int((os.environ.get("SMS_DAILY_CAP") or "40").strip()))
+    except Exception:
+        return 40
+
+
+def _over_daily_cap() -> bool:
+    """Count one send against today's cap. True = refuse (cap reached, or the count could not be kept)."""
+    try:
+        import fcntl
+        day = time.strftime("%Y-%m-%d", time.gmtime())
+        with open(_CAP_FILE, "a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            f.seek(0)
+            raw = f.read()
+            try:
+                d = json.loads(raw) if raw.strip() else {}
+            except Exception:
+                d = {}
+            n = int(d.get(day, 0))
+            if n >= daily_cap():
+                return True
+            f.seek(0)
+            f.truncate()
+            json.dump({day: n + 1}, f)
+        return False
+    except Exception as exc:
+        _log.warning("sms daily cap could not be counted -- refusing to send: %s", exc)
+        return True
+
+
 def _throttled(to: str, per_hour: int = 6) -> bool:
     now = time.time()
     hits = [t for t in _RATE.get(to, []) if now - t < 3600]
@@ -96,6 +137,9 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
     if _throttled(e164):
         _log.warning("sms throttled (%s): %s", purpose, mask(e164))
         return ("skipped", "throttled")
+    if _over_daily_cap():
+        _log.warning("sms refused (%s): daily cap of %d reached or uncountable -- to %s", purpose, daily_cap(), mask(e164))
+        return ("skipped", "daily cap reached")
     text = (text or "")[:459]              # three concatenated GSM parts at most
     try:
         import httpx
