@@ -33450,5 +33450,22 @@ def rg_car_hire_1():
     return [(INFO, "a car for hire is listed, priced and shown as a hire")]
 
 
+@entry("RG-0608", "AGENCY-APPLY-1: the F14 story walk (agency-listed) -- an agency, operator, dealership or placement agency with "
+       "no organisation on TrustSquare yet is shown how to apply ('Apply by email', support@trustsquare.co) instead of a dead end "
+       "that said 'set up on application' and named no way to apply",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js _agencyCreateHtml() non-superuser branch.",
+       ref="F14 walk 30 Sep 2026 (docs/E2E_2026-09-30_F14.md): Margaret, an estate agent, opened ?agency=1 and read 'No agency "
+           "is linked to this account yet. Agencies are set up by TrustSquare on application.' -- nothing else on the screen.")
+def rg_agency_apply_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    i = js.find("function _agencyCreateHtml(")
+    body = js[i:i + 3000] if i >= 0 else ""
+    if "mailto:support@trustsquare.co" not in body or "Apply by email" not in body:
+        return [(FAIL, "the agency console's no-agency screen names no way to apply again")]
+    return [(INFO, "an organisation without an agency is shown how to apply")]
+
 if __name__ == "__main__":
     sys.exit(main())

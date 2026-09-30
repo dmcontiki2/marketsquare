@@ -2163,7 +2163,13 @@ function _agencyCreateHtml(isSuper,email){
       +'<input id="ag-new-admin" placeholder="Admin email" value="'+(email||'')+'" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:8px;">'
       +'<input id="ag-new-countries" placeholder="Countries e.g. ZA,GB" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:10px;">'
       +'<button onclick="agencyCreate()" style="width:100%;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Create agency</button></div>')
-      :'<p style="color:var(--text-3);font-size:12px;margin-top:14px;">'+_agL('setup')+'</p>')
+      :'<p style="color:var(--text-3);font-size:12px;margin-top:14px;">'+_agL('setup')+'</p>'
+       /* AGENCY-APPLY-1 (30 Sep 2026, F14 walk): 'on application' named no way to apply -- a real agency stopped here */
+       +'<a href="mailto:support@trustsquare.co?subject='+encodeURIComponent('Application: '+_agL('org')+' on TrustSquare')
+       +'&body='+encodeURIComponent('Name of the '+_agL('org')+':\nRegistration number:\nCities you work in:\nYour sign-in email: '+(email||'')+'\n')
+       +'" style="display:inline-block;margin-top:10px;background:var(--navy,#0c1a2e);color:#fff;border-radius:50px;padding:11px 22px;'
+       +'font-weight:700;text-decoration:none;">Apply by email</a>'
+       +'<p style="color:var(--text-3);font-size:12px;margin-top:8px;">support@trustsquare.co \u2014 we link your '+_agL('org')+' to this account.</p>')
     +'</div>';
 }
 async function agencyCreate(){
