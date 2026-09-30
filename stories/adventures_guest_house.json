@@ -1,0 +1,624 @@
+{
+ "type": "adventures_guest_house",
+ "status": "draft",
+ "flow": "F12",
+ "label": {
+  "en": "Guest house",
+  "af": "Gastehuis",
+  "zu": "Indlu yezivakashi",
+  "xh": "Indlu yeendwendwe",
+  "nso": "Ntlo ya baeng"
+ },
+ "title": {
+  "en": "Guest house: from listing to the guests who find you",
+  "af": "Gastehuis: van advertensie tot die gaste wat jou vind",
+  "zu": "Indlu yezivakashi: kusukela esikhangisweni kuya ezivakashini ezikutholayo",
+  "xh": "Indlu yeendwendwe: ukusuka kwintengiso ukuya kwiindwendwe ezikufumanayo",
+  "nso": "Ntlo ya baeng: go tloga papatšong go ya go baeng bao ba go hwetšago"
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Elsabe",
+  "customer": "Riana"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List your stay",
+   "af": "Lys jou verblyf",
+   "zu": "Faka indawo yakho yokuhlala",
+   "xh": "Faka indawo yakho yokuhlala",
+   "nso": "Tsenya lefelo la gago la go robala"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "A guest finds you",
+   "af": "'n Gas vind jou",
+   "zu": "Isivakashi siyakuthola",
+   "xh": "Undwendwe luyakufumana",
+   "nso": "Moeng o a go hwetša"
+  },
+  {
+   "id": "c4",
+   "en": "You answer",
+   "af": "Jy antwoord",
+   "zu": "Uyaphendula",
+   "xh": "Uyaphendula",
+   "nso": "O a araba"
+  },
+  {
+   "id": "c5",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_01_sell",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Tap [[Sell]], then [[Adventures]]",
+    "In TrustSquare tap [[Sell]] at the bottom and choose [[Adventures]]."
+   ],
+   "af": [
+    "Tik [[Sell]], dan [[Adventures]]",
+    "Tik in TrustSquare onder op [[Sell]] en kies [[Adventures]]."
+   ],
+   "zu": [
+    "Thepha [[Sell]], bese [[Adventures]]",
+    "Ku-TrustSquare thepha [[Sell]] ngezansi bese ukhetha [[Adventures]]."
+   ],
+   "xh": [
+    "Cofa [[Sell]], emva koko [[Adventures]]",
+    "Kwi-TrustSquare cofa [[Sell]] ezantsi uze ukhethe [[Adventures]]."
+   ],
+   "nso": [
+    "Kgotla [[Sell]], ke moka [[Adventures]]",
+    "Go TrustSquare kgotla [[Sell]] ka fase gomme o kgethe [[Adventures]]."
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_02_kind",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Pick [[Accommodation]]",
+    "Stays are guest houses, bush camps, chalets, hostels, self-catering places, camp sites and huts. Experiences are things people do."
+   ],
+   "af": [
+    "Kies [[Accommodation]]",
+    "Verblyf is gastehuise, boskampe, chalets, hostelle, selfsorg-plekke, kampeerterreine en hutte. Ervarings is dinge wat mense doen."
+   ],
+   "zu": [
+    "Khetha [[Accommodation]]",
+    "Izindawo zokuhlala yizindlu zezivakashi, amakamu asehlathini, ama-chalet, amahostela, izindawo ozipheka kuzo, izindawo zokukhempa namaqhugwana. Okuhlangenwe nakho yizinto abantu abazenzayo."
+   ],
+   "xh": [
+    "Khetha [[Accommodation]]",
+    "Iindawo zokuhlala zizindlu zeendwendwe, iinkampu zasehlathini, ii-chalet, iihostele, iindawo ozipheka kuzo, iindawo zokukhempisha neendlwana. Amava zizinto abantu abazenzayo."
+   ],
+   "nso": [
+    "Kgetha [[Accommodation]]",
+    "Mafelo a go robala ke dintlo tša baeng, dikampa tša sekgwa, di-chalet, di-hostele, mafelo a go iphepa, mafelo a go kampa le mapotlana. Maitemogelo ke dilo tšeo batho ba di dirago."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_03_photos",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Add your best photos",
+    "Start with the outside or the view, then a room. The app checks every photo and blurs signs and street numbers, so your exact address stays private."
+   ],
+   "af": [
+    "Voeg jou beste foto's by",
+    "Begin met die buitekant of die uitsig, dan 'n kamer. Die toep kyk na elke foto en maak borde en straatnommers dof, sodat jou presiese adres privaat bly."
+   ],
+   "zu": [
+    "Engeza izithombe zakho ezinhle kakhulu",
+    "Qala ngangaphandle noma ngombono, bese kuba igumbi. I-app ihlola zonke izithombe futhi ifiphaze izimpawu nezinombolo zomgwaqo, ukuze ikheli lakho eliqondile lihlale liyimfihlo."
+   ],
+   "xh": [
+    "Yongeza iifoto zakho ezilungileyo",
+    "Qala ngangaphandle okanye ngembonakalo, emva koko igumbi. I-app ihlola yonke ifoto ize ifiphaze iimpawu neenombolo zesitalato, ukuze idilesi yakho ichaneke ihlale iyimfihlo."
+   ],
+   "nso": [
+    "Oketša diswantšho tša gago tše dibotse",
+    "Thoma ka ka ntle goba pono, ke moka kamora. App e hlahloba seswantšho se sengwe le se sengwe gomme e fifatša matšhwao le dinomoro tša mebila, gore aterese ya gago ya nnete e dule e le sephiri."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_04_details",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Say what kind of stay it is",
+    "Choose the type, then the rooms, how many it sleeps, your star grading, your price a night and your area."
+   ],
+   "af": [
+    "Sê watter soort verblyf dit is",
+    "Kies die soort, dan die kamers, hoeveel dit slaap, jou stergradering, jou prys per nag en jou area."
+   ],
+   "zu": [
+    "Yisho ukuthi kuyindawo enjani yokuhlala",
+    "Khetha uhlobo, bese amagumbi, bangaki abangalala khona, izinkanyezi zakho, intengo yakho ngobusuku nendawo yakho."
+   ],
+   "xh": [
+    "Yitsho ukuba yindawo enjani yokuhlala",
+    "Khetha uhlobo, emva koko amagumbi, bangaphi abanokulala apho, iinkwenkwezi zakho, ixabiso lakho ngobusuku nendawo yakho."
+   ],
+   "nso": [
+    "Bolela gore ke lefelo la mohuta ofe",
+    "Kgetha mohuta, ke moka dikamora, ba bakae bao ba ka robalago moo, dinaledi tša gago, theko ya gago ka bošego le lefelo la gago."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_05_rules",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Answer the house rules once",
+    "Meals, pets and children, and a few words about what makes a stay special. Guests stop asking the same questions."
+   ],
+   "af": [
+    "Beantwoord die huisreëls een keer",
+    "Etes, troeteldiere en kinders, en 'n paar woorde oor wat 'n verblyf spesiaal maak. Gaste hou op om dieselfde vrae te vra."
+   ],
+   "zu": [
+    "Phendula imithetho yendlu kanye",
+    "Ukudla, izilwane ezifuywayo nezingane, namagama ambalwa ngokwenza ukuhlala kukhethekile. Izivakashi ziyayeka ukubuza imibuzo efanayo."
+   ],
+   "xh": [
+    "Phendula imithetho yendlu kanye",
+    "Ukutya, izilwanyana zasekhaya nabantwana, namazwi ambalwa ngokwenza ukuhlala kukhethekile. Iindwendwe ziyayeka ukubuza imibuzo efanayo."
+   ],
+   "nso": [
+    "Araba melao ya ntlo gatee",
+    "Dijo, diruiwa le bana, le mantšu a mmalwa ka seo se dirago gore go dula moo go be go kgethegilego. Baeng ba tlogela go botšiša dipotšišo tše di swanago."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_06_environment",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Say where it is and what is around it",
+    "Type the general area and pick the [[Environment]]: bush, mountains, coast, farm and more. Guests search by it."
+   ],
+   "af": [
+    "Sê waar dit is en wat rondom dit is",
+    "Tik die algemene area en kies die [[Environment]]: bosveld, berge, kus, plaas en meer. Gaste soek daarvolgens."
+   ],
+   "zu": [
+    "Yisho ukuthi ikuphi nokuthi yini ezungezile",
+    "Bhala indawo ngokujwayelekile bese ukhetha [[Environment]]: ihlathi, izintaba, ugu, ipulazi nokunye. Izivakashi zisesha ngakho."
+   ],
+   "xh": [
+    "Yitsho ukuba iphi kwaye yintoni ejikelezileyo",
+    "Bhala indawo ngokubanzi uze ukhethe [[Environment]]: ihlathi, iintaba, unxweme, ifama nokunye. Iindwendwe zikhangela ngako."
+   ],
+   "nso": [
+    "Bolela gore le kae le gore go na le eng go le dikologa",
+    "Ngwala lefelo ka kakaretšo gomme o kgethe [[Environment]]: sekgwa, dithaba, lebopo, polase le tše dingwe. Baeng ba nyaka ka yona."
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_07_features",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Tick your features",
+    "[[Pool]], [[Braai]], [[WiFi]], [[Fireplace]] and the rest. They make your listing richer."
+   ],
+   "af": [
+    "Merk jou geriewe",
+    "[[Pool]], [[Braai]], [[WiFi]], [[Fireplace]] en die res. Hulle maak jou advertensie ryker."
+   ],
+   "zu": [
+    "Maka izinto onazo",
+    "[[Pool]], [[Braai]], [[WiFi]], [[Fireplace]] nokunye. Zenza isikhangiso sakho sicebe kakhudlwana."
+   ],
+   "xh": [
+    "Phawula izinto onazo",
+    "[[Pool]], [[Braai]], [[WiFi]], [[Fireplace]] nokunye. Zenza intengiso yakho ityebe ngakumbi."
+   ],
+   "nso": [
+    "Swaya dilo tšeo o nago le tšona",
+    "[[Pool]], [[Braai]], [[WiFi]], [[Fireplace]] le tše dingwe. Di dira gore papatšo ya gago e humile."
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_08_legal",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Read the legal side",
+    "Zoning, fire safety, a guest register and insurance: what a host needs in South Africa. It is general guidance, not legal advice."
+   ],
+   "af": [
+    "Lees die regskant",
+    "Sonering, brandveiligheid, 'n gasteregister en versekering: wat 'n gasheer in Suid-Afrika nodig het. Dit is algemene riglyne, nie regsadvies nie."
+   ],
+   "zu": [
+    "Funda uhlangothi lwezomthetho",
+    "Ukuklanywa komhlaba, ukuphepha emlilweni, irejista yezivakashi nomshwalense: lokho umsingathi akudingayo eNingizimu Afrika. Kuyisiqondiso esijwayelekile, akusona iseluleko somthetho."
+   ],
+   "xh": [
+    "Funda icala lomthetho",
+    "Ucando lomhlaba, ukhuseleko lomlilo, irejista yeendwendwe ne-inshorensi: oko umamkeli akufunayo eMzantsi Afrika. Sisikhokelo ngokubanzi, asiyongcebiso yomthetho."
+   ],
+   "nso": [
+    "Bala lehlakore la molao",
+    "Karoganyo ya naga, polokego ya mollo, rejisetara ya baeng le inšorense: seo moamogedi a se hlokago ka Afrika Borwa. Ke tlhahlo ya kakaretšo, ga se keletšo ya molao."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_09_score",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Check your score and publish",
+    "Your score shows what would lift you higher in search. Tap [[Publish now — I accept the Terms]]."
+   ],
+   "af": [
+    "Kyk na jou telling en publiseer",
+    "Jou telling wys wat jou hoër in soektogte sal lig. Tik [[Publish now — I accept the Terms]]."
+   ],
+   "zu": [
+    "Bheka amaphuzu akho bese ushicilela",
+    "Amaphuzu akho akhombisa okungakuphakamisa ekusesheni. Thepha [[Publish now — I accept the Terms]]."
+   ],
+   "xh": [
+    "Jonga amanqaku akho uze upapashe",
+    "Amanqaku akho abonisa oko kunokukuphakamisa ekukhangeleni. Cofa [[Publish now — I accept the Terms]]."
+   ],
+   "nso": [
+    "Lebelela dintlha tša gago gomme o phatlalatše",
+    "Dintlha tša gago di bontšha seo se ka go phagamišago ka go nyakišišo. Kgotla [[Publish now — I accept the Terms]]."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_10_live",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "You are live",
+    "Guests can find you and ask for an introduction straight away. Upload your ID in [[My Space]], then [[Trust]], so they see you are checked."
+   ],
+   "af": [
+    "Jy is lewendig",
+    "Gaste kan jou dadelik vind en vra vir 'n bekendstelling. Laai jou ID op in [[My Space]], dan [[Trust]], sodat hulle sien jy is nagegaan."
+   ],
+   "zu": [
+    "Usuphilayo",
+    "Izivakashi zingakuthola futhi zicele ukwethulwa ngokushesha. Layisha i-ID yakho ku-[[My Space]], bese [[Trust]], ukuze zibone ukuthi uhloliwe."
+   ],
+   "xh": [
+    "Uphilayo ngoku",
+    "Iindwendwe zingakufumana kwaye zicele ukwaziswa kwangoko. Layisha i-ID yakho kwi-[[My Space]], emva koko [[Trust]], ukuze zibone ukuba uhloliwe."
+   ],
+   "nso": [
+    "O phela bjale",
+    "Baeng ba ka go hwetša gomme ba kgopela go tsebišwa gona bjale. Laiša ID ya gago go [[My Space]], ke moka [[Trust]], gore ba bone gore o hlahlobilwe."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f12_11_stays",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "A guest opens Adventures and taps [[Stays]]",
+    "She sees places to stay only, from guest houses to bush camps."
+   ],
+   "af": [
+    "'n Gas maak Adventures oop en tik [[Stays]]",
+    "Sy sien net blyplekke, van gastehuise tot boskampe."
+   ],
+   "zu": [
+    "Isivakashi sivula i-Adventures bese sithepha [[Stays]]",
+    "Sibona izindawo zokuhlala kuphela, kusukela ezindlini zezivakashi kuya emakamu asehlathini."
+   ],
+   "xh": [
+    "Undwendwe luvula i-Adventures luze lucofe [[Stays]]",
+    "Lubona iindawo zokuhlala kuphela, ukusuka kwizindlu zeendwendwe ukuya kwiinkampu zasehlathini."
+   ],
+   "nso": [
+    "Moeng o bula Adventures gomme o kgotla [[Stays]]",
+    "O bona mafelo a go dula feela, go tloga dintlong tša baeng go ya dikampeng tša sekgwa."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f12_12_env_filter",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "She picks the surroundings she wants",
+    "In [[Filtered Search]] she taps an [[Environment]], like [[Farm & Rural]], then [[Show results]]."
+   ],
+   "af": [
+    "Sy kies die omgewing wat sy wil hê",
+    "In [[Filtered Search]] tik sy 'n [[Environment]], soos [[Farm & Rural]], dan [[Show results]]."
+   ],
+   "zu": [
+    "Sikhetha indawo esiyifunayo",
+    "Ku-[[Filtered Search]] sithepha i-[[Environment]], njenge-[[Farm & Rural]], bese [[Show results]]."
+   ],
+   "xh": [
+    "Lukhetha indawo olufuna yona",
+    "Kwi-[[Filtered Search]] lucofa i-[[Environment]], njenge-[[Farm & Rural]], emva koko [[Show results]]."
+   ],
+   "nso": [
+    "O kgetha tikologo yeo a e nyakago",
+    "Go [[Filtered Search]] o kgotla [[Environment]], bjalo ka [[Farm & Rural]], ke moka [[Show results]]."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f12_13_found",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Your stay is there",
+    "Your card says [[Stays]] and your environment. She can also type your town in the search box."
+   ],
+   "af": [
+    "Jou verblyf is daar",
+    "Jou kaart sê [[Stays]] en jou omgewing. Sy kan ook jou dorp in die soekblokkie tik."
+   ],
+   "zu": [
+    "Indawo yakho ikhona",
+    "Ikhadi lakho lithi [[Stays]] kanye nendawo ekuzungezile. Angabhala nedolobha lakho ebhokisini lokusesha."
+   ],
+   "xh": [
+    "Indawo yakho ikhona",
+    "Ikhadi lakho lithi [[Stays]] kunye nendawo ekujikelezileyo. Unokubhala nedolophu yakho kwibhokisi yokukhangela."
+   ],
+   "nso": [
+    "Lefelo la gago le gona",
+    "Karata ya gago e re [[Stays]] le tikologo ya gago. A ka ngwala le toropo ya gago lebokoseng la go nyaka."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f12_14_detail",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "She reads your listing",
+    "Your price a night, your area, your environment, your rules and your Trust Score. Your name and address stay private."
+   ],
+   "af": [
+    "Sy lees jou advertensie",
+    "Jou prys per nag, jou area, jou omgewing, jou reëls en jou Trust Score. Jou naam en adres bly privaat."
+   ],
+   "zu": [
+    "Sifunda isikhangiso sakho",
+    "Intengo yakho ngobusuku, indawo yakho, okukuzungezile, imithetho yakho ne-Trust Score yakho. Igama lakho nekheli lakho kuhlala kuyimfihlo."
+   ],
+   "xh": [
+    "Lufunda intengiso yakho",
+    "Ixabiso lakho ngobusuku, indawo yakho, okukujikelezileyo, imithetho yakho ne-Trust Score yakho. Igama lakho nedilesi yakho zihlala ziyimfihlo."
+   ],
+   "nso": [
+    "O bala papatšo ya gago",
+    "Theko ya gago ka bošego, lefelo la gago, tikologo ya gago, melao ya gago le Trust Score ya gago. Leina la gago le aterese di dula e le sephiri."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f12_15_ask",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "She asks for an introduction",
+    "She writes a short question. 1 Tuppence is held from her, and spent only if you accept."
+   ],
+   "af": [
+    "Sy vra vir 'n bekendstelling",
+    "Sy skryf 'n kort vraag. 1 Tuppence word van haar teruggehou en net bestee as jy aanvaar."
+   ],
+   "zu": [
+    "Sicela ukwethulwa",
+    "Sibhala umbuzo omfushane. I-Tuppence e-1 iyabanjwa kuso, isetshenziswe kuphela uma wamukela."
+   ],
+   "xh": [
+    "Lucela ukwaziswa",
+    "Lubhala umbuzo omfutshane. I-Tuppence e-1 iyabanjwa kulo, isetyenziswe kuphela ukuba uyamkela."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O ngwala potšišo ye kopana. Tuppence e 1 e swarwa go yena, e šomišwa feela ge o amogela."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_17_intros",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Read her question",
+    "Open [[My Space]], then [[Intros]]. Her message shows under her request."
+   ],
+   "af": [
+    "Lees haar vraag",
+    "Maak [[My Space]] oop, dan [[Intros]]. Haar boodskap wys onder haar versoek."
+   ],
+   "zu": [
+    "Funda umbuzo wakhe",
+    "Vula [[My Space]], bese [[Intros]]. Umlayezo wakhe uvela ngaphansi kwesicelo sakhe."
+   ],
+   "xh": [
+    "Funda umbuzo wakhe",
+    "Vula [[My Space]], emva koko [[Intros]]. Umyalezo wakhe uvela phantsi kwesicelo sakhe."
+   ],
+   "nso": [
+    "Bala potšišo ya gagwe",
+    "Bula [[My Space]], ke moka [[Intros]]. Molaetša wa gagwe o tšwelela ka fase ga kgopelo ya gagwe."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_18_accepted",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Accept",
+    "Tap [[Accept]]. It costs you nothing. You both get an email: reply to it to talk. Your email address stays private."
+   ],
+   "af": [
+    "Aanvaar",
+    "Tik [[Accept]]. Dit kos jou niks. Julle albei kry 'n e-pos: antwoord dit om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Yamukela",
+    "Thepha [[Accept]]. Akukubizi lutho. Nobabili nithola i-imeyili: yiphendule ukuze nikhulume. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Yamkela",
+    "Cofa [[Accept]]. Akukuxabisi nto. Nobabini nifumana i-imeyile: yiphendule ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "Amogela",
+    "Kgotla [[Accept]]. Ga go go biditše selo. Ka bobedi le hwetša imeile: e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f12_19_buyer",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "She sees you accepted",
+    "Her [[Intros]] say [[Accepted]], and her 1 Tuppence is spent."
+   ],
+   "af": [
+    "Sy sien jy het aanvaar",
+    "Haar [[Intros]] sê [[Accepted]], en haar 1 Tuppence is bestee."
+   ],
+   "zu": [
+    "Sibona ukuthi wamukele",
+    "Ama-[[Intros]] aso athi [[Accepted]], futhi i-Tuppence yaso e-1 isisetshenzisiwe."
+   ],
+   "xh": [
+    "Lubona ukuba wamkele",
+    "Ii-[[Intros]] zalo zithi [[Accepted]], kwaye i-Tuppence yalo e-1 isetyenzisiwe."
+   ],
+   "nso": [
+    "O bona gore o amogetše",
+    "Di-[[Intros]] tša gagwe di re [[Accepted]], gomme Tuppence ya gagwe e 1 e šomišitšwe."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f12_21_status_card",
+   "pass": true,
+   "quick": null,
+   "en": [
+    "Put your stay on your WhatsApp Status",
+    "In your [[Seller Hub]] tap [[Share to Status]]. A card with your stay, your price and your link opens: save it and post it."
+   ],
+   "af": [
+    "Sit jou verblyf op jou WhatsApp Status",
+    "Tik in jou [[Seller Hub]] op [[Share to Status]]. 'n Kaart met jou verblyf, jou prys en jou skakel maak oop: stoor dit en plaas dit."
+   ],
+   "zu": [
+    "Beka indawo yakho ku-WhatsApp Status yakho",
+    "Ku-[[Seller Hub]] yakho thepha [[Share to Status]]. Kuvuleka ikhadi elinendawo yakho, intengo yakho nesixhumanisi sakho: lilondoloze bese ulifaka."
+   ],
+   "xh": [
+    "Beka indawo yakho kwi-WhatsApp Status yakho",
+    "Kwi-[[Seller Hub]] yakho cofa [[Share to Status]]. Kuvuleka ikhadi elinendawo yakho, ixabiso lakho nekhonkco lakho: ligcine uze ulifake."
+   ],
+   "nso": [
+    "Bea lefelo la gago go WhatsApp Status ya gago",
+    "Go [[Seller Hub]] ya gago kgotla [[Share to Status]]. Karata ye e nago le lefelo la gago, theko ya gago le kgokagano ya gago e a bulega: e boloke gomme o e tsenye."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}
