@@ -33517,5 +33517,25 @@ def rg_agency_apply_1():
         return [(FAIL, "the agency console's no-agency screen names no way to apply again")]
     return [(INFO, "an organisation without an agency is shown how to apply")]
 
+@entry("RG-0575", "ITEM-HINT-1: the F10 story walk (collectors) -- Quick's 'What exactly is it?' box on a Collectors advert gives a "
+       "collector's example (1974 Krugerrand, 1 oz gold) in every Quick language, not 'Raw honey, 500 g jar'",
+       OPEN, fixed_on="2026-09-30",
+       scope="quick.html (= genie/HARNESS.html) #qpitem placeholder by door; roles/quick_i18n.json carries the new line in every Quick "
+             "language (QI18N block regenerated, nothing lost).",
+       ref="F10 cloud walk 30 Sep 2026 (Siyabonga, coins): the example on his coin advert was honey.")
+def rg_item_hint_1():
+    q = repo_file("quick.html"); src = repo_file("roles/quick_i18n.json")
+    if None in (q, src):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "cat().key==='collectors' ? 'What exactly is it? e.g. 1974 Krugerrand, 1 oz gold'" not in q:
+        bad.append("a collector is shown the honey example again")
+    if '"What exactly is it? e.g. 1974 Krugerrand, 1 oz gold"' not in src:
+        bad.append("the collector's example has no translations in roles/quick_i18n.json")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a collector's item gets a collector's example")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
