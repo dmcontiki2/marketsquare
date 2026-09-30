@@ -20,8 +20,7 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   `[sendable]` **9 · runway 0.** onboard_steps marks those scanner sessions bot=0 — the funnel counts machines.
 - **The prize (§7):** 1,111 phone-only Gumtree South Africans advertising their own services; 0 phone-only rows
   in `prospects` (the scraper drops them). Cold SMS/WhatsApp to them is a POPIA s69 question — David's (GI-0004).
-- **Built:** GI-0001 (hub agent card fit + Quick line wording) — **not live**: `ms.js` and the ledger are under
-  `lm-walk`'s work lock (21:03Z). Patch in `docs/goal_patches/`. Follow-up scheduled to ship it.
+- **Shipped:** GI-0001 HUB-AGENT-FIT-1 (RG-0552 LOCKED) — 06bf885, live 30 Sep 00:14Z after `lm-walk` released its lock; proven on the live page (Services-only seller: agents' card hidden; Property / Adventures / no adverts: shown) and both Quick lines read "Cleaner, gardener, nanny, driver? Quick listing".
 - **REVIEW NOW:** GI-0002 archive QA adverts · GI-0003 full-size Quick card in Sell (changes RG-0478) ·
   GI-0004 SMS account ≈ R100–135/month + legal read on the 1,111.
 - **First-run check (§9):** "Daily Agent Stand-up (with Pulse)" and "trustsquare-onboarding-goal" are OFF;
