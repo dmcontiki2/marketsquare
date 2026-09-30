@@ -11543,11 +11543,36 @@ function msPauseListing(id, pause){
 /* HIDDEN-CASUAL-1 (Ripple walk 3, 27 Sep 2026): RUL-115 keeps a new home worker out of strangers' sight until one
    person she worked for confirms her (or her ID is checked). She was never told, and the link lived on the fifth
    card of the trust coach. Her own card now says so, with the link one tap away. */
-function msHiddenCasualNote(lid){
+function msHiddenCasualNote(lid, raw){
+  /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): for a nanny, caregiver, au pair or creche assistant it is a
+     police clearance checked by our team that opens her advert (RUL-153) -- a confirmation or an ID check does not. */
+  if(raw && raw.gate === 'police_clearance'){
+    const waiting = raw.clearance_status === 'pending';
+    return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
+      + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
+      + (waiting
+        ? '<div style="font-size:12px;color:#78350f;margin:3px 0 0;line-height:1.45;">Your police clearance is with our team. Strangers see your listing once we have checked it.</div>'
+        : '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Parents and families see it once our team has checked your police clearance. This keeps the children and people you care for safe.</div>'
+          + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ')">Upload my police clearance</button>')
+      + '</div>';
+  }
   return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
     + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
     + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
     + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
+}
+function msClearanceUpload(lid){
+  openEditListing(lid);
+  let n = 0;
+  const t = setInterval(function(){
+    const sel = document.getElementById('el-dh-signal');
+    if(sel || ++n > 40){
+      clearInterval(t);
+      if(!sel) return;
+      sel.value = 'category.services_cas.clearance';
+      sel.scrollIntoView({block:'center'});
+    }
+  }, 250);
 }
 async function msEmployerLinkCard(btn){
   const email = _msSignedEmail(); const host = btn.parentNode;
@@ -11644,7 +11669,7 @@ function renderDashCard(dl){
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
-      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId) : ''}
+      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId, dl._raw) : ''}
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
@@ -12625,6 +12650,14 @@ const EL_CRED_SIGNALS = {
   ],
   Cars: [
     ['category.cars.dealer_reg',  'MIRA dealer / trader registration (+8)'],
+  ],
+  /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): a nanny had nowhere to hand in the police clearance her
+     advert waits for -- the general upload filed it as a Local-Market certificate. */
+  Services: [
+    ['category.services_cas.clearance', 'Police clearance (+10) — nannies and carers need it before strangers see them'],
+  ],
+  Tutors: [
+    ['category.tutors.clearance', 'Police clearance (+8)'],
   ],
 };
 function EL_SIGNAL_OPTS_HTML(){
