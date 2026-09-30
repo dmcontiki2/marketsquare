@@ -32922,5 +32922,32 @@ def rg_sms_daily_cap_1():
     return [(INFO, "SMS total capped per day (default 40), fails closed")]
 
 
+@entry("RG-0555", "SMS-CODES-ONLY-1: TrustSquare's paid SMS account sends one-time sign-in codes and nothing else -- no Buzz, "
+       "relay, listing-live or low-balance messages; those stay on push and e-mail between the users",
+       OPEN, fixed_on="2026-09-30",
+       scope="sms_provider.py SMS_PURPOSES gate at the top of send(); bea_main.py _sms_key_seller returns 'skipped'.",
+       ref="David, 30 Sep 2026: 'For the users Buzz usage they must not use my account, i hope it is only for us to once a "
+           "customer send them our sms? After that all buzz comms must take place between the two users on their account.' "
+           "Found three notification callers (relay-nudge, lm-lowbal, quick-live) that would have spent his credit. RUL-122.")
+def rg_sms_codes_only_1():
+    sp = repo_file("sms_provider.py"); bm = repo_file("bea_main.py")
+    if None in (sp, bm):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    c = _code_only(sp)
+    bad = []
+    if 'SMS_PURPOSES = ("phone-code", "setup-test")' not in c:
+        bad.append("SMS purposes are no longer limited to the sign-in code")
+    i = c.find("def send("); j = c.find("if purpose not in SMS_PURPOSES:", i); k = c.find("httpx.post(", i)
+    if i < 0 or j < 0 or (k >= 0 and j > k):
+        bad.append("send() no longer refuses other purposes before it posts")
+    f = bm.find("def _sms_key_seller(")
+    body = bm[f:f + 1500] if f >= 0 else ""
+    if 'return "skipped"' not in body.split("    try:")[0]:
+        bad.append("_sms_key_seller sends notifications by our SMS again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "our SMS account sends sign-in codes only")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

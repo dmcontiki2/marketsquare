@@ -126,8 +126,19 @@ def _throttled(to: str, per_hour: int = 6) -> bool:
     return False
 
 
+# SMS-CODES-ONLY-1 (David, 30 Sep 2026): "For the users Buzz usage they must not use my account ... After that all
+# buzz comms must take place between the two users on their account." TrustSquare's paid SMS account sends ONE kind
+# of message: the one-time sign-in code. Buzz, relay nudges, listing-live and low-balance notices never go by our SMS
+# (RUL-122: push and e-mail are the notification channels). Enforced HERE, at the only door, so no new caller can
+# quietly start spending on notifications. 'setup-test' is the operator's own delivery test.
+SMS_PURPOSES = ("phone-code", "setup-test")
+
+
 def send(to: str, text: str, purpose: str = "") -> tuple:
     """Send one SMS. Returns (status, info): status in 'sent' | 'skipped' | 'failed'."""
+    if purpose not in SMS_PURPOSES:
+        _log.info("sms refused (%s): our SMS account sends sign-in codes only (SMS-CODES-ONLY-1)", purpose)
+        return ("skipped", "sign-in codes only")
     e164 = normalise(to)
     if not e164:
         return ("failed", "number not recognised")

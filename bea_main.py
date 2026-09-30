@@ -8019,7 +8019,10 @@ def _user_phone(conn, email):
         return None
 
 def _sms_key_seller(email: str, text: str, purpose: str) -> str:
-    """SMS to a key-account seller when she left a phone; 'skipped' otherwise. Never raises."""
+    """SMS to a key-account seller when she left a phone; 'skipped' otherwise. Never raises.
+    SMS-CODES-ONLY-1 (David, 30 Sep 2026): no longer sends -- TrustSquare's SMS account is for sign-in codes only;
+    these nudges go by push/e-mail (RUL-122). sms_provider.send() refuses every purpose but 'phone-code' anyway."""
+    return "skipped"
     try:
         import sms_provider
         conn = database.get_db()
