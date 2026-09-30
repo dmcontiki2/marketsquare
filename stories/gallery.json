@@ -88,6 +88,28 @@
    "walked_on": "2026-09-30",
    "steps": 18,
    "cover": "f2_01_door"
+  },
+  {
+   "type": "property_house",
+   "status": "draft",
+   "flow": "F6",
+   "label": {
+    "en": "House for sale",
+    "af": "Huis te koop",
+    "zu": "Indlu edayiswayo",
+    "xh": "Indlu ethengiswayo",
+    "nso": "Ntlo ye e rekišwago"
+   },
+   "title": {
+    "en": "House for sale: from listing to the buyer who asks for you",
+    "af": "Huis te koop: van advertensie tot die koper wat na jou vra",
+    "zu": "Indlu edayiswayo: kusukela esikhangisweni kuya kumthengi okucelayo",
+    "xh": "Indlu ethengiswayo: ukusuka kwintengiso ukuya kumthengi okucelayo",
+    "nso": "Ntlo ye e rekišwago: go tloga papatšong go ya go moreki yo a go kgopelago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 25,
+   "cover": "f6_01_door"
   }
  ]
 }

@@ -324,4 +324,5 @@ stories/cars_bakkie.json | help/data/cars_bakkie.json
 stories/home_cleaner.json | help/data/home_cleaner.json
 stories/localmarket_food_preserves.json | help/data/localmarket_food_preserves.json
 stories/nanny.json | help/data/nanny.json
+stories/property_house.json | help/data/property_house.json
 # ── end HELP-STORIES-1 ──

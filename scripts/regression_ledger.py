@@ -33357,5 +33357,26 @@ def rg_photo_terms_toast_1():
     return [(INFO, "a photo added before the terms says how to keep it")]
 
 
+@entry("RG-0583", "PROP-STORY-1: the F6 story guide -- House for sale, walked live and told in five languages at "
+       "/help/property_house; its Area Dossier step is a 3T report step (3T_report, via STORY-REPORT-COST-1)",
+       OPEN, fixed_on="2026-09-30",
+       scope="stories/property_house.json (+ gallery.json, the manifest block); the NT_report cost comes from the F8 "
+             "session's STORY-REPORT-COST-1 in stories/help.html and scripts/build_help.py.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md). Faults found are RG-0558/0559/0580/0581/0582.")
+def rg_prop_story_1():
+    h = repo_file("stories/help.html"); b = repo_file("scripts/build_help.py"); s = repo_file("stories/property_house.json")
+    if None in (h, b, s):
+        return [(FAIL, "help.html, build_help.py or property_house.json is missing")]
+    bad = []
+    if "T_report$/" not in h or "T_report" not in b:
+        bad.append("the guide or build_help no longer knows a paid report step (NT_report)")
+    if '"type": "property_house"' not in s or '"3T_report"' not in s:
+        bad.append("the F6 story lost its type or its dossier step")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "/help/property_house: the house-for-sale guide, dossier step marked 3T")]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

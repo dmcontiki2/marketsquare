@@ -1,0 +1,797 @@
+{
+ "type": "property_house",
+ "status": "draft",
+ "flow": "F6",
+ "label": {
+  "en": "House for sale",
+  "af": "Huis te koop",
+  "zu": "Indlu edayiswayo",
+  "xh": "Indlu ethengiswayo",
+  "nso": "Ntlo ye e rekišwago"
+ },
+ "title": {
+  "en": "House for sale: from listing to the buyer who asks for you",
+  "af": "Huis te koop: van advertensie tot die koper wat na jou vra",
+  "zu": "Indlu edayiswayo: kusukela esikhangisweni kuya kumthengi okucelayo",
+  "xh": "Indlu ethengiswayo: ukusuka kwintengiso ukuya kumthengi okucelayo",
+  "nso": "Ntlo ye e rekišwago: go tloga papatšong go ya go moreki yo a go kgopelago"
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Magdalena",
+  "customer": "Jacoba"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "A buyer finds your house",
+   "af": "'n Koper vind jou huis",
+   "zu": "Umthengi uthola indlu yakho",
+   "xh": "Umthengi ufumana indlu yakho",
+   "nso": "Moreki o hwetša ntlo ya gago"
+  },
+  {
+   "id": "c4",
+   "en": "The introduction",
+   "af": "Die voorstelling",
+   "zu": "Ukwethulwa",
+   "xh": "Ukwaziswa",
+   "nso": "Tsebišo"
+  },
+  {
+   "id": "c5",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_01_door",
+   "pass": true,
+   "en": [
+    "Open Quick, go to [[Property]] and tap [[List a place]]",
+    "Swipe the pictures until you see Property. One tap starts your listing."
+   ],
+   "af": [
+    "Maak Quick oop, gaan na [[Property]] en tik [[List a place]]",
+    "Swiep die prente totdat jy Eiendom sien. Een tik begin jou advertensie."
+   ],
+   "zu": [
+    "Vula i-Quick, iya ku-[[Property]] bese uthepha [[List a place]]",
+    "Swayipha izithombe uze ubone Izindlu. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, yiya kwi-[[Property]] uze ucofe [[List a place]]",
+    "Tyibilikisa imifanekiso ude ubone Izindlu. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, eya go [[Property]] o kgotle [[List a place]]",
+    "Šuthiša diswantšho go fihlela o bona Thoto. Go kgotla gatee go thoma papatšo ya gago."
+   ],
+   "quick": [
+    "door"
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_02_what",
+   "pass": true,
+   "en": [
+    "Tap [[House]]",
+    "A flat, townhouse, plot, farm or commercial place follows the same steps."
+   ],
+   "af": [
+    "Tik [[House]]",
+    "'n Woonstel, meenthuis, erf, plaas of sakeperseel volg dieselfde stappe."
+   ],
+   "zu": [
+    "Thepha [[House]]",
+    "Ifulethi, i-townhouse, isiza, ipulazi noma indawo yebhizinisi kulandela izinyathelo ezifanayo."
+   ],
+   "xh": [
+    "Cofa [[House]]",
+    "Iflethi, i-townhouse, isiza, ifama okanye indawo yoshishino zilandela amanyathelo afanayo."
+   ],
+   "nso": [
+    "Kgotla [[House]]",
+    "Folete, ntlo ya mothalo, setsha, polase goba lefelo la kgwebo di latela dikgato tše di swanago."
+   ],
+   "quick": [
+    "what"
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_03_deal",
+   "pass": true,
+   "en": [
+    "Tap [[To sell]]",
+    "Letting it instead? Tap To let: Quick then asks the rent a month."
+   ],
+   "af": [
+    "Tik [[To sell]]",
+    "Wil jy dit eerder verhuur? Tik To let: Quick vra dan die huur per maand."
+   ],
+   "zu": [
+    "Thepha [[To sell]]",
+    "Uyayiqashisa esikhundleni salokho? Thepha To let: i-Quick izobe isibuza irenti ngenyanga."
+   ],
+   "xh": [
+    "Cofa [[To sell]]",
+    "Uyayiqeshisa endaweni yoko? Cofa To let: i-Quick iza kubuza irente ngenyanga."
+   ],
+   "nso": [
+    "Kgotla [[To sell]]",
+    "O e hirišetša go na le moo? Kgotla To let: Quick e tla botšiša rente ka kgwedi."
+   ],
+   "quick": [
+    "deal"
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_04_beds",
+   "pass": true,
+   "en": [
+    "Tap how many bedrooms",
+    "A plot or a commercial place skips this question."
+   ],
+   "af": [
+    "Tik hoeveel slaapkamers",
+    "'n Erf of sakeperseel slaan hierdie vraag oor."
+   ],
+   "zu": [
+    "Thepha ukuthi mangaki amakamelo okulala",
+    "Isiza noma indawo yebhizinisi yeqa lo mbuzo."
+   ],
+   "xh": [
+    "Cofa mangaphi amagumbi okulala",
+    "Isiza okanye indawo yoshishino iyawutsiba lo mbuzo."
+   ],
+   "nso": [
+    "Kgotla gore ke diphapoši tše kae tša go robala",
+    "Setsha goba lefelo la kgwebo di tshela potšišo ye."
+   ],
+   "quick": [
+    "beds"
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_05_where",
+   "pass": true,
+   "en": [
+    "Tap your area",
+    "Not in the list? Tap Another option and type it. Quick asks your city once, then remembers it."
+   ],
+   "af": [
+    "Tik jou area",
+    "Nie in die lys nie? Tik Another option en tik dit in. Quick vra jou stad een keer en onthou dit."
+   ],
+   "zu": [
+    "Thepha indawo yakho",
+    "Ayikho ohlwini? Thepha Another option bese uyibhala. I-Quick ibuza idolobha lakho kanye, bese ilikhumbula."
+   ],
+   "xh": [
+    "Cofa indawo yakho",
+    "Ayikho kuluhlu? Cofa Another option uze uyibhale. I-Quick ibuza isixeko sakho kube kanye, emva koko isikhumbule."
+   ],
+   "nso": [
+    "Kgotla lefelo la gago",
+    "Ga le gona lenaneong? Kgotla Another option o le ngwale. Quick e botšiša toropo ya gago gatee, ke moka e e gopole."
+   ],
+   "quick": [
+    "where"
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_06_price",
+   "pass": true,
+   "en": [
+    "Type your asking price, then tap [[Next]]",
+    "Type it the way you say it: 2 450 000 or 2.45m. It shows on your listing as R2 450 000."
+   ],
+   "af": [
+    "Tik jou vraprys, dan [[Next]]",
+    "Tik dit soos jy dit sê: 2 450 000 of 2.45m. Dit wys op jou advertensie as R2 450 000."
+   ],
+   "zu": [
+    "Bhala intengo oyifunayo, bese [[Next]]",
+    "Yibhale ngendlela oyisho ngayo: 2 450 000 noma 2.45m. Ivela esikhangisweni sakho njengo-R2 450 000."
+   ],
+   "xh": [
+    "Bhala ixabiso olifunayo, emva koko [[Next]]",
+    "Libhale ngendlela olithetha ngayo: 2 450 000 okanye 2.45m. Libonakala kwintengiso yakho njengo-R2 450 000."
+   ],
+   "nso": [
+    "Ngwala theko ye o e nyakago, ke moka [[Next]]",
+    "E ngwale ka mo o e bolelago ka gona: 2 450 000 goba 2.45m. E bonala papatšong ya gago bjalo ka R2 450 000."
+   ],
+   "quick": [
+    "price"
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_07_draft",
+   "pass": true,
+   "en": [
+    "Check your listing, then tap [[Save my listing]]",
+    "Saving is free. The photo is only an example until you add your own in the app."
+   ],
+   "af": [
+    "Kyk na jou advertensie, dan [[Save my listing]]",
+    "Stoor is gratis. Die foto is net 'n voorbeeld totdat jy jou eie in die app byvoeg."
+   ],
+   "zu": [
+    "Hlola isikhangiso sakho, bese [[Save my listing]]",
+    "Ukugcina kumahhala. Isithombe siyisibonelo nje uze ufake esakho ku-app."
+   ],
+   "xh": [
+    "Jonga intengiso yakho, emva koko [[Save my listing]]",
+    "Ukugcina simahla. Umfanekiso ngumzekelo nje ude ufake owakho kwi-app."
+   ],
+   "nso": [
+    "Lekola papatšo ya gago, ke moka [[Save my listing]]",
+    "Go boloka ke mahala. Seswantšho ke mohlala feela go fihlela o tsenya sa gago go app."
+   ],
+   "quick": [
+    "draft"
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_08_saved",
+   "pass": true,
+   "en": [
+    "Saved: tap [[Sign the terms and publish]]",
+    "Your listing is kept, and we email you a link to it too. Nobody sees it until you publish."
+   ],
+   "af": [
+    "Gestoor: tik [[Sign the terms and publish]]",
+    "Jou advertensie is bewaar, en ons e-pos jou ook 'n skakel daarna. Niemand sien dit voordat jy publiseer nie."
+   ],
+   "zu": [
+    "Kugciniwe: thepha [[Sign the terms and publish]]",
+    "Isikhangiso sakho sigciniwe, futhi sikuthumelela isixhumanisi nge-imeyili. Akekho osibonayo uze usishicilele."
+   ],
+   "xh": [
+    "Kugciniwe: cofa [[Sign the terms and publish]]",
+    "Intengiso yakho igciniwe, kwaye sikuthumelela ikhonkco nge-imeyile. Akukho mntu uyibonayo ude uyipapashe."
+   ],
+   "nso": [
+    "E bolokilwe: kgotla [[Sign the terms and publish]]",
+    "Papatšo ya gago e bolokilwe, gape re go romela kgokagano ka imeile. Ga go yo a e bonago go fihlela o e phatlalatša."
+   ],
+   "quick": [
+    "saved"
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_09_hub",
+   "pass": true,
+   "en": [
+    "TrustSquare opens your Seller Hub: tap [[Edit]]",
+    "Your listing waits here as a draft. Edit is where you add your own photos and the details."
+   ],
+   "af": [
+    "TrustSquare maak jou Verkopersentrum oop: tik [[Edit]]",
+    "Jou advertensie wag hier as 'n konsep. Edit is waar jy jou eie foto's en die besonderhede byvoeg."
+   ],
+   "zu": [
+    "I-TrustSquare ivula i-Seller Hub yakho: thepha [[Edit]]",
+    "Isikhangiso sakho silinde lapha njengokusalungiswa. Ku-Edit yilapho ufaka khona izithombe zakho nemininingwane."
+   ],
+   "xh": [
+    "I-TrustSquare ivula i-Seller Hub yakho: cofa [[Edit]]",
+    "Intengiso yakho ilinde apha njengedrafti. Ku-Edit kulapho ufaka khona imifanekiso yakho neenkcukacha."
+   ],
+   "nso": [
+    "TrustSquare e bula Seller Hub ya gago: kgotla [[Edit]]",
+    "Papatšo ya gago e emetše mo bjalo ka kakanyo. Edit ke moo o tsenyago diswantšho tša gago le dintlha."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_10_edit",
+   "pass": true,
+   "en": [
+    "Add your photos and the details, then tap [[Save Changes]]",
+    "Bathrooms, garages, floor and erf size, and a few lines about the house. Keep the street number and your phone number off the photos: the address is only shared after an introduction."
+   ],
+   "af": [
+    "Voeg jou foto's en die besonderhede by, dan [[Save Changes]]",
+    "Badkamers, motorhuise, vloer- en erfgrootte, en 'n paar reëls oor die huis. Hou die straatnommer en jou foonnommer uit die foto's: die adres word eers ná 'n voorstelling gedeel."
+   ],
+   "zu": [
+    "Faka izithombe zakho nemininingwane, bese [[Save Changes]]",
+    "Amagumbi okugeza, amagaraji, ubukhulu bephansi nesiza, nemigqa embalwa ngendlu. Ungabonisi inombolo yomgwaqo nenombolo yakho yefoni ezithombeni: ikheli labelwana ngalo kuphela ngemva kokwethulwa."
+   ],
+   "xh": [
+    "Faka imifanekiso yakho neenkcukacha, emva koko [[Save Changes]]",
+    "Amagumbi okuhlambela, iigaraji, ubungakanani bomgangatho nesiza, nemigca embalwa ngendlu. Musa ukubonisa inombolo yesitrato nenombolo yakho yefowuni kwimifanekiso: idilesi yabelwana ngayo kuphela emva kokwaziswa."
+   ],
+   "nso": [
+    "Tsenya diswantšho tša gago le dintlha, ke moka [[Save Changes]]",
+    "Diphapoši tša go hlapela, dikaratšhe, bogolo bja lebato le setsha, le methalo e mmalwa ka ntlo. O se bontšhe nomoro ya seterata le nomoro ya gago ya mogala diswantšhong: aterese e abelanwa feela ka morago ga tsebišo."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_11_terms",
+   "pass": true,
+   "en": [
+    "Read the seller terms, tick both boxes, tap [[I accept]]",
+    "Once only, at your first save. Your changes stay on the screen while you read."
+   ],
+   "af": [
+    "Lees die verkopersvoorwaardes, merk albei blokkies, tik [[I accept]]",
+    "Net een keer, met jou eerste stoor. Jou veranderinge bly op die skerm terwyl jy lees."
+   ],
+   "zu": [
+    "Funda imigomo yomthengisi, maka womabili amabhokisi, thepha [[I accept]]",
+    "Kanye kuphela, lapho ugcina okokuqala. Izinguquko zakho zihlala esikrinini ngenkathi ufunda."
+   ],
+   "xh": [
+    "Funda imiqathango yomthengisi, phawula omabini amabhokisi, cofa [[I accept]]",
+    "Kube kanye kuphela, xa ugcina okokuqala. Utshintsho lwakho luhlala kwisikrini ngelixa ufunda."
+   ],
+   "nso": [
+    "Bala dipego tša morekiši, swaya mapokisi ka bobedi, kgotla [[I accept]]",
+    "Gatee feela, ge o boloka la mathomo. Diphetogo tša gago di dula sekrining ge o bala."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_12_publish",
+   "pass": true,
+   "en": [
+    "Back in your Seller Hub, tap [[Publish]]",
+    "Publishing is free. Your house goes live at once."
+   ],
+   "af": [
+    "Terug in jou Verkopersentrum, tik [[Publish]]",
+    "Publiseer is gratis. Jou huis is dadelik op die webwerf."
+   ],
+   "zu": [
+    "Ubuyele ku-Seller Hub yakho, thepha [[Publish]]",
+    "Ukushicilela kumahhala. Indlu yakho ivela khona manjalo."
+   ],
+   "xh": [
+    "Ubuyele kwi-Seller Hub yakho, cofa [[Publish]]",
+    "Ukupapasha simahla. Indlu yakho iyabonakala kwangoko."
+   ],
+   "nso": [
+    "O boetše go Seller Hub ya gago, kgotla [[Publish]]",
+    "Go phatlalatša ke mahala. Ntlo ya gago e bonala gona bjale."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_13_live",
+   "pass": true,
+   "en": [
+    "Your house is live",
+    "Buyers can find it now. Your name, number and street address stay hidden until you accept an introduction."
+   ],
+   "af": [
+    "Jou huis is aanlyn",
+    "Kopers kan dit nou vind. Jou naam, nommer en straatadres bly versteek totdat jy 'n voorstelling aanvaar."
+   ],
+   "zu": [
+    "Indlu yakho isivela",
+    "Abathengi bangayithola manje. Igama lakho, inombolo nekheli lomgwaqo kuhlala kufihliwe uze wamukele ukwethulwa."
+   ],
+   "xh": [
+    "Indlu yakho iyabonakala",
+    "Abathengi banokuyifumana ngoku. Igama lakho, inombolo nedilesi yesitrato zihlala zifihliwe ude wamkele ukwaziswa."
+   ],
+   "nso": [
+    "Ntlo ya gago e a bonala",
+    "Bareki ba ka e hwetša bjale. Leina la gago, nomoro le aterese ya seterata di dula di utilwe go fihlela o amogela tsebišo."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_14_find",
+   "pass": true,
+   "en": [
+    "A buyer opens Quick and taps [[Find a place]]",
+    "She picks House and Buying, then her area."
+   ],
+   "af": [
+    "'n Koper maak Quick oop en tik [[Find a place]]",
+    "Sy kies House en Buying, dan haar area."
+   ],
+   "zu": [
+    "Umthengi uvula i-Quick bese ethepha [[Find a place]]",
+    "Ukhetha u-House no-Buying, bese kuba indawo yakhe."
+   ],
+   "xh": [
+    "Umthengi uvula i-Quick aze acofe [[Find a place]]",
+    "Ukhetha u-House no-Buying, emva koko indawo yakhe."
+   ],
+   "nso": [
+    "Moreki o bula Quick a kgotla [[Find a place]]",
+    "O kgetha House le Buying, ke moka lefelo la gagwe."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_16_results",
+   "pass": true,
+   "en": [
+    "Your house is in her results",
+    "Real listings show their own photo and price. AI examples are always marked AI EXAMPLE LISTING."
+   ],
+   "af": [
+    "Jou huis is in haar resultate",
+    "Regte advertensies wys hul eie foto en prys. KI-voorbeelde is altyd gemerk AI EXAMPLE LISTING."
+   ],
+   "zu": [
+    "Indlu yakho iphakathi kwemiphumela yakhe",
+    "Izikhangiso zangempela zibonisa isithombe nentengo yazo. Izibonelo ze-AI zihlala zimakwe ngo-AI EXAMPLE LISTING."
+   ],
+   "xh": [
+    "Indlu yakho iphakathi kweziphumo zakhe",
+    "Iintengiso zokwenyani zibonisa umfanekiso nexabiso lazo. Imizekelo ye-AI ihlala iphawulwe ngo-AI EXAMPLE LISTING."
+   ],
+   "nso": [
+    "Ntlo ya gago e gare ga dipoelo tša gagwe",
+    "Dipapatšo tša nnete di bontšha seswantšho le theko ya tšona. Mehlala ya AI e dula e swailwe ka AI EXAMPLE LISTING."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_17_detail",
+   "pass": true,
+   "en": [
+    "She taps it: your listing opens in TrustSquare",
+    "Price, bedrooms, bathrooms, sizes and your trust score. Your name and address are not shown."
+   ],
+   "af": [
+    "Sy tik dit: jou advertensie maak in TrustSquare oop",
+    "Prys, slaapkamers, badkamers, groottes en jou vertrouetelling. Jou naam en adres word nie gewys nie."
+   ],
+   "zu": [
+    "Uyathepha: isikhangiso sakho sivuleka ku-TrustSquare",
+    "Intengo, amakamelo okulala, amagumbi okugeza, ubukhulu namaphuzu akho okwethenjwa. Igama lakho nekheli akuboniswa."
+   ],
+   "xh": [
+    "Uyacofa: intengiso yakho ivuleka kwi-TrustSquare",
+    "Ixabiso, amagumbi okulala, amagumbi okuhlambela, ubungakanani namanqaku akho okuthembeka. Igama lakho nedilesi azibonakali."
+   ],
+   "nso": [
+    "O a e kgotla: papatšo ya gago e bulega go TrustSquare",
+    "Theko, diphapoši tša go robala, tša go hlapela, bogolo le dintlha tša gago tša tshepo. Leina la gago le aterese ga di bontšhwe."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_18_fairprice",
+   "pass": true,
+   "en": [
+    "She checks your price against the area",
+    "[[Is this a fair price?]] gives a free area guide: the usual price per square metre there, worked out for your floor size."
+   ],
+   "af": [
+    "Sy vergelyk jou prys met die area",
+    "[[Is this a fair price?]] gee 'n gratis areagids: die gewone prys per vierkante meter daar, uitgewerk vir jou vloergrootte."
+   ],
+   "zu": [
+    "Uqhathanisa intengo yakho nendawo",
+    "[[Is this a fair price?]] inika umhlahlandlela wendawo wamahhala: intengo evamile ngemitha-skwele lapho, ibalelwe ubukhulu bephansi lendlu yakho."
+   ],
+   "xh": [
+    "Uthelekisa ixabiso lakho nendawo",
+    "[[Is this a fair price?]] inika isikhokelo sendawo simahla: ixabiso eliqhelekileyo ngemitha-skwere apho, libalelwe ubungakanani bomgangatho wendlu yakho."
+   ],
+   "nso": [
+    "O bapetša theko ya gago le lefelo",
+    "[[Is this a fair price?]] e fa tlhahli ya lefelo ya mahala: theko ye e tlwaelegilego ka mitara-sekwere moo, e balelwa bogolo bja lebato la ntlo ya gago."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_19_dossier",
+   "pass": true,
+   "en": [
+    "She can ask for the [[Property Area Dossier]]",
+    "Right under the price checks. One tap opens it with your house already filled in."
+   ],
+   "af": [
+    "Sy kan die [[Property Area Dossier]] vra",
+    "Reg onder die pryskontroles. Een tik maak dit oop met jou huis reeds ingevul."
+   ],
+   "zu": [
+    "Angacela i-[[Property Area Dossier]]",
+    "Ngaphansi nje kokuhlolwa kwentengo. Ukuthepha kanye kuyivula nendlu yakho isivele igcwalisiwe."
+   ],
+   "xh": [
+    "Angacela i-[[Property Area Dossier]]",
+    "Ngaphantsi nje kokujongwa kwexabiso. Ukucofa kanye kuyivula nendlu yakho sele igcwalisiwe."
+   ],
+   "nso": [
+    "A ka kgopela [[Property Area Dossier]]",
+    "Ka tlase ga ditlhahlobo tša theko. Go kgotla gatee go e bula ntlo ya gago e šetše e tladitšwe."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "3T_report",
+   "img": "f6_21_dossier_done",
+   "pass": true,
+   "en": [
+    "She taps [[Get the report · 3T]]",
+    "Houses for sale nearby, what her budget buys, schools, commute and running costs. The Tuppence is only taken when the report arrives."
+   ],
+   "af": [
+    "Sy tik [[Get the report · 3T]]",
+    "Huise te koop in die omgewing, wat haar begroting koop, skole, pendel en lopende koste. Die Tuppence word eers geneem wanneer die verslag aankom."
+   ],
+   "zu": [
+    "Uthepha [[Get the report · 3T]]",
+    "Izindlu ezidayiswayo eduze, lokho okuthengwa yisabelomali sakhe, izikole, ukugibela nezindleko. I-Tuppence ithathwa kuphela uma umbiko ufika."
+   ],
+   "xh": [
+    "Ucofa [[Get the report · 3T]]",
+    "Izindlu ezithengiswayo kufutshane, oko kuthengwa luhlahlo-lwabiwo-mali lwakhe, izikolo, uhambo neendleko. I-Tuppence ithathwa kuphela xa ingxelo ifika."
+   ],
+   "nso": [
+    "O kgotla [[Get the report · 3T]]",
+    "Dintlo tše di rekišwago kgauswi, seo tekanyetšo ya gagwe e se rekago, dikolo, leeto le ditshenyagalelo. Tuppence e tšewa feela ge pego e fihla."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f6_23_request",
+   "pass": true,
+   "en": [
+    "She taps [[Request introduction]] and writes you a line",
+    "1 Tuppence is held when she sends it and only spent if you accept. While she waits, your listing pauses for other buyers."
+   ],
+   "af": [
+    "Sy tik [[Request introduction]] en skryf vir jou 'n reël",
+    "1 Tuppence word gehou wanneer sy dit stuur en net bestee as jy aanvaar. Terwyl sy wag, rus jou advertensie vir ander kopers."
+   ],
+   "zu": [
+    "Uthepha [[Request introduction]] bese ekubhalela umugqa",
+    "I-Tuppence engu-1 iyabanjwa uma ethumela futhi isetshenziswa kuphela uma wamukela. Ngenkathi elinde, isikhangiso sakho siyama kwabanye abathengi."
+   ],
+   "xh": [
+    "Ucofa [[Request introduction]] aze akubhalele umgca",
+    "I-Tuppence e-1 iyabanjwa xa ethumela kwaye isetyenziswa kuphela ukuba uyamkela. Ngelixa elindile, intengiso yakho iyanqumama kwabanye abathengi."
+   ],
+   "nso": [
+    "O kgotla [[Request introduction]] a go ngwalela mothalo",
+    "Tuppence e 1 e a swarwa ge a e romela gomme e šomišwa feela ge o amogela. Ge a sa letile, papatšo ya gago e ema go bareki ba bangwe."
+   ]
+  },
+  {
+   "n": 21,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_25_sent",
+   "pass": true,
+   "en": [
+    "Request sent",
+    "The first time, she accepts the TrustSquare terms once. Then: Request sent, listing paused."
+   ],
+   "af": [
+    "Versoek gestuur",
+    "Die eerste keer aanvaar sy die TrustSquare-voorwaardes een keer. Dan: Request sent, listing paused."
+   ],
+   "zu": [
+    "Isicelo sithunyelwe",
+    "Okokuqala, wamukela imigomo ye-TrustSquare kanye. Bese: Request sent, listing paused."
+   ],
+   "xh": [
+    "Isicelo sithunyelwe",
+    "Okokuqala, wamkela imiqathango ye-TrustSquare kube kanye. Emva koko: Request sent, listing paused."
+   ],
+   "nso": [
+    "Kgopelo e rometšwe",
+    "La mathomo, o amogela dipego tša TrustSquare gatee. Ke moka: Request sent, listing paused."
+   ]
+  },
+  {
+   "n": 22,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_27_request_in",
+   "pass": true,
+   "en": [
+    "You see her request in your Seller Hub",
+    "Her first name and her message. Tap [[✓ Accept]] or [[✕ Decline]]. We also email you."
+   ],
+   "af": [
+    "Jy sien haar versoek in jou Verkopersentrum",
+    "Haar voornaam en haar boodskap. Tik [[✓ Accept]] of [[✕ Decline]]. Ons e-pos jou ook."
+   ],
+   "zu": [
+    "Ubona isicelo sakhe ku-Seller Hub yakho",
+    "Igama lakhe lokuqala nomyalezo wakhe. Thepha [[✓ Accept]] noma [[✕ Decline]]. Siphinde sikuthumelele i-imeyili."
+   ],
+   "xh": [
+    "Ubona isicelo sakhe kwi-Seller Hub yakho",
+    "Igama lakhe lokuqala nomyalezo wakhe. Cofa [[✓ Accept]] okanye [[✕ Decline]]. Sikuthumelela ne-imeyile."
+   ],
+   "nso": [
+    "O bona kgopelo ya gagwe go Seller Hub ya gago",
+    "Leina la gagwe la pele le molaetša wa gagwe. Kgotla [[✓ Accept]] goba [[✕ Decline]]. Re go romela le imeile."
+   ]
+  },
+  {
+   "n": 23,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_28_accepted",
+   "pass": true,
+   "en": [
+    "Accept: you are introduced",
+    "Accepting costs you nothing: her 1 Tuppence is spent now. You both get an email; reply to it to talk, and arrange the viewing. Your listing is open to other buyers again."
+   ],
+   "af": [
+    "Aanvaar: julle word voorgestel",
+    "Aanvaar kos jou niks: haar 1 Tuppence word nou bestee. Julle kry albei 'n e-pos; antwoord daarop om te praat en reël die besigtiging. Jou advertensie is weer oop vir ander kopers."
+   ],
+   "zu": [
+    "Yamukela: niyethulwa",
+    "Ukwamukela akukubizi lutho: i-Tuppence yakhe engu-1 isetshenziswa manje. Nobabili nithola i-imeyili; yiphendule ukuze nikhulume, nihlele ukubuka indlu. Isikhangiso sakho siphinde sivuleleke kwabanye abathengi."
+   ],
+   "xh": [
+    "Yamkela: niyaziswa",
+    "Ukwamkela akukuxabisi nto: i-Tuppence yakhe e-1 isetyenziswa ngoku. Nobabini nifumana i-imeyile; yiphendule ukuze nithethe, nilungiselele ukubona indlu. Intengiso yakho iphinda ivulelwe abanye abathengi."
+   ],
+   "nso": [
+    "Amogela: le a tsebišwa",
+    "Go amogela ga go go lefiše selo: Tuppence ya gagwe e 1 e šomišwa bjale. Ka bobedi le hwetša imeile; e arabe gore le boledišane, le rulaganye go bona ntlo. Papatšo ya gago e bulegela bareki ba bangwe gape."
+   ]
+  },
+  {
+   "n": 24,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f6_29_myrequests",
+   "pass": true,
+   "en": [
+    "She sees it under [[My Requests]]",
+    "Every introduction she asked for, and where it stands: Accepted, check your email."
+   ],
+   "af": [
+    "Sy sien dit onder [[My Requests]]",
+    "Elke voorstelling wat sy gevra het, en waar dit staan: Accepted, check your email."
+   ],
+   "zu": [
+    "Ukubona ngaphansi kwe-[[My Requests]]",
+    "Konke ukwethulwa akucelile, nokuthi kumi kuphi: Accepted, check your email."
+   ],
+   "xh": [
+    "Ukubona phantsi kwe-[[My Requests]]",
+    "Konke ukwaziswa akucelileyo, nokuba kumi phi: Accepted, check your email."
+   ],
+   "nso": [
+    "O e bona ka fase ga [[My Requests]]",
+    "Tsebišo ye nngwe le ye nngwe ye a e kgopetšego, le moo e lego gona: Accepted, check your email."
+   ]
+  },
+  {
+   "n": 25,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f6_30_pass",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "On Quick's first screen, tap Share: they scan the code or you send the link. They get their own Quick, never your listing or your number."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Op Quick se eerste skerm, tik Share: hulle skandeer die kode of jy stuur die skakel. Hulle kry hul eie Quick, nooit jou advertensie of jou nommer nie."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Esikrinini sokuqala se-Quick, thepha Share: bafaka ikhodi kukhamera noma uthumela isixhumanisi. Bathola i-Quick yabo, hhayi isikhangiso sakho noma inombolo yakho."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Kwisikrini sokuqala se-Quick, cofa Share: baskena ikhowudi okanye uthumela ikhonkco. Bafumana eyabo i-Quick, hayi intengiso yakho okanye inombolo yakho."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Sekrining sa mathomo sa Quick, kgotla Share: ba skena khoutu goba o romela kgokagano. Ba hwetša Quick ya bona, e sego papatšo ya gago goba nomoro ya gago."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}

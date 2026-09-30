@@ -19747,7 +19747,7 @@ async function aiListingRef(v){
     const what = [d.beds ? d.beds + '-bedroom' : '', String(d.prop_type || '').toLowerCase(), [d.vehicle_year, d.make, d.model].filter(Boolean).join(' ')].filter(Boolean).join(' ');
     const where = [d.suburb || d.area, d.city, CN[String(d.country||'ZA').toUpperCase()] || d.country].filter(Boolean).join(', ');
     const deal = /rent|let/i.test(String(d.listing_type||'')) ? 'rent ' : 'asking ';
-    const bits = [what || d.title || '', where ? 'in ' + where : '', d.price ? deal + String(d.price).replace(/\s/g,' ') : '',
+    const bits = [(what || d.title || '') + (where ? ' in ' + where : ''), d.price ? deal + String(d.price).replace(/\s/g,' ') : '',
                   d.floor_area ? d.floor_area + ' m2 floor' : '', d.erf_size ? d.erf_size + ' m2 erf' : '',
                   d.mileage ? d.mileage + ' km' : '', 'TrustSquare listing #' + m[1]];
     return bits.filter(Boolean).join(', ');
