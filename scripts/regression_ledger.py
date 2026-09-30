@@ -33564,6 +33564,29 @@ def rg_flat_story_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "/help/property_flat: the flat-to-let guide")]
 
+@entry("RG-0576", "COL-REPORT-DOOR-1: the F10 story walk (collectors) -- Edit's AI tools offer a Collectors seller the "
+       "Collectables Advert + Market Report (5T), filled in with his item and price; it lived only behind Wallet -> AI Features",
+       OPEN, fixed_on="2026-09-30",
+       scope="marketsquare.html #el-colreport-btn; ms.js shows it for a Collectors advert and elOpenColReport() opens AI Features "
+             "with collectables_advert chosen and items/asking filled.",
+       ref="F10 cloud walk 30 Sep 2026 (Siyabonga, 1974 Krugerrand priced R4 800): nothing on his advert or in Edit pointed him "
+           "to the report that tells him what it is worth.")
+def rg_col_report_door_1():
+    ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'id="el-colreport-btn" onclick="elOpenColReport()"' not in h:
+        bad.append("Edit no longer offers the Collectables report")
+    f = ms.find("async function elOpenColReport(")
+    if f < 0 or "aiSel('collectables_advert')" not in ms[f:f + 800]:
+        bad.append("the report no longer opens filled in with his item")
+    if "colBtn.style.display = elCurrentCat.toLowerCase().startsWith('collect')" not in ms:
+        bad.append("the report button shows on the wrong adverts")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a collector can order his market report from Edit")]
+
 
 if __name__ == "__main__":
     sys.exit(main())

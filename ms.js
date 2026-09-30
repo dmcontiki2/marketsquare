@@ -1661,6 +1661,20 @@ function carDossierDoor(l){
     + `<div style="font-size:12px;color:#374151;line-height:1.5;margin:4px 0 9px;">Before you ask: the market price for this car, known faults for its model and year, and a test-drive checklist. You pay only when your report arrives.</div>`
     + `<button onclick="carDossierOpen('${l.id}')" style="width:100%;background:#1b6fb5;color:#fff;border:none;border-radius:50px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;">Get the dossier for this car</button></div>`;
 }
+/* COL-REPORT-DOOR-1 (30 Sep 2026, F10 story walk): a collector pricing his piece in Edit never learnt that the
+   Collectables Advert + Market Report (5T) exists -- it lived only behind Wallet -> AI Features. Edit's AI tools offer it
+   for a Collectors advert, filled in with the item and his price; the report can then be attached to this advert. */
+async function elOpenColReport(){
+  const raw = elCurrentRaw || {};
+  const item = String((document.getElementById('elf-title')||{}).value || raw.title || '').trim();
+  const price = String((document.getElementById('elf-price')||{}).value || raw.price || '').trim();
+  goTo('ai-features');
+  try{ await aiBoot(); }catch(_){}
+  try{ if(aiSel('collectables_advert')===false) return; }catch(_){ return; }
+  const set = (k,v)=>{ const e=document.getElementById('ai-p-'+k); if(e && v) e.value=v; };
+  set('items', item);
+  set('asking', price ? ((typeof formatZAR==='function' && formatZAR(price)) || price) : '');
+}
 async function carDossierOpen(id){
   const l = findListing(id); if(!l) return;
   goTo('ai-features');
@@ -12079,6 +12093,9 @@ async function openEditListing(beaId) {
     const isProperty = elCurrentCat.toLowerCase().startsWith('property');
     yieldBtn.style.display = isProperty ? '' : 'none';
   }
+  // COL-REPORT-DOOR-1 (30 Sep 2026, F10 walk): the Collectables report (5T) lived only behind Wallet -> AI Features
+  const colBtn = document.getElementById('el-colreport-btn');
+  if (colBtn) colBtn.style.display = elCurrentCat.toLowerCase().startsWith('collect') ? '' : 'none';
 
   // Render form and navigate
   renderEditForm(elCurrentRaw);
