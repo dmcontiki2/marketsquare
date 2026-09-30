@@ -5965,6 +5965,10 @@ function openDetail(id){
         <div id="detail-yield-chips-${id}"></div>
         <div id="detail-yield-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>` : ''}
+      ${(!DEMO_MODE && l.cat==='Property' && l.listingType!=='rent' && /^bea_\d+$/.test(String(id))) ? `
+      <button onclick="msAreaDossier('${id}')" style="width:100%;text-align:left;border:1.5px solid #c4b5fd;background:#f5f3ff;border-radius:11px;padding:11px 13px;margin:0 0 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span><b style="font-size:13.5px;color:#4c1d95;">🏡 Property Area Dossier</b><span style="display:block;font-size:11.5px;color:#6b7280;margin-top:2px;">Sales nearby, schools, commute and costs for this house's area, before you ask for an introduction.</span></span>
+        <span style="font-size:12px;font-weight:800;color:#5b21b6;white-space:nowrap;">3T</span></button>` : ''}
       ${isAdv ? '<div class="adv-stat-strip">' + (function(){
           var expLabel = l.experience_type ? (ADV_EXP_TYPE_LABELS[l.experience_type] || l.experience_type.replace(/_/g,' ')) : '';
           var accLabel = l.accommodation_type ? (ADV_ACC_TYPE_LABELS[l.accommodation_type] || l.accommodation_type.replace(/_/g,' ')) : '';
@@ -19455,6 +19459,15 @@ function aiVideoTutor(id){
   });
 }
 
+/* AREA-DOSSIER-LINK-1 (F6 walk, 30 Sep 2026): a buyer looking at a house had no way to the Property Area Dossier from
+   the advert -- it lived only under Wallet > AI features. The advert now offers it; this opens it with the advert filled in. */
+async function msAreaDossier(id){
+  if (DEMO_MODE) return;
+  try{ goTo('ai-features'); await aiBoot(); }catch(_){}
+  try{ if(aiSel('property_dossier') === false) return; }catch(_){ return; }
+  const el = document.getElementById('ai-p-listing'); if(el) el.value = String(id);
+  const it = document.getElementById('ai-p-intent'); if(it && !it.value) it.value = 'live';
+}
 async function aiBoot(){
   if (DEMO_MODE) return;
   try{ aiLoadMyReports(); }catch(_){}   // REPORT-KEEP-1: every paid report stays reachable

@@ -33210,5 +33210,28 @@ def rg_adv_env_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "stays found by place and environment; stay cards say Stays")]
 
+@entry("RG-0580", "AREA-DOSSIER-LINK-1: the F6 story walk (house for sale) -- a property advert for sale offers the buyer the "
+       "Property Area Dossier (3T) and opens it with the advert filled in; before, it was only under Wallet > AI features",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js detail sheet (after the yield box, live mode, Property not to rent) + msAreaDossier(id); marketsquare.html ms.js?v bump.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): the walk's own brief says the buyer runs the Area Dossier; "
+           "from the advert there was no way to it.")
+def rg_area_dossier_link_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "onclick=\"msAreaDossier('${id}')\"" not in js:
+        bad.append("the property advert no longer offers the Area Dossier")
+    if "async function msAreaDossier(id){" not in js or "aiSel('property_dossier')" not in js:
+        bad.append("msAreaDossier no longer opens the dossier")
+    if "!DEMO_MODE && l.cat==='Property' && l.listingType!=='rent'" not in js:
+        bad.append("the link lost its demo / to-rent guard")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a house for sale offers its Area Dossier from the advert")]
+
+
+
 if __name__ == "__main__":
     sys.exit(main())

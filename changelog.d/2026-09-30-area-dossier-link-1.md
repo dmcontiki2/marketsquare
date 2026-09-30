@@ -1,0 +1,1 @@
+- **AREA-DOSSIER-LINK-1 (RG-0580), from the F6 story walk (house for sale):** a buyer looking at a house for sale had no way to the Property Area Dossier (3T — sales nearby, schools, commute and costs) from the advert itself; it was only under Wallet → AI features. The advert now shows it under the price and yield checks, and one tap opens it with that advert already filled in.
