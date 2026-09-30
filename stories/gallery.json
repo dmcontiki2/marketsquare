@@ -90,6 +90,28 @@
    "cover": "f9_01_sell"
   },
   {
+   "type": "collectors_coins",
+   "status": "draft",
+   "flow": "F10",
+   "label": {
+    "en": "Coins",
+    "af": "Munte",
+    "zu": "Izinhlamvu zemali",
+    "xh": "Iingqekembe",
+    "nso": "Ditšhelete tša tshipi"
+   },
+   "title": {
+    "en": "Selling a collector's piece: from Quick to your first collector",
+    "af": "Verkoop 'n versamelstuk: van Quick tot jou eerste versamelaar",
+    "zu": "Ukuthengisa into yomqoqi: kusukela ku-Quick kuya kumqoqi wakho wokuqala",
+    "xh": "Ukuthengisa into yomqokeleli: ukusuka kwi-Quick ukuya kumqokeleli wakho wokuqala",
+    "nso": "Go rekiša selo sa mokgobokedi: go tloga go Quick go ya go mokgobokedi wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f10_01_door"
+  },
+  {
    "type": "electrician",
    "status": "draft",
    "flow": "F4",

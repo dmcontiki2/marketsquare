@@ -1,0 +1,741 @@
+{
+ "type": "collectors_coins",
+ "status": "draft",
+ "flow": "F10",
+ "label": {
+  "en": "Coins",
+  "af": "Munte",
+  "zu": "Izinhlamvu zemali",
+  "xh": "Iingqekembe",
+  "nso": "Ditšhelete tša tshipi"
+ },
+ "title": {
+  "en": "Selling a collector's piece: from Quick to your first collector",
+  "af": "Verkoop 'n versamelstuk: van Quick tot jou eerste versamelaar",
+  "zu": "Ukuthengisa into yomqoqi: kusukela ku-Quick kuya kumqoqi wakho wokuqala",
+  "xh": "Ukuthengisa into yomqokeleli: ukusuka kwi-Quick ukuya kumqokeleli wakho wokuqala",
+  "nso": "Go rekiša selo sa mokgobokedi: go tloga go Quick go ya go mokgobokedi wa gago wa mathomo"
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Siyabonga",
+  "customer": "Ayanda"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Price it and publish",
+   "af": "Prys dit en publiseer",
+   "zu": "Beka intengo bese ushicilela",
+   "xh": "Beka ixabiso uze upapashe",
+   "nso": "Bea theko o phatlalatše"
+  },
+  {
+   "id": "c3",
+   "en": "A collector",
+   "af": "'n Versamelaar",
+   "zu": "Umqoqi",
+   "xh": "Umqokeleli",
+   "nso": "Mokgobokedi"
+  },
+  {
+   "id": "c4",
+   "en": "You accept",
+   "af": "Jy aanvaar",
+   "zu": "Uyamukela",
+   "xh": "Uyamkela",
+   "nso": "O a amogela"
+  },
+  {
+   "id": "c5",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_01_door",
+   "pass": true,
+   "en": [
+    "Open Quick, swipe to [[Collectors]] and tap [[Sell a piece]]",
+    "Swipe the Quick door until it says Collectors. One tap starts your advert."
+   ],
+   "af": [
+    "Maak Quick oop, swiep na [[Collectors]] en tik [[Sell a piece]]",
+    "Swiep die Quick-deur tot dit Collectors sê. Een tik begin jou advertensie."
+   ],
+   "zu": [
+    "Vula i-Quick, swayipha uye ku-[[Collectors]] bese uthepha [[Sell a piece]]",
+    "Swayipha umnyango we-Quick uze ubone u-Collectors. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, tyibilikisa uye kwi-[[Collectors]] uze ucofe [[Sell a piece]]",
+    "Tyibilikisa ucango lwe-Quick de lubonise u-Collectors. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, šutiša go ya go [[Collectors]] o kgotle [[Sell a piece]]",
+    "Šutiša lebati la Quick go fihlela le re Collectors. Go kgotla gatee go thoma papatšo ya gago."
+   ],
+   "quick": [
+    "door"
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_02_what",
+   "pass": true,
+   "en": [
+    "Pick [[Coins]]",
+    "Coins, stamps, cards, militaria, watches or art."
+   ],
+   "af": [
+    "Kies [[Coins]]",
+    "Munte, seëls, kaarte, militêre items, horlosies of kuns."
+   ],
+   "zu": [
+    "Khetha [[Coins]]",
+    "Izinhlamvu zemali, izitembu, amakhadi, izinto zamasosha, amawashi noma ubuciko."
+   ],
+   "xh": [
+    "Khetha [[Coins]]",
+    "Iingqekembe, izitampu, amakhadi, izinto zomkhosi, iiwotshi okanye ubugcisa."
+   ],
+   "nso": [
+    "Kgetha [[Coins]]",
+    "Ditšhelete tša tshipi, ditempe, dikarata, dilo tša bohlabani, diwatšhe goba bokgabo."
+   ],
+   "quick": [
+    "what"
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_03_cond",
+   "pass": true,
+   "en": [
+    "Pick its condition",
+    "Mint, near mint, good, played or ungraded."
+   ],
+   "af": [
+    "Kies sy toestand",
+    "Mint, near mint, good, played of ungraded."
+   ],
+   "zu": [
+    "Khetha isimo sayo",
+    "Mint, near mint, good, played noma ungraded."
+   ],
+   "xh": [
+    "Khetha imeko yayo",
+    "Mint, near mint, good, played okanye ungraded."
+   ],
+   "nso": [
+    "Kgetha boemo bja yona",
+    "Mint, near mint, good, played goba ungraded."
+   ],
+   "quick": [
+    "cond"
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_04_auth",
+   "pass": true,
+   "en": [
+    "Say if it is authenticated",
+    "Graded, a certificate, or not yet."
+   ],
+   "af": [
+    "Sê of dit gewaarmerk is",
+    "Gegradeer, 'n sertifikaat, of nog nie."
+   ],
+   "zu": [
+    "Yisho ukuthi iqinisekisiwe yini",
+    "Ihleliwe ngamabanga, inesitifiketi, noma akukabi njalo."
+   ],
+   "xh": [
+    "Yitsho ukuba iqinisekisiwe na",
+    "Ihlelwe ngamabakala, inesatifikethi, okanye akukabi njalo."
+   ],
+   "nso": [
+    "Bolela ge e netefaditšwe",
+    "E beilwe maemo, e na le setifikeiti, goba ga se ya ba bjalo."
+   ],
+   "quick": [
+    "auth"
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_05_price",
+   "pass": true,
+   "en": [
+    "Type your price",
+    "Tap [[Another option]] and type it. You can change it later, for example after the market report."
+   ],
+   "af": [
+    "Tik jou prys",
+    "Tik [[Another option]] en tik dit. Jy kan dit later verander, byvoorbeeld ná die markverslag."
+   ],
+   "zu": [
+    "Bhala intengo yakho",
+    "Thepha [[Another option]] bese uyibhala. Ungayishintsha kamuva, isibonelo ngemva kombiko wemakethe."
+   ],
+   "xh": [
+    "Bhala ixabiso lakho",
+    "Cofa [[Another option]] uze ulibhale. Unokulitshintsha kamva, umzekelo emva kwengxelo yemarike."
+   ],
+   "nso": [
+    "Ngwala theko ya gago",
+    "Kgotla [[Another option]] o e ngwale. O ka e fetoša ka morago, mohlala ka morago ga pego ya mmaraka."
+   ],
+   "quick": [
+    "price"
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_06_where",
+   "pass": true,
+   "en": [
+    "Tap your area",
+    "Buyers search by area. Your exact address stays private."
+   ],
+   "af": [
+    "Tik jou area",
+    "Kopers soek volgens area. Jou presiese adres bly privaat."
+   ],
+   "zu": [
+    "Thepha indawo yakho",
+    "Abathengi basesha ngendawo. Ikheli lakho eliqondile lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Cofa indawo yakho",
+    "Abathengi bakhangela ngendawo. Idilesi yakho echanekileyo ihlala iyimfihlo."
+   ],
+   "nso": [
+    "Kgotla lefelo la gago",
+    "Bareki ba nyaka ka lefelo. Aterese ya gago ya nnete e dula e le sephiri."
+   ],
+   "quick": [
+    "where"
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_07b_item",
+   "pass": true,
+   "en": [
+    "Say exactly what it is, then [[Save my listing]]",
+    "Type it the way a collector would search, for example \"1974 Krugerrand, 1 oz gold proof\". Saving is free."
+   ],
+   "af": [
+    "Sê presies wat dit is, dan [[Save my listing]]",
+    "Tik dit soos 'n versamelaar sou soek, byvoorbeeld \"1974 Krugerrand, 1 oz gold proof\". Stoor is gratis."
+   ],
+   "zu": [
+    "Yisho ngqo ukuthi yini, bese [[Save my listing]]",
+    "Yibhale ngendlela umqoqi angasesha ngayo, isibonelo \"1974 Krugerrand, 1 oz gold proof\". Ukulondoloza kumahhala."
+   ],
+   "xh": [
+    "Yitsho kanye ukuba yintoni, emva koko [[Save my listing]]",
+    "Yibhale ngendlela umqokeleli anokukhangela ngayo, umzekelo \"1974 Krugerrand, 1 oz gold proof\". Ukugcina kusimahla."
+   ],
+   "nso": [
+    "Bolela gabotse gore ke eng, ke moka [[Save my listing]]",
+    "E ngwale ka mokgwa wo mokgobokedi a ka nyakago ka wona, mohlala \"1974 Krugerrand, 1 oz gold proof\". Go boloka ke mahala."
+   ],
+   "quick": [
+    "draft"
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_08_saved",
+   "pass": true,
+   "en": [
+    "Saved: open it in TrustSquare",
+    "Tap [[Sign the terms and publish]]. Your advert opens in the Seller Hub."
+   ],
+   "af": [
+    "Gestoor: maak dit in TrustSquare oop",
+    "Tik [[Sign the terms and publish]]. Jou advertensie maak in die Seller Hub oop."
+   ],
+   "zu": [
+    "Kulondoloziwe: kuvule ku-TrustSquare",
+    "Thepha [[Sign the terms and publish]]. Isikhangiso sakho sivuleka ku-Seller Hub."
+   ],
+   "xh": [
+    "Igciniwe: yivule kwi-TrustSquare",
+    "Cofa [[Sign the terms and publish]]. Intengiso yakho ivuleka kwi-Seller Hub."
+   ],
+   "nso": [
+    "E bolokilwe: e bule go TrustSquare",
+    "Kgotla [[Sign the terms and publish]]. Papatšo ya gago e bulega go Seller Hub."
+   ],
+   "quick": [
+    "saved"
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_11_edit_ai",
+   "pass": true,
+   "en": [
+    "In [[Edit]], tap [[Market report · 5T]]",
+    "Before you settle your price: the Collectables report researches real prices for your piece."
+   ],
+   "af": [
+    "In [[Edit]], tik [[Market report · 5T]]",
+    "Voordat jy jou prys vasstel: die Collectables-verslag soek regte pryse vir jou stuk na."
+   ],
+   "zu": [
+    "Ku-[[Edit]], thepha [[Market report · 5T]]",
+    "Ngaphambi kokunquma intengo yakho: umbiko we-Collectables ucwaninga amanani angempela ento yakho."
+   ],
+   "xh": [
+    "Kwi-[[Edit]], cofa [[Market report · 5T]]",
+    "Phambi kokuba ugqibe ixabiso lakho: ingxelo ye-Collectables iphanda amaxabiso okwenyani ento yakho."
+   ],
+   "nso": [
+    "Go [[Edit]], kgotla [[Market report · 5T]]",
+    "Pele o tiiša theko ya gago: pego ya Collectables e nyakišiša ditheko tša nnete tša selo sa gago."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "5T_report",
+   "img": "f10_12_report_form",
+   "pass": false,
+   "en": [
+    "Get the report: 5T",
+    "It opens filled in with your item and price. Add a photo and tap [[Get the report · 5T]]. You pay only when the report arrives."
+   ],
+   "af": [
+    "Kry die verslag: 5T",
+    "Dit maak oop met jou item en prys reeds ingevul. Voeg 'n foto by en tik [[Get the report · 5T]]. Jy betaal net wanneer die verslag aankom."
+   ],
+   "zu": [
+    "Thola umbiko: 5T",
+    "Uvuleka usugcwaliswe ngento yakho nentengo. Engeza isithombe bese uthepha [[Get the report · 5T]]. Ukhokha kuphela uma umbiko ufika."
+   ],
+   "xh": [
+    "Fumana ingxelo: 5T",
+    "Ivuleka sele izaliswe ngento yakho nexabiso. Faka ifoto uze ucofe [[Get the report · 5T]]. Uhlawula kuphela xa ingxelo ifikile."
+   ],
+   "nso": [
+    "Hwetša pego: 5T",
+    "E bulega e šetše e tladitšwe ka selo sa gago le theko. Tsenya seswantšho o kgotle [[Get the report · 5T]]. O lefa feela ge pego e fihla."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_14_attach",
+   "pass": false,
+   "en": [
+    "Attach the report to your advert",
+    "Tap [[Attach report to my listing]]. Buyers see the market range next to your price."
+   ],
+   "af": [
+    "Heg die verslag aan jou advertensie",
+    "Tik [[Attach report to my listing]]. Kopers sien die markreeks langs jou prys."
+   ],
+   "zu": [
+    "Namathisela umbiko esikhangisweni sakho",
+    "Thepha [[Attach report to my listing]]. Abathengi babona ibanga lemakethe eduze kwentengo yakho."
+   ],
+   "xh": [
+    "Qhoboshela ingxelo kwintengiso yakho",
+    "Cofa [[Attach report to my listing]]. Abathengi babona uluhlu lwemarike ecaleni kwexabiso lakho."
+   ],
+   "nso": [
+    "Kgomaretša pego papatšong ya gago",
+    "Kgotla [[Attach report to my listing]]. Bareki ba bona magomo a mmaraka kgauswi le theko ya gago."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_15_edit_fields",
+   "pass": true,
+   "en": [
+    "Fill in the details and set your price",
+    "Collection type, condition, catalogue reference (for example KM# 73) and year, then your asking price. Add your own photo."
+   ],
+   "af": [
+    "Vul die besonderhede in en stel jou prys",
+    "Versamelingsoort, toestand, katalogusverwysing (byvoorbeeld KM# 73) en jaar, dan jou vraprys. Voeg jou eie foto by."
+   ],
+   "zu": [
+    "Gcwalisa imininingwane bese ubeka intengo yakho",
+    "Uhlobo lweqoqo, isimo, inkomba yekhathalogi (isibonelo KM# 73) nonyaka, bese intengo yakho. Engeza isithombe sakho."
+   ],
+   "xh": [
+    "Zalisa iinkcukacha uze ubeke ixabiso lakho",
+    "Uhlobo lwengqokelela, imeko, isalathisi sekhathalogu (umzekelo KM# 73) nonyaka, emva koko ixabiso lakho. Faka ifoto yakho."
+   ],
+   "nso": [
+    "Tlatša dintlha o bee theko ya gago",
+    "Mohuta wa kgoboketšo, boemo, tšhupetšo ya khathalogo (mohlala KM# 73) le ngwaga, ke moka theko ya gago. Tsenya seswantšho sa gago."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_16_terms",
+   "pass": true,
+   "en": [
+    "Accept the seller terms once",
+    "At your first [[Save Changes]] the terms open. Read to the end, tick both boxes and tap [[I accept]]. Your photo and details are kept."
+   ],
+   "af": [
+    "Aanvaar die verkopersvoorwaardes een keer",
+    "By jou eerste [[Save Changes]] maak die voorwaardes oop. Lees tot aan die einde, merk albei blokkies en tik [[I accept]]. Jou foto en besonderhede bly."
+   ],
+   "zu": [
+    "Yamukela imigomo yabathengisi kanye",
+    "Ku-[[Save Changes]] yakho yokuqala kuvuleka imigomo. Funda kuze kube sekugcineni, khetha amabhokisi womabili bese uthepha [[I accept]]. Isithombe nemininingwane yakho kuyagcinwa."
+   ],
+   "xh": [
+    "Yamkela imigaqo yabathengisi kube kanye",
+    "Kwi-[[Save Changes]] yakho yokuqala kuvuleka imigaqo. Funda ude uyigqibe, phawula zombini iibhokisi uze ucofe [[I accept]]. Ifoto neenkcukacha zakho ziyagcinwa."
+   ],
+   "nso": [
+    "Amogela melawana ya barekiši gatee",
+    "Go [[Save Changes]] ya gago ya mathomo melawana e a bulega. Bala go fihla mafelelong, swaya mapokisi ka bobedi o kgotle [[I accept]]. Seswantšho le dintlha tša gago di a bolokwa."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_17_publish",
+   "pass": true,
+   "en": [
+    "Tap [[Publish]]",
+    "Your advert is live. Collectors can ask for an introduction straight away."
+   ],
+   "af": [
+    "Tik [[Publish]]",
+    "Jou advertensie is regstreeks. Versamelaars kan dadelik vir 'n voorstelling vra."
+   ],
+   "zu": [
+    "Thepha [[Publish]]",
+    "Isikhangiso sakho sesibukhoma. Abaqoqi bangacela ukwethulwa ngokushesha."
+   ],
+   "xh": [
+    "Cofa [[Publish]]",
+    "Intengiso yakho iphilayo. Abaqokeleli banokucela ukwaziswa ngoko nangoko."
+   ],
+   "nso": [
+    "Kgotla [[Publish]]",
+    "Papatšo ya gago e phela. Bakgobokedi ba ka kgopela go tsebišwa gona bjale."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f10_20_find",
+   "pass": true,
+   "en": [
+    "A collector opens Quick: [[Find a piece]]",
+    "She picks Coins, what she can spend and how rare."
+   ],
+   "af": [
+    "'n Versamelaar maak Quick oop: [[Find a piece]]",
+    "Sy kies Coins, wat sy kan spandeer en hoe skaars."
+   ],
+   "zu": [
+    "Umqoqi uvula i-Quick: [[Find a piece]]",
+    "Ukhetha u-Coins, angakusebenzisa nokuthi kuyivelakancane kangakanani."
+   ],
+   "xh": [
+    "Umqokeleli uvula i-Quick: [[Find a piece]]",
+    "Ukhetha u-Coins, anokukusebenzisa nokuba inqabile kangakanani."
+   ],
+   "nso": [
+    "Mokgobokedi o bula Quick: [[Find a piece]]",
+    "O kgetha Coins, seo a ka se šomišago le go hwetšagala ga yona."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f10_23_results",
+   "pass": true,
+   "en": [
+    "She finds your coin",
+    "Real adverts and marked AI examples, in her city. She taps yours."
+   ],
+   "af": [
+    "Sy kry jou munt",
+    "Regte advertensies en gemerkte KI-voorbeelde, in haar stad. Sy tik op joune."
+   ],
+   "zu": [
+    "Uthola uhlamvu lwakho",
+    "Izikhangiso zangempela nezibonelo ze-AI eziphawuliwe, edolobheni lakhe. Uthepha olwakho."
+   ],
+   "xh": [
+    "Ufumana ingqekembe yakho",
+    "Iintengiso zokwenyani nemizekelo ye-AI ephawuliweyo, kwisixeko sakhe. Ucofa eyakho."
+   ],
+   "nso": [
+    "O hwetša tšhelete ya gago ya tshipi",
+    "Dipapatšo tša nnete le mehlala ya AI ye e swailwego, toropong ya gagwe. O kgotla ya gago."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f10_24_detail",
+   "pass": true,
+   "en": [
+    "She reads your advert",
+    "Price, condition, catalogue reference and year. Your name stays hidden."
+   ],
+   "af": [
+    "Sy lees jou advertensie",
+    "Prys, toestand, katalogusverwysing en jaar. Jou naam bly versteek."
+   ],
+   "zu": [
+    "Ufunda isikhangiso sakho",
+    "Intengo, isimo, inkomba yekhathalogi nonyaka. Igama lakho lihlala lifihliwe."
+   ],
+   "xh": [
+    "Ufunda intengiso yakho",
+    "Ixabiso, imeko, isalathisi sekhathalogu nonyaka. Igama lakho lihlala lifihliwe."
+   ],
+   "nso": [
+    "O bala papatšo ya gago",
+    "Theko, boemo, tšhupetšo ya khathalogo le ngwaga. Leina la gago le dula le utilwe."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T_check",
+   "img": "f10_26_fair_result",
+   "pass": false,
+   "en": [
+    "She checks the price: [[Is this a fair price?]]",
+    "A catalogue or market price for your piece, 1T, charged only if a real figure comes back."
+   ],
+   "af": [
+    "Sy toets die prys: [[Is this a fair price?]]",
+    "'n Katalogus- of markprys vir jou stuk, 1T, net gehef as 'n regte syfer terugkom."
+   ],
+   "zu": [
+    "Uhlola intengo: [[Is this a fair price?]]",
+    "Inani lekhathalogi noma lemakethe lento yakho, 1T, kukhokhwa kuphela uma kubuya inani langempela."
+   ],
+   "xh": [
+    "Uhlola ixabiso: [[Is this a fair price?]]",
+    "Ixabiso lekhathalogu okanye lemarike lento yakho, 1T, kuhlawulwa kuphela xa kubuya inani lokwenyani."
+   ],
+   "nso": [
+    "O lekola theko: [[Is this a fair price?]]",
+    "Theko ya khathalogo goba ya mmaraka ya selo sa gago, 1T, e lefišwa feela ge palo ya nnete e boa."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f10_28_ask_sheet",
+   "pass": true,
+   "en": [
+    "She asks for an introduction",
+    "She taps [[Join queue]], adds a message and sends. 1T is held from her and only spent if you accept."
+   ],
+   "af": [
+    "Sy vra vir 'n voorstelling",
+    "Sy tik [[Join queue]], voeg 'n boodskap by en stuur. 1T word van haar teruggehou en net gebruik as jy aanvaar."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Uthepha [[Join queue]], engeze umlayezo bese ethumela. U-1T uyabanjwa kuye futhi usetshenziswa kuphela uma wamukela."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ucofa [[Join queue]], ongeze umyalezo aze athumele. I-1T iyabanjwa kuye kwaye isetyenziswa kuphela ukuba uyamkela."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O kgotla [[Join queue]], a oketša molaetša gomme a romela. 1T e swarwa go yena gomme e šomišwa feela ge o amogela."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_30_request",
+   "pass": true,
+   "en": [
+    "You see her request",
+    "Your Seller Hub shows [[1 request waiting]] with her first name and message."
+   ],
+   "af": [
+    "Jy sien haar versoek",
+    "Jou Seller Hub wys [[1 request waiting]] met haar voornaam en boodskap."
+   ],
+   "zu": [
+    "Ubona isicelo sakhe",
+    "I-Seller Hub yakho ibonisa [[1 request waiting]] negama lakhe lokuqala nomlayezo."
+   ],
+   "xh": [
+    "Ubona isicelo sakhe",
+    "I-Seller Hub yakho ibonisa [[1 request waiting]] negama lakhe lokuqala nomyalezo."
+   ],
+   "nso": [
+    "O bona kgopelo ya gagwe",
+    "Seller Hub ya gago e bontšha [[1 request waiting]] le leina la gagwe la pele le molaetša."
+   ]
+  },
+  {
+   "n": 21,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_31_accepted",
+   "pass": true,
+   "en": [
+    "Tap [[Accept]]",
+    "You pay nothing: her 1T is spent now. You both get an email; reply to it to arrange a viewing. Your email address stays private."
+   ],
+   "af": [
+    "Tik [[Accept]]",
+    "Jy betaal niks: haar 1T word nou gebruik. Julle kry albei 'n e-pos; antwoord dit om 'n besigtiging te reël. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Thepha [[Accept]]",
+    "Awukhokhi lutho: u-1T wakhe usetshenziswa manje. Nobabili nithola i-imeyili; yiphendule ukuze nihlele ukubuka. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Cofa [[Accept]]",
+    "Awuhlawuli nto: i-1T yakhe isetyenziswa ngoku. Nobabini nifumana i-imeyile; yiphendule ukuze nicwangcise ukujonga. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "Kgotla [[Accept]]",
+    "Ga o lefe selo: 1T ya gagwe e šomišwa bjale. Ka bobedi le hwetša imeile; e arabe gore le beakanye go lebelela. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 22,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f10_32_buyer_intros",
+   "pass": true,
+   "en": [
+    "She sees it accepted",
+    "In My Space, under Intros, her request shows [[Accepted]]."
+   ],
+   "af": [
+    "Sy sien dit is aanvaar",
+    "In My Space, onder Intros, wys haar versoek [[Accepted]]."
+   ],
+   "zu": [
+    "Ubona ukuthi samukelwe",
+    "Ku-My Space, ngaphansi kwe-Intros, isicelo sakhe sibonisa [[Accepted]]."
+   ],
+   "xh": [
+    "Ubona ukuba samkelwe",
+    "Kwi-My Space, phantsi kwe-Intros, isicelo sakhe sibonisa [[Accepted]]."
+   ],
+   "nso": [
+    "O bona gore e amogetšwe",
+    "Go My Space, ka fase ga Intros, kgopelo ya gagwe e bontšha [[Accepted]]."
+   ]
+  },
+  {
+   "n": 23,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f10_08_saved",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "Tap [[Pass Quick on to someone]] and share it with a friend who collects."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriend wat versamel."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Thepha [[Pass Quick on to someone]] bese uyabelana ngayo nomngane oqoqayo."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Cofa [[Pass Quick on to someone]] uze wabelane ngayo nomhlobo oqokelelayo."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Kgotla [[Pass Quick on to someone]] o e abelane le mogwera yo a kgoboketšago."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}

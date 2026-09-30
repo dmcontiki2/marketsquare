@@ -43,7 +43,7 @@ list the email in the report under **Checked next on the laptop**.
 | F13 Adventures experience | hiking, water sports, wildlife … sky & extreme | difficulty and season shown; intro; accept |
 | F14 Agency-listed | estate agency for owners; placement agency for workers | an agent lists for someone else; the right person receives the intro |
 
-Done already: F1 (`stories/home_cleaner.json`), F2 (`stories/nanny.json`, family half waits on L28), F8 (`stories/cars_bakkie.json`), F9 (`stories/cars_for_hire.json`), F11 (`stories/localmarket_food_preserves.json`). Walk
+Done already: F1 (`stories/home_cleaner.json`), F2 (`stories/nanny.json`, family half waits on L28), F8 (`stories/cars_bakkie.json`), F9 (`stories/cars_for_hire.json`), F10 (`stories/collectors_coins.json`, report steps wait on L34), F11 (`stories/localmarket_food_preserves.json`). Walk
 one flow per session, picking the first one here with no `stories/<type>.json` yet.
 
 ## 3. The walk (the story template)
