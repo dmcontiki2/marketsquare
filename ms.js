@@ -11570,6 +11570,8 @@ function msClearanceUpload(lid){
       clearInterval(t);
       if(!sel) return;
       sel.value = 'category.services_cas.clearance';
+      const ty = document.getElementById('el-dh-type'); if(ty){ ty.value = 'other'; if(typeof elUpdateDocHint === 'function') elUpdateDocHint('other'); }
+      const lb = document.getElementById('el-dh-label'); if(lb && !lb.value) lb.value = 'Police clearance';
       sel.scrollIntoView({block:'center'});
     }
   }, 250);
@@ -12654,7 +12656,7 @@ const EL_CRED_SIGNALS = {
   /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): a nanny had nowhere to hand in the police clearance her
      advert waits for -- the general upload filed it as a Local-Market certificate. */
   Services: [
-    ['category.services_cas.clearance', 'Police clearance (+10) — nannies and carers need it before strangers see them'],
+    ['category.services_cas.clearance', 'Police clearance (+10)'],
   ],
   Tutors: [
     ['category.tutors.clearance', 'Police clearance (+8)'],
@@ -12663,7 +12665,7 @@ const EL_CRED_SIGNALS = {
 function EL_SIGNAL_OPTS_HTML(){
   const list = EL_CRED_SIGNALS[elCurrentCat] || [];
   if (!list.length) return '';
-  return '<select id="el-dh-signal" style="background:var(--surface-2);border:1.5px solid var(--border);'+
+  return '<select id="el-dh-signal" onchange="if(/clearance$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
     'border-radius:8px;padding:8px 10px;font-size:13px;">'+
     '<option value="">What is this document? (general — no credential)</option>'+
     list.map(s => '<option value="'+s[0]+'">'+s[1]+'</option>').join('')+
