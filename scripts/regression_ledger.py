@@ -32992,6 +32992,27 @@ def rg_sms_codes_only_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "our SMS account is outreach-only; the app sends none")]
 
+@entry("RG-0557", "PRICE-CARD-1: the F6 story walk (house for sale) -- Quick's search results show a price saved as bare digits "
+       "the way the AI examples beside it are ('R2 450 000', not '2450000'), and a property to let says 'a month'",
+       OPEN, fixed_on="2026-09-30",
+       scope="quick.html drawLookup paint() cardPrice (= genie/HARNESS.html); QI18N 'a month' in five languages.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Elsabe's house showed '2450000' between 'R 3 450 000' and "
+           "'R4 250 000'; every live Pretoria rental read '13990' with no currency and no period.")
+def rg_price_card_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(FAIL, "quick.html is missing")]
+    bad = []
+    if "+E(cardPrice(l))+" not in q or "var cardPrice=function(l)" not in q:
+        bad.append("Quick's result cards print the raw price again")
+    if '"a month": {"af": "per maand"' not in q:
+        bad.append("'a month' lost its translations")
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick's result cards show R2 450 000 and 'a month' for a let")]
+
 
 @entry("RG-0557", "VEHICLE-PROV-1: the F8 story walk (bakkie for sale) -- the confirm-your-vehicle screen before Go live only "
        "calls a value 'AI draft' (and only warns 'these were read from your photos') when the AI really read it off the photos; "
