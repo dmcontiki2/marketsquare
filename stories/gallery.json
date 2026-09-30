@@ -46,6 +46,28 @@
    "cover": "f8_01_door"
   },
   {
+   "type": "electrician",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Electrician",
+    "af": "Elektrisiën",
+    "zu": "Usogesi",
+    "xh": "Umbane-ngcali",
+    "nso": "Radielektriki"
+   },
+   "title": {
+    "en": "Electrician: from listing to the customers who can find you",
+    "af": "Elektrisiën: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Usogesi: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umbane-ngcali: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Radielektriki: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door"
+  },
+  {
    "type": "home_cleaner",
    "status": "draft",
    "flow": "F1",
