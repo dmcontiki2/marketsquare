@@ -44,6 +44,28 @@
    "walked_on": "2026-09-29",
    "steps": 20,
    "cover": "lm_01_door"
+  },
+  {
+   "type": "nanny",
+   "status": "draft",
+   "flow": "F2",
+   "label": {
+    "en": "Nanny",
+    "af": "Kinderoppasser",
+    "zu": "Umzanyana",
+    "xh": "Umgcini-bantwana",
+    "nso": "Mohlokomedi wa bana"
+   },
+   "title": {
+    "en": "Nanny: from listing to the families who can find you",
+    "af": "Kinderoppasser: van advertensie tot die gesinne wat jou kan vind",
+    "zu": "Umzanyana: kusukela esikhangisweni kuya emindenini engakuthola",
+    "xh": "Umgcini-bantwana: ukusuka kwintengiso ukuya kwiintsapho ezinokukufumana",
+    "nso": "Mohlokomedi wa bana: go tloga papatšong go ya go malapa ao a ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 18,
+   "cover": "f2_01_door"
   }
  ]
 }

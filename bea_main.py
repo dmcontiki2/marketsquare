@@ -5344,11 +5344,23 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
             (email,)).fetchall()}
     except Exception as _hx:
         _log.warning("HIDDEN-CASUAL-1: %s", _hx); _hid = set()
+    # CLEARANCE-CHECK-1 (F2 story walk): a nanny's card told her an employer's confirmation or an ID check opens her
+    # advert -- for the police-clearance roles neither does. Her card names her real gate and where her clearance is.
+    _clr_roles = _gate_role_names()[1]
+    try:
+        _clr = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id = ?",
+                            (email, "category.services_cas.clearance")).fetchone()
+        _clr = _clr["status"] if _clr else None
+    except Exception:
+        _clr = None
     conn.close()
     out = []
     for r in rows:
         d = dict(r)
         d["hidden_from_strangers"] = int(d.get("id") or 0) in _hid
+        if d["hidden_from_strangers"] and (d.get("service_type") or "").strip().lower() in _clr_roles:
+            d["gate"] = "police_clearance"
+            d["clearance_status"] = _clr
         if (d.get("category") or "").lower() == "property":
             d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
         out.append(d)
@@ -15673,6 +15685,11 @@ _LEGAL_SIGNALS = {
     "category.cars.dealer_reg",
     "category.travel.asata",
     "category.services.trade_licence",
+    # CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): RUL-153 opens a nanny's, caregiver's, au pair's or creche
+    # assistant's advert to strangers on a VERIFIED police clearance (STRANGER-GATE-1). Any file uploaded here
+    # auto-earned it, so a photo of anything opened the child-care gate. A person checks it first now.
+    "category.services_cas.clearance",
+    "category.tutors.clearance",
 }
 # A mandate is granted per property, so it must arrive with the listing it covers.
 _PER_LISTING_SIGNALS = {"category.property.mandate"}
@@ -15866,7 +15883,9 @@ def list_seller_documents(
         "Tutors": "category.tutors.",
         "Services-Technical": "category.services_tech.",
         "Services-Casuals": "category.services_cas.",
-        "Services": "category.services_tech.",
+        # CLEARANCE-CHECK-1 (F2 walk): Edit sends "Services" for every service advert -- a nanny's police clearance
+        # (services_cas) was left out of her own list, so her upload seemed to vanish.
+        "Services": "category.services",
         "Adventures-Experiences": "category.adv_exp.",
         "Adventures-Accommodation": "category.adv_acc.",
         "Adventures": "category.adv_exp.",

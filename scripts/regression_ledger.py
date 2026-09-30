@@ -32922,7 +32922,44 @@ def rg_sms_daily_cap_1():
     return [(INFO, "SMS total capped per day (default 40), fails closed")]
 
 
-@entry("RG-0555", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
+
+@entry("RG-0555", "CLEARANCE-CHECK-1: the F2 story walk (nanny) -- a police clearance now waits for a person's check before it "
+       "opens a nanny's, caregiver's, au pair's or creche assistant's advert to strangers; her Seller Hub card names that gate "
+       "(not an employer confirmation or ID check, which do not open it) with an upload button; Edit's documents offer 'Police "
+       "clearance'; and Quick says it above Save",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py _LEGAL_SIGNALS (+ services_cas.clearance, tutors.clearance) and /listings/mine gate + clearance_status; "
+             "ms.js msHiddenCasualNote(lid, raw) / msClearanceUpload, EL_CRED_SIGNALS Services + Tutors; quick.html draft screen "
+             "(= genie/HARNESS.html).",
+       ref="F2 walk 30 Sep 2026 (docs/E2E_2026-09-30_F2.md). RUL-153: a VERIFIED police clearance opens public visibility for "
+           "the child-and-care roles. The upload auto-earned it (self-attestation), so any photo opened the gate.")
+def rg_clearance_check_1():
+    py = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if None in (py, js, q):
+        return [(FAIL, "bea_main.py, ms.js or quick.html is missing")]
+    bad = []
+    i = py.find("_LEGAL_SIGNALS = {")
+    legal = py[i:py.find("}", i)] if i >= 0 else ""
+    for sig in ('"category.services_cas.clearance"', '"category.tutors.clearance"'):
+        if sig not in legal:
+            bad.append(sig + " is auto-earned on upload again (no person checks it)")
+    if 'd["gate"] = "police_clearance"' not in py or 'd["clearance_status"]' not in py:
+        bad.append("/listings/mine no longer tells the Hub which gate holds her advert")
+    if "raw.gate === 'police_clearance'" not in js or "msHiddenCasualNote(dl.beaListingId, dl._raw)" not in js:
+        bad.append("the Hub card tells a nanny the wrong gate (employer confirmation / ID)")
+    if "['category.services_cas.clearance'," not in js or "function msClearanceUpload(" not in js:
+        bad.append("Edit has no 'Police clearance' document choice / the card's upload button is gone")
+    if '"Services": "category.services",' not in py:
+        bad.append("a nanny's own police clearance drops out of her Services document list")
+    if "status = document.getElementById('el-dh-status') || status;" not in js:
+        bad.append("Edit's upload no longer says the document went to our team")
+    if "CLEARANCE-CHECK-1" not in q or (h is not None and h != q):
+        bad.append("Quick's draft screen lost the police-clearance line (or HARNESS differs)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "police clearance checked by a person; nanny told her real gate in Quick, the Hub and Edit")]
+
+@entry("RG-0556", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
        "a customer does in the app -- no sign-in codes, no Buzz, relay, listing-live or low-balance messages; Quick offers no Phone option",
        OPEN, fixed_on="2026-09-30",
        scope="sms_provider.py SMS_PURPOSES gate at the top of send(); bea_main.py _sms_key_seller returns 'skipped'.",

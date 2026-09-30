@@ -1487,6 +1487,13 @@ function drawDraft(){
    +'<div class="card"><img class="hero" src="'+PH[heroPhoto()]+'" alt="">'
    +'<div class="pad"><h3>'+title+'</h3><p>'+c.draftBody(picks)+'</p>'
    +'<div class="facts">'+facts+'</div></div></div>'
+   /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): a nanny, caregiver, au pair or creche assistant is shown to
+      strangers only once her police clearance is checked (RUL-153). Quick said so only after a direct publish -- she
+      saved without hearing it. The same sentence (already in five languages) now sits above Save. */
+   +(function(){ try{ var _gw=pickOf('what'), _gr=(_gw && _gw.r) ? svcRole(_gw.r) : null;
+       return (_gr && _gr.gate==='police_clearance')
+         ? '<div class="gate"><span>It shows in searches once your police clearance is verified in TrustSquare.</span></div>' : '';
+     }catch(_){ return ''; } })()
    +scores
    +'<div class="todolab">Each of these adds to your listing score</div>'
    +'<div class="todo" id="todo">'+jobs+'</div>'

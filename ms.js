@@ -11543,11 +11543,38 @@ function msPauseListing(id, pause){
 /* HIDDEN-CASUAL-1 (Ripple walk 3, 27 Sep 2026): RUL-115 keeps a new home worker out of strangers' sight until one
    person she worked for confirms her (or her ID is checked). She was never told, and the link lived on the fifth
    card of the trust coach. Her own card now says so, with the link one tap away. */
-function msHiddenCasualNote(lid){
+function msHiddenCasualNote(lid, raw){
+  /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): for a nanny, caregiver, au pair or creche assistant it is a
+     police clearance checked by our team that opens her advert (RUL-153) -- a confirmation or an ID check does not. */
+  if(raw && raw.gate === 'police_clearance'){
+    const waiting = raw.clearance_status === 'pending';
+    return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
+      + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
+      + (waiting
+        ? '<div style="font-size:12px;color:#78350f;margin:3px 0 0;line-height:1.45;">Your police clearance is with our team. Strangers see your listing once we have checked it.</div>'
+        : '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Parents and families see it once our team has checked your police clearance. This keeps the children and people you care for safe.</div>'
+          + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ')">Upload my police clearance</button>')
+      + '</div>';
+  }
   return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
     + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
     + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
     + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
+}
+function msClearanceUpload(lid){
+  openEditListing(lid);
+  let n = 0;
+  const t = setInterval(function(){
+    const sel = document.getElementById('el-dh-signal');
+    if(sel || ++n > 40){
+      clearInterval(t);
+      if(!sel) return;
+      sel.value = 'category.services_cas.clearance';
+      const ty = document.getElementById('el-dh-type'); if(ty){ ty.value = 'other'; if(typeof elUpdateDocHint === 'function') elUpdateDocHint('other'); }
+      const lb = document.getElementById('el-dh-label'); if(lb && !lb.value) lb.value = 'Police clearance';
+      sel.scrollIntoView({block:'center'});
+    }
+  }, 250);
 }
 async function msEmployerLinkCard(btn){
   const email = _msSignedEmail(); const host = btn.parentNode;
@@ -11644,7 +11671,7 @@ function renderDashCard(dl){
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
-      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId) : ''}
+      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId, dl._raw) : ''}
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
@@ -12626,11 +12653,19 @@ const EL_CRED_SIGNALS = {
   Cars: [
     ['category.cars.dealer_reg',  'MIRA dealer / trader registration (+8)'],
   ],
+  /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): a nanny had nowhere to hand in the police clearance her
+     advert waits for -- the general upload filed it as a Local-Market certificate. */
+  Services: [
+    ['category.services_cas.clearance', 'Police clearance (+10)'],
+  ],
+  Tutors: [
+    ['category.tutors.clearance', 'Police clearance (+8)'],
+  ],
 };
 function EL_SIGNAL_OPTS_HTML(){
   const list = EL_CRED_SIGNALS[elCurrentCat] || [];
   if (!list.length) return '';
-  return '<select id="el-dh-signal" style="background:var(--surface-2);border:1.5px solid var(--border);'+
+  return '<select id="el-dh-signal" onchange="if(/clearance$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
     'border-radius:8px;padding:8px 10px;font-size:13px;">'+
     '<option value="">What is this document? (general — no credential)</option>'+
     list.map(s => '<option value="'+s[0]+'">'+s[1]+'</option>').join('')+
@@ -12815,7 +12850,7 @@ async function elDocHubUpload(email) {
   const docType   = document.getElementById('el-dh-type')?.value || 'other';
   const label     = document.getElementById('el-dh-label')?.value.trim() || '';
   const postIntro = document.getElementById('el-dh-postintro')?.checked;
-  const status    = document.getElementById('el-dh-status');
+  let status      = document.getElementById('el-dh-status');
   if (!fileInput?.files?.length) { if (status) status.textContent = 'Please choose a file first.'; return; }
   const isIdDoc = docType === 'id_doc';
   if (status) status.textContent = isIdDoc ? '⏳ Uploading — AI verification in progress…' : '⏳ Uploading…';
@@ -12851,6 +12886,13 @@ async function elDocHubUpload(email) {
       allItemsUp.forEach(it => { if (it.has_declaration && it.status !== 'earned') declarableItemsUp.push(it); });
     }
     if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email, declarableItemsUp);
+    // CLEARANCE-CHECK-1 (F2 walk): the redraw replaced the status line, so 'uploaded' was never seen. Say it on the new one.
+    status = document.getElementById('el-dh-status') || status;
+    if (_sig && !uploadData.auto_earned) {
+      if (status) status.textContent = '✅ Sent to our team. A person checks it, then your points are added'
+        + (/clearance$/.test(_sig) ? ' and strangers can see your listing.' : '.');
+      return;   // nothing changes in the score until then, and a second redraw would wipe this line again
+    }
     // AI comment on this upload
     try {
       const commentRes = await apiPostAuth('/trust-score/upload-comment', {
