@@ -20630,6 +20630,7 @@ function sfValidStep(to){   // a step this listing can actually show (Back/resto
   if(s.cat==='local_market' && !s.lmType) return 'lmpick';
   if(to==='legal' && !sfLegalCard()) return 'features';
   if(to==='agents' && s.cat!=='Property' && s.cat!=='Cars') return 'scorecard';
+  if(to==='agents' && sfIsCarHire()) return 'scorecard';   // CAR-HIRE-1: 'Boost your sale?' is a sale agent's pitch
   return ['photos','secA','secB','secC','features','legal','agents','scorecard'].indexOf(to)>-1 ? to : 'photos';
 }
 // SF-DRAFT-KEEP-1 (ts4-04): Photos' ← returns to the kind / type picker (Services, Adventures, Local Market), not the tiles
