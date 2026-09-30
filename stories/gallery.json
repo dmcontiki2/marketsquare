@@ -134,6 +134,28 @@
    "cover": "f3_01_door"
   },
   {
+   "type": "property_flat",
+   "status": "draft",
+   "flow": "F7",
+   "label": {
+    "en": "Flat to let",
+    "af": "Woonstel te huur",
+    "zu": "Ifulethi eqashiswayo",
+    "xh": "Iflethi eqeshiswayo",
+    "nso": "Folete ye e hirišwago"
+   },
+   "title": {
+    "en": "Flat to let: from listing to the tenant who asks for you",
+    "af": "Woonstel te huur: van advertensie tot die huurder wat na jou vra",
+    "zu": "Ifulethi eqashiswayo: kusukela esikhangisweni kuya kumqashi okucelayo",
+    "xh": "Iflethi eqeshiswayo: ukusuka kwintengiso ukuya kumqeshi okucelayo",
+    "nso": "Folete ye e hirišwago: go tloga papatšong go ya go mohiri yo a go kgopelago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 23,
+   "cover": "f7_01_door"
+  },
+  {
    "type": "property_house",
    "status": "draft",
    "flow": "F6",

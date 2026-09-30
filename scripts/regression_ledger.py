@@ -33149,7 +33149,7 @@ def rg_sms_codes_only_1():
 @entry("RG-0558", "PRICE-CARD-1: the F6 story walk (house for sale) -- Quick's search results show a price saved as bare digits "
        "the way the AI examples beside it are ('R2 450 000', not '2450000'), and a property to let says 'a month'",
        OPEN, fixed_on="2026-09-30",
-       scope="quick.html drawLookup paint() cardPrice (= genie/HARNESS.html); QI18N 'a month' in five languages.",
+       scope="quick.html drawLookup paint() cardPrice (= genie/HARNESS.html); 'a month' in roles/quick_i18n.json (QI18N is generated from it).",
        ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Elsabe's house showed '2450000' between 'R 3 450 000' and "
            "'R4 250 000'; every live Pretoria rental read '13990' with no currency and no period.")
 def rg_price_card_1():
@@ -33198,7 +33198,7 @@ def rg_vehicle_prov_1():
        "let, the rent a month) as its last question; it was the one door that never asked a price, so a house went live with none",
        OPEN, fixed_on="2026-09-30",
        scope="quick.html isAsk/drawAsk + the flow() wrapper that adds a last 'price' step (after the area, so the currency is known) for Property sell "
-             "(= genie/HARNESS.html); QI18N for the two questions and notes; UNITS af ' / month'.",
+             "(= genie/HARNESS.html); the two questions and notes in roles/quick_i18n.json (QI18N is generated from it); UNITS af ' / month'.",
        ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): the door says 'A few taps and your price'; House -> To sell -> "
            "3 -> Centurion saved 'House -- To sell' with no price, and the buyer's 'Is this a fair price?' had nothing to check.")
 def rg_asking_price_1():
@@ -33541,6 +33541,26 @@ def rg_item_hint_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a collector's item gets a collector's example")]
+
+
+@entry("RG-0585", "FLAT-STORY-1: the F7 story guide -- Flat to let, walked live and told in five languages at "
+       "/help/property_flat: Quick asks the rent a month, the landlord's Yield Estimate (1T, only when a yield is worked "
+       "out), a tenant's free rent check, her introduction and the accept",
+       OPEN, fixed_on="2026-09-30",
+       scope="stories/property_flat.json (+ gallery.json, the manifest block).",
+       ref="F7 walk 30 Sep 2026 (docs/E2E_2026-09-30_F7.md). Faults found are RG-0584 and the RG-0558 follow-up.")
+def rg_flat_story_1():
+    s = repo_file("stories/property_flat.json")
+    if s is None:
+        return [(FAIL, "stories/property_flat.json is missing")]
+    bad = []
+    if '"type": "property_flat"' not in s or '"flow": "F7"' not in s:
+        bad.append("the F7 story lost its type or flow")
+    if '"img": "f7_14_yield"' not in s or '"1T_report"' not in s:
+        bad.append("the Yield Estimate step is gone")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "/help/property_flat: the flat-to-let guide")]
 
 
 if __name__ == "__main__":
