@@ -24852,15 +24852,21 @@ async def ai_yield_calc(listing_id: int, email: str,
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
 
     def _num(v):
+        # YIELD-READ-1 (F7 walk, 30 Sep 2026): the app saves a rent as "R12 500 / month" (spaced thousands, often a
+        # no-break space) -- the old strip-and-float read that as nothing, so "Still missing a figure" came back after
+        # she had typed the purchase price. The first amount in the text is the figure.
+        m = re.search(r"\d[\d\s\u00a0\u202f,]*(?:\.\d+)?", str(v or ""))
+        if not m:
+            return None
         try:
-            return float(str(v).replace("R", "").replace(",", "")
-                         .replace("/month", "").replace("pm", "").strip())
+            return float(re.sub(r"[\s\u00a0\u202f,]", "", m.group(0)))
         except Exception:
             return None
 
     listing_amount = _num(price_raw)
     lt = listing_type.lower()
-    is_rental = ("rent" in lt) or ("rent" in (title + " " + desc).lower() and "for sale" not in lt)
+    # YIELD-READ-1: Quick files a rental as "To let" -- a let is a rental too
+    is_rental = bool(re.search(r"\b(rent|let)\b", lt)) or ("rent" in (title + " " + desc).lower() and "for sale" not in lt)
 
     # Resolve purchase_price (annual rent / monthly rent) from listing + caller input.
     monthly_rent = None

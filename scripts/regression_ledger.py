@@ -33377,6 +33377,28 @@ def rg_prop_story_1():
     return [(INFO, "/help/property_house: the house-for-sale guide, dossier step marked 3T")]
 
 
+@entry("RG-0584", "YIELD-READ-1: the F7 story walk (flat to let) -- the Yield Estimate reads a rent saved as 'R12 500 / "
+       "month' (spaced thousands, no-break space) and counts a 'To let' listing as a rental; after she typed the purchase "
+       "price it answered 'Still missing a figure -- nothing charged'",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py ai_yield_calc: _num() takes the first amount in the text; is_rental matches rent|let.",
+       ref="F7 walk 30 Sep 2026 (docs/E2E_2026-09-30_F7.md): Wilhelmina's #449 'R12\\u00a0500 / month', listing_type 'To let'.")
+def rg_yield_read_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(FAIL, "bea_main.py is missing")]
+    i = py.find('@app.post("/listings/{listing_id}/yield-calc")')
+    body = py[i:i + 6000] if i >= 0 else ""
+    bad = []
+    if "YIELD-READ-1" not in body or 'm = re.search(r"\\d[\\d\\s\\u00a0\\u202f,]*(?:\\.\\d+)?", str(v or ""))' not in body:
+        bad.append("the yield calc no longer reads 'R12 500 / month'")
+    if 're.search(r"\\b(rent|let)\\b", lt)' not in body:
+        bad.append("a 'To let' listing is taken for a sale again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the Yield Estimate reads a spaced rent and knows a let is a rental")]
+
+
 
 if __name__ == "__main__":
     sys.exit(main())
