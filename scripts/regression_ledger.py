@@ -33658,5 +33658,36 @@ def rg_col_report_door_1():
     return [(INFO, "a collector can order his market report from Edit")]
 
 
+@entry("RG-0647", "STAY-WHERE-1: in Quick, a B&B / guest house / self-catering owner is asked what kind of place, the price per "
+       "room per night, then her city and its areas -- not 'How long?', 'Best season?' and Kruger / Cape Town as 'Where is it?'",
+       LOCKED, fixed_on="2026-10-01",
+       scope="quick.html (= genie/HARNESS.html): Adventures sell tile 'Place to stay'; qIsStay / qStaySteps; the city-areas "
+             "WHERE and the city pick no longer skip a stay; title, advert words, '/ room / night', category adventures_accommodation.",
+       ref="David, 1 Oct 2026: 'I tried to test a B&B and then it got the local area all wrong'. Checked live first: only "
+           "Quick's Adventures door was wrong (Services, Local Market, Property and Cars ask the city then its areas). "
+           "David: 'please implement it as you suggest'.")
+def rg_stay_where_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if None in (q, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if q != h:
+        bad.append("quick.html and genie/HARNESS.html differ")
+    if '{"t": "Place to stay", "p": "room_bed3"}' not in q:
+        bad.append("Quick's Adventures door lost its 'Place to stay' tile")
+    if "window.qIsStay=function" not in q or "window.qStaySteps=function" not in q:
+        bad.append("a stay no longer gets its own steps")
+    if "(cat().key==='adventures' && !(window.qIsStay && qIsStay()))" not in q or \
+       "(cat().key!=='adventures' || (window.qIsStay && qIsStay()))" not in q:
+        bad.append("a stay's WHERE no longer asks her city and its areas")
+    if "return {category:'adventures_accommodation'}" not in q:
+        bad.append("a Quick stay no longer lands in TrustSquare's Stays")
+    if "' / room / night'" not in q:
+        bad.append("a stay's price lost its per-room-per-night basis")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick: a place to stay asks kind, per-room price, her city and its areas")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
