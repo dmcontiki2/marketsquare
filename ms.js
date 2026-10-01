@@ -932,7 +932,8 @@ function obTrack(step, meta){
     var st=(typeof sfState!=='undefined'&&sfState)||{};
     var ml=(typeof magicLink!=='undefined'&&magicLink)||{};
     var body={sid:_obSid, step:String(step||'').slice(0,40), meta:meta||null, magic:!!ml.active,
-      src:ml.src||'', cat:st.cat||ml.cat||'', sub:st.sub||'', email:st.email||ml.email||''};
+      src:ml.src||'', cat:st.cat||ml.cat||'', sub:st.sub||'', email:st.email||ml.email||'',
+      wd:(navigator.webdriver?1:0)};   // FUNNEL-WEBDRIVER-1: a script-driven browser says so
     fetch(BEA_URL+'/onboard/step',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
   }catch(e){}
 }
@@ -20437,7 +20438,7 @@ local_market: { label:'Local Market', typePickTitle:'What are you selling?',
    antiques:[['main','The item','Neutral background','🏺'],['detail',"Maker's marks / underside",'Where the truth lives','🔍'],['context','Scale & setting','Next to something familiar','📏'],['prov','Provenance papers','Names auto-blurred','📜']],
    general:[['main','The item','Clean background, good light','📦'],['detail','Close-up','Condition honesty','🔍'],['context','Extras included','Everything in the deal','➕']]},
   lmRowsA:{
-   food:[['title','What is it?','text','e.g. Raw wildflower honey'],['unit','Sold','select','Per jar|Per bottle|Per kg|Per dozen|Per box'],['origin','Made / harvested','text','e.g. Own hives, Rietfontein'],['shelf','Shelf life','text','e.g. 12 months']],
+   food:[['title','What is it?','text','e.g. Raw wildflower honey'],['unit','Sold','select','Per jar|Per bottle|Per kg|Per dozen|Per box|Per pack|Each'],['origin','Made / harvested','text','e.g. Own hives, Rietfontein'],['shelf','Shelf life','text','e.g. 12 months']],
    handmade:[['title','What is it?','text','e.g. Leather tote bag'],['materials','Materials','text','e.g. Full-grain leather, brass'],['madeto','Availability','select','In stock|Made to order|Both'],['lead','Lead time','text','e.g. 5 days']],
    furniture:[['title','What is it?','text','e.g. Two-seater couch'],['dims','Dimensions','text','e.g. 160 × 90 × 85 cm'],['material','Material','text','e.g. Solid oak, linen'],['age','Age','text','e.g. 3 years']],
    instruments:[['title','What is it?','text','e.g. Acoustic guitar'],['brand','Brand & model','text','e.g. Yamaha F310'],['year','Year','text','e.g. 2019'],['cond','Condition','select','Excellent|Good|Fair|Needs work']],
@@ -20451,7 +20452,7 @@ local_market: { label:'Local Market', typePickTitle:'What are you selling?',
    antiques:['Documented provenance','Appraisal available','Trade considered','More from this estate'],
    general:['Negotiable','Warranty remaining','Original packaging','Delivery possible']},
   sections:[
-   {key:'A',title:'Item Details',pts:20,coach:'<b>The AI drafts a title from your photo</b> — make it yours. Specific beats generic every time.',rows:[]},
+   {key:'A',title:'Item Details',pts:20,coach:'<b>Name it the way a buyer would search</b> — specific beats generic every time. Added a photo? The AI has drafted a title — make it yours.',rows:[]},
    {key:'B',title:'The Story',pts:20,coach:"<b>This is your unfair advantage.</b> A jar of honey is R80; <i>your</i> honey from <i>your</i> hives has a queue. Tell it.",rows:[
     ['story','What makes it special?','textarea',"How it's made, where it comes from, why it's different…"],
     ['care','Care / usage tips','text','e.g. Store below 25°C'],['why','Why are you selling?','text','e.g. Hobby outgrew the house']]},
@@ -20478,6 +20479,11 @@ function _sfPriceWithUnit(raw, flow){
   /* RATE-BASIS-1 (25 Sep 2026 inspection, ts4-05): a casual worker who picked "Per day" or "Per job" as her rate
      basis is published per day / per job -- the flow's default unit only applies when she did not choose one. */
   var _basis = (typeof sfState!=='undefined' && sfState && sfState.A) ? ({'Per hour':'/ hour','Per day':'/ day','Per job':'/ job'})[sfState.A.unit] : '';
+  /* LM-UNIT-1 (1 Oct 2026, Goal run 26 walk): a Local Market seller who picked how it is sold ("Per jar", "Per box",
+     "Each") had it buried in the description while the card showed a bare "R85". It now travels with the price --
+     "R85 per box" -- which the card's own basis suffix (_priceBasisSuffix) already shows. */
+  if(!_basis && typeof sfState!=='undefined' && sfState && sfState.cat==='local_market' && sfState.A && /^(per [a-z ]{2,12}|each)$/i.test(String(sfState.A.unit||'')))
+    _basis = String(sfState.A.unit).toLowerCase();
   var unit = _basis || (flow && flow.priceUnit);
   if(!unit) return raw;
   if(/\/|\bper\b|once|poa|negotiable|quote|package|from /i.test(raw)) return raw;

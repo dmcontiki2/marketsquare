@@ -33184,6 +33184,64 @@ def rg_attach_pick_label_1():
     return [(INFO, "the attach picker says which advert is which")]
 
 
+@entry("RG-0652", "LM-UNIT-1: a Local Market seller's 'Sold' choice (per jar / per box / each) travels with her price -- the "
+       "card says 'R85 per box', not a bare 'R85' -- and a home baker can pick 'Per pack' or 'Each'",
+       OPEN, fixed_on="2026-10-01",
+       scope="ms.js lmRowsA.food unit options + _sfPriceWithUnit (Local Market)",
+       ref="Goal run 26 walk, 1 Oct 2026 (docs/E2E_2026-10-01.md): Food & Produce, 'Homemade buttermilk rusks', Sold 'Per box', "
+           "R85 -> sfListingFields().price was '85'; 'Sold: Per box' only in the description.")
+def rg_lm_unit_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    if "'Per jar|Per bottle|Per kg|Per dozen|Per box|Per pack|Each'" not in js:
+        return [(FAIL, "Food & Produce lost 'Per pack' / 'Each' -- a baker selling by the packet or piece has no unit")]
+    i = js.find("function _sfPriceWithUnit(")
+    seg = js[i:i + 2500] if i >= 0 else ""
+    if "sfState.cat==='local_market'" not in seg or "String(sfState.A.unit).toLowerCase()" not in seg:
+        return [(FAIL, "a Local Market price is published without the unit the seller chose")]
+    return [(INFO, "the Local Market unit travels with the price")]
+
+
+@entry("RG-0653", "LM-COACH-TRUTH-1: Local Market step 2 no longer tells a seller who skipped the photo that 'the AI drafts a "
+       "title from your photo'",
+       OPEN, fixed_on="2026-10-01",
+       scope="ms.js Local Market section A coach",
+       ref="Goal run 26 walk, 1 Oct 2026: photo skipped at step 1, step 2 still opened on 'The AI drafts a title from your photo'.")
+def rg_lm_coach_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    if "coach:'<b>The AI drafts a title from your photo</b>" in js:
+        return [(FAIL, "step 2 again promises an AI title from a photo the seller may not have added")]
+    if "Name it the way a buyer would search" not in js:
+        return [(FAIL, "the Local Market step 2 coach is missing")]
+    return [(INFO, "step 2's coach is true with or without a photo")]
+
+
+@entry("RG-0654", "FUNNEL-WEBDRIVER-1: a sell-flow beacon from a script-driven browser (navigator.webdriver) is stored bot=2, "
+       "so cloud checks and Goal walks that carry no QA key stop counting as strangers",
+       OPEN, fixed_on="2026-10-01",
+       scope="ms.js obTrack + quick.html / quick_next.html qTrack (wd flag); bea_main.py onboard_step bot verdict",
+       ref="Goal run 26, 1 Oct 2026: of 55 sessions the funnel called human on 1 Oct, 35 were a cloud check's iPhone 17_0 "
+           "burst (14:39-15:01, ~12 s apart) and 10 were this run's own Playwright walk.")
+def rg_funnel_webdriver_1():
+    py, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if py is None or js is None:
+        return [(FAIL, "bea_main.py or ms.js is missing")]
+    i = py.find("async def onboard_step(")
+    seg = py[i:i + 4500] if i >= 0 else ""
+    if 'body.get("wd") in (1, True, "1")' not in seg:
+        return [(FAIL, "the server no longer keeps script-driven beacons out of the stranger funnel")]
+    if "wd:(navigator.webdriver?1:0)" not in js:
+        return [(FAIL, "ms.js no longer says when the browser is script-driven")]
+    for f in ("quick.html", "quick_next.html"):
+        h = repo_file(f)
+        if h is not None and "wd:(navigator.webdriver?1:0)" not in h:
+            return [(FAIL, f + " no longer says when the browser is script-driven")]
+    return [(INFO, "script-driven walks are kept out of the stranger funnel")]
+
+
 @entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
        "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
        OPEN, fixed_on="2026-09-30",

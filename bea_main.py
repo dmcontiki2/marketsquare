@@ -18066,8 +18066,12 @@ async def onboard_step(request: Request):
     # Quick drafts since 1 Sep, every one came from an emulated phone in a scripted burst.
     if not bot:
         try:
+            # FUNNEL-WEBDRIVER-1 (1 Oct 2026, Goal run 26): a script-driven browser (navigator.webdriver -- every
+            # Playwright / Selenium / CDP walk) is ours too. 1 Oct the funnel still called 45 of 55 scripted sessions
+            # human: a cloud check's iPhone 17_0 burst 14:39-15:01 and this run's own walk, none carrying the QA key.
             if (_qa_key_ok(request) or _is_tester_cookie(request.cookies.get('ts_review'))
-                    or (email and _QA_EMAIL_RE.match(email))):
+                    or (email and _QA_EMAIL_RE.match(email))
+                    or body.get("wd") in (1, True, "1")):
                 bot = 2
         except Exception:
             pass
