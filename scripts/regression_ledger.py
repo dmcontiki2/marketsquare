@@ -33743,5 +33743,90 @@ def rg_stay_where_1():
     return [(INFO, "Quick: a place to stay asks kind, per-room price, her city and its areas")]
 
 
+
+@entry("RG-0649", "HELP-LANG-SYNC-1: a language picked in Quick while the How guide is open re-speaks the guide behind it, "
+       "on the step she is reading; the language menu closes on a pick and on a tap anywhere else (the guide included); "
+       "the gallery follows Quick's '#lang=' and, inside Quick, shows no second language control of its own",
+       OPEN, fixed_on="2026-10-01",
+       scope="quick.html (= genie/HARNESS.html) qHelpRelang / qSetLang / qLangMenuClose / .qlscrim; stories/index.html "
+             "hashchange + html.embed .top",
+       ref="David, 1 Oct 2026 (screenshot: pill AF, menu still marking EN, the guide behind in Sepedi): 'Why does the "
+           "background still stay in the one language while the language selection is already set to another'.")
+def rg_help_lang_sync_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); g = repo_file("stories/index.html")
+    if None in (q, h, g):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if q != h:
+        bad.append("quick.html and genie/HARNESS.html differ")
+    if "function qHelpRelang(){" not in q or "else if(hb) qHelpRelang();" not in q:
+        bad.append("a language picked while the guide is open no longer reaches the guide")
+    if "qLangMenuClose(); qNextSetLang(l);" not in q or "'<div class=\"qlscrim\" id=\"qlscrim\"></div>" not in q:
+        bad.append("the language menu stays open after a pick, or a tap on the guide cannot close it")
+    if "window.addEventListener('hashchange'" not in g or "html.embed .top{display:none}" not in g:
+        bad.append("the gallery ignores Quick's language, or shows its own language buttons inside Quick")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick's language reaches the open How guide and the gallery; the menu closes on a pick")]
+
+
+@entry("RG-0650", "PH-FIT-1: an example line (placeholder) is never shown cut -- a line that nearly fits its box is set a "
+       "little smaller; one that cannot fit is written in full beside the box (Quick and the guides: above it; the main "
+       "app's sell form: the row stacks, then under the box) and the box's own copy is hidden",
+       OPEN, fixed_on="2026-10-01",
+       scope="quick.html (= genie/HARNESS.html) PH-FIT-1 block; ms.js PH-FIT-1 block (input[data-i18n-ph]); "
+             "stories/index.html fitPh + shorter zu/xh/nso search words + the empty search box's clear button",
+       ref="David, 1 Oct 2026: the How gallery's 'Find your kind of work or item' was cut in isiZulu, isiXhosa and "
+           "Sepedi -- 'look where it happens everywhere in the apps and fix it'. Measured on a 360px phone: 73 of "
+           "Quick's placeholder/language pairs and 19 of the main app's 64 sell-form examples (in English) were cut.")
+def rg_ph_fit_1():
+    q = repo_file("quick.html"); js = repo_file("ms.js"); g = repo_file("stories/index.html")
+    if None in (q, js, g):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "PH-FIT-1" not in q or "#app input.pho::placeholder{color:transparent}" not in q or "line.className='phl'" not in q:
+        bad.append("Quick shows long example lines cut again")
+    if "PH-FIT-1" not in js or "input[data-i18n-ph].pho::placeholder{color:transparent}" not in js or \
+       ".sf-frow.sf-stack{flex-wrap:wrap}" not in js:
+        bad.append("the main app's sell-form examples are cut again")
+    if "function fitPh(el){" not in g or "::-webkit-search-cancel-button{display:none}" not in g:
+        bad.append("the How gallery's search line is cut again")
+    for w in ("Thola uhlobo lomsebenzi wakho noma into", "Fumana uhlobo lomsebenzi wakho okanye into",
+              "Hwetša mohuta wa mošomo wa gago goba selo"):
+        if w in g:
+            bad.append("the gallery's long search words came back (%s)" % w[:20])
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "example lines fit, shrink a little, or are written in full beside their box -- never cut")]
+
+
+@entry("RG-0651", "CUT-WORDS-1: longer languages no longer cut words -- Quick's tile names shrink until their longest word "
+       "fits (Afrikaans 'Swembadskoonmaker'); Quick's top bar fits a 320px phone with isiZulu's 'Kanjani'; the guides' "
+       "header wraps instead of running off the edge; the Tuppence step title wraps; the AI-services cards keep their "
+       "price chip on screen",
+       OPEN, fixed_on="2026-10-01",
+       scope="quick.html fitWord / .steps / .bar media rule; stories/help.html + stories/index.html .top; ms.css "
+             ".hiw-feat-label; marketsquare.html AI-services cards",
+       ref="Found by the PH-FIT-1 sweep (David, 1 Oct 2026): a clip scan of Quick's screens in five languages and "
+           "scripts/i18n_pseudo_locale.py (4 breaks in 35%-longer text before, 0 after).")
+def rg_cut_words_1():
+    q = repo_file("quick.html"); css = repo_file("ms.css"); html = repo_file("marketsquare.html")
+    hp = repo_file("stories/help.html"); g = repo_file("stories/index.html")
+    if None in (q, css, html, hp, g):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "function fitWord(el){" not in q or ".steps{min-width:0}" not in q:
+        bad.append("Quick cuts long tile names, or its top bar runs off a narrow phone again")
+    if ".hiw-feat-label{font-size:13px;font-weight:700;color:#fff;white-space:nowrap" in css:
+        bad.append("the Tuppence step title is a one-line ellipsis again")
+    if 'flex:1;min-width:0;overflow-wrap:anywhere;' not in html:
+        bad.append("an AI-services card can push its price chip off the screen again")
+    for name, page in (("help.html", hp), ("index.html", g)):
+        if "gap:10px;flex-wrap:wrap}" not in page:
+            bad.append("the guide header (%s) runs off a narrow phone again" % name)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "long words wrap or shrink to fit in Quick, the guides and the main app")]
+
 if __name__ == "__main__":
     sys.exit(main())

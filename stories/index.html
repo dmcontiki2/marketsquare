@@ -12,7 +12,8 @@
 html,body{background:var(--bg)}
 body{margin:0;color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-inline:16px;padding-block:20px 48px}
 .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}   /* PH-FIT-1: on a narrow phone the languages drop under the name, never off the edge */
+.top .lang{margin-left:auto}
 .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--bright)}
 .brand i{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#04120f;font-style:normal;font-size:11px;font-weight:800;display:grid;place-items:center}
 .lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
@@ -23,6 +24,14 @@ h1{font-size:28px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.01em;text-w
 .count{display:inline-flex;margin-top:10px;font-size:12.5px;color:var(--bright);background:rgba(22,169,124,.12);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
 input[type=search]{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
 input[type=search]::placeholder{color:var(--ink2)}
+/* PH-FIT-1: an example line that nearly fits is set smaller; one that cannot fit is written above the box, never cut */
+input.phs::placeholder{font-size:var(--phfs)}
+input.pho::placeholder{color:transparent}
+input[type=search]:placeholder-shown::-webkit-search-cancel-button{display:none}   /* PH-FIT-1: the empty box's clear button kept ~16px and cut the line short */
+/* HELP-LANG-SYNC-1: inside Quick (?embed=1) Quick's bar is the one language control -- the gallery's own buttons set a
+   second language behind it (David's screenshot: Quick in Afrikaans over a Sepedi guide) */
+html.embed .top{display:none}
+.phl{margin-bottom:-12px;padding-inline:4px;font-size:13px;line-height:1.35;color:var(--ink2)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;color:inherit;text-decoration:none}
 .card:hover,.card:focus-visible{border-color:var(--bright);outline:none}
@@ -59,17 +68,18 @@ const UI = {
      count:(n,t)=>`${n} gids${n===1?'':'e'} geskryf` + (t ? ` van ${t} soorte advertensies` : ''),q:'Soek jou soort werk of item',steps:n=>`${n} stappe`,checked:'nagegaan',draft:'Konsep',
      none:'Niks pas nog nie. Meer gidse word nagestap.',foot:'Net stappe wat op die regte webwerf gewerk het, word gewys.',months:['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Des']},
  zu:{brand:'Kusebenza kanjani',title:'Isinyathelo ngesinyathelo, kuzo zonke izinhlobo zezikhangiso',sub:'Umhlahlandlela ngamunye ulandela ukuhamba kwangempela kusayithi, isikrini ngesikrini, kusukela empendulweni yakho yokuqala kuya ekhasimendeni lakho lokuqala.',
-     count:(n,t)=>`Imihlahlandlela engu-${n} ibhaliwe`,q:'Thola uhlobo lomsebenzi wakho noma into',steps:n=>`izinyathelo ezingu-${n}`,checked:'kuhlolwe',draft:'Okusalungiswa',
+     count:(n,t)=>`Imihlahlandlela engu-${n} ibhaliwe`,q:'Thola umsebenzi wakho noma into',steps:n=>`izinyathelo ezingu-${n}`,checked:'kuhlolwe',draft:'Okusalungiswa',
      none:'Akukho okufanayo okwamanje. Eminye imihlahlandlela isahanjwa.',foot:'Kuboniswa kuphela izinyathelo ezisebenzile kusayithi langempela.',months:['Jan','Feb','Mas','Apr','Mey','Jun','Jul','Aga','Sep','Okt','Nov','Dis']},
  xh:{brand:'Isebenza njani',title:'Inyathelo ngenyathelo, kulo lonke uhlobo lwentengiso',sub:'Isikhokelo ngasinye silandela uhambo lokwenyani kwisayithi, isikrini ngesikrini, ukusuka kwimpendulo yakho yokuqala ukuya kumthengi wakho wokuqala.',
-     count:(n,t)=>`Izikhokelo ezi-${n} zibhaliwe`,q:'Fumana uhlobo lomsebenzi wakho okanye into',steps:n=>`amanyathelo angama-${n}`,checked:'kuhlolwe',draft:'Idrafti',
+     count:(n,t)=>`Izikhokelo ezi-${n} zibhaliwe`,q:'Fumana umsebenzi wakho okanye into',steps:n=>`amanyathelo angama-${n}`,checked:'kuhlolwe',draft:'Idrafti',
      none:'Akukho nto ifanayo okwangoku. Ezinye izikhokelo zisahanjwa.',foot:'Kuboniswa kuphela amanyathelo asebenzileyo kwisayithi yokwenyani.',months:['Jan','Feb','Mat','Epr','Mey','Jun','Jul','Aga','Sep','Okt','Nov','Dis']},
  nso:{brand:'Ka moo e šomago',title:'Kgato ka kgato, go mehuta ka moka ya dipapatšo',sub:'Tlhahli ye nngwe le ye nngwe e latela leeto la nnete weposaeteng, sekirini ka sekirini, go tloga karabong ya gago ya mathomo go ya go moreki wa gago wa mathomo.',
-     count:(n,t)=>`Ditlhahli tše ${n} di ngwadilwe`,q:'Hwetša mohuta wa mošomo wa gago goba selo',steps:n=>`dikgato tše ${n}`,checked:'e hlahlobilwe',draft:'Kakanyo',
+     count:(n,t)=>`Ditlhahli tše ${n} di ngwadilwe`,q:'Hwetša mošomo wa gago goba selo',steps:n=>`dikgato tše ${n}`,checked:'e hlahlobilwe',draft:'Kakanyo',
      none:'Ga go se se swanago ga bjale. Ditlhahli tše dingwe di sa sepelwa.',foot:'Go bontšhwa feela dikgato tšeo di šomilego weposaeteng ya nnete.',months:['Jan','Feb','Mat','Apr','Mei','Jun','Jul','Ago','Set','Okt','Nof','Dis']}
 };
 let lang = 'en', IDX = {stories: []};
 const EMBED = new URLSearchParams(location.search).get('embed') === '1';   // HELP-SWAP-1: opened from Quick's How button
+if (EMBED) document.documentElement.classList.add('embed');
 
 const LANGS = ['en', 'af', 'zu', 'xh', 'nso'];   // HELP-LANG-1
 try { const l = localStorage.getItem('ts_help_lang'); if (LANGS.includes(l)) lang = l; } catch (e) {}
@@ -89,7 +99,29 @@ function render(){
       <span class="b"><span class="t">${esc(L(s.label))}</span><span class="m">${u.steps(s.steps)} · ${u.checked} ${day(s.walked_on)}</span>${s.status === 'draft' ? `<span class="d">${u.draft}</span>` : ''}</span></a>`).join('');
   $('empty').hidden = list.length > 0; $('empty').textContent = u.none;
   document.querySelectorAll('.lang [data-l]').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === lang));
+  fitPh($('q'));
 }
+// PH-FIT-1 (1 Oct 2026, David: "the words look cut off in the other languages"): the search line was cut mid-word in
+// isiZulu, isiXhosa and Sepedi on a phone. It is measured against its box after every draw: a line that nearly fits is
+// set a little smaller (down to 13px); one that still does not fit is written in full above the box instead of cut.
+function fitPh(el){
+  if (!el || !el.offsetWidth) return;
+  const ph = el.placeholder || '', cs = getComputedStyle(el), base = parseFloat(cs.fontSize);
+  const room = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+  const cv = fitPh.cv || (fitPh.cv = document.createElement('canvas').getContext('2d'));
+  const w = px => { cv.font = `${cs.fontStyle} ${cs.fontWeight} ${px}px ${cs.fontFamily}`; return cv.measureText(ph).width; };
+  let px = base; while (px > 13 && w(px) > room) px -= .5;
+  const fits = !ph || w(px) <= room;
+  el.classList.toggle('phs', px < base); el.style.setProperty('--phfs', px + 'px'); el.classList.toggle('pho', !fits);
+  let line = el.previousElementSibling && el.previousElementSibling.classList.contains('phl') ? el.previousElementSibling : null;
+  if (fits) { if (line) line.remove(); return; }
+  if (!line) { line = document.createElement('div'); line.className = 'phl'; line.setAttribute('aria-hidden', 'true'); el.before(line); }
+  if (line.textContent !== ph) line.textContent = ph;
+}
+window.addEventListener('resize', () => fitPh($('q')));
+// HELP-LANG-SYNC-1 (1 Oct 2026): Quick re-speaks an open gallery through its hash ('#lang=af'); the page used to read
+// the hash once, on load, so a language picked in Quick while the gallery was showing never reached it.
+window.addEventListener('hashchange', () => { const hl = ((location.hash || '').match(/lang=(en|af|zu|xh|nso)/) || [])[1]; if (hl && hl !== lang) { lang = hl; render(); } });
 $('q').oninput = render;
 document.querySelectorAll('.lang [data-l]').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem('ts_help_lang', lang); } catch (e) {} render(); });
 render();
