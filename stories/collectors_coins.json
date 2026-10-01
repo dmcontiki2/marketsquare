@@ -346,7 +346,7 @@
    "who": "you",
    "cost": "5T_report",
    "img": "f10_12_report_form",
-   "pass": false,
+   "pass": true,
    "en": [
     "Get the report: 5T",
     "It opens filled in with your item and price. Add a photo and tap [[Get the report · 5T]]. You pay only when the report arrives."
@@ -374,7 +374,7 @@
    "who": "you",
    "cost": "free",
    "img": "f10_14_attach",
-   "pass": false,
+   "pass": true,
    "en": [
     "Attach the report to your advert",
     "Tap [[Attach report to my listing]]. Buyers see the market range next to your price."
@@ -590,7 +590,8 @@
    "nso": [
     "O lekola theko: [[Is this a fair price?]]",
     "Theko ya khathalogo goba ya mmaraka ya selo sa gago, 1T, e lefišwa feela ge palo ya nnete e boa."
-   ]
+   ],
+   "note": "1 Oct 2026 (Goal run, after the OpenAI top-up): the 1T check returned a verified range (R72,779-R86,000 asking, 3 named sources) and charged 1T -- proven on the service; the buyer-page screen waits for #455 to be published again"
   },
   {
    "n": 19,
