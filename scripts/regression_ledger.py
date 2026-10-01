@@ -33745,13 +33745,13 @@ def rg_stay_where_1():
 
 @entry("RG-0649", "HOW-GATE-F4: the electrician guide's licence gate shows -- its licence upload (step 11) is the gate step, its "
        "note says step 11 in all five languages, and build_help.py refuses a gate note no passed step stands behind",
-       OPEN, fixed_on="2026-10-01",
+       LOCKED, fixed_on="2026-10-01",
        scope="stories/electrician.json (step 11 \"gate\": true; gate_note en/af/zu/xh/nso 'step 11'); scripts/build_help.py "
              "(HOW-GATE-F4: gate_note needs a passed gate step and must name its number); stories/how_check.py static check.",
        ref="HOW-CHECK-1, the cloud How check, 1 Oct 2026 (David: 'check the unique functions of each How'): the F4 guide's one "
            "unique function -- 'until our team has checked your licence, only people you send your link to can see your "
            "listing' -- never showed. No step carried gate (nanny's upload step does) and the note said step 10, which is Publish; "
-           "the licence upload is step 11. Proven: build_help --check is red on the pre-fix electrician.json, green on the fix.")
+           "the licence upload is step 11. Proven: build_help --check is red on the pre-fix electrician.json, green on the fix. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
 def rg_how_gate_f4():
     import json as _j
     st = repo_file("stories/electrician.json"); bh = repo_file("scripts/build_help.py")
@@ -33776,14 +33776,14 @@ def rg_how_gate_f4():
 @entry("RG-0650", "HOW-NEAREST-1: Quick's How opens the nearest guide -- the one written for her listing, else the one whose own "
        "words say it serves her listing and deal (a sedan gets the car guide, a caregiver the nanny's, a house TO LET the to-let "
        "guide, not FOR SALE); a guide walked in TrustSquare's Sell is never opened from Quick",
-       OPEN, fixed_on="2026-10-01",
+       LOCKED, fixed_on="2026-10-01",
        scope="stories/<type>.json 'serves' (+ property 'deal'), copied from each guide's own step 2; scripts/build_help.py writes "
              "door / quick / serves / deal into /help/data/index.json and refuses a type two guides serve; quick.html + "
              "genie/HARNESS.html QHELP_IDX, qHelpDeal, qHelpType.",
        ref="HOW-CHECK-1, 1 Oct 2026, measured live (21 walks, 167 screens, How pressed on each): a sedan, stamps, a science "
            "tutor, crafts, a caregiver, a gas installer and a bricklayer all got the guide LIST although a guide says in its "
            "step 2 that they follow its steps; a house to let got 'Type your asking price' beside 'What is the rent a month?'; "
-           "Quick's new stay path (STAY-WHERE-1) opened the guest-house guide at 'Tap Sell, then Adventures'.")
+           "Quick's new stay path (STAY-WHERE-1) opened the guest-house guide at 'Tap Sell, then Adventures'. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
 def rg_how_nearest_1():
     import json as _j
     q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); g = repo_file("stories/gallery.json")
@@ -33815,12 +33815,12 @@ def rg_how_nearest_1():
 @entry("RG-0651", "HOW-PLACE-1: How opens at her place -- a Quick screen the guide has no card for opens at the last card she "
        "passed (bathrooms opens at bedrooms, not step 1); a buyer in Find opens at the buyer's half; with no guide for her "
        "listing the list puts her door's guides first and each opens at her place; the list also finds a guide by what it serves",
-       OPEN, fixed_on="2026-10-01",
+       LOCKED, fixed_on="2026-10-01",
        scope="quick.html + genie/HARNESS.html qHelpPlace / qHelpDoor / qHelpOpen (&seen=, &side=find, #door=); stories/help.html "
              "placeFromHash; stories/index.html readHash / PLACE / door sort / serves search; stories/how_check.py (HOW-CHECK-1).",
        ref="HOW-CHECK-1, 1 Oct 2026: Quick's bathrooms question (DJNR-BATHS-1, added after the F6/F7 walks) has no card and "
            "opened step 1 on a fresh How; a buyer on 'What can you spend?' was shown the seller's 'Type your exact asking price' "
-           "and on the results 'Check your advert and tap Save my listing'; a guide picked from the list opened at step 1.")
+           "and on the results 'Check your advert and tap Save my listing'; a guide picked from the list opened at step 1. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
 def rg_how_place_1():
     q = repo_file("quick.html"); hp = repo_file("stories/help.html"); ix = repo_file("stories/index.html")
     ck = repo_file("stories/how_check.py")

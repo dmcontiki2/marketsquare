@@ -20,7 +20,7 @@ And it checks each guide's own promise -- the unique function of each How -- aga
 A screen the guide has no card of its own for is a WARN: the guide still opens at the last card she passed, and the next
 walk of that flow should give it its own.
 
-  python3 stories/how_check.py                  # the live site, every guide (about 5 minutes)
+  python3 stories/how_check.py                  # the live site, every guide (about 8 minutes)
   python3 stories/how_check.py --candidate      # this checkout's quick.html + stories/ served over the live site: prove a
                                                 #   change BEFORE committing it with [ship]
   python3 stories/how_check.py nanny cars_bakkie   # only these guides
