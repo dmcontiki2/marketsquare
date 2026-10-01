@@ -33606,9 +33606,9 @@ def rg_item_hint_1():
     if None in (q, src):
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = []
-    if "cat().key==='collectors' ? 'What exactly is it? e.g. 1974 Krugerrand, 1 oz gold'" not in q:
+    if "cat().key==='collectors' ? 'What exactly is it? e.g. 2000 Krugerrand, 1 oz gold'" not in q:
         bad.append("a collector is shown the honey example again")
-    if '"What exactly is it? e.g. 1974 Krugerrand, 1 oz gold"' not in src:
+    if '"What exactly is it? e.g. 2000 Krugerrand, 1 oz gold"' not in src:
         bad.append("the collector's example has no translations in roles/quick_i18n.json")
     if bad:
         return [(FAIL, "; ".join(bad))]
