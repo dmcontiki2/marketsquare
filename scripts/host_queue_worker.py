@@ -63,7 +63,7 @@ def execute(action: str, arg: str) -> tuple[int, str]:
         rc, heads = run(['git', 'ls-remote', '--heads', 'origin', 'main'], repo)
         branch = 'main' if (rc == 0 and 'refs/heads/main' in heads) else 'master'
         # SYNC-ORIGIN-1 (RUL-193): take in what the cloud shipped first; a conflict stops before the push.
-        rc, out = run([sys.executable, str(HERE / 'sync_origin.py'), '--repo', str(repo), '--branch', branch], repo)
+        rc, out = run([sys.executable, str(HERE / 'scripts' / 'sync_origin.py'), '--repo', str(repo), '--branch', branch], repo)
         if rc != 0:
             return rc, out
         return run(['git', 'push', 'origin', 'HEAD:' + branch], repo)
