@@ -5,6 +5,36 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 26 — Thu 1 Oct 2026, 20:56–21:40 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable. SSH needs `bash load_sandbox_ssh.sh` first in a fresh device VM ("Host key
+  verification failed" until then). The device VM has ~1.3 GB free — a clone of the 2.2 GB repo fails, so this run
+  built in a server worktree (`/root/w26`, branch `goal26` off `origin/main`) and shipped by pushing
+  `claude/goal-run26` with `[ship]` (CLOUD-SHIP-1 gates, health-checked deploy). Laptop tree untouched (2 behind origin
+  at start, clean apart from an untracked `SYNC_ORIGIN_GUARDS_2026-10-01.html`).
+- **Walk (Local Market, `docs/E2E_2026-10-01.md`):** a fresh Chromium profile from the cloud sandbox (the built-in pane
+  holds other lanes' QA storage and the safety layer refused clearing it). Home → Sell → Local Market → Food & Produce →
+  six steps → score 60 in ~2 min → stopped at Publish (contract). No errors. Breaks: the "Sold" unit never reached the
+  price (card would read "R85", not "R85 per box"); no "each"/"per pack" for baked goods; step 2 promised an AI title
+  from a photo she had skipped. All three fixed. Seen, not fixed: Story / Selling details / Features add no points
+  (score 60 before and after a full story) although the coach calls the story "your unfair advantage".
+- **Number: 0** (`onboarding_number.py`): 6,748 listed · 2,611 emailed (+1 since run 25) · 5 registered · 0 qualifying.
+  Live 103 = 85 AI examples + 18 family. **By a stranger's hand: 0.** New listings 1 Oct: #458 draft (David's
+  davidconradie1234 address, Property) and one QA row. Nothing published by anyone outside the family.
+- **Where people stop:** still unknown — **no strangers in the funnel.** Of 55 sessions stored human on 1 Oct: 35 a
+  cloud check's iPhone 17_0 burst (14:39–15:01, ~12 s apart), 10 this run's own walk, 3 Pixel 8 scripted, 7 iPhone 18_7
+  (one carries dmcontiki2@ — David's phone; #458 matches another). FUNNEL-QA-1 missed them because scripted walks
+  without the QA key look human. Fixed (FUNNEL-WEBDRIVER-1). From 21:28Z the human count should mean people.
+- **Shipped (33f3052, live 21:28:08Z, ms.js?v=885):** GI-0010 LM-UNIT-1 (RG-0652), GI-0011 LM-COACH-TRUTH-1
+  (RG-0653), GI-0012 FUNNEL-WEBDRIVER-1 (RG-0654). All three FAIL on e22c12f and pass on 33f3052; full ledger on the new
+  tree 14 !!!! vs 15 on origin/main (all pre-existing, server-vantage; none new). Live proof below each row.
+- **REVIEW NOW:** unchanged — GI-0009 OpenAI credit · GI-0008 SO-6 rulings sweep · GI-0006 Collectors step-6 note ·
+  GI-0003 Quick card in Sell. Nothing new needs David.
+- **Not reached:** per-wave outreach opens/clicks; whether GI-0009 (OpenAI credit) was topped up today; the scoring
+  question above (next run: read sfScore / section pts before changing anything). **Data left behind:** 10 funnel rows
+  of this walk (bot=0, UA SM-A156E, 20:59–21:09Z, 1 Oct) — deleting live rows is David's; readers can exclude them.
+  Server worktree `/root/w26` removed at the end of the run.
+
 ## RUN 25 — Wed 30 Sep 2026, 20:56–21:35 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable; ssh to the server works. **The laptop checkout is 56 commits behind
