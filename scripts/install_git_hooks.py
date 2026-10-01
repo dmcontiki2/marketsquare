@@ -49,11 +49,31 @@ HOOK = r'''#!/bin/sh
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 GATED=0
+OVERWRITE=""
+ZERO=0000000000000000000000000000000000000000
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
     case "$remote_ref" in
         refs/heads/deploy) GATED=1 ;;
     esac
+    # SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026): a push to main or deploy may only ADD to what GitHub holds.
+    # If GitHub's tip is not inside what we push (a cloud session shipped meanwhile, or a --force),
+    # this push would wipe those commits -- refuse, whatever lane is pushing.
+    case "$remote_ref" in
+        refs/heads/main|refs/heads/deploy)
+            if [ "$_remote_sha" != "$ZERO" ] && [ "$_local_sha" != "$ZERO" ]; then
+                git merge-base --is-ancestor "$_remote_sha" "$_local_sha" 2>/dev/null || OVERWRITE="$OVERWRITE ${remote_ref#refs/heads/}"
+            fi ;;
+    esac
 done
+if [ -n "$OVERWRITE" ] && [ "${MS_ALLOW_OVERWRITE}" != "1" ]; then
+    echo ""
+    echo "  PUSH REFUSED (SYNC-ORIGIN-1) -- GitHub's$OVERWRITE holds commits this push does not contain."
+    echo "  Pushing would wipe them (usually a cloud session's shipped work). Nothing was pushed."
+    echo "  Take them in first:   python scripts/sync_origin.py   then push again."
+    echo "  Overwriting on purpose (by design only):   MS_ALLOW_OVERWRITE=1 git push ..."
+    echo ""
+    exit 1
+fi
 [ "$GATED" = "1" ] || exit 0
 
 echo ""
@@ -103,6 +123,8 @@ def _installed_ok() -> tuple[bool, list[str]]:
         problems.append("pre-push does not run predeploy_check.py")
     if "refs/heads/deploy" not in body:
         problems.append("pre-push does not key on refs/heads/deploy")
+    if "SYNC-ORIGIN-1" not in body or "merge-base --is-ancestor" not in body:
+        problems.append("pre-push lacks the SYNC-ORIGIN-1 no-overwrite guard (re-run install_git_hooks.py)")
     if not os.access(PRE_PUSH, os.X_OK):
         problems.append("pre-push is not executable -- git ignores it silently")
     return (not problems), problems

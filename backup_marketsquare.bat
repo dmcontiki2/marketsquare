@@ -38,6 +38,12 @@ if exist ".git\index.lock" del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"  del /f /q ".git\HEAD.lock"
 set "AHEAD=?"
 for /f %%c in ('git rev-list --count origin/main..HEAD 2^>nul') do set "AHEAD=%%c"
+%PYEXE% "%~dp0scripts\sync_origin.py"
+if errorlevel 1 (
+   echo   [STOP] GitHub has commits this laptop could not take in cleanly - code NOT mirrored, nothing overwritten ^(SYNC_CONFLICT.txt^).
+   >>"%REPORT%" echo [1] CODE: NOT mirrored - GitHub has newer commits that need a merge ^(SYNC_CONFLICT.txt^).
+   goto :after_code_push
+)
 git push origin main
 if errorlevel 1 (
    echo   [FAIL] git push failed - code NOT mirrored this run ^(check GitHub auth^).
@@ -49,6 +55,7 @@ if errorlevel 1 (
 
 :: ---- [2] SERVER DATA -> consistent DB snapshot, then pull ----
 echo.
+:after_code_push
 echo [2/5] Snapshotting + pulling the live database...
 set "SNAP=/tmp/ms_%STAMP%.db"
 ssh -o ConnectTimeout=20 %SERVER% "sqlite3 %REMOTE%/%DB% '.backup %SNAP%'"

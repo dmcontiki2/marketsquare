@@ -39,6 +39,7 @@ for /f "delims=" %%D in ('%PYEXE% "%~dp0check_deploy_drift.py" 2^>nul') do if no
 echo "!DRIFTLINE!" | find /i "clean" >nul
 if not errorlevel 1 (
     echo %date% %time%  IN SYNC - !DRIFTLINE!>>"%LOG%"
+    > "%FLAG%" echo IN SYNC %date% %time% - live already matches this laptop; nothing was shipped
     exit /b 0
 )
 

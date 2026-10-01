@@ -32891,6 +32891,60 @@ def rg_qa_cloud_1():
     return [(INFO, "QA routes key-guarded and QA-only; cloud [ship] branches gated and shipped by the server")]
 
 
+
+@entry("RG-0648", "SYNC-ORIGIN-1 + HARNESS-PARITY-1 (RUL-193): the laptop and the cloud never stop, wipe or overwrite each "
+       "other's shipped work except by design -- every pushing lane takes GitHub's newer commits in first, stops on a "
+       "conflict with every file as it was, and both ship paths run the same strict pre-deploy scan",
+       LOCKED, fixed_on="2026-10-01",
+       scope="scripts/sync_origin.py (one shared take-in step) called by deploy_marketsquare.bat, release.bat, commit.bat, "
+             "backup_marketsquare.bat, nightly_checkpoint.bat, host_queue_worker.py, maintenance_agent.py, deploy_web.py, "
+             "request_deploy.py; pre-push hook refuses a push that would drop GitHub's tip (MS_ALLOW_OVERWRITE=1 by design "
+             "only); ops/cloudship runs predeploy_check.py strict; quick.html == genie/HARNESS.html kept by harness_parity.py "
+             "and gated in predeploy_check.py; check_deploy_drift.py says when LIVE is the side ahead.",
+       ref="1 Oct 2026: the laptop was 61 commits behind GitHub (cloud walks shipped direct), every nightly ship since "
+           "30 Sep was aborted by a 13th INSERT OR IGNORE the cloud path never scanned, and a laptop ship of quick.html "
+           "alone blocked the cloud gate. David: 'so that nothing is stopped, wiped, overwritten between the cloud and "
+           "laptop, except if it is done by design.'")
+def rg_sync_origin_1():
+    need = {
+        "scripts/sync_origin.py": ["merge', '--abort'", "SYNC_CONFLICT.txt", "never forces"],
+        "scripts/harness_parity.py": ["--fix", "BOTH quick.html and genie/HARNESS.html changed"],
+        "deploy_marketsquare.bat": ["sync_origin.py", "harness_parity.py"],
+        "release.bat": ["sync_origin.py", "HEAD:main HEAD:deploy"],
+        "commit.bat": ["sync_origin.py"],
+        "backup_marketsquare.bat": ["sync_origin.py"],
+        "nightly_checkpoint.bat": ["sync_origin.py", "git push -q origin HEAD:main"],
+        "nightly_tsl.bat": ["IN SYNC %date% %time% - live already matches"],
+        "autodeploy_agent.bat": ['findstr /b /c:"IN SYNC"', "NOTHING TO SHIP"],
+        "scripts/host_queue_worker.py": ["sync_origin.py"],
+        "scripts/maintenance_agent.py": ["sync_origin.py", '"HEAD:main", "HEAD:deploy"'],
+        "deploy_web.py": ["sync_origin.py"],
+        "scripts/request_deploy.py": ["sync_origin.py", "PREDEPLOY_MODE='strict'", "harness_parity.py"],
+        "scripts/install_git_hooks.py": ["SYNC-ORIGIN-1", "merge-base --is-ancestor", "MS_ALLOW_OVERWRITE"],
+        "ops/cloudship/cloud_branch_ship.sh": ["PREDEPLOY_MODE=strict", "predeploy_check.py", "cmp -s quick.html genie/HARNESS.html"],
+        "predeploy_check.py": ["harness-parity"],
+        "check_deploy_drift.py": ["LIVE IS AHEAD", "HEAD..origin/deploy"],
+    }
+    bad, seen = [], 0
+    for f, marks in need.items():
+        t = repo_file(f)
+        if t is None:
+            continue
+        seen += 1
+        miss = [m for m in marks if m not in t]
+        if miss:
+            bad.append("%s lacks %s" % (f, ", ".join(miss)))
+        if f.endswith((".bat", ".py", ".sh")) and re.search(r"git\s+push\b[^\n]*(--force|\s-f\b|\s\+[A-Za-z])", t):
+            bad.append("%s force-pushes" % f)
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is not None and h is not None and q != h:
+        bad.append("quick.html and genie/HARNESS.html differ (the cloud ship gate refuses every branch)")
+    if not seen:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "every pushing lane takes GitHub in first, stops clean on a conflict, never forces; both ship paths scanned")]
+
 @entry("RG-0600", "EBAY-DROP-1: eBay is no longer a price source (it rejected the developer registration; David 30 Sep: "
        "'Lets drop eBay') -- the 1T fair-price check on Local Market and Collectors still shows, served by catalogues or by "
        "named-shop asking prices (web_comps)", LOCKED, fixed_on="2026-09-30",

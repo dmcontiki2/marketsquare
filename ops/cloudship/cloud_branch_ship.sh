@@ -79,6 +79,13 @@ PY
   if [ -z "$fail" ]; then
     out=$(TS_HELP_IMG=$IMG python3 scripts/build_help.py --check 2>&1) || fail="build_help --check: $(echo "$out" | grep -E 'ERROR|STALE' | head -2 | tr '\n' ' ')"
   fi
+  # SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026): the SAME strict pre-deploy scan the laptop's deploy push runs (trust checks,
+  # scoreboard guards, Postgres-readiness ratchet, harness parity ...). On 30 Sep a cloud ship added a 13th
+  # 'INSERT OR IGNORE' that this job did not check; every laptop ship was then aborted for two days.
+  if [ -z "$fail" ]; then
+    out=$(PREDEPLOY_MODE=strict timeout 300 python3 predeploy_check.py 2>&1) || \
+      fail="pre-deploy scan: $(echo "$out" | grep -E '^ *!!' | head -2 | sed 's/^ *//' | tr '\n' ' ')"
+  fi
   find . -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null
   if [ -n "$fail" ]; then
     say "REFUSED $br ${tip:0:7}: $fail"

@@ -200,3 +200,5 @@ host_queue/QUIET_COMMIT_ATTEMPTS.txt
 /marketsquare.db-journal
 /_to_delete/
 host_queue/QUIET_COMMIT_REASON.txt
+# SYNC-ORIGIN-1: a stop note for the session that resolves it, not history
+SYNC_CONFLICT.txt*

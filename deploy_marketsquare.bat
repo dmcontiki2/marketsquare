@@ -47,6 +47,8 @@ call "%PROJECT%\git_unlock.bat"
 :: The server bumps index.html's ms.js/ms.css ?v= itself (monotonic). This bump
 :: covers the CHILD references INSIDE ms.js (tour maps etc.) before we commit.
 if defined PYEXE %PYEXE% "%PROJECT%\scripts\autobump.py"
+:: HARNESS-PARITY-1 (RUL-193): quick.html == genie/HARNESS.html, or the cloud lane is blocked. Copies the one edited side.
+if defined PYEXE %PYEXE% "%PROJECT%\scripts\harness_parity.py" --fix
 
 :: -- PROVENANCE-1 (22 Aug 2026): refuse to ship a dashboard that paints a
 ::    health colour nothing measures. Advisory (does not block), but it prints
@@ -144,6 +146,17 @@ if errorlevel 1 (
 git log -1 --oneline
 
 :: -- [5/6] Publish: mirror backup + the deploy ref ---------------------------
+:: SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026): take in what the cloud shipped to GitHub meanwhile, BEFORE pushing.
+:: A clean merge carries on (the pre-push hook re-runs the scan on the merged tree); a conflict stops here
+:: with every file as it was -- never a forced push, never a wiped commit. See SYNC_CONFLICT.txt.
+if defined PYEXE (
+    %PYEXE% "%PROJECT%\scripts\sync_origin.py"
+    if errorlevel 1 (
+        echo  STOP: GitHub has commits this laptop could not take in cleanly - NOTHING was released,
+        echo        nothing was overwritten. See SYNC_CONFLICT.txt. ^(SYNC-ORIGIN-1^)
+        goto :release_lock_fail
+    )
+)
 echo  [5/6] Pushing to the mirror - backup ref main...
 git push origin HEAD:main
 echo  [5/6] Publishing the deploy ref - THIS is the deploy...

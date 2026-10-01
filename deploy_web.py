@@ -101,6 +101,11 @@ def try_hook():
 
 def try_git_push(remote, ref):
     """Return (ok, message). Pushes current HEAD to the deploy ref on the mirror."""
+    # SYNC-ORIGIN-1 (RUL-193): take in what the cloud shipped first; a conflict stops before the push.
+    _s = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts", "sync_origin.py")],
+                        capture_output=True, text=True)
+    if _s.returncode != 0:
+        return False, "GitHub has commits that could not be taken in cleanly -- nothing pushed, nothing overwritten:\n    " + (_s.stdout or _s.stderr).strip()[-300:]
     head = local_head()
     rc, out = _run(["git", "push", remote, f"HEAD:refs/heads/{ref}"])
     if rc == 0:

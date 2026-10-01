@@ -36,16 +36,20 @@ def relay(head):
                                capture_output=True, text=True, timeout=20)
         if probe.stdout.strip() != 'ok':
             print('relay: SSH closed right now -- falling back to the host agent'); return False
-        git('fetch', '-q', 'origin', 'main', 'deploy')
-        if subprocess.run(['git', 'merge-base', '--is-ancestor', 'origin/main', 'HEAD'], cwd=REPO, env=ENV).returncode:
-            # CLOUD-SHIP-1 (30 Sep 2026): cloud story walks land on main from the server, so main can move
-            # under the laptop. Take it in with a clean merge; a conflict is aborted and left to the host agent.
-            m = subprocess.run(['git', 'merge', '--no-edit', '-q', 'origin/main'], cwd=REPO, env=ENV, capture_output=True, text=True)
-            if m.returncode:
-                subprocess.run(['git', 'merge', '--abort'], cwd=REPO, env=ENV, capture_output=True)
-                print('relay: HEAD does not fast-forward origin/main and the merge conflicts -- refusing to diverge; host agent will handle it'); return False
-            head = git('rev-parse', '--short', 'HEAD')
-            print('relay: merged origin/main (a cloud branch shipped meanwhile) -> %s' % head)
+        # CLOUD-SHIP-1 (30 Sep) -> SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026): take in what the cloud shipped meanwhile with the
+        # ONE shared step every pushing lane uses; a conflict is aborted (files untouched, SYNC_CONFLICT.txt) and nothing relays.
+        s = subprocess.run([sys.executable, os.path.join(HERE, 'sync_origin.py')], cwd=REPO, env=ENV, capture_output=True, text=True)
+        print('relay: ' + (s.stdout or s.stderr).strip()[-200:])
+        if s.returncode:
+            return False
+        head = git('rev-parse', '--short', 'HEAD')
+        # The relay never passes the laptop's pre-push hook, so it runs the same strict scan itself, on the merged tree.
+        g = subprocess.run([sys.executable, os.path.join(REPO, 'predeploy_check.py')], cwd=REPO,
+                           env=dict(ENV, PREDEPLOY_MODE='strict'), capture_output=True, text=True, timeout=300)
+        if g.returncode:
+            print('relay: pre-deploy scan reached DANGER on the merged tree -- not relayed; the host agent gates and retries')
+            print('\n'.join(l for l in (g.stdout or '').splitlines() if '!!' in l or 'FAIL' in l)[:600])
+            return False
         r = subprocess.run(['git', 'push', '-q', 'ssh://%s%s' % (SERVER, SERVER_REPO), 'HEAD:refs/heads/claude-relay'],
                            cwd=REPO, env=ENV, capture_output=True, text=True, timeout=120)
         if r.returncode:
@@ -87,6 +91,8 @@ def main():
     if cl:
         with open(CLFLAG, 'w', encoding='utf-8') as f: f.write('REQUESTED %s\nreason: %s\n' % (stamp, reason))
         print('CityLauncher deploy requested -> agent ships on its next 20-min tick'); return 0
+    # HARNESS-PARITY-1 (RUL-193): quick.html == genie/HARNESS.html before anything is committed or shipped
+    subprocess.run([sys.executable, os.path.join(HERE, 'harness_parity.py'), '--fix'], cwd=REPO)
     # pre-flight: compile everything changed
     changed = [l[3:] for l in git('status', '--porcelain').splitlines() if l.endswith('.py')]
     for f in changed:

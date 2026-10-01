@@ -19,6 +19,15 @@ echo === git commit ===
 git commit -m "%MSG%"
 
 echo.
+echo === take in GitHub first (SYNC-ORIGIN-1) ===
+set "PYEXE=python"
+where python >nul 2>&1 || set "PYEXE=py"
+%PYEXE% "%~dp0scripts\sync_origin.py"
+if errorlevel 1 (
+    echo STOP: GitHub has commits that could not be taken in cleanly - committed locally, NOT pushed, nothing overwritten. See SYNC_CONFLICT.txt.
+    pause >nul
+    exit /b 1
+)
 echo === git push ===
 git push
 

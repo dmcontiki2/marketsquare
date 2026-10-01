@@ -145,18 +145,35 @@ def main():
 
     drift = ahead + not_on_server
     n = len(local)
+    # SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026): a file that differs is not necessarily newer HERE. Cloud sessions ship
+    # straight to GitHub, so live can be the side that moved: on 1 Oct live was 61 commits ahead and this line said
+    # 'local-ahead'. Count what GitHub's deploy ref holds that this laptop does not, and say which side moved.
+    behind = 0
+    try:
+        _env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+        subprocess.run(["git", "fetch", "-q", "origin", "deploy"], cwd=HERE, env=_env, capture_output=True, timeout=60)
+        _r = subprocess.run(["git", "rev-list", "--count", "HEAD..origin/deploy"], cwd=HERE, env=_env,
+                            capture_output=True, text=True, timeout=30)
+        behind = int((_r.stdout or "0").strip() or 0) if _r.returncode == 0 else 0
+    except Exception:
+        behind = 0
     if not drift:
         line = f"DEPLOY DRIFT: clean - all {n} tracked files match live"
     else:
         bits = []
         if ahead:         bits.append(", ".join(sorted(ahead)))
         if not_on_server: bits.append(", ".join(f"{f} (never deployed)" for f in sorted(not_on_server)))
-        line = f"DEPLOY DRIFT: {len(drift)} file(s) local-ahead of live - run /ship: " + "; ".join(bits)
+        if behind:
+            # no parentheses in this line: cmd re-parses a piped echo and chokes on them (DRIFT-PIPE-1)
+            line = (f"DEPLOY DRIFT: {len(drift)} files differ from live - LIVE IS AHEAD by {behind} commits not on this "
+                    f"laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: " + "; ".join(bits))
+        else:
+            line = f"DEPLOY DRIFT: {len(drift)} file(s) local-ahead of live - run /ship: " + "; ".join(bits)
 
     if as_json:
         print(json.dumps({
             "status": "clean" if not drift else "drift",
-            "tracked": n, "ahead": sorted(ahead),
+            "tracked": n, "ahead": sorted(ahead), "live_ahead_commits": behind,
             "never_deployed": sorted(not_on_server),
             "missing_local": sorted(missing_local), "line": line,
         }))

@@ -25,7 +25,16 @@ echo.
 echo  Publishing current commit to the live "deploy" ref...
 git log -1 --oneline
 echo.
-git push origin HEAD:deploy
+:: SYNC-ORIGIN-1 (RUL-193): take in what the cloud shipped meanwhile; a conflict stops before any push.
+set "PYEXE=python"
+where python >nul 2>&1 || set "PYEXE=py"
+%PYEXE% "%PROJECT%\scripts\sync_origin.py"
+if errorlevel 1 (
+    echo  STOP: GitHub has commits that could not be taken in cleanly - nothing released, nothing overwritten. See SYNC_CONFLICT.txt.
+    pause
+    exit /b 1
+)
+git push origin HEAD:main HEAD:deploy
 if errorlevel 1 (
     echo.
     echo  ERROR: push failed. Nothing was released. Common causes:

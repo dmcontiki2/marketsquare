@@ -102,6 +102,13 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-193": [
+   ("RULINGS.md", ["NOTHING IS STOPPED, WIPED OR OVERWRITTEN BETWEEN THE CLOUD AND THE LAPTOP"], []),
+   ("scripts/sync_origin.py", ["SYNC-ORIGIN-1", "merge', '--abort'"], ["'--force'", "'reset'"]),
+   ("deploy_marketsquare.bat", ["sync_origin.py", "harness_parity.py"], []),
+   ("scripts/install_git_hooks.py", ["merge-base --is-ancestor", "MS_ALLOW_OVERWRITE"], []),
+   ("ops/cloudship/cloud_branch_ship.sh", ["PREDEPLOY_MODE=strict", "predeploy_check.py"], []),
+ ],
  "RUL-190": [
    ("RULINGS.md", ["ONE STANDARD FLOW: A LOCAL MARKET BUYER IS NEVER TURNED AWAY"], []),
    ("bea_main.py", ["LM-STANDARD-FLOW-1", "A buyer is waiting. Accepting your first buyer"], ['detail=f"seller_insufficient_tuppence']),

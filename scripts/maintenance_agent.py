@@ -1230,8 +1230,13 @@ def main():
             # loop -- orphaning the commit. The fault was left "fix-shipped": the register
             # said done, the site never changed, and the work was unrecoverable. Never again:
             # a push that did not happen is not a ship, and the work is kept on a real branch.
-            _push = subprocess.run(["git", "push", "origin", "HEAD:deploy"],
-                                   cwd=work, capture_output=True, timeout=120, text=True)
+            # SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026): take in what the cloud shipped meanwhile, and move main AND
+            # deploy together -- a deploy-only push left main behind and made the next cloud ship's push fail.
+            _push = subprocess.run([sys.executable, os.path.join(REPO, "scripts", "sync_origin.py"), "--repo", work],
+                                   cwd=work, capture_output=True, timeout=240, text=True)
+            if _push.returncode == 0:
+                _push = subprocess.run(["git", "push", "origin", "HEAD:main", "HEAD:deploy"],
+                                       cwd=work, capture_output=True, timeout=120, text=True)
             if _push.returncode != 0:
                 _err = ((_push.stderr or "") + (_push.stdout or "")).strip().splitlines()
                 _err = _err[-1][:160] if _err else "rc=%d" % _push.returncode

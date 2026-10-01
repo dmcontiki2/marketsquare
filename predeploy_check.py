@@ -262,6 +262,20 @@ def main():
     except Exception as _e:
         print('  [tester-intake] check skipped: %r' % _e)
 
+    # HARNESS-PARITY-1 (RUL-193, 1 Oct 2026): ops/cloudship refuses EVERY cloud branch while quick.html and
+    # genie/HARNESS.html differ -- a laptop ship that changed one alone stopped the cloud lane that afternoon.
+    try:
+        _qa = os.path.join(HERE, 'quick.html'); _qb = os.path.join(HERE, 'genie', 'HARNESS.html')
+        if os.path.isfile(_qa) and os.path.isfile(_qb):
+            if open(_qa, 'rb').read().replace(b'\r\n', b'\n') != open(_qb, 'rb').read().replace(b'\r\n', b'\n'):
+                danger.append('harness-parity')
+                print('  !! HARNESS PARITY: quick.html and genie/HARNESS.html differ -- the cloud lane would be blocked.')
+                print('       run: python scripts/harness_parity.py --fix')
+            else:
+                print('  Harness parity (quick.html == genie/HARNESS.html): ok')
+    except Exception as _e:
+        print('  [harness-parity] check skipped: %r' % _e)
+
     verdict = 'DANGER' if danger else ('REVIEW' if recent else 'ok')
     print('  Verdict: %s   (logged -> deploy_audit.log)' % verdict)
     print('  ------------------------------------------------------------')

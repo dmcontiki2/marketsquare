@@ -83,6 +83,15 @@ if exist "%REQ%" (
             echo !date! !time!  BLOCKED - request kept, retry next tick >>"%LOG%"
             goto :cl
         )
+        rem SYNC-ORIGIN-1 RUL-193: an in-sync tick shipped nothing - say so, never SHIPPED.
+        findstr /b /c:"IN SYNC" "%~dp0TSL_READY.flag" >nul 2>&1
+        if not errorlevel 1 (
+            > "%RESULT%" echo NOTHING TO SHIP !date! !time! - live already matches; non-served changes reach GitHub at the 05:30 checkpoint
+            type "%REQ%" >>"%RESULT%"
+            del /q "%REQ%" >nul 2>&1
+            echo !date! !time!  IN SYNC - nothing to ship - request closed >>"%LOG%"
+            goto :cl
+        )
         findstr /b /c:"FAILED" "%~dp0TSL_READY.flag" >nul 2>&1
         if not errorlevel 1 (
             > "%RESULT%" echo FAILED !date! !time! - see autodeploy_agent_log.txt / nightly_tsl_log.txt

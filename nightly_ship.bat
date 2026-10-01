@@ -30,7 +30,7 @@ echo %date% %time%  media_push rc=%errorlevel%>>"%LOG%"
 set "DRIFTLINE="
 for /f "delims=" %%D in ('%PYEXE% "%~dp0check_deploy_drift.py" 2^>nul') do if not defined DRIFTLINE set "DRIFTLINE=%%D"
 echo %date% %time%  drift: %DRIFTLINE%>>"%LOG%"
-echo %DRIFTLINE% | find /i "clean" >nul
+echo "%DRIFTLINE%" | find /i "clean" >nul
 if not errorlevel 1 (
     echo %date% %time%  IN SYNC — nothing to ship>>"%LOG%"
     exit /b 0
