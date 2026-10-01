@@ -19645,7 +19645,12 @@ async function aiAttachPick(jobId){
   }
   host.innerHTML = rows.slice(0, 10).map(function(x){
     return '<button onclick="aiAttachDo(\'' + _lmEsc(jobId) + '\',' + parseInt(x.id,10) + ',this)" style="width:100%;text-align:left;margin-top:7px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;cursor:pointer;">'
-      + _lmEsc(x.title || ('Listing #' + x.id)) + (x.ai_report_job === jobId ? ' \u2014 attached' : '') + '</button>';
+      + _lmEsc(x.title || ('Listing #' + x.id))
+      /* ATTACH-PICK-LABEL-1 (1 Oct 2026, F10 re-walk): two adverts with the same title (a draft and the live copy) read
+         identically -- say which is which: its state and its price. */
+      + '<span style="color:#6b7280;font-size:12px;"> \u00b7 ' + _lmEsc(({live:'Live',draft:'Draft',paused:'Paused'})[String(x.listing_status||'live').toLowerCase()] || 'Live')
+      + (x.price ? ' \u00b7 ' + _lmEsc((typeof formatZAR==='function' && formatZAR(x.price)) || x.price) : '') + '</span>'
+      + (x.ai_report_job === jobId ? ' \u2014 attached' : '') + '</button>';
   }).join('');
 }
 async function aiAttachDo(jobId, listingId, btn){

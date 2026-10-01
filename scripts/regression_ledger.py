@@ -33096,6 +33096,40 @@ def rg_funnel_qa_1():
     return [(INFO, "QA and tester beacons are kept out of the stranger funnel")]
 
 
+@entry("RG-0645", "REPORT-RANGE-2: an attached Collectables report shows buyers its own range when the report writes it in the "
+       "'Market findings' table (est. range) rather than as 'Likely achieved range' or 'ESTIMATE' -- the OpenAI lane's format",
+       OPEN, fixed_on="2026-10-01",
+       scope="ripple_features.py _range_from (REPORT-ATTACH-1)",
+       ref="F10 re-walk 1 Oct 2026 after the OpenAI top-up: report ai_a4d5b725d43d stated 'R68,000-R72,500 estimated' and "
+           "listing 455 stored ai_range_text = NULL, so the buyer's badge showed no range.")
+def rg_report_range_2():
+    src = repo_file("ripple_features.py")
+    if src is None:
+        return [(FAIL, "ripple_features.py is missing")]
+    i = src.find("def _range_from"); j = src.find("class _ClaimIn")
+    ns = {}
+    try:
+        exec(src[i:j], ns)
+        got = ns["_range_from"]("## 1 \u00b7 Market findings\n| item | est. range |\n|---|---|\n| coin | **R68,000\u2013R72,500 estimated** |")
+    except Exception as e:
+        return [(FAIL, "_range_from could not be exercised: %s" % e)]
+    if got != "R68,000\u2013R72,500":
+        return [(FAIL, "an attached report's Market findings range is lost again (got %r)" % (got,))]
+    return [(INFO, "a report's Market findings range reaches the buyer's badge")]
+
+
+@entry("RG-0646", "ATTACH-PICK-LABEL-1: 'Attach report to my listing' names each advert's state and price, so a draft and its "
+       "live copy with the same title can be told apart",
+       OPEN, fixed_on="2026-10-01", scope="ms.js aiAttachPick",
+       ref="F10 re-walk 1 Oct 2026: the picker showed '1974 Krugerrand, 1 oz gold proof - Near mint' twice (#454 draft, #455).")
+def rg_attach_pick_label_1():
+    js = repo_file("ms.js")
+    i = js.find("async function aiAttachPick(") if js else -1
+    if i < 0 or "ATTACH-PICK-LABEL-1" not in js[i:i + 2600] or "Paused" not in js[i:i + 2600]:
+        return [(FAIL, "the attach picker shows identical titles with nothing to tell them apart again")]
+    return [(INFO, "the attach picker says which advert is which")]
+
+
 @entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
        "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
        OPEN, fixed_on="2026-09-30",
