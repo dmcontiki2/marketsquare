@@ -12426,7 +12426,7 @@ function elRenderPhotos(raw, photoWarning) {
     <div class="el-photo-card" style="display:flex;align-items:center;justify-content:center;">
       <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:120px;height:90px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;color:var(--text-3);font-size:11px;gap:4px;">
         <span style="font-size:24px;">＋</span>Add Photo
-        <input type="file" accept="image/*" style="display:none" onchange="elAddPhoto(event)">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="elAddPhoto(event)">
       </label>
     </div>` : '');
 
@@ -12476,51 +12476,78 @@ function elMovePhoto(idx, delta) {
   _elSyncPhotoOrder('Photo moved');
 }
 
+/* DJNR-MULTI-PHOTO-1 (1 Oct 2026, Dave jnr via David, F-018): "Add Photo" on the edit
+   screen took ONE file - the input had no `multiple` and this read files[0] only - so on a
+   phone every photo was its own trip to the camera roll. Now he picks several at once: each
+   uploads in turn up to the 10-photo cap, the batch is saved ONCE, and a photo the server
+   refused is NAMED with its reason (RG-0041 class: nothing silently dropped). They land in
+   the order picked; the existing ★ Make cover / ◀ ▶ buttons arrange them afterwards. */
 async function elAddPhoto(event) {
-  const file = event.target.files[0];
-  if (!file || !elCurrentId) return;
-  if (_elPhotoUrls.length >= 10) { showToast('Maximum 10 photos'); return; }
-  showToast('⏳ Uploading photo…');
-  const fd = new FormData();
-  fd.append('file', file);
+  const inp = event.target;
+  const files = Array.from((inp && inp.files) || []);
+  if (!files.length || !elCurrentId) { if (inp) inp.value = ''; return; }
+  const room = 10 - _elPhotoUrls.length;
+  if (room <= 0) { showToast('Maximum 10 photos'); inp.value = ''; return; }
+  const take = files.slice(0, room);
+  const leftOut = files.length - take.length;
+  const failed = [];
+  let added = 0;
+  for (let i = 0; i < take.length; i++) {
+    const file = take[i];
+    showToast(take.length > 1 ? '⏳ Uploading photo ' + (i + 1) + ' of ' + take.length + '…' : '⏳ Uploading photo…');
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch(BEA_URL + '/listings/photo', {
+        method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
+      });
+      if (!res.ok) {
+        /* TS-0030 / PHOTO-MEASURE-1 (10 Aug 2026): the server names the real reason
+           (HEIC guidance, anonymity refusal, replacement request). A generic
+           'Upload failed' silenced all of them on the edit path - RG-0041 class. */
+        let _why = 'Upload failed';
+        try { const _j = await res.json(); if (_j && _j.detail) _why = _j.detail; } catch(_e) {}
+        throw new Error(_why);
+      }
+      const data = await res.json();
+      const _u = data.medium_url || data.thumb_url;
+      if (!_u) throw new Error('no photo address came back');
+      _elPhotoUrls.push(_u);
+      added++;
+    } catch(e) {
+      failed.push((file.name || ('photo ' + (i + 1))) + ': ' + e.message);
+    }
+  }
+  inp.value = '';
+  if (!added) { showToast('Photo upload failed — ' + failed.join(' · '), 7000); return; }
+  if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
+  elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
+  const _n = added + ' photo' + (added !== 1 ? 's' : '');
+  let _tail = '';
+  if (failed.length) _tail += ' — not uploaded: ' + failed.join(' · ');
+  if (leftOut > 0) _tail += ' — ' + leftOut + ' left out (10-photo maximum)';
+  // Auto-save photos immediately - ONE save for the whole batch
+  const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  if (!(sellerEmail && elCurrentId)) {
+    // never claim "saved" when nothing was sent (BUGSWEEP-24SEP class)
+    showToast(_n + ' added — tap Save Changes to apply' + _tail, _tail ? 7000 : 4000);
+    return;
+  }
   try {
-    const res = await fetch(BEA_URL + '/listings/photo', {
-      method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
-    });
-    if (!res.ok) {
-      /* TS-0030 / PHOTO-MEASURE-1 (10 Aug 2026): the server names the real reason
-         (HEIC guidance, anonymity refusal, replacement request). A generic
-         'Upload failed' silenced all of them on the edit path - RG-0041 class. */
-      let _why = 'Upload failed';
-      try { const _j = await res.json(); if (_j && _j.detail) _why = _j.detail; } catch(_e) {}
-      throw new Error(_why);
+    const photoPayload = { photo_urls: JSON.stringify(_elPhotoUrls) };
+    // Always use position-0 as the card thumbnail, not the newly uploaded photo
+    photoPayload.thumb_url  = _elPhotoUrls[0];
+    photoPayload.medium_url = _elPhotoUrls[0];
+    const _sr = await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
+      { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(photoPayload) });
+    if (!_sr.ok) {   // BUGSWEEP-24SEP: a refused save used to show "added and saved"
+      const _sj = await _sr.json().catch(() => ({}));
+      showToast(_n + ' added but NOT saved — ' + ((_sj && typeof _sj.detail==='string' && _sj.detail) || ('error ' + _sr.status)), 6000);
+      return;
     }
-    const data = await res.json();
-    _elPhotoUrls.push(data.medium_url || data.thumb_url);
-    if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
-    elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
-    // Auto-save photos immediately
-    const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
-    if (sellerEmail && elCurrentId) {
-      const photoPayload = { photo_urls: JSON.stringify(_elPhotoUrls) };
-      if (_elPhotoUrls.length >= 1) {
-        // Always use position-0 as the card thumbnail, not the newly uploaded photo
-        photoPayload.thumb_url  = _elPhotoUrls[0];
-        photoPayload.medium_url = _elPhotoUrls[0];
-      }
-      const _sr = await fetch(BEA_URL + '/listings/' + elCurrentId + '?email=' + encodeURIComponent(sellerEmail),
-        { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(photoPayload) });
-      if (!_sr.ok) {   // BUGSWEEP-24SEP: a refused save used to show "added and saved"
-        const _sj = await _sr.json().catch(() => ({}));
-        showToast('Photo added but NOT saved — ' + ((_sj && typeof _sj.detail==='string' && _sj.detail) || ('error ' + _sr.status)), 5000);
-        event.target.value = '';
-        return;
-      }
-    }
-    showToast('✅ Photo added and saved');
-  } catch(e) { showToast('Photo upload failed: ' + e.message); }
-  event.target.value = '';
+  } catch(e) { showToast(_n + ' added but NOT saved — ' + e.message, 6000); return; }
+  showToast('✅ ' + _n + ' added and saved' + _tail, _tail ? 7000 : undefined);
 }
 
 let _elPhotoReplaceIdx = 0;

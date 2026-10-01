@@ -63,3 +63,21 @@ adapter, pay-once cache, hard monthly cap, machine-translated label with one-tap
 original). **Readiness item 8** = that design present with its anchors (probed by
 i18n_readiness_check.py). Lane-2 BUILD is sandbox-first alongside item 4; ARMING waits
 for Phase C — users must have a language before their content can cross one.
+
+## Checkpoint — Thu 1 Oct 2026 (mid-freeze run; PROBED by `python3 scripts/i18n_readiness_check.py`)
+**4 of 8 done · 29 days to Fri 30 Oct.** Items 2 and 3 were built and proven in this run.
+- **Item 2 — DONE.** `scripts/i18n_parity_harness.py` (`prove` / `check --candidate DIR [--langs en,af]` /
+  `record` / `snapshot` / `compare`). Proof in `i18n/parity_proof.json`: clean pass identical within one
+  walk and across two walks (29,361 strings, 45 states), three planted one-letter faults each caught
+  exactly. Data fixture (gitignored, live adverts): `ledger_runs/i18n_parity_fixture.json`, rebuilt with
+  `record` through the gate. The live `/i18n/translate` is never called (it can spend); the harness
+  answers from `roles/app_i18n_<lang>.json`, so a dictionary edit is checkable in its own language.
+- **Item 3 — DONE.** `scripts/i18n_pseudo_locale.py` → `i18n/locales/qps-pseudo.json` +
+  `i18n/pseudo_locale_report.json` (coverage of the paint layer, layout breaks that appear only with
+  longer text, inventory gaps, checked-dictionary coverage per language).
+- **Measured context that changes item 5's shape:** since RUL-163 the live app already translates
+  through a paint layer keyed by the English phrase itself (af/zu/xh/nso). Item 5's `en.json` is
+  therefore the catalogue of English phrases that layer asks for (inventory + run-time phrases the
+  pseudo test captures), not a key-per-string extraction of marketsquare.html/ms.js.
+- **Still open:** 5 en.json → 6 flags wiring plan → 7 ledger drafts → 4 staging (server work; any spend
+  or provisioning decision is David's).

@@ -5418,6 +5418,20 @@
    "Ke eng hantle? mohl. Todi e tala, nkgo ya 500 g",
    "Yintoni kanye kanye? umz. Ubusi obuluhlaza, ingqayi ye-500 g",
    "Ke eng tlwa? mohl. Todi ye tala, nkgwana ya 500 g"
+  ],
+  "How many bathrooms?": [
+   "Hoeveel badkamers?",
+   "Mangaki amagumbi okugezela?",
+   "",
+   "Mangaphi amagumbi okuhlambela?",
+   "Diphapoši tše kae tša go hlapela?"
+  ],
+  "bathrooms": [
+   "badkamers",
+   "amagumbi okugezela",
+   "",
+   "amagumbi okuhlambela",
+   "diphapoši tša go hlapela"
   ]
  },
  "p": [

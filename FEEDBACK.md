@@ -24,6 +24,9 @@
 | F-017 | 2026-08-03 | Found reviewing F-015 (not reported by a user) | legal credentials (FFC/PPRA/mandate) auto-earned full points on upload with no human check, against §4a and the app's own "ops verifies before points" copy | legal-cred-autoearn | fix-now | FIXED (built) — land 'pending'; migration 006 re-queues existing, David's ruling 3 Aug | EVIDENCE-TRUE-2 |
 | P-001 | 2026-07-23 | Maroushka Conradie | "The listing process was easy and I loved seeing my quality score climb with the info I added." | praise-quality-score | — (praise) | noted | — |
 | P-002 | 2026-07-23 | Maroushka Conradie | "I love the 'Introduce me to an agent' function!!!" | praise-agent-intro | — (praise) | noted | AGENT-SVC-1 |
+| F-018 | 2026-10-01 | David Jnr (Quick property test, verbal via David) | after publishing via Quick, opening edit to add photos "has to add one photo at a time on his phone" — wants to select multiple from the camera library in one go | edit-photo-multiselect | fix-now | FIXED (built, verified locally, awaiting /ship) — the edit screen's Add Photo had no `multiple` and read files[0] only. 2nd vote on batch photo upload (F-011 11 Aug → DCB-001, which covered the sell flow, not edit) | DJNR-MULTI-PHOTO-1 |
+| F-019 | 2026-10-01 | David Jnr (Quick property test, via David) | "In the quick listing process for properties there should also be a question for the amount of bathrooms" | quick-property-baths | fix-now | FIXED (built, verified in a rendered phone-width browser, awaiting /ship) — server always required baths; Quick never asked. Property now 5 taps (RUL-117 budget held); Plot skips it | DJNR-BATHS-1 |
+| P-003 | 2026-10-01 | David Jnr | found the Quick listing process easy and liked it (knowing he still has to publish in the app) | praise-quick-property | — (praise) | noted | RUL-117 · RUL-166 |
 
 ## Notes
 - 2026-08-03: F-011…F-015 from Maroushka after publishing 6 property listings (the sell flow worked;
@@ -54,3 +57,9 @@
   duplicate-photo judgement TS-0006, HEIC silence TS-0030). Routed: design-change item →
   DESIGN_BACKLOG.md dossier DCB-001 (designer gate = David until bound). Cross-link: accuracy
   half of the same conversation filed as fault TS-0031 (Maintenance lane).
+
+- 2026-10-01: F-018/F-019/P-003 from David Jnr after a Quick property listing → publish → edit walk. Both
+  points confirmed against the code. F-018 is the second independent vote for batch photo upload (after
+  his own F-011): DCB-001 fixed the sell flow, but the post-publish edit screen kept a single-file
+  picker - the same friction re-surfaced one screen later. F-019: the gap was between two halves of
+  the system that each looked complete - the server scorer required baths, Quick never asked it.

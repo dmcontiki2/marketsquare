@@ -1,0 +1,117 @@
+{
+ "built": "1 Oct 2026 (I18N_READINESS item 3)",
+ "at": "2026-10-01T07:36:13Z",
+ "how": "python3 scripts/i18n_pseudo_locale.py",
+ "fixture": true,
+ "states_walked": 45,
+ "language_slot": "af",
+ "coverage": {
+  "visible_text_nodes": 4661,
+  "reached_by_paint_layer": 4661,
+  "percent": 100.0,
+  "marked_do_not_translate": 133,
+  "chrome_strings_missed": 0,
+  "other_untranslated_nodes (listing content / data -- not stored)": 0
+ },
+ "chrome_strings_missed": [],
+ "layout_breaks_new_in_pseudo": [
+  {
+   "where": "clipped-x  div#hiw-feat-label",
+   "kind": "clipped-x",
+   "text": "⟦Ĺîšţîñĝ þàûšéđ öñ îñţŕöđûçţîöñ ŕéǫûéšţ ~~~~~~~~~~~~~~⟧",
+   "states": [
+    "goto:tuppence"
+   ],
+   "n_states": 1
+  },
+  {
+   "where": "off-screen  div.ai-svc-body>div>div>div",
+   "kind": "off-screen",
+   "text": "⟦1Ţ ~~⟧",
+   "states": [
+    "goto:tuppence"
+   ],
+   "n_states": 1
+  },
+  {
+   "where": "off-screen  div>div>div>div",
+   "kind": "off-screen",
+   "text": "⟦📍 Þŕöþéŕţý / àççöɱɱöđàţîöñ ĺîšţîñĝ → \"📈 Îñṽéšţöŕ Ýîéĺđ Çà",
+   "states": [
+    "goto:tuppence"
+   ],
+   "n_states": 1
+  }
+ ],
+ "layout_issues_already_in_english": 33,
+ "inventory_gaps": {
+  "chrome_phrases_asked_not_in_inventory": 651,
+  "data_phrases_asked (listings/wonders/geo -- count only)": 506,
+  "sample": [
+   "\"Including\" and similar expressions are not words of limitation.",
+   "(In Casuals: if the Helper accepts the Requester's Introduction, the Requester's held 1T is burned and nothing is credited to the Helper.",
+   "+ Add prospect",
+   "/ month",
+   "0 / 20 joined",
+   "0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence",
+   "1 / 20 joined",
+   "1 Tuppence (1T) = USD $2.00 fixed.",
+   "1 Tuppence = 1 introduction = $2 · R33. Same price at any quantity — buy exactly what you need.",
+   "1 listing",
+   "1 listing found",
+   "1. Definitions & Interpretation",
+   "10. Disputes, Enforcement & Liability",
+   "10.7 ECT Act Safe Harbour (§79)",
+   "11. Trust Score, Ranking & Enforcement Criteria",
+   "12. Tuppence — Regulatory Classification & Virtual Asset Status",
+   "12.3 NCA — Current Non-Applicability",
+   "13. Governing Law, Jurisdiction & Mandatory SA Law",
+   "14. Termination & Suspension",
+   "14.5 Enumerated Blocking Causes (B1–B6)",
+   "15. Changes, Miscellaneous & Contact",
+   "19 listings",
+   "19 listings found",
+   "1T = $2 · R33",
+   "2 listings",
+   "2 listings found",
+   "2. Platform Identity, Scope & Acceptance",
+   "2.4 EULA Acceptance Gate — Before a Listing Goes Live, an Introduction Request or a Purchase",
+   "2.6 Nature and Limits of the Introduction Service — Not a Referral",
+   "25 points to Some evidence",
+   "29 listings",
+   "29 listings · All countries",
+   "3 listings",
+   "3 listings found",
+   "3. User Accounts, Anonymity & Identity Verification",
+   "3.2 Bilateral Identity Reveal — The Acceptance Gate",
+   "3.4 Deferred KYC — FICA Compliance Model",
+   "3.5A Home Affairs Identity Verification — Optional, Paid, and What It Means",
+   "3.8 Buzz — A Convenience, Not a Communications Service",
+   "4 listings"
+  ]
+ },
+ "checked_dictionary_coverage_of_chrome_asked": {
+  "af": {
+   "checked": 738,
+   "of": 1912,
+   "percent": 38.6
+  },
+  "zu": {
+   "checked": 737,
+   "of": 1912,
+   "percent": 38.5
+  },
+  "xh": {
+   "checked": 737,
+   "of": 1912,
+   "percent": 38.5
+  },
+  "nso": {
+   "checked": 737,
+   "of": 1912,
+   "percent": 38.5
+  }
+ },
+ "page_errors_new_in_pseudo": {},
+ "phrases_asked_by_paint_layer": 2418
+}

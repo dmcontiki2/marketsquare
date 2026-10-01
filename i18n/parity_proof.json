@@ -1,0 +1,72 @@
+{
+ "built": "1 Oct 2026 (I18N_READINESS item 2)",
+ "at": "2026-10-01T07:30:45Z",
+ "clean_pass": true,
+ "clean_within_walk": true,
+ "clean_across_walks": true,
+ "planted_fault_caught": true,
+ "clean_differences": [],
+ "planted": [
+  {
+   "label": "static-html-text",
+   "file": "marketsquare.html",
+   "original": "Stage 3 of 4",
+   "mutated": "Stage 3 oq 4",
+   "caught": true,
+   "exact": true,
+   "diff": [
+    "goto:aa-coach: visible text differs: 'of' -> 'oq'",
+    "goto:aa-coach/screen-aa-coach: text: 'Stage 3 of 4' -> 'Stage 3 oq 4'",
+    "load/screen-aa-coach: text: 'Stage 3 of 4' -> 'Stage 3 oq 4'"
+   ]
+  },
+  {
+   "label": "js-rendered-text",
+   "file": "ms.js",
+   "original": "Today on the Square",
+   "mutated": "Today on the Squarq",
+   "caught": true,
+   "exact": true,
+   "diff": [
+    "goto:home: visible text differs: 'Square' -> 'Squarq'",
+    "goto:home/screen-home: text: 'Today on the Square' -> 'Today on the Squarq'",
+    "goto:home#end: visible text differs: 'Square' -> 'Squarq'",
+    "goto:home#end/screen-home: text: 'Today on the Square' -> 'Today on the Squarq'",
+    "load: visible text differs: 'Square' -> 'Squarq'",
+    "load/screen-home: text: 'Today on the Square' -> 'Today on the Squarq'"
+   ]
+  },
+  {
+   "label": "attribute-placeholder",
+   "file": "marketsquare.html",
+   "original": "Enter password or PIN",
+   "mutated": "Enter password or PIQ",
+   "caught": true,
+   "exact": true,
+   "diff": [
+    "browse:Adventures/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "browse:Cars/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "browse:Collectors/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "browse:Property/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "browse:Services/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "browse:Tutors/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "detail:first/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "goto:aa-coach/chrome: attrs: -['input@placeholder=Enter password or PIN'] +['input@placeholder=Enter password or PIQ']",
+    "... 37 more"
+   ]
+  }
+ ],
+ "strings_read_per_run": 29361,
+ "states_walked": 45,
+ "fixture": true,
+ "fixture_clock": "2026-10-01T07:25:00+00:00",
+ "baseline_files": {
+  "/": "ba694e8ca8b45088",
+  "/static/legal-must-haves/legal-cards.js": "61fd6d88db527cae",
+  "/static/ms.css": "812e475e9915ad28",
+  "/static/ms.js": "f5000d1110ee17dc",
+  "/static/ms_gate.js": "f279ffc97d4638b9",
+  "/static/ts_report.js": "8440bb19a197cf1c"
+ },
+ "how": "python3 scripts/i18n_parity_harness.py prove"
+}
