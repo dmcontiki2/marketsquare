@@ -2,6 +2,12 @@
  "type": "plumber",
  "status": "draft",
  "flow": "F3",
+ "serves": [
+  "bricklayer",
+  "tiler",
+  "carpenter",
+  "roofer"
+ ],
  "label": {
   "en": "Plumber",
   "af": "Loodgieter",

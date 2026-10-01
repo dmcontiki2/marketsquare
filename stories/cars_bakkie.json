@@ -2,6 +2,9 @@
  "type": "cars_bakkie",
  "status": "draft",
  "flow": "F8",
+ "serves": [
+  "cars_*"
+ ],
  "label": {
   "en": "Bakkie for sale",
   "af": "Bakkie te koop",
