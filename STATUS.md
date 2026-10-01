@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-27 - standup bit drift qa pin roster)
+## Last Completed (2026-09-28 - 28 Sep 2026 maintenance loop (05)
 
-- Stand-up 27 Sep (19:00Z, on time): GREEN. Two BIT boards now held together by an assertion with teeth in both directions (BIT-BOARD-DRIFT-1, closes L13 after 26 days); the QA bot's 403 explained and its false docstring corrected (QA-PIN-TRUTH-1, closes L18 - no fix was due); AGENTS.md corrected after 53 days of four false engine bindings and a forbidden hardcoded model. L25 opened: /health's cached primary_bytes cannot detect data loss and this log had been treating it as if it could.
+- **28 Sep 2026 maintenance loop (05:43Z, PROBED):** ledger green (0 regressed, 0 unverified); fault queue empty (new 0, fix-shipped 0, verified 26); no fixes needed; no escalations. Host queue STALLED: 1 commit on main unpushed 2.2 h. Five OPEN entries (RG-0532/0534/0536/0537/0539) await a rendered live walk before LOCK.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **28 Sep 2026 maintenance loop (05:43Z, PROBED):** ledger green (0 regressed, 0 unverified); fault queue empty (new 0, fix-shipped 0, verified 26); no fixes needed; no escalations. Host queue STALLED: 1 commit on main unpushed 2.2 h. Five OPEN entries (RG-0532/0534/0536/0537/0539) await a rendered live walk before LOCK.
 
 - Stand-up 27 Sep (19:00Z, on time): GREEN. Two BIT boards now held together by an assertion with teeth in both directions (BIT-BOARD-DRIFT-1, closes L13 after 26 days); the QA bot's 403 explained and its false docstring corrected (QA-PIN-TRUTH-1, closes L18 - no fix was due); AGENTS.md corrected after 53 days of four false engine bindings and a forbidden hardcoded model. L25 opened: /health's cached primary_bytes cannot detect data loss and this log had been treating it as if it could.
 

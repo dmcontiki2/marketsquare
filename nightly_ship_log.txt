@@ -1725,3 +1725,78 @@ warmed 11 tutor videos on the CF edge
 Press any key to continue . . . 
 Wed 09/30/2026  2:01:25.30  drift: DEPLOY DRIFT: clean - all 161 tracked files match live
 Wed 09/30/2026  2:01:25.32  IN SYNC — nothing to ship
+============================================================
+Thu 10/01/2026  2:00:01.58  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Thu 10/01/2026  2:00:01.65
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 375 files already current - upload skipped.
+ [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
+   [OK] SYNC email_strip: all 24 files already current - upload skipped.
+ [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
+   [OK] SYNC quick_ph: all 298 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 4 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Thu 10/01/2026  2:01:25.47  drift: DEPLOY DRIFT: 13 file(s) local-ahead of live - run /ship: SESSION_COUNTER.json, STATUS.md, ai_service_tiers.py, bea_main.py, feature_flags.py, marketsquare.html, ms.css, ms.js, quick.html, roles/quick_i18n.json, status_card.py, stories/gallery.json, stories/help.html
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Thu 10/01/2026  2:01:25.54
+ ============================================================
+
+  [autobump] 0 reference(s) bumped
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  [FAIL] line 691: registered static surface 'cost R 0' passed its review date 2026-09-30 -- re-verify it or wire it
+  [FAIL] line 779: registered static surface 'free tier' passed its review date 2026-09-30 -- re-verify it or wire it
+no pending fragments.
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-01T00:01:27Z   mode=strict
+  Working tree: 12 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  288474 B   1106 min ago  [modified]
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  !! PG-READINESS: SQLite-ism count grew:
+       FAIL  SQLite-specific surface GREW {'insert_or': (12, 13)} - write it portably (helpers/portable SQL) so the Postgres move stays cheap
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Verdict: DANGER   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+ ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
+Press any key to continue . . . 
+Thu 10/01/2026  2:01:30.30  BLOCKED/FAILED rc=1 — tree untouched live, see log above

@@ -1,3 +1,3 @@
-BLOCKED Wed 09/30/2026  7:15:15.27
-DEPLOY DRIFT: 5 file(s) local-ahead of live - run /ship: bea_main.py, ms.js, quick.html, sms_provider.py, stories/gallery.json
+BLOCKED Thu 10/01/2026  5:15:10.70
+DEPLOY DRIFT: 13 file(s) local-ahead of live - run /ship: SESSION_COUNTER.json, STATUS.md, ai_service_tiers.py, bea_main.py, feature_flags.py, marketsquare.html, ms.css, ms.js, quick.html, roles/quick_i18n.json, status_card.py, stories/gallery.json, stories/help.html
 Gate not clean (rc=2) - NOT shipped. See nightly_tsl_gate.txt.
