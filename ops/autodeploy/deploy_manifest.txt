@@ -320,6 +320,17 @@ roles/role_registry.json   | roles/role_registry.json
 stories/help.html          | help/story.html
 stories/index.html         | help/index.html
 stories/gallery.json       | help/data/index.json
+stories/adventures_guest_house.json | help/data/adventures_guest_house.json
+stories/adventures_guided_walk.json | help/data/adventures_guided_walk.json
+stories/cars_bakkie.json | help/data/cars_bakkie.json
+stories/cars_for_hire.json | help/data/cars_for_hire.json
+stories/collectors_coins.json | help/data/collectors_coins.json
+stories/electrician.json | help/data/electrician.json
 stories/home_cleaner.json | help/data/home_cleaner.json
 stories/localmarket_food_preserves.json | help/data/localmarket_food_preserves.json
+stories/nanny.json | help/data/nanny.json
+stories/plumber.json | help/data/plumber.json
+stories/property_flat.json | help/data/property_flat.json
+stories/property_house.json | help/data/property_house.json
+stories/tutors_maths.json | help/data/tutors_maths.json
 # ── end HELP-STORIES-1 ──

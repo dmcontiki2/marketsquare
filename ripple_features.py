@@ -64,6 +64,12 @@ def _range_from(text):
     m = re.search(r"ESTIMATE", body)
     if m:
         spots.append(body[m.start(): m.start() + 260])
+    # REPORT-RANGE-2 (1 Oct 2026, F10 re-walk): the Collectables report on the OpenAI lane writes its range in the
+    # 'Market findings' table's "est. range" column ("R68,000–R72,500 estimated") and says neither phrase above, so
+    # an attached report showed buyers no range. The first range in that table is the report's own figure.
+    m = re.search(r"market findings", body, re.I)
+    if m:
+        spots.append(body[m.end(): m.end() + 1500])
     for seg in spots:
         r = rng.search(seg)
         if not r:

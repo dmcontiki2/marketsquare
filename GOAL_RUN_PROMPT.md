@@ -72,6 +72,16 @@ Watch for the thing a checker cannot see: the step where a real person would giv
 nothing errored. Silence, a blank screen, a wait with no feedback, a word she would not
 recognise, a form asking something she does not have. That is the material for section 4.
 
+**Since 30 Sep 2026 (run 25): the cloud story lane walks publish-to-accept.** QA-CLOUD-1 (David, "GO", 29 Sep)
+walks one full story per flow on the live site with QA addresses and test Tuppence — publish, intro, accept
+— and ships the fixes (`stories/CLOUD_WALK.md`, `docs/E2E_<date>_F<n>.md`). Do not repeat those walks. Walk
+what that lane does not: **a stranger's first minutes** — cold Home, the doors, the category flow up to
+Publish — in the flow the rotation names, then read that lane's newest findings and the funnel before you
+form a view. Check `git fetch` first: the laptop checkout may be behind `origin/main`; build and ship from a
+fresh clone of `origin/main` through the server relay (push the branch to `/opt/marketsquare-src`, then
+`git push origin <branch>:main <branch>:deploy` there), never by editing a stale laptop tree. Use
+`git --no-optional-locks` for reads on the laptop checkout — this shell cannot delete a `.git/index.lock`.
+
 **Seen 29 Sep 2026 (run 24):** the unattended run's own safety layer refused the click that publishes a public advert on the live site. Walk to the Publish button, record that the rest was not walked, and report it in one line; do not look for a way round it. David decides whether that changes.
 
 State at 28 Sep 2026 — verify, do not trust: walk-3 items 1, 2, 4, 5, 6 closed 27 Sep (RG-0537);
@@ -168,27 +178,23 @@ Deliberately dropped, because it consumed the runs that should have caught the b
 The one thing kept from all of it: **before you deploy, confirm the site answers** — one request,
 not a report — so you never ship onto something already down. Say nothing about it unless it fails.
 
-## 7. STANDING OBJECTIVE — phone and WhatsApp sign-up must still happen
+## 7. STANDING OBJECTIVE — reach the people email cannot (revised 30 Sep 2026, run 25, after RUL-192)
 
-Email being the anchor is where we got to, not where we are going (David, 28 Sep 2026). Check the
-state rather than trusting this paragraph:
+**RUL-192 (30 Sep) changed this section.** TrustSquare's paid SMS account is for **our outreach only**: the app
+sends no SMS at our cost — no sign-in codes (RUL-167's phone-code key is off), no Buzz, relay or nudges
+(RUL-122 stands). A buyer and seller may text each other from their own phones. So phone sign-up by SMS
+code is **not** an objective any more; do not build toward it and do not re-raise the SMS price.
 
-- **RUL-167 (24 Sep) already rules it in**: the account key may be an e-mail, **a phone number
-  with a one-time code by SMS**, or the private draft link itself. The decision is made; the
-  plumbing and the subscription are what is missing.
-- **EMAIL-ANCHOR-1 / RG-0536 (27 Sep)** parked both behind switches — Quick offers Phone only
-  while SMS is on (`QUICK_LINK_KEY_ON`, `LINK_KEY_NEW_ON`), and the no-email WhatsApp-link key is
-  dormant until WhatsApp is subscribed. Existing link keys keep working.
-- **RUL-146 (18 Sep)** is the shape we may use: `https://wa.me/?text=<message>`, no recipient in
-  the link, so we never hold a number.
-- **RUL-122 (12 Sep)** rules SMS out as a **notification channel** — push and email are the
-  channels. That is not a ruling against SMS as a one-time sign-in code; do not let it be read as
-  one. If the two genuinely collide, that is a ruling change and therefore David's: one line.
-
-Every run: measure the prize (how many outreach contacts have no usable e-mail; how many stopped
-at the key step) and build everything behind the switches so only the subscription is missing.
-Choosing and paying for an SMS provider and a WhatsApp Business account is spend, so it is his —
-say that **once**, with a real monthly figure you have actually found, and then stop re-raising it.
+What remains, every run:
+- **The account key** is an e-mail or the private draft link (RUL-192(b)). The no-email WhatsApp-link key
+  (RUL-146 shape, `https://wa.me/?text=<message>`, no recipient) stays dormant until David subscribes
+  WhatsApp — spend, his, said once.
+- **The prize:** how many outreach contacts have a phone and no usable e-mail (26 Apr Gumtree scrape: 1,111
+  South Africans), and how many people stopped at the key step. Measure it; do not send to it. Cold SMS to
+  those phones is RUL-192(a) territory and waits on the consent/suppression questions in GOAL_IMPROVEMENTS
+  GI-0008 (RUL-054/106/052/101, POPIA s69) — David's.
+- Any question that would put a per-use cost back into the app goes to David under SO-6's three lines
+  (cost · ruling it changes · model/schema change) — never as a small yes.
 
 The **D-U-N-S request is still live** (Dun & Bradstreet, requested 25 Sep for TrustSquare (Pty)
 Ltd, to dmcontiki2@gmail.com). Its own 06:45 SAST watch keeps running and **must not be

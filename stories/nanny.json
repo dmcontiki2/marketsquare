@@ -1,0 +1,734 @@
+{
+ "type": "nanny",
+ "status": "draft",
+ "flow": "F2",
+ "label": {
+  "en": "Nanny",
+  "af": "Kinderoppasser",
+  "zu": "Umzanyana",
+  "xh": "Umgcini-bantwana",
+  "nso": "Mohlokomedi wa bana"
+ },
+ "title": {
+  "en": "Nanny: from listing to the families who can find you",
+  "af": "Kinderoppasser: van advertensie tot die gesinne wat jou kan vind",
+  "zu": "Umzanyana: kusukela esikhangisweni kuya emindenini engakuthola",
+  "xh": "Umgcini-bantwana: ukusuka kwintengiso ukuya kwiintsapho ezinokukufumana",
+  "nso": "Mohlokomedi wa bana: go tloga papatšong go ya go malapa ao a ka go hwetšago"
+ },
+ "gate_note": {
+  "en": "Coming up at step 12: until our team has checked your police clearance, only people you send your link to can see your listing.",
+  "af": "By stap 12: totdat ons span jou polisieklaring nagegaan het, kan net mense aan wie jy jou skakel stuur jou advertensie sien.",
+  "zu": "Kuyeza esinyathelweni 12: kuze kube yilapho ithimba lethu selihlolile isitifiketi sakho samaphoyisa, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.",
+  "xh": "Kwinyathelo le-12: de iqela lethu lihlole isatifikethi sakho samapolisa, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
+  "nso": "Kgatong ya 12: go fihlela sehlopha sa rena se hlahlobile setifikeiti sa gago sa maphodisa, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Thandeka",
+  "regular": "Nomsa",
+  "customer": "Lindiwe"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "Your police clearance",
+   "af": "Jou polisieklaring",
+   "zu": "Isitifiketi sakho samaphoyisa",
+   "xh": "Isatifikethi sakho samapolisa",
+   "nso": "Setifikeiti sa gago sa maphodisa"
+  },
+  {
+   "id": "c4",
+   "en": "The families you work for",
+   "af": "Die gesinne vir wie jy werk",
+   "zu": "Imindeni oyisebenzelayo",
+   "xh": "Iintsapho ozisebenzelayo",
+   "nso": "Malapa ao o a šomelago"
+  },
+  {
+   "id": "c5",
+   "en": "A new family",
+   "af": "'n Nuwe gesin",
+   "zu": "Umndeni omusha",
+   "xh": "Usapho olutsha",
+   "nso": "Lapa le leswa"
+  },
+  {
+   "id": "c6",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_01_door",
+   "pass": true,
+   "en": [
+    "Open Quick, tap [[Offer a service]]",
+    "Quick opens on the services door. One tap starts your listing."
+   ],
+   "af": [
+    "Maak Quick oop, tik [[Offer a service]]",
+    "Quick maak oop by die dienste-deur. Een tik begin jou advertensie."
+   ],
+   "quick": [
+    "door"
+   ],
+   "zu": [
+    "Vula i-Quick, thepha [[Offer a service]]",
+    "I-Quick ivula emnyango wezinsizakalo. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, cofa [[Offer a service]]",
+    "I-Quick ivula kucango leenkonzo. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, kgotla [[Offer a service]]",
+    "Quick e bula lebating la ditirelo. Go kgotla gatee go thoma papatšo ya gago."
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_03_roles",
+   "pass": true,
+   "en": [
+    "Pick [[Home & care]], then [[Nanny]]",
+    "Choose the kind of work, then your job. Caregivers, au pairs and crèche assistants follow the same steps."
+   ],
+   "af": [
+    "Kies [[Home & care]], dan [[Nanny]]",
+    "Kies die soort werk, dan jou werk. Versorgers, au pairs en crèche-assistente volg dieselfde stappe."
+   ],
+   "quick": [
+    "group",
+    "what"
+   ],
+   "zu": [
+    "Khetha [[Home & care]], bese [[Nanny]]",
+    "Khetha uhlobo lomsebenzi, bese kuba umsebenzi wakho. Abanakekeli, ama-au pair nabasizi basenkulisa balandela izinyathelo ezifanayo."
+   ],
+   "xh": [
+    "Khetha [[Home & care]], emva koko [[Nanny]]",
+    "Khetha uhlobo lomsebenzi, emva koko umsebenzi wakho. Abakhathaleli, ii-au pair nabancedisi bekhreshi balandela amanyathelo afanayo."
+   ],
+   "nso": [
+    "Kgetha [[Home & care]], ke moka [[Nanny]]",
+    "Kgetha mohuta wa mošomo, ke moka mošomo wa gago. Bahlokomedi, di-au pair le bathuši ba krešhe ba latela dikgato tše di swanago."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_05_areas",
+   "pass": true,
+   "en": [
+    "Tick every area you work in",
+    "You can tick more than one, and a family searching any of them finds you. Type your area if it is not listed."
+   ],
+   "af": [
+    "Merk elke area waar jy werk",
+    "Jy kan meer as een merk, en 'n gesin wat in enige van hulle soek, vind jou. Tik jou area in as dit nie gelys is nie."
+   ],
+   "quick": [
+    "where"
+   ],
+   "zu": [
+    "Maka zonke izindawo osebenza kuzo",
+    "Ungamaka ezingaphezu kweyodwa, futhi umndeni osesha kunoma iyiphi yazo uyakuthola. Bhala indawo yakho uma ingekho ohlwini."
+   ],
+   "xh": [
+    "Phawula yonke imimandla osebenza kuyo",
+    "Ungaphawula engaphezu komnye, kwaye usapho olukhangela kuyo nayiphi na luyakufumana. Bhala indawo yakho ukuba ayikho kuluhlu."
+   ],
+   "nso": [
+    "Swaya mafelo ka moka ao o šomago go ona",
+    "O ka swaya a fetago le tee, gomme lapa le le nyakago go le ge e le lefe la ona le a go hwetša. Ngwala lefelo la gago ge le se lenaneong."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_06_days",
+   "pass": true,
+   "en": [
+    "Choose your days",
+    "Tap the days you can work."
+   ],
+   "af": [
+    "Kies jou dae",
+    "Tik die dae waarop jy kan werk."
+   ],
+   "quick": [
+    "days"
+   ],
+   "zu": [
+    "Khetha izinsuku zakho",
+    "Thepha izinsuku ongasebenza ngazo."
+   ],
+   "xh": [
+    "Khetha iintsuku zakho",
+    "Cofa iintsuku onokusebenza ngazo."
+   ],
+   "nso": [
+    "Kgetha matšatši a gago",
+    "Kgotla matšatši ao o ka šomago ka ona."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_07_price",
+   "pass": true,
+   "en": [
+    "Set your day rate",
+    "Type what your work is worth. Quick shows the legal minimum wage, so nobody can pay you less."
+   ],
+   "af": [
+    "Stel jou dagtarief",
+    "Tik wat jou werk werd is. Quick wys die wettige minimum loon, sodat niemand jou minder kan betaal nie."
+   ],
+   "quick": [
+    "price"
+   ],
+   "zu": [
+    "Beka imali yakho yosuku",
+    "Bhala ukuthi umsebenzi wakho ubiza malini. I-Quick ikhombisa iholo elincane elisemthethweni, ukuze kungabikho muntu okukhokhela ngaphansi."
+   ],
+   "xh": [
+    "Beka ixabiso lakho losuku",
+    "Bhala ukuba umsebenzi wakho uxabisa malini. I-Quick ibonisa owona mvuzo uphantsi osemthethweni, ukuze kungabikho mntu ukuhlawula ngaphantsi."
+   ],
+   "nso": [
+    "Bea tefo ya gago ya letšatši",
+    "Ngwala seo mošomo wa gago o se swanetšego. Quick e bontšha moputso wa fase wa molao, gore go se be le yo a go lefago ka fase ga wona."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_08a_ages",
+   "pass": true,
+   "en": [
+    "Tick the ages you care for",
+    "[[Babies]], [[Toddlers]], [[School age]] or [[Teenagers]]. Families see them on your listing."
+   ],
+   "af": [
+    "Merk die ouderdomme wat jy oppas",
+    "[[Babies]], [[Toddlers]], [[School age]] of [[Teenagers]]. Gesinne sien dit op jou advertensie."
+   ],
+   "quick": [
+    "draft"
+   ],
+   "zu": [
+    "Maka iminyaka yezingane ozinakekelayo",
+    "[[Babies]], [[Toddlers]], [[School age]] noma [[Teenagers]]. Imindeni iyibona esikhangisweni sakho."
+   ],
+   "xh": [
+    "Phawula iminyaka yabantwana obakhathalelayo",
+    "[[Babies]], [[Toddlers]], [[School age]] okanye [[Teenagers]]. Iintsapho ziyibona kwintengiso yakho."
+   ],
+   "nso": [
+    "Swaya mengwaga ya bana bao o ba hlokomelago",
+    "[[Babies]], [[Toddlers]], [[School age]] goba [[Teenagers]]. Malapa a e bona papatšong ya gago."
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_08b_gate_save",
+   "pass": true,
+   "en": [
+    "Note the police clearance, add your first name and email, then save",
+    "Quick tells you now: families find a nanny only once her police clearance is checked. Tap [[Save my listing]]. No password."
+   ],
+   "af": [
+    "Let op die polisieklaring, voeg jou voornaam en e-pos by, en stoor",
+    "Quick sê dit nou reeds: gesinne vind 'n kinderoppasser eers sodra haar polisieklaring nagegaan is. Tik [[Save my listing]]. Geen wagwoord nie."
+   ],
+   "quick": [
+    "draft"
+   ],
+   "zu": [
+    "Qaphela isitifiketi samaphoyisa, faka igama lakho lokuqala ne-imeyili, bese ulondoloza",
+    "I-Quick ikutshela manje: imindeni ithola umzanyana kuphela uma isitifiketi sakhe samaphoyisa sesihloliwe. Thepha [[Save my listing]]. Ayikho iphasiwedi."
+   ],
+   "xh": [
+    "Qaphela isatifikethi samapolisa, faka igama lakho lokuqala ne-imeyile, uze ugcine",
+    "I-Quick ikuxelela ngoku: iintsapho zifumana umgcini-bantwana kuphela xa isatifikethi sakhe samapolisa sele sihloliwe. Cofa [[Save my listing]]. Akukho phasiwedi."
+   ],
+   "nso": [
+    "Ela hloko setifikeiti sa maphodisa, tsenya leina la gago la pele le imeile, ke moka o boloke",
+    "Quick e go botša bjale: malapa a hwetša mohlokomedi wa bana fela ge setifikeiti sa gagwe sa maphodisa se šetše se hlahlobilwe. Kgotla [[Save my listing]]. Ga go na phasewete."
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_09_saved",
+   "pass": true,
+   "en": [
+    "Saved: now sign the terms and publish",
+    "Tap [[Sign the terms and publish]], or open the email we sent you. Nobody can see your listing yet."
+   ],
+   "af": [
+    "Gestoor: teken nou die bepalings en publiseer",
+    "Tik [[Sign the terms and publish]], of maak die e-pos oop wat ons gestuur het. Niemand kan jou advertensie nog sien nie."
+   ],
+   "quick": [
+    "saved"
+   ],
+   "zu": [
+    "Kulondoloziwe: manje sayina imigomo bese ushicilela",
+    "Thepha [[Sign the terms and publish]], noma uvule i-imeyili esikuthumelele yona. Akekho umuntu ongabona isikhangiso sakho okwamanje."
+   ],
+   "xh": [
+    "Kugciniwe: ngoku sayina imimiselo uze upapashe",
+    "Cofa [[Sign the terms and publish]], okanye uvule i-imeyile esikuthumelele yona. Akukho mntu unokubona intengiso yakho okwangoku."
+   ],
+   "nso": [
+    "E bolokilwe: bjale saena melawana gomme o phatlalatše",
+    "Kgotla [[Sign the terms and publish]], goba o bule imeile ye re go rometšego yona. Ga go yo a ka bonago papatšo ya gago ga bjale."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_11_edit",
+   "pass": true,
+   "en": [
+    "Add your own photo",
+    "In TrustSquare tap [[Edit]], then [[Add Photo]]: a photo of your work with no children's faces and no writing on it. Tap [[Save Changes]]."
+   ],
+   "af": [
+    "Voeg jou eie foto by",
+    "Tik in TrustSquare [[Edit]], dan [[Add Photo]]: 'n foto van jou werk sonder kindergesiggies en sonder skrif daarop. Tik [[Save Changes]]."
+   ],
+   "zu": [
+    "Faka isithombe sakho",
+    "Ku-TrustSquare thepha [[Edit]], bese [[Add Photo]]: isithombe somsebenzi wakho esingenabo ubuso bezingane futhi esingenambhalo. Thepha [[Save Changes]]."
+   ],
+   "xh": [
+    "Faka owakho umfanekiso",
+    "Kwi-TrustSquare cofa [[Edit]], emva koko [[Add Photo]]: umfanekiso womsebenzi wakho ongenabo ubuso babantwana kwaye ongenambhalo. Cofa [[Save Changes]]."
+   ],
+   "nso": [
+    "Tsenya seswantšho sa gago",
+    "Go TrustSquare kgotla [[Edit]], ke moka [[Add Photo]]: seswantšho sa mošomo wa gago se se se nago difahlego tša bana le mangwalo. Kgotla [[Save Changes]]."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_12_terms_ticked",
+   "pass": true,
+   "en": [
+    "Accept the seller terms once",
+    "Read them, tick both boxes at the end and tap [[I accept]]."
+   ],
+   "af": [
+    "Aanvaar die verkopersbepalings een keer",
+    "Lees hulle, merk albei blokkies aan die einde en tik [[I accept]]."
+   ],
+   "zu": [
+    "Yamukela imigomo yabathengisi kanye",
+    "Yifunde, maka omabili amabhokisi ekugcineni bese uthepha [[I accept]]."
+   ],
+   "xh": [
+    "Yamkela imimiselo yabathengisi kanye",
+    "Yifunde, phawula zombini iibhokisi ekugqibeleni uze ucofe [[I accept]]."
+   ],
+   "nso": [
+    "Amogela melawana ya barekiši gatee",
+    "E bale, swaya mapokisi a mabedi mafelelong gomme o kgotle [[I accept]]."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_15_hub_gate",
+   "pass": true,
+   "en": [
+    "Publish",
+    "Tap [[Publish]]. Your listing is live, but for now only people you send your link to can see it. Your card says why: families see it once our team has checked your police clearance."
+   ],
+   "af": [
+    "Publiseer",
+    "Tik [[Publish]]. Jou advertensie is aanlyn, maar vir eers kan net mense aan wie jy jou skakel stuur dit sien. Jou kaart sê hoekom: gesinne sien dit sodra ons span jou polisieklaring nagegaan het."
+   ],
+   "zu": [
+    "Shicilela",
+    "Thepha [[Publish]]. Isikhangiso sakho sesiphilayo, kodwa okwamanje ngabantu kuphela obathumelela isixhumanisi sakho abangasibona. Ikhadi lakho lichaza isizathu: imindeni iyasibona uma ithimba lethu selihlolile isitifiketi sakho samaphoyisa."
+   ],
+   "xh": [
+    "Papasha",
+    "Cofa [[Publish]]. Intengiso yakho iphilile, kodwa okwangoku ngabantu kuphela obathumelela ikhonkco lakho abanokuyibona. Ikhadi lakho lichaza isizathu: iintsapho ziyayibona xa iqela lethu sele lihlolile isatifikethi sakho samapolisa."
+   ],
+   "nso": [
+    "Phatlalatša",
+    "Kgotla [[Publish]]. Papatšo ya gago e phela, eupša ga bjale ke batho feela bao o ba romelago kgokagano ya gago bao ba ka e bonago. Karata ya gago e hlaloša lebaka: malapa a e bona ge sehlopha sa rena se šetše se hlahlobile setifikeiti sa gago sa maphodisa."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_16_upload_clearance",
+   "pass": true,
+   "en": [
+    "Tap [[Upload my police clearance]]",
+    "It opens the right upload with [[Police clearance]] already chosen. Tap [[Choose file]], pick a clear photo or PDF of your SAPS clearance and tap [[Upload Document]]."
+   ],
+   "af": [
+    "Tik [[Upload my police clearance]]",
+    "Dit maak die regte oplaai oop met [[Police clearance]] reeds gekies. Tik [[Choose file]], kies 'n duidelike foto of PDF van jou SAPD-klaring en tik [[Upload Document]]."
+   ],
+   "gate": true,
+   "zu": [
+    "Thepha [[Upload my police clearance]]",
+    "Ivula indawo efanele yokulayisha, i-[[Police clearance]] isivele ikhethiwe. Thepha [[Choose file]], khetha isithombe esicacile noma i-PDF yesitifiketi sakho se-SAPS bese uthepha [[Upload Document]]."
+   ],
+   "xh": [
+    "Cofa [[Upload my police clearance]]",
+    "Ivula indawo efanelekileyo yokulayisha, i-[[Police clearance]] sele ikhethiwe. Cofa [[Choose file]], khetha umfanekiso ocacileyo okanye i-PDF yesatifikethi sakho se-SAPS uze ucofe [[Upload Document]]."
+   ],
+   "nso": [
+    "Kgotla [[Upload my police clearance]]",
+    "E bula lefelo le le nepagetšego la go romela, [[Police clearance]] e šetše e kgethilwe. Kgotla [[Choose file]], kgetha seswantšho se se kwagalago goba PDF ya setifikeiti sa gago sa SAPS gomme o kgotle [[Upload Document]]."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_17_clearance_sent",
+   "pass": true,
+   "en": [
+    "It goes to our team",
+    "The app says so: a person checks it, then your points are added and strangers can see your listing. A clearance nobody has looked at never opens it."
+   ],
+   "af": [
+    "Dit gaan na ons span",
+    "Die app sê so: 'n mens gaan dit na, dan word jou punte bygetel en kan vreemdelinge jou advertensie sien. 'n Klaring waarna niemand gekyk het nie, maak dit nooit oop nie."
+   ],
+   "zu": [
+    "Iya ethimbeni lethu",
+    "Uhlelo lokusebenza lusho kanjalo: umuntu uyasihlola, bese amaphuzu akho engezwa futhi abantu ongabazi bangasibona isikhangiso sakho. Isitifiketi esingakabhekwa muntu asisivuli neze."
+   ],
+   "xh": [
+    "Iya kwiqela lethu",
+    "Usetyenziso luyatsho: umntu uyasihlola, emva koko amanqaku akho ayongezwa kwaye abantu ongabaziyo banokuyibona intengiso yakho. Isatifikethi ekungekho mntu usijongileyo asiyivuli."
+   ],
+   "nso": [
+    "Se ya go sehlopha sa rena",
+    "Tirišo e bolela bjalo: motho o a se hlahloba, ke moka dintlha tša gago di a oketšwa gomme batho bao o sa ba tsebego ba ka bona papatšo ya gago. Setifikeiti se go se nago motho yo a se lebeletšego ga se e bule."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_18_hub_waiting",
+   "pass": true,
+   "en": [
+    "Your card shows it is waiting",
+    "Back in your Seller Hub: [[Your police clearance is with our team]]. Until then your listing stays out of searches, which keeps the children and people you care for safe."
+   ],
+   "af": [
+    "Jou kaart wys dit wag",
+    "Terug in jou Seller Hub: [[Your police clearance is with our team]]. Tot dan bly jou advertensie uit soektogte, wat die kinders en mense vir wie jy sorg veilig hou."
+   ],
+   "zu": [
+    "Ikhadi lakho likhombisa ukuthi kulindiwe",
+    "Emuva ku-Seller Hub yakho: [[Your police clearance is with our team]]. Kuze kube yilapho isikhangiso sakho asiveli ekuseshweni, okugcina izingane nabantu obanakekelayo bephephile."
+   ],
+   "xh": [
+    "Ikhadi lakho libonisa ukuba kusalindwe",
+    "Emva kwi-Seller Hub yakho: [[Your police clearance is with our team]]. De kube ngoko intengiso yakho ayiveli ekukhangeleni, nto leyo egcina abantwana nabantu obakhathalelayo bekhuselekile."
+   ],
+   "nso": [
+    "Karata ya gago e bontšha gore go sa letilwe",
+    "Morago go Seller Hub ya gago: [[Your police clearance is with our team]]. Go fihlela ka nako yeo papatšo ya gago ga e tšwelele dinyakišišong, e lego seo se bolokago bana le batho bao o ba hlokomelago ba šireletšegile."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_25_opened",
+   "pass": false,
+   "en": [
+    "Our team checks it: families can find you",
+    "Once it is checked, your listing shows in searches and your Trust Score goes up."
+   ],
+   "af": [
+    "Ons span gaan dit na: gesinne kan jou vind",
+    "Sodra dit nagegaan is, verskyn jou advertensie in soektogte en jou Trust Score gaan op."
+   ],
+   "zu": [
+    "Ithimba lethu liyasihlola: imindeni ingakuthola",
+    "Uma sesihloliwe, isikhangiso sakho siyavela ekuseshweni futhi i-Trust Score yakho iyenyuka."
+   ],
+   "xh": [
+    "Iqela lethu liyasihlola: iintsapho zinokukufumana",
+    "Xa sele sihloliwe, intengiso yakho iyavela ekukhangeleni kwaye i-Trust Score yakho iyanyuka."
+   ],
+   "nso": [
+    "Sehlopha sa rena se a se hlahloba: malapa a ka go hwetša",
+    "Ge se šetše se hlahlobilwe, papatšo ya gago e a tšwelela dinyakišišong gomme Trust Score ya gago e a godišwa."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_20_buzz_link",
+   "pass": true,
+   "en": [
+    "Send your Buzz link to the families you work for",
+    "In [[My Space]], open [[Buzz]] and tap [[Get my link]]. One link for all of them: [[Send on WhatsApp]] or [[Copy]]."
+   ],
+   "af": [
+    "Stuur jou Buzz-skakel aan die gesinne vir wie jy werk",
+    "Maak in [[My Space]] [[Buzz]] oop en tik [[Get my link]]. Een skakel vir almal: [[Send on WhatsApp]] of [[Copy]]."
+   ],
+   "quick": [
+    "buzz"
+   ],
+   "zu": [
+    "Thumela isixhumanisi sakho se-Buzz emindenini oyisebenzelayo",
+    "Ku-[[My Space]], vula i-[[Buzz]] bese uthepha [[Get my link]]. Isixhumanisi esisodwa sabo bonke: [[Send on WhatsApp]] noma [[Copy]]."
+   ],
+   "xh": [
+    "Thumela ikhonkco lakho le-Buzz kwiintsapho ozisebenzelayo",
+    "Kwi-[[My Space]], vula i-[[Buzz]] uze ucofe [[Get my link]]. Ikhonkco elinye labo bonke: [[Send on WhatsApp]] okanye [[Copy]]."
+   ],
+   "nso": [
+    "Romela kgokagano ya gago ya Buzz go malapa ao o a šomelago",
+    "Go [[My Space]], bula [[Buzz]] gomme o kgotle [[Get my link]]. Kgokagano e tee ya bohle: [[Send on WhatsApp]] goba [[Copy]]."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c4",
+   "who": "regular",
+   "cost": "free",
+   "img": "f2_21_join",
+   "pass": true,
+   "en": [
+    "A family you work for joins",
+    "She taps the link, ticks the Buzz terms and taps [[Continue]]. You are connected, and it costs nothing."
+   ],
+   "af": [
+    "'n Gesin vir wie jy werk, sluit aan",
+    "Sy tik die skakel, merk die Buzz-bepalings en tik [[Continue]]. Julle is verbind, en dit kos niks."
+   ],
+   "zu": [
+    "Umndeni owusebenzelayo uyajoyina",
+    "Uthepha isixhumanisi, amake imigomo ye-Buzz bese ethepha [[Continue]]. Nixhumene, futhi akubizi lutho."
+   ],
+   "xh": [
+    "Usapho olusebenzelayo luyajoyina",
+    "Ucofa ikhonkco, aphawule imimiselo ye-Buzz aze acofe [[Continue]]. Nidibene, kwaye akubizi nto."
+   ],
+   "nso": [
+    "Lapa leo o le šomelago le a tsena",
+    "O kgotla kgokagano, a swaya melawana ya Buzz gomme a kgotla [[Continue]]. Le kopane, gomme ga go bitše selo."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c4",
+   "who": "regular",
+   "cost": "free",
+   "img": "f2_23_buzz_sent",
+   "pass": true,
+   "en": [
+    "She buzzes you",
+    "One line, straight to your phone, with her name on it: 'Can you also come on Saturday morning?'"
+   ],
+   "af": [
+    "Sy buzz jou",
+    "Een reël, reguit na jou foon, met haar naam daarop: 'Kan jy Saterdagoggend ook kom?'"
+   ],
+   "zu": [
+    "Uyakubuzza",
+    "Umugqa owodwa, uqonde efonini yakho, unegama lakhe: 'Ungafika nangoMgqibelo ekuseni?'"
+   ],
+   "xh": [
+    "Uyakubuzza",
+    "Umgca omnye, uthe ngqo kwifowuni yakho, unegama lakhe: 'Ungeza nangoMgqibelo kusasa?'"
+   ],
+   "nso": [
+    "O go buzza",
+    "Mothalo o tee, thwii go founo ya gago, o na le leina la gagwe: 'O ka tla le ka Mokibelo mesong?'"
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c5",
+   "who": "customer",
+   "cost": "free",
+   "img": "f2_26_detail",
+   "pass": false,
+   "en": [
+    "A new family finds you",
+    "She finds you under [[Services]] by area, and sees your rate, your days, the ages you care for and your Trust Score."
+   ],
+   "af": [
+    "'n Nuwe gesin vind jou",
+    "Sy vind jou onder [[Services]] volgens area, en sien jou tarief, jou dae, die ouderdomme wat jy oppas en jou Trust Score."
+   ],
+   "zu": [
+    "Umndeni omusha uyakuthola",
+    "Ukuthola ngaphansi kwe-[[Services]] ngendawo, abone imali yakho, izinsuku zakho, iminyaka yezingane ozinakekelayo ne-Trust Score yakho."
+   ],
+   "xh": [
+    "Usapho olutsha luyakufumana",
+    "Ukufumana phantsi kwe-[[Services]] ngendawo, abone ixabiso lakho, iintsuku zakho, iminyaka yabantwana obakhathalelayo ne-Trust Score yakho."
+   ],
+   "nso": [
+    "Lapa le leswa le a go hwetša",
+    "O go hwetša ka fase ga [[Services]] ka lefelo, a bona tefo ya gago, matšatši a gago, mengwaga ya bana bao o ba hlokomelago le Trust Score ya gago."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c5",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f2_27_ask",
+   "pass": false,
+   "en": [
+    "She asks for an introduction",
+    "She writes a short message. 1 Tuppence is held from her, and spent only if you accept."
+   ],
+   "af": [
+    "Sy vra vir 'n voorstelling",
+    "Sy skryf 'n kort boodskap. 1 Tuppence word van haar teruggehou, en net bestee as jy aanvaar."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Ubhala umlayezo omfushane. I-Tuppence engu-1 iyabanjwa kuye, isetshenziswe kuphela uma wamukela."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ubhala umyalezo omfutshane. I-Tuppence e-1 iyabanjwa kuye, isetyenziswe kuphela ukuba uyamkela."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O ngwala molaetša o mokopana. Tuppence e 1 e a swarwa go yena, e šomišwa fela ge o amogela."
+   ]
+  },
+  {
+   "n": 21,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_28_accept",
+   "pass": false,
+   "en": [
+    "You accept",
+    "Open [[My Space]], then [[Intros]], and tap [[Accept]]. You both get an email: reply to it to talk. Your email address stays private."
+   ],
+   "af": [
+    "Jy aanvaar",
+    "Maak [[My Space]] oop, dan [[Intros]], en tik [[Accept]]. Julle kry albei 'n e-pos: antwoord dit om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Uyamukela",
+    "Vula i-[[My Space]], bese [[Intros]], bese uthepha [[Accept]]. Nobabili nithola i-imeyili: yiphendule ukuze nixoxe. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Uyamkela",
+    "Vula i-[[My Space]], emva koko [[Intros]], uze ucofe [[Accept]]. Nobabini nifumana i-imeyile: yiphendule ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "O a amogela",
+    "Bula [[My Space]], ke moka [[Intros]], gomme o kgotle [[Accept]]. Le fela le hwetša imeile: e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 22,
+   "ch": "c6",
+   "who": "you",
+   "cost": "free",
+   "img": "f2_09_saved",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "Tap [[Pass Quick on to someone]] and share it with a friend who works like you."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriendin wat werk soos jy."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Thepha [[Pass Quick on to someone]] bese uyabelana ngayo nomngane osebenza njengawe."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Cofa [[Pass Quick on to someone]] uze wabelane ngayo nomhlobo osebenza njengawe."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Kgotla [[Pass Quick on to someone]] gomme o e abelane le mogwera yo a šomago bjalo ka wena."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}

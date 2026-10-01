@@ -382,6 +382,15 @@ async function _introAnswerPut(introId, accept){
    (the FIRST amount of the price, with k/m) -- or, when a row carries none, the same reading of the price text (the
    port of bea_main._price_number). Gluing every digit together read 'R1 000–R5 000' as 10 005 000 and
    'R350 / call-out + R300 / hour' as 350 300. */
+function _msDescLine(desc, labels){   // ADV-ENV-1: 'Label: value' or '**Label:** value' at the start of a line
+  for (var i = 0; i < labels.length; i++){
+    var m = String(desc||'').match(new RegExp('^\\*{0,2}' + labels[i] + ':\\*{0,2}[ \\t]*([^\\n]+)', 'mi'));
+    if (m && m[1].trim()) return m[1].trim();
+  }
+  return '';
+}
+function _advSeasonText(s){ s = String(s||'').trim(); return /^all year$/i.test(s) ? 'All year' : (s ? 'Best in ' + s.toLowerCase() : ''); }   // ADV-LEVEL-SEASON-1
+function _advEnvKey(v){ return String(v||'').toLowerCase().replace(/\s*&\s*/g,'_').replace(/\s+/g,'_'); }   // 'Farm & Rural' -> farm_rural
 function _msPriceNum(l){
   if (l && typeof l.price_num === 'number' && l.price_num > 0) return l.price_num;
   const m = String((l && l.price) || '').match(/(\d{1,3}(?:[ ,\u00a0\u202f'](?=\d{3}(?!\d))\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)\s*(k|m|mil|mill?ion|bn|billion)?(?![a-z])/i);
@@ -466,7 +475,7 @@ function _msMapBeaListing(l){
           suburb: l.suburb || l.area || l.city || activeCity.name,
           trust: l.trust_score || 40,
           price: l.price || 'POA',
-          per: (function(){var p=String(l.price||'');if(p.indexOf('/')>-1){var u=p.split('/').pop().trim().toLowerCase();var M={hr:'hour',hrs:'hour',hour:'hour',day:'day',visit:'visit','call-out':'call-out',callout:'call-out',call:'call-out',month:'month',mo:'month',week:'week',wk:'week',night:'night',pp:'person',person:'person',session:'session',lesson:'lesson',km:'km'};return u?('per '+(M[u]||u)):'';}if(/\bpp\b/i.test(p))return 'per person';return '';})(),
+          per: (function(){var p=String(l.price||'');if(_priceIsCompound(p))return '';if(p.indexOf('/')>-1){var u=p.split('/').pop().trim().toLowerCase();var M={hr:'hour',hrs:'hour',hour:'hour',day:'day',visit:'visit','call-out':'call-out',callout:'call-out',call:'call-out',month:'month',mo:'month',week:'week',wk:'week',night:'night',pp:'person',person:'person',session:'session',lesson:'lesson',km:'km'};return u?('per '+(M[u]||u)):'';}if(/\bpp\b/i.test(p))return 'per person';return '';})(),
           priceNum: _msPriceNum(l),   // PRICE-NUM-1 (25 Sep 2026 inspection, backend-10): the server's price_num / first amount
           desc: desc,
           photo: l.thumb_url || (photos[0] || null),
@@ -481,6 +490,15 @@ function _msMapBeaListing(l){
           showcase: l.showcase || 0,   // SHOWCASE-BANNER-1 (11 Aug 2026): banner without the pin
           suburb_lat: l.suburb_lat || null,
           suburb_lng: l.suburb_lng || null,
+          /* ADV-ENV-1 (30 Sep 2026 F12 walk): the Sell flow writes 'Environment: ...' and the Edit form
+             '**Environment:** ...' into the description -- there is no column. Without this no live stay or
+             experience ever carried environment_type, so every Environment filter showed 'No Adventures yet'. */
+          environment_type: l.environment_type || _msDescLine(desc, ['Environment']) || null,
+          /* ADV-LEVEL-SEASON-1 (30 Sep 2026 F13 walk): how hard a trip is and when it is best, from the advert's own lines */
+          difficulty: l.difficulty || String(_msDescLine(desc, ['Fitness level', 'Difficulty level', 'Difficulty']) || '').split(' \u2014 ')[0] || null,
+          season: l.season || _msDescLine(desc, ['Best season']) || null,
+          accommodation_type: String(l.category||'').toLowerCase().indexOf('accommodation') > -1
+            ? (l.accommodation_type || _msDescLine(desc, ['Accommodation type']) || l.prop_type || _msDescLine(desc, ['Type']) || null) : (l.accommodation_type || null),
           propType, beds, baths, garages, listingType, furnished, pets, features,
           floor_area:   l.floor_area   || null,
           erf_size:     l.erf_size     || null,
@@ -506,6 +524,7 @@ function _msMapBeaListing(l){
           drivetrain:    l.drivetrain    || null,
           colour:        l.colour        || null,
           vehicle_specs: l.vehicle_specs || null,
+          carDeal:       l.category && /car|vehicle/i.test(l.category) ? (l.listing_type || null) : null,   // CAR-DOSSIER-DOOR-1
           attested_at:   l.attested_at   || null,
           collectibleType: l.collectible_type || '',
           condition:       l.condition || '',
@@ -744,6 +763,9 @@ function formatZAR(value) {
      shown as the seller gave it (any '/ basis' after it is shown by the card's own per-line). */
   const rangeM = s.match(/^\s*[^\d\s]{0,3}\s*\d[\d\s.,]*[kKmM]?\s*(?:–|—|-|\bto\b)\s*[^\d\s]{0,3}\s*\d[\d\s.,]*[kKmM]?/);
   if (rangeM) return _lmEsc(rangeM[0].trim());
+  /* PRICE-PLUS-1 (30 Sep 2026, F3 plumber walk): Quick's trade prices join two amounts ('R450 / call-out + R350 / hour
+     + parts'). Squeezed to its digits it read R450,350 on the advert. A price of two amounts is shown as the seller gave it. */
+  if (_priceIsCompound(s)) return _lmEsc(s.trim());
   const numStr = s.replace(/[^0-9.]/g, '');
   if (!numStr) return null;
   const n = parseFloat(numStr);
@@ -753,7 +775,9 @@ function formatZAR(value) {
   return 'R' + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
 }
 
+function _priceIsCompound(p){ return /\d[^+\d]*\+\s*[^\d\s]{0,3}\s*\d/.test(String(p||'')); }   // PRICE-PLUS-1
 function _priceBasisSuffix(p){
+  if(_priceIsCompound(p)) return '';   // PRICE-PLUS-1: the whole price is already shown
   // JNR-FIX-5C (22 Jul 2026): formatZAR ate the basis ("R 50 per person" -> "R50").
   // Recover the textual basis after the amount so cards/detail never show a bare rate.
   var m=String(p||'').match(/^[^0-9]*[\d\s.,]+(.*)$/);
@@ -1627,6 +1651,42 @@ function vehSpecPanel(l){
 }
 
 
+/* CAR-DOSSIER-DOOR-1 (30 Sep 2026, F8 story walk): the Car Purchase Dossier (3T) lived only on the AI Features screen
+   behind the Wallet -- a buyer looking at a car never learnt it existed. A car for sale now offers it, filled in with
+   this car. Not on a hire listing, a demo or an AI example. Charged only when the report arrives (aiRun). */
+function carDossierDoor(l){
+  if(DEMO_MODE || l.super_example || l.is_demo || /hire|rent/i.test(l.carDeal||'')) return '';
+  return `<div style="border:1.5px solid #bcd9f1;background:#f3f9fe;border-radius:12px;padding:12px 14px;margin-bottom:14px;">`
+    + `<div style="font-size:13px;font-weight:800;color:#1b6fb5;font-family:'Syne',sans-serif;">\ud83d\ude97 Car Purchase Dossier \u00b7 3T</div>`
+    + `<div style="font-size:12px;color:#374151;line-height:1.5;margin:4px 0 9px;">Before you ask: the market price for this car, known faults for its model and year, and a test-drive checklist. You pay only when your report arrives.</div>`
+    + `<button onclick="carDossierOpen('${l.id}')" style="width:100%;background:#1b6fb5;color:#fff;border:none;border-radius:50px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;">Get the dossier for this car</button></div>`;
+}
+/* COL-REPORT-DOOR-1 (30 Sep 2026, F10 story walk): a collector pricing his piece in Edit never learnt that the
+   Collectables Advert + Market Report (5T) exists -- it lived only behind Wallet -> AI Features. Edit's AI tools offer it
+   for a Collectors advert, filled in with the item and his price; the report can then be attached to this advert. */
+async function elOpenColReport(){
+  const raw = elCurrentRaw || {};
+  const item = String((document.getElementById('elf-title')||{}).value || raw.title || '').trim();
+  const price = String((document.getElementById('elf-price')||{}).value || raw.price || '').trim();
+  goTo('ai-features');
+  try{ await aiBoot(); }catch(_){}
+  try{ if(aiSel('collectables_advert')===false) return; }catch(_){ return; }
+  const set = (k,v)=>{ const e=document.getElementById('ai-p-'+k); if(e && v) e.value=v; };
+  set('items', item);
+  set('asking', price ? ((typeof formatZAR==='function' && formatZAR(price)) || price) : '');
+}
+async function carDossierOpen(id){
+  const l = findListing(id); if(!l) return;
+  goTo('ai-features');
+  try{ await aiBoot(); }catch(_){}
+  try{ if(aiSel('car_dossier')===false) return; }catch(_){ return; }
+  const veh = [l.vehicle_year, l.make, l.model, l.variant].filter(Boolean).join(' ')
+    + ((l.mileage_km||l.mileage_km===0) ? ', ' + Number(l.mileage_km).toLocaleString('en-ZA') + ' km' : '');
+  const set = (k,v)=>{ const e=document.getElementById('ai-p-'+k); if(e && v) e.value=v; };
+  set('vehicle', veh.trim() || l.title || '');
+  set('price', (typeof formatZAR==='function' && formatZAR(l.price)) || l.price || '');
+}
+
 // ── HMI-1 (18 Jul 2026): category summary tile grid — the WeBuyCars-style block for non-Cars
 // categories, driven by fields the DB stores today. Falls back to legacy chips when <3 tiles.
 function catSummaryTiles(l){
@@ -2117,7 +2177,13 @@ function _agencyCreateHtml(isSuper,email){
       +'<input id="ag-new-admin" placeholder="Admin email" value="'+(email||'')+'" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:8px;">'
       +'<input id="ag-new-countries" placeholder="Countries e.g. ZA,GB" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:10px;">'
       +'<button onclick="agencyCreate()" style="width:100%;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Create agency</button></div>')
-      :'<p style="color:var(--text-3);font-size:12px;margin-top:14px;">'+_agL('setup')+'</p>')
+      :'<p style="color:var(--text-3);font-size:12px;margin-top:14px;">'+_agL('setup')+'</p>'
+       /* AGENCY-APPLY-1 (30 Sep 2026, F14 walk): 'on application' named no way to apply -- a real agency stopped here */
+       +'<a href="mailto:support@trustsquare.co?subject='+encodeURIComponent('Application: '+_agL('org')+' on TrustSquare')
+       +'&body='+encodeURIComponent('Name of the '+_agL('org')+':\nRegistration number:\nCities you work in:\nYour sign-in email: '+(email||'')+'\n')
+       +'" style="display:inline-block;margin-top:10px;background:var(--navy,#0c1a2e);color:#fff;border-radius:50px;padding:11px 22px;'
+       +'font-weight:700;text-decoration:none;">Apply by email</a>'
+       +'<p style="color:var(--text-3);font-size:12px;margin-top:8px;">support@trustsquare.co \u2014 we link your '+_agL('org')+' to this account.</p>')
     +'</div>';
 }
 async function agencyCreate(){
@@ -3787,7 +3853,7 @@ const ADV_PINS = {
 
 // Label lookup for cards
 function advCatLabel(l){
-  const isAccom = (l.cat||'').toLowerCase().includes('accommodation');
+  const isAccom = ((l.advType||'')+' '+(l.cat||'')).toLowerCase().includes('accommodation');   // ADV-ENV-1: live rows carry it in advType
   const cats = isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS;
   const match = cats.find(c=>c.key===(l.experience_type||l.accommodation_type||''));
   return match ? match.icon+' '+match.name : (isAccom ? ADV_SUBCAT_LABELS.adventures_accommodation : ADV_SUBCAT_LABELS.adventures_experiences);
@@ -4009,8 +4075,8 @@ function renderAdvGrid(){
 
     // Category filter (experience_type or accommodation_type)
     if(advCat !== 'all'){
-      const isAccom = cat.includes('accommodation');
-      const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+      const isAccom = _sub.includes('accommodation');   // ADV-ENV-1: a live row's sub-type is in advType
+      const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
       if(!typeVal || typeVal !== advCat) return false;
     }
 
@@ -4098,6 +4164,7 @@ function renderAdvGrid(){
           <span style="font-size:11px;color:#6b7280;margin-left:auto;">${flag}</span>
         </div>
         <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px;line-height:1.3;">${esc(l.title||l.name||'Untitled')}</div>
+        ${(l.difficulty||l.season) ? `<div style="font-size:12px;color:#4b5563;">${[l.difficulty?'🥾 '+esc(l.difficulty):'', l.season?'📅 '+esc(_advSeasonText(l.season)):''].filter(Boolean).join(' · ')}</div>` : ''}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
           <div>
             <span style="font-size:14px;font-weight:700;color:#111827;">${priceLabel}</span>
@@ -5822,11 +5889,12 @@ function openDetail(id){
   // Adventures category display label + price formatting
   const isAdv = l.cat==='adventures_accommodation'||l.cat==='adventures_experiences'||l.cat==='Adventures';
   const isCars = l.cat==='Cars';   // CARS-SPEC-1: cars share the gallery thumb strip
-  const catDisplayLabel = l.cat==='adventures_accommodation' ? ADV_SUBCAT_LABELS.adventures_accommodation
-    : l.cat==='adventures_experiences' ? ADV_SUBCAT_LABELS.adventures_experiences
+  const _advSub = (l.advType && l.advType.indexOf('adventures_')===0) ? l.advType : l.cat;   // ADV-ENV-1
+  const catDisplayLabel = _advSub==='adventures_accommodation' ? ADV_SUBCAT_LABELS.adventures_accommodation
+    : _advSub==='adventures_experiences' ? ADV_SUBCAT_LABELS.adventures_experiences
     : l.cat;
   const advCur = isAdv ? (ADV_COUNTRY_CURRENCY[(l.country||'ZA').toUpperCase()]||'R') : null;
-  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[(l.environment_type||'').toLowerCase().replace(/\s+/g,'_')]||'') : '';
+  const advEnvLabel = isAdv ? (ADV_ENV_LABELS[_advEnvKey(l.environment_type)]||'') : '';
   // JNR-FIX-3 (22 Jul 2026, David Jnr feedback): never RNaN on the detail page.
   // Same treatment as the card's ADV-FIX-1 — numeric parse with fallback to the seller's own string.
   const _isAccomDetail = ((l.advType||l.cat||'')+'').toLowerCase().includes('accommodation');
@@ -5893,7 +5961,7 @@ function openDetail(id){
       <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(l.area)}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||_lmEsc(l.country.toUpperCase())}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
         <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">Price</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">${(l.cat==='Cars' && /hire|rent/i.test(l.carDeal||'')) ? '🔑 For hire · hire rate' : 'Price'}</div>
           ${isAdv && advPriceDisplay
             ? `<div class="pamount">${advPriceDisplay}</div>${l.per?`<div class="pper">${_lmEsc(l.per)}</div>`:''}`
             : l.price
@@ -5902,6 +5970,7 @@ function openDetail(id){
         </div>
       </div>
       ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
+      ${l.cat==='Cars' ? carDossierDoor(l) : ''}
       <div class="trust-block" id="trustblk-${l.id}" style="background:${t.bg};border-color:${t.c}30;">
         <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=7" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence</div><div class="tscale-note" style="font-size:11px;color:var(--text-3);margin-top:5px;line-height:1.45;"><span>Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.</span> <span>A new seller simply has less evidence — not a mark against them.</span></div></div>
@@ -5921,17 +5990,23 @@ function openDetail(id){
         <div id="detail-yield-chips-${id}"></div>
         <div id="detail-yield-result-${id}" style="display:none;margin-top:8px;"></div>
       </div>` : ''}
+      ${(!DEMO_MODE && l.cat==='Property' && l.listingType!=='rent' && /^bea_\d+$/.test(String(id))) ? `
+      <button onclick="msAreaDossier('${id}')" style="width:100%;text-align:left;border:1.5px solid #c4b5fd;background:#f5f3ff;border-radius:11px;padding:11px 13px;margin:0 0 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span><b style="font-size:13.5px;color:#4c1d95;">🏡 Property Area Dossier</b><span style="display:block;font-size:11.5px;color:#6b7280;margin-top:2px;">Sales nearby, schools, commute and costs for this house's area, before you ask for an introduction.</span></span>
+        <span style="font-size:12px;font-weight:800;color:#5b21b6;white-space:nowrap;">3T</span></button>` : ''}
       ${isAdv ? '<div class="adv-stat-strip">' + (function(){
           var expLabel = l.experience_type ? (ADV_EXP_TYPE_LABELS[l.experience_type] || l.experience_type.replace(/_/g,' ')) : '';
           var accLabel = l.accommodation_type ? (ADV_ACC_TYPE_LABELS[l.accommodation_type] || l.accommodation_type.replace(/_/g,' ')) : '';
           var typeLabel = expLabel || accLabel;
-          var envKey = (l.environment_type||'').toLowerCase().replace(/\s+/g,'_');
+          var envKey = _advEnvKey(l.environment_type);   // ADV-ENV-1: 'Farm & Rural' -> farm_rural
           var envL = ADV_ENV_LABELS[envKey] || ADV_ENV_LABELS[(l.environment_type||'').toLowerCase()] || '';
           var countryCode = (l.country||'ZA').toUpperCase();
           var flag = ADV_COUNTRY_FLAGS[countryCode] || '🌍';
           var parts = [];   // SELLER-TEXT-ESC-1 (ts1-01): the seller-chosen types, sizes and codes are escaped
           if(typeLabel) parts.push('<span class="adv-stat price-stat">'+_lmEsc(typeLabel)+'</span>');
           if(envL) parts.push('<span class="adv-stat env-stat">'+envL+'</span>');
+          if(l.difficulty) parts.push('<span class="adv-stat level-stat">🥾 '+_lmEsc(l.difficulty)+'</span>');   // ADV-LEVEL-SEASON-1
+          if(l.season) parts.push('<span class="adv-stat season-stat">📅 '+_lmEsc(_advSeasonText(l.season))+'</span>');
           if(l.groupSize) parts.push('<span class="adv-stat group-stat">👥 '+_lmEsc(l.groupSize)+'</span>');
           if(l.duration) parts.push('<span class="adv-stat duration-stat">⏱ '+_lmEsc(l.duration)+'</span>');
           if(countryCode && countryCode !== 'ZA') parts.push('<span class="adv-stat country-stat">'+flag+' '+_lmEsc(countryCode)+'</span>');
@@ -8263,10 +8338,15 @@ function sobRenderAttest(){
   sobState._attest = data ? { draftId:data.draftId, confirmed:{}, sections:Object.keys(data.sections) } : null;
   if(!data){ wrap.style.display='none'; host.innerHTML=''; sobCheckEula(); return; }
   wrap.style.display='block';
+  // VEHICLE-PROV-1 (30 Sep 2026, F8 walk): only a value the AI read off the photos is an 'AI draft'. What she typed in
+  // Quick or Edit carries no provenance at all -- it was labelled 'AI draft ... read from your photos', which is untrue.
+  const _ai=k=>data.prov[k]==='ai_guess';
+  const _note=document.getElementById('sob-attest-ai-note');
+  if(_note) _note.style.display=Object.keys(data.sections).some(sec=>data.sections[sec].some(([k])=>_ai(k)))?'block':'none';
   host.innerHTML = Object.keys(data.sections).map(sec=>{
     const def=VEHICLE_SECTIONS_JS[sec];
     const rows=data.sections[sec].map(([k,v])=>{
-      const chip = data.prov[k]==='seller_entered'
+      const chip = !_ai(k)
         ? '<span style="font-size:9px;color:#86efac;border:1px solid rgba(134,239,172,.35);border-radius:8px;padding:1px 6px;margin-left:6px;white-space:nowrap;">You entered</span>'
         : '<span style="font-size:9px;color:#fcd34d;border:1px solid rgba(252,211,77,.35);border-radius:8px;padding:1px 6px;margin-left:6px;white-space:nowrap;">AI draft</span>';
       return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;"><span style="color:rgba(255,255,255,.55);">'+(VEHICLE_SPEC_LABELS[k]||k)+'</span><span style="color:rgba(255,255,255,.85);text-align:right;">'+String(v).replace(/</g,'&lt;')+chip+'</span></div>';
@@ -8545,7 +8625,9 @@ async function _sobGoLiveInner() {
     fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/id-status').then(function(r){ return r.ok ? r.json() : null; }).then(function(st){
       if (!st || st.green_tick) return;
       const sub = document.getElementById('sob-success-sub');
-      if (sub) sub.innerHTML = 'Your listing is live and buyers can see it. <strong style="color:#fbbf24">Buyers can send you introductions once your ID is verified</strong> \u2014 do it in My Space \u2192 Trust \u2192 Upload ID. It is what keeps scammers out.';
+      /* ID-LIVE-CARD-1 (30 Sep 2026, F8 walk): since RUL-188 an unchecked ID never holds an introduction -- the buyer is
+         told it is not checked yet. The card said introductions wait for her ID, which sent her off to the wrong task. */
+      if (sub) sub.innerHTML = 'Your listing is live and buyers can send you introductions. <strong style="color:#fbbf24">Until your ID is checked, buyers are told TrustSquare has not confirmed who you are</strong> \u2014 upload it in My Space \u2192 Trust \u2192 Upload ID to take that warning away.';
     }).catch(function(){});
   } catch (e) {}
   obTrack('publish_ok',{n:successCount});   // ONBOARD-FUNNEL-1: the number's own event
@@ -11543,11 +11625,51 @@ function msPauseListing(id, pause){
 /* HIDDEN-CASUAL-1 (Ripple walk 3, 27 Sep 2026): RUL-115 keeps a new home worker out of strangers' sight until one
    person she worked for confirms her (or her ID is checked). She was never told, and the link lived on the fifth
    card of the trust coach. Her own card now says so, with the link one tap away. */
-function msHiddenCasualNote(lid){
+function msHiddenCasualNote(lid, raw){
+  /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): for a nanny, caregiver, au pair or creche assistant it is a
+     police clearance checked by our team that opens her advert (RUL-153) -- a confirmation or an ID check does not. */
+  if(raw && raw.gate === 'police_clearance'){
+    const waiting = raw.clearance_status === 'pending';
+    return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
+      + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
+      + (waiting
+        ? '<div style="font-size:12px;color:#78350f;margin:3px 0 0;line-height:1.45;">Your police clearance is with our team. Strangers see your listing once we have checked it.</div>'
+        : '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Parents and families see it once our team has checked your police clearance. This keeps the children and people you care for safe.</div>'
+          + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ')">Upload my police clearance</button>')
+      + '</div>';
+  }
+  /* LICENCE-GATE-1 (F4 story walk, 30 Sep 2026): for work the law licenses -- an electrician's DoEL registration, a
+     gas or refrigerant SAQCC card, PSIRA, a driving licence -- it is that licence, checked by our team (RUL-156). */
+  if(raw && raw.gate === 'licence'){
+    const lw = raw.licence_status === 'pending';
+    return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
+      + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
+      + (lw
+        ? '<div style="font-size:12px;color:#78350f;margin:3px 0 0;line-height:1.45;">Your licence is with our team. Customers see your listing once we have checked it.</div>'
+        : '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">The law says this work needs a licence or registration. Customers see your listing once our team has checked yours.</div>'
+          + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ',\'licence\')">Upload my licence</button>')
+      + '</div>';
+  }
   return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
     + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
     + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
     + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
+}
+function msClearanceUpload(lid, kind){
+  const _lic = kind === 'licence';   // LICENCE-GATE-1: the same shortcut chooses the licence credential
+  openEditListing(lid);
+  let n = 0;
+  const t = setInterval(function(){
+    const sel = document.getElementById('el-dh-signal');
+    if(sel || ++n > 40){
+      clearInterval(t);
+      if(!sel) return;
+      sel.value = _lic ? 'category.services_tech.coc' : 'category.services_cas.clearance';
+      const ty = document.getElementById('el-dh-type'); if(ty){ ty.value = 'other'; if(typeof elUpdateDocHint === 'function') elUpdateDocHint('other'); }
+      const lb = document.getElementById('el-dh-label'); if(lb && !lb.value) lb.value = _lic ? 'Licence to practise' : 'Police clearance';
+      sel.scrollIntoView({block:'center'});
+    }
+  }, 250);
 }
 async function msEmployerLinkCard(btn){
   const email = _msSignedEmail(); const host = btn.parentNode;
@@ -11644,7 +11766,7 @@ function renderDashCard(dl){
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
-      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId) : ''}
+      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId, dl._raw) : ''}
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
@@ -11855,7 +11977,9 @@ async function handleIntro(dlId, introId, action){
     const _keySeller = /@key\.trustsquare\.co$/i.test(String(_msSignedEmail() || ''));
     showToast(_keySeller
       ? `✓ Accepted — ${intro.name} has been told by email. Their replies cannot reach a WhatsApp-link account yet.`
-      : `✓ Accepted — ${intro.name}'s contact revealed.`, _keySeller ? 8000 : 2600);
+      /* INTRO-TOAST-TRUTH-1 (30 Sep 2026, F3 walk): nothing is shown on this screen -- the introduction is an email to
+         both of you, and your address stays private. 'contact revealed' sent a plumber looking for a number that is not there. */
+      : `✓ Accepted — you and ${intro.name} both get an email now. Reply to it to talk; your email address stays private.`, _keySeller ? 8000 : 6000);
   } else {
     if(BEA_ENABLED && intro.beaId){
       const ok = await apiPut('/intros/'+intro.beaId+'/decline');
@@ -11863,8 +11987,11 @@ async function handleIntro(dlId, introId, action){
     }
     intro.status = 'declined';
     dl.status = 'active';
+    /* DECLINE-TOAST-TRUTH-1 (30 Sep 2026, F3 walk): only a listing her request had paused is 'reactivated'; an open-queue
+       advert never stopped. A held 1T goes back either way. */
+    const _wasHeld = !!(dl && dl._raw && String(dl._raw.auto_paused_intro_id||'') === String(intro.beaId||''));
     _msPropertyReopened(dl, intro);
-    showToast(`Declined — ${intro.name} notified. Listing reactivated.`);
+    showToast(`Declined — ${intro.name} is told, and any Tuppence held for this request goes back to them.` + (_wasHeld ? ' Your listing is open again.' : ''), 5000);
   }
   renderDash();
   updateTuppenceUI();
@@ -11966,6 +12093,9 @@ async function openEditListing(beaId) {
     const isProperty = elCurrentCat.toLowerCase().startsWith('property');
     yieldBtn.style.display = isProperty ? '' : 'none';
   }
+  // COL-REPORT-DOOR-1 (30 Sep 2026, F10 walk): the Collectables report (5T) lived only behind Wallet -> AI Features
+  const colBtn = document.getElementById('el-colreport-btn');
+  if (colBtn) colBtn.style.display = elCurrentCat.toLowerCase().startsWith('collect') ? '' : 'none';
 
   // Render form and navigate
   renderEditForm(elCurrentRaw);
@@ -12543,10 +12673,15 @@ async function elAddPhoto(event) {
         body: JSON.stringify(photoPayload) });
     if (!_sr.ok) {   // BUGSWEEP-24SEP: a refused save used to show "added and saved"
       const _sj = await _sr.json().catch(() => ({}));
-      showToast(_n + ' added but NOT saved — ' + ((_sj && typeof _sj.detail==='string' && _sj.detail) || ('error ' + _sr.status)), 6000);
+      const _sd = (_sj && typeof _sj.detail==='string' && _sj.detail) || '';
+      /* PHOTO-TERMS-TOAST-1 (30 Sep 2026, F8 walk): a first-time seller adds her photo before she has signed the seller
+         terms. The photo stays on the screen and is saved with Save Changes, right after the terms -- 'NOT saved' told
+         her it was lost. Other refusals keep their plain reason. */
+      if (/eula|terms/i.test(_sd)) showToast(_n + ' added. Tap Save Changes and accept the seller terms to keep ' + (added !== 1 ? 'them' : 'it') + '.' + _tail, 6000);
+      else showToast(_n + ' added but NOT saved — ' + (_sd || ('error ' + _sr.status)) + _tail, 6000);
       return;
     }
-  } catch(e) { showToast(_n + ' added but NOT saved — ' + e.message, 6000); return; }
+  } catch(e) { showToast(_n + ' added but NOT saved — ' + e.message + _tail, 6000); return; }
   showToast('✅ ' + _n + ' added and saved' + _tail, _tail ? 7000 : undefined);
 }
 
@@ -12653,11 +12788,20 @@ const EL_CRED_SIGNALS = {
   Cars: [
     ['category.cars.dealer_reg',  'MIRA dealer / trader registration (+8)'],
   ],
+  /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): a nanny had nowhere to hand in the police clearance her
+     advert waits for -- the general upload filed it as a Local-Market certificate. */
+  Services: [
+    ['category.services_cas.clearance', 'Police clearance (+10)'],
+    ['category.services_tech.coc', 'Licence to practise (+5) — DoEL, SAQCC, PSIRA, PrDP'],   // LICENCE-GATE-1
+  ],
+  Tutors: [
+    ['category.tutors.clearance', 'Police clearance (+8)'],
+  ],
 };
 function EL_SIGNAL_OPTS_HTML(){
   const list = EL_CRED_SIGNALS[elCurrentCat] || [];
   if (!list.length) return '';
-  return '<select id="el-dh-signal" style="background:var(--surface-2);border:1.5px solid var(--border);'+
+  return '<select id="el-dh-signal" onchange="if(/clearance$|\.coc$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
     'border-radius:8px;padding:8px 10px;font-size:13px;">'+
     '<option value="">What is this document? (general — no credential)</option>'+
     list.map(s => '<option value="'+s[0]+'">'+s[1]+'</option>').join('')+
@@ -12842,7 +12986,7 @@ async function elDocHubUpload(email) {
   const docType   = document.getElementById('el-dh-type')?.value || 'other';
   const label     = document.getElementById('el-dh-label')?.value.trim() || '';
   const postIntro = document.getElementById('el-dh-postintro')?.checked;
-  const status    = document.getElementById('el-dh-status');
+  let status      = document.getElementById('el-dh-status');
   if (!fileInput?.files?.length) { if (status) status.textContent = 'Please choose a file first.'; return; }
   const isIdDoc = docType === 'id_doc';
   if (status) status.textContent = isIdDoc ? '⏳ Uploading — AI verification in progress…' : '⏳ Uploading…';
@@ -12878,6 +13022,13 @@ async function elDocHubUpload(email) {
       allItemsUp.forEach(it => { if (it.has_declaration && it.status !== 'earned') declarableItemsUp.push(it); });
     }
     if (dhSec) dhSec.innerHTML = elRenderDocHub(docs, email, declarableItemsUp);
+    // CLEARANCE-CHECK-1 (F2 walk): the redraw replaced the status line, so 'uploaded' was never seen. Say it on the new one.
+    status = document.getElementById('el-dh-status') || status;
+    if (_sig && !uploadData.auto_earned) {
+      if (status) status.textContent = '✅ Sent to our team. A person checks it, then your points are added'
+        + (/clearance$|\.coc$/.test(_sig) ? ' and strangers can see your listing.' : '.');
+      return;   // nothing changes in the score until then, and a second redraw would wipe this line again
+    }
     // AI comment on this upload
     try {
       const commentRes = await apiPostAuth('/trust-score/upload-comment', {
@@ -14213,6 +14364,7 @@ function renderMyRequests(){
   });
   if(!interacted.length){
     el.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><h3>No requests yet</h3><p>When you save a listing or send an introduction request, it will appear here.</p></div>`;
+    msMyIntros(el, true);   // MY-INTROS-1
     return;
   }
   el.innerHTML=`<div class="lgrid">${interacted.map(l=>{
@@ -14227,6 +14379,34 @@ function renderMyRequests(){
       </div>
     </div>`;
   }).join('')}</div>`;
+  msMyIntros(el, false);   // MY-INTROS-1
+}
+/* MY-INTROS-1 (F6 walk, 30 Sep 2026): Jacoba asked to be introduced to a house, the seller accepted, and her My Requests
+   still said "No requests yet" -- the tab only read this phone's memory. The introductions she asked for now come from
+   the server (her own, session-bound), newest first, each saying where it stands. */
+async function msMyIntros(el, empty){
+  if(DEMO_MODE || !BEA_ENABLED) return;
+  const me = _msSignedEmail(); if(!me) return;
+  let rows = [];
+  try{
+    const r = await fetch(BEA_URL + '/intros?status=all&buyer_email=' + encodeURIComponent(me), {credentials:'include'});
+    if(!r.ok) return;
+    rows = (await r.json()).filter(x => String(x.buyer_email||'').toLowerCase() === me.toLowerCase());
+  }catch(_){ return; }
+  if(!rows.length || !el.isConnected) return;
+  const WORD = {pending:['Waiting for the seller','#92400e','#fef3c7'], accepted:['Accepted — check your email','#065f46','#d1fae5'],
+                declined:['Declined — nothing was charged','#6b7280','#f3f4f6'], expired:['No answer — nothing was charged','#6b7280','#f3f4f6'],
+                withdrawn:['You withdrew it — nothing was charged','#6b7280','#f3f4f6']};
+  const box = document.createElement('div'); box.id = 'my-intros';
+  box.innerHTML = '<div style="font-weight:800;font-size:15px;margin:4px 2px 8px;">Introductions you asked for</div>'
+    + rows.slice(0, 20).map(x => { const w = WORD[String(x.status||'').toLowerCase()] || [_lmEsc(x.status||''),'#374151','#f3f4f6'];
+        return '<button onclick="openDetail(\'bea_' + parseInt(x.listing_id,10) + '\')" style="width:100%;text-align:left;background:var(--surface,#fff);border:1.5px solid var(--border,#e5e7eb);border-radius:12px;padding:11px 13px;margin:0 0 8px;cursor:pointer;">'
+          + '<b style="font-size:14px;color:var(--navy,#0f172a);">' + _lmEsc(x.listing_title || ('Listing #' + x.listing_id)) + '</b>'
+          + '<span style="display:block;font-size:12px;color:#6b7280;margin:2px 0 6px;">' + _lmEsc([x.category, x.city].filter(Boolean).join(' · ')) + ' · ' + _lmEsc(String(x.created_at||'').slice(0,10)) + '</span>'
+          + '<span style="font-size:11.5px;font-weight:700;color:' + w[1] + ';background:' + w[2] + ';border-radius:20px;padding:3px 10px;">' + w[0] + '</span></button>'; }).join('');
+  const old = el.querySelector('#my-intros'); if(old) old.remove();
+  if(empty) el.innerHTML = '';
+  el.insertBefore(box, el.firstChild);
 }
 
 // ── ADVERT AGENT ─────────────────────────────────────────────
@@ -16975,6 +17155,7 @@ async function initLMHomeTile() {
       const d = document.createElement('div');
       d.style.cssText = 'position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity 0.8s ease;opacity:0;z-index:' + z + ';';
       catBg.style.position = 'relative';
+      catBg.style.zIndex = '0';   // LM-TILE-LABEL-1 (30 Sep 2026, Goal run 25): the photo layers stay inside the picture, under the "Local Market · N listings" label -- they were painting over it
       catBg.appendChild(d);
       return d;
     };
@@ -18516,8 +18697,19 @@ function msRenderIntroList(elId, items, dir){
       +'<div class="ms-intro-avatar '+colour+'">'+_lmEsc(initials)+'</div>'
       +'<div style="flex:1;min-width:0;"><div class="ms-intro-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_lmEsc(ident)+'</div>'
       +'<div class="ms-intro-meta">'+meta+'</div></div>'
-      +chip+hired+withdraw+answer+'</div>';
+      +chip+hired+withdraw+answer+msIntroMsg(i, dir)+'</div>';
   }).join('');
+}
+
+/* INTRO-MSG-1 (30 Sep 2026, F12 walk): the buyer's message ('Is breakfast served on Sunday too?') reached the server and
+   the seller's email, but the Intros list never showed it -- she chose Accept or Decline without reading what was asked. */
+(function(){ try{ var s=document.createElement('style'); s.textContent='.ms-intro-item{flex-wrap:wrap}'; document.head.appendChild(s); }catch(e){} })();
+function msIntroMsg(i, dir){
+  var m = String((i && i.message) || '').trim();
+  if(!m || dir === 'sent') return '';
+  /* its own full-width line under the row (the row wraps): beside Accept and Decline it was squeezed to one word a line */
+  return '<div class="ms-intro-msg" style="flex:0 0 100%;order:9;box-sizing:border-box;padding-left:46px;font-size:13px;'
+    + 'line-height:1.4;margin-top:6px;color:inherit;opacity:.85;white-space:normal;overflow-wrap:anywhere;">\u201c' + _lmEsc(m.length > 280 ? m.slice(0, 277) + '\u2026' : m) + '\u201d</div>';
 }
 
 async function msIntroWithdraw(introId, btn){
@@ -18567,7 +18759,7 @@ function msRenderOpenActions(items){
       +'<div class="ms-action-btns">'
       +'<button class="ms-btn-sm" onclick="msIntroAction('+parseInt(i.id,10)+',0,this)">Decline</button>'
       +'<button class="ms-btn-sm primary" onclick="msIntroAction('+parseInt(i.id,10)+',1,this)">Accept</button>'
-      +'</div></div>';
+      +'</div>'+msIntroMsg(i, 'received')+'</div>';
   }).join('');
 }
 
@@ -19387,6 +19579,15 @@ function aiVideoTutor(id){
   });
 }
 
+/* AREA-DOSSIER-LINK-1 (F6 walk, 30 Sep 2026): a buyer looking at a house had no way to the Property Area Dossier from
+   the advert -- it lived only under Wallet > AI features. The advert now offers it; this opens it with the advert filled in. */
+async function msAreaDossier(id){
+  if (DEMO_MODE) return;
+  try{ goTo('ai-features'); await aiBoot(); }catch(_){}
+  try{ if(aiSel('property_dossier') === false) return; }catch(_){ return; }
+  const el = document.getElementById('ai-p-listing'); if(el){ el.value = String(id); el.value = await aiListingRef(id); }   // DOSSIER-REF-1: she sees what is sent
+  const it = document.getElementById('ai-p-intent'); if(it && !it.value) it.value = 'live';
+}
 async function aiBoot(){
   if (DEMO_MODE) return;
   try{ aiLoadMyReports(); }catch(_){}   // REPORT-KEEP-1: every paid report stays reachable
@@ -19471,7 +19672,12 @@ async function aiAttachPick(jobId){
   }
   host.innerHTML = rows.slice(0, 10).map(function(x){
     return '<button onclick="aiAttachDo(\'' + _lmEsc(jobId) + '\',' + parseInt(x.id,10) + ',this)" style="width:100%;text-align:left;margin-top:7px;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;cursor:pointer;">'
-      + _lmEsc(x.title || ('Listing #' + x.id)) + (x.ai_report_job === jobId ? ' \u2014 attached' : '') + '</button>';
+      + _lmEsc(x.title || ('Listing #' + x.id))
+      /* ATTACH-PICK-LABEL-1 (1 Oct 2026, F10 re-walk): two adverts with the same title (a draft and the live copy) read
+         identically -- say which is which: its state and its price. */
+      + '<span style="color:#6b7280;font-size:12px;"> \u00b7 ' + _lmEsc(({live:'Live',draft:'Draft',paused:'Paused'})[String(x.listing_status||'live').toLowerCase()] || 'Live')
+      + (x.price ? ' \u00b7 ' + _lmEsc((typeof formatZAR==='function' && formatZAR(x.price)) || x.price) : '') + '</span>'
+      + (x.ai_report_job === jobId ? ' \u2014 attached' : '') + '</button>';
   }).join('');
 }
 async function aiAttachDo(jobId, listingId, btn){
@@ -19607,6 +19813,26 @@ function aiThumbs(){
   t.innerHTML = AI_PHOTOS.map((p,i)=>`<div class="ai-ph"><img src="${p}"><span aria-label="Remove this photo" onclick="AI_PHOTOS.splice(${i},1);aiThumbs()">&times;</span></div>`).join('');
 }
 
+/* DOSSIER-REF-1 (F6 walk, 30 Sep 2026): the dossier form asks for a "Listing #" and shows 'bea_42' as its example,
+   but the report service cannot look a TrustSquare number up -- Jacoba's Area Dossier for bea_446 came back "could not
+   be matched to a suburb" and still cost 3T. A listing number is now turned into the advert's own facts (what, where,
+   asking price) before the report is asked for; anything else she typed is sent as she typed it. */
+async function aiListingRef(v){
+  const m = /^\s*(?:bea_|#|listing\s*#?\s*)?(\d+)\s*$/i.exec(String(v||''));
+  if (!m) return v;
+  try{
+    const r = await fetch(BEA_URL + '/listings/' + m[1]); if (!r.ok) return v;
+    const d = await r.json();
+    const CN = {ZA:'South Africa',NA:'Namibia',BW:'Botswana',MZ:'Mozambique',KE:'Kenya',GB:'United Kingdom',UK:'United Kingdom',DE:'Germany',AU:'Australia',US:'United States'};
+    const what = [d.beds ? d.beds + '-bedroom' : '', String(d.prop_type || '').toLowerCase(), [d.vehicle_year, d.make, d.model].filter(Boolean).join(' ')].filter(Boolean).join(' ');
+    const where = [d.suburb || d.area, d.city, CN[String(d.country||'ZA').toUpperCase()] || d.country].filter(Boolean).join(', ');
+    const deal = /rent|let/i.test(String(d.listing_type||'')) ? 'rent ' : 'asking ';
+    const bits = [(what || d.title || '') + (where ? ' in ' + where : ''), d.price ? deal + String(d.price).replace(/\s/g,' ') : '',
+                  d.floor_area ? d.floor_area + ' m2 floor' : '', d.erf_size ? d.erf_size + ' m2 erf' : '',
+                  d.mileage ? d.mileage + ' km' : '', 'TrustSquare listing #' + m[1]];
+    return bits.filter(Boolean).join(', ');
+  }catch(_){ return v; }
+}
 async function aiRun(){
   if (DEMO_MODE) { showToast('AI Features run in live mode only'); return; }   // demo guard (belt & braces)
   if (!AI_SEL) return;
@@ -19619,6 +19845,7 @@ async function aiRun(){
   aiStopPoll(false);   // AI-POLL-ONE-1
   const params = {};
   AI_SEL.params.forEach(pp=>{ const el=document.getElementById('ai-p-'+pp.key); params[pp.key]=el?el.value:''; });
+  if (params.listing) params.listing = await aiListingRef(params.listing);   // DOSSIER-REF-1
   if (AI_PHOTOS.length) params.photos = AI_PHOTOS;
   const dry = document.getElementById('ai-dryrun').checked;
   if (dry && AI_PHOTOS.length) showToast('Sample mode: your photos are not analysed — untick Sample preview for the full report.');
@@ -20041,6 +20268,7 @@ Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Ask
          ['engine','Engine bay','Bonnet open, well lit','🔧']],
   sections:[
    {key:'A',title:'Vehicle Details',pts:20,coach:'<b>The AI pre-fills what it can see</b> — make, model and variant come from your photos. Confirm or correct each one.',rows:[
+    ['ltype','For sale or for hire?','select','For Sale|For Hire'],   // CAR-HIRE-1
     ['make','Make','text','e.g. BMW'],['model','Model','text','e.g. X1'],['variant','Variant / trim','text','e.g. sDrive18i Auto'],
     ['year','Year','number','e.g. 2016'],['colour','Colour','text','e.g. White'],
     ['body','Body type','select','Sedan|Hatchback|SUV|Bakkie|Coupe|Convertible|MPV|Wagon|Crossover']]},
@@ -20160,10 +20388,12 @@ Adventures: { label:'Adventures',
      {key:'A',title:'Experience Details',pts:20,coach:'<b>Duration and group size</b> are the first two filters buyers apply.',rows:[
       ['atype','Activity','text','e.g. Guided Magaliesberg day hike'],['dur','Duration','text','e.g. Full day, 6–8 hrs'],
       ['gmin','Min group','number','e.g. 2'],['gmax','Max group','number','e.g. 12'],
-      ['area','General area','text','e.g. Magaliesberg — exact meeting point stays private']]},
+      ['area','General area','text','e.g. Magaliesberg — exact meeting point stays private'],
+      ['env','Environment','select','Bush & Wildlife|Mountain & Highlands|Coastal & Beach|Garden & Winelands|Wetlands & Lakes|Desert & Karoo|Forest & Fynbos|Urban & Township|Farm & Rural']]},   // ADV-ENV-1: buyers filter Adventures by environment
      {key:'B',title:'Included & Level',pts:20,coach:'<b>Included vs excluded is the #1 buyer question.</b> Be explicit and disputes disappear.',rows:[
       ['incl',"What's included",'text','e.g. Guide, permits, lunch'],['excl','Not included','text','e.g. Transport to start point'],
       ['fit','Fitness level','select','Easy|Moderate|Challenging'],
+      ['season','Best season','select','All year|Summer|Autumn|Winter|Spring'],   // ADV-LEVEL-SEASON-1
       ['notes','Describe the day','textarea','Hour by hour, what makes it special…']]},
      {key:'C',title:'Safety & Credentials',pts:10,coach:'<b>Registered guides earn Trust Score bonuses</b> — declare now, upload proof later.',rows:[
       ['guide','Registered guide','select','Yes — provincial registration|In process|No'],
@@ -20175,7 +20405,7 @@ Adventures: { label:'Adventures',
            ['common','Common area / deck','Where guests live','🔥'],['view','The view','What they wake up to','🌄']],
     sections:[
      {key:'A',title:'Property Details',pts:20,coach:'<b>Sleeps-count and type</b> drive every search. TGCSA grading earns Trust Score bonuses when verified.',rows:[
-      ['ptype','Type','select','Guest house|B&B|Bush camp|Self-catering|Boutique hotel|Cottage'],
+      ['ptype','Type','select','Guest house|B&B|Bush camp|Chalet|Hostel|Self-catering|Camp site|Mountain hut|Boutique hotel|Cottage'],
       ['units','Rooms / units','number','e.g. 5'],['sleeps','Sleeps (total)','number','e.g. 12'],
       ['grading','TGCSA grading','select','None|1-star|2-star|3-star|4-star|5-star']]},
      {key:'B',title:'Amenities & Rules',pts:20,coach:'<b>Pets and kids policies</b> — answer once here instead of in every enquiry.',rows:[
@@ -20184,6 +20414,7 @@ Adventures: { label:'Adventures',
       ['notes','What makes a stay special','textarea','The fire at night, the birdlife, the silence…']]},
      {key:'C',title:'Location & Access',pts:10,coach:'<b>Access honesty prevents 1-star reviews.</b> If it needs a bakkie, say so.',rows:[
       ['area','General area','text','e.g. Waterberg, 2h from Pretoria'],
+      ['env','Environment','select','Bush & Wildlife|Mountain & Highlands|Coastal & Beach|Garden & Winelands|Wetlands & Lakes|Desert & Karoo|Forest & Fynbos|Urban & Township|Farm & Rural'],   // ADV-ENV-1
       ['access','Road access','select','Sedan friendly|High clearance|4x4 only'],
       ['dist','Distance to landmark','text','e.g. 20 min from park gate']]}],
     feats:['Pool','Braai','WiFi','Off-grid solar','Game drives','Fireplace','Hot tub','Pet-friendly','Fenced for kids']}}},
@@ -20449,6 +20680,7 @@ function sfValidStep(to){   // a step this listing can actually show (Back/resto
   if(s.cat==='local_market' && !s.lmType) return 'lmpick';
   if(to==='legal' && !sfLegalCard()) return 'features';
   if(to==='agents' && s.cat!=='Property' && s.cat!=='Cars') return 'scorecard';
+  if(to==='agents' && sfIsCarHire()) return 'scorecard';   // CAR-HIRE-1: 'Boost your sale?' is a sale agent's pitch
   return ['photos','secA','secB','secC','features','legal','agents','scorecard'].indexOf(to)>-1 ? to : 'photos';
 }
 // SF-DRAFT-KEEP-1 (ts4-04): Photos' ← returns to the kind / type picker (Services, Adventures, Local Market), not the tiles
@@ -20578,6 +20810,20 @@ var SF_PROP_RENTAL_SEC_C = {key:'C',title:'Tenant Costs & Responsibilities',pts:
   ['tenant_fees','Other tenant fees','text','e.g. R150/m prepaid meter admin — blank if none'],
   ['fibre','Fibre available','select','Yes|No'],
   ['security','Security','select','None|Alarm|Security estate|Armed response']]};
+/* CAR-HIRE-1 (30 Sep 2026, F9 story walk): a car offered for hire had no way to say so in Sell (only Edit's Listing
+   type), and its advert never showed it. Hire: the price is a day rate, and Condition asks the terms a hirer needs;
+   sfComposeDescription() writes them into the advert, where the buyer reads them before asking. */
+var SF_CAR_HIRE_SEC_B = {key:'B',title:'Hire terms',pts:20,
+  coach:'<b>What every hirer asks first.</b> Say it here and it shows on your advert, before anyone asks.',rows:[
+  ['mileage','Mileage (km)','number','e.g. 85 000'],
+  ['deposit','Deposit (R)','number','e.g. 3 000'],
+  ['min_days','Shortest hire (days)','number','e.g. 2'],
+  ['km_day','Free km per day','text','e.g. 200 km, then R3 a km'],
+  ['driver','Who may drive','text','e.g. licence held 2+ years, age 23+'],
+  ['notes','Other terms and condition','textarea','Delivery, fuel policy, cross-border, condition…']]};
+function sfIsCarHire(){
+  return !!(sfState && sfState.cat==='Cars' && /hire/i.test(String((sfState.A&&sfState.A.ltype)||'')));
+}
 function sfIsRental(){
   return !!(sfState && sfState.cat==='Property' && /rent|let/i.test(String((sfState.A&&sfState.A.ltype)||'')));
 }
@@ -20591,6 +20837,10 @@ function sfFlow(){
     return {label:b.label, aiCap:b.aiCap, priceLabel:b.priceLabel, slots:b.lmSlots[t],
       sections:[{key:'A',title:b.sections[0].title,pts:20,coach:b.sections[0].coach,rows:b.lmRowsA[t]},
                 b.sections[1], b.sections[2]], feats:b.lmFeats[t]};
+  }
+  if(sfIsCarHire()){   // CAR-HIRE-1
+    return {label:c.label, aiCap:c.aiCap, priceLabel:'Hire rate per day', priceUnit:'/ day', slots:c.slots,
+      sections:[c.sections[0], SF_CAR_HIRE_SEC_B, c.sections[2]], feats:c.feats};
   }
   // RENTAL-COSTS-1: To Rent property → tenant-cost section C replaces levies/rates
   if(sfState.cat==='Property' && sfIsRental()){
@@ -20723,7 +20973,8 @@ function sfListingFields(){   // the ONE place the flow's answers become listing
   // canonical 'For Rent'/'For Sale' the browse mapping and filters expect.
   if(A.parking) fields.garages=A.parking;
   if(A.ptype) fields.prop_type=A.ptype;
-  if(A.ltype) fields.listing_type=/rent|let/i.test(String(A.ltype))?'For Rent':'For Sale';
+  if(A.ltype) fields.listing_type=sfState.cat==='Cars' ? (/hire/i.test(String(A.ltype))?'For Hire / Rental':'For Sale')   // CAR-HIRE-1: Edit's own words
+                                                      : (/rent|let/i.test(String(A.ltype))?'For Rent':'For Sale');
   if(A.subjects) fields.subject=A.subjects;
   if(A.levels) fields.level=A.levels;
   if(A.trade) fields.service_type=A.trade;
@@ -21709,7 +21960,11 @@ function sfSpecS(secKey){
 }
 function sfUpd(scope,id,v){
   if(scope==='__root__') sfState[id]=v; else sfState[scope][id]=v;
-  if(id==='ltype' && sfState.cat==='Property'){ sfRender(); return; }  // PRICE-LABEL-1: refresh price label
+  if(id==='ltype' && (sfState.cat==='Property' || sfState.cat==='Cars')){
+    /* CAR-HIRE-1: the photo's price guess is a SALE value -- it must not stay in the box as a rate per day */
+    var _sg=String((sfState.visionDraft&&sfState.visionDraft.suggested_price)||'');
+    if(sfState.cat==='Cars' && /hire/i.test(String(v)) && _sg && String(sfState.price).trim()===_sg) sfState.price='';
+    sfRender(); return; }  // PRICE-LABEL-1 / CAR-HIRE-1: refresh price label and steps
   sfMeterUpdate();      // ONE-SCORE-1: the server's number follows as soon as it answers
   sfDraftSaveSoon();    // SF-DRAFT-KEEP-1
 }
@@ -21756,7 +22011,7 @@ var SF_LEGAL_NOTES = {
 function sfLegalCat(){
   var c = sfState.cat;
   if(c==='Property') return 'property';
-  if(c==='Cars') return 'cars';
+  if(c==='Cars') return sfIsCarHire() ? null : 'cars';   // CAR-HIRE-1: the sale paperwork (change of ownership, RC1) is not a hire's -- no card rather than the wrong one
   if(c==='Tutors') return 'tutors';
   if(c==='Services') return 'services';
   if(c==='Collectors') return 'collectors';
@@ -22212,7 +22467,7 @@ function _asProfileHtml(p,tpl){
       ? '<div style="font-size:12.5px;line-height:1.5;">'+_agency.name+
         (_agency.verified?' <span style="font-size:10px;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:2px 7px;font-weight:700;">✓ verified agency</span>':'')+
         '<div style="color:var(--text-3);margin-top:3px;">'+(_agency.listing_cap||10)+' listing slots on your seat. Your FFC and PPRA stay personal to you — every practising agent holds their own.</div></div>'
-      : '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">Not linked to an agency yet. Agencies are set up by us after verification — ask your principal to email <b>hello@trustsquare.co</b> and we will add the firm and invite each agent. Until then you are listed as an independent agent.</div>')+
+      : '<div style="font-size:12px;color:var(--text-3);line-height:1.5;">Not linked to an agency yet. Agencies are set up by us after verification — ask your principal to email <b>support@trustsquare.co</b> and we will add the firm and invite each agent. Until then you are listed as an independent agent.</div>')+
     '</div>';
   h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
     '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Your certificates</div>'+

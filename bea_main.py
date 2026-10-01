@@ -3392,6 +3392,32 @@ _GATE_VOUCH_SIGNALS = ("universal.employer_confirmed", "universal.employer_confi
 _GATE_ID_SIGNALS = ("universal.id_verified", "category.lm.id_ai_verified")
 _GATE_CLEARANCE_SIGNALS = ("category.services_cas.clearance", "category.tutors.clearance")
 _GATE_ROLES = {"casual": None, "clearance": None}
+# LICENCE-GATE-1 (30 Sep 2026, F4 story walk): RUL-156 -- a role whose work legally needs a licence or registration
+# (DoEL electrician, SAQCC gas / refrigerant, PSIRA, driving licence + PrDP) is listed at once and reachable through
+# her own link, but shown to strangers only once that licence is VERIFIED. The gate existed in the role registry and
+# nothing read it, so an electrician went public unchecked. The licence is handed in as the existing
+# 'Primary industry licence / CoC' credential, which a person now checks (_LEGAL_SIGNALS).
+_GATE_LICENCE_SIGNALS = ("category.services_tech.coc",)
+_GATE_LIC = {"roles": None}
+
+
+def _gate_licence_roles():
+    """Lowercased names (English label + aliases) of the roles whose registry gate is a licence (RUL-156)."""
+    if _GATE_LIC["roles"] is None:
+        lic = set()
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"),
+                      encoding="utf-8") as _fh:
+                for _r in json.load(_fh).get("roles", []):
+                    if (_r.get("gate") or {}).get("type") == "licence":
+                        _names = {str((_r.get("label") or {}).get("en") or "").strip().lower()}
+                        _names |= {str(_a).strip().lower() for _a in (_r.get("aliases") or [])}
+                        _names.discard("")
+                        lic |= _names
+        except Exception as _rex:
+            _log.warning("LICENCE-GATE-1: role registry unreadable (%s) -- no licence gate", _rex)
+        _GATE_LIC["roles"] = lic - _gate_role_names()[1]
+    return _GATE_LIC["roles"]
 
 
 def _gate_role_names():
@@ -3438,14 +3464,17 @@ def _stranger_hidden_sql(p: str = "l.") -> str:
     _id_on_file = ("%s IN (SELECT LOWER(TRIM(_gu.email)) FROM users _gu WHERE _gu.id_verified_at IS NOT NULL)" % who)
     clr_in = ",".join(_sql_lit(x) for x in sorted(clearance)) or "''"
     cas_in = ",".join(_sql_lit(x) for x in sorted(casual)) or "''"
+    lic_in = ",".join(_sql_lit(x) for x in sorted(_gate_licence_roles())) or "''"   # LICENCE-GATE-1 (RUL-156)
     return ("(LOWER(COALESCE(%scategory,'')) IN (%s) AND COALESCE(%sis_demo,0) = 0 AND COALESCE(%ssuper_example,0) = 0 "
             "AND COALESCE(%sshowcase,0) = 0 AND (CASE "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
             "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE 1 END) "
             "ELSE 0 END) = 1)" % (
                 p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
                 st, clr_in, _has(_GATE_CLEARANCE_SIGNALS),
+                st, lic_in, _has(_GATE_LICENCE_SIGNALS),
                 p, st, cas_in,
                 _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file))
 
@@ -5344,11 +5373,34 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
             (email,)).fetchall()}
     except Exception as _hx:
         _log.warning("HIDDEN-CASUAL-1: %s", _hx); _hid = set()
+    # CLEARANCE-CHECK-1 (F2 story walk): a nanny's card told her an employer's confirmation or an ID check opens her
+    # advert -- for the police-clearance roles neither does. Her card names her real gate and where her clearance is.
+    _clr_roles = _gate_role_names()[1]
+    try:
+        _clr = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id = ?",
+                            (email, "category.services_cas.clearance")).fetchone()
+        _clr = _clr["status"] if _clr else None
+    except Exception:
+        _clr = None
+    _lic_roles = _gate_licence_roles()
+    try:
+        _lic = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id IN (%s) "
+                            "ORDER BY CASE status WHEN 'earned' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END LIMIT 1"
+                            % ",".join("?" * len(_GATE_LICENCE_SIGNALS)), (email,) + _GATE_LICENCE_SIGNALS).fetchone()
+        _lic = _lic["status"] if _lic else None
+    except Exception:
+        _lic = None
     conn.close()
     out = []
     for r in rows:
         d = dict(r)
         d["hidden_from_strangers"] = int(d.get("id") or 0) in _hid
+        if d["hidden_from_strangers"] and (d.get("service_type") or "").strip().lower() in _clr_roles:
+            d["gate"] = "police_clearance"
+            d["clearance_status"] = _clr
+        elif d["hidden_from_strangers"] and (d.get("service_type") or "").strip().lower() in _lic_roles:
+            d["gate"] = "licence"          # LICENCE-GATE-1: her card names the licence and where it is
+            d["licence_status"] = _lic
         if (d.get("category") or "").lower() == "property":
             d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
         out.append(d)
@@ -8647,6 +8699,15 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             conn.rollback(); conn.close()
             raise HTTPException(status_code=409, detail="The seller is answering another buyer about this property. "
                                                         "It opens again as soon as they reply — within 4 days at most.")
+    # INTRO-ONCE-1 (30 Sep 2026, F3 plumber walk): one waiting request per buyer per advert. A second tap on Join queue
+    # queued her twice and held 2T for the same seller. Read under the write lock, so two quick taps cannot both pass.
+    _dup = conn.execute(
+        "SELECT id FROM intro_requests WHERE listing_id = ? AND lower(buyer_email) = lower(?) AND status = 'pending'",
+        (intro.listing_id, intro.buyer_email or "")).fetchone()
+    if _dup:
+        conn.rollback(); conn.close()
+        raise HTTPException(status_code=409, detail="You have already asked this seller. Your request is waiting for "
+                                                    "their answer, and nothing more is held.")
     _hold_balance = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?",
         (intro.buyer_email,)).fetchone()["bal"]
@@ -15673,6 +15734,14 @@ _LEGAL_SIGNALS = {
     "category.cars.dealer_reg",
     "category.travel.asata",
     "category.services.trade_licence",
+    # CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): RUL-153 opens a nanny's, caregiver's, au pair's or creche
+    # assistant's advert to strangers on a VERIFIED police clearance (STRANGER-GATE-1). Any file uploaded here
+    # auto-earned it, so a photo of anything opened the child-care gate. A person checks it first now.
+    "category.services_cas.clearance",
+    "category.tutors.clearance",
+    # LICENCE-GATE-1 (F4 story walk): a licence to practise opens a licensed trade's advert to strangers (RUL-156),
+    # so a person checks it first instead of any upload earning it.
+    "category.services_tech.coc",
 }
 # A mandate is granted per property, so it must arrive with the listing it covers.
 _PER_LISTING_SIGNALS = {"category.property.mandate"}
@@ -15866,7 +15935,9 @@ def list_seller_documents(
         "Tutors": "category.tutors.",
         "Services-Technical": "category.services_tech.",
         "Services-Casuals": "category.services_cas.",
-        "Services": "category.services_tech.",
+        # CLEARANCE-CHECK-1 (F2 walk): Edit sends "Services" for every service advert -- a nanny's police clearance
+        # (services_cas) was left out of her own list, so her upload seemed to vanish.
+        "Services": "category.services",
         "Adventures-Experiences": "category.adv_exp.",
         "Adventures-Accommodation": "category.adv_acc.",
         "Adventures": "category.adv_exp.",
@@ -17989,6 +18060,17 @@ async def onboard_step(request: Request):
     magic = 1 if body.get("magic") else 0
     ua = (request.headers.get("user-agent") or "")[:200]          # FUNNEL-HUMAN-1
     bot = 1 if _ob_is_bot(ua) else 0
+    # FUNNEL-QA-1 (30 Sep 2026, Goal run 25): our own walks are not strangers. A beacon carrying the QA key,
+    # the tester cookie (ts_review) or a QA test address is stored as bot=2 -- every reader that counts bot=0
+    # leaves it out, and it is not counted as a link scanner (bot=1) either. Measured 30 Sep: of 31 'human'
+    # Quick drafts since 1 Sep, every one came from an emulated phone in a scripted burst.
+    if not bot:
+        try:
+            if (_qa_key_ok(request) or _is_tester_cookie(request.cookies.get('ts_review'))
+                    or (email and _QA_EMAIL_RE.match(email))):
+                bot = 2
+        except Exception:
+            pass
     # SEC-GATE-1 (24 Sep 2026): the per-sid cap is caller-chosen, so also cap rows per client IP per hour.
     import time as _obt
     _ob_ip = (request.client.host if request.client else "?") or "?"
@@ -24824,15 +24906,21 @@ async def ai_yield_calc(listing_id: int, email: str,
     _check_cost_ceiling(email)    # C1 — refuse if daily cost ceiling reached
 
     def _num(v):
+        # YIELD-READ-1 (F7 walk, 30 Sep 2026): the app saves a rent as "R12 500 / month" (spaced thousands, often a
+        # no-break space) -- the old strip-and-float read that as nothing, so "Still missing a figure" came back after
+        # she had typed the purchase price. The first amount in the text is the figure.
+        m = re.search(r"\d[\d\s\u00a0\u202f,]*(?:\.\d+)?", str(v or ""))
+        if not m:
+            return None
         try:
-            return float(str(v).replace("R", "").replace(",", "")
-                         .replace("/month", "").replace("pm", "").strip())
+            return float(re.sub(r"[\s\u00a0\u202f,]", "", m.group(0)))
         except Exception:
             return None
 
     listing_amount = _num(price_raw)
     lt = listing_type.lower()
-    is_rental = ("rent" in lt) or ("rent" in (title + " " + desc).lower() and "for sale" not in lt)
+    # YIELD-READ-1: Quick files a rental as "To let" -- a let is a rental too
+    is_rental = bool(re.search(r"\b(rent|let)\b", lt)) or ("rent" in (title + " " + desc).lower() and "for sale" not in lt)
 
     # Resolve purchase_price (annual rent / monthly rent) from listing + caller input.
     monthly_rent = None
@@ -28883,7 +28971,7 @@ def qa_grant(body: _QAGrant, request: Request):
                            "AND description LIKE 'QA-CLOUD-1%' AND substr(created_at,1,10)=?", (em, today)).fetchone()["s"]
         if int(got) + amt > 20:
             raise HTTPException(status_code=429, detail="20T per QA address per day")
-        conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (em,))
+        conn.execute("INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING", (em,))   # portable: pg-ratchet (PG-RATCHET-QA-1)
         desc = "QA-CLOUD-1 tester grant — %dT%s" % (amt, (" (" + _plain_text(body.reason)[:120] + ")") if body.reason.strip() else "")
         conn.execute("INSERT INTO transactions (user_email, type, amount, description, created_at) VALUES (?, 'tester_grant', ?, ?, CURRENT_TIMESTAMP)",
                      (em, amt, desc))

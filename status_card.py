@@ -49,7 +49,11 @@ def _role_picture(listing):
         if s:
             cands.append(os.path.join(STATIC_DIR, "quick", "role_%s.jpg" % s))
     cat = _slug(listing.get("category"))
-    cands.append(os.path.join(STATIC_DIR, "quick", {"services": "role_gardener", "property": "prop_garden"}.get(cat, "room_lounge") + ".jpg"))
+    # ADV-CARD-PIC-1 (30 Sep 2026, F12 walk): a guest house's card showed a suburban lounge -- a stay or a trip now
+    # falls back to the door's own lodge / landscape picture (still never her photo: nothing is fetched off the box)
+    cands.append(os.path.join(STATIC_DIR, "quick", {"services": "role_gardener", "property": "prop_garden",
+                                                    "adventures_accommodation": "adv_lodge",
+                                                    "adventures_experiences": "adv_main"}.get(cat, "room_lounge") + ".jpg"))
     for p in cands:
         try:
             if os.path.isfile(p):

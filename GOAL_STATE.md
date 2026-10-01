@@ -5,6 +5,40 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 25 — Wed 30 Sep 2026, 20:56–21:35 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable; ssh to the server works. **The laptop checkout is 56 commits behind
+  `origin/main`** (the cloud story lane ships through GitHub) and carries uncommitted nightly files
+  (marketsquare.html v=504, STATUS.md, nightly logs); `DEPLOY_RESULT.txt` says FAILED 07:35. So this run built in a
+  fresh clone of `origin/main` and shipped through the server relay. **These GOAL files are updated on `origin/main`,
+  not in the laptop tree** — the laptop sees them when it next merges origin.
+- **Walk (Collectors, `docs/E2E_2026-09-30.md`):** stranger Home → Sell → Collectors 6 steps → score → stopped at
+  Publish (contract). Breaks: Home's Local Market tile had no words on it (fixed). Hesitation point: step 6 greets a
+  one-coin seller with dealer registration and "SEVERE PENALTIES" (GI-0006). Buyer half not walkable: Pretoria's only
+  Collectors advert is the AI demo; Local Market's only real advert is family. False red cleared: 48 h vs 96 h wording
+  agrees with the Terms.
+- **The cloud story lane walked F2–F14 end to end today** (publish, intro, accept, ~30 fixes). Its F10 walk found
+  **the OpenAI account out of credit** — confirmed: last 200 at 19:17 UTC, 429s since 19:23; photos still pass via
+  Anthropic failover; paid reports and the web fair-price check are down (GI-0009).
+- **Number: 0** (`/opt/marketsquare-src/scripts/onboarding_number.py`): 6,748 listed · 2,610 emailed · 5 registered ·
+  0 qualifying. Live adverts 103 = 85 AI examples + 18 family (Marietjie 3, Maroushka 15). **By a stranger's hand: 0.**
+  QA adverts: 0 public (all five paused 18:46Z by another lane — GI-0002 done). Rick's draft #382 (12 Sep) still a draft.
+- **Where people stop:** unknown — **the sell funnel had no people in it.** Every "human" Quick session since 1 Sep
+  that reached a draft is an emulated phone in a scripted burst (Pixel 7/8, iPhone 17_0/17_5, minutes apart).
+  FUNNEL-QA-1 now tags our own traffic bot=2 from tonight; read `/onboard/funnel` from 1 Oct.
+- **Outreach:** 28 Sep 13 sent / 1 bounce; 29 Sep **9 sent / 1 bounce**, all organisations (service companies, tour
+  operators, a collector shop). Runway 0.
+- **Shipped (39572d8, live 21:20:52Z, ms.js?v=875):** GI-0005 LM-TILE-LABEL-1 (RG-0643) and GI-0007 FUNNEL-QA-1
+  (RG-0644), both proven live, both ledger entries fail on the old tree.
+- **REVIEW NOW:** GI-0008 SO-6 rulings sweep (RUL-138, 189/191, 191(3), 144/178, 155/156 wording, 192(a) consent) ·
+  GI-0009 OpenAI credit · GI-0006 Collectors step-6 note · GI-0003 Quick card in Sell. GI-0004 overtaken by RUL-192.
+- **Contract changed (GOAL_RUN_PROMPT.md):** §2 — the cloud lane owns publish-to-accept walks; the Goal walk covers a
+  stranger's first minutes and ships from a fresh clone via the relay. §7 — rewritten for RUL-192 (no SMS sign-in).
+- **Not reached:** Local Market accept path (only real seller is family); per-wave opens/clicks; a rand figure for the
+  Anthropic failover spend. **Housekeeping:** this run's fetch left `.git/index.lock` + an old `ORIG_HEAD.lock` in the
+  laptop repo; both moved (not deleted) to `.git_stale_locks/*goalrun25*`. A stray empty `.wtest` (my write probe) is
+  in the laptop repo root — `rm` is not permitted from this shell.
+
 ## RUN 24 — Tue 29 Sep 2026, 20:56–21:3x UTC, first run under GOAL_RUN_PROMPT v2 (Opus 5.5)
 
 - **Acting:** folder mounted and writable; server reachable by ssh from the device shell.
@@ -122,6 +156,7 @@ If SSH is dead, queue it host-side: `run_py MarketSquare\scripts\onboarding_numb
 | 2026-09-27 (run 22, 23:07–00:15) | **0** | 0 | 0 | 2,588 emailed — the 26 Sep wave sent ONE letter · true sendable ZA pool ≈ 20 · a source was inventing addresses · D8 withdrawn |
 | 2026-09-28 (run 23, 23:08–01:0x) | **0** | 0 | 0 | 2,588 emailed — **the campaign was sending ZERO, both cities latched** · dashboard said 365 sendable, truth is **21** · **both latches released, gates now clear** |
 | 2026-09-29 (run 24, 20:56–21:3x) | **0** | 0 | 0 | 2,601 emailed · 28 Sep wave: 13 sent, 0 human clicks · **sendable 9, runway 0** · 5 QA adverts public |
+| 2026-09-30 (run 25, 20:56–21:35) | **0** | 0 | 0 | 2,610 emailed · 29 Sep wave 9 sent / 1 bounce · **the sell funnel held no people — all emulated QA phones** (FUNNEL-QA-1) · OpenAI out of credit 19:20Z |
 
 Target: **20 by Fri 31 Oct 2026** — 33 days. Runs 5–8, 11, 12 Fable 5.1; runs 9–10, 13–23 Opus 5.
 

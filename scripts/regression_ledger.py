@@ -32891,6 +32891,31 @@ def rg_qa_cloud_1():
     return [(INFO, "QA routes key-guarded and QA-only; cloud [ship] branches gated and shipped by the server")]
 
 
+@entry("RG-0600", "EBAY-DROP-1: eBay is no longer a price source (it rejected the developer registration; David 30 Sep: "
+       "'Lets drop eBay') -- the 1T fair-price check on Local Market and Collectors still shows, served by catalogues or by "
+       "named-shop asking prices (web_comps)", LOCKED, fixed_on="2026-09-30",
+       scope="ai_service_tiers.py DEFAULT_PROVIDERS + fair_price rows; feature_flags.py FREE_PROVIDERS; feature_flags.json.",
+       ref="Numbered RG-0600 to stay clear of the numbers the parallel cloud walks take on 30 Sep. A tier shows only if one of its "
+           "providers is live, and Local Market's only provider was ebay_browse -- switching eBay off without web_comps would have "
+           "hidden the check.")
+def rg_ebay_drop_1():
+    t = repo_file("ai_service_tiers.py"); f = repo_file("feature_flags.py"); j = repo_file("feature_flags.json")
+    if None in (t, f, j):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '"ebay_browse":     False' not in t or '"web_comps":       True' not in t:
+        bad.append("eBay is back on, or web_comps is off, in DEFAULT_PROVIDERS")
+    if '["web_comps"]),' not in t:
+        bad.append("Local Market's fair-price row no longer names web_comps -- the check would disappear")
+    if '"ebay_browse",' in f or '"web_comps",' not in f:
+        bad.append("feature_flags.py still treats eBay as a free provider, or lost web_comps")
+    if '"ebay_browse": true' in j:
+        bad.append("feature_flags.json switches eBay on")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "eBay dropped; Local Market and Collectors fair price served by catalogues or named-shop asking prices")]
+
+
 @entry("RG-0554", "SMS-DAILY-CAP-1: the server can never send more than SMS_DAILY_CAP text messages a day (default 40), counted "
        "across every worker under a file lock, and it sends nothing when it cannot count -- so a prepaid SMS balance cannot run away",
        OPEN, fixed_on="2026-09-30",
@@ -32922,7 +32947,241 @@ def rg_sms_daily_cap_1():
     return [(INFO, "SMS total capped per day (default 40), fails closed")]
 
 
-@entry("RG-0555", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
+
+@entry("RG-0555", "CLEARANCE-CHECK-1: the F2 story walk (nanny) -- a police clearance now waits for a person's check before it "
+       "opens a nanny's, caregiver's, au pair's or creche assistant's advert to strangers; her Seller Hub card names that gate "
+       "(not an employer confirmation or ID check, which do not open it) with an upload button; Edit's documents offer 'Police "
+       "clearance'; and Quick says it above Save",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py _LEGAL_SIGNALS (+ services_cas.clearance, tutors.clearance) and /listings/mine gate + clearance_status; "
+             "ms.js msHiddenCasualNote(lid, raw) / msClearanceUpload, EL_CRED_SIGNALS Services + Tutors; quick.html draft screen "
+             "(= genie/HARNESS.html).",
+       ref="F2 walk 30 Sep 2026 (docs/E2E_2026-09-30_F2.md). RUL-153: a VERIFIED police clearance opens public visibility for "
+           "the child-and-care roles. The upload auto-earned it (self-attestation), so any photo opened the gate.")
+def rg_clearance_check_1():
+    py = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if None in (py, js, q):
+        return [(FAIL, "bea_main.py, ms.js or quick.html is missing")]
+    bad = []
+    i = py.find("_LEGAL_SIGNALS = {")
+    legal = py[i:py.find("}", i)] if i >= 0 else ""
+    for sig in ('"category.services_cas.clearance"', '"category.tutors.clearance"'):
+        if sig not in legal:
+            bad.append(sig + " is auto-earned on upload again (no person checks it)")
+    if 'd["gate"] = "police_clearance"' not in py or 'd["clearance_status"]' not in py:
+        bad.append("/listings/mine no longer tells the Hub which gate holds her advert")
+    if "raw.gate === 'police_clearance'" not in js or "msHiddenCasualNote(dl.beaListingId, dl._raw)" not in js:
+        bad.append("the Hub card tells a nanny the wrong gate (employer confirmation / ID)")
+    if "['category.services_cas.clearance'," not in js or "function msClearanceUpload(" not in js:
+        bad.append("Edit has no 'Police clearance' document choice / the card's upload button is gone")
+    if '"Services": "category.services",' not in py:
+        bad.append("a nanny's own police clearance drops out of her Services document list")
+    if "status = document.getElementById('el-dh-status') || status;" not in js:
+        bad.append("Edit's upload no longer says the document went to our team")
+    if "CLEARANCE-CHECK-1" not in q or (h is not None and h != q):
+        bad.append("Quick's draft screen lost the police-clearance line (or HARNESS differs)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "police clearance checked by a person; nanny told her real gate in Quick, the Hub and Edit")]
+
+# ── F3/F4/F5 cloud story walks, 30 Sep 2026: kept here, not at the end, so parallel walks appending there do not collide ──
+@entry("RG-0601", "PRICE-PLUS-1: the F3 story walk (plumber) -- a price of two amounts ('R450 / call-out + R350 / hour + parts', "
+       "as Quick writes a trade's call-out + hourly rate) is shown as the seller gave it; it read R450,350 'per hour + parts' "
+       "on the advert",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js _priceIsCompound(); formatZAR returns it whole; _priceBasisSuffix and the mapper's per-line stay empty for it.",
+       ref="F3 walk 30 Sep 2026 (docs/E2E_2026-09-30_F3.md), advert #443: the buyer's detail price box said R450,350.")
+def rg_price_plus_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "function _priceIsCompound(p)" not in js:
+        bad.append("_priceIsCompound is gone")
+    i = js.find("function formatZAR(")
+    if i < 0 or "if (_priceIsCompound(s)) return _lmEsc(s.trim());" not in js[i:i + 2500]:
+        bad.append("formatZAR squeezes a two-amount price into one number again")
+    j = js.find("function _priceBasisSuffix(")
+    if j < 0 or "if(_priceIsCompound(p)) return '';" not in js[j:j + 300]:
+        bad.append("the basis suffix repeats the second half of a two-amount price")
+    if "per: (function(){var p=String(l.price||'');if(_priceIsCompound(p))return '';" not in js:
+        bad.append("the card's per-line repeats the second half of a two-amount price")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a call-out + hourly price shows as the seller gave it")]
+
+
+@entry("RG-0602", "INTRO-TOAST-TRUTH-1: the F3 story walk -- after Accept the seller is told the truth: both of you get an "
+       "email, reply to it to talk, your address stays private (it said the buyer's 'contact revealed', and nothing is shown)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js handleIntro accept toast.",
+       ref="F3 walk 30 Sep 2026: Pieter accepted Marietjie and looked for a number that is not on any screen.")
+def rg_intro_toast_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "'s contact revealed." in js:
+        return [(FAIL, "the accept toast says the buyer's contact is revealed again")]
+    if "both get an email now. Reply to it to talk; your email address stays private." not in js:
+        return [(FAIL, "the accept toast no longer says how the two of you talk")]
+    return [(INFO, "accept says: you both get an email")]
+
+
+@entry("RG-0603", "EDIT-AI-STRIP-1: the F3 story walk -- Edit's 'AI tools' label takes its own line on a phone (it wrapped one "
+       "word per line beside the buttons; seen in F2 too)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.css .el-ai-strip flex-wrap + p flex-basis 100%; marketsquare.html ms.css?v bump.",
+       ref="F2 report 'Not fixed, noted'; F3 walk 30 Sep 2026.")
+def rg_edit_ai_strip_1():
+    css = repo_file("ms.css")
+    if css is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if ".el-ai-strip p{flex:1 1 100%;" not in css or "display:flex;flex-wrap:wrap;align-items:center;gap:10px;}" not in css:
+        return [(FAIL, "Edit's 'AI tools' label is squeezed beside the buttons again")]
+    return [(INFO, "the AI tools label has its own line")]
+
+
+@entry("RG-0604", "INTRO-ONCE-1: the F3 story walk -- one waiting introduction request per buyer per advert; a second tap on "
+       "Join queue queued her twice and held 2T for the same seller",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py create_intro: pending (listing_id, buyer_email) read under _wallet_lock -> 409 before any hold.",
+       ref="F3 walk 30 Sep 2026, advert #443: qa-anneke0930 held 2T in two pending requests to Pieter.")
+def rg_intro_once_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = py.find("def create_intro(")
+    body = py[i:i + 9000] if i >= 0 else ""
+    d = body.find("AND lower(buyer_email) = lower(?) AND status = 'pending'")
+    lock = body.find("_wallet_lock(conn)")
+    hold = body.find("'intro_hold', -1")
+    if d < 0 or "You have already asked this seller." not in body:
+        return [(FAIL, "a buyer can queue twice on the same advert again (and 2T are held)")]
+    if lock < 0 or hold < 0 or not (lock < d < hold):
+        return [(FAIL, "the one-request check no longer runs under the wallet lock, before the hold")]
+    return [(INFO, "one waiting request per buyer per advert")]
+
+
+@entry("RG-0643", "LM-TILE-LABEL-1: Home's wide Local Market tile shows its words ('Local Market · N listings') over the "
+       "photos -- the crossfading photo layers (z-index 1 and 2) painted over the label, so a stranger saw a jar of honey "
+       "and no word saying what the tile was",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js home Local Market tile crossfade mkLayer (catBg stacking context)",
+       ref="Goal run 25 walk, 30 Sep 2026 (docs/E2E_2026-09-30.md): elementFromPoint at the label's centre returned the photo "
+           "layer, not the label; every other category tile carried its name.")
+def rg_lm_tile_label_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    i = js.find("const mkLayer = (z) => {")
+    if i < 0 or "catBg.style.zIndex = '0';" not in js[i:i + 700]:
+        return [(FAIL, "the Local Market tile's photo layers can paint over its label again")]
+    return [(INFO, "the photo layers stay inside the tile's picture, under its label")]
+
+
+@entry("RG-0644", "FUNNEL-QA-1: a sell-flow beacon from our own walks (the QA key, the tester cookie, or a QA test address) "
+       "is stored bot=2, so the stranger funnel (bot=0) stops counting our scripted phones as people",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py onboard_step bot verdict",
+       ref="Goal run 25, 30 Sep 2026: of the Quick sessions since 1 Sep the funnel called human, every one that reached a "
+           "draft came from an emulated phone (Pixel 7/8, iPhone 17_0/17_5) in a scripted burst minutes apart.")
+def rg_funnel_qa_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(FAIL, "bea_main.py is missing")]
+    i = py.find("async def onboard_step(")
+    seg = py[i:i + 4000] if i >= 0 else ""
+    if "bot = 2" not in seg or "_qa_key_ok(request)" not in seg or "_is_tester_cookie(request.cookies.get('ts_review'))" not in seg:
+        return [(FAIL, "our own walks are counted as strangers in the sell funnel again")]
+    return [(INFO, "QA and tester beacons are kept out of the stranger funnel")]
+
+
+@entry("RG-0645", "REPORT-RANGE-2: an attached Collectables report shows buyers its own range when the report writes it in the "
+       "'Market findings' table (est. range) rather than as 'Likely achieved range' or 'ESTIMATE' -- the OpenAI lane's format",
+       OPEN, fixed_on="2026-10-01",
+       scope="ripple_features.py _range_from (REPORT-ATTACH-1)",
+       ref="F10 re-walk 1 Oct 2026 after the OpenAI top-up: report ai_a4d5b725d43d stated 'R68,000-R72,500 estimated' and "
+           "listing 455 stored ai_range_text = NULL, so the buyer's badge showed no range.")
+def rg_report_range_2():
+    src = repo_file("ripple_features.py")
+    if src is None:
+        return [(FAIL, "ripple_features.py is missing")]
+    i = src.find("def _range_from"); j = src.find("class _ClaimIn")
+    ns = {}
+    try:
+        exec(src[i:j], ns)
+        got = ns["_range_from"]("## 1 \u00b7 Market findings\n| item | est. range |\n|---|---|\n| coin | **R68,000\u2013R72,500 estimated** |")
+    except Exception as e:
+        return [(FAIL, "_range_from could not be exercised: %s" % e)]
+    if got != "R68,000\u2013R72,500":
+        return [(FAIL, "an attached report's Market findings range is lost again (got %r)" % (got,))]
+    return [(INFO, "a report's Market findings range reaches the buyer's badge")]
+
+
+@entry("RG-0646", "ATTACH-PICK-LABEL-1: 'Attach report to my listing' names each advert's state and price, so a draft and its "
+       "live copy with the same title can be told apart",
+       OPEN, fixed_on="2026-10-01", scope="ms.js aiAttachPick",
+       ref="F10 re-walk 1 Oct 2026: the picker showed '1974 Krugerrand, 1 oz gold proof - Near mint' twice (#454 draft, #455).")
+def rg_attach_pick_label_1():
+    js = repo_file("ms.js")
+    i = js.find("async function aiAttachPick(") if js else -1
+    if i < 0 or "ATTACH-PICK-LABEL-1" not in js[i:i + 2600] or "Paused" not in js[i:i + 2600]:
+        return [(FAIL, "the attach picker shows identical titles with nothing to tell them apart again")]
+    return [(INFO, "the attach picker says which advert is which")]
+
+
+@entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
+       "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js handleIntro decline toast (auto_paused_intro_id decides the second sentence).",
+       ref="F3 walk 30 Sep 2026: Pieter declined a duplicate request on open-queue advert #443.")
+def rg_decline_toast_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "notified. Listing reactivated." in js:
+        return [(FAIL, "Decline says 'Listing reactivated' for every advert again")]
+    if "any Tuppence held for this request goes back to them." not in js or "(_wasHeld ? ' Your listing is open again.' : '')" not in js:
+        return [(FAIL, "the decline message lost its plain words")]
+    return [(INFO, "decline tells the truth about the listing and the held Tuppence")]
+
+
+@entry("RG-0642", "LICENCE-GATE-1: the F4 story walk (electrician) -- RUL-156 built: a role whose work the law licenses "
+       "(electrician, gas installer, air-con, CCTV, gate, locksmith, drivers, PSIRA roles) is shown to strangers only once "
+       "a person has checked its licence; the Hub card names the licence with an upload button, Edit offers 'Licence to "
+       "practise', and Quick says it above Save",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py _gate_licence_roles / _GATE_LICENCE_SIGNALS in _stranger_hidden_sql; category.services_tech.coc in "
+             "_LEGAL_SIGNALS; /listings/mine gate 'licence' + licence_status. ms.js msHiddenCasualNote licence branch, "
+             "msClearanceUpload(lid,'licence'), EL_CRED_SIGNALS Services. quick.html (= HARNESS) draft line + QI18N from "
+             "roles/quick_i18n.json.",
+       ref="F4 walk 30 Sep 2026 (docs/E2E_2026-09-30_F4.md): an electrician's advert went public with no licence asked; the "
+           "role registry carried gate 'licence' (RUL-156) and nothing read it.")
+def rg_licence_gate_1():
+    py = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if None in (py, js, q):
+        return [(FAIL, "bea_main.py, ms.js or quick.html is missing")]
+    bad = []
+    if '_GATE_LICENCE_SIGNALS = ("category.services_tech.coc",)' not in py or "def _gate_licence_roles():" not in py:
+        bad.append("the licence gate's roles / signal are gone")
+    i = py.find("def _stranger_hidden_sql(")
+    if i < 0 or "st, lic_in, _has(_GATE_LICENCE_SIGNALS)," not in py[i:i + 3500]:
+        bad.append("strangers see a licensed role's advert before its licence is checked again")
+    j = py.find("_LEGAL_SIGNALS = {")
+    if j < 0 or '"category.services_tech.coc",' not in py[j:py.find("}", j)]:
+        bad.append("a licence upload is self-earned again (no person checks it)")
+    if 'd["gate"] = "licence"' not in py:
+        bad.append("/listings/mine no longer tells the Hub the licence holds the advert")
+    if "raw.gate === 'licence'" not in js or "['category.services_tech.coc', 'Licence to practise" not in js:
+        bad.append("the Hub card / Edit no longer ask for the licence")
+    if "once your licence is verified in TrustSquare." not in q or (h is not None and h != q):
+        bad.append("Quick's draft screen lost the licence line (or HARNESS differs)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a licensed trade is public only once a person has checked its licence (RUL-156)")]
+
+
+@entry("RG-0556", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
        "a customer does in the app -- no sign-in codes, no Buzz, relay, listing-live or low-balance messages; Quick offers no Phone option",
        OPEN, fixed_on="2026-09-30",
        scope="sms_provider.py SMS_PURPOSES gate at the top of send(); bea_main.py _sms_key_seller returns 'skipped'.",
@@ -32954,6 +33213,449 @@ def rg_sms_codes_only_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "our SMS account is outreach-only; the app sends none")]
+
+@entry("RG-0558", "PRICE-CARD-1: the F6 story walk (house for sale) -- Quick's search results show a price saved as bare digits "
+       "the way the AI examples beside it are ('R2 450 000', not '2450000'), and a property to let says 'a month'",
+       OPEN, fixed_on="2026-09-30",
+       scope="quick.html drawLookup paint() cardPrice (= genie/HARNESS.html); 'a month' in roles/quick_i18n.json (QI18N is generated from it).",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Elsabe's house showed '2450000' between 'R 3 450 000' and "
+           "'R4 250 000'; every live Pretoria rental read '13990' with no currency and no period.")
+def rg_price_card_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(FAIL, "quick.html is missing")]
+    bad = []
+    if "+E(cardPrice(l))+" not in q or "var cardPrice=function(l)" not in q:
+        bad.append("Quick's result cards print the raw price again")
+    if '"a month": {"af": "per maand"' not in q:
+        bad.append("'a month' lost its translations")
+    if "pr.replace(/\\s*\\/\\s*month$/i, ' '+T('a month'))" not in q:
+        bad.append("a rent saved as 'R12 500 / month' reads differently from its neighbours")
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick's result cards show R2 450 000 and 'a month' for a let")]
+
+
+@entry("RG-0557", "VEHICLE-PROV-1: the F8 story walk (bakkie for sale) -- the confirm-your-vehicle screen before Go live only "
+       "calls a value 'AI draft' (and only warns 'these were read from your photos') when the AI really read it off the photos; "
+       "what the seller typed in Quick or Edit shows 'You entered'",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js sobRenderAttest(): chip is 'AI draft' only for _prov == 'ai_guess'; marketsquare.html #sob-attest-ai-note "
+             "is hidden when no value is an AI guess.",
+       ref="F8 cloud walk 30 Sep 2026: Johan typed make, model, year, mileage and colour into Edit; the Go-live screen said "
+           "'These were read from your photos' with every value marked 'AI draft'. Values with no provenance are hers.")
+def rg_vehicle_prov_1():
+    ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    f = ms.find("function sobRenderAttest(")
+    body = ms[f:f + 2500] if f >= 0 else ""
+    if "data.prov[k]==='ai_guess'" not in body or "const chip = !_ai(k)" not in body:
+        bad.append("values she typed are labelled 'AI draft' again")
+    if "sob-attest-ai-note" not in body or 'id="sob-attest-ai-note"' not in h:
+        bad.append("the 'read from your photos' warning shows when nothing was read from photos")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "only real AI guesses are called AI draft on the vehicle confirm screen")]
+
+
+@entry("RG-0559", "ASKING-PRICE-1: the F6 story walk (house for sale) -- Quick's Property door asks her asking price (or, to "
+       "let, the rent a month) as its last question; it was the one door that never asked a price, so a house went live with none",
+       OPEN, fixed_on="2026-09-30",
+       scope="quick.html isAsk/drawAsk + the flow() wrapper that adds a last 'price' step (after the area, so the currency is known) for Property sell "
+             "(= genie/HARNESS.html); the two questions and notes in roles/quick_i18n.json (QI18N is generated from it); UNITS af ' / month'.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): the door says 'A few taps and your price'; House -> To sell -> "
+           "3 -> Centurion saved 'House -- To sell' with no price, and the buyer's 'Is this a fair price?' had nothing to check.")
+def rg_asking_price_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(FAIL, "quick.html is missing")]
+    bad = []
+    for need in ("function isAsk(s){ return !!(s && s.key==='price' && mode==='sell' && cat().key==='property'); }",
+                 "if(isAsk(s)){ drawAsk(s); return; }", "var _flAsk=flow;",
+                 "'What is the rent a month?':'What is your asking price?'", "money(cc,a)+(rent?' / month':'')"):
+        if need not in q:
+            bad.append("missing: " + need[:50])
+    if '"What is your asking price?": {"af": "Wat is jou vraprys?"' not in q:
+        bad.append("the price question lost its translations")
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Quick asks a property seller her price (or rent a month) after the area")]
+
+@entry("RG-0571", "ID-LIVE-CARD-1: the F8 story walk -- the 'You're live' card no longer tells a seller with no checked ID that "
+       "buyers can only send introductions once her ID is verified; since RUL-188 introductions arrive and the buyer is warned",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js publish success (sob-success-sub) for a seller whose /id-status has no green tick.",
+       ref="F8 cloud walk 30 Sep 2026 (Johan, bakkie #444): the card read 'Buyers can send you introductions once your ID is "
+           "verified'; _seller_intro_gate() refuses nothing since ID-NEVER-BLOCKS-1 (RUL-188, David 27 Sep 2026).")
+def rg_id_live_card_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "Buyers can send you introductions once your ID is verified" in ms:
+        return [(FAIL, "the live card says introductions wait for her ID again (untrue since RUL-188)")]
+    if "Your listing is live and buyers can send you introductions." not in ms:
+        return [(FAIL, "the live card no longer tells her introductions can arrive")]
+    return [(INFO, "the live card tells the truth about the ID: a buyer warning, not a hold")]
+
+
+@entry("RG-0572", "CAR-DOSSIER-DOOR-1: the F8 story walk -- a buyer looking at a car for sale is offered the Car Purchase "
+       "Dossier (3T) on the advert itself, filled in with that car; it used to live only on the AI Features screen behind the Wallet",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js carDossierDoor()/carDossierOpen() on the Cars detail; carDeal carries listing_type so hire adverts do not offer it.",
+       ref="F8 cloud walk 30 Sep 2026 (Pieter, bakkie #444): the advert offered no dossier and no price check (the 1T fair price "
+           "is hidden until 8 comparable cars are listed -- by design); CLOUD_WALK F8 requires the buyer to reach the 3T dossier.")
+def rg_car_dossier_door_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "${l.cat==='Cars' ? carDossierDoor(l) : ''}" not in ms:
+        bad.append("the car detail no longer offers the Car Purchase Dossier")
+    f = ms.find("function carDossierOpen(")
+    body = ms[f:f + 900] if f >= 0 else ""
+    if "aiSel('car_dossier')" not in body or "set('vehicle'" not in body:
+        bad.append("the dossier no longer opens filled in with the car")
+    g = ms.find("function carDossierDoor(")
+    if "/hire|rent/i.test(l.carDeal" not in ms[g:g + 400]:
+        bad.append("a hire advert offers a purchase dossier")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a car for sale offers its own Car Purchase Dossier")]
+@entry("RG-0560", "ADV-ENV-1: the F12 story walk (a guest house) -- a stay is found by place AND environment: the Sell flow asks "
+       "'Environment' for stays and experiences, the advert keeps it, and the buyer's Environment filter finds it (it found no live "
+       "advert at all); stay cards say 'Stays' (every live stay said 'Experiences'); the stays types include chalet, hostel, camp "
+       "site and mountain hut",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js SF_FLOWS Adventures (env row, ptype options), _msDescLine/_advEnvKey + _msMapBeaListing environment_type / "
+             "accommodation_type, advCatLabel + detail catDisplayLabel read advType, the type-pin filter reads advType "
+             "(the you're-live ID note it also found is ID-LIVE-CARD-1, RG-0571.)",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Riana picked 'Farm & Rural' and got 'No Adventures yet' -- the "
+           "listing mapper never set environment_type and the Sell flow never asked it.")
+def rg_adv_env_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if js.count("['env','Environment','select'") < 2:
+        bad.append("the Sell flow no longer asks a stay's / experience's environment")
+    if "environment_type: l.environment_type || _msDescLine(desc, ['Environment'])" not in js:
+        bad.append("a live advert's environment never reaches the buyer's Environment filter")
+    if "Chalet|Hostel|Self-catering|Camp site|Mountain hut" not in js:
+        bad.append("the stays types lost chalet / hostel / camp site / mountain hut")
+    if "((l.advType||'')+' '+(l.cat||'')).toLowerCase().includes('accommodation')" not in js:
+        bad.append("live stay cards say 'Experiences' again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "stays found by place and environment; stay cards say Stays")]
+
+@entry("RG-0580", "AREA-DOSSIER-LINK-1: the F6 story walk (house for sale) -- a property advert for sale offers the buyer the "
+       "Property Area Dossier (3T) and opens it with the advert filled in; before, it was only under Wallet > AI features",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js detail sheet (after the yield box, live mode, Property not to rent) + msAreaDossier(id); marketsquare.html ms.js?v bump.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): the walk's own brief says the buyer runs the Area Dossier; "
+           "from the advert there was no way to it.")
+def rg_area_dossier_link_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "onclick=\"msAreaDossier('${id}')\"" not in js:
+        bad.append("the property advert no longer offers the Area Dossier")
+    if "async function msAreaDossier(id){" not in js or "aiSel('property_dossier')" not in js:
+        bad.append("msAreaDossier no longer opens the dossier")
+    if "!DEMO_MODE && l.cat==='Property' && l.listingType!=='rent'" not in js:
+        bad.append("the link lost its demo / to-rent guard")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a house for sale offers its Area Dossier from the advert")]
+
+
+@entry("RG-0581", "DOSSIER-REF-1: the F6 story walk (house for sale) -- a dossier asked for a listing number (bea_446, #446, "
+       "446 -- the form's own example format) is sent the advert's facts (what, suburb, city, country, asking price), not the "
+       "bare number the report service cannot look up",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js aiListingRef(v), called in aiRun for params.listing and by msAreaDossier so she sees what is sent.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Jacoba's Property Area Dossier for 'bea_446' said the area "
+           "'could not be matched to a publicly identifiable suburb' and still cost 3T. The charge on a no-data report is "
+           "the /ai service's (not in this repo) -- parked for David.")
+def rg_dossier_ref_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "async function aiListingRef(v){" not in js:
+        bad.append("aiListingRef is gone")
+    if "if (params.listing) params.listing = await aiListingRef(params.listing);" not in js:
+        bad.append("aiRun sends a bare listing number to the report service again")
+    if "el.value = await aiListingRef(id);" not in js:
+        bad.append("the advert's dossier button no longer shows her what is sent")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a listing number reaches the dossier as the advert's own place and facts")]
+@entry("RG-0605", "INTRO-MSG-1: the F12 story walk (a guest house) -- the seller reads the buyer's message before she answers: "
+       "My Space's Intros list and Open actions show it under the request (it reached the server and her email, never the screen)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js msIntroMsg() in msRenderIntroList (received) and msRenderOpenActions; .ms-intro-item wraps.",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Riana asked 'Is breakfast served on Sunday too?'; Elsabe's "
+           "Intros tab showed 'Riana - Guest house' with Accept and Decline and nothing else.")
+def rg_intro_msg_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "function msIntroMsg(i, dir){" not in js:
+        bad.append("msIntroMsg is gone")
+    if "+chip+hired+withdraw+answer+msIntroMsg(i, dir)+" not in js:
+        bad.append("the Intros list no longer shows the buyer's message")
+    if "+'</div>'+msIntroMsg(i, 'received')+'</div>';" not in js:
+        bad.append("Open actions no longer shows the buyer's message")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the seller sees the buyer's message before Accept / Decline")]
+
+
+@entry("RG-0582", "MY-INTROS-1: the F6 story walk (house for sale) -- the Hub's My Requests lists the introductions the "
+       "signed-in buyer asked for, from the server, each with where it stands (waiting / accepted -- check your email / "
+       "declined or no answer -- nothing was charged); it said 'No requests yet' after an accepted introduction",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js renderMyRequests -> msMyIntros(el, empty) reading GET /intros?status=all&buyer_email= (session-scoped "
+             "by SEC-GATE-1); live mode only.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md): Jacoba's request for #446 was accepted; My Requests read only "
+           "this phone's wishlist/acceptedIntros memory.")
+def rg_my_intros_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "async function msMyIntros(el, empty){" not in js:
+        bad.append("msMyIntros is gone")
+    if js.count("msMyIntros(el, ") < 2:
+        bad.append("My Requests no longer asks the server for her introductions")
+    if "'/intros?status=all&buyer_email='" not in js:
+        bad.append("the introductions no longer come from the server")
+    if "if(DEMO_MODE || !BEA_ENABLED) return;" not in js[js.find("async function msMyIntros"):][:200]:
+        bad.append("msMyIntros lost its demo guard")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "My Requests shows the buyer's own introductions and where each stands")]
+
+
+
+@entry("RG-0606", "ADV-CARD-PIC-1: the F12 story walk (a guest house) -- a stay's or a trip's WhatsApp Status card shows the door's "
+       "lodge or landscape picture, not a suburban lounge",
+       OPEN, fixed_on="2026-09-30",
+       scope="status_card.py _role_picture() category fallback (adventures_accommodation -> adv_lodge, adventures_experiences -> adv_main).",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Elsabe's Share to Status card for a thatched guest house outside "
+           "Cullinan showed room_lounge -- a lounge with a jacaranda garden. The card never fetches her own photo (by design).")
+def rg_adv_card_pic_1():
+    sc = repo_file("status_card.py")
+    if sc is None:
+        return [(FAIL, "status_card.py is missing")]
+    if '"adventures_accommodation": "adv_lodge"' not in sc or '"adventures_experiences": "adv_main"' not in sc:
+        return [(FAIL, "a stay's Status card falls back to the suburban lounge picture again")]
+    return [(INFO, "stays and trips get the lodge / landscape picture on their Status card")]
+
+
+@entry("RG-0573", "PHOTO-TERMS-TOAST-1: the F8 story walk -- a first-time seller who adds a photo in Edit before signing the seller "
+       "terms is told to tap Save Changes and accept the terms to keep it, not 'Photo added but NOT saved -- EULA not accepted'",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js Edit photo auto-save refusal toast; other refusal reasons still show 'NOT saved' with the server's reason.",
+       ref="F8 cloud walk 30 Sep 2026 (Johan, bakkie #444/#448): the photo stayed and was saved with Save Changes after the terms, "
+           "but the toast said it was not saved.")
+def rg_photo_terms_toast_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "Photo added. Tap Save Changes and accept the seller terms to keep it." not in ms or "/eula|terms/i.test(_sd)" not in ms:
+        return [(FAIL, "a photo added before the terms is reported as lost again")]
+    return [(INFO, "a photo added before the terms says how to keep it")]
+
+
+@entry("RG-0583", "PROP-STORY-1: the F6 story guide -- House for sale, walked live and told in five languages at "
+       "/help/property_house; its Area Dossier step is a 3T report step (3T_report, via STORY-REPORT-COST-1)",
+       OPEN, fixed_on="2026-09-30",
+       scope="stories/property_house.json (+ gallery.json, the manifest block); the NT_report cost comes from the F8 "
+             "session's STORY-REPORT-COST-1 in stories/help.html and scripts/build_help.py.",
+       ref="F6 walk 30 Sep 2026 (docs/E2E_2026-09-30_F6.md). Faults found are RG-0558/0559/0580/0581/0582.")
+def rg_prop_story_1():
+    h = repo_file("stories/help.html"); b = repo_file("scripts/build_help.py"); s = repo_file("stories/property_house.json")
+    if None in (h, b, s):
+        return [(FAIL, "help.html, build_help.py or property_house.json is missing")]
+    bad = []
+    if "T_report$/" not in h or "T_report" not in b:
+        bad.append("the guide or build_help no longer knows a paid report step (NT_report)")
+    if '"type": "property_house"' not in s or '"3T_report"' not in s:
+        bad.append("the F6 story lost its type or its dossier step")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "/help/property_house: the house-for-sale guide, dossier step marked 3T")]
+
+
+@entry("RG-0584", "YIELD-READ-1: the F7 story walk (flat to let) -- the Yield Estimate reads a rent saved as 'R12 500 / "
+       "month' (spaced thousands, no-break space) and counts a 'To let' listing as a rental; after she typed the purchase "
+       "price it answered 'Still missing a figure -- nothing charged'",
+       OPEN, fixed_on="2026-09-30",
+       scope="bea_main.py ai_yield_calc: _num() takes the first amount in the text; is_rental matches rent|let.",
+       ref="F7 walk 30 Sep 2026 (docs/E2E_2026-09-30_F7.md): Wilhelmina's #449 'R12\\u00a0500 / month', listing_type 'To let'.")
+def rg_yield_read_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(FAIL, "bea_main.py is missing")]
+    i = py.find('@app.post("/listings/{listing_id}/yield-calc")')
+    body = py[i:i + 6000] if i >= 0 else ""
+    bad = []
+    if "YIELD-READ-1" not in body or 'm = re.search(r"\\d[\\d\\s\\u00a0\\u202f,]*(?:\\.\\d+)?", str(v or ""))' not in body:
+        bad.append("the yield calc no longer reads 'R12 500 / month'")
+    if 're.search(r"\\b(rent|let)\\b", lt)' not in body:
+        bad.append("a 'To let' listing is taken for a sale again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the Yield Estimate reads a spaced rent and knows a let is a rental")]
+
+
+
+@entry("RG-0607", "ADV-LEVEL-SEASON-1: the F13 story walk (a guided bush walk) -- an experience says how hard it is and when it "
+       "is best: the Sell flow asks 'Best season' beside 'Fitness level', and the card and the advert show them (difficulty was "
+       "one line in a long list; season was never asked)",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js SF_FLOWS Adventures experiences (season row), _msMapBeaListing difficulty / season, _advSeasonText, the "
+             "advert's adv-stat-strip and the Adventures card.",
+       ref="F13 walk 30 Sep 2026 (docs/E2E_2026-09-30_F13.md): Lerato opened Mpho's walk and read 'Fitness level: Moderate' "
+           "tenth in a list; 'best in winter' was only there because Mpho happened to type it.")
+def rg_adv_level_season_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    bad = []
+    if "['season','Best season','select','All year|Summer|Autumn|Winter|Spring']" not in js:
+        bad.append("the Sell flow no longer asks an experience's best season")
+    if "season: l.season || _msDescLine(desc, ['Best season'])" not in js or "difficulty: l.difficulty ||" not in js:
+        bad.append("a live experience's difficulty / season never reach the page")
+    if "level-stat" not in js or "season-stat" not in js:
+        bad.append("the advert no longer shows difficulty and season")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "experiences show difficulty and best season")]
+
+
+@entry("RG-0574", "CAR-HIRE-1: the F9 story walk (vehicle for hire) -- Sell's guided Cars flow asks 'For sale or for hire?'; "
+       "for hire the price is a day rate and the Condition step asks the hire terms (deposit, shortest hire, free km, who may drive), "
+       "which the advert shows; the buyer's page labels the price 'For hire - hire rate'",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js SF_CATS.Cars row ltype, SF_CAR_HIRE_SEC_B, sfIsCarHire()/sfFlow(), sfListingFields() listing_type "
+             "'For Hire / Rental' (Edit's words), sfUpd re-render, detail price label via carDeal.",
+       ref="F9 cloud walk 30 Sep 2026 (Tebogo): the guided Sell had no hire choice at all (Property has Listing type), and a car "
+           "set to hire in Edit showed a plain 'Price' with no terms -- the flow's proof 'hire terms shown' could not pass.")
+def rg_car_hire_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "['ltype','For sale or for hire?','select','For Sale|For Hire']" not in ms:
+        bad.append("Sell no longer asks whether the car is for sale or for hire")
+    if "var SF_CAR_HIRE_SEC_B" not in ms or "if(sfIsCarHire()){" not in ms or "priceUnit:'/ day'" not in ms:
+        bad.append("a car for hire no longer gets a day rate and the hire-terms step")
+    if "'For Hire / Rental':'For Sale')" not in ms:
+        bad.append("a car for hire is stored as For Sale")
+    if "if(c==='Cars') return sfIsCarHire() ? null : 'cars';" not in ms:
+        bad.append("a car for hire is shown the sale paperwork (change of ownership) again")
+    if "if(to==='agents' && sfIsCarHire()) return 'scorecard';" not in ms:
+        bad.append("a car for hire is offered a car sales agent again")
+    if "if(sfState.cat==='Cars' && /hire/i.test(String(v)) && _sg && String(sfState.price).trim()===_sg) sfState.price='';" not in ms:
+        bad.append("the photo's sale-price guess stays in the day-rate box of a car for hire")
+    if "'🔑 For hire · hire rate' : 'Price'" not in ms:
+        bad.append("the buyer's page no longer says the car is for hire")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a car for hire is listed, priced and shown as a hire")]
+
+
+@entry("RG-0608", "AGENCY-APPLY-1: the F14 story walk (agency-listed) -- an agency, operator, dealership or placement agency with "
+       "no organisation on TrustSquare yet is shown how to apply ('Apply by email', support@trustsquare.co) instead of a dead end "
+       "that said 'set up on application' and named no way to apply",
+       OPEN, fixed_on="2026-09-30",
+       scope="ms.js _agencyCreateHtml() non-superuser branch.",
+       ref="F14 walk 30 Sep 2026 (docs/E2E_2026-09-30_F14.md): Margaret, an estate agent, opened ?agency=1 and read 'No agency "
+           "is linked to this account yet. Agencies are set up by TrustSquare on application.' -- nothing else on the screen.")
+def rg_agency_apply_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    i = js.find("function _agencyCreateHtml(")
+    body = js[i:i + 3000] if i >= 0 else ""
+    if "mailto:support@trustsquare.co" not in body or "Apply by email" not in body:
+        return [(FAIL, "the agency console's no-agency screen names no way to apply again")]
+    if "ask your principal to email <b>support@trustsquare.co</b>" not in js:
+        return [(FAIL, "the Agent Hub sends agencies to a different address than the console does")]
+    return [(INFO, "an organisation without an agency is shown how to apply")]
+
+@entry("RG-0575", "ITEM-HINT-1: the F10 story walk (collectors) -- Quick's 'What exactly is it?' box on a Collectors advert gives a "
+       "collector's example (1974 Krugerrand, 1 oz gold) in every Quick language, not 'Raw honey, 500 g jar'",
+       OPEN, fixed_on="2026-09-30",
+       scope="quick.html (= genie/HARNESS.html) #qpitem placeholder by door; roles/quick_i18n.json carries the new line in every Quick "
+             "language (QI18N block regenerated, nothing lost).",
+       ref="F10 cloud walk 30 Sep 2026 (Siyabonga, coins): the example on his coin advert was honey.")
+def rg_item_hint_1():
+    q = repo_file("quick.html"); src = repo_file("roles/quick_i18n.json")
+    if None in (q, src):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "cat().key==='collectors' ? 'What exactly is it? e.g. 2000 Krugerrand, 1 oz gold'" not in q:
+        bad.append("a collector is shown the honey example again")
+    if '"What exactly is it? e.g. 2000 Krugerrand, 1 oz gold"' not in src:
+        bad.append("the collector's example has no translations in roles/quick_i18n.json")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a collector's item gets a collector's example")]
+
+
+@entry("RG-0585", "FLAT-STORY-1: the F7 story guide -- Flat to let, walked live and told in five languages at "
+       "/help/property_flat: Quick asks the rent a month, the landlord's Yield Estimate (1T, only when a yield is worked "
+       "out), a tenant's free rent check, her introduction and the accept",
+       OPEN, fixed_on="2026-09-30",
+       scope="stories/property_flat.json (+ gallery.json, the manifest block).",
+       ref="F7 walk 30 Sep 2026 (docs/E2E_2026-09-30_F7.md). Faults found are RG-0584 and the RG-0558 follow-up.")
+def rg_flat_story_1():
+    s = repo_file("stories/property_flat.json")
+    if s is None:
+        return [(FAIL, "stories/property_flat.json is missing")]
+    bad = []
+    if '"type": "property_flat"' not in s or '"flow": "F7"' not in s:
+        bad.append("the F7 story lost its type or flow")
+    if '"img": "f7_14_yield"' not in s or '"1T_report"' not in s:
+        bad.append("the Yield Estimate step is gone")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "/help/property_flat: the flat-to-let guide")]
+
+@entry("RG-0576", "COL-REPORT-DOOR-1: the F10 story walk (collectors) -- Edit's AI tools offer a Collectors seller the "
+       "Collectables Advert + Market Report (5T), filled in with his item and price; it lived only behind Wallet -> AI Features",
+       OPEN, fixed_on="2026-09-30",
+       scope="marketsquare.html #el-colreport-btn; ms.js shows it for a Collectors advert and elOpenColReport() opens AI Features "
+             "with collectables_advert chosen and items/asking filled.",
+       ref="F10 cloud walk 30 Sep 2026 (Siyabonga, 1974 Krugerrand priced R4 800): nothing on his advert or in Edit pointed him "
+           "to the report that tells him what it is worth.")
+def rg_col_report_door_1():
+    ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'id="el-colreport-btn" onclick="elOpenColReport()"' not in h:
+        bad.append("Edit no longer offers the Collectables report")
+    f = ms.find("async function elOpenColReport(")
+    if f < 0 or "aiSel('collectables_advert')" not in ms[f:f + 800]:
+        bad.append("the report no longer opens filled in with his item")
+    if "colBtn.style.display = elCurrentCat.toLowerCase().startsWith('collect')" not in ms:
+        bad.append("the report button shows on the wrong adverts")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a collector can order his market report from Edit")]
 
 
 if __name__ == "__main__":

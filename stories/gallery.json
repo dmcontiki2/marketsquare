@@ -2,6 +2,138 @@
  "generated_by": "scripts/build_help.py",
  "stories": [
   {
+   "type": "adventures_guest_house",
+   "status": "draft",
+   "flow": "F12",
+   "label": {
+    "en": "Guest house",
+    "af": "Gastehuis",
+    "zu": "Indlu yezivakashi",
+    "xh": "Indlu yeendwendwe",
+    "nso": "Ntlo ya baeng"
+   },
+   "title": {
+    "en": "Guest house: from listing to the guests who find you",
+    "af": "Gastehuis: van advertensie tot die gaste wat jou vind",
+    "zu": "Indlu yezivakashi: kusukela esikhangisweni kuya ezivakashini ezikutholayo",
+    "xh": "Indlu yeendwendwe: ukusuka kwintengiso ukuya kwiindwendwe ezikufumanayo",
+    "nso": "Ntlo ya baeng: go tloga papatšong go ya go baeng bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 19,
+   "cover": "f12_01_sell"
+  },
+  {
+   "type": "adventures_guided_walk",
+   "status": "draft",
+   "flow": "F13",
+   "label": {
+    "en": "Guided walk",
+    "af": "Begeleide staptog",
+    "zu": "Uhambo oluholwayo",
+    "xh": "Uhambo olukhokelwayo",
+    "nso": "Leeto le le hlahlwago"
+   },
+   "title": {
+    "en": "Guided walk: from listing to the guests who book you",
+    "af": "Begeleide staptog: van advertensie tot die gaste wat jou bespreek",
+    "zu": "Uhambo oluholwayo: kusukela esikhangisweni kuya ezivakashini ezikubhukhayo",
+    "xh": "Uhambo olukhokelwayo: ukusuka kwintengiso ukuya kwiindwendwe ezikubhukishayo",
+    "nso": "Leeto le le hlahlwago: go tloga papatšong go ya go baeng bao ba go beeletšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 19,
+   "cover": "f13_01_sell"
+  },
+  {
+   "type": "cars_bakkie",
+   "status": "draft",
+   "flow": "F8",
+   "label": {
+    "en": "Bakkie for sale",
+    "af": "Bakkie te koop",
+    "zu": "I-bakkie edayiswayo",
+    "xh": "Ibhakkie ethengiswayo",
+    "nso": "Bakkie ye e rekišwago"
+   },
+   "title": {
+    "en": "Selling a car: from Quick to your first buyer",
+    "af": "Verkoop 'n motor: van Quick tot jou eerste koper",
+    "zu": "Ukuthengisa imoto: kusukela ku-Quick kuya kumthengi wakho wokuqala",
+    "xh": "Ukuthengisa imoto: ukusuka kwi-Quick ukuya kumthengi wakho wokuqala",
+    "nso": "Go rekiša koloi: go tloga go Quick go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 22,
+   "cover": "f8_01_door"
+  },
+  {
+   "type": "cars_for_hire",
+   "status": "draft",
+   "flow": "F9",
+   "label": {
+    "en": "Car for hire",
+    "af": "Motor te huur",
+    "zu": "Imoto eqashwayo",
+    "xh": "Imoto eqeshwayo",
+    "nso": "Koloi ye e hirišwago"
+   },
+   "title": {
+    "en": "Hiring out a car: from Sell to your first hirer",
+    "af": "Verhuur 'n motor: van Sell tot jou eerste huurder",
+    "zu": "Ukuqashisa imoto: kusukela ku-Sell kuya kumqashi wakho wokuqala",
+    "xh": "Ukuqeshisa imoto: ukusuka kwi-Sell ukuya kumqeshi wakho wokuqala",
+    "nso": "Go hiriša koloi: go tloga go Sell go ya go mohiri wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 19,
+   "cover": "f9_01_sell"
+  },
+  {
+   "type": "collectors_coins",
+   "status": "draft",
+   "flow": "F10",
+   "label": {
+    "en": "Coins",
+    "af": "Munte",
+    "zu": "Izinhlamvu zemali",
+    "xh": "Iingqekembe",
+    "nso": "Ditšhelete tša tshipi"
+   },
+   "title": {
+    "en": "Selling a collector's piece: from Quick to your first collector",
+    "af": "Verkoop 'n versamelstuk: van Quick tot jou eerste versamelaar",
+    "zu": "Ukuthengisa into yomqoqi: kusukela ku-Quick kuya kumqoqi wakho wokuqala",
+    "xh": "Ukuthengisa into yomqokeleli: ukusuka kwi-Quick ukuya kumqokeleli wakho wokuqala",
+    "nso": "Go rekiša selo sa mokgobokedi: go tloga go Quick go ya go mokgobokedi wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 22,
+   "cover": "f10_01_door"
+  },
+  {
+   "type": "electrician",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Electrician",
+    "af": "Elektrisiën",
+    "zu": "Usogesi",
+    "xh": "Umbane-ngcali",
+    "nso": "Radielektriki"
+   },
+   "title": {
+    "en": "Electrician: from listing to the customers who can find you",
+    "af": "Elektrisiën: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Usogesi: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umbane-ngcali: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Radielektriki: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door"
+  },
+  {
    "type": "home_cleaner",
    "status": "draft",
    "flow": "F1",
@@ -44,6 +176,116 @@
    "walked_on": "2026-09-29",
    "steps": 20,
    "cover": "lm_01_door"
+  },
+  {
+   "type": "nanny",
+   "status": "draft",
+   "flow": "F2",
+   "label": {
+    "en": "Nanny",
+    "af": "Kinderoppasser",
+    "zu": "Umzanyana",
+    "xh": "Umgcini-bantwana",
+    "nso": "Mohlokomedi wa bana"
+   },
+   "title": {
+    "en": "Nanny: from listing to the families who can find you",
+    "af": "Kinderoppasser: van advertensie tot die gesinne wat jou kan vind",
+    "zu": "Umzanyana: kusukela esikhangisweni kuya emindenini engakuthola",
+    "xh": "Umgcini-bantwana: ukusuka kwintengiso ukuya kwiintsapho ezinokukufumana",
+    "nso": "Mohlokomedi wa bana: go tloga papatšong go ya go malapa ao a ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 18,
+   "cover": "f2_01_door"
+  },
+  {
+   "type": "plumber",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Plumber",
+    "af": "Loodgieter",
+    "zu": "Umkhandi wamapayipi",
+    "xh": "Umlungisi wemibhobho",
+    "nso": "Mošomi wa dipeipi"
+   },
+   "title": {
+    "en": "Plumber: from listing to your first customer",
+    "af": "Loodgieter: van advertensie tot jou eerste kliënt",
+    "zu": "Umkhandi wamapayipi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungisi wemibhobho: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mošomi wa dipeipi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door"
+  },
+  {
+   "type": "property_flat",
+   "status": "draft",
+   "flow": "F7",
+   "label": {
+    "en": "Flat to let",
+    "af": "Woonstel te huur",
+    "zu": "Ifulethi eqashiswayo",
+    "xh": "Iflethi eqeshiswayo",
+    "nso": "Folete ye e hirišwago"
+   },
+   "title": {
+    "en": "Flat to let: from listing to the tenant who asks for you",
+    "af": "Woonstel te huur: van advertensie tot die huurder wat na jou vra",
+    "zu": "Ifulethi eqashiswayo: kusukela esikhangisweni kuya kumqashi okucelayo",
+    "xh": "Iflethi eqeshiswayo: ukusuka kwintengiso ukuya kumqeshi okucelayo",
+    "nso": "Folete ye e hirišwago: go tloga papatšong go ya go mohiri yo a go kgopelago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 23,
+   "cover": "f7_01_door"
+  },
+  {
+   "type": "property_house",
+   "status": "draft",
+   "flow": "F6",
+   "label": {
+    "en": "House for sale",
+    "af": "Huis te koop",
+    "zu": "Indlu edayiswayo",
+    "xh": "Indlu ethengiswayo",
+    "nso": "Ntlo ye e rekišwago"
+   },
+   "title": {
+    "en": "House for sale: from listing to the buyer who asks for you",
+    "af": "Huis te koop: van advertensie tot die koper wat na jou vra",
+    "zu": "Indlu edayiswayo: kusukela esikhangisweni kuya kumthengi okucelayo",
+    "xh": "Indlu ethengiswayo: ukusuka kwintengiso ukuya kumthengi okucelayo",
+    "nso": "Ntlo ye e rekišwago: go tloga papatšong go ya go moreki yo a go kgopelago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 25,
+   "cover": "f6_01_door"
+  },
+  {
+   "type": "tutors_maths",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Maths tutor",
+    "af": "Wiskunde-tutor",
+    "zu": "Umfundisi wezibalo",
+    "xh": "Umfundisi weMathematika",
+    "nso": "Morutiši wa dipalo"
+   },
+   "title": {
+    "en": "Maths tutor: from listing to the parents who find you",
+    "af": "Wiskunde-tutor: van advertensie tot die ouers wat jou vind",
+    "zu": "Umfundisi wezibalo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umfundisi weMathematika: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Morutiši wa dipalo: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 23,
+   "cover": "f5_01_door"
   }
  ]
 }

@@ -1,0 +1,1 @@
+- **ADV-CARD-PIC-1 (RG-0606), from the F12 story walk (a guest house):** the WhatsApp Status card a host shares from her Seller Hub showed a suburban lounge for a thatched guest house outside Cullinan. A stay's card now shows a lodge picture and a trip's card a landscape (the card still never uses her own photo).

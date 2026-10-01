@@ -148,7 +148,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
      ■ END DATA LAYER
      ════════════════════════════════════════════════════════════ -->
 
-<link rel="stylesheet" href="/static/ms.css?v=296">
+<link rel="stylesheet" href="/static/ms.css?v=297">
 <style id="sf-styles">
 /* ── SELL-FLOW-REDO-2 (15 Jul 2026) — scoped to #screen-sell-flow ── */
 #screen-sell-flow{background:#0b1220;min-height:100vh;color:#f2f5f9;font-family:'Inter',sans-serif;padding-bottom:80px;}
@@ -2307,7 +2307,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
              exactly why an uncommon variant can come back confidently wrong. Saying so at the
              moment of attestation is the honest half of that fault; whether to ground the lane in
              real vehicle data is David's design call (BACKLOG). -->
-        <div style="font-size:11px;color:rgba(251,191,36,.75);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;">⚠️ These were read from your photos &mdash; nothing was looked up in a vehicle database. On less common models the AI can be confidently wrong, so please check every figure against your own papers before confirming.</div>
+        <div id="sob-attest-ai-note" style="font-size:11px;color:rgba(251,191,36,.75);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.5;">⚠️ These were read from your photos &mdash; nothing was looked up in a vehicle database. On less common models the AI can be confidently wrong, so please check every figure against your own papers before confirming.</div>
         <div id="sob-attest-sections"></div>
         <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin-top:12px;">
           <input type="checkbox" id="sob-attest-chk" onchange="sobCheckEula()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;">
@@ -3070,6 +3070,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <button class="el-ai-btn" id="el-rewrite-btn" onclick="elRunRewrite()" style="font-size:11px;padding:7px 11px;background:#5b21b6;">✨ Rewrite</button>
         <button class="el-ai-btn" id="el-audit-btn" onclick="elRunAudit()" style="font-size:11px;padding:7px 11px;background:#0e7490;">🔍 Why No Introductions?</button>
         <button class="el-ai-btn" id="el-yield-btn" onclick="elRunYield()" style="display:none;font-size:11px;padding:7px 11px;background:#065f46;">📈 Yield Calc</button>
+        <button class="el-ai-btn" id="el-colreport-btn" onclick="elOpenColReport()" style="display:none;font-size:11px;padding:7px 11px;background:#a87a16;">📈 Market report · 5T</button>
       </div>
     </div>
     <div id="el-ai-output"></div>
@@ -4023,7 +4024,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 <!-- TRIP-LAZY-1 (25 Sep 2026 inspection, shell-14): trip_essentials.js is no longer loaded for every visitor -- ms.js
      teLoadData() fetches it the first time an advert shows the trip panel (RG-0135 re-aimed). -->
 <script src="/static/ms_gate.js?v=1"></script><!-- SEC-GATE-1: sign-in prompt on a gate refusal -->
-<script src="/static/ms.js?v=504"></script>
+<script src="/static/ms.js?v=512"></script>
 <!-- ════════════════════════════════════════════════════════════
      ■ END LOGIC
      ════════════════════════════════════════════════════════════ -->

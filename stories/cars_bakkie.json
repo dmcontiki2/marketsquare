@@ -1,0 +1,741 @@
+{
+ "type": "cars_bakkie",
+ "status": "draft",
+ "flow": "F8",
+ "label": {
+  "en": "Bakkie for sale",
+  "af": "Bakkie te koop",
+  "zu": "I-bakkie edayiswayo",
+  "xh": "Ibhakkie ethengiswayo",
+  "nso": "Bakkie ye e rekišwago"
+ },
+ "title": {
+  "en": "Selling a car: from Quick to your first buyer",
+  "af": "Verkoop 'n motor: van Quick tot jou eerste koper",
+  "zu": "Ukuthengisa imoto: kusukela ku-Quick kuya kumthengi wakho wokuqala",
+  "xh": "Ukuthengisa imoto: ukusuka kwi-Quick ukuya kumthengi wakho wokuqala",
+  "nso": "Go rekiša koloi: go tloga go Quick go ya go moreki wa gago wa mathomo"
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Johan",
+  "customer": "Pieter"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "A buyer",
+   "af": "'n Koper",
+   "zu": "Umthengi",
+   "xh": "Umthengi",
+   "nso": "Moreki"
+  },
+  {
+   "id": "c4",
+   "en": "You accept",
+   "af": "Jy aanvaar",
+   "zu": "Uyamukela",
+   "xh": "Uyamkela",
+   "nso": "O a amogela"
+  },
+  {
+   "id": "c5",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_01_door",
+   "pass": true,
+   "en": [
+    "Open Quick, swipe to [[Cars]] and tap [[Sell a car]]",
+    "Swipe the Quick door until it says Cars. One tap starts your advert."
+   ],
+   "af": [
+    "Maak Quick oop, swiep na [[Cars]] en tik [[Sell a car]]",
+    "Swiep die Quick-deur tot dit Cars sê. Een tik begin jou advertensie."
+   ],
+   "zu": [
+    "Vula i-Quick, swayipha uye ku-[[Cars]] bese uthepha [[Sell a car]]",
+    "Swayipha umnyango we-Quick uze ubone u-Cars. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, tyibilikisa uye kwi-[[Cars]] uze ucofe [[Sell a car]]",
+    "Tyibilikisa ucango lwe-Quick de lubonise u-Cars. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, šutiša go ya go [[Cars]] o kgotle [[Sell a car]]",
+    "Šutiša lebati la Quick go fihlela le re Cars. Go kgotla gatee go thoma papatšo ya gago."
+   ],
+   "quick": [
+    "door"
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_02_what",
+   "pass": true,
+   "en": [
+    "Pick [[Bakkie]]",
+    "Car, bakkie, SUV or bike: pick the one you are selling. Not on the list? Tap [[Another option]]."
+   ],
+   "af": [
+    "Kies [[Bakkie]]",
+    "Motor, bakkie, SUV of motorfiets: kies die een wat jy verkoop. Nie op die lys nie? Tik [[Another option]]."
+   ],
+   "zu": [
+    "Khetha [[Bakkie]]",
+    "Imoto, i-bakkie, i-SUV noma isithuthuthu: khetha leyo oyithengisayo. Ayikho ohlwini? Thepha [[Another option]]."
+   ],
+   "xh": [
+    "Khetha [[Bakkie]]",
+    "Imoto, ibhakkie, i-SUV okanye isithuthuthu: khetha leyo uyithengisayo. Ayikho kuluhlu? Cofa [[Another option]]."
+   ],
+   "nso": [
+    "Kgetha [[Bakkie]]",
+    "Koloi, bakkie, SUV goba sethuthuthu: kgetha seo o se rekišago. Ga se gona lenaneong? Kgotla [[Another option]]."
+   ],
+   "quick": [
+    "what"
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_03_make",
+   "pass": true,
+   "en": [
+    "Pick the make",
+    "Toyota, VW, Ford, BMW, Isuzu, or type your own."
+   ],
+   "af": [
+    "Kies die fabrikaat",
+    "Toyota, VW, Ford, BMW, Isuzu, of tik jou eie."
+   ],
+   "zu": [
+    "Khetha uhlobo lwemoto",
+    "Toyota, VW, Ford, BMW, Isuzu, noma ubhale olwakho."
+   ],
+   "xh": [
+    "Khetha uhlobo lwemoto",
+    "Toyota, VW, Ford, BMW, Isuzu, okanye ubhale olwakho."
+   ],
+   "nso": [
+    "Kgetha mohuta wa koloi",
+    "Toyota, VW, Ford, BMW, Isuzu, goba o ngwale wa gago."
+   ],
+   "quick": [
+    "make"
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_04_year",
+   "pass": true,
+   "en": [
+    "Pick roughly what year",
+    "A rough range is enough here. You type the exact year later, in the app."
+   ],
+   "af": [
+    "Kies ongeveer watter jaar",
+    "'n Rowwe reeks is genoeg hier. Jy tik die presiese jaar later in die app."
+   ],
+   "zu": [
+    "Khetha unyaka cishe",
+    "Ibanga elicishe lanele lapha. Unyaka oqondile uwubhala kamuva ku-app."
+   ],
+   "xh": [
+    "Khetha unyaka malunga",
+    "Uluhlu olumalunga lwanele apha. Unyaka ochanekileyo uwubhala kamva kwi-app."
+   ],
+   "nso": [
+    "Kgetha ngwaga ka kakanyo",
+    "Magomo a kakanyo a lekane mo. Ngwaga wa nnete o o ngwala ka morago go app."
+   ],
+   "quick": [
+    "year"
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_05_price",
+   "pass": true,
+   "en": [
+    "Type your exact asking price",
+    "Tap [[Another option]] and type the price, for example R219 000. Buyers see exactly what you type."
+   ],
+   "af": [
+    "Tik jou presiese vraprys",
+    "Tik [[Another option]] en tik die prys, byvoorbeeld R219 000. Kopers sien presies wat jy tik."
+   ],
+   "zu": [
+    "Bhala intengo oyicelayo ngqo",
+    "Thepha [[Another option]] bese ubhala intengo, isibonelo R219 000. Abathengi babona ngqo lokho okubhalile."
+   ],
+   "xh": [
+    "Bhala ixabiso lakho elichanekileyo",
+    "Cofa [[Another option]] uze ubhale ixabiso, umzekelo R219 000. Abathengi babona kanye oko ukubhalileyo."
+   ],
+   "nso": [
+    "Ngwala theko ya gago ya nnete",
+    "Kgotla [[Another option]] o ngwale theko, mohlala R219 000. Bareki ba bona seo o se ngwadilego."
+   ],
+   "quick": [
+    "price"
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_06_where",
+   "pass": true,
+   "en": [
+    "Tap where the car is",
+    "Pick your area. Buyers search by area."
+   ],
+   "af": [
+    "Tik waar die motor is",
+    "Kies jou area. Kopers soek volgens area."
+   ],
+   "zu": [
+    "Thepha lapho imoto ikhona",
+    "Khetha indawo yakho. Abathengi basesha ngendawo."
+   ],
+   "xh": [
+    "Cofa apho imoto ikhoyo",
+    "Khetha indawo yakho. Abathengi bakhangela ngendawo."
+   ],
+   "nso": [
+    "Kgotla moo koloi e lego gona",
+    "Kgetha lefelo la gago. Bareki ba nyaka ka lefelo."
+   ],
+   "quick": [
+    "where"
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_07_draft",
+   "pass": true,
+   "en": [
+    "Check your advert and tap [[Save my listing]]",
+    "Saving is free. Nobody sees it yet: you publish it in the app after you read the seller terms."
+   ],
+   "af": [
+    "Kyk na jou advertensie en tik [[Save my listing]]",
+    "Stoor is gratis. Niemand sien dit nog nie: jy publiseer dit in die app nadat jy die verkopersvoorwaardes gelees het."
+   ],
+   "zu": [
+    "Hlola isikhangiso sakho bese uthepha [[Save my listing]]",
+    "Ukulondoloza kumahhala. Akekho osibonayo okwamanje: usishicilela ku-app ngemva kokufunda imigomo yabathengisi."
+   ],
+   "xh": [
+    "Jonga intengiso yakho uze ucofe [[Save my listing]]",
+    "Ukugcina kusimahla. Akukho mntu uyibonayo okwangoku: uyipapasha kwi-app emva kokufunda imigaqo yabathengisi."
+   ],
+   "nso": [
+    "Lekola papatšo ya gago o kgotle [[Save my listing]]",
+    "Go boloka ke mahala. Ga go motho yo a e bonago ga bjale: o e phatlalatša go app ka morago ga go bala melawana ya barekiši."
+   ],
+   "quick": [
+    "draft"
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_08_saved",
+   "pass": true,
+   "en": [
+    "Saved: now sign the terms and publish",
+    "Tap [[Sign the terms and publish]]. It opens your advert in TrustSquare's Seller Hub."
+   ],
+   "af": [
+    "Gestoor: teken nou die voorwaardes en publiseer",
+    "Tik [[Sign the terms and publish]]. Dit maak jou advertensie in TrustSquare se Seller Hub oop."
+   ],
+   "zu": [
+    "Kulondoloziwe: manje sayina imigomo bese ushicilela",
+    "Thepha [[Sign the terms and publish]]. Kuvula isikhangiso sakho ku-Seller Hub ye-TrustSquare."
+   ],
+   "xh": [
+    "Igciniwe: ngoku tyikitya imigaqo uze upapashe",
+    "Cofa [[Sign the terms and publish]]. Ivula intengiso yakho kwi-Seller Hub ye-TrustSquare."
+   ],
+   "nso": [
+    "E bolokilwe: bjale saena melawana o phatlalatše",
+    "Kgotla [[Sign the terms and publish]]. E bula papatšo ya gago go Seller Hub ya TrustSquare."
+   ],
+   "quick": [
+    "saved"
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_11_edit",
+   "pass": true,
+   "en": [
+    "Add your photos and the car's details",
+    "Tap [[Edit]], then [[Add Photo]]. Fill in model, year, mileage, colour, gearbox and fuel, and set [[For Sale]]."
+   ],
+   "af": [
+    "Voeg jou foto's en die motor se besonderhede by",
+    "Tik [[Edit]], dan [[Add Photo]]. Vul model, jaar, kilometers, kleur, ratkas en brandstof in, en kies [[For Sale]]."
+   ],
+   "zu": [
+    "Engeza izithombe zakho nemininingwane yemoto",
+    "Thepha [[Edit]], bese [[Add Photo]]. Gcwalisa imodeli, unyaka, amakhilomitha, umbala, igiya nophethiloli, bese ukhetha [[For Sale]]."
+   ],
+   "xh": [
+    "Faka iifoto zakho neenkcukacha zemoto",
+    "Cofa [[Edit]], emva koko [[Add Photo]]. Zalisa imodeli, unyaka, iikhilomitha, umbala, igiya nepetroli, uze ukhethe [[For Sale]]."
+   ],
+   "nso": [
+    "Tsenya diswantšho tša gago le dintlha tša koloi",
+    "Kgotla [[Edit]], ke moka [[Add Photo]]. Tlatša modele, ngwaga, dikhilomithara, mmala, giya le makhura, o kgethe [[For Sale]]."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_12_terms_ticked",
+   "pass": true,
+   "en": [
+    "Accept the seller terms once",
+    "At your first [[Save Changes]] the seller terms open. Read to the end, tick both boxes and tap [[I accept]]. Your photo and details are kept."
+   ],
+   "af": [
+    "Aanvaar die verkopersvoorwaardes een keer",
+    "By jou eerste [[Save Changes]] maak die verkopersvoorwaardes oop. Lees tot aan die einde, merk albei blokkies en tik [[I accept]]. Jou foto en besonderhede bly."
+   ],
+   "zu": [
+    "Yamukela imigomo yabathengisi kanye",
+    "Ku-[[Save Changes]] yakho yokuqala kuvuleka imigomo yabathengisi. Funda kuze kube sekugcineni, khetha amabhokisi womabili bese uthepha [[I accept]]. Isithombe nemininingwane yakho kuyagcinwa."
+   ],
+   "xh": [
+    "Yamkela imigaqo yabathengisi kube kanye",
+    "Kwi-[[Save Changes]] yakho yokuqala kuvuleka imigaqo yabathengisi. Funda ude uyigqibe, phawula zombini iibhokisi uze ucofe [[I accept]]. Ifoto neenkcukacha zakho ziyagcinwa."
+   ],
+   "nso": [
+    "Amogela melawana ya barekiši gatee",
+    "Go [[Save Changes]] ya gago ya mathomo melawana ya barekiši e a bulega. Bala go fihla mafelelong, swaya mapokisi ka bobedi o kgotle [[I accept]]. Seswantšho le dintlha tša gago di a bolokwa."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_13_confirm",
+   "pass": true,
+   "en": [
+    "Confirm the car's details",
+    "Tap [[Publish]]. Check each section against your papers, tap [[Confirm ✓]] on each and tick the box. Buyers only see details you confirmed."
+   ],
+   "af": [
+    "Bevestig die motor se besonderhede",
+    "Tik [[Publish]]. Vergelyk elke afdeling met jou papiere, tik [[Confirm ✓]] by elkeen en merk die blokkie. Kopers sien net besonderhede wat jy bevestig het."
+   ],
+   "zu": [
+    "Qinisekisa imininingwane yemoto",
+    "Thepha [[Publish]]. Qhathanisa isigaba ngasinye namaphepha akho, thepha [[Confirm ✓]] kuso ngasinye bese umaka ibhokisi. Abathengi babona kuphela imininingwane oyiqinisekisile."
+   ],
+   "xh": [
+    "Qinisekisa iinkcukacha zemoto",
+    "Cofa [[Publish]]. Thelekisa icandelo ngalinye namaphepha akho, cofa [[Confirm ✓]] kwilinye nalinye uze uphawule ibhokisi. Abathengi babona kuphela iinkcukacha oziqinisekisileyo."
+   ],
+   "nso": [
+    "Netefatša dintlha tša koloi",
+    "Kgotla [[Publish]]. Bapetša karolo ye nngwe le ye nngwe le dipampiri tša gago, kgotla [[Confirm ✓]] go ye nngwe le ye nngwe o swaye lepokisi. Bareki ba bona feela dintlha tšeo o di netefaditšego."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_14_live",
+   "pass": true,
+   "en": [
+    "Tap [[Go live]]",
+    "Your advert is live and buyers can ask for an introduction. Until your ID is checked, buyers are told so: upload it in My Space to take that warning away."
+   ],
+   "af": [
+    "Tik [[Go live]]",
+    "Jou advertensie is regstreeks en kopers kan vir 'n voorstelling vra. Totdat jou ID nagegaan is, word kopers dit meegedeel: laai dit in My Space op om daardie waarskuwing weg te neem."
+   ],
+   "zu": [
+    "Thepha [[Go live]]",
+    "Isikhangiso sakho sesibukhoma futhi abathengi bangacela ukwethulwa. Kuze kuhlolwe i-ID yakho, abathengi bayatshelwa: yilayishe ku-My Space ukuze leso sexwayiso sisuke."
+   ],
+   "xh": [
+    "Cofa [[Go live]]",
+    "Intengiso yakho iphilayo kwaye abathengi banokucela ukwaziswa. De kuhlolwe i-ID yakho, abathengi bayaxelelwa: yilayishe kwi-My Space ukuze eso silumkiso sisuswe."
+   ],
+   "nso": [
+    "Kgotla [[Go live]]",
+    "Papatšo ya gago e phela gomme bareki ba ka kgopela go tsebišwa. Go fihlela ID ya gago e hlahlobja, bareki ba a botšwa: e tsenye go My Space go tloša temošo yeo."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f8_20_find_what",
+   "pass": true,
+   "en": [
+    "A buyer opens Quick: [[Find a car]]",
+    "He swipes to Cars, taps [[Find a car]] and picks [[Bakkie]]."
+   ],
+   "af": [
+    "'n Koper maak Quick oop: [[Find a car]]",
+    "Hy swiep na Cars, tik [[Find a car]] en kies [[Bakkie]]."
+   ],
+   "zu": [
+    "Umthengi uvula i-Quick: [[Find a car]]",
+    "Uswayipha aye ku-Cars, athephe [[Find a car]] bese ekhetha [[Bakkie]]."
+   ],
+   "xh": [
+    "Umthengi uvula i-Quick: [[Find a car]]",
+    "Utyibilikisa aye kwi-Cars, acofe [[Find a car]] aze akhethe [[Bakkie]]."
+   ],
+   "nso": [
+    "Moreki o bula Quick: [[Find a car]]",
+    "O šutiša go ya go Cars, a kgotla [[Find a car]] gomme a kgetha [[Bakkie]]."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f8_22_results",
+   "pass": true,
+   "en": [
+    "He picks his budget and area, and finds your bakkie",
+    "Real adverts come first; AI examples are marked. He taps yours."
+   ],
+   "af": [
+    "Hy kies sy begroting en area, en kry jou bakkie",
+    "Regte advertensies kom eerste; KI-voorbeelde is gemerk. Hy tik op joune."
+   ],
+   "zu": [
+    "Ukhetha isabelomali sakhe nendawo, bese ethola i-bakkie yakho",
+    "Izikhangiso zangempela ziza kuqala; izibonelo ze-AI ziphawuliwe. Uthepha esakho."
+   ],
+   "xh": [
+    "Ukhetha uhlahlo-lwabiwo-mali lwakhe nendawo, aze afumane ibhakkie yakho",
+    "Iintengiso zokwenyani zeza kuqala; imizekelo ye-AI iphawuliwe. Ucofa eyakho."
+   ],
+   "nso": [
+    "O kgetha tekanyetšo ya gagwe le lefelo, gomme o hwetša bakkie ya gago",
+    "Dipapatšo tša nnete di tla pele; mehlala ya AI e swailwe. O kgotla ya gago."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f8_23_detail",
+   "pass": true,
+   "en": [
+    "He sees your price and the details you confirmed",
+    "Price, mileage, gearbox, fuel and the full spec sheet. Your name and number stay hidden."
+   ],
+   "af": [
+    "Hy sien jou prys en die besonderhede wat jy bevestig het",
+    "Prys, kilometers, ratkas, brandstof en die volle spesifikasies. Jou naam en nommer bly versteek."
+   ],
+   "zu": [
+    "Ubona intengo yakho nemininingwane oyiqinisekisile",
+    "Intengo, amakhilomitha, igiya, uphethiloli nemininingwane egcwele. Igama nenombolo yakho kuhlala kufihliwe."
+   ],
+   "xh": [
+    "Ubona ixabiso lakho neenkcukacha oziqinisekisileyo",
+    "Ixabiso, iikhilomitha, igiya, ipetroli neenkcukacha ezipheleleyo. Igama nenombolo yakho zihlala zifihliwe."
+   ],
+   "nso": [
+    "O bona theko ya gago le dintlha tšeo o di netefaditšego",
+    "Theko, dikhilomithara, giya, makhura le dintlha ka moka. Leina le nomoro ya gago di dula di utilwe."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "free",
+   "img": "f8_24_dossier_card",
+   "pass": true,
+   "en": [
+    "Before he asks: the [[Car Purchase Dossier]]",
+    "Right on your advert he can order a dossier on this car: market price, known faults for its model and year, and a test-drive checklist."
+   ],
+   "af": [
+    "Voordat hy vra: die [[Car Purchase Dossier]]",
+    "Reg op jou advertensie kan hy 'n dossier oor hierdie motor bestel: markprys, bekende foute vir die model en jaar, en 'n toetsrit-kontrolelys."
+   ],
+   "zu": [
+    "Ngaphambi kokuthi acele: i-[[Car Purchase Dossier]]",
+    "Khona esikhangisweni sakho angaoda umbiko ngale moto: intengo yemakethe, amaphutha aziwayo emodeli nonyaka wayo, nohlu lokuhlola lokushayela."
+   ],
+   "xh": [
+    "Phambi kokuba acele: i-[[Car Purchase Dossier]]",
+    "Kanye kwintengiso yakho angaodola ingxelo ngale moto: ixabiso lemarike, iziphene ezaziwayo zemodeli nonyaka wayo, noluhlu lokuhlola ukuqhuba."
+   ],
+   "nso": [
+    "Pele a kgopela: [[Car Purchase Dossier]]",
+    "Gona papatšong ya gago a ka odara pego ka koloi ye: theko ya mmaraka, diphošo tše di tsebjago tša modele le ngwaga wa yona, le lenaneo la go leka go e otlela."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "3T_report",
+   "img": "f8_26_dossier_result",
+   "pass": true,
+   "en": [
+    "He gets the dossier: 3T",
+    "It is filled in with your car. He taps [[Get the report · 3T]]; in about two minutes it arrives, with the real adverts it was compared against. He pays only when it arrives."
+   ],
+   "af": [
+    "Hy kry die dossier: 3T",
+    "Dit is reeds met jou motor ingevul. Hy tik [[Get the report · 3T]]; oor sowat twee minute kom dit, met die regte advertensies waarmee dit vergelyk is. Hy betaal net wanneer dit aankom."
+   ],
+   "zu": [
+    "Uthola umbiko: 3T",
+    "Usuvele ugcwaliswe ngemoto yakho. Uthepha [[Get the report · 3T]]; cishe ngemizuzu emibili uyafika, nezikhangiso zangempela eqhathaniswe nazo. Ukhokha kuphela uma ufika."
+   ],
+   "xh": [
+    "Ufumana ingxelo: 3T",
+    "Sele izaliswe ngemoto yakho. Ucofa [[Get the report · 3T]]; malunga nemizuzu emibini iyafika, neentengiso zokwenyani ethelekiswe nazo. Uhlawula kuphela xa ifikile."
+   ],
+   "nso": [
+    "O hwetša pego: 3T",
+    "E šetše e tladitšwe ka koloi ya gago. O kgotla [[Get the report · 3T]]; ka metsotso e ka bago e mebedi e a fihla, le dipapatšo tša nnete tšeo e bapeditšwego le tšona. O lefa feela ge e fihla."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T_check",
+   "img": "f8_27_fair",
+   "pass": false,
+   "en": [
+    "The 1T fair-price check",
+    "A separate 1T check appears on car adverts once eight similar cars are listed on TrustSquare. Until then the dossier gives the market price."
+   ],
+   "af": [
+    "Die 1T-billike-prys-toets",
+    "'n Aparte 1T-toets verskyn op motoradvertensies sodra agt soortgelyke motors op TrustSquare gelys is. Tot dan gee die dossier die markprys."
+   ],
+   "zu": [
+    "Ukuhlolwa kwentengo efanele okungu-1T",
+    "Ukuhlola okuhlukile okungu-1T kuvela ezikhangisweni zezimoto uma sekunezimoto eziyisishiyagalombili ezifanayo ku-TrustSquare. Kuze kube yilapho, umbiko unikeza intengo yemakethe."
+   ],
+   "xh": [
+    "Uhlolo lwexabiso elifanelekileyo olu-1T",
+    "Uhlolo olwahlukileyo olu-1T luvela kwiintengiso zeemoto xa kukho iimoto ezisibhozo ezifanayo kwi-TrustSquare. Ukuza kuthi ga ngoko, ingxelo inika ixabiso lemarike."
+   ],
+   "nso": [
+    "Tekolo ya theko ye e lokilego ya 1T",
+    "Tekolo ye e aroganego ya 1T e tšwelela dipapatšong tša dikoloi ge go na le dikoloi tše seswai tše di swanago go TrustSquare. Go fihlela ka nako yeo, pego e fa theko ya mmaraka."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c3",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f8_28_ask_sheet",
+   "pass": true,
+   "en": [
+    "He asks for an introduction",
+    "He taps [[Join queue]], adds a message and sends. 1T is held from him and only spent if you accept."
+   ],
+   "af": [
+    "Hy vra vir 'n voorstelling",
+    "Hy tik [[Join queue]], voeg 'n boodskap by en stuur. 1T word van hom teruggehou en net gebruik as jy aanvaar."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Uthepha [[Join queue]], engeze umlayezo bese ethumela. U-1T uyabanjwa kuye futhi usetshenziswa kuphela uma wamukela."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ucofa [[Join queue]], ongeze umyalezo aze athumele. I-1T iyabanjwa kuye kwaye isetyenziswa kuphela ukuba uyamkela."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O kgotla [[Join queue]], a oketša molaetša gomme a romela. 1T e swarwa go yena gomme e šomišwa feela ge o amogela."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_31_request",
+   "pass": true,
+   "en": [
+    "You see his request",
+    "In the Seller Hub your advert shows [[1 request waiting]] with his first name and message."
+   ],
+   "af": [
+    "Jy sien sy versoek",
+    "In die Seller Hub wys jou advertensie [[1 request waiting]] met sy voornaam en boodskap."
+   ],
+   "zu": [
+    "Ubona isicelo sakhe",
+    "Ku-Seller Hub isikhangiso sakho sibonisa [[1 request waiting]] negama lakhe lokuqala nomlayezo wakhe."
+   ],
+   "xh": [
+    "Ubona isicelo sakhe",
+    "Kwi-Seller Hub intengiso yakho ibonisa [[1 request waiting]] negama lakhe lokuqala nomyalezo wakhe."
+   ],
+   "nso": [
+    "O bona kgopelo ya gagwe",
+    "Go Seller Hub papatšo ya gago e bontšha [[1 request waiting]] le leina la gagwe la pele le molaetša."
+   ]
+  },
+  {
+   "n": 21,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_32_accept_sheet",
+   "pass": true,
+   "en": [
+    "Tap [[Accept]]",
+    "You pay nothing: his 1T is spent now. You both get an email; reply to it to talk. Your email address stays private."
+   ],
+   "af": [
+    "Tik [[Accept]]",
+    "Jy betaal niks: sy 1T word nou gebruik. Julle kry albei 'n e-pos; antwoord dit om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Thepha [[Accept]]",
+    "Awukhokhi lutho: u-1T wakhe usetshenziswa manje. Nobabili nithola i-imeyili; yiphendule ukuze nikhulume. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Cofa [[Accept]]",
+    "Awuhlawuli nto: i-1T yakhe isetyenziswa ngoku. Nobabini nifumana i-imeyile; yiphendule ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "Kgotla [[Accept]]",
+    "Ga o lefe selo: 1T ya gagwe e šomišwa bjale. Ka bobedi le hwetša imeile; e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 22,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f8_35_buyer_intros",
+   "pass": true,
+   "en": [
+    "He sees it accepted",
+    "In My Space, under Intros, his request shows [[Accepted]]. The rest is between the two of you, by email."
+   ],
+   "af": [
+    "Hy sien dit is aanvaar",
+    "In My Space, onder Intros, wys sy versoek [[Accepted]]. Die res is tussen julle twee, per e-pos."
+   ],
+   "zu": [
+    "Ubona ukuthi samukelwe",
+    "Ku-My Space, ngaphansi kwe-Intros, isicelo sakhe sibonisa [[Accepted]]. Okunye kuphakathi kwenu nobabili, nge-imeyili."
+   ],
+   "xh": [
+    "Ubona ukuba samkelwe",
+    "Kwi-My Space, phantsi kwe-Intros, isicelo sakhe sibonisa [[Accepted]]. Okunye kuphakathi kwenu nobabini, nge-imeyile."
+   ],
+   "nso": [
+    "O bona gore e amogetšwe",
+    "Go My Space, ka fase ga Intros, kgopelo ya gagwe e bontšha [[Accepted]]. Tše dingwe ke magareng ga lena ka bobedi, ka imeile."
+   ]
+  },
+  {
+   "n": 23,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f8_08_saved",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "Tap [[Pass Quick on to someone]] and share it with a friend who has something to sell."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriend wat iets het om te verkoop."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Thepha [[Pass Quick on to someone]] bese uyabelana ngayo nomngane onento yokuthengisa."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Cofa [[Pass Quick on to someone]] uze wabelane ngayo nomhlobo onento yokuthengisa."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Kgotla [[Pass Quick on to someone]] o e abelane le mogwera yo a nago le se sengwe sa go rekiša."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ }
+}
