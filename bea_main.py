@@ -8789,7 +8789,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
     if status == "all":
         if buyer_email:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE LOWER(i.buyer_email) = LOWER(?)
@@ -8798,7 +8798,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    ORDER BY i.created_at DESC"""
@@ -8806,7 +8806,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
     else:
         if buyer_email:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE i.status = ? AND LOWER(i.buyer_email) = LOWER(?)
@@ -8815,7 +8815,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE i.status = ?
@@ -14947,6 +14947,24 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
                 headers={"Authorization": "Bearer " + _rk}, timeout=10)
     except Exception as _mx:
         _log.warning("credential decision mail failed (non-fatal): %s", _mx)
+    # CRED-SCORE-SYNC-1 (2 Oct 2026, F2 family-half walk): a checked police clearance lifted her score to 60 on her
+    # profile, but her advert and search card kept showing 50 until someone happened to open the profile (the only
+    # read that heals the stored badge). The decision itself now writes the score each of her adverts is scored
+    # under -- the same evidence set and the same Local Market rule as /sellers/credentials.
+    try:
+        _em = (req.email or "").strip().lower()
+        _rows = conn.execute("SELECT DISTINCT category, service_class FROM listings WHERE LOWER(seller_email) = ?",
+                             (_em,)).fetchall()
+        _lm_any = any((r["category"] or "").strip().lower() in ("local_market", "local market") for r in _rows)
+        for _r in _rows:
+            _ck = "local_market" if _lm_any else (_norm_cat_key(_r["category"], _r["service_class"])
+                                                  or _category_key_for_user(conn, _em))
+            _sc = int(_trust_evidence(conn, _em, _ck)["score"])
+            conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND category = ? "
+                         "AND COALESCE(service_class,'') = COALESCE(?,'') AND COALESCE(trust_score,-1) != ?",
+                         (_sc, _em, _r["category"], _r["service_class"], _sc))
+    except Exception as _sx:
+        _log.warning("CRED-SCORE-SYNC-1: score sync after a credential decision failed (non-fatal): %s", _sx)
     conn.commit()
     conn.close()
     return {"message": "Credential updated", "signal_id": req.signal_id, "status": req.status}
@@ -24726,10 +24744,15 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
             "charged":          False,
             "sa_context":       "",
             "sa_range":         "N/A",
-            "assessment":       ("We don\u2019t yet have a verified price source for this "
+            # PRICE-MISS-WORD-1 (2 Oct 2026, F10 walk): a chip the buyer chose was offered because its source is
+            # live -- when it finds nothing (or fails) that is not "no source for this category".
+            "assessment":       (("We couldn\u2019t get a verified price for this item just now, so we "
+                                  "won\u2019t guess. No Tuppence was charged. Try again later, or compare the "
+                                  "asking price against similar listings before deciding.") if tier is not None else
+                                 ("We don\u2019t yet have a verified price source for this "
                                  "category, so we won\u2019t guess. No Tuppence was charged. "
                                  "Compare the asking price against similar local listings "
-                                 "before deciding."),
+                                 "before deciding.")),
             "official_context": "",
             "official_range":   "N/A",
             "local_vs_global":  "cannot_compare",

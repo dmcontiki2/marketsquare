@@ -33297,6 +33297,83 @@ def rg_licence_gate_1():
     return [(INFO, "a licensed trade is public only once a person has checked its licence (RUL-156)")]
 
 
+@entry("RG-0681", "CRED-SCORE-SYNC-1: the F2 family-half walk -- a credential decision (a person approving a police clearance or "
+       "a licence) writes the seller's new Trust Score onto her adverts; her profile said 60 while her advert and card kept 50",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py trust_score_set_credential: per (category, service_class) of her adverts, _trust_evidence score -> listings.",
+       ref="F2 L28 walk 2 Oct 2026: #441's clearance approved; /sellers/credentials/441 said 60, the advert 50.")
+def rg_cred_score_sync_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = py.find("def trust_score_set_credential(")
+    body = py[i:i + 6000] if i >= 0 else ""
+    if "CRED-SCORE-SYNC-1" not in body or '_trust_evidence(conn, _em, _ck)["score"]' not in body or "UPDATE listings SET trust_score" not in body:
+        return [(FAIL, "approving a credential no longer updates the score her adverts show")]
+    return [(INFO, "a credential decision updates her adverts' Trust Score")]
+
+
+@entry("RG-0682", "INTRO-NAME-WRAP-1: F2/F5 walks -- My Space > Intros keeps the buyer's name readable beside Accept/Decline "
+       "(it was cut to 'Nosiph...' / 'Lindiwe...' on a phone)",
+       OPEN, fixed_on="2026-10-02", scope="ms.js msRenderIntroList name block.", ref="F5 report; F2 L28 walk 2 Oct 2026.")
+def rg_intro_name_wrap_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if """'<div style="flex:1 1 150px;min-width:0;"><div class="ms-intro-name" style="overflow-wrap:anywhere;">'""" not in js:
+        return [(FAIL, "the Intros list cuts the buyer's name short again")]
+    return [(INFO, "Intros names wrap, not cut")]
+
+
+@entry("RG-0683", "GATE-TIP-1: F2/F4 walks -- Edit's 'Best next step' names the police clearance / licence that holds a gated "
+       "advert out of searches (it said 'Upload your ID')",
+       OPEN, fixed_on="2026-10-02", scope="ms.js elLoadSidebarPanels haiko_tip override from elCurrentRaw.gate.",
+       ref="F2 and F4 reports, 'Not fixed, noted'.")
+def rg_gate_tip_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "GATE-TIP-1" not in js or "if (_gw) ts.haiko_tip = {" not in js:
+        return [(FAIL, "a gated seller's best next step points at points, not her gate, again")]
+    return [(INFO, "a gated seller is told her gate is the next step")]
+
+
+@entry("RG-0684", "CRED-BY-CLASS-1: F4 walk -- Edit offers a technical trade 'Licence to practise' and a home worker 'Police "
+       "clearance', not each other's",
+       OPEN, fixed_on="2026-10-02", scope="ms.js EL_SIGNAL_OPTS_HTML filter on elCurrentRaw.service_class.",
+       ref="F4 report, 'Not fixed, noted'.")
+def rg_cred_by_class_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "CRED-BY-CLASS-1" not in js or "_sc.indexOf('tech') === 0 ? !/clearance$/.test(s[0])" not in js:
+        return [(FAIL, "Edit offers an electrician a police clearance (or a nanny a licence) again")]
+    return [(INFO, "credential choices follow the advert's class")]
+
+
+@entry("RG-0685", "BUZZ-EG-WORDS-1: F3/F5 walks -- Buzz's example card says 'a regular customer', not 'your employer'",
+       OPEN, fixed_on="2026-10-02", scope="ms.js Buzz empty-state example.", ref="F5 report; David 25 Sep (tutor 'your employer').")
+def rg_buzz_eg_words_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "Mrs Nkosi<span>your employer</span>" in js or "Mrs Nkosi<span>a regular customer</span>" not in js:
+        return [(FAIL, "Buzz's example calls the other person 'your employer' again")]
+    return [(INFO, "Buzz example says a regular customer")]
+
+
+@entry("RG-0686", "CALLOUT-SHOWN-1: F3 walk -- Edit's empty 'Call-out fee' box says where the fee is ('In your rate above: R450 "
+       "/ call-out') for a Quick listing, instead of a bare '0'",
+       OPEN, fixed_on="2026-10-02", scope="ms.js renderEditForm rate field placeholder.", ref="F3 report, 'Not fixed, noted'.")
+def rg_callout_shown_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "CALLOUT-SHOWN-1" not in js or "_ph = 'In your rate above: ' + _m[0].trim();" not in js:
+        return [(FAIL, "Edit's call-out fee box hides where the fee is again")]
+    return [(INFO, "the call-out box points at the fee in the rate")]
+
+
 @entry("RG-0556", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
        "a customer does in the app -- no sign-in codes, no Buzz, relay, listing-live or low-balance messages; Quick offers no Phone option",
        OPEN, fixed_on="2026-09-30",
@@ -34018,8 +34095,57 @@ def rg_hub_active_count_1():
         return [(FAIL, "a hub card reads l.paused again (the server never sends it)")]
     return [(INFO, "the hub's ACTIVE count leaves out paused adverts")]
 
+@entry("RG-0671", "BOUGHT-WORD-1: after an accepted introduction the buyer's confirm button says what she did -- 'I bought from them' "
+       "for a car for sale, a collector's piece or Local Market goods, 'I rented from them' for a property to let, 'I hired them' for "
+       "a service or a car for hire (the F8 and F10 walks were offered 'I hired them' for a bakkie and a coin)",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js msHiredWords() in the sent-intros list and msIntroHired(); bea_main.py GET /intros adds l.listing_type.",
+       ref="F8 (Pieter, bakkie #444) and F10 (Ayanda, coin #455) cloud walks, 30 Sep 2026; David 2 Oct: complete the open actions.")
+def rg_bought_word_1():
+    ms = repo_file("ms.js"); bm = repo_file("bea_main.py")
+    if None in (ms, bm):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "function msHiredWords(i)" not in ms or "const _hw = msHiredWords(i);" not in ms:
+        bad.append("a buyer who bought a car or a coin is asked 'I hired them' again")
+    if bm.count("SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type") < 4:
+        bad.append("GET /intros no longer tells a hire car from a sale")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the buyer confirms what she did: bought, rented or hired")]
 
-@entry("RG-0659", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
+@entry("RG-0672", "ACCEPT-PRIVATE-WORDS-1: the advert's how-it-works steps and the identity box say what an accept does today -- "
+       "you both get an email and talk by replying, email addresses stay private -- not 'identities revealed'",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js listing detail queue/commitment steps, the Local Market steps and the two buyer-facing identity boxes.",
+       ref="F8 cloud walk 30 Sep 2026: the advert said 'Accepted -> 1T deducted - identities revealed' while the accept said "
+           "'your email address stays private'.")
+def rg_accept_private_words_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "identities revealed" in ms:
+        return [(FAIL, "an advert says identities are revealed on accept again")]
+    if ms.count("Reply to it to talk · email addresses stay private") < 3:
+        return [(FAIL, "the advert's steps no longer say how the two of you talk after an accept")]
+    return [(INFO, "the advert says an accept means an email each, addresses private")]
+
+@entry("RG-0673", "PRICE-MISS-WORD-1: when the 1T price check the buyer chose finds no verified price, it says 'We couldn't get a "
+       "verified price for this item just now' (not charged) instead of 'We don't yet have a verified price source for this category'",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py fair-price no-feed answer: the old words only when no tier was chosen.",
+       ref="F10 cloud walk 30 Sep 2026: the collectors source was live (the chip was offered) but failed while OpenAI had no "
+           "credit; the answer blamed the category.")
+def rg_price_miss_word_1():
+    bm = repo_file("bea_main.py")
+    if bm is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "We couldn\\u2019t get a verified price for this item just now" not in bm or ") if tier is not None else" not in bm:
+        return [(FAIL, "a failed price check blames the category again")]
+    return [(INFO, "a price check that finds nothing says so, and charges nothing")]
+
+
+@entry("RG-0700", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
        "viewer can switch the examples off -- the switch starts ON and is remembered on the device",
        OPEN,
        scope="bea_main.py /listings _sort_map (5 variants + fallback via _ex_last) and the Local Market ORDER BY; "
@@ -34028,7 +34154,7 @@ def rg_hub_active_count_1():
              "find results (same device key ts_show_examples) with Hide/Show AI examples. SCOPE: every category, every "
              "country, both apps. An example = super_example, is_demo, or a house account -- the RUL-187 definition.",
        ref="RUL-194, David 2 Oct 2026: a DEMO switch combined with real listings first. Replaces SUPER-PIN-1 (20 Jul 2026). "
-           "Numbered RG-0659 at the merge: the cloud lane took RG-0655..0658 the same morning. "
+           "Numbered RG-0700 at the merge: the cloud lanes took RG-0655..0658 and 0671..0686 the same morning. "
            "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin.")
 def rg_examples_last_1():
     bm = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); ze = repo_file("zoom_engine.py")
