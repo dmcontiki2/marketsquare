@@ -33973,5 +33973,40 @@ def rg_stay_carry_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a Quick guest house opens in Edit with its type and place")]
 
+@entry("RG-0657", "ADV-PER-SPACE-1: an Adventures card whose price carries a basis reads 'From R950 per night', not 'From R950per "
+       "night' -- every guest house or trip listed in Quick ('R950 / room / night', 'R1 500 / person') showed it glued",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js Adventures card priceLabel (_advPer): a space before l.per, as every other card already renders it.",
+       ref="F12 walk through Quick, 2 Oct 2026: Karin's Filtered Search result for Sannie's guest house read 'From R950per night'.")
+def rg_adv_per_space_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "const _advPer = l.per ? ' ' + l.per : (isAccom ? '/night' : '/person');" not in js:
+        return [(FAIL, "an Adventures card glues its price to the basis again ('R950per night')")]
+    return [(INFO, "Adventures cards: 'From R950 per night'")]
+
+
+@entry("RG-0658", "EULA-FOOTER-VER-1: the Terms end with ONE version -- the italic footer under '— End of TrustSquare Terms of Use / "
+       "EULA v1.20 —' still read 'v1.19 · Republic of South Africa ...' in all three copies, so every first-time buyer's one-tap "
+       "Terms sheet showed two versions; it names the version canon.yml publishes",
+       OPEN, fixed_on="2026-10-02",
+       scope="eula_clean.html (source) -> terms.html + ms.js via scripts/eula_sync.py; no clause changed.",
+       ref="F12 walk through Quick, 2 Oct 2026: Karin's buyer Terms sheet ended 'EULA v1.20' then 'v1.19 · Republic of South "
+           "Africa · Country Schedules ...'. The v1.20 bump of 27 Sep (RUL-188/190) updated the end line, not the footer.")
+def rg_eula_footer_ver_1():
+    import re as _re
+    src = repo_file("eula_clean.html"); canon = repo_file("canon.yml")
+    if None in (src, canon):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r'^\s*eula:\s*"(v[\d.]+)"', canon, _re.M)
+    end = _re.search(r"End of TrustSquare Terms of Use / EULA (v[\d.]+)", src)
+    foot = _re.search(r"<p><em>(v[\d.]+) · Republic of South Africa", src)
+    if not (m and end and foot):
+        return [(FAIL, "the Terms' end line, footer or canon.yml version is not where this entry reads it")]
+    if not (m.group(1) == end.group(1) == foot.group(1)):
+        return [(FAIL, "the Terms name more than one version: canon %s, end line %s, footer %s" % (m.group(1), end.group(1), foot.group(1)))]
+    return [(INFO, "the Terms end with one version, %s" % m.group(1))]
+
 if __name__ == "__main__":
     sys.exit(main())
