@@ -33293,6 +33293,83 @@ def rg_licence_gate_1():
     return [(INFO, "a licensed trade is public only once a person has checked its licence (RUL-156)")]
 
 
+@entry("RG-0681", "CRED-SCORE-SYNC-1: the F2 family-half walk -- a credential decision (a person approving a police clearance or "
+       "a licence) writes the seller's new Trust Score onto her adverts; her profile said 60 while her advert and card kept 50",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py trust_score_set_credential: per (category, service_class) of her adverts, _trust_evidence score -> listings.",
+       ref="F2 L28 walk 2 Oct 2026: #441's clearance approved; /sellers/credentials/441 said 60, the advert 50.")
+def rg_cred_score_sync_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = py.find("def trust_score_set_credential(")
+    body = py[i:i + 6000] if i >= 0 else ""
+    if "CRED-SCORE-SYNC-1" not in body or '_trust_evidence(conn, _em, _ck)["score"]' not in body or "UPDATE listings SET trust_score" not in body:
+        return [(FAIL, "approving a credential no longer updates the score her adverts show")]
+    return [(INFO, "a credential decision updates her adverts' Trust Score")]
+
+
+@entry("RG-0682", "INTRO-NAME-WRAP-1: F2/F5 walks -- My Space > Intros keeps the buyer's name readable beside Accept/Decline "
+       "(it was cut to 'Nosiph...' / 'Lindiwe...' on a phone)",
+       OPEN, fixed_on="2026-10-02", scope="ms.js msRenderIntroList name block.", ref="F5 report; F2 L28 walk 2 Oct 2026.")
+def rg_intro_name_wrap_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if """'<div style="flex:1 1 150px;min-width:0;"><div class="ms-intro-name" style="overflow-wrap:anywhere;">'""" not in js:
+        return [(FAIL, "the Intros list cuts the buyer's name short again")]
+    return [(INFO, "Intros names wrap, not cut")]
+
+
+@entry("RG-0683", "GATE-TIP-1: F2/F4 walks -- Edit's 'Best next step' names the police clearance / licence that holds a gated "
+       "advert out of searches (it said 'Upload your ID')",
+       OPEN, fixed_on="2026-10-02", scope="ms.js elLoadSidebarPanels haiko_tip override from elCurrentRaw.gate.",
+       ref="F2 and F4 reports, 'Not fixed, noted'.")
+def rg_gate_tip_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "GATE-TIP-1" not in js or "if (_gw) ts.haiko_tip = {" not in js:
+        return [(FAIL, "a gated seller's best next step points at points, not her gate, again")]
+    return [(INFO, "a gated seller is told her gate is the next step")]
+
+
+@entry("RG-0684", "CRED-BY-CLASS-1: F4 walk -- Edit offers a technical trade 'Licence to practise' and a home worker 'Police "
+       "clearance', not each other's",
+       OPEN, fixed_on="2026-10-02", scope="ms.js EL_SIGNAL_OPTS_HTML filter on elCurrentRaw.service_class.",
+       ref="F4 report, 'Not fixed, noted'.")
+def rg_cred_by_class_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "CRED-BY-CLASS-1" not in js or "_sc.indexOf('tech') === 0 ? !/clearance$/.test(s[0])" not in js:
+        return [(FAIL, "Edit offers an electrician a police clearance (or a nanny a licence) again")]
+    return [(INFO, "credential choices follow the advert's class")]
+
+
+@entry("RG-0685", "BUZZ-EG-WORDS-1: F3/F5 walks -- Buzz's example card says 'a regular customer', not 'your employer'",
+       OPEN, fixed_on="2026-10-02", scope="ms.js Buzz empty-state example.", ref="F5 report; David 25 Sep (tutor 'your employer').")
+def rg_buzz_eg_words_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "Mrs Nkosi<span>your employer</span>" in js or "Mrs Nkosi<span>a regular customer</span>" not in js:
+        return [(FAIL, "Buzz's example calls the other person 'your employer' again")]
+    return [(INFO, "Buzz example says a regular customer")]
+
+
+@entry("RG-0686", "CALLOUT-SHOWN-1: F3 walk -- Edit's empty 'Call-out fee' box says where the fee is ('In your rate above: R450 "
+       "/ call-out') for a Quick listing, instead of a bare '0'",
+       OPEN, fixed_on="2026-10-02", scope="ms.js renderEditForm rate field placeholder.", ref="F3 report, 'Not fixed, noted'.")
+def rg_callout_shown_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "CALLOUT-SHOWN-1" not in js or "_ph = 'In your rate above: ' + _m[0].trim();" not in js:
+        return [(FAIL, "Edit's call-out fee box hides where the fee is again")]
+    return [(INFO, "the call-out box points at the fee in the rate")]
+
+
 @entry("RG-0556", "SMS-OUTREACH-ONLY-1: TrustSquare's paid SMS account is for our outreach to phone-only prospects and nothing "
        "a customer does in the app -- no sign-in codes, no Buzz, relay, listing-live or low-balance messages; Quick offers no Phone option",
        OPEN, fixed_on="2026-09-30",
