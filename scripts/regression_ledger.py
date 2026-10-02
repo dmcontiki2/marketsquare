@@ -34056,11 +34056,12 @@ def rg_stay_carry_1():
 @entry("RG-0730", "HELP-LANG-SYNC-1: a language picked in Quick while the How guide is open re-speaks the guide behind it, "
        "on the step she is reading; the language menu closes on a pick and on a tap anywhere else (the guide included); "
        "the gallery follows Quick's '#lang=' and, inside Quick, shows no second language control of its own",
-       OPEN, fixed_on="2026-10-01",
+       LOCKED, fixed_on="2026-10-01",
        scope="quick.html (= genie/HARNESS.html) qHelpRelang / qSetLang / qLangMenuClose / .qlscrim; stories/index.html "
              "hashchange + html.embed .top",
        ref="David, 1 Oct 2026 (screenshot: pill AF, menu still marking EN, the guide behind in Sepedi): 'Why does the "
-           "background still stay in the one language while the language selection is already set to another'.")
+           "background still stay in the one language while the language selection is already set to another'. "
+           "LOCKED 2 Oct 2026 after the live check on trustsquare.co (05:44Z, 1203c16, tester cookie, 390px phone): How opened the gallery in Sepedi with no language buttons of its own; picking AF closed the menu and re-spoke the gallery behind it, keeping door=services&at=door&seen=door; a tap over the guide closed the menu; the bakkie guide on step 3 followed to isiZulu on step 3.")
 def rg_help_lang_sync_1():
     q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); g = repo_file("stories/index.html")
     if None in (q, h, g):
@@ -34084,12 +34085,13 @@ def rg_help_lang_sync_1():
 @entry("RG-0731", "PH-FIT-1: an example line (placeholder) is never shown cut -- a line that nearly fits its box is set a "
        "little smaller; one that cannot fit is written in full beside the box (Quick and the guides: above it; the main "
        "app's sell form: the row stacks, then under the box) and the box's own copy is hidden",
-       OPEN, fixed_on="2026-10-01",
+       LOCKED, fixed_on="2026-10-01",
        scope="quick.html (= genie/HARNESS.html) PH-FIT-1 block; ms.js PH-FIT-1 block (input[data-i18n-ph]); "
              "stories/index.html fitPh + shorter zu/xh/nso search words + the empty search box's clear button",
        ref="David, 1 Oct 2026: the How gallery's 'Find your kind of work or item' was cut in isiZulu, isiXhosa and "
            "Sepedi -- 'look where it happens everywhere in the apps and fix it'. Measured on a 360px phone: 73 of "
-           "Quick's placeholder/language pairs and 19 of the main app's 64 sell-form examples (in English) were cut.")
+           "Quick's placeholder/language pairs and 19 of the main app's 64 sell-form examples (in English) were cut. "
+           "LOCKED 2 Oct 2026 after the live check (05:44Z): the gallery's search line is whole at 320px in isiZulu, isiXhosa and Sepedi; Quick 0 of 105 placeholders cut at 320/360/412px and the main app's sell form 0 of 64 (headless, served from the shipped files).")
 def rg_ph_fit_1():
     q = repo_file("quick.html"); js = repo_file("ms.js"); g = repo_file("stories/index.html")
     if None in (q, js, g):
@@ -34115,11 +34117,12 @@ def rg_ph_fit_1():
        "fits (Afrikaans 'Swembadskoonmaker'); Quick's top bar fits a 320px phone with isiZulu's 'Kanjani'; the guides' "
        "header wraps instead of running off the edge; the Tuppence step title wraps; the AI-services cards keep their "
        "price chip on screen",
-       OPEN, fixed_on="2026-10-01",
+       LOCKED, fixed_on="2026-10-01",
        scope="quick.html fitWord / .steps / .bar media rule; stories/help.html + stories/index.html .top; ms.css "
              ".hiw-feat-label; marketsquare.html AI-services cards",
        ref="Found by the PH-FIT-1 sweep (David, 1 Oct 2026): a clip scan of Quick's screens in five languages and "
-           "scripts/i18n_pseudo_locale.py (4 breaks in 35%-longer text before, 0 after).")
+           "scripts/i18n_pseudo_locale.py (4 breaks in 35%-longer text before, 0 after). "
+           "LOCKED 2 Oct 2026 after the ship (846526d / 1203c16): scripts/i18n_pseudo_locale.py 0 layout breaks in longer text (4 before); Quick's clip scan in five languages 0 findings; live smoke test all checks pass.")
 def rg_cut_words_1():
     q = repo_file("quick.html"); css = repo_file("ms.css"); html = repo_file("marketsquare.html")
     hp = repo_file("stories/help.html"); g = repo_file("stories/index.html")
@@ -34143,11 +34146,12 @@ def rg_cut_words_1():
 @entry("RG-0733", "I18N-APP-WORD-1: Afrikaans says 'app', never 'toep' -- the checked words, the guides and Quick carry no "
        "'toep'; the server's translator is told to keep 'app'; migration 063 rewrote the cached machine words and "
        "ms.js DICTV 7 made every browser drop its saved copy",
-       OPEN, fixed_on="2026-10-02",
+       LOCKED, fixed_on="2026-10-02",
        scope="roles/app_i18n_af.json; stories/*.json (af); quick.html; bea_main.py I18N_GLOSS['af']; "
              "migrations/063_i18n_af_app_word.py; ms.js DICTV",
        ref="David, 2 Oct 2026: \"the English 'app' is translated to 'toep' ... most people will understand the 'app' in "
-           "Afrikaans and won't know what 'toep' is -- rather use the app for Afrikaans as well\".")
+           "Afrikaans and won't know what 'toep' is -- rather use the app for Afrikaans as well\". "
+           "LOCKED 2 Oct 2026 after the live check: /help/data/adventures_guest_house.json says 'Die app kyk'; live ms.js v=899+ carries DICTV 7; POST /i18n/translate (af) answers the language note and the Local Market terms line from the cache (from_cache 2, translated 0) with the checked 'in die app' words -- migration 063 ran.")
 def rg_i18n_app_word_1():
     import glob, re as _re
     af = repo_file("roles/app_i18n_af.json"); q = repo_file("quick.html"); bea = repo_file("bea_main.py"); js = repo_file("ms.js")
