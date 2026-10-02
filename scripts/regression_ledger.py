@@ -34040,11 +34040,14 @@ def rg_stay_carry_1():
     bad = []
     if h is not None and h != q:
         bad.append("genie/HARNESS.html differs from quick.html")
-    if " adventures:{prop_type:'kind'}};" not in q:
+    # STAY-CARRY-1b (2 Oct 2026): read the meaning, not one spelling of the line -- COL-CARRY-1 (RG-0676) added
+    # FIELD_FROM.collectors after this entry and a second matcher to the select match, and this check convicted both
+    import re as _re
+    if not _re.search(r"var FIELD_FROM=\{.*?\badventures:\{prop_type:'kind'\}[,}]", q, _re.S):
         bad.append("Quick no longer sends a stay's kind")
     for need in ("function _elQuickCarry(raw, fieldId)", "|| _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);",
                  "if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();",
-                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());"):
+                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase())"):
         if need not in js:
             bad.append("Edit no longer carries a Quick stay's answers: " + need[:48])
     i = js.find("function _msMapBeaListing")
