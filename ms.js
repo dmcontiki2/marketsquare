@@ -2981,7 +2981,7 @@ const filterState = {
   services:   { maxRate:'', serviceClass:'', serviceType:'', availability:'', area:'' },
   adventures: { adventureType:'', environment:'', maxPrice:'', duration:'', groupSize:'', area:'' },
   collectors: { collectibleType:'', maxPrice:'', condition:'', era:'', area:'' },
-  cars:       { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'' },
+  cars:       { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'', deal:'' },   // CAR-HIRE-FILTER-1: deal
 };
 
 // Global Trust >= filter (applies across all categories; client-side over loaded listings)
@@ -3459,6 +3459,7 @@ function applyFilters(cat){
     filterState.cars.yearFrom     = getSelOptInSection('Year From','fs-cars');
     filterState.cars.transmission = getSelOptInSection('Transmission','fs-cars');
     filterState.cars.mileage      = getSelOptInSection('Max Mileage (km)','fs-cars');
+    filterState.cars.deal         = getSelOptInSection('Buy or hire','fs-cars');   // CAR-HIRE-FILTER-1
   }
   document.getElementById('fs-'+cat).classList.remove('open');
   if(cat==='adventures'){ refreshAdvFilterBadge(); renderAdvGrid(); return; }
@@ -3488,7 +3489,7 @@ function clearFilters(cat){
     const el=document.getElementById('fc-max'); if(el)el.value='';
     document.querySelectorAll('#fs-collectors .fs-opt').forEach(o=>o.classList.remove('sel'));
   } else if(cat==='cars'){
-    filterState.cars = { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'' };
+    filterState.cars = { make:'', maxPrice:'', yearFrom:'', transmission:'', mileage:'', area:'', deal:'' };
     const el=document.getElementById('fcar-max'); if(el)el.value='';
     document.querySelectorAll('#fs-cars .fs-opt').forEach(o=>o.classList.remove('sel'));
   }
@@ -4294,6 +4295,7 @@ function renderActiveFilterTags(){
     if(fs.yearFrom)     tags.push(`📅 ${fs.yearFrom}`);
     if(fs.transmission) tags.push(`⚙️ ${fs.transmission}`);
     if(fs.mileage)      tags.push(`🛣 ${fs.mileage}`);
+    if(fs.deal==='For hire' || fs.deal==='For sale') tags.push(fs.deal==='For hire' ? '🔑 For hire' : '🏷 For sale');   // CAR-HIRE-FILTER-1
   }
 
   row.innerHTML = tags.map(t=>`
@@ -5314,6 +5316,9 @@ function renderGrid(){
       }
       if(fcar.transmission && fcar.transmission!=='' && l.transmission && l.transmission!==fcar.transmission) return false;
       if(fcar.area && fcar.area!=='' && l.suburb !== fcar.area) return false;
+      /* CAR-HIRE-FILTER-1 (2 Oct 2026, F9 walk): a hirer could only spot hire cars by the 'per day' on the card */
+      if(fcar.deal==='For hire' && !/hire|rent/i.test(l.carDeal||'')) return false;
+      if(fcar.deal==='For sale' && /hire|rent/i.test(l.carDeal||'')) return false;
     }
 
     return true;
@@ -21107,6 +21112,9 @@ function sfBuildVehicle(){   // seller-entered structured fields override / exte
   if(C.cc&&parseInt(C.cc,10)){specs.engine_capacity_cc=parseInt(C.cc,10);prov.engine_capacity_cc='seller_entered';}
   if(C.kw&&parseInt(C.kw,10)){specs.kilowatts_kw=parseInt(C.kw,10);prov.kilowatts_kw='seller_entered';}
   if(C.gears&&parseInt(C.gears,10)){specs.gears=parseInt(C.gears,10);prov.gears='seller_entered';}
+  /* CAR-FEATS-1 (2 Oct 2026, F9 walk): the features she ticked (Aircon, Bluetooth) reached only the advert's text; the
+     spec sheet's Features box stayed empty. They are hers, so they go in as seller-entered. */
+  if((sfState.features||[]).length){specs.features=sfState.features.slice();prov.features='seller_entered';}
   specs._prov=prov;
   v.vehicle_specs=JSON.stringify(specs);
   return v;

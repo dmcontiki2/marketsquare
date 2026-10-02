@@ -34204,5 +34204,38 @@ def rg_examples_last_1():
         out.append((INFO, "live: %d real listing(s), then %d AI example(s), in the Pretoria feed" % (flags.count(False), flags.count(True))))
     return out
 
+@entry("RG-0674", "CAR-FEATS-1: the features a seller ticks in Sell for a car (Aircon, Bluetooth) fill the advert's Vehicle Specs "
+       "Features box as seller-entered, not only the advert's text (F9 walk: the box was empty)",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js sfBuildVehicle(): specs.features + _prov.features='seller_entered'.",
+       ref="F9 cloud walk 30 Sep 2026 (Tebogo, #456): 'Features' box empty while the text said 'Features: Aircon, Bluetooth'.")
+def rg_car_feats_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "if((sfState.features||[]).length){specs.features=sfState.features.slice();prov.features='seller_entered';}" not in ms:
+        return [(FAIL, "a car's ticked features no longer reach its spec sheet")]
+    return [(INFO, "a car's features fill its spec sheet")]
+
+@entry("RG-0675", "CAR-HIRE-FILTER-1: Browse -> Cars -> Filtered Search asks 'Buy or hire' (Any / For sale / For hire) and "
+       "filters on the advert's listing type; a hirer no longer has to spot 'per day' on each card (F9 walk)",
+       OPEN, fixed_on="2026-10-02",
+       scope="marketsquare.html #fs-cars 'Buy or hire' section; ms.js filterState.cars.deal, the cars filter and its tag.",
+       ref="F9 cloud walk 30 Sep 2026 (Lerato): no way to ask for hire cars only.")
+def rg_car_hire_filter_1():
+    ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '<div class="fs-label">Buy or hire</div>' not in h:
+        bad.append("the cars filter no longer asks buy or hire")
+    if "filterState.cars.deal         = getSelOptInSection('Buy or hire','fs-cars');" not in ms \
+            or "if(fcar.deal==='For hire' && !/hire|rent/i.test(l.carDeal||'')) return false;" not in ms:
+        bad.append("the buy-or-hire choice no longer filters the cars")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a hirer can ask for hire cars only")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
