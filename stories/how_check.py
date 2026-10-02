@@ -186,6 +186,8 @@ def plans(guides, idx, roles):
             sv = [k for k in s.get("serves", []) if role.get(k)]
             for k in sorted(set(sv[:1] + sv[-1:]), key=sv.index):   # the first and the last role it serves
                 out.append(("%s (serves %s)" % (t, k), "services", "sell", {"group": role[k]["g"], "what": role[k]["l"]}, t))
+        elif t == "adventures_guest_house":
+            continue   # a stay's path in Quick is Place to stay -> its kind, walked by the stay plans below
         else:
             out.append((t, door, "sell", dict({"what~": t[len(door) + 1:]}, **({"deal": dl} if dl else {})), t))
             for o in idx:   # the other deal's own listing: a house TO LET must open the TO LET guide, not House FOR SALE
@@ -197,8 +199,12 @@ def plans(guides, idx, roles):
                             dict({"what!": sorted(x for x in exact if x.startswith(door + "_"))}, **({"deal": dl} if dl else {})), t))
     for door in sorted({s["door"] for s in idx if s.get("quick")}):
         out.append(("Find in %s" % door, door, "find", {}, "*"))
-    # STAY-WHERE-1 made a Quick stay path on 1 Oct; the guest-house guide was walked in TrustSquare's Sell
-    out.append(("Quick stay (B&B / guest house)", "adventures", "sell", {"what": "Place to stay", "kind": "Guest house"}, ""))
+    # STAY-WHERE-1 made a Quick stay path on 1 Oct. The guest-house guide (F12) was walked in TrustSquare's Sell -- the list
+    # then -- and through Quick on 2 Oct: every place to stay, whatever its kind, opens that guide
+    gh = next((s for s in idx if s["type"] == "adventures_guest_house" and s.get("quick")), None)
+    for kind in ("Guest house", "B&B"):
+        out.append(("Quick stay (%s)" % kind, "adventures", "sell", {"what": "Place to stay", "kind": kind},
+                    "adventures_guest_house" if gh else ""))
     return out
 
 

@@ -19,11 +19,11 @@
     "xh": "Indlu yeendwendwe: ukusuka kwintengiso ukuya kwiindwendwe ezikufumanayo",
     "nso": "Ntlo ya baeng: go tloga papatšong go ya go baeng bao ba go hwetšago"
    },
-   "walked_on": "2026-09-30",
-   "steps": 19,
-   "cover": "f12_01_sell",
+   "walked_on": "2026-10-02",
+   "steps": 23,
+   "cover": "f12q_01_door",
    "door": "adventures",
-   "quick": false
+   "quick": true
   },
   {
    "type": "adventures_guided_walk",

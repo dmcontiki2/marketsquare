@@ -3047,9 +3047,23 @@ function openFilterSheet(cat){
   if(typeof zoomOpen==='function' && zoomOpen(cat)) return;   // ZOOM-HMI-1: under the flag the funnel IS the filter
   _ensureUniversalBlocks();
   if(cat==='cars') _fillMakeDatalist();   // FILTER-DATA-2
+  if(cat==='adventures') _advSheetTypeSync();   // ADV-SYNC-2
   const _s = document.getElementById('fs-'+cat);
   if(_s) _s.classList.add('open');
   syncAllUniPills();
+}
+/* ADV-SYNC-2 (2 Oct 2026, the F12 walk): ADV-SYNC-1 made the Stays/Experiences pills write the sheet's Adventure Type,
+   but the sheet never showed it -- it opened with no type picked, so Apply read 'Any' and threw a guest on Stays back
+   to All, experiences among her stays. The sheet now opens with the pills' type picked. */
+function _advSheetTypeSync(){
+  const t = (typeof filterState!=='undefined' && filterState.adventures && filterState.adventures.adventureType) || '';
+  const sheet = document.getElementById('fs-adventures');
+  if(!sheet) return;
+  sheet.querySelectorAll('.fs-section').forEach(function(sec){
+    const label = sec.querySelector('.fs-label');
+    if(!label || msEnText(label)!=='Adventure Type') return;   // I18N-KEY-1: labels are matched in English
+    sec.querySelectorAll('.fs-opt').forEach(function(o){ o.classList.toggle('sel', !!t && msEnText(o)===t); });
+  });
 }
 
 /* FILTER-DATA-2 (20 Jul 2026, David's standing ruling): churny enumerations
@@ -18882,6 +18896,7 @@ function msHiredWords(i){
   if(/car|vehicle/.test(c)) return /hire|rent/i.test(lt) ? ['I hired them','Hired ✓','hired'] : bought;
   if(/collect|local/.test(c)) return bought;
   if(/propert|estate/.test(c)) return /rent|let/i.test(lt) ? rented : bought;
+  if(/accommodation/.test(c)) return ['I stayed with them','Stayed ✓','stayed with'];   // STAY-WORD-1 (F12 walk): nobody hires a guest house
   return ['I hired them','Hired ✓','hired'];
 }
 async function msIntroHired(introId, btn){

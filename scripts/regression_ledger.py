@@ -34276,5 +34276,52 @@ def rg_eula_footer_ver_1():
         return [(FAIL, "the Terms name more than one version: canon %s, end line %s, footer %s" % (m.group(1), end.group(1), foot.group(1)))]
     return [(INFO, "the Terms end with one version, %s" % m.group(1))]
 
+
+@entry("RG-0722", "ADV-SYNC-2: a guest on Adventures -> Stays who opens Filtered Search sees 'Stays' picked in the sheet, so "
+       "Apply keeps her on Stays -- the sheet opened with no type picked, Apply read it as 'Any' and threw her back to All "
+       "(experiences among her stays)",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js openFilterSheet('adventures') -> _advSheetTypeSync(): the sheet's Adventure Type mirrors "
+             "filterState.adventures.adventureType (which the Stays/Experiences pills write, ADV-SYNC-1) before it opens.",
+       ref="F12 walk through Quick, 2 Oct 2026: Karin on Stays -> Filtered Search -> Coastal & Beach -> Apply landed on the "
+           "All tab; the badge had already counted Stays as one filter.")
+def rg_adv_sync_2():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"function openFilterSheet\(cat\)\{(.*?)\n\}", js, _re.S)
+    if not m:
+        return [(FAIL, "openFilterSheet(cat) is not where this entry reads it")]
+    body = m.group(1)
+    i, j = body.find("_advSheetTypeSync()"), body.find("classList.add('open')")
+    if i < 0 or j < 0 or i > j:
+        return [(FAIL, "the Adventures sheet opens without showing the Stays/Experiences pill's type -- Apply throws a guest on Stays back to All")]
+    f = _re.search(r"function _advSheetTypeSync\(\)\{(.*?)\n\}", js, _re.S)
+    if not f or "adventureType" not in f.group(1) or "'Adventure Type'" not in f.group(1) or "'sel'" not in f.group(1):
+        return [(FAIL, "_advSheetTypeSync() no longer marks the sheet's Adventure Type from filterState.adventures.adventureType")]
+    return [(INFO, "the Adventures sheet opens with the pill's type picked; Apply keeps Stays")]
+
+
+@entry("RG-0723", "STAY-WORD-1: a guest whose stay was accepted is asked 'I stayed with them', not 'I hired them' -- nobody "
+       "hires a guest house; the button, its done chip and the confirm all follow (BOUGHT-WORD-1's words, one more case)",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js msHiredWords(): an intro on a stay (category adventures_accommodation) -> 'I stayed with them' / "
+             "'Stayed ✓' / 'stayed with'. The server record (RUL-142 verified client) is unchanged.",
+       ref="F12 walk through Quick, 2 Oct 2026: Karin's Intros showed Sannie's accepted guest house with 'I hired them'.")
+def rg_stay_word_1():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    f = _re.search(r"function msHiredWords\(i\)\{(.*?)\n\}", js, _re.S)
+    if not f:
+        return [(FAIL, "msHiredWords(i) is not where this entry reads it")]
+    body = f.group(1)
+    i, j = body.find("/accommodation/.test(c)"), body.find("return ['I hired them'")
+    if i < 0 or "'I stayed with them'" not in body or (j >= 0 and i > j):
+        return [(FAIL, "a guest whose stay was accepted is asked 'I hired them' again")]
+    return [(INFO, "a stay's guest is asked 'I stayed with them'")]
+
 if __name__ == "__main__":
     sys.exit(main())
