@@ -3065,20 +3065,24 @@ def rg_live_ops_dashboard():
            "client. migrations/014 marks the live trios (seller LIKE %showcase%); both "
            "creator scripts now write super_example=1 + showcase=1 so future trios are "
            "born correct. Public feeds ship the boolean via SELECT * (RG-0045-safe: "
-           "_strip_seller_identity is a blocklist and showcase is not identity).")
+           "_strip_seller_identity is a blocklist and showcase is not identity). "
+           "AMENDED 2 Oct 2026 (RUL-194, EXAMPLES-LAST-1): David retired SUPER-PIN-1, so the assertion now checks the "
+           "stronger form -- EVERY example, showcase or not, sorts after every real seller (server _ex_last in all 6 "
+           "variants; ms.js msExOrder). The intent of this entry is unchanged: no demo ever outranks a real seller.")
 def rg_showcase_banner_not_pin():
     out = []
     bea = repo_file("bea_main.py")
     if bea is None:
         return [(INFO, "running outside the repo — SHOWCASE-BANNER-1 checks skipped")]
-    n = bea.count("(COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC")
-    if n < 6:
-        out.append((FAIL, "server sort pins raw super_example again in %d/6 variants — "
-                          "showcase demos will outrank real sellers (SHOWCASE-BANNER-1)" % (6 - n)))
+    # AMENDED 2 Oct 2026 (RUL-194): the stronger form -- every example after every real seller.
+    n = bea.count('_ex_last + ", ')
+    if n < 6 or "(COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC" in bea:
+        out.append((FAIL, "server sort no longer puts every example after the real sellers in all 6 variants "
+                          "(%d/6) -- demos can outrank real sellers (SHOWCASE-BANNER-1 / RUL-194)" % n))
     js = repo_file("ms.js")
     if js is not None:
-        if "(a.super_example&&!a.showcase)?0:1" not in js:
-            out.append((FAIL, "ms.js comparator pins raw super_example again (SHOWCASE-BANNER-1)"))
+        if "function msExOrder(" not in js or "(a.super_example&&!a.showcase)?0:1" in js:
+            out.append((FAIL, "ms.js no longer puts every example after the real sellers (SHOWCASE-BANNER-1 / RUL-194)"))
         if "showcase: l.showcase || 0" not in js:
             out.append((FAIL, "ms.js mapper dropped the showcase field — the client cannot exclude the pin"))
     for f in ("scripts/create_stays_showcase_adverts.py", "scripts/create_email_showcase_adverts.py"):
@@ -33902,6 +33906,65 @@ def rg_how_place_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "How opens at her place: last card passed, the buyer's half, the list keeps her place")]
+
+
+@entry("RG-0655", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
+       "viewer can switch the examples off -- the switch starts ON and is remembered on the device",
+       OPEN,
+       scope="bea_main.py /listings _sort_map (5 variants + fallback via _ex_last) and the Local Market ORDER BY; "
+             "zoom_engine.order_results (is_example last); ms.js msIsExample / msShowExamples / msExOrder in renderGrid, "
+             "renderAdvGrid, lmLoadGrid, renderMap and renderCatCounts, with the 'AI examples on/off' switch; quick.html "
+             "find results (same device key ts_show_examples) with Hide/Show AI examples. SCOPE: every category, every "
+             "country, both apps. An example = super_example, is_demo, or a house account -- the RUL-187 definition.",
+       ref="RUL-194, David 2 Oct 2026: a DEMO switch combined with real listings first. Replaces SUPER-PIN-1 (20 Jul 2026). "
+           "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin.")
+def rg_examples_last_1():
+    bm = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); ze = repo_file("zoom_engine.py")
+    out = []
+    if None in (bm, js, q, ze):
+        out.append((INFO, "NOT EVALUATED (source) - repo files not readable from here"))
+    else:
+        bad = []
+        if bm.count('_ex_last + ", ') < 6:
+            bad.append("a /listings sort variant no longer puts examples last")
+        if "(COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC" in bm:
+            bad.append("the old example pin is back in the server sort")
+        if "ORDER BY (CASE WHEN COALESCE(l.is_demo,0)=1 OR COALESCE(l.super_example,0)=1" not in bm:
+            bad.append("Local Market no longer lists real listings first")
+        if "ex = 1 if is_example(r) else 0" not in ze:
+            bad.append("the zoom order no longer puts examples last")
+        for need, what in (("function msExOrder(", "the ordering helper"),
+                           ("localStorage.getItem(MS_EX_KEY) !== '0'", "the switch starting ON"),
+                           ("const _exShown = msExOrder(filtered);", "Browse"), ("items = msExOrder(items);", "Adventures"),
+                           ("const cards = msExOrder(_lmAll);", "Local Market"),
+                           ("if(!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: the map", "the map"),
+                           ("if (!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: hidden examples", "the category counts"),
+                           ("function msExSwitchHtml(", "the switch")):
+            if need not in js:
+                bad.append("ms.js lost " + what)
+        if "(a.super_example&&!a.showcase)?0:1" in js:
+            bad.append("ms.js pins examples first again")
+        for need, what in (("localStorage.getItem('ts_show_examples')!=='0'", "the shared switch"),
+                           ('id="lkex"', "the Hide/Show button"), (".concat(exOn?_exAll:[]).slice(0,5)", "real-first order")):
+            if need not in q:
+                bad.append("Quick lost " + what)
+        out.append((FAIL, "; ".join(bad)) if bad else (INFO, "source: every list puts real listings first and the switch is wired"))
+    # LIVE: the public feed answers real listings first
+    raw = _get("/listings?city=Pretoria&page_size=100")
+    try:
+        rows = json.loads(raw)
+    except Exception:
+        return out + [(FAIL, "live: the Pretoria feed did not answer JSON")]
+    if isinstance(rows, dict):
+        rows = rows.get("listings") or rows.get("items") or []
+    def _ex(r):
+        return bool(r.get("demo_example") or int(r.get("super_example") or 0) or int(r.get("is_demo") or 0))
+    flags = [_ex(r) for r in rows]
+    if True in flags and False in flags[flags.index(True):]:
+        out.append((FAIL, "live: an AI example comes before a real listing in the Pretoria feed"))
+    else:
+        out.append((INFO, "live: %d real listing(s), then %d AI example(s), in the Pretoria feed" % (flags.count(False), flags.count(True))))
+    return out
 
 if __name__ == "__main__":
     sys.exit(main())

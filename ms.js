@@ -1746,6 +1746,61 @@ function _demoBadge(l){
     ? '<span class="demo-ex-badge" onclick="event.stopPropagation();showToast(DEMO_EXAMPLE_MSG, 7000)" style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:10px;font-weight:800;vertical-align:middle;cursor:pointer;">Demo example</span>'
     : '';
 }
+/* EXAMPLES-LAST-1 (RUL-194, David 2 Oct 2026): "Have a DEMO switch for users to switch them on or off" -- combined with
+   real listings always ABOVE the AI examples. One rule for every list: real listings first, then the AI examples (when the
+   viewer has them on), then 'Coming soon' placeholders. The switch starts ON and is remembered on this device; Quick reads
+   the same key. Replaces SUPER-PIN-1 (20 Jul 2026), which pinned the examples first. An example stays marked and still takes
+   no introduction (RUL-040, RUL-187) -- the switch changes only whether it is shown. */
+const MS_EX_KEY = 'ts_show_examples';
+function msIsExample(l){ return !!(l && (l.demo_example || +l.super_example || +l.is_demo)); }
+function msShowExamples(){ try{ return localStorage.getItem(MS_EX_KEY) !== '0'; }catch(e){ return true; } }
+function msExSplit(list){
+  const real = [], ex = [], ph = [];
+  (list || []).forEach(function(l){
+    if(String(l && l.id).startsWith('ph_')) ph.push(l); else if(msIsExample(l)) ex.push(l); else real.push(l);
+  });
+  return { real: real, ex: ex, ph: ph };
+}
+function msExOrder(list){ const s = msExSplit(list); return msShowExamples() ? s.real.concat(s.ex, s.ph) : s.real.concat(s.ph); }
+function msExCountText(nReal, nEx){
+  const on = msShowExamples();
+  return nReal + ' real listing' + (nReal === 1 ? '' : 's') + ((nEx && on) ? ' · ' + nEx + ' AI example' + (nEx === 1 ? '' : 's') : '');
+}
+function msExSwitchHtml(nEx){
+  const on = msShowExamples();
+  if(!nEx && on) return '';   // no examples in this view: nothing to switch
+  return '<button type="button" class="ms-ex-switch" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"'
+    + ' onclick="event.stopPropagation();msToggleExamples()" title="Show or hide the AI example listings"'
+    + ' style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;'
+    + 'border:1px solid ' + (on ? '#fcd34d' : '#d1d5db') + ';background:' + (on ? '#fef3c7' : '#f3f4f6') + ';color:' + (on ? '#92400e' : '#4b5563') + ';">'
+    + '<span style="position:relative;display:inline-block;width:24px;height:13px;border-radius:7px;background:' + (on ? '#f59e0b' : '#9ca3af') + ';">'
+    + '<span style="position:absolute;top:1.5px;' + (on ? 'right' : 'left') + ':1.5px;width:10px;height:10px;border-radius:50%;background:#fff;"></span></span>'
+    + 'AI examples ' + (on ? 'on' : 'off') + '</button>';
+}
+function msExPaint(slotId, anchorId, nEx, before, css){
+  let s = document.getElementById(slotId);
+  if(!s){
+    const a = document.getElementById(anchorId);
+    if(!a || !a.parentNode) return;
+    s = document.createElement('div'); s.id = slotId; s.style.cssText = css || '';
+    a.parentNode.insertBefore(s, before ? a : a.nextSibling);
+  }
+  s.innerHTML = msExSwitchHtml(nEx);
+}
+function msExHiddenNote(nEx){
+  return '<div class="no-res">No real listings here yet' + (nEx ? ' — ' + nEx + ' AI example' + (nEx === 1 ? ' is' : 's are') + ' hidden.' : '.')
+    + '<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msToggleExamples()">Show AI examples</span></div>';
+}
+function msToggleExamples(){
+  const on = !msShowExamples();
+  try{ localStorage.setItem(MS_EX_KEY, on ? '1' : '0'); }catch(e){}
+  if(typeof showToast === 'function') showToast(on ? 'AI examples are shown, below the real listings.' : 'AI examples are hidden. Only real listings show.', 3500);
+  try{ renderGrid(); }catch(e){}
+  try{ if(document.getElementById('adv-grid')) renderAdvGrid(); }catch(e){}
+  try{ const lg = document.getElementById('lm-grid'); if(lg && lg.offsetParent !== null) lmLoadGrid(); }catch(e){}
+  try{ if(typeof viewMode !== 'undefined' && viewMode === 'map') renderMap(); }catch(e){}
+  try{ renderCatCounts(); }catch(e){}
+}
 function fspark(l){
   return _demoBadge(l) + (isFounders(l)
     ? `<img src="/static/founders_spark.svg" alt="Founders Badge" style="width:16px;height:16px;vertical-align:middle;margin-left:4px;cursor:pointer;flex:none;" onclick="event.stopPropagation();showToast('Founders Badge · minted at launch 2026 — never minted again',4000)">`
@@ -4119,9 +4174,17 @@ function renderAdvGrid(){
     if(_mixed.length === items.length) items = _mixed;
   }
 
-  countEl.textContent = items.length
-    ? `${items.length} listing${items.length===1?'':'s'} · ${advCountryName}`
+  // EXAMPLES-LAST-1 (RUL-194): real listings first, AI examples after them (or hidden).
+  const _advSp = msExSplit(items);
+  items = msExOrder(items);
+  countEl.textContent = (_advSp.real.length + _advSp.ph.length || _advSp.ex.length)
+    ? `${msExCountText(_advSp.real.length + _advSp.ph.length, _advSp.ex.length)} · ${advCountryName}`
     : '';
+  msExPaint('ms-ex-adv', 'adv-results-count', _advSp.ex.length, false, 'padding:0 16px 4px;');
+  if(!items.length && _advSp.ex.length && !msShowExamples()){
+    grid.innerHTML = msExHiddenNote(_advSp.ex.length);
+    return;
+  }
 
   if(!items.length){
     grid.innerHTML = `<div class="adv-empty">
@@ -4648,6 +4711,7 @@ function renderMap(){
   const listings=LISTINGS.filter(l=>{
     if(String(l.id).startsWith('ph_')) return false;
     if(l.paused) return false;
+    if(!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: the map follows the switch
     if(activeFilter!=='All'&&normCat(l.cat)!==activeFilter) return false;
     if(DEMO_MODE && String(l.id).startsWith('demo_')) {
       const lCity = l.city || l.area || '';
@@ -4756,6 +4820,7 @@ function renderCatCounts() {
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
     if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
+    if (!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: hidden examples are not counted
     if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     // TODO: REMOVE BEFORE LAUNCH — mirror DEMO_DISPLAY_MODE filter
@@ -5261,22 +5326,34 @@ function renderGrid(){
   }
   // Placeholders always go last — push "Coming soon" cards to the end
   filtered.sort((a,b)=>{
-    const asup=(a.super_example&&!a.showcase)?0:1, bsup=(b.super_example&&!b.showcase)?0:1;   // SUPER-PIN-1 + SHOWCASE-BANNER-1: exemplars pin first, showcase demos never pin
-    if(asup!==bsup) return asup-bsup;
+    // SUPER-PIN-1 (examples pinned first) is retired by EXAMPLES-LAST-1 (RUL-194): msExOrder() below puts every
+    // AI example after the real listings, whatever the sort.
     const aph=String(a.id).startsWith('ph_')?1:0;
     const bph=String(b.id).startsWith('ph_')?1:0;
     return aph-bph;
   });
   // ZOOM-HMI-1 (spec 6.1): the server's order IS the Ranking Score (0.5 quality + 0.5 trust),
-  // super_example already pinned first there -- one ranking method, two surfaces.
+  // examples already last there (EXAMPLES-LAST-1) -- one ranking method, two surfaces.
   if(_zoomOrder && zoomActiveFor(activeFilter)){
     filtered.sort((a,b)=> (_zoomOrder.has(a.id)?_zoomOrder.get(a.id):1e9) - (_zoomOrder.has(b.id)?_zoomOrder.get(b.id):1e9));
   }
 
+  // EXAMPLES-LAST-1 (RUL-194): real listings first, AI examples after them (or hidden), placeholders last.
+  const _exSp = msExSplit(filtered);
+  const _exN = _exSp.ex.length;
+  const _exShown = msExOrder(filtered);
+  filtered.length = 0; Array.prototype.push.apply(filtered, _exShown);
+
   const grid = document.getElementById('listing-grid');
   const countEl = document.getElementById('results-count');
-  const realCount = filtered.filter(l => !String(l.id).startsWith('ph_')).length;
-  if(countEl) countEl.textContent = realCount > 0 ? `${realCount} listing${realCount!==1?'s':''} found` : '';
+  const realCount = _exSp.real.length;
+  if(countEl) countEl.textContent = (realCount > 0 || _exN > 0) ? msExCountText(realCount, _exN) : '';
+  msExPaint('ms-ex-browse', 'results-count', _exN, false, 'margin:0 8px 0 auto;');
+  if(!filtered.length && _exN && !msShowExamples()){
+    grid.innerHTML = msExHiddenNote(_exN);
+    if(typeof catAgentsRestore==='function') catAgentsRestore();
+    return;
+  }
   if(!filtered.length){
     if(_msSearchIds){
       grid.innerHTML='<div class="no-res">No matches for \u201C'+_wlEsc(_msSearchQ)+'\u201D — try fewer or different words.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msClearSearch()">Clear search</span></div>';
@@ -17283,14 +17360,22 @@ async function lmLoadGrid() {
     if (DEMO_MODE) params.set('demo', '1');
     const r = await fetch(BEA_URL + '/local-market/listings?' + params.toString());
     if (!r.ok) throw new Error('API ' + r.status);
-    const cards = await r.json();
+    const _lmAll = await r.json();
+    // EXAMPLES-LAST-1 (RUL-194): real listings first, AI examples after them (or hidden).
+    const _lmSp = msExSplit(_lmAll);
+    const cards = msExOrder(_lmAll);
     // Refresh the search signal with the actual result count (0 = demand MISS).
     if (_lmSearchQ && typeof wlCaptureSearch === 'function') {
-      try { wlCaptureSearch(_lmSearchQ, null, (cards && cards.length) || 0); } catch(e) {}
+      try { wlCaptureSearch(_lmSearchQ, null, (_lmAll && _lmAll.length) || 0); } catch(e) {}
+    }
+    msExPaint('ms-ex-lm', 'lm-grid', _lmSp.ex.length, true, 'padding:0 16px 8px;');
+    if (!cards.length && _lmSp.ex.length && !msShowExamples()) {
+      grid.innerHTML = '<div style="grid-column:1/-1;">' + msExHiddenNote(_lmSp.ex.length) + '</div>';
+      return;
     }
     if (!cards.length) {
       // Fall back to demo listings from local LISTINGS array
-      const aCity = activeCity.name || ''; const demoLM = LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket' && (!aCity || !l.city || l.city === aCity));
+      const aCity = activeCity.name || ''; const demoLM = msExOrder(LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket' && (!aCity || !l.city || l.city === aCity)));   // EXAMPLES-LAST-1
       if (demoLM.length) {
         // A11Y-NAMES-1 (25 Sep 2026 inspection, shell-08): each heart says 'Save advert' / 'Remove from saved' and whether it is on
         grid.innerHTML = demoLM.map(l => {

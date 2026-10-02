@@ -136,12 +136,12 @@ def main():
             fails.append("%s took %d taps (budget %d)" % (name, t, budget))
         if r["total"] == 0:
             fails.append("%s landed on zero results" % name)
-    # (6.1) order = ranking score, pinned first
+    # (6.1) order = ranking score, AI examples after every real listing (EXAMPLES-LAST-1, RUL-194)
     c = cands(rows, "Cars"); c[0]["super_example"] = 1
     res = Z.next_step(c, "Cars", {}, tier="free")
-    if res["ids"][0] != c[0]["id"]:
-        fails.append("super_example not pinned first")
-    sc = [res["scores"][str(i)] for i in res["ids"][1:]]
+    if res["ids"][-1] != c[0]["id"]:
+        fails.append("an AI example is not after the real listings")
+    sc = [res["scores"][str(i)] for i in res["ids"][:-1]]
     if sc != sorted(sc, reverse=True):
         fails.append("results not ordered by ranking score")
     # (rule 4) typing is a shortcut through the funnel

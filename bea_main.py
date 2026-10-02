@@ -3641,20 +3641,23 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
     if (_gate_viewer or _gate_staff) and response is not None:
         response.headers["Cache-Control"] = "private, no-store"   # this answer is shaped by who is asking
     _extra_where = (" WHERE " + " AND ".join(_xw)) if _xw else ""
+    # EXAMPLES-LAST-1 (RUL-194, David 2 Oct 2026): real listings ALWAYS come before the AI examples, in every sort
+    # variant. An example is the same thing DEMO-INACTIVE-1 refuses an introduction to (_is_demo_example: is_demo or a
+    # house account) plus the super_example exemplars. This replaces SUPER-PIN-1 (20 Jul 2026), which pinned the
+    # exemplars first, and widens SHOWCASE-BANNER-1 (11 Aug 2026, showcase demos never outrank real sellers) to every
+    # example. Examples keep their order among themselves; the app's switch can hide them (ms.js msExOrder).
+    _ex_last = ("ORDER BY (CASE WHEN COALESCE(is_demo,0)=1 OR COALESCE(super_example,0)=1"
+                " OR LOWER(COALESCE(seller_email,'')) LIKE '%@trustsquare.co'"
+                " OR LOWER(COALESCE(seller_email,'')) LIKE '%@example.com' THEN 1 ELSE 0 END) ASC")
     _sort_map = {
-        # SUPER-PIN-1 (20 Jul 2026, David): super_example exemplars are LIVE LAUNCH
-        # fixtures — always the first listing in every view, the measuring stick
-        # every lister checks against. Every sort variant pins them first.
-        # SHOWCASE-BANNER-1 (11 Aug 2026, David): showcase demos share the banner
-        # but NOT the pin — the (1-showcase) factor keeps real sellers on top.
-        "newest":     "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, created_at DESC",
-        "price_asc":  "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (price_num IS NULL), price_num ASC",
-        "price_desc": "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (price_num IS NULL), price_num DESC",
-        "trust":      "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, COALESCE(trust_score,0) DESC, created_at DESC",
+        "newest":     _ex_last + ", created_at DESC",
+        "price_asc":  _ex_last + ", (price_num IS NULL), price_num ASC",
+        "price_desc": _ex_last + ", (price_num IS NULL), price_num DESC",
+        "trust":      _ex_last + ", COALESCE(trust_score,0) DESC, created_at DESC",
         # smart = the design's dials: trust (60%) + freshness decay over 30 days (40%)
-        "smart":      "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
+        "smart":      _ex_last + ", (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
     }
-    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, created_at DESC")
+    _order_clause = _sort_map.get((sort or "").strip().lower(), _ex_last + ", created_at DESC")
 
     if suburb:
         # Suburb filter only applies to home-city branch (extended listings have no suburb match)
@@ -13374,7 +13377,10 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
             FROM listings l
             LEFT JOIN users u ON u.email = l.seller_email
             WHERE {where}
-            ORDER BY COALESCE(l.super_example,0) DESC, l.published_at DESC LIMIT ?""",
+            ORDER BY (CASE WHEN COALESCE(l.is_demo,0)=1 OR COALESCE(l.super_example,0)=1
+                        OR LOWER(COALESCE(l.seller_email,'')) LIKE '%@trustsquare.co'
+                        OR LOWER(COALESCE(l.seller_email,'')) LIKE '%@example.com' THEN 1 ELSE 0 END) ASC,
+                     l.published_at DESC LIMIT ?""",   # EXAMPLES-LAST-1 (RUL-194): real Local Market listings first
         params + [limit]
     ).fetchall()
     conn.close()

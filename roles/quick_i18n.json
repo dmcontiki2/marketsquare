@@ -5481,6 +5481,27 @@
    "",
    "amagumbi okuhlambela",
    "diphapoši tša go hlapela"
+  ],
+  "Hide AI examples": [
+   "Versteek KI-voorbeelde",
+   "Fihla izibonelo ze-AI",
+   "Pata mehlala ya AI",
+   "Fihla imizekelo ye-AI",
+   "Uta mehlala ya AI"
+  ],
+  "Show AI examples": [
+   "Wys KI-voorbeelde",
+   "Bonisa izibonelo ze-AI",
+   "Bontsha mehlala ya AI",
+   "Bonisa imizekelo ye-AI",
+   "Bontšha mehlala ya AI"
+  ],
+  "AI examples are hidden.": [
+   "KI-voorbeelde is versteek.",
+   "Izibonelo ze-AI zifihliwe.",
+   "Mehlala ya AI e patilwe.",
+   "Imizekelo ye-AI ifihliwe.",
+   "Mehlala ya AI e utilwe."
   ]
  },
  "p": [
