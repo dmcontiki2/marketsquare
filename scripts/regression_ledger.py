@@ -33987,5 +33987,44 @@ def rg_cut_words_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "long words wrap or shrink to fit in Quick, the guides and the main app")]
 
+
+@entry("RG-0658", "I18N-APP-WORD-1: Afrikaans says 'app', never 'toep' -- the checked words, the guides and Quick carry no "
+       "'toep'; the server's translator is told to keep 'app'; migration 063 rewrote the cached machine words and "
+       "ms.js DICTV 7 made every browser drop its saved copy",
+       OPEN, fixed_on="2026-10-02",
+       scope="roles/app_i18n_af.json; stories/*.json (af); quick.html; bea_main.py I18N_GLOSS['af']; "
+             "migrations/063_i18n_af_app_word.py; ms.js DICTV",
+       ref="David, 2 Oct 2026: \"the English 'app' is translated to 'toep' ... most people will understand the 'app' in "
+           "Afrikaans and won't know what 'toep' is -- rather use the app for Afrikaans as well\".")
+def rg_i18n_app_word_1():
+    import glob, re as _re
+    af = repo_file("roles/app_i18n_af.json"); q = repo_file("quick.html"); bea = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if None in (af, q, bea, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    word = _re.compile(r"\b[Tt]oepe?\b")
+    bad = []
+    try:
+        d = json.loads(af)
+        hits = [v for v in d.get("t", {}).values() if word.search(v or "")]
+        if hits:
+            bad.append("the checked Afrikaans says 'toep' again (%s)" % hits[0][:40])
+    except Exception as e:
+        bad.append("roles/app_i18n_af.json does not parse (%s)" % e)
+    if word.search(q):
+        bad.append("Quick says 'toep'")
+    for f in sorted(glob.glob(os.path.join(REPO, "stories", "*.json"))):
+        if word.search(open(f, encoding="utf-8").read()):
+            bad.append("a guide says 'toep' (%s)" % os.path.basename(f))
+    if "never 'toep', 'toepe' or 'toepassing'" not in bea:
+        bad.append("the server's translator is no longer told to keep 'app'")
+    m = _re.search(r"var DICTV='(\d+)'", js)
+    if not m or int(m.group(1)) < 7:
+        bad.append("ms.js DICTV is below 7 -- browsers keep their saved 'toep'")
+    if repo_file("migrations/063_i18n_af_app_word.py") is None:
+        bad.append("migration 063 is missing")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "Afrikaans says 'app' in the checked words, the guides, Quick and the translator's rules")]
+
 if __name__ == "__main__":
     sys.exit(main())

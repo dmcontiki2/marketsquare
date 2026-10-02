@@ -29896,7 +29896,10 @@ I18N_GLOSS = {
            "\"Make an introduction\" is \"Maak 'n voorstelling\" and never \"stel jouself voor\". "
            "A LISTING is an advertensie. LISTING SLOTS are advertensieplekke. A SELLER is a "
            "verkoper and a BUYER a koper. A WISHLIST is a wenslys. Market goods: raw honey is "
-           "'rou heuning', beeswax is 'byewas', propolis stays 'propolis'."),
+           "'rou heuning', beeswax is 'byewas', propolis stays 'propolis'. "
+           # I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use the app for Afrikaans as well'): readers know 'app'
+           "The APP (TrustSquare's app, or any app on a phone) is 'app' in Afrikaans, plural 'apps', "
+           "'in-app' is 'in die app' -- never 'toep', 'toepe' or 'toepassing'."),
 }
 
 def _i18n_prompt(lang: str, items) -> str:
