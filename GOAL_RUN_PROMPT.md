@@ -98,7 +98,8 @@ fresh clone of `origin/main` through the server relay (push the branch to `/opt/
 **Seen 29 Sep 2026 (run 24):** the unattended run's own safety layer refused the click that publishes a public advert on the live site. Walk to the Publish button, record that the rest was not walked, and report it in one line; do not look for a way round it. David decides whether that changes.
 
 State at 28 Sep 2026 — verify, do not trust: walk-3 items 1, 2, 4, 5, 6 closed 27 Sep (RG-0537);
-item 3, fair price on **Local Market**, waits on `EBAY_APP_ID` / `EBAY_CERT_ID`, which are David's.
+item 3, fair price on **Local Market**, no longer waits on eBay keys: since 27 Sep it runs on named-source web
+comparables (FAIR-PRICE-WEB-1); eBay is an optional extra source, not a blocker (checked 2 Oct).
 If it is still open, one line, move on.
 
 ## 3. READ THE STATE
