@@ -8786,7 +8786,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
     if status == "all":
         if buyer_email:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE LOWER(i.buyer_email) = LOWER(?)
@@ -8795,7 +8795,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    ORDER BY i.created_at DESC"""
@@ -8803,7 +8803,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
     else:
         if buyer_email:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE i.status = ? AND LOWER(i.buyer_email) = LOWER(?)
@@ -8812,7 +8812,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE i.status = ?
@@ -24720,10 +24720,15 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
             "charged":          False,
             "sa_context":       "",
             "sa_range":         "N/A",
-            "assessment":       ("We don\u2019t yet have a verified price source for this "
+            # PRICE-MISS-WORD-1 (2 Oct 2026, F10 walk): a chip the buyer chose was offered because its source is
+            # live -- when it finds nothing (or fails) that is not "no source for this category".
+            "assessment":       (("We couldn\u2019t get a verified price for this item just now, so we "
+                                  "won\u2019t guess. No Tuppence was charged. Try again later, or compare the "
+                                  "asking price against similar listings before deciding.") if tier is not None else
+                                 ("We don\u2019t yet have a verified price source for this "
                                  "category, so we won\u2019t guess. No Tuppence was charged. "
                                  "Compare the asking price against similar local listings "
-                                 "before deciding."),
+                                 "before deciding.")),
             "official_context": "",
             "official_range":   "N/A",
             "local_vs_global":  "cannot_compare",

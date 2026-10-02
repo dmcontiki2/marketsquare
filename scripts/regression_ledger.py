@@ -34014,5 +34014,55 @@ def rg_hub_active_count_1():
         return [(FAIL, "a hub card reads l.paused again (the server never sends it)")]
     return [(INFO, "the hub's ACTIVE count leaves out paused adverts")]
 
+@entry("RG-0671", "BOUGHT-WORD-1: after an accepted introduction the buyer's confirm button says what she did -- 'I bought from them' "
+       "for a car for sale, a collector's piece or Local Market goods, 'I rented from them' for a property to let, 'I hired them' for "
+       "a service or a car for hire (the F8 and F10 walks were offered 'I hired them' for a bakkie and a coin)",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js msHiredWords() in the sent-intros list and msIntroHired(); bea_main.py GET /intros adds l.listing_type.",
+       ref="F8 (Pieter, bakkie #444) and F10 (Ayanda, coin #455) cloud walks, 30 Sep 2026; David 2 Oct: complete the open actions.")
+def rg_bought_word_1():
+    ms = repo_file("ms.js"); bm = repo_file("bea_main.py")
+    if None in (ms, bm):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "function msHiredWords(i)" not in ms or "const _hw = msHiredWords(i);" not in ms:
+        bad.append("a buyer who bought a car or a coin is asked 'I hired them' again")
+    if bm.count("SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type") < 4:
+        bad.append("GET /intros no longer tells a hire car from a sale")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the buyer confirms what she did: bought, rented or hired")]
+
+@entry("RG-0672", "ACCEPT-PRIVATE-WORDS-1: the advert's how-it-works steps and the identity box say what an accept does today -- "
+       "you both get an email and talk by replying, email addresses stay private -- not 'identities revealed'",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js listing detail queue/commitment steps, the Local Market steps and the two buyer-facing identity boxes.",
+       ref="F8 cloud walk 30 Sep 2026: the advert said 'Accepted -> 1T deducted - identities revealed' while the accept said "
+           "'your email address stays private'.")
+def rg_accept_private_words_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "identities revealed" in ms:
+        return [(FAIL, "an advert says identities are revealed on accept again")]
+    if ms.count("Reply to it to talk · email addresses stay private") < 3:
+        return [(FAIL, "the advert's steps no longer say how the two of you talk after an accept")]
+    return [(INFO, "the advert says an accept means an email each, addresses private")]
+
+@entry("RG-0673", "PRICE-MISS-WORD-1: when the 1T price check the buyer chose finds no verified price, it says 'We couldn't get a "
+       "verified price for this item just now' (not charged) instead of 'We don't yet have a verified price source for this category'",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py fair-price no-feed answer: the old words only when no tier was chosen.",
+       ref="F10 cloud walk 30 Sep 2026: the collectors source was live (the chip was offered) but failed while OpenAI had no "
+           "credit; the answer blamed the category.")
+def rg_price_miss_word_1():
+    bm = repo_file("bea_main.py")
+    if bm is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "We couldn\\u2019t get a verified price for this item just now" not in bm or ") if tier is not None else" not in bm:
+        return [(FAIL, "a failed price check blames the category again")]
+    return [(INFO, "a price check that finds nothing says so, and charges nothing")]
+
+
 if __name__ == "__main__":
     sys.exit(main())
