@@ -102,6 +102,14 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-194": [
+   ("RULINGS.md", ["REAL LISTINGS ALWAYS COME BEFORE THE AI EXAMPLES"], []),
+   ("bea_main.py", ["EXAMPLES-LAST-1", '_ex_last + ", created_at DESC"'], ["(COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC"]),
+   ("ms.js", ["function msExOrder(", "const MS_EX_KEY = 'ts_show_examples';"], ["(a.super_example&&!a.showcase)?0:1"]),
+   ("quick.html", ["localStorage.getItem('ts_show_examples')!=='0'"], []),
+   ("zoom_engine.py", ["ex = 1 if is_example(r) else 0"], ["pinned = 1 if"]),
+   ("AGENT_BRIEFING.md", ["EXAMPLES-LAST-1"], []),
+ ],
  "RUL-193": [
    ("RULINGS.md", ["NOTHING IS STOPPED, WIPED OR OVERWRITTEN BETWEEN THE CLOUD AND THE LAPTOP"], []),
    ("scripts/sync_origin.py", ["SYNC-ORIGIN-1", "merge', '--abort'"], ["'--force'", "'reset'"]),

@@ -1,0 +1,1 @@
+- **INTRO-ADDR-HIDE-1 (RG-0657), OPEN_LOOPS L29:** when a buyer asked for an introduction, the seller's app was sent the buyer's email address before the seller had accepted — the screen showed only her first name, but the address was in the data. Now the address reaches the seller only once she accepts, as TrustSquare promises. The buyer's own list and staff views are unchanged.

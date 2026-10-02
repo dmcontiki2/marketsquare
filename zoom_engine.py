@@ -21,8 +21,8 @@ Engine rules carried here (each was found by BUILDING the prototype, not by desi
        applied silently (lossless) and shown in the rail, never asked
   rule 2: zero-count options do not exist -- an option is a value some row in the set holds
   rule 4: typing is a shortcut THROUGH the funnel (apply_text) -- it fills chips
-  6.1  result order = Ranking Score at listing level, 0.5*quality + 0.5*trust, super_example
-       pinned first (SUPER-PIN-1), freshness only as the tiebreak
+  6.1  result order = Ranking Score at listing level, 0.5*quality + 0.5*trust, every AI example
+       AFTER the real listings (EXAMPLES-LAST-1, RUL-194 -- replaces SUPER-PIN-1), freshness only as the tiebreak
 """
 from __future__ import annotations
 
@@ -373,10 +373,16 @@ def rank_score(r, quality_fn=None):
     t = _num(r.get("trust_score")) or 0.0
     return round(0.5 * min(100.0, q) + 0.5 * min(100.0, t), 1)
 
+def is_example(r):
+    """EXAMPLES-LAST-1 (RUL-194): an AI example -- an exemplar, a demo row, or anything a house account holds."""
+    em = str(r.get("seller_email") or "").strip().lower()
+    return bool(_num(r.get("super_example")) or _num(r.get("is_demo")) or r.get("demo_example")
+                or em.endswith("@trustsquare.co") or em.endswith("@example.com"))
+
 def order_results(rows, quality_fn=None):
     def key(r):
-        pinned = 1 if (_num(r.get("super_example")) and not _num(r.get("showcase"))) else 0
-        return (-pinned, -rank_score(r, quality_fn), -(_num(r.get("id")) or 0))
+        ex = 1 if is_example(r) else 0   # EXAMPLES-LAST-1: real listings first, examples after them
+        return (ex, -rank_score(r, quality_fn), -(_num(r.get("id")) or 0))
     return sorted(rows, key=key)
 
 def next_step(rows, cat, chosen, tier="free", locked_geo=None, quality_fn=None, text=None):

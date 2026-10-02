@@ -188,6 +188,8 @@ default result order becomes the **Ranking Score at listing level** — `0.5 x l
 0.5 x seller trust` — the same 50/50 as the agent formula, so one method governs both surfaces.
 Freshness drops from a 40% headline dial to a tiebreak. `super_example` pinning is unchanged
 (SUPER-PIN-1 stands). Both prototypes now sort this way and print the score on each card.
+**AMENDED 2 Oct 2026 (RUL-194, EXAMPLES-LAST-1):** SUPER-PIN-1 is superseded -- every AI example now sorts
+AFTER every real listing (zoom_engine.order_results keys on is_example first), and the viewer can hide them.
 
 **Build blocker this creates, named not hidden:** listing quality is computed per row today
 (`_import_quality_score`), **not stored** — so SQL cannot order by it. A maintained

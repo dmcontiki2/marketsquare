@@ -28,7 +28,7 @@
   "xh": "Kwinyathelo le-12: de iqela lethu lihlole isatifikethi sakho samapolisa, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
   "nso": "Kgatong ya 12: go fihlela sehlopha sa rena se hlahlobile setifikeiti sa gago sa maphodisa, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
  },
- "walked_on": "2026-09-30",
+ "walked_on": "2026-10-02",
  "people": {
   "you": "Thandeka",
   "regular": "Nomsa",
@@ -509,7 +509,7 @@
    "who": "you",
    "cost": "free",
    "img": "f2_25_opened",
-   "pass": false,
+   "pass": true,
    "en": [
     "Our team checks it: families can find you",
     "Once it is checked, your listing shows in searches and your Trust Score goes up."
@@ -624,7 +624,7 @@
    "who": "customer",
    "cost": "free",
    "img": "f2_26_detail",
-   "pass": false,
+   "pass": true,
    "en": [
     "A new family finds you",
     "She finds you under [[Services]] by area, and sees your rate, your days, the ages you care for and your Trust Score."
@@ -652,7 +652,7 @@
    "who": "customer",
    "cost": "1T",
    "img": "f2_27_ask",
-   "pass": false,
+   "pass": true,
    "en": [
     "She asks for an introduction",
     "She writes a short message. 1 Tuppence is held from her, and spent only if you accept."
@@ -680,7 +680,7 @@
    "who": "you",
    "cost": "free",
    "img": "f2_28_accept",
-   "pass": false,
+   "pass": true,
    "en": [
     "You accept",
     "Open [[My Space]], then [[Intros]], and tap [[Accept]]. You both get an email: reply to it to talk. Your email address stays private."

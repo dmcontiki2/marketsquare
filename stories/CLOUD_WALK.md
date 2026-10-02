@@ -43,13 +43,9 @@ list the email in the report under **Checked next on the laptop**.
 | F13 Adventures experience | hiking, water sports, wildlife … sky & extreme | difficulty and season shown; intro; accept |
 | F14 Agency-listed | estate agency for owners; placement agency for workers | an agent lists for someone else; the right person receives the intro |
 
-**L35 -- F10 re-walk (David, 1 Oct 2026).** The F10 photo shows a Krugerrand dated **2000** while every screen said
-"1974 Krugerrand ... proof". Text is corrected (Quick's example in five languages, the story's step 7, adverts #454/#455).
-Re-shoot every F10 screen that shows the old title -- f10_07b, 08, 11, 12, 14, 15, 17, 23, 24, 26, 28, 30, 31, 32 -- as a
-fresh walk with new QA people, typing "2000 Krugerrand, 1 oz gold"; step 18 (fair price, 1T) passes now that OpenAI has
-credit. Do not regenerate the AI report text or any video.
+**L35 -- F10 re-walk: DONE 2 Oct 2026** (Luthando / Zintle, advert #464; `docs/E2E_2026-10-02_F10_rewalk.md`).
 
-Done already: F1 (`stories/home_cleaner.json`), F2 (`stories/nanny.json`, family half waits on L28), F8 (`stories/cars_bakkie.json`), F9 (`stories/cars_for_hire.json`), F10 (`stories/collectors_coins.json` -- **RE-WALK FIRST, before any new flow (L35):** the coin is a **2000** Krugerrand, not 1974), F11 (`stories/localmarket_food_preserves.json`). Walk
+Done already: F1 (`stories/home_cleaner.json`), F2 (`stories/nanny.json`, family half waits on L28), F8 (`stories/cars_bakkie.json`), F9 (`stories/cars_for_hire.json`), F10 (`stories/collectors_coins.json`, re-walked 2 Oct), F11 (`stories/localmarket_food_preserves.json`). Walk
 one flow per session, picking the first one here with no `stories/<type>.json` yet.
 
 ## 3. The walk (the story template)

@@ -1,0 +1,1 @@
+- **HUB-ACTIVE-COUNT-1 (RG-0658), from the F12 story walk:** the Seller Hub's **Active** count included paused adverts — a host who had paused all three of her adverts still read "3 ACTIVE". It now counts only the adverts buyers can see.

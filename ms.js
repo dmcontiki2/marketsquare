@@ -612,6 +612,9 @@ async function loadLiveListings(retryCount) {
 // ── LIVE DASHBOARD LOADER ─────────────────────────────────
 // 1. Fetches seller\'s own published listings via /listings/mine
 // 2. Merges pending intros from /intros
+/* HUB-ACTIVE-COUNT-1 (F12 walk, 30 Sep 2026): the hub counted '2 ACTIVE' over three paused adverts -- a new card read
+   l.paused, which /listings/mine never sends, so every paused or archived advert counted as active after a reload. */
+function _dlStatus(ls){ ls = String(ls || 'live').toLowerCase(); return ls === 'draft' ? 'draft' : (ls === 'paused' ? 'paused' : (ls === 'archived' ? 'archived' : 'active')); }
 async function loadLiveDash() {
   if (!BEA_ENABLED || isOffline()) return;
 
@@ -652,7 +655,7 @@ async function loadLiveDash() {
               title: l.title,
               cat: normCat(l.category),
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
-              status: l.listing_status==='draft' ? 'draft' : (l.paused ? 'paused' : 'active'),
+              status: _dlStatus(l.listing_status),   // HUB-ACTIVE-COUNT-1: the server's listing_status, not an absent l.paused
               listing_status: (l.listing_status || 'live').toLowerCase(),
               photo: l.thumb_url || null,
               isCommit: normCat(l.category) === 'Property',
@@ -665,7 +668,7 @@ async function loadLiveDash() {
             // E2E-HMI-1 (24 Sep 2026): the server's state wins. An advert published through the Terms
             // step kept reading 'Draft - not visible yet' on the hub until a page reload.
             dl.listing_status = (l.listing_status || 'live').toLowerCase();
-            dl.status = l.listing_status==='draft' ? 'draft' : (dl.listing_status==='paused' ? 'paused' : 'active');
+            dl.status = _dlStatus(l.listing_status);
             dl.title = l.title || dl.title;
             if (l.thumb_url) dl.photo = l.thumb_url;
           }
@@ -1745,6 +1748,61 @@ function _demoBadge(l){
   return (l && l.demo_example)
     ? '<span class="demo-ex-badge" onclick="event.stopPropagation();showToast(DEMO_EXAMPLE_MSG, 7000)" style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:10px;font-weight:800;vertical-align:middle;cursor:pointer;">Demo example</span>'
     : '';
+}
+/* EXAMPLES-LAST-1 (RUL-194, David 2 Oct 2026): "Have a DEMO switch for users to switch them on or off" -- combined with
+   real listings always ABOVE the AI examples. One rule for every list: real listings first, then the AI examples (when the
+   viewer has them on), then 'Coming soon' placeholders. The switch starts ON and is remembered on this device; Quick reads
+   the same key. Replaces SUPER-PIN-1 (20 Jul 2026), which pinned the examples first. An example stays marked and still takes
+   no introduction (RUL-040, RUL-187) -- the switch changes only whether it is shown. */
+const MS_EX_KEY = 'ts_show_examples';
+function msIsExample(l){ return !!(l && (l.demo_example || +l.super_example || +l.is_demo)); }
+function msShowExamples(){ try{ return localStorage.getItem(MS_EX_KEY) !== '0'; }catch(e){ return true; } }
+function msExSplit(list){
+  const real = [], ex = [], ph = [];
+  (list || []).forEach(function(l){
+    if(String(l && l.id).startsWith('ph_')) ph.push(l); else if(msIsExample(l)) ex.push(l); else real.push(l);
+  });
+  return { real: real, ex: ex, ph: ph };
+}
+function msExOrder(list){ const s = msExSplit(list); return msShowExamples() ? s.real.concat(s.ex, s.ph) : s.real.concat(s.ph); }
+function msExCountText(nReal, nEx){
+  const on = msShowExamples();
+  return nReal + ' real listing' + (nReal === 1 ? '' : 's') + ((nEx && on) ? ' · ' + nEx + ' AI example' + (nEx === 1 ? '' : 's') : '');
+}
+function msExSwitchHtml(nEx){
+  const on = msShowExamples();
+  if(!nEx && on) return '';   // no examples in this view: nothing to switch
+  return '<button type="button" class="ms-ex-switch" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"'
+    + ' onclick="event.stopPropagation();msToggleExamples()" title="Show or hide the AI example listings"'
+    + ' style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;'
+    + 'border:1px solid ' + (on ? '#fcd34d' : '#d1d5db') + ';background:' + (on ? '#fef3c7' : '#f3f4f6') + ';color:' + (on ? '#92400e' : '#4b5563') + ';">'
+    + '<span style="position:relative;display:inline-block;width:24px;height:13px;border-radius:7px;background:' + (on ? '#f59e0b' : '#9ca3af') + ';">'
+    + '<span style="position:absolute;top:1.5px;' + (on ? 'right' : 'left') + ':1.5px;width:10px;height:10px;border-radius:50%;background:#fff;"></span></span>'
+    + 'AI examples ' + (on ? 'on' : 'off') + '</button>';
+}
+function msExPaint(slotId, anchorId, nEx, before, css){
+  let s = document.getElementById(slotId);
+  if(!s){
+    const a = document.getElementById(anchorId);
+    if(!a || !a.parentNode) return;
+    s = document.createElement('div'); s.id = slotId; s.style.cssText = css || '';
+    a.parentNode.insertBefore(s, before ? a : a.nextSibling);
+  }
+  s.innerHTML = msExSwitchHtml(nEx);
+}
+function msExHiddenNote(nEx){
+  return '<div class="no-res">No real listings here yet' + (nEx ? ' — ' + nEx + ' AI example' + (nEx === 1 ? ' is' : 's are') + ' hidden.' : '.')
+    + '<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msToggleExamples()">Show AI examples</span></div>';
+}
+function msToggleExamples(){
+  const on = !msShowExamples();
+  try{ localStorage.setItem(MS_EX_KEY, on ? '1' : '0'); }catch(e){}
+  if(typeof showToast === 'function') showToast(on ? 'AI examples are shown, below the real listings.' : 'AI examples are hidden. Only real listings show.', 3500);
+  try{ renderGrid(); }catch(e){}
+  try{ if(document.getElementById('adv-grid')) renderAdvGrid(); }catch(e){}
+  try{ const lg = document.getElementById('lm-grid'); if(lg && lg.offsetParent !== null) lmLoadGrid(); }catch(e){}
+  try{ if(typeof viewMode !== 'undefined' && viewMode === 'map') renderMap(); }catch(e){}
+  try{ renderCatCounts(); }catch(e){}
 }
 function fspark(l){
   return _demoBadge(l) + (isFounders(l)
@@ -4119,9 +4177,17 @@ function renderAdvGrid(){
     if(_mixed.length === items.length) items = _mixed;
   }
 
-  countEl.textContent = items.length
-    ? `${items.length} listing${items.length===1?'':'s'} · ${advCountryName}`
+  // EXAMPLES-LAST-1 (RUL-194): real listings first, AI examples after them (or hidden).
+  const _advSp = msExSplit(items);
+  items = msExOrder(items);
+  countEl.textContent = (_advSp.real.length + _advSp.ph.length || _advSp.ex.length)
+    ? `${msExCountText(_advSp.real.length + _advSp.ph.length, _advSp.ex.length)} · ${advCountryName}`
     : '';
+  msExPaint('ms-ex-adv', 'adv-results-count', _advSp.ex.length, false, 'padding:0 16px 4px;');
+  if(!items.length && _advSp.ex.length && !msShowExamples()){
+    grid.innerHTML = msExHiddenNote(_advSp.ex.length);
+    return;
+  }
 
   if(!items.length){
     grid.innerHTML = `<div class="adv-empty">
@@ -4648,6 +4714,7 @@ function renderMap(){
   const listings=LISTINGS.filter(l=>{
     if(String(l.id).startsWith('ph_')) return false;
     if(l.paused) return false;
+    if(!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: the map follows the switch
     if(activeFilter!=='All'&&normCat(l.cat)!==activeFilter) return false;
     if(DEMO_MODE && String(l.id).startsWith('demo_')) {
       const lCity = l.city || l.area || '';
@@ -4756,6 +4823,7 @@ function renderCatCounts() {
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
     if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
+    if (!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: hidden examples are not counted
     if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     // TODO: REMOVE BEFORE LAUNCH — mirror DEMO_DISPLAY_MODE filter
@@ -5261,22 +5329,34 @@ function renderGrid(){
   }
   // Placeholders always go last — push "Coming soon" cards to the end
   filtered.sort((a,b)=>{
-    const asup=(a.super_example&&!a.showcase)?0:1, bsup=(b.super_example&&!b.showcase)?0:1;   // SUPER-PIN-1 + SHOWCASE-BANNER-1: exemplars pin first, showcase demos never pin
-    if(asup!==bsup) return asup-bsup;
+    // SUPER-PIN-1 (examples pinned first) is retired by EXAMPLES-LAST-1 (RUL-194): msExOrder() below puts every
+    // AI example after the real listings, whatever the sort.
     const aph=String(a.id).startsWith('ph_')?1:0;
     const bph=String(b.id).startsWith('ph_')?1:0;
     return aph-bph;
   });
   // ZOOM-HMI-1 (spec 6.1): the server's order IS the Ranking Score (0.5 quality + 0.5 trust),
-  // super_example already pinned first there -- one ranking method, two surfaces.
+  // examples already last there (EXAMPLES-LAST-1) -- one ranking method, two surfaces.
   if(_zoomOrder && zoomActiveFor(activeFilter)){
     filtered.sort((a,b)=> (_zoomOrder.has(a.id)?_zoomOrder.get(a.id):1e9) - (_zoomOrder.has(b.id)?_zoomOrder.get(b.id):1e9));
   }
 
+  // EXAMPLES-LAST-1 (RUL-194): real listings first, AI examples after them (or hidden), placeholders last.
+  const _exSp = msExSplit(filtered);
+  const _exN = _exSp.ex.length;
+  const _exShown = msExOrder(filtered);
+  filtered.length = 0; Array.prototype.push.apply(filtered, _exShown);
+
   const grid = document.getElementById('listing-grid');
   const countEl = document.getElementById('results-count');
-  const realCount = filtered.filter(l => !String(l.id).startsWith('ph_')).length;
-  if(countEl) countEl.textContent = realCount > 0 ? `${realCount} listing${realCount!==1?'s':''} found` : '';
+  const realCount = _exSp.real.length;
+  if(countEl) countEl.textContent = (realCount > 0 || _exN > 0) ? msExCountText(realCount, _exN) : '';
+  msExPaint('ms-ex-browse', 'results-count', _exN, false, 'margin:0 8px 0 auto;');
+  if(!filtered.length && _exN && !msShowExamples()){
+    grid.innerHTML = msExHiddenNote(_exN);
+    if(typeof catAgentsRestore==='function') catAgentsRestore();
+    return;
+  }
   if(!filtered.length){
     if(_msSearchIds){
       grid.innerHTML='<div class="no-res">No matches for \u201C'+_wlEsc(_msSearchQ)+'\u201D — try fewer or different words.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msClearSearch()">Clear search</span></div>';
@@ -5931,7 +6011,7 @@ function openDetail(id){
         <div class="cs"><div class="cs-dot buyer">B</div><div><div class="cs-label">You send an introduction request</div><div class="cs-sub">No Tuppence deducted yet</div></div></div>
         <div class="cs"><div class="cs-dot system">⏸</div><div><div class="cs-label">Listing paused immediately</div><div class="cs-sub">Invisible to other buyers during review</div></div></div>
         <div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">The seller has 48 hours to accept or decline</div><div class="cs-sub">Seller sees your message before deciding</div></div></div>
-        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T deducted · identities revealed</div><div class="cs-sub">Both parties connect directly</div></div></div>
+        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T spent · you both get an email</div><div class="cs-sub">Reply to it to talk · email addresses stay private</div></div></div>
         <div class="cs"><div class="cs-dot penalty">✕</div><div><div class="cs-label">Declined → you pay nothing · listing reopens</div><div class="cs-sub">No reply within 48 hours → seller's Trust Score −5 · you pay nothing</div></div></div>
       </div>
     </div>`:`
@@ -5942,7 +6022,7 @@ function openDetail(id){
         <div class="cs"><div class="cs-dot buyer">B</div><div><div class="cs-label">You send an introduction request</div><div class="cs-sub">No Tuppence deducted yet · listing stays visible</div></div></div>
         <div class="cs"><div class="cs-dot system q">👥</div><div><div class="cs-label">Added to seller\'s queue — listing stays live</div><div class="cs-sub">Other buyers can still request simultaneously</div></div></div>
         <div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Sellers are asked to reply within 48 hours</div><div class="cs-sub">Seller reviews all queued requests</div></div></div>
-        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T deducted · identities revealed</div><div class="cs-sub">Connect directly with seller</div></div></div>
+        <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted → 1T spent · you both get an email</div><div class="cs-sub">Reply to it to talk · email addresses stay private</div></div></div>
         <div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">The seller is expected to reply within 48 hours</div><div class="cs-sub">No reply within 48 hours → seller's Trust Score −5</div></div></div>
       </div>
     </div>
@@ -6070,7 +6150,7 @@ function openDetail(id){
       <div class="anon-block">
         <div class="lock-icon">🔒</div>
         <h4>Identity protected until introduction</h4>
-        <p>Seller name, contact details and specific address are only revealed after both parties accept.</p>
+        <p>The seller's name, contact details and exact address stay hidden. When the seller accepts, you both get an email and talk by replying to it — your email addresses stay private.</p>
       </div>
     </div>
     ${String(l.cat||'').toLowerCase()==='services' ? `<div style="margin:0 0 14px;text-align:center;font-size:13px;color:var(--text-3);">Do work like this yourself? <a href="/quick/?src=detail-make" style="color:var(--accent);font-weight:700;">Make your own listing \u2014 free</a></div>` : ''}<!-- QUICK-LINK-CARRY-1b (ts1-12): counted as a tap on this advert page, no longer as a WhatsApp Status -->
@@ -12211,6 +12291,16 @@ async function elLoadSidebarPanels(email, category) {
         const next = ts.next_tier
           ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Next: <strong>${ts.next_tier.name}</strong> — ${ts.next_tier.delta} more pts</div>`
           : '';
+        /* GATE-TIP-1 (2 Oct 2026, F2/F4 walks): a nanny or an electrician whose advert waits on a checked police
+           clearance / licence was told 'Best next step: Upload your ID' -- points, not what keeps her out of searches. */
+        try{
+          const _gr = (typeof elCurrentRaw !== 'undefined' && elCurrentRaw) || {};
+          const _gw = _gr.gate === 'police_clearance' ? 'police clearance' : (_gr.gate === 'licence' ? 'licence' : '');
+          const _gs = _gr.gate === 'licence' ? _gr.licence_status : _gr.clearance_status;
+          if (_gw) ts.haiko_tip = { points_available: 0, text: _gs === 'pending'
+            ? 'Your ' + _gw + ' is with our team. Strangers see your listing once we have checked it.'
+            : 'Upload your ' + _gw + ' below (choose it under \u201cWhat is this document?\u201d). Strangers see your listing once our team has checked it.' };
+        }catch(_e){}
         const tip = ts.haiko_tip
           ? `<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:9px 11px;margin-top:10px;font-size:12px;color:#92400e;line-height:1.5;">
                💡 <strong>Best next step:</strong> ${ts.haiko_tip.text}
@@ -12457,9 +12547,17 @@ function renderEditForm(raw) {
         ${sugHtml}</div>`;
     }
     if (f.type === 'rate') {
+      /* CALLOUT-SHOWN-1 (2 Oct 2026, F3 walk): Quick writes the call-out fee into the Rate line ('R450 / call-out +
+         R350 / hour'), so this box opened empty showing '0' and a plumber could think his fee was lost. Say where it is;
+         a placeholder only -- nothing new is saved unless he types here. */
+      let _ph = f.placeholder || '';
+      if (f.id === 'callout_fee' && !val) {
+        const _m = String(raw.price || '').match(/[^+]*\/\s*call-?out/i);
+        if (_m) _ph = 'In your rate above: ' + _m[0].trim();
+      }
       return `<div class="el-field">
         <label>${f.label}</label>
-        <input type="text" id="elf-${f.id}" value="${v}" placeholder="${f.placeholder || ''}">
+        <input type="text" id="elf-${f.id}" value="${v}" placeholder="${_lmEsc(_ph)}">
         ${sugHtml}</div>`;
     }
     // Default: text / number
@@ -12818,7 +12916,14 @@ const EL_CRED_SIGNALS = {
   ],
 };
 function EL_SIGNAL_OPTS_HTML(){
-  const list = EL_CRED_SIGNALS[elCurrentCat] || [];
+  let list = EL_CRED_SIGNALS[elCurrentCat] || [];
+  /* CRED-BY-CLASS-1 (2 Oct 2026, F4 walk): an electrician was offered 'Police clearance' and a nanny 'Licence to
+     practise'. A technical trade sees the licence, a home worker the clearance; an advert of unknown class sees both. */
+  try{
+    const _sc = String((elCurrentRaw && elCurrentRaw.service_class) || '').toLowerCase();
+    if (elCurrentCat === 'Services' && _sc)
+      list = list.filter(s => _sc.indexOf('tech') === 0 ? !/clearance$/.test(s[0]) : !/\.coc$/.test(s[0]));
+  }catch(_e){}
   if (!list.length) return '';
   return '<select id="el-dh-signal" onchange="if(/clearance$|\.coc$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
     'border-radius:8px;padding:8px 10px;font-size:13px;">'+
@@ -16403,7 +16508,9 @@ async function buzzRender(){
     h += '<div class="bz-eglab">What one looks like</div>'
        + '<div class="ms-card bz-eg" aria-hidden="true">'
        + '<div class="bz-who"><div class="bz-av">MN</div>'
-       + '<div class="bz-nm">Mrs Nkosi<span>your employer</span></div></div>'
+       /* BUZZ-EG-WORDS-1 (2 Oct 2026, F3/F5 walks): 'your employer' read oddly to a plumber or a tutor -- the link is
+          sent to 'your regular customers', so the example says that, for every kind of seller. */
+       + '<div class="bz-nm">Mrs Nkosi<span>a regular customer</span></div></div>'
        + '<div class="bz-row"><div class="bz-lbl"><b>Let her buzz me</b>'
        + '<span>Her line reaches this phone</span></div><div class="bz-sw on"></div></div>'
        + '<div class="bz-row"><div class="bz-lbl"><b>She lets me buzz her</b>'
@@ -17301,14 +17408,22 @@ async function lmLoadGrid() {
     if (DEMO_MODE) params.set('demo', '1');
     const r = await fetch(BEA_URL + '/local-market/listings?' + params.toString());
     if (!r.ok) throw new Error('API ' + r.status);
-    const cards = await r.json();
+    const _lmAll = await r.json();
+    // EXAMPLES-LAST-1 (RUL-194): real listings first, AI examples after them (or hidden).
+    const _lmSp = msExSplit(_lmAll);
+    const cards = msExOrder(_lmAll);
     // Refresh the search signal with the actual result count (0 = demand MISS).
     if (_lmSearchQ && typeof wlCaptureSearch === 'function') {
-      try { wlCaptureSearch(_lmSearchQ, null, (cards && cards.length) || 0); } catch(e) {}
+      try { wlCaptureSearch(_lmSearchQ, null, (_lmAll && _lmAll.length) || 0); } catch(e) {}
+    }
+    msExPaint('ms-ex-lm', 'lm-grid', _lmSp.ex.length, true, 'padding:0 16px 8px;');
+    if (!cards.length && _lmSp.ex.length && !msShowExamples()) {
+      grid.innerHTML = '<div style="grid-column:1/-1;">' + msExHiddenNote(_lmSp.ex.length) + '</div>';
+      return;
     }
     if (!cards.length) {
       // Fall back to demo listings from local LISTINGS array
-      const aCity = activeCity.name || ''; const demoLM = LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket' && (!aCity || !l.city || l.city === aCity));
+      const aCity = activeCity.name || ''; const demoLM = msExOrder(LISTINGS.filter(l => !l.paused && normCat(l.cat) === 'LocalMarket' && (!aCity || !l.city || l.city === aCity)));   // EXAMPLES-LAST-1
       if (demoLM.length) {
         // A11Y-NAMES-1 (25 Sep 2026 inspection, shell-08): each heart says 'Save advert' / 'Remove from saved' and whether it is on
         grid.innerHTML = demoLM.map(l => {
@@ -17472,11 +17587,11 @@ async function lmOpenDetail(listingId) {
             `<div class="cs"><div class="cs-dot buyer">B</div><div><div class="cs-label">You send an introduction request</div><div class="cs-sub">No Tuppence deducted · listing stays visible</div></div></div>` +
             `<div class="cs"><div class="cs-dot system q">🛍️</div><div><div class="cs-label">Added to seller\'s queue — listing stays live</div><div class="cs-sub">Other buyers can still request simultaneously</div></div></div>` +
             `<div class="cs"><div class="cs-dot seller">S</div><div><div class="cs-label">Sellers are asked to reply within 48 hours</div><div class="cs-sub">Seller reviews all queued requests</div></div></div>` +
-            `<div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted · identities revealed</div><div class="cs-sub">Identities revealed · you connect directly</div></div></div>` +
+            `<div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">Accepted · you both get an email</div><div class="cs-sub">Reply to it to talk · email addresses stay private</div></div></div>` +
             `<div class="cs"><div class="cs-dot reveal">✓</div><div><div class="cs-label">The seller is expected to reply within 48 hours</div><div class="cs-sub">No reply within 48 hours → seller's Trust Score −5</div></div></div>` +
           `</div>` +
         `</div>` +
-        `<div class="anon-block"><div class="lock-icon">🔒</div><h4>Identity protected until introduction</h4><p>Seller name and contact details are only revealed after both parties accept.</p></div>` +
+        `<div class="anon-block"><div class="lock-icon">🔒</div><h4>Identity protected until introduction</h4><p>The seller's name and contact details stay hidden. When the seller accepts, you both get an email and talk by replying to it — your email addresses stay private.</p></div>` +
       `</div>` +
       (c.demo_example   // DEMO-INACTIVE-1
         ? `<div class="sticky-cta"><button class="cta-btn queue-cta" style="opacity:.6;font-size:13px" onclick="showToast(DEMO_EXAMPLE_MSG, 7000)">Demo example \u2014 no real product or service</button></div>`
@@ -18699,10 +18814,11 @@ function msRenderIntroList(elId, items, dir){
     const meta = 'Listing #'+(i.listing_id||'–')+' · '+(i.created_at ? new Date(i.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) : '–');
     // RUL-142: the client of an ACCEPTED introduction confirms she hired the seller - that is
     // what makes a verified client (5/6/7 points to the seller). Once, and only by the client.
+    const _hw = msHiredWords(i);   // BOUGHT-WORD-1: a car or a coin is bought, not hired
     const hired = (dir==='sent' && i.status==='accepted')
       ? (i.hired_confirmed_at
-          ? '<span class="ms-chip ms-chip-done" style="margin-left:6px;">Hired ✓</span>'
-          : '<button class="ms-btn-sm primary" style="margin-left:6px;" onclick="msIntroHired('+parseInt(i.id,10)+',this)">I hired them</button>')
+          ? '<span class="ms-chip ms-chip-done" style="margin-left:6px;">'+_hw[1]+'</span>'
+          : '<button class="ms-btn-sm primary" style="margin-left:6px;" data-hw="'+_hw[0]+'" data-hd="'+_hw[1]+'" data-hv="'+_hw[2]+'" onclick="msIntroHired('+parseInt(i.id,10)+',this)">'+_hw[0]+'</button>')
       : '';
     // INTRO-WITHDRAW-1 (Terms 5.4): before the seller answers, she can take her request back -- the 1T hold returns in full.
     const withdraw = (dir==='sent' && (i.status||'pending')==='pending' && i.id)
@@ -18714,7 +18830,10 @@ function msRenderIntroList(elId, items, dir){
       : '';
     return '<div class="ms-intro-item">'
       +'<div class="ms-intro-avatar '+colour+'">'+_lmEsc(initials)+'</div>'
-      +'<div style="flex:1;min-width:0;"><div class="ms-intro-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_lmEsc(ident)+'</div>'
+      /* INTRO-NAME-WRAP-1 (2 Oct 2026, F2/F5 walks): beside Pending + Decline + Accept a phone left the name ~60px and
+         cut it to 'Nosiph…' / 'Lindiwe…'. The name block now keeps a sensible width (the row wraps the buttons under it)
+         and a long name or title wraps instead of being cut. */
+      +'<div style="flex:1 1 150px;min-width:0;"><div class="ms-intro-name" style="overflow-wrap:anywhere;">'+_lmEsc(ident)+'</div>'
       +'<div class="ms-intro-meta">'+meta+'</div></div>'
       +chip+hired+withdraw+answer+msIntroMsg(i, dir)+'</div>';
   }).join('');
@@ -18750,16 +18869,27 @@ async function msIntroWithdraw(introId, btn){
   }catch(e){ showToast('Could not reach the server — nothing was changed.'); if(btn){ btn.disabled = false; btn.textContent = 'Withdraw'; } }
 }
 
+/* BOUGHT-WORD-1 (2 Oct 2026, F8/F10 walks): after buying a bakkie or a coin the buyer was asked 'I hired them'.
+   The words follow what she did -- bought, rented or hired; the server record (RUL-142 verified client) is the same. */
+function msHiredWords(i){
+  const c=String((i&&i.category)||'').toLowerCase(), lt=String((i&&i.listing_type)||'');
+  const bought=['I bought from them','Bought ✓','bought from'], rented=['I rented from them','Rented ✓','rented from'];
+  if(/car|vehicle/.test(c)) return /hire|rent/i.test(lt) ? ['I hired them','Hired ✓','hired'] : bought;
+  if(/collect|local/.test(c)) return bought;
+  if(/propert|estate/.test(c)) return /rent|let/i.test(lt) ? rented : bought;
+  return ['I hired them','Hired ✓','hired'];
+}
 async function msIntroHired(introId, btn){
-  if(!confirm('Confirm that you hired this person after the introduction? It adds to their Trust Score, and you can only say it once.')) return;
+  const _hw = btn && btn.dataset && btn.dataset.hw ? [btn.dataset.hw, btn.dataset.hd, btn.dataset.hv] : ['I hired them','Hired ✓','hired'];
+  if(!confirm('Confirm that you '+_hw[2]+' this person after the introduction? It adds to their Trust Score, and you can only say it once.')) return;
   if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
   try{
     const r = await fetch(BEA_URL + '/intros/' + introId + '/hired', { method:'POST', credentials:'include', headers:{'X-Api-Key':API_KEY} });
     const j = await r.json().catch(function(){ return {}; });
-    if(!r.ok){ showToast('Not saved — ' + ((j && typeof j.detail==='string' && j.detail) || ('error ' + r.status))); if(btn){ btn.disabled=false; btn.textContent='I hired them'; } return; }
-    if(btn){ btn.outerHTML = '<span class="ms-chip ms-chip-done" style="margin-left:6px;">Hired ✓</span>'; }
+    if(!r.ok){ showToast('Not saved — ' + ((j && typeof j.detail==='string' && j.detail) || ('error ' + r.status))); if(btn){ btn.disabled=false; btn.textContent=_hw[0]; } return; }
+    if(btn){ btn.outerHTML = '<span class="ms-chip ms-chip-done" style="margin-left:6px;">'+_hw[1]+'</span>'; }
     showToast('✓ Thank you — that counts as a verified client for them');
-  }catch(e){ showToast('Could not reach the server'); if(btn){ btn.disabled=false; btn.textContent='I hired them'; } }
+  }catch(e){ showToast('Could not reach the server'); if(btn){ btn.disabled=false; btn.textContent=_hw[0]; } }
 }
 
 function msRenderOpenActions(items){

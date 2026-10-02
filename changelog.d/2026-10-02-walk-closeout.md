@@ -1,0 +1,7 @@
+- **F2 story finished (OPEN_LOOPS L28 closed):** with Thandeka's police clearance checked by our team, her nanny advert appears to a new family searching Mamelodi; her seller profile shows "Police clearance / background check ✓", the family asks (1 Tuppence held) and Thandeka accepts. `/help/nanny` now shows all 22 steps.
+- **CRED-SCORE-SYNC-1 (RG-0681):** when our team approves a credential (a police clearance, a licence), the seller's new Trust Score now shows on her adverts at once. Before, her profile said 60 while her advert and search card still said 50.
+- **INTRO-NAME-WRAP-1 (RG-0682):** My Space → Intros no longer cuts a buyer's name to "Lindiwe…" beside the Accept and Decline buttons.
+- **GATE-TIP-1 (RG-0683):** a nanny or an electrician whose advert waits on a checked police clearance or licence is now told that is her best next step, not "Upload your ID".
+- **CRED-BY-CLASS-1 (RG-0684):** Edit offers an electrician "Licence to practise" and a nanny "Police clearance" — not each other's.
+- **BUZZ-EG-WORDS-1 (RG-0685):** Buzz's example card says "a regular customer" instead of "your employer".
+- **CALLOUT-SHOWN-1 (RG-0686):** for a trade listed in Quick, Edit's empty Call-out fee box now says where the fee is ("In your rate above: R450 / call-out").

@@ -19,10 +19,10 @@
   "xh": "Ukuthengisa into yomqokeleli: ukusuka kwi-Quick ukuya kumqokeleli wakho wokuqala",
   "nso": "Go rekiša selo sa mokgobokedi: go tloga go Quick go ya go mokgobokedi wa gago wa mathomo"
  },
- "walked_on": "2026-09-30",
+ "walked_on": "2026-10-02",
  "people": {
-  "you": "Siyabonga",
-  "customer": "Ayanda"
+  "you": "Luthando",
+  "customer": "Zintle"
  },
  "chapters": [
   {
@@ -573,7 +573,7 @@
    "who": "customer",
    "cost": "1T_check",
    "img": "f10_26_fair_result",
-   "pass": false,
+   "pass": true,
    "en": [
     "She checks the price: [[Is this a fair price?]]",
     "A catalogue or market price for your piece, 1T, charged only if a real figure comes back."
