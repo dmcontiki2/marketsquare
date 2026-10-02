@@ -121,7 +121,15 @@ function placeFromHash(){ const a = hashArgs();
   if (LANGS.includes(a.lang)) lang = a.lang;
   let i = -1;
   if (a.s) i = S.findIndex(s => s.n === a.s);
-  else if (a.at) i = S.findIndex(s => (s.quick || []).includes(a.at));
+  // HOW-PLACE-1 (1 Oct 2026): a buyer in Quick's Find opens at the buyer's half, not at the seller's cards
+  if (i < 0 && !a.s && a.side === 'find') i = S.findIndex(s => s.who === 'customer');
+  if (i < 0 && !a.s && a.at) {
+    i = S.findIndex(s => (s.quick || []).includes(a.at));
+    // HOW-PLACE-1: a Quick screen this guide has no card for (a question added after the walk, e.g. bathrooms) opens at
+    // the card for the last screen she passed -- never at step 1, never left on the previous jump's card
+    for (const k of (a.seen || '').split(',').filter(Boolean).reverse()) { if (i >= 0) break; i = S.findIndex(s => (s.quick || []).includes(k)); }
+    if (i < 0) i = 0;
+  }
   if (i >= 0) cur = i; }
 const img = k => `/help/img/${TYPE}/${k}.jpg`;
 const UI = {

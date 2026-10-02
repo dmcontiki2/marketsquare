@@ -88,6 +88,12 @@ Then:
     python3 scripts/build_help.py            # writes gallery.json + the manifest block
     python3 scripts/build_help.py --check    # 0 errors, 0 stale
     cmp quick.html genie/HARNESS.html        # if you touched Quick, copy it across
+    python3 stories/how_check.py --candidate # HOW-CHECK-1: walks every guide's path in Quick (this checkout over the live
+                                             # site), presses How on each screen and reads the card -- 0 FAIL before [ship]
+
+Give the story `serves` when its step 2 names other listings that follow the same steps ("Caregivers, au pairs and
+crèche assistants follow the same steps" -> `"serves": ["caregiver", "au_pair", "creche_assistant"]`; a whole door is
+`"cars_*"`), and a property story its `deal` (sale | let) -- that is how Quick's How finds it for those listings too.
 
 Report: `docs/E2E_<yyyy-mm-dd>_<flow>.md` — the table (step, saw, would a stranger stop here), the fixes
 with their RG numbers, the QA adverts paused, and **Checked next on the laptop**.

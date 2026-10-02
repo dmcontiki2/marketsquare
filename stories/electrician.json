@@ -2,6 +2,13 @@
  "type": "electrician",
  "status": "draft",
  "flow": "F4",
+ "serves": [
+  "gas_installer",
+  "air_con_refrigeration_technician",
+  "cctv_alarm_installer",
+  "gate_garage_door_technician",
+  "locksmith"
+ ],
  "label": {
   "en": "Electrician",
   "af": "Elektrisiën",
@@ -17,11 +24,11 @@
   "nso": "Radielektriki: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
  },
  "gate_note": {
-  "en": "Coming up at step 10: until our team has checked your licence, only people you send your link to can see your listing.",
-  "af": "By stap 10: totdat ons span jou lisensie nagegaan het, kan net mense aan wie jy jou skakel stuur jou advertensie sien.",
-  "zu": "Kuyeza esinyathelweni 10: kuze kube yilapho ithimba lethu selihlolile ilayisensi yakho, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.",
-  "xh": "Kwinyathelo le-10: de iqela lethu lihlole ilayisenisi yakho, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
-  "nso": "Kgatong ya 10: go fihlela sehlopha sa rena se hlahlobile laesense ya gago, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
+  "en": "Coming up at step 11: until our team has checked your licence, only people you send your link to can see your listing.",
+  "af": "By stap 11: totdat ons span jou lisensie nagegaan het, kan net mense aan wie jy jou skakel stuur jou advertensie sien.",
+  "zu": "Kuyeza esinyathelweni 11: kuze kube yilapho ithimba lethu selihlolile ilayisensi yakho, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.",
+  "xh": "Kwinyathelo le-11: de iqela lethu lihlole ilayisenisi yakho, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
+  "nso": "Kgatong ya 11: go fihlela sehlopha sa rena se hlahlobile laesense ya gago, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
  },
  "walked_on": "2026-09-30",
  "people": {
@@ -408,7 +415,8 @@
    "nso": [
     "Kgotla [[Upload my licence]]",
     "Edit e bulega go kgethilwe [[Licence to practise]]. Kgetha seswantšho sa ngwadišo ya gago ya DoEL (goba karata ya gago ya SAQCC, PSIRA goba PrDP)."
-   ]
+   ],
+   "gate": true
   },
   {
    "n": 12,

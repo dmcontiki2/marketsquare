@@ -84,6 +84,12 @@ if (EMBED) document.documentElement.classList.add('embed');
 const LANGS = ['en', 'af', 'zu', 'xh', 'nso'];   // HELP-LANG-1
 try { const l = localStorage.getItem('ts_help_lang'); if (LANGS.includes(l)) lang = l; } catch (e) {}
 { const hl = ((location.hash || '').match(/lang=(en|af|zu|xh|nso)/) || [])[1]; if (hl) lang = hl; }
+// HOW-PLACE-1: Quick's How sends #door=..&at=..&seen=..(&side=find) when no guide is written for her type
+let HA = {}, PLACE = '';
+function readHash(){ HA = {}; (location.hash || '').slice(1).split('&').forEach(kv => { const i = kv.indexOf('='); if (i > 0) HA[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1)); });
+  PLACE = ['at', 'seen', 'side'].filter(k => HA[k]).map(k => k + '=' + encodeURIComponent(HA[k]) + '&').join(''); }
+readHash();
+window.addEventListener('hashchange', () => { readHash(); if (LANGS.includes(HA.lang)) lang = HA.lang; render(); });   // Quick moved on: keep up
 const $ = id => document.getElementById(id);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const day = iso => { const u = UI[lang]; return `${Number(iso.slice(8))} ${u.months[Number(iso.slice(5,7)) - 1]} ${iso.slice(0,4)}`; };
@@ -93,8 +99,11 @@ function render(){
   $('t-brand').textContent = u.brand; $('t-title').textContent = u.title; $('t-sub').textContent = u.sub;
   $('t-count').textContent = u.count(IDX.stories.length, IDX.total_types); $('q').placeholder = u.q; $('t-foot').textContent = u.foot;
   const L = o => (o && (o[lang] || o.en)) || '';
-  const list = IDX.stories.filter(s => !q || (Object.values(s.label).join(' ') + ' ' + Object.values(s.title).join(' ')).toLowerCase().includes(q));
-  $('grid').innerHTML = list.map(s => `<a class="card" href="/help/${encodeURIComponent(s.type)}${EMBED ? '?embed=1#lang=' + lang : ''}">
+  // HOW-PLACE-1 (1 Oct 2026): search also finds a guide by the listings it serves ('caregiver' finds Nanny); opened from
+  // Quick's How with no guide for her type, her door's guides come first and each opens at her place in Quick
+  const list = IDX.stories.filter(s => !q || (Object.values(s.label).join(' ') + ' ' + Object.values(s.title).join(' ') + ' ' + (s.serves || []).join(' ').replace(/[_*]/g, ' ')).toLowerCase().includes(q))
+    .sort((x, y) => (y.door === HA.door) - (x.door === HA.door));
+  $('grid').innerHTML = list.map(s => `<a class="card" href="/help/${encodeURIComponent(s.type)}${EMBED ? '?embed=1#' + PLACE + 'lang=' + lang : ''}">
       <img src="/help/img/${encodeURIComponent(s.type)}/${encodeURIComponent(s.cover)}.jpg" alt="" loading="lazy">
       <span class="b"><span class="t">${esc(L(s.label))}</span><span class="m">${u.steps(s.steps)} · ${u.checked} ${day(s.walked_on)}</span>${s.status === 'draft' ? `<span class="d">${u.draft}</span>` : ''}</span></a>`).join('');
   $('empty').hidden = list.length > 0; $('empty').textContent = u.none;

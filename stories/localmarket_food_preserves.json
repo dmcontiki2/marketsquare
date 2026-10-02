@@ -2,6 +2,9 @@
  "type": "localmarket_food_preserves",
  "status": "draft",
  "flow": "F11",
+ "serves": [
+  "localmarket_*"
+ ],
  "label": {
   "en": "Food & preserves",
   "af": "Kos en inmaak",

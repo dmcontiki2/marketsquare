@@ -33184,6 +33184,64 @@ def rg_attach_pick_label_1():
     return [(INFO, "the attach picker says which advert is which")]
 
 
+@entry("RG-0652", "LM-UNIT-1: a Local Market seller's 'Sold' choice (per jar / per box / each) travels with her price -- the "
+       "card says 'R85 per box', not a bare 'R85' -- and a home baker can pick 'Per pack' or 'Each'",
+       OPEN, fixed_on="2026-10-01",
+       scope="ms.js lmRowsA.food unit options + _sfPriceWithUnit (Local Market)",
+       ref="Goal run 26 walk, 1 Oct 2026 (docs/E2E_2026-10-01.md): Food & Produce, 'Homemade buttermilk rusks', Sold 'Per box', "
+           "R85 -> sfListingFields().price was '85'; 'Sold: Per box' only in the description.")
+def rg_lm_unit_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    if "'Per jar|Per bottle|Per kg|Per dozen|Per box|Per pack|Each'" not in js:
+        return [(FAIL, "Food & Produce lost 'Per pack' / 'Each' -- a baker selling by the packet or piece has no unit")]
+    i = js.find("function _sfPriceWithUnit(")
+    seg = js[i:i + 2500] if i >= 0 else ""
+    if "sfState.cat==='local_market'" not in seg or "String(sfState.A.unit).toLowerCase()" not in seg:
+        return [(FAIL, "a Local Market price is published without the unit the seller chose")]
+    return [(INFO, "the Local Market unit travels with the price")]
+
+
+@entry("RG-0653", "LM-COACH-TRUTH-1: Local Market step 2 no longer tells a seller who skipped the photo that 'the AI drafts a "
+       "title from your photo'",
+       OPEN, fixed_on="2026-10-01",
+       scope="ms.js Local Market section A coach",
+       ref="Goal run 26 walk, 1 Oct 2026: photo skipped at step 1, step 2 still opened on 'The AI drafts a title from your photo'.")
+def rg_lm_coach_truth_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    if "coach:'<b>The AI drafts a title from your photo</b>" in js:
+        return [(FAIL, "step 2 again promises an AI title from a photo the seller may not have added")]
+    if "Name it the way a buyer would search" not in js:
+        return [(FAIL, "the Local Market step 2 coach is missing")]
+    return [(INFO, "step 2's coach is true with or without a photo")]
+
+
+@entry("RG-0654", "FUNNEL-WEBDRIVER-1: a sell-flow beacon from a script-driven browser (navigator.webdriver) is stored bot=2, "
+       "so cloud checks and Goal walks that carry no QA key stop counting as strangers",
+       OPEN, fixed_on="2026-10-01",
+       scope="ms.js obTrack + quick.html / quick_next.html qTrack (wd flag); bea_main.py onboard_step bot verdict",
+       ref="Goal run 26, 1 Oct 2026: of 55 sessions the funnel called human on 1 Oct, 35 were a cloud check's iPhone 17_0 "
+           "burst (14:39-15:01, ~12 s apart) and 10 were this run's own Playwright walk.")
+def rg_funnel_webdriver_1():
+    py, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if py is None or js is None:
+        return [(FAIL, "bea_main.py or ms.js is missing")]
+    i = py.find("async def onboard_step(")
+    seg = py[i:i + 4500] if i >= 0 else ""
+    if 'body.get("wd") in (1, True, "1")' not in seg:
+        return [(FAIL, "the server no longer keeps script-driven beacons out of the stranger funnel")]
+    if "wd:(navigator.webdriver?1:0)" not in js:
+        return [(FAIL, "ms.js no longer says when the browser is script-driven")]
+    for f in ("quick.html", "quick_next.html"):
+        h = repo_file(f)
+        if h is not None and "wd:(navigator.webdriver?1:0)" not in h:
+            return [(FAIL, f + " no longer says when the browser is script-driven")]
+    return [(INFO, "script-driven walks are kept out of the stranger funnel")]
+
+
 @entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
        "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
        OPEN, fixed_on="2026-09-30",
@@ -33743,8 +33801,109 @@ def rg_stay_where_1():
     return [(INFO, "Quick: a place to stay asks kind, per-room price, her city and its areas")]
 
 
+@entry("RG-0649", "HOW-GATE-F4: the electrician guide's licence gate shows -- its licence upload (step 11) is the gate step, its "
+       "note says step 11 in all five languages, and build_help.py refuses a gate note no passed step stands behind",
+       LOCKED, fixed_on="2026-10-01",
+       scope="stories/electrician.json (step 11 \"gate\": true; gate_note en/af/zu/xh/nso 'step 11'); scripts/build_help.py "
+             "(HOW-GATE-F4: gate_note needs a passed gate step and must name its number); stories/how_check.py static check.",
+       ref="HOW-CHECK-1, the cloud How check, 1 Oct 2026 (David: 'check the unique functions of each How'): the F4 guide's one "
+           "unique function -- 'until our team has checked your licence, only people you send your link to can see your "
+           "listing' -- never showed. No step carried gate (nanny's upload step does) and the note said step 10, which is Publish; "
+           "the licence upload is step 11. Proven: build_help --check is red on the pre-fix electrician.json, green on the fix. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
+def rg_how_gate_f4():
+    import json as _j
+    st = repo_file("stories/electrician.json"); bh = repo_file("scripts/build_help.py")
+    if None in (st, bh):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    d = _j.loads(st)
+    g = [s for s in d.get("steps", []) if s.get("pass") and s.get("gate")]
+    if not g or not g[0]["en"][0].startswith("Tap [[Upload my licence]]"):
+        bad.append("the electrician guide's licence upload is no longer its gate step -- the banner never shows")
+    else:
+        miss = [lg for lg, t in d.get("gate_note", {}).items() if str(g[0]["n"]) not in t]
+        if miss:
+            bad.append("the gate note no longer names step %s (%s)" % (g[0]["n"], ", ".join(miss)))
+    if "has a gate_note but no passed step has" not in bh:
+        bad.append("build_help.py no longer refuses a gate note with no gate step")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the electrician guide warns of the licence check at step %s" % g[0]["n"])]
 
-@entry("RG-0649", "HELP-LANG-SYNC-1: a language picked in Quick while the How guide is open re-speaks the guide behind it, "
+
+@entry("RG-0650", "HOW-NEAREST-1: Quick's How opens the nearest guide -- the one written for her listing, else the one whose own "
+       "words say it serves her listing and deal (a sedan gets the car guide, a caregiver the nanny's, a house TO LET the to-let "
+       "guide, not FOR SALE); a guide walked in TrustSquare's Sell is never opened from Quick",
+       LOCKED, fixed_on="2026-10-01",
+       scope="stories/<type>.json 'serves' (+ property 'deal'), copied from each guide's own step 2; scripts/build_help.py writes "
+             "door / quick / serves / deal into /help/data/index.json and refuses a type two guides serve; quick.html + "
+             "genie/HARNESS.html QHELP_IDX, qHelpDeal, qHelpType.",
+       ref="HOW-CHECK-1, 1 Oct 2026, measured live (21 walks, 167 screens, How pressed on each): a sedan, stamps, a science "
+           "tutor, crafts, a caregiver, a gas installer and a bricklayer all got the guide LIST although a guide says in its "
+           "step 2 that they follow its steps; a house to let got 'Type your asking price' beside 'What is the rent a month?'; "
+           "Quick's new stay path (STAY-WHERE-1) opened the guest-house guide at 'Tap Sell, then Adventures'. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
+def rg_how_nearest_1():
+    import json as _j
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); g = repo_file("stories/gallery.json")
+    if None in (q, g):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    for need in ("var QHELP_IDX=[];", "function qHelpDeal(", "return s.quick!==false && (!s.deal || !deal || s.deal===deal);",
+                 "p.slice(-1)==='*' && k.indexOf(p.slice(0,-1))===0", "QHELP_IDX=(d&&d.stories)||[];",
+                 "return s.type==='adventures_guest_house' && s.quick!==false;"):   # STAY-WHERE-1's stay rule, narrowed
+        if need not in q:
+            bad.append("Quick's How lost: " + need[:50])
+    idx = {s["type"]: s for s in _j.loads(g).get("stories", [])}
+    want = {"cars_bakkie": "cars_*", "collectors_coins": "collectors_*", "tutors_maths": "tutors_*", "nanny": "caregiver",
+            "electrician": "gas_installer", "plumber": "bricklayer", "property_flat": "property_*"}
+    for t, x in want.items():
+        if x not in (idx.get(t, {}).get("serves") or []):
+            bad.append("%s no longer serves %s" % (t, x))
+    if idx.get("property_house", {}).get("deal") != "sale" or idx.get("property_flat", {}).get("deal") != "let":
+        bad.append("the property guides lost their deal -- a house to let gets the for-sale guide again")
+    if idx.get("adventures_guest_house", {}).get("quick") is not False:
+        bad.append("the guest-house guide (walked in TrustSquare's Sell) is no longer marked as not walked in Quick")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "How opens the guide that serves her listing and deal")]
+
+
+@entry("RG-0651", "HOW-PLACE-1: How opens at her place -- a Quick screen the guide has no card for opens at the last card she "
+       "passed (bathrooms opens at bedrooms, not step 1); a buyer in Find opens at the buyer's half; with no guide for her "
+       "listing the list puts her door's guides first and each opens at her place; the list also finds a guide by what it serves",
+       LOCKED, fixed_on="2026-10-01",
+       scope="quick.html + genie/HARNESS.html qHelpPlace / qHelpDoor / qHelpOpen (&seen=, &side=find, #door=); stories/help.html "
+             "placeFromHash; stories/index.html readHash / PLACE / door sort / serves search; stories/how_check.py (HOW-CHECK-1).",
+       ref="HOW-CHECK-1, 1 Oct 2026: Quick's bathrooms question (DJNR-BATHS-1, added after the F6/F7 walks) has no card and "
+           "opened step 1 on a fresh How; a buyer on 'What can you spend?' was shown the seller's 'Type your exact asking price' "
+           "and on the results 'Check your advert and tap Save my listing'; a guide picked from the list opened at step 1. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
+def rg_how_place_1():
+    q = repo_file("quick.html"); hp = repo_file("stories/help.html"); ix = repo_file("stories/index.html")
+    ck = repo_file("stories/how_check.py")
+    if None in (q, hp, ix):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need in ("function qHelpPlace(", "out+='&side=find'", "out+='&seen='+encodeURIComponent(ks.join(','))",
+                 "'&door='+qHelpDoor()"):
+        if need not in q:
+            bad.append("Quick no longer sends her place: " + need[:40])
+    for need in ("a.side === 'find') i = S.findIndex(s => s.who === 'customer')", "(a.seen || '').split(',')",
+                 "(s.quick || []).includes(a.at)"):
+        if need not in hp:
+            bad.append("the guide no longer places her: " + need[:40])
+    for need in ("function readHash()", ".sort((x, y) => (y.door === HA.door) - (x.door === HA.door))",
+                 "'?embed=1#' + PLACE + 'lang='", "(s.serves || []).join(' ')"):
+        if need not in ix:
+            bad.append("the guide list lost: " + need[:40])
+    if ck is None or "def expected_card(" not in ck or "--candidate" not in ck:
+        bad.append("stories/how_check.py, the check that walks every guide's screens, is missing")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "How opens at her place: last card passed, the buyer's half, the list keeps her place")]
+
+@entry("RG-0655", "HELP-LANG-SYNC-1: a language picked in Quick while the How guide is open re-speaks the guide behind it, "
        "on the step she is reading; the language menu closes on a pick and on a tap anywhere else (the guide included); "
        "the gallery follows Quick's '#lang=' and, inside Quick, shows no second language control of its own",
        OPEN, fixed_on="2026-10-01",
@@ -33770,7 +33929,7 @@ def rg_help_lang_sync_1():
     return [(INFO, "Quick's language reaches the open How guide and the gallery; the menu closes on a pick")]
 
 
-@entry("RG-0650", "PH-FIT-1: an example line (placeholder) is never shown cut -- a line that nearly fits its box is set a "
+@entry("RG-0656", "PH-FIT-1: an example line (placeholder) is never shown cut -- a line that nearly fits its box is set a "
        "little smaller; one that cannot fit is written in full beside the box (Quick and the guides: above it; the main "
        "app's sell form: the row stacks, then under the box) and the box's own copy is hidden",
        OPEN, fixed_on="2026-10-01",
@@ -33800,7 +33959,7 @@ def rg_ph_fit_1():
     return [(INFO, "example lines fit, shrink a little, or are written in full beside their box -- never cut")]
 
 
-@entry("RG-0651", "CUT-WORDS-1: longer languages no longer cut words -- Quick's tile names shrink until their longest word "
+@entry("RG-0657", "CUT-WORDS-1: longer languages no longer cut words -- Quick's tile names shrink until their longest word "
        "fits (Afrikaans 'Swembadskoonmaker'); Quick's top bar fits a 320px phone with isiZulu's 'Kanjani'; the guides' "
        "header wraps instead of running off the edge; the Tuppence step title wraps; the AI-services cards keep their "
        "price chip on screen",

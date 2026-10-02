@@ -996,7 +996,8 @@ function qTrack(stepName, meta){
     var body={sid:_qfSid, step:String(stepName||'').slice(0,40), meta:meta||null, magic:false,
               src:(sp&&sp.get('src')?String(sp.get('src')).slice(0,120):''),
               cat:(function(){ try{ return String((cat()&&(cat().key||cat().name))||''); }catch(e){ return ''; } })(), sub:'',
-              email:(typeof HANDOVER!=='undefined'&&HANDOVER&&HANDOVER.email)?HANDOVER.email:''};
+              email:(typeof HANDOVER!=='undefined'&&HANDOVER&&HANDOVER.email)?HANDOVER.email:'',
+              wd:(navigator.webdriver?1:0)};   /* FUNNEL-WEBDRIVER-1 */
     fetch(_QF_BASE+'/onboard/step',{method:'POST',keepalive:true,
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
   }catch(e){}

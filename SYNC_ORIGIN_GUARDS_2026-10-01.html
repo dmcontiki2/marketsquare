@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cloud ↔ laptop guards — 1 Oct 2026</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--ink:#e9edf2;--dim:#9aa3ae;--line:#2a303b;--lap:#2E86E0;--cloud:#8B5CF6;--guard:#16A97C;--stop:#E0A02E;--gh:#cbd5e1}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:20px 16px}
+h1{font-size:20px;margin:0 0 4px}.sub{color:var(--dim);font-size:13px;margin-bottom:16px}
+svg{width:100%;max-width:980px;height:auto;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:16px;max-width:980px}
+.card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:12px}
+.card b{display:block;margin-bottom:4px}.card p{margin:0;color:var(--dim);font-size:13px}
+.key{margin-top:14px;font-size:12px;color:var(--dim)}.key span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 12px;vertical-align:middle}
+</style></head><body>
+<h1>Cloud ↔ laptop: nothing stopped, wiped or overwritten (RUL-193)</h1>
+<div class="sub">Every path to GitHub now takes the other side's work in first, stops cleanly on a real conflict, and runs the same scan.</div>
+<svg viewBox="0 0 980 360" role="img" aria-label="Diagram: laptop lanes and cloud sessions both reach GitHub main and deploy through guards; the server deploys from deploy">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#9aa3ae"/></marker></defs>
+<g font-size="13" fill="#e9edf2">
+<rect x="20" y="30" width="230" height="190" rx="12" fill="#10233a" stroke="#2E86E0"/>
+<text x="35" y="55" font-weight="700" fill="#a1c9f1">Laptop lanes</text>
+<text x="35" y="80" fill="#cbd5e1">deploy / nightly ship (02:00)</text>
+<text x="35" y="102" fill="#cbd5e1">checkpoint (05:30) → mirror main</text>
+<text x="35" y="124" fill="#cbd5e1">commit.bat · release.bat · backup</text>
+<text x="35" y="146" fill="#cbd5e1">host queue · maint agent · relay</text>
+<rect x="35" y="164" width="200" height="40" rx="8" fill="#0d2a22" stroke="#16A97C"/>
+<text x="45" y="189" fill="#96d8c4">① sync_origin: GitHub in first</text>
+<rect x="282" y="70" width="210" height="56" rx="10" fill="#0d2a22" stroke="#16A97C"/>
+<text x="294" y="94" fill="#96d8c4">② pre-push guard</text>
+<text x="294" y="114" fill="#9aa3ae" font-size="12">blocks a push that drops commits</text>
+<rect x="282" y="150" width="210" height="56" rx="10" fill="#2a210d" stroke="#E0A02E"/>
+<text x="294" y="174" fill="#f2cf8a">real conflict → STOP</text>
+<text x="294" y="194" fill="#9aa3ae" font-size="12">files untouched · SYNC_CONFLICT.txt</text>
+<rect x="510" y="60" width="170" height="150" rx="12" fill="#1b2230" stroke="#cbd5e1"/>
+<text x="525" y="88" font-weight="700">GitHub</text><text x="525" y="114" fill="#cbd5e1">main</text><text x="525" y="138" fill="#cbd5e1">deploy</text>
+<text x="525" y="168" fill="#9aa3ae" font-size="12">only ever added to —</text><text x="525" y="186" fill="#9aa3ae" font-size="12">never force-pushed</text>
+<rect x="730" y="30" width="230" height="190" rx="12" fill="#1c1533" stroke="#8B5CF6"/>
+<text x="745" y="55" font-weight="700" fill="#c9b6ff">Cloud sessions</text>
+<text x="745" y="80" fill="#cbd5e1">story walks · fixes</text>
+<text x="745" y="102" fill="#cbd5e1">push claude/… [ship]</text>
+<rect x="745" y="124" width="200" height="80" rx="8" fill="#0d2a22" stroke="#16A97C"/>
+<text x="755" y="146" fill="#96d8c4">③ cloud ship job now runs</text>
+<text x="755" y="166" fill="#96d8c4">the SAME strict scan</text>
+<text x="755" y="188" fill="#9aa3ae" font-size="12">conflict → refused, never forced</text>
+<rect x="500" y="270" width="200" height="60" rx="10" fill="#1b2230" stroke="#9aa3ae"/>
+<text x="525" y="296">Server (live)</text><text x="525" y="316" fill="#9aa3ae" font-size="12">deploys the deploy ref only</text>
+<rect x="20" y="270" width="440" height="60" rx="10" fill="#0d2a22" stroke="#16A97C"/>
+<text x="35" y="295" fill="#96d8c4">④ quick.html = genie/HARNESS.html kept identical</text>
+<text x="35" y="315" fill="#9aa3ae" font-size="12">⑤ drift check says which side is ahead</text>
+</g>
+<g stroke="#9aa3ae" stroke-width="1.6" fill="none" marker-end="url(#a)">
+<path d="M235 184 C 258 184, 258 98, 280 98"/><path d="M492 98 L 508 110"/><path d="M387 128 L 387 148"/>
+<path d="M745 164 C 710 164, 710 130, 682 130"/><path d="M595 212 L 595 268"/>
+<path d="M512 205 C 450 250, 250 250, 140 222" stroke-dasharray="4 4"/>
+</g>
+<text x="250" y="263" font-size="12" fill="#9aa3ae">nightly: laptop takes cloud work in (05:30)</text>
+</svg>
+<div class="grid">
+<div class="card" style="--c:#16A97C"><b>① Take in first</b><p>One shared step before every push: fast-forward or normal merge. Never rebase, reset or force.</p></div>
+<div class="card" style="--c:#E0A02E"><b>Stop, not wipe</b><p>A real conflict aborts the push with every file as it was, and SYNC_CONFLICT.txt names the files.</p></div>
+<div class="card" style="--c:#16A97C"><b>② No overwrite, any lane</b><p>The pre-push hook refuses a push that would drop GitHub commits; only MS_ALLOW_OVERWRITE=1 (by design) passes.</p></div>
+<div class="card" style="--c:#8B5CF6"><b>③ Same scan both ways</b><p>The cloud ship job runs the laptop's strict pre-deploy scan, so neither side ships a red the other trips on.</p></div>
+</div>
+<div class="key">Colour key:<span style="background:#2E86E0"></span>laptop<span style="background:#8B5CF6"></span>cloud<span style="background:#16A97C"></span>guard<span style="background:#E0A02E"></span>clean stop</div>
+</body></html>

@@ -1800,3 +1800,145 @@ no pending fragments.
  ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
 Press any key to continue . . . 
 Thu 10/01/2026  2:01:30.30  BLOCKED/FAILED rc=1 â€” tree untouched live, see log above
+============================================================
+Fri 10/02/2026  2:00:01.55  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Fri 10/02/2026  2:00:01.75
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 375 files already current - upload skipped.
+ [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
+   [OK] SYNC email_strip: all 24 files already current - upload skipped.
+ [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
+   [OK] SYNC quick_ph: all 298 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 4 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Fri 10/02/2026  2:01:30.32  drift: DEPLOY DRIFT: 15 files differ from live - LIVE IS AHEAD by 4 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: bea_main.py, ms.js, quick.html, stories/cars_bakkie.json, stories/collectors_coins.json, stories/electrician.json, stories/gallery.json, stories/help.html, stories/index.html, stories/localmarket_food_preserves.json, stories/nanny.json, stories/plumber.json, stories/property_flat.json, stories/property_house.json, stories/tutors_maths.json
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Fri 10/02/2026  2:01:30.42
+ ============================================================
+
+  [autobump] ms.js changed -> marketsquare.html ref ?v=513
+  [autobump] ms.css changed -> marketsquare.html ref ?v=298
+  [autobump] 2 reference(s) bumped
+harness-parity: quick.html == genie/HARNESS.html
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  [FAIL] line 691: registered static surface 'cost R 0' passed its review date 2026-09-30 -- re-verify it or wire it
+  [FAIL] line 779: registered static surface 'free tier' passed its review date 2026-09-30 -- re-verify it or wire it
+folded 28, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-02T00:01:37Z   mode=strict
+  Working tree: 63 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  288699 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 1 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: REVIEW   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 5712), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-10-02T00:01:39Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-09-28 (4 days ago)
+    - CHANGELOG newest    : 2026-09-29
+    - Ship pending        : marketsquare.html
+    - (note) CHANGE_REGISTER.md not modified this session
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 8413184 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'marketsquare.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_ship_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'scripts/static_versions.json', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+e605090 Release Fri 10/02/2026  2:01:44.25
+sync-origin [MarketSquare]: took in 4 commit(s) from origin/main by merge -> a2f08a8
+ [5/6] Pushing to the mirror - backup ref main...
+To https://github.com/dmcontiki2/marketsquare.git
+   74a2545..a2f08a8  HEAD -> main
+ [5/6] Publishing the deploy ref - THIS is the deploy...
+
+  DEPLOY-GATE-ALL-1: publishing the deploy ref -- running the pre-deploy scan.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-02T00:01:51Z   mode=strict
+  Working tree: 1 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: ok   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  Pre-deploy scan: ok -- push allowed.
+To https://github.com/dmcontiki2/marketsquare.git
+   74a2545..a2f08a8  HEAD -> deploy
+
+  PUBLISHED. The server deploys it within ~2 minutes - with health check,
+  monotonic cache-buster, auto-rollback, then seed + migrations hook.
+
+ [6/6] Waiting ~3 minutes for the server to apply and settle...
+ERROR: Input redirection is not supported, exiting the process immediately.
+  [OK] /health answers ok 
+  DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_COUNTER.json
+  [WAIT] Not clean yet - one more 2-minute server tick...
+ERROR: Input redirection is not supported, exiting the process immediately.
+DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_COUNTER.json
+  If still ahead: watch  ssh root@178.104.73.239 "tail -20 /var/log/marketsquare-deploy.log"
+  [LOCK] released.
+
+ ============================================================
+  RELEASE COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Fri 10/02/2026  2:02:07.38  SHIPPED rc=0 â€” server runs migrations + smoke itself

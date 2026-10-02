@@ -1174,7 +1174,8 @@ function qTrack(stepName, meta){
     var body={sid:_qfSid, step:String(stepName||'').slice(0,40), meta:meta||null, magic:false,
               src:(sp&&sp.get('src')?String(sp.get('src')).slice(0,120):''),
               cat:(function(){ try{ return String((cat()&&(cat().key||cat().name))||''); }catch(e){ return ''; } })(), sub:'',
-              email:(typeof HANDOVER!=='undefined'&&HANDOVER&&HANDOVER.email)?HANDOVER.email:''};
+              email:(typeof HANDOVER!=='undefined'&&HANDOVER&&HANDOVER.email)?HANDOVER.email:'',
+              wd:(navigator.webdriver?1:0)};   /* FUNNEL-WEBDRIVER-1 */
     fetch(_QF_BASE+'/onboard/step',{method:'POST',keepalive:true,
       headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
   }catch(e){}
@@ -1215,6 +1216,17 @@ function qHelpAt(){
     return f.steps[step].key||'';
   }catch(e){ return ''; }
 }
+/* HOW-NEAREST-1 (1 Oct 2026, the cloud How check): each guide names, in its own step 2, the other listings that follow the
+   same steps ("Car, bakkie, SUV or bike", "Caregivers, au pairs and creche assistants ..."); scripts/build_help.py carries
+   that into /help/data/index.json as 'serves', with a property guide's 'deal' and whether it was walked in Quick at all.
+   How opens the guide written for her type, else the one that says it serves her type and deal, else the list. Before, a
+   sedan, a caregiver or a townhouse got the list; a house TO LET got the house-FOR-SALE guide (a buyer's 3T dossier); and a
+   Quick guest house got a guide walked in TrustSquare's Sell, opened at 'Tap Sell, then Adventures'. */
+var QHELP_IDX=[];
+function qHelpDeal(){
+  try{ var d=svcPickIn(picks,'deal'), l=String((d&&d.label)||'');
+    return /sell|buy/i.test(l) ? 'sale' : (/let|rent/i.test(l) ? 'let' : ''); }catch(e){ return ''; }
+}
 function qHelpType(){
   var k='';
   try{
@@ -1222,8 +1234,30 @@ function qHelpType(){
     /* LM-STORY-1: goods have no role key -- their guide is <door>_<group>, e.g. localmarket_food_preserves */
     if(!k && rp && rp.label && typeof cat==='function') k=cat().key+'_'+String(rp.label).toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
   }catch(e){}
-  return (k && QHELP[k]) ? k : '';
+  if(!k) return '';
+  var deal=qHelpDeal(), hit='';
+  function fits(s){ return s.quick!==false && (!s.deal || !deal || s.deal===deal); }
+  QHELP_IDX.forEach(function(s){ if(!hit && s.type===k && fits(s)) hit=s.type; });
+  QHELP_IDX.forEach(function(s){ if(!hit && fits(s) && (s.serves||[]).some(function(p){
+    return p===k || (p.slice(-1)==='*' && k.indexOf(p.slice(0,-1))===0); })) hit=s.type; });
+  return hit;
 }
+/* HOW-PLACE-1 (1 Oct 2026, the cloud How check): with her screen go the screens she has passed, so a screen the guide has no
+   card for (bathrooms, added after the walk) opens at the last card she passed -- not at step 1 -- and, for a buyer in Find,
+   side=find, so she opens at the buyer's half instead of the seller's 'Type your exact asking price'. */
+function qHelpPlace(){
+  var out='';
+  try{
+    if(mode==='find') out+='&side=find';
+    var ks=['door'];
+    if(mode){ var f=flow(), n=Math.min(step, (f.steps||[]).length);
+      for(var i=0;i<n;i++) if(f.steps[i] && f.steps[i].key) ks.push(f.steps[i].key); }
+    var at=qHelpAt(); if(at==='saved'||at==='buzz') ks.push('draft'); if(at==='buzz') ks.push('saved');
+    out+='&seen='+encodeURIComponent(ks.join(','));
+  }catch(e){}
+  return out;
+}
+function qHelpDoor(){ try{ var k=cat().key; return k==='homehelp' ? 'services' : k; }catch(e){ return ''; } }
 /* HELP-LANG-1 (29 Sep 2026): the guides speak Quick's five languages -- the button's one word does too */
 var QHELP_WORD={en:'How',af:'Hoe',zu:'Kanjani',xh:'Njani',nso:'Bjang'};
 function qHelpWord(open){ return open ? 'Quick' : (QHELP_WORD[QLANG] || 'How'); }
@@ -1246,8 +1280,10 @@ function qHelpClose(){
 function qHelpOpen(){
   var app=document.getElementById('app'), bar=document.querySelector('.bar'), b=document.getElementById('qhb');
   if(!app || !bar || !b) return;
-  var t=qHelpType(), lang=qHelpLang();
-  var src=t ? '/help/'+t+'?embed=1#at='+encodeURIComponent(qHelpAt())+'&lang='+lang : '/help/?embed=1#lang='+lang;
+  var t=qHelpType(), lang=qHelpLang(), pl=qHelpPlace();
+  /* HOW-PLACE-1: no guide for her type -> the list, her door's guides first, each opening at her place */
+  var src=t ? '/help/'+t+'?embed=1#at='+encodeURIComponent(qHelpAt())+pl+'&lang='+lang
+            : '/help/?embed=1#lang='+lang+'&door='+qHelpDoor()+'&at='+encodeURIComponent(qHelpAt())+pl;
   var o=document.getElementById('qhov');
   if(!o){ o=document.createElement('div'); o.id='qhov'; o.innerHTML='<iframe title="How it works"></iframe>'; app.appendChild(o); }
   var top=bar.offsetTop+bar.offsetHeight;
@@ -1279,7 +1315,7 @@ function qHelpButton(){
   bar.insertBefore(b, document.getElementById('qlbw') || document.getElementById('home'));
   ['back','home'].forEach(function(id){ var x=document.getElementById(id); if(x) x.addEventListener('click', qHelpClose); });
   try{ fetch(location.origin+'/help/data/index.json').then(function(r){ return r.ok ? r.json() : null; })
-         .then(function(d){ ((d&&d.stories)||[]).forEach(function(s){ QHELP[s.type]=1; }); }).catch(function(){}); }catch(e){}
+         .then(function(d){ ((d&&d.stories)||[]).forEach(function(s){ QHELP[s.type]=1; }); QHELP_IDX=(d&&d.stories)||[]; }).catch(function(){}); }catch(e){}
 }
 try{ fetch(location.origin+'/flags',{credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; })
        .then(function(f){ if(f && f.effective && f.effective.help_guides) qHelpButton(); }).catch(function(){}); }catch(e){}
@@ -4691,9 +4727,13 @@ drawDoor();
   /* a place to stay lands in TrustSquare's Stays (adventures_accommodation), where the guest-house walk (F12) is found */
   var _coS=catOut;
   catOut=function(c){ if(c && c.key==='adventures' && qIsStay()) return {category:'adventures_accommodation'}; return _coS(c); };
-  /* the How button opens the walked guest-house guide (F12) for every place to stay */
+  /* the How button opens the walked guest-house guide (F12) for every place to stay -- HOW-NEAREST-1 (1 Oct 2026, the cloud
+     How check): once that guide has been walked through Quick. F12 was walked in TrustSquare's Sell and has no Quick card, so
+     on every Quick stay screen it opened at 'Tap Sell, then Adventures'; until a Quick walk gives it cards a stay gets the
+     guide list, Adventures first, one tap from the guide. */
   var _qht=qHelpType;
-  qHelpType=function(){ try{ if(qIsStay() && QHELP['adventures_guest_house']) return 'adventures_guest_house'; }catch(e){} return _qht(); };
+  qHelpType=function(){ try{ if(qIsStay() && QHELP['adventures_guest_house'] && QHELP_IDX.some(function(s){
+    return s.type==='adventures_guest_house' && s.quick!==false; })) return 'adventures_guest_house'; }catch(e){} return _qht(); };
   if(typeof FREE_HINT!=='undefined') FREE_HINT.kind='Name it in your own words';
   var W=QI18N.w;
   function add(en, af, zu, xh, nso){ if(!W[en]) W[en]={af:af, zu:zu, st:'', xh:xh, nso:nso}; }
