@@ -33942,5 +33942,36 @@ def rg_serves_roles_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the cleaner, plumber and electrician guides serve the 50 + 3 roles that share their steps and gate")]
 
+@entry("RG-0656", "STAY-CARRY-1: a guest house listed in Quick opens in TrustSquare's Edit with its type and place filled in -- "
+       "Quick sends the kind she tapped ('Guest house') as prop_type, the column TrustSquare reads as a stay's type, and Edit "
+       "shows it as 'Guest House' and her area and city as 'Wilderness, George', instead of '— select —' and an empty box",
+       OPEN, fixed_on="2026-10-02",
+       scope="quick.html + genie/HARNESS.html FIELD_FROM.adventures; ms.js _elQuickCarry (stays only; a Coach or Sell answer "
+             "wins) and renderEditForm's case-blind select match.",
+       ref="F12 walk through Quick, 2 Oct 2026 (OPEN_LOOPS L36(a)), draft #460: Edit asked ACCOMMODATION TYPE and LOCATION / "
+           "AREA again beside the title 'Guest house — Wilderness' -- RUL-149 Q2's class (the app re-asks what Quick knows). "
+           "The type also never reached the Stays type filter (accommodation_type came from prop_type, which was empty). "
+           "Proven on the candidate before shipping: draft #461 opened with Guest House and Wilderness, George.")
+def rg_stay_carry_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); js = repo_file("ms.js")
+    if None in (q, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if " adventures:{prop_type:'kind'}};" not in q:
+        bad.append("Quick no longer sends a stay's kind")
+    for need in ("function _elQuickCarry(raw, fieldId)", "|| _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);",
+                 "if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();",
+                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());"):
+        if need not in js:
+            bad.append("Edit no longer carries a Quick stay's answers: " + need[:48])
+    i = js.find("function _msMapBeaListing")
+    if "l.prop_type || _msDescLine(desc, ['Type'])" not in js:
+        bad.append("the app no longer reads a stay's type from prop_type")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a Quick guest house opens in Edit with its type and place")]
+
 if __name__ == "__main__":
     sys.exit(main())
