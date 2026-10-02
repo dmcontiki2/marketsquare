@@ -12214,6 +12214,16 @@ async function elLoadSidebarPanels(email, category) {
         const next = ts.next_tier
           ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Next: <strong>${ts.next_tier.name}</strong> — ${ts.next_tier.delta} more pts</div>`
           : '';
+        /* GATE-TIP-1 (2 Oct 2026, F2/F4 walks): a nanny or an electrician whose advert waits on a checked police
+           clearance / licence was told 'Best next step: Upload your ID' -- points, not what keeps her out of searches. */
+        try{
+          const _gr = (typeof elCurrentRaw !== 'undefined' && elCurrentRaw) || {};
+          const _gw = _gr.gate === 'police_clearance' ? 'police clearance' : (_gr.gate === 'licence' ? 'licence' : '');
+          const _gs = _gr.gate === 'licence' ? _gr.licence_status : _gr.clearance_status;
+          if (_gw) ts.haiko_tip = { points_available: 0, text: _gs === 'pending'
+            ? 'Your ' + _gw + ' is with our team. Strangers see your listing once we have checked it.'
+            : 'Upload your ' + _gw + ' below (choose it under \u201cWhat is this document?\u201d). Strangers see your listing once our team has checked it.' };
+        }catch(_e){}
         const tip = ts.haiko_tip
           ? `<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:9px 11px;margin-top:10px;font-size:12px;color:#92400e;line-height:1.5;">
                💡 <strong>Best next step:</strong> ${ts.haiko_tip.text}
@@ -12460,9 +12470,17 @@ function renderEditForm(raw) {
         ${sugHtml}</div>`;
     }
     if (f.type === 'rate') {
+      /* CALLOUT-SHOWN-1 (2 Oct 2026, F3 walk): Quick writes the call-out fee into the Rate line ('R450 / call-out +
+         R350 / hour'), so this box opened empty showing '0' and a plumber could think his fee was lost. Say where it is;
+         a placeholder only -- nothing new is saved unless he types here. */
+      let _ph = f.placeholder || '';
+      if (f.id === 'callout_fee' && !val) {
+        const _m = String(raw.price || '').match(/[^+]*\/\s*call-?out/i);
+        if (_m) _ph = 'In your rate above: ' + _m[0].trim();
+      }
       return `<div class="el-field">
         <label>${f.label}</label>
-        <input type="text" id="elf-${f.id}" value="${v}" placeholder="${f.placeholder || ''}">
+        <input type="text" id="elf-${f.id}" value="${v}" placeholder="${_lmEsc(_ph)}">
         ${sugHtml}</div>`;
     }
     // Default: text / number
@@ -12821,7 +12839,14 @@ const EL_CRED_SIGNALS = {
   ],
 };
 function EL_SIGNAL_OPTS_HTML(){
-  const list = EL_CRED_SIGNALS[elCurrentCat] || [];
+  let list = EL_CRED_SIGNALS[elCurrentCat] || [];
+  /* CRED-BY-CLASS-1 (2 Oct 2026, F4 walk): an electrician was offered 'Police clearance' and a nanny 'Licence to
+     practise'. A technical trade sees the licence, a home worker the clearance; an advert of unknown class sees both. */
+  try{
+    const _sc = String((elCurrentRaw && elCurrentRaw.service_class) || '').toLowerCase();
+    if (elCurrentCat === 'Services' && _sc)
+      list = list.filter(s => _sc.indexOf('tech') === 0 ? !/clearance$/.test(s[0]) : !/\.coc$/.test(s[0]));
+  }catch(_e){}
   if (!list.length) return '';
   return '<select id="el-dh-signal" onchange="if(/clearance$|\.coc$/.test(this.value)){var t=document.getElementById(\'el-dh-type\');if(t)t.value=\'other\';}" style="width:100%;max-width:100%;box-sizing:border-box;background:var(--surface-2);border:1.5px solid var(--border);'+
     'border-radius:8px;padding:8px 10px;font-size:13px;">'+
@@ -16406,7 +16431,9 @@ async function buzzRender(){
     h += '<div class="bz-eglab">What one looks like</div>'
        + '<div class="ms-card bz-eg" aria-hidden="true">'
        + '<div class="bz-who"><div class="bz-av">MN</div>'
-       + '<div class="bz-nm">Mrs Nkosi<span>your employer</span></div></div>'
+       /* BUZZ-EG-WORDS-1 (2 Oct 2026, F3/F5 walks): 'your employer' read oddly to a plumber or a tutor -- the link is
+          sent to 'your regular customers', so the example says that, for every kind of seller. */
+       + '<div class="bz-nm">Mrs Nkosi<span>a regular customer</span></div></div>'
        + '<div class="bz-row"><div class="bz-lbl"><b>Let her buzz me</b>'
        + '<span>Her line reaches this phone</span></div><div class="bz-sw on"></div></div>'
        + '<div class="bz-row"><div class="bz-lbl"><b>She lets me buzz her</b>'
@@ -18718,7 +18745,10 @@ function msRenderIntroList(elId, items, dir){
       : '';
     return '<div class="ms-intro-item">'
       +'<div class="ms-intro-avatar '+colour+'">'+_lmEsc(initials)+'</div>'
-      +'<div style="flex:1;min-width:0;"><div class="ms-intro-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_lmEsc(ident)+'</div>'
+      /* INTRO-NAME-WRAP-1 (2 Oct 2026, F2/F5 walks): beside Pending + Decline + Accept a phone left the name ~60px and
+         cut it to 'Nosiph…' / 'Lindiwe…'. The name block now keeps a sensible width (the row wraps the buttons under it)
+         and a long name or title wraps instead of being cut. */
+      +'<div style="flex:1 1 150px;min-width:0;"><div class="ms-intro-name" style="overflow-wrap:anywhere;">'+_lmEsc(ident)+'</div>'
       +'<div class="ms-intro-meta">'+meta+'</div></div>'
       +chip+hired+withdraw+answer+msIntroMsg(i, dir)+'</div>';
   }).join('');
