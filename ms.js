@@ -23741,6 +23741,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
          fixed button bar -- the language can be changed from any other screen. */
       st.textContent='#ts-lang{position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);z-index:90;font:600 12px system-ui,sans-serif}'
        +'body:has(#screen-detail.active) #ts-lang,body:has(#screen-local-market-detail.active) #ts-lang,body:has(#screen-sell-flow.active) #ts-lang,'
+       +'body:has(#screen-seller-onboard.active) #ts-lang,'   /* LANG-PILL-SOB-1 (Goal run 27): it sat on the terms step's Back button */
        +'body:has(#screen-seller-cv.active) #ts-lang,body:has(#screen-publish.active) #ts-lang,body:has(#screen-sell-b.active) #ts-lang{display:none}'
        +'#ts-lang .pill{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;cursor:pointer;'
        +'background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 18px rgba(0,0,0,.35)}'

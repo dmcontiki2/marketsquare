@@ -4740,6 +4740,27 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         listing = Listing(**{k: v for k, v in fields.items() if k in Listing.__fields__})
     except Exception as exc:
         raise HTTPException(status_code=422, detail="That listing is missing something: %s" % str(exc)[:160])
+    # QUICK-DUP-1 (Goal run 27, 2 Oct 2026): a signed-in member who walked Quick a second time with the same answers
+    # got a SECOND live advert, identical to the first (#468 and #469, 12 minutes apart, both in the public grid). If
+    # she already has this exact advert live from the last 24 hours, the tap answers with that one -- nothing new is
+    # made and nothing is published twice. Different words, price or place is a different advert and goes through.
+    if signed_member:
+        conn = database.get_db()
+        try:
+            _dup = conn.execute(
+                "SELECT id FROM listings WHERE LOWER(seller_email)=? AND listing_status='live' AND created_at > ? "
+                "AND title IS ? AND category IS ? AND IFNULL(price,'')=? AND IFNULL(city,'')=? AND IFNULL(suburb,'')=? "
+                "ORDER BY id DESC LIMIT 1",
+                (em, _sql_since(hours=24), listing.title, listing.category, str(listing.price or ""),
+                 str(getattr(listing, "city", "") or ""), str(getattr(listing, "suburb", "") or ""))).fetchone()
+        except Exception as exc:   # never let the guard stop a publish
+            _log.warning("QUICK-DUP-1 check skipped: %s", exc); _dup = None
+        finally:
+            conn.close()
+        if _dup:
+            _log.info("QUICK-DUP-1: %s already has this advert live as %s -- no second copy", em, _dup["id"])
+            return {"id": int(_dup["id"]), "live": True, "duplicate": True, "identity": _qp_identity_kind(em),
+                    "detail": "This listing is already live — nothing new was made."}
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
     if not sess:
@@ -19194,7 +19215,7 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
     the person typed into our own form seconds earlier for exactly this purpose, and it
     does one thing -- gives him back the advert he just made. He still presses publish."""
     safe = (title or "your listing").replace("<", "&lt;").replace(">", "&gt;")
-    subject = "Your TrustSquare listing is composed \u2014 one step left"
+    subject = "Your TrustSquare listing is saved \u2014 one step left"   # LETTER-WORD-1 (Goal run 27): Quick says "saved"; nobody says "composed"
     html = (
         "<div style='font-family:Inter,Arial,sans-serif;max-width:460px;margin:auto'>"
         "<h2 style='color:#0c1a2e;margin-bottom:6px'>Your listing is waiting</h2>"
@@ -19216,7 +19237,7 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
           "\u2014 nothing is public and nothing else will be sent.</p>"
         "</div>"
     )
-    plain = ("Your TrustSquare listing is composed and waiting: " + (title or "")
+    plain = ("Your TrustSquare listing is saved and waiting: " + (title or "")
              + "\n\nIt is saved and not yet public. Open it, check it and publish it:\n"
              + link
              + "\n\nTap it within 3 days: it signs you in on that phone and opens your listing, and it keeps "
