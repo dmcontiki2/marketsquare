@@ -8826,17 +8826,29 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
         rows = [r for r in rows
                 if (r["buyer_email"] or "").strip().lower() == _scope or r["listing_id"] in _own_ids]
     conn.close()
-    return [dict(r) for r in rows]
+    return [_intro_for_viewer(dict(r), _scope) for r in rows]
+
+
+def _intro_for_viewer(d: dict, viewer) -> dict:
+    """INTRO-ADDR-HIDE-1 (L29, David 2 Oct 2026): contact details are revealed only when both accept. The seller's own
+    read of a request she has not accepted carries no buyer address -- the screen already showed only a first name
+    (RECV-REAL-1), but the response handed her the email. The buyer's own rows, accepted rows and staff reads keep it."""
+    v = (viewer or "").strip().lower()
+    if v and (d.get("buyer_email") or "").strip().lower() != v and (d.get("status") or "pending") != "accepted":
+        d["buyer_email"] = ""
+    return d
 
 @app.get("/intros/{listing_id}")
-def get_intros(listing_id: int):
+def get_intros(listing_id: int, ts_user: str = Cookie(default=None),
+               x_admin_key: str = Header(default=None), x_admin_token: str = Header(default=None)):
     conn = database.get_db()
     rows = conn.execute(
         "SELECT * FROM intro_requests WHERE listing_id = ? ORDER BY created_at DESC",
         (listing_id,)
     ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    _v = None if _summary_caller_is_admin(x_admin_key, x_admin_token) else (_session_email(ts_user) or "-")
+    return [_intro_for_viewer(dict(r), _v) for r in rows]   # INTRO-ADDR-HIDE-1
 
 def _seller_verification_notice(conn, seller_email, category=None):
     """

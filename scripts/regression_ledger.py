@@ -33973,5 +33973,30 @@ def rg_stay_carry_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a Quick guest house opens in Edit with its type and place")]
 
+@entry("RG-0657", "INTRO-ADDR-HIDE-1 (L29): a seller's read of an introduction request she has not accepted carries no buyer "
+       "email address -- GET /intros and GET /intros/{listing_id} blank it until the request is accepted; the buyer's own "
+       "rows, accepted rows and staff reads keep it",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py _intro_for_viewer() applied in get_all_intros and get_intros.",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Elsabe's GET /intros?status=all returned "
+           "buyer_email=dmcontiki2+qa-riana0930@gmail.com on a pending request. OPEN_LOOPS L29; David 2 Oct 2026: "
+           "'Please complete open actions and ship'.")
+def rg_intro_addr_hide_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(FAIL, "bea_main.py is missing")]
+    bad = []
+    i = py.find("def _intro_for_viewer(")
+    body = py[i:i + 900] if i >= 0 else ""
+    if '!= "accepted"' not in body or 'd["buyer_email"] = ""' not in body:
+        bad.append("the helper no longer blanks the buyer's address before acceptance")
+    if "return [_intro_for_viewer(dict(r), _scope) for r in rows]" not in py:
+        bad.append("GET /intros hands the seller the buyer's address again")
+    if "return [_intro_for_viewer(dict(r), _v) for r in rows]" not in py:
+        bad.append("GET /intros/{listing_id} hands the seller the buyer's address again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a pending request reaches the seller without the buyer's address")]
+
 if __name__ == "__main__":
     sys.exit(main())
