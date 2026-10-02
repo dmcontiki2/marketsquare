@@ -7,7 +7,10 @@
   "air_con_refrigeration_technician",
   "cctv_alarm_installer",
   "gate_garage_door_technician",
-  "locksmith"
+  "locksmith",
+  "driver",
+  "code_10_code_14_driver",
+  "taxi_shuttle_driver"
  ],
  "label": {
   "en": "Electrician",
@@ -131,23 +134,23 @@
    ],
    "en": [
     "Pick [[Building trades]], then [[Electrician]]",
-    "Gas installers, air-con technicians, CCTV, gate and locksmith work follow the same steps: the law asks for a licence for them too."
+    "Gas installers, air-con technicians, CCTV, gate and locksmith work follow the same steps: the law asks for a licence for them too. Drivers follow them too, with their PrDP as the licence."
    ],
    "af": [
     "Kies [[Building trades]], dan [[Electrician]]",
-    "Gasinstalleerders, lugversorgingstegnici, CCTV-, hek- en slotmakerswerk volg dieselfde stappe: die wet vra ook vir hulle 'n lisensie."
+    "Gasinstalleerders, lugversorgingstegnici, CCTV-, hek- en slotmakerswerk volg dieselfde stappe: die wet vra ook vir hulle 'n lisensie. Bestuurders volg hulle ook, met hul PrDP as die lisensie."
    ],
    "zu": [
     "Khetha [[Building trades]], bese [[Electrician]]",
-    "Abafaki begesi, ochwepheshe be-air-con, umsebenzi we-CCTV, wamasango nowokhiye balandela izinyathelo ezifanayo: umthetho ufuna ilayisensi nakubo."
+    "Abafaki begesi, ochwepheshe be-air-con, umsebenzi we-CCTV, wamasango nowokhiye balandela izinyathelo ezifanayo: umthetho ufuna ilayisensi nakubo. Abashayeli nabo bayazilandela, i-PrDP yabo iyilayisensi."
    ],
    "xh": [
     "Khetha [[Building trades]], emva koko [[Electrician]]",
-    "Abafaki berhasi, iingcali ze-air-con, umsebenzi we-CCTV, wamasango nowezitshixo balandela amanyathelo afanayo: umthetho ufuna ilayisenisi nakubo."
+    "Abafaki berhasi, iingcali ze-air-con, umsebenzi we-CCTV, wamasango nowezitshixo balandela amanyathelo afanayo: umthetho ufuna ilayisenisi nakubo. Abaqhubi nabo bayawalandela, i-PrDP yabo iyilayisenisi."
    ],
    "nso": [
     "Kgetha [[Building trades]], ke moka [[Electrician]]",
-    "Batsenyi ba gase, ditsebi tša air-con, mošomo wa CCTV, wa dikgoro le wa dinotlelo ba latela dikgato tše di swanago: molao o nyaka laesense le go bona."
+    "Batsenyi ba gase, ditsebi tša air-con, mošomo wa CCTV, wa dikgoro le wa dinotlelo ba latela dikgato tše di swanago: molao o nyaka laesense le go bona. Baotledi le bona ba a di latela, PrDP ya bona e le laesense."
    ]
   },
   {

@@ -2,6 +2,46 @@
  "type": "home_cleaner",
  "status": "draft",
  "flow": "F1",
+ "serves": [
+  "housekeeper",
+  "cook",
+  "chef",
+  "gardener",
+  "pool_cleaner",
+  "window_cleaner",
+  "handyman",
+  "pet_sitter_dog_walker",
+  "carpet_washer",
+  "tree_cutter",
+  "garden_waste_removal",
+  "room_attendant",
+  "kitchen_assistant",
+  "cashier",
+  "waiter",
+  "bartender",
+  "griller_braai",
+  "hotel_porter",
+  "lodge_staff",
+  "caterer",
+  "petrol_attendant",
+  "shelf_packer",
+  "shop_assistant",
+  "merchandiser",
+  "picker_packer",
+  "removals_helper",
+  "farm_worker",
+  "general_worker",
+  "painter",
+  "builders_assistant",
+  "office_cleaner",
+  "seamstress_tailor",
+  "sewing_machinist",
+  "hair_braider",
+  "hairdresser",
+  "nail_technician",
+  "car_washer",
+  "event_staff"
+ ],
  "label": {
   "en": "Home cleaner",
   "af": "Huisskoonmaker",
@@ -121,11 +161,11 @@
    "pass": true,
    "en": [
     "Pick [[Home & care]], then [[Home cleaner]]",
-    "Choose the kind of work, then your job."
+    "Choose the kind of work, then your job. Gardeners, cooks, waiters, shop assistants and every other job that needs no licence or police clearance follow the same steps."
    ],
    "af": [
     "Kies [[Home & care]], dan [[Home cleaner]]",
-    "Kies die soort werk, dan jou werk."
+    "Kies die soort werk, dan jou werk. Tuiniers, kokke, kelners, winkelassistente en elke ander werk wat geen lisensie of polisieklaring nodig het nie, volg dieselfde stappe."
    ],
    "quick": [
     "group",
@@ -133,15 +173,15 @@
    ],
    "zu": [
     "Khetha [[Home & care]], bese [[Home cleaner]]",
-    "Khetha uhlobo lomsebenzi, bese kuba umsebenzi wakho."
+    "Khetha uhlobo lomsebenzi, bese kuba umsebenzi wakho. Abalimi bezingadi, abapheki, oweta, abasizi basezitolo nayo yonke eminye imisebenzi engadingi layisensi noma isitifiketi samaphoyisa balandela izinyathelo ezifanayo."
    ],
    "xh": [
     "Khetha [[Home & care]], emva koko [[Home cleaner]]",
-    "Khetha uhlobo lomsebenzi, emva koko umsebenzi wakho."
+    "Khetha uhlobo lomsebenzi, emva koko umsebenzi wakho. Abalimi beegadi, abapheki, ooweyitala, abancedisi beevenkile nayo yonke eminye imisebenzi engafuni layisenisi okanye isatifikethi samapolisa balandela amanyathelo afanayo."
    ],
    "nso": [
     "Kgetha [[Home & care]], ke moka [[Home cleaner]]",
-    "Kgetha mohuta wa mošomo, ke moka mošomo wa gago."
+    "Kgetha mohuta wa mošomo, ke moka mošomo wa gago. Balemi ba dirapa, baapei, baweitara, bathuši ba mabenkeleng le mešomo ka moka ye mengwe ye e sa nyakego laesense goba setifikeiti sa maphodisa ba latela dikgato tše di swanago."
    ]
   },
   {

@@ -33903,5 +33903,44 @@ def rg_how_place_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "How opens at her place: last card passed, the buyer's half, the list keeps her place")]
 
+@entry("RG-0655", "SERVES-ROLES-1: the home-cleaner, plumber and electrician guides say which other jobs follow their steps, "
+       "and Quick's How opens them for those jobs -- 38 Casuals (no licence or clearance), 12 trades (no licence) and 3 driver "
+       "roles (a PrDP) that used to get the guide list",
+       OPEN, fixed_on="2026-10-02",
+       scope="stories/home_cleaner.json, plumber.json, electrician.json: step 2 in en/af/zu/xh/nso ('... follow the same steps') "
+             "and 'serves'; stories/gallery.json; stories/how_check.py walks the first and last role each guide serves.",
+       ref="OPEN_LOOPS L36(c), David 2 Oct 2026: 'are these 2 items still open? If yes please close them'. The claim is true "
+           "only while each role keeps the guide's screens and gate, so this entry also reads Quick's role registry: a Casual "
+           "served by the cleaner must have no licence or clearance gate (RUL-115's employer confirmation is its gate), a trade "
+           "served by the plumber no gate, a role served by the electrician a licence gate (LICENCE-GATE-1).")
+def rg_serves_roles_1():
+    import json as _j, re as _re
+    q = repo_file("quick.html")
+    st = {t: repo_file("stories/%s.json" % t) for t in ("home_cleaner", "plumber", "electrician")}
+    if q is None or None in st.values():
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"var SVC_ROLES = (\[.*?\]);\n", q)
+    if not m:
+        return [(FAIL, "Quick's role registry (SVC_ROLES) is not where this entry reads it")]
+    roles = {r["k"]: r for r in _j.loads(m.group(1))}
+    want = {"home_cleaner": (38, lambda r: r["c"] == "C" and not r.get("gate"), "every other job that needs no licence or police clearance"),
+            "plumber": (16, lambda r: r["c"] == "T" and not r.get("gate"), "welders, mechanics, plasterers, pavers"),
+            "electrician": (8, lambda r: r.get("gate") == "licence", "Drivers follow them too, with their PrDP as the licence.")}
+    bad = []
+    for t, (n, ok, words) in want.items():
+        d = _j.loads(st[t])
+        sv = d.get("serves") or []
+        if len(sv) < n:
+            bad.append("%s serves %d roles, not %d" % (t, len(sv), n))
+        wrong = [k for k in sv if k not in roles or not ok(roles[k])]
+        if wrong:
+            bad.append("%s claims roles whose screens or gate now differ: %s" % (t, ", ".join(wrong[:6])))
+        s2 = [x for x in d.get("steps", []) if x.get("n") == 2]
+        if not s2 or words not in s2[0]["en"][1] or any(len((s2[0].get(lg) or ["", ""])[1]) < 40 for lg in ("af", "zu", "xh", "nso")):
+            bad.append("%s's step 2 no longer says which jobs follow its steps, in all five languages" % t)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the cleaner, plumber and electrician guides serve the 50 + 3 roles that share their steps and gate")]
+
 if __name__ == "__main__":
     sys.exit(main())
