@@ -33998,5 +33998,21 @@ def rg_intro_addr_hide_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a pending request reaches the seller without the buyer's address")]
 
+@entry("RG-0658", "HUB-ACTIVE-COUNT-1: the Seller Hub's ACTIVE count leaves out paused, draft and archived adverts -- it read "
+       "'3 ACTIVE' over three paused adverts because a new card took its state from l.paused, which /listings/mine never sends",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js _dlStatus() used by loadLiveDash for new and refreshed cards.",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md, 'Not fixed, noted'): Elsabe's hub said 2 ACTIVE with all three "
+           "adverts paused; measured again 2 Oct: live 3, fixed build 0.")
+def rg_hub_active_count_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    if "function _dlStatus(ls)" not in js or "status: _dlStatus(l.listing_status)," not in js:
+        return [(FAIL, "the hub counts paused adverts as active again")]
+    if "(l.paused ? 'paused' : 'active')" in js:
+        return [(FAIL, "a hub card reads l.paused again (the server never sends it)")]
+    return [(INFO, "the hub's ACTIVE count leaves out paused adverts")]
+
 if __name__ == "__main__":
     sys.exit(main())

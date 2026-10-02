@@ -612,6 +612,9 @@ async function loadLiveListings(retryCount) {
 // ── LIVE DASHBOARD LOADER ─────────────────────────────────
 // 1. Fetches seller\'s own published listings via /listings/mine
 // 2. Merges pending intros from /intros
+/* HUB-ACTIVE-COUNT-1 (F12 walk, 30 Sep 2026): the hub counted '2 ACTIVE' over three paused adverts -- a new card read
+   l.paused, which /listings/mine never sends, so every paused or archived advert counted as active after a reload. */
+function _dlStatus(ls){ ls = String(ls || 'live').toLowerCase(); return ls === 'draft' ? 'draft' : (ls === 'paused' ? 'paused' : (ls === 'archived' ? 'archived' : 'active')); }
 async function loadLiveDash() {
   if (!BEA_ENABLED || isOffline()) return;
 
@@ -652,7 +655,7 @@ async function loadLiveDash() {
               title: l.title,
               cat: normCat(l.category),
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
-              status: l.listing_status==='draft' ? 'draft' : (l.paused ? 'paused' : 'active'),
+              status: _dlStatus(l.listing_status),   // HUB-ACTIVE-COUNT-1: the server's listing_status, not an absent l.paused
               listing_status: (l.listing_status || 'live').toLowerCase(),
               photo: l.thumb_url || null,
               isCommit: normCat(l.category) === 'Property',
@@ -665,7 +668,7 @@ async function loadLiveDash() {
             // E2E-HMI-1 (24 Sep 2026): the server's state wins. An advert published through the Terms
             // step kept reading 'Draft - not visible yet' on the hub until a page reload.
             dl.listing_status = (l.listing_status || 'live').toLowerCase();
-            dl.status = l.listing_status==='draft' ? 'draft' : (dl.listing_status==='paused' ? 'paused' : 'active');
+            dl.status = _dlStatus(l.listing_status);
             dl.title = l.title || dl.title;
             if (l.thumb_url) dl.photo = l.thumb_url;
           }
