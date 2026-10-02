@@ -12393,6 +12393,20 @@ function _elRateWithBasis(typed, orig) {
   return cur + amt + ' ' + basis;
 }
 
+// STAY-CARRY-1 (2 Oct 2026, the F12 walk through Quick): a stay saved in Quick already said what it is and where -- its
+// kind in prop_type (the column _msMapBeaListing reads as a stay's type) and its place in area + city. Edit opened with
+// '— select —' and an empty Location / area beside 'Guest house — Wilderness'. Read only when the column and the
+// description line are both empty, so an answer written by the Coach or the Sell flow always wins.
+function _elQuickCarry(raw, fieldId) {
+  if (!/accommodation/i.test(String((raw && raw.category) || ''))) return '';
+  if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();
+  if (fieldId === 'destination') {
+    const a = String(raw.area || raw.suburb || '').trim(), c = String(raw.city || '').trim();
+    return (a && c && a.toLowerCase().indexOf(c.toLowerCase()) < 0) ? a + ', ' + c : (a || c);
+  }
+  return '';
+}
+
 // Build the edit form — mirrors AA field definitions but pre-populated & AI suggestions optional
 function renderEditForm(raw) {
   const fields = _elGetFields(elCurrentCat, raw.service_class);
@@ -12404,8 +12418,12 @@ function renderEditForm(raw) {
        in a title ('55" TV') cut it off at the quote and Save wrote the cut version back.
        EDIT-DESC-PHOTOS-1 (ts2-12): the description box no longer starts with the hidden photo list; the server puts
        it back on save (the [photos:...] preserve block in PUT /listings/{id}). */
-    let val = _elFieldVal(raw, f.id) || _elDescField(raw, f.id);
+    let val = _elFieldVal(raw, f.id) || _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);   // STAY-CARRY-1
     if (f.id === 'desc') val = String(val).replace(/^\[photos:[^\]]*\]\n?/, '');
+    if (f.type === 'select' && val && (f.options || []).indexOf(val) < 0) {   // STAY-CARRY-1: 'Guest house' is 'Guest House'
+      const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());
+      if (_ci) val = _ci;
+    }
     const v = _lmEsc(val);
     const sug = elAISuggestions[f.id];
     const sugHtml = sug
