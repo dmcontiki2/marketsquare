@@ -1268,11 +1268,15 @@ function qHelpLang(){ return QHELP_WORD[QLANG] ? QLANG : 'en'; }
 /* HELP-LANG-SYNC-1 (1 Oct 2026, David: "the background stays in the one language while the language selection is
    already set to another"): the guide only learned Quick's language when How was tapped, so a language picked while the
    guide was open changed Quick and the pill but left the guide behind it in the old one. Now the guide follows at once,
-   on the step she is reading ('#lang=' alone never moves her), and the next How starts from the same place. */
+   on the step she is reading, and the next How starts from the same place. Only the language in the page's hash changes
+   (2 Oct, live check): a guide she has moved through ('#s3') keeps her step, and the gallery keeps her door and place in
+   Quick (HOW-PLACE-1's door / at / seen) -- a bare '#lang=' had wiped them. */
 function qHelpRelang(){
   var o=document.getElementById('qhov'); if(!o || o.style.display!=='block') return;
   var l=qHelpLang(), ds=o.getAttribute('data-src')||'';
-  try{ o.firstChild.contentWindow.location.hash='lang='+l; }catch(e){}
+  try{ var loc=o.firstChild.contentWindow.location, h=(loc.hash||'').slice(1);
+    loc.hash=/(^|&)lang=[a-z]+/.test(h) ? h.replace(/(^|&)lang=[a-z]+/, '$1lang='+l) : (!h || /^s\d+$/.test(h)) ? 'lang='+l : h+'&lang='+l;
+  }catch(e){}
   o.setAttribute('data-src', ds.replace(/([#&])lang=[a-z]+/, '$1lang='+l));
 }
 function qHelpClose(){

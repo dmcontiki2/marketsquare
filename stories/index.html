@@ -128,9 +128,6 @@ function fitPh(el){
   if (line.textContent !== ph) line.textContent = ph;
 }
 window.addEventListener('resize', () => fitPh($('q')));
-// HELP-LANG-SYNC-1 (1 Oct 2026): Quick re-speaks an open gallery through its hash ('#lang=af'); the page used to read
-// the hash once, on load, so a language picked in Quick while the gallery was showing never reached it.
-window.addEventListener('hashchange', () => { const hl = ((location.hash || '').match(/lang=(en|af|zu|xh|nso)/) || [])[1]; if (hl && hl !== lang) { lang = hl; render(); } });
 $('q').oninput = render;
 document.querySelectorAll('.lang [data-l]').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem('ts_help_lang', lang); } catch (e) {} render(); });
 render();
