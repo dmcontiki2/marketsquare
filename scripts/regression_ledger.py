@@ -34147,7 +34147,7 @@ def rg_price_miss_word_1():
 
 @entry("RG-0700", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
        "viewer can switch the examples off -- the switch starts ON and is remembered on the device",
-       OPEN,
+       LOCKED, fixed_on="2026-10-02",
        scope="bea_main.py /listings _sort_map (5 variants + fallback via _ex_last) and the Local Market ORDER BY; "
              "zoom_engine.order_results (is_example last); ms.js msIsExample / msShowExamples / msExOrder in renderGrid, "
              "renderAdvGrid, lmLoadGrid, renderMap and renderCatCounts, with the 'AI examples on/off' switch; quick.html "
@@ -34155,7 +34155,12 @@ def rg_price_miss_word_1():
              "country, both apps. An example = super_example, is_demo, or a house account -- the RUL-187 definition.",
        ref="RUL-194, David 2 Oct 2026: a DEMO switch combined with real listings first. Replaces SUPER-PIN-1 (20 Jul 2026). "
            "Numbered RG-0700 at the merge: the cloud lanes took RG-0655..0658 and 0671..0686 the same morning. "
-           "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin.")
+           "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin. "
+           "LOCKED 2 Oct 2026 after the rendered check in Chrome (live 05:14Z in b49b013, ms.js v=896): Browse, Pretoria, reads "
+           "'18 real listings · 41 AI examples' with all 18 real cards before the first example; switch off leaves 18 cards and 0 "
+           "examples, and Cars reads 'No real listings here yet -- 4 AI examples are hidden.'; one tap brings them back. Public feed: "
+           "18 real, then 48 examples. Quick (Afrikaans), Collectors > coins: 'Versteek KI-voorbeelde' hides the example and the screen "
+           "says 'KI-voorbeelde is versteek.'. No Quick search walked held both kinds at once, so Quick's order rests on the feed and the code.")
 def rg_examples_last_1():
     bm = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); ze = repo_file("zoom_engine.py")
     out = []
