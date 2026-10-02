@@ -1300,6 +1300,16 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
     <div class="fs-title"><img src="/static/brand-photos/cat_cars.jpg" alt="" loading="lazy" style="width:34px;height:24px;object-fit:cover;border-radius:6px;vertical-align:-6px;margin-right:7px;border:1px solid rgba(0,0,0,.08);">Cars Filters</div>
     <div class="fs-sub js-city-sub">Pretoria · narrow your search</div>
 
+    <!-- CAR-HIRE-FILTER-1 (2 Oct 2026, F9 walk): buy or hire -->
+    <div class="fs-section">
+      <div class="fs-label">Buy or hire</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-deal')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-deal')">For sale</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fcar-deal')">For hire</div>
+      </div>
+    </div>
+
     <div class="fs-section">
       <div class="fs-label">Make</div>
       <!-- FILTER-DATA-2 (20 Jul 2026, David's ruling): enumerable-but-CHURNY fields

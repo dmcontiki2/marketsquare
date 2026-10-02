@@ -34269,7 +34269,7 @@ def rg_price_miss_word_1():
 
 @entry("RG-0700", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
        "viewer can switch the examples off -- the switch starts ON and is remembered on the device",
-       OPEN,
+       LOCKED, fixed_on="2026-10-02",
        scope="bea_main.py /listings _sort_map (5 variants + fallback via _ex_last) and the Local Market ORDER BY; "
              "zoom_engine.order_results (is_example last); ms.js msIsExample / msShowExamples / msExOrder in renderGrid, "
              "renderAdvGrid, lmLoadGrid, renderMap and renderCatCounts, with the 'AI examples on/off' switch; quick.html "
@@ -34277,7 +34277,12 @@ def rg_price_miss_word_1():
              "country, both apps. An example = super_example, is_demo, or a house account -- the RUL-187 definition.",
        ref="RUL-194, David 2 Oct 2026: a DEMO switch combined with real listings first. Replaces SUPER-PIN-1 (20 Jul 2026). "
            "Numbered RG-0700 at the merge: the cloud lanes took RG-0655..0658 and 0671..0686 the same morning. "
-           "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin.")
+           "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin. "
+           "LOCKED 2 Oct 2026 after the rendered check in Chrome (live 05:14Z in b49b013, ms.js v=896): Browse, Pretoria, reads "
+           "'18 real listings · 41 AI examples' with all 18 real cards before the first example; switch off leaves 18 cards and 0 "
+           "examples, and Cars reads 'No real listings here yet -- 4 AI examples are hidden.'; one tap brings them back. Public feed: "
+           "18 real, then 48 examples. Quick (Afrikaans), Collectors > coins: 'Versteek KI-voorbeelde' hides the example and the screen "
+           "says 'KI-voorbeelde is versteek.'. No Quick search walked held both kinds at once, so Quick's order rests on the feed and the code.")
 def rg_examples_last_1():
     bm = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); ze = repo_file("zoom_engine.py")
     out = []
@@ -34325,6 +34330,73 @@ def rg_examples_last_1():
     else:
         out.append((INFO, "live: %d real listing(s), then %d AI example(s), in the Pretoria feed" % (flags.count(False), flags.count(True))))
     return out
+
+@entry("RG-0674", "CAR-FEATS-1: the features a seller ticks in Sell for a car (Aircon, Bluetooth) fill the advert's Vehicle Specs "
+       "Features box as seller-entered, not only the advert's text (F9 walk: the box was empty)",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js sfBuildVehicle(): specs.features + _prov.features='seller_entered'.",
+       ref="F9 cloud walk 30 Sep 2026 (Tebogo, #456): 'Features' box empty while the text said 'Features: Aircon, Bluetooth'.")
+def rg_car_feats_1():
+    ms = repo_file("ms.js")
+    if ms is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "if((sfState.features||[]).length){specs.features=sfState.features.slice();prov.features='seller_entered';}" not in ms:
+        return [(FAIL, "a car's ticked features no longer reach its spec sheet")]
+    return [(INFO, "a car's features fill its spec sheet")]
+
+@entry("RG-0675", "CAR-HIRE-FILTER-1: Browse -> Cars -> Filtered Search asks 'Buy or hire' (Any / For sale / For hire) and "
+       "filters on the advert's listing type; a hirer no longer has to spot 'per day' on each card (F9 walk)",
+       OPEN, fixed_on="2026-10-02",
+       scope="marketsquare.html #fs-cars 'Buy or hire' section; ms.js filterState.cars.deal, the cars filter and its tag.",
+       ref="F9 cloud walk 30 Sep 2026 (Lerato): no way to ask for hire cars only.")
+def rg_car_hire_filter_1():
+    ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '<div class="fs-label">Buy or hire</div>' not in h:
+        bad.append("the cars filter no longer asks buy or hire")
+    if "filterState.cars.deal         = getSelOptInSection('Buy or hire','fs-cars');" not in ms \
+            or "if(fcar.deal==='For hire' && !/hire|rent/i.test(l.carDeal||'')) return false;" not in ms:
+        bad.append("the buy-or-hire choice no longer filters the cars")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a hirer can ask for hire cars only")]
+
+@entry("RG-0720", "ADV-PER-SPACE-1: an Adventures card whose price carries a basis reads 'From R950 per night', not 'From R950per "
+       "night' -- every guest house or trip listed in Quick ('R950 / room / night', 'R1 500 / person') showed it glued",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js Adventures card priceLabel (_advPer): a space before l.per, as every other card already renders it.",
+       ref="F12 walk through Quick, 2 Oct 2026: Karin's Filtered Search result for Sannie's guest house read 'From R950per night'.")
+def rg_adv_per_space_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "const _advPer = l.per ? ' ' + l.per : (isAccom ? '/night' : '/person');" not in js:
+        return [(FAIL, "an Adventures card glues its price to the basis again ('R950per night')")]
+    return [(INFO, "Adventures cards: 'From R950 per night'")]
+
+
+@entry("RG-0721", "EULA-FOOTER-VER-1: the Terms end with ONE version -- the italic footer under '— End of TrustSquare Terms of Use / "
+       "EULA v1.20 —' still read 'v1.19 · Republic of South Africa ...' in all three copies, so every first-time buyer's one-tap "
+       "Terms sheet showed two versions; it names the version canon.yml publishes",
+       OPEN, fixed_on="2026-10-02",
+       scope="eula_clean.html (source) -> terms.html + ms.js via scripts/eula_sync.py; no clause changed.",
+       ref="F12 walk through Quick, 2 Oct 2026: Karin's buyer Terms sheet ended 'EULA v1.20' then 'v1.19 · Republic of South "
+           "Africa · Country Schedules ...'. The v1.20 bump of 27 Sep (RUL-188/190) updated the end line, not the footer.")
+def rg_eula_footer_ver_1():
+    import re as _re
+    src = repo_file("eula_clean.html"); canon = repo_file("canon.yml")
+    if None in (src, canon):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r'^\s*eula:\s*"(v[\d.]+)"', canon, _re.M)
+    end = _re.search(r"End of TrustSquare Terms of Use / EULA (v[\d.]+)", src)
+    foot = _re.search(r"<p><em>(v[\d.]+) · Republic of South Africa", src)
+    if not (m and end and foot):
+        return [(FAIL, "the Terms' end line, footer or canon.yml version is not where this entry reads it")]
+    if not (m.group(1) == end.group(1) == foot.group(1)):
+        return [(FAIL, "the Terms name more than one version: canon %s, end line %s, footer %s" % (m.group(1), end.group(1), foot.group(1)))]
+    return [(INFO, "the Terms end with one version, %s" % m.group(1))]
 
 if __name__ == "__main__":
     sys.exit(main())
