@@ -2,6 +2,9 @@
  "type": "collectors_coins",
  "status": "draft",
  "flow": "F10",
+ "serves": [
+  "collectors_*"
+ ],
  "label": {
   "en": "Coins",
   "af": "Munte",

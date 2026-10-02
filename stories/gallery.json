@@ -21,7 +21,9 @@
    },
    "walked_on": "2026-09-30",
    "steps": 19,
-   "cover": "f12_01_sell"
+   "cover": "f12_01_sell",
+   "door": "adventures",
+   "quick": false
   },
   {
    "type": "adventures_guided_walk",
@@ -43,7 +45,9 @@
    },
    "walked_on": "2026-09-30",
    "steps": 19,
-   "cover": "f13_01_sell"
+   "cover": "f13_01_sell",
+   "door": "adventures",
+   "quick": false
   },
   {
    "type": "cars_bakkie",
@@ -65,7 +69,12 @@
    },
    "walked_on": "2026-09-30",
    "steps": 22,
-   "cover": "f8_01_door"
+   "cover": "f8_01_door",
+   "door": "cars",
+   "quick": true,
+   "serves": [
+    "cars_*"
+   ]
   },
   {
    "type": "cars_for_hire",
@@ -87,7 +96,9 @@
    },
    "walked_on": "2026-09-30",
    "steps": 19,
-   "cover": "f9_01_sell"
+   "cover": "f9_01_sell",
+   "door": "cars",
+   "quick": false
   },
   {
    "type": "collectors_coins",
@@ -109,7 +120,12 @@
    },
    "walked_on": "2026-09-30",
    "steps": 22,
-   "cover": "f10_01_door"
+   "cover": "f10_01_door",
+   "door": "collectors",
+   "quick": true,
+   "serves": [
+    "collectors_*"
+   ]
   },
   {
    "type": "electrician",
@@ -131,7 +147,16 @@
    },
    "walked_on": "2026-09-30",
    "steps": 17,
-   "cover": "f4_01_door"
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "serves": [
+    "gas_installer",
+    "air_con_refrigeration_technician",
+    "cctv_alarm_installer",
+    "gate_garage_door_technician",
+    "locksmith"
+   ]
   },
   {
    "type": "home_cleaner",
@@ -153,7 +178,9 @@
    },
    "walked_on": "2026-09-29",
    "steps": 17,
-   "cover": "h2_01_start"
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true
   },
   {
    "type": "localmarket_food_preserves",
@@ -175,7 +202,12 @@
    },
    "walked_on": "2026-09-29",
    "steps": 20,
-   "cover": "lm_01_door"
+   "cover": "lm_01_door",
+   "door": "localmarket",
+   "quick": true,
+   "serves": [
+    "localmarket_*"
+   ]
   },
   {
    "type": "nanny",
@@ -197,7 +229,14 @@
    },
    "walked_on": "2026-09-30",
    "steps": 18,
-   "cover": "f2_01_door"
+   "cover": "f2_01_door",
+   "door": "services",
+   "quick": true,
+   "serves": [
+    "caregiver",
+    "au_pair",
+    "creche_assistant"
+   ]
   },
   {
    "type": "plumber",
@@ -219,7 +258,15 @@
    },
    "walked_on": "2026-09-30",
    "steps": 20,
-   "cover": "f3_01_door"
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "serves": [
+    "bricklayer",
+    "tiler",
+    "carpenter",
+    "roofer"
+   ]
   },
   {
    "type": "property_flat",
@@ -241,7 +288,13 @@
    },
    "walked_on": "2026-09-30",
    "steps": 23,
-   "cover": "f7_01_door"
+   "cover": "f7_01_door",
+   "door": "property",
+   "quick": true,
+   "serves": [
+    "property_*"
+   ],
+   "deal": "let"
   },
   {
    "type": "property_house",
@@ -263,7 +316,13 @@
    },
    "walked_on": "2026-09-30",
    "steps": 25,
-   "cover": "f6_01_door"
+   "cover": "f6_01_door",
+   "door": "property",
+   "quick": true,
+   "serves": [
+    "property_*"
+   ],
+   "deal": "sale"
   },
   {
    "type": "tutors_maths",
@@ -285,7 +344,12 @@
    },
    "walked_on": "2026-09-30",
    "steps": 23,
-   "cover": "f5_01_door"
+   "cover": "f5_01_door",
+   "door": "tutors",
+   "quick": true,
+   "serves": [
+    "tutors_*"
+   ]
   }
  ]
 }

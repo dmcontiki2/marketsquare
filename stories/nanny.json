@@ -2,6 +2,11 @@
  "type": "nanny",
  "status": "draft",
  "flow": "F2",
+ "serves": [
+  "caregiver",
+  "au_pair",
+  "creche_assistant"
+ ],
  "label": {
   "en": "Nanny",
   "af": "Kinderoppasser",

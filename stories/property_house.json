@@ -2,6 +2,10 @@
  "type": "property_house",
  "status": "draft",
  "flow": "F6",
+ "deal": "sale",
+ "serves": [
+  "property_*"
+ ],
  "label": {
   "en": "House for sale",
   "af": "Huis te koop",

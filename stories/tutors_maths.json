@@ -2,6 +2,9 @@
  "type": "tutors_maths",
  "status": "draft",
  "flow": "F5",
+ "serves": [
+  "tutors_*"
+ ],
  "label": {
   "en": "Maths tutor",
   "af": "Wiskunde-tutor",

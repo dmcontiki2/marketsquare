@@ -2,6 +2,10 @@
  "type": "property_flat",
  "status": "draft",
  "flow": "F7",
+ "deal": "let",
+ "serves": [
+  "property_*"
+ ],
  "label": {
   "en": "Flat to let",
   "af": "Woonstel te huur",
