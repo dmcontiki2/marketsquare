@@ -33907,8 +33907,119 @@ def rg_how_place_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "How opens at her place: last card passed, the buyer's half, the list keeps her place")]
 
+@entry("RG-0655", "SERVES-ROLES-1: the home-cleaner, plumber and electrician guides say which other jobs follow their steps, "
+       "and Quick's How opens them for those jobs -- 38 Casuals (no licence or clearance), 12 trades (no licence) and 3 driver "
+       "roles (a PrDP) that used to get the guide list",
+       OPEN, fixed_on="2026-10-02",
+       scope="stories/home_cleaner.json, plumber.json, electrician.json: step 2 in en/af/zu/xh/nso ('... follow the same steps') "
+             "and 'serves'; stories/gallery.json; stories/how_check.py walks the first and last role each guide serves.",
+       ref="OPEN_LOOPS L36(c), David 2 Oct 2026: 'are these 2 items still open? If yes please close them'. The claim is true "
+           "only while each role keeps the guide's screens and gate, so this entry also reads Quick's role registry: a Casual "
+           "served by the cleaner must have no licence or clearance gate (RUL-115's employer confirmation is its gate), a trade "
+           "served by the plumber no gate, a role served by the electrician a licence gate (LICENCE-GATE-1).")
+def rg_serves_roles_1():
+    import json as _j, re as _re
+    q = repo_file("quick.html")
+    st = {t: repo_file("stories/%s.json" % t) for t in ("home_cleaner", "plumber", "electrician")}
+    if q is None or None in st.values():
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"var SVC_ROLES = (\[.*?\]);\n", q)
+    if not m:
+        return [(FAIL, "Quick's role registry (SVC_ROLES) is not where this entry reads it")]
+    roles = {r["k"]: r for r in _j.loads(m.group(1))}
+    want = {"home_cleaner": (38, lambda r: r["c"] == "C" and not r.get("gate"), "every other job that needs no licence or police clearance"),
+            "plumber": (16, lambda r: r["c"] == "T" and not r.get("gate"), "welders, mechanics, plasterers, pavers"),
+            "electrician": (8, lambda r: r.get("gate") == "licence", "Drivers follow them too, with their PrDP as the licence.")}
+    bad = []
+    for t, (n, ok, words) in want.items():
+        d = _j.loads(st[t])
+        sv = d.get("serves") or []
+        if len(sv) < n:
+            bad.append("%s serves %d roles, not %d" % (t, len(sv), n))
+        wrong = [k for k in sv if k not in roles or not ok(roles[k])]
+        if wrong:
+            bad.append("%s claims roles whose screens or gate now differ: %s" % (t, ", ".join(wrong[:6])))
+        s2 = [x for x in d.get("steps", []) if x.get("n") == 2]
+        if not s2 or words not in s2[0]["en"][1] or any(len((s2[0].get(lg) or ["", ""])[1]) < 40 for lg in ("af", "zu", "xh", "nso")):
+            bad.append("%s's step 2 no longer says which jobs follow its steps, in all five languages" % t)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the cleaner, plumber and electrician guides serve the 50 + 3 roles that share their steps and gate")]
 
-@entry("RG-0655", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
+@entry("RG-0656", "STAY-CARRY-1: a guest house listed in Quick opens in TrustSquare's Edit with its type and place filled in -- "
+       "Quick sends the kind she tapped ('Guest house') as prop_type, the column TrustSquare reads as a stay's type, and Edit "
+       "shows it as 'Guest House' and her area and city as 'Wilderness, George', instead of '— select —' and an empty box",
+       OPEN, fixed_on="2026-10-02",
+       scope="quick.html + genie/HARNESS.html FIELD_FROM.adventures; ms.js _elQuickCarry (stays only; a Coach or Sell answer "
+             "wins) and renderEditForm's case-blind select match.",
+       ref="F12 walk through Quick, 2 Oct 2026 (OPEN_LOOPS L36(a)), draft #460: Edit asked ACCOMMODATION TYPE and LOCATION / "
+           "AREA again beside the title 'Guest house — Wilderness' -- RUL-149 Q2's class (the app re-asks what Quick knows). "
+           "The type also never reached the Stays type filter (accommodation_type came from prop_type, which was empty). "
+           "Proven on the candidate before shipping: draft #461 opened with Guest House and Wilderness, George.")
+def rg_stay_carry_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); js = repo_file("ms.js")
+    if None in (q, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if " adventures:{prop_type:'kind'}};" not in q:
+        bad.append("Quick no longer sends a stay's kind")
+    for need in ("function _elQuickCarry(raw, fieldId)", "|| _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);",
+                 "if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();",
+                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());"):
+        if need not in js:
+            bad.append("Edit no longer carries a Quick stay's answers: " + need[:48])
+    i = js.find("function _msMapBeaListing")
+    if "l.prop_type || _msDescLine(desc, ['Type'])" not in js:
+        bad.append("the app no longer reads a stay's type from prop_type")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a Quick guest house opens in Edit with its type and place")]
+
+@entry("RG-0657", "INTRO-ADDR-HIDE-1 (L29): a seller's read of an introduction request she has not accepted carries no buyer "
+       "email address -- GET /intros and GET /intros/{listing_id} blank it until the request is accepted; the buyer's own "
+       "rows, accepted rows and staff reads keep it",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py _intro_for_viewer() applied in get_all_intros and get_intros.",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md): Elsabe's GET /intros?status=all returned "
+           "buyer_email=dmcontiki2+qa-riana0930@gmail.com on a pending request. OPEN_LOOPS L29; David 2 Oct 2026: "
+           "'Please complete open actions and ship'.")
+def rg_intro_addr_hide_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(FAIL, "bea_main.py is missing")]
+    bad = []
+    i = py.find("def _intro_for_viewer(")
+    body = py[i:i + 900] if i >= 0 else ""
+    if '!= "accepted"' not in body or 'd["buyer_email"] = ""' not in body:
+        bad.append("the helper no longer blanks the buyer's address before acceptance")
+    if "return [_intro_for_viewer(dict(r), _scope) for r in rows]" not in py:
+        bad.append("GET /intros hands the seller the buyer's address again")
+    if "return [_intro_for_viewer(dict(r), _v) for r in rows]" not in py:
+        bad.append("GET /intros/{listing_id} hands the seller the buyer's address again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a pending request reaches the seller without the buyer's address")]
+
+@entry("RG-0658", "HUB-ACTIVE-COUNT-1: the Seller Hub's ACTIVE count leaves out paused, draft and archived adverts -- it read "
+       "'3 ACTIVE' over three paused adverts because a new card took its state from l.paused, which /listings/mine never sends",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js _dlStatus() used by loadLiveDash for new and refreshed cards.",
+       ref="F12 walk 30 Sep 2026 (docs/E2E_2026-09-30_F12.md, 'Not fixed, noted'): Elsabe's hub said 2 ACTIVE with all three "
+           "adverts paused; measured again 2 Oct: live 3, fixed build 0.")
+def rg_hub_active_count_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(FAIL, "ms.js is missing")]
+    if "function _dlStatus(ls)" not in js or "status: _dlStatus(l.listing_status)," not in js:
+        return [(FAIL, "the hub counts paused adverts as active again")]
+    if "(l.paused ? 'paused' : 'active')" in js:
+        return [(FAIL, "a hub card reads l.paused again (the server never sends it)")]
+    return [(INFO, "the hub's ACTIVE count leaves out paused adverts")]
+
+
+@entry("RG-0659", "EXAMPLES-LAST-1: real listings always come before the AI examples, in every list of both apps, and the "
        "viewer can switch the examples off -- the switch starts ON and is remembered on the device",
        OPEN,
        scope="bea_main.py /listings _sort_map (5 variants + fallback via _ex_last) and the Local Market ORDER BY; "
@@ -33917,6 +34028,7 @@ def rg_how_place_1():
              "find results (same device key ts_show_examples) with Hide/Show AI examples. SCOPE: every category, every "
              "country, both apps. An example = super_example, is_demo, or a house account -- the RUL-187 definition.",
        ref="RUL-194, David 2 Oct 2026: a DEMO switch combined with real listings first. Replaces SUPER-PIN-1 (20 Jul 2026). "
+           "Numbered RG-0659 at the merge: the cloud lane took RG-0655..0658 the same morning. "
            "Seen on the 30 Sep F10 walk: Ayanda's coin search showed the AI example collection first, then his real coin.")
 def rg_examples_last_1():
     bm = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); ze = repo_file("zoom_engine.py")

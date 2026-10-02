@@ -612,6 +612,9 @@ async function loadLiveListings(retryCount) {
 // ── LIVE DASHBOARD LOADER ─────────────────────────────────
 // 1. Fetches seller\'s own published listings via /listings/mine
 // 2. Merges pending intros from /intros
+/* HUB-ACTIVE-COUNT-1 (F12 walk, 30 Sep 2026): the hub counted '2 ACTIVE' over three paused adverts -- a new card read
+   l.paused, which /listings/mine never sends, so every paused or archived advert counted as active after a reload. */
+function _dlStatus(ls){ ls = String(ls || 'live').toLowerCase(); return ls === 'draft' ? 'draft' : (ls === 'paused' ? 'paused' : (ls === 'archived' ? 'archived' : 'active')); }
 async function loadLiveDash() {
   if (!BEA_ENABLED || isOffline()) return;
 
@@ -652,7 +655,7 @@ async function loadLiveDash() {
               title: l.title,
               cat: normCat(l.category),
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
-              status: l.listing_status==='draft' ? 'draft' : (l.paused ? 'paused' : 'active'),
+              status: _dlStatus(l.listing_status),   // HUB-ACTIVE-COUNT-1: the server's listing_status, not an absent l.paused
               listing_status: (l.listing_status || 'live').toLowerCase(),
               photo: l.thumb_url || null,
               isCommit: normCat(l.category) === 'Property',
@@ -665,7 +668,7 @@ async function loadLiveDash() {
             // E2E-HMI-1 (24 Sep 2026): the server's state wins. An advert published through the Terms
             // step kept reading 'Draft - not visible yet' on the hub until a page reload.
             dl.listing_status = (l.listing_status || 'live').toLowerCase();
-            dl.status = l.listing_status==='draft' ? 'draft' : (dl.listing_status==='paused' ? 'paused' : 'active');
+            dl.status = _dlStatus(l.listing_status);
             dl.title = l.title || dl.title;
             if (l.thumb_url) dl.photo = l.thumb_url;
           }
@@ -12470,6 +12473,20 @@ function _elRateWithBasis(typed, orig) {
   return cur + amt + ' ' + basis;
 }
 
+// STAY-CARRY-1 (2 Oct 2026, the F12 walk through Quick): a stay saved in Quick already said what it is and where -- its
+// kind in prop_type (the column _msMapBeaListing reads as a stay's type) and its place in area + city. Edit opened with
+// '— select —' and an empty Location / area beside 'Guest house — Wilderness'. Read only when the column and the
+// description line are both empty, so an answer written by the Coach or the Sell flow always wins.
+function _elQuickCarry(raw, fieldId) {
+  if (!/accommodation/i.test(String((raw && raw.category) || ''))) return '';
+  if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();
+  if (fieldId === 'destination') {
+    const a = String(raw.area || raw.suburb || '').trim(), c = String(raw.city || '').trim();
+    return (a && c && a.toLowerCase().indexOf(c.toLowerCase()) < 0) ? a + ', ' + c : (a || c);
+  }
+  return '';
+}
+
 // Build the edit form — mirrors AA field definitions but pre-populated & AI suggestions optional
 function renderEditForm(raw) {
   const fields = _elGetFields(elCurrentCat, raw.service_class);
@@ -12481,8 +12498,12 @@ function renderEditForm(raw) {
        in a title ('55" TV') cut it off at the quote and Save wrote the cut version back.
        EDIT-DESC-PHOTOS-1 (ts2-12): the description box no longer starts with the hidden photo list; the server puts
        it back on save (the [photos:...] preserve block in PUT /listings/{id}). */
-    let val = _elFieldVal(raw, f.id) || _elDescField(raw, f.id);
+    let val = _elFieldVal(raw, f.id) || _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);   // STAY-CARRY-1
     if (f.id === 'desc') val = String(val).replace(/^\[photos:[^\]]*\]\n?/, '');
+    if (f.type === 'select' && val && (f.options || []).indexOf(val) < 0) {   // STAY-CARRY-1: 'Guest house' is 'Guest House'
+      const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());
+      if (_ci) val = _ci;
+    }
     const v = _lmEsc(val);
     const sug = elAISuggestions[f.id];
     const sugHtml = sug

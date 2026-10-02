@@ -28,8 +28,8 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 - **Shipped (33f3052, live 21:28:08Z, ms.js?v=885):** GI-0010 LM-UNIT-1 (RG-0652), GI-0011 LM-COACH-TRUTH-1
   (RG-0653), GI-0012 FUNNEL-WEBDRIVER-1 (RG-0654). All three FAIL on e22c12f and pass on 33f3052; full ledger on the new
   tree 14 !!!! vs 15 on origin/main (all pre-existing, server-vantage; none new). Live proof below each row.
-- **REVIEW NOW:** unchanged — GI-0009 OpenAI credit · GI-0008 SO-6 rulings sweep · GI-0006 Collectors step-6 note ·
-  GI-0003 Quick card in Sell. Nothing new needs David.
+- **REVIEW NOW (corrected 2 Oct):** GI-0008 SO-6 rulings sweep · GI-0006 Collectors step-6 note · GI-0003 Quick card
+  in Sell. GI-0009 was listed here as open but OpenAI had been answering since 04:15Z on 1 Oct — re-check before inheriting.
 - **Not reached:** per-wave outreach opens/clicks; whether GI-0009 (OpenAI credit) was topped up today; the scoring
   question above (next run: read sfScore / section pts before changing anything). **Data left behind:** 10 funnel rows
   of this walk (bot=0, UA SM-A156E, 20:59–21:09Z, 1 Oct) — deleting live rows is David's; readers can exclude them.

@@ -15,6 +15,6 @@ best suggestion. Please do it." After Claude corrected itself (this reverses SUP
 - **Quick:** find results show real listings first; a "Hide AI examples" / "Show AI examples" button (3 new phrases in all
   five languages, RUL-165 drafts).
 - Unchanged: every example stays marked and takes no introduction (RUL-040, RUL-187).
-- Supersedes SUPER-PIN-1 (20 Jul 2026). RG-0052 amended to the stronger form; new ledger RG-0655; rulings_check RUL-194.
+- Supersedes SUPER-PIN-1 (20 Jul 2026). RG-0052 amended to the stronger form; new ledger RG-0659; rulings_check RUL-194.
 
 Cost model impact: none. Schema: none.

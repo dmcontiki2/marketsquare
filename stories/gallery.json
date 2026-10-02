@@ -155,7 +155,10 @@
     "air_con_refrigeration_technician",
     "cctv_alarm_installer",
     "gate_garage_door_technician",
-    "locksmith"
+    "locksmith",
+    "driver",
+    "code_10_code_14_driver",
+    "taxi_shuttle_driver"
    ]
   },
   {
@@ -180,7 +183,47 @@
    "steps": 17,
    "cover": "h2_01_start",
    "door": "services",
-   "quick": true
+   "quick": true,
+   "serves": [
+    "housekeeper",
+    "cook",
+    "chef",
+    "gardener",
+    "pool_cleaner",
+    "window_cleaner",
+    "handyman",
+    "pet_sitter_dog_walker",
+    "carpet_washer",
+    "tree_cutter",
+    "garden_waste_removal",
+    "room_attendant",
+    "kitchen_assistant",
+    "cashier",
+    "waiter",
+    "bartender",
+    "griller_braai",
+    "hotel_porter",
+    "lodge_staff",
+    "caterer",
+    "petrol_attendant",
+    "shelf_packer",
+    "shop_assistant",
+    "merchandiser",
+    "picker_packer",
+    "removals_helper",
+    "farm_worker",
+    "general_worker",
+    "painter",
+    "builders_assistant",
+    "office_cleaner",
+    "seamstress_tailor",
+    "sewing_machinist",
+    "hair_braider",
+    "hairdresser",
+    "nail_technician",
+    "car_washer",
+    "event_staff"
+   ]
   },
   {
    "type": "localmarket_food_preserves",
@@ -265,7 +308,19 @@
     "bricklayer",
     "tiler",
     "carpenter",
-    "roofer"
+    "roofer",
+    "plant_operator_tlb_excavator",
+    "boilermaker",
+    "welder",
+    "forklift_operator",
+    "diesel_mechanic",
+    "motor_mechanic",
+    "auto_electrician",
+    "plasterer",
+    "paver",
+    "solar_pv_installer",
+    "borehole_pump_technician",
+    "appliance_repair"
    ]
   },
   {

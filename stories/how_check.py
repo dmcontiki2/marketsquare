@@ -183,10 +183,9 @@ def plans(guides, idx, roles):
             r = role.get(t)
             if r:
                 out.append((t, "services", "sell", {"group": r["g"], "what": r["l"]}, t))
-            for k in s.get("serves", []):
-                if role.get(k):
-                    out.append(("%s (serves %s)" % (t, k), "services", "sell", {"group": role[k]["g"], "what": role[k]["l"]}, t))
-                    break
+            sv = [k for k in s.get("serves", []) if role.get(k)]
+            for k in sorted(set(sv[:1] + sv[-1:]), key=sv.index):   # the first and the last role it serves
+                out.append(("%s (serves %s)" % (t, k), "services", "sell", {"group": role[k]["g"], "what": role[k]["l"]}, t))
         else:
             out.append((t, door, "sell", dict({"what~": t[len(door) + 1:]}, **({"deal": dl} if dl else {})), t))
             for o in idx:   # the other deal's own listing: a house TO LET must open the TO LET guide, not House FOR SALE

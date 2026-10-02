@@ -6,7 +6,19 @@
   "bricklayer",
   "tiler",
   "carpenter",
-  "roofer"
+  "roofer",
+  "plant_operator_tlb_excavator",
+  "boilermaker",
+  "welder",
+  "forklift_operator",
+  "diesel_mechanic",
+  "motor_mechanic",
+  "auto_electrician",
+  "plasterer",
+  "paver",
+  "solar_pv_installer",
+  "borehole_pump_technician",
+  "appliance_repair"
  ],
  "label": {
   "en": "Plumber",
@@ -115,23 +127,23 @@
    ],
    "en": [
     "Pick [[Building trades]], then [[Plumber]]",
-    "Choose the kind of work, then your trade. Bricklayers, tilers, carpenters and roofers follow the same steps."
+    "Choose the kind of work, then your trade. Bricklayers, tilers, carpenters, roofers, welders, mechanics, plasterers, pavers and the other trades that need no licence follow the same steps."
    ],
    "af": [
     "Kies [[Building trades]], dan [[Plumber]]",
-    "Kies die soort werk, dan jou ambag. Messelaars, teëlers, skrynwerkers en dakwerkers volg dieselfde stappe."
+    "Kies die soort werk, dan jou ambag. Messelaars, teëlers, skrynwerkers, dakwerkers, sweisers, werktuigkundiges, pleisteraars, plaveiers en die ander ambagte wat geen lisensie nodig het nie, volg dieselfde stappe."
    ],
    "zu": [
     "Khetha [[Building trades]], bese [[Plumber]]",
-    "Khetha uhlobo lomsebenzi, bese kuba ubuciko bakho. Abakhi bezitini, abafaka amathayili, ababazi nabafaki bophahla balandela izinyathelo ezifanayo."
+    "Khetha uhlobo lomsebenzi, bese kuba ubuciko bakho. Abakhi bezitini, abafaka amathayili, ababazi, abafaki bophahla, owelda, omakhenikha, abasimenti bezindonga, ababeki bamaphevu neminye imisebenzi yobuciko engadingi layisensi balandela izinyathelo ezifanayo."
    ],
    "xh": [
     "Khetha [[Building trades]], emva koko [[Plumber]]",
-    "Khetha uhlobo lomsebenzi, emva koko ubugcisa bakho. Abakhi bezitena, abafaki beethayile, abachweli nabafaki bophahla balandela amanyathelo afanayo."
+    "Khetha uhlobo lomsebenzi, emva koko ubugcisa bakho. Abakhi bezitena, abafaki beethayile, abachweli, abafaki bophahla, oowelda, abakhandi beemoto, abatyabeki, ababeki bee-paving neminye imisebenzi yobugcisa engafuni layisenisi balandela amanyathelo afanayo."
    ],
    "nso": [
     "Kgetha [[Building trades]], ke moka [[Plumber]]",
-    "Kgetha mohuta wa mošomo, ke moka bokgoni bja gago. Baagi ba ditena, bapheadi ba dithaele, babetli le baagi ba marulelo ba latela dikgato tše di swanago."
+    "Kgetha mohuta wa mošomo, ke moka bokgoni bja gago. Baagi ba ditena, bapheadi ba dithaele, babetli, baagi ba marulelo, bawelda, bakhenike ba dikoloi, baphaditši, babei ba diphefi le mešomo ye mengwe ya bokgoni ye e sa nyakego laesense ba latela dikgato tše di swanago."
    ]
   },
   {
