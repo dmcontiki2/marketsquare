@@ -5,6 +5,39 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 27 — Fri 2 Oct 2026, 20:56–21:25 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; my write probe moved to `_to_delete/goalrun27_write_probe`).
+  Laptop 5 behind origin, untouched. Built in server worktree `/root/w27` (removed at the end), shipped
+  `claude/goal-run27` 26db01f via CLOUD-SHIP-1 (SHIPPED, ms.js?v=905). Commits from the server need
+  `-c user.name="Claude (Goal run)" -c user.email=claude@trustsquare.co` — there is no global git identity there.
+- **Walk (casual / services, `docs/E2E_2026-10-02.md`):** cold Home → Sell → Quick → Home cleaner, Pretoria (Mamelodi,
+  Menlyn), Mon/Wed/Fri, R350/day → Save → letter in 17 s → link → Seller Hub → Publish my listing → terms step → stopped
+  at Go live (contract). Path works end to end up to Go live; no errors. Breaks a person would feel: a dead orange "Email"
+  button (one-tab bar); terms step told a two-minute-old seller "You have an existing account"; language pill on the
+  terms step's Back button; letter said "composed". All four fixed and proven live. Note: the sign-in link is single-use
+  per phone (a second open says "already used" — matches the letter). Quick picks the country from Cloudflare geo, so the
+  US-egress sandbox lands on US cities; a real SA phone is not affected.
+- **Number: 0** (6,748 listed · 2,612 emailed · 5 registered · 0 qualifying). Live 105 = 103 + #468, #469 (family:
+  davidconradie1234@). **By a stranger's hand: 0.**
+- **Where people stop:** still no strangers. Human sessions since FUNNEL-WEBDRIVER-1 (1 Oct 21:28Z): David's phone
+  (03:30) and David Jnr's phone (08:42–09:05), nothing else — every other session is bot=2. The filter works; the
+  funnel is empty because nobody new is arriving.
+- **Found:** David Jnr's second Quick walk re-published the same Townhouse → two identical live adverts (#468, #469).
+  QUICK-DUP-1 stops repeats (proven on the live DB read-only: #469's fields → finds 469; changed price → none; cannot be
+  proven by a live publish without publishing).
+- **Shipped (26db01f):** GI-0013 QUICK-ONE-TAB-1 (RG-0790), GI-0014 TERMS-NOTE-1 (RG-0791), GI-0015 LANG-PILL-SOB-1 +
+  LETTER-WORD-1 (RG-0792), GI-0016 QUICK-DUP-1 (RG-0793). All four FAIL on origin/main 11c1f4f, pass on 26db01f; full
+  ledger 14 !!!! vs 15 on origin/main, none new. Live proof: Quick key bar `display:none` with the email box shown;
+  terms step note reads the new words, pill `display:none` (screenshot); letter to qa-goal27b subject "Your TrustSquare
+  listing is saved — one step left"; main.py carries QUICK-DUP-1.
+- **QA data:** drafts #470 and #471 deleted by their own seller sessions (200, gone from the DB). User rows for
+  qa-goal27@ / qa-goal27b@ left (account deletion is David's).
+- **REVIEW NOW:** GI-0017 pause #469 (new) · GI-0008 SO-6 rulings sweep · GI-0006 Collectors step-6 note · GI-0003 Quick
+  card in Sell.
+- **Not reached:** outreach per-wave opens/clicks (not pulled this run); Story/Selling-details scoring question from
+  run 26 (not started).
+
 ## RUN 26 — Thu 1 Oct 2026, 20:56–21:40 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable. SSH needs `bash load_sandbox_ssh.sh` first in a fresh device VM ("Host key
