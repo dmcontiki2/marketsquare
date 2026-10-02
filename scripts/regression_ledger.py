@@ -33903,7 +33903,76 @@ def rg_how_place_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "How opens at her place: last card passed, the buyer's half, the list keeps her place")]
 
-@entry("RG-0655", "HELP-LANG-SYNC-1: a language picked in Quick while the How guide is open re-speaks the guide behind it, "
+@entry("RG-0655", "SERVES-ROLES-1: the home-cleaner, plumber and electrician guides say which other jobs follow their steps, "
+       "and Quick's How opens them for those jobs -- 38 Casuals (no licence or clearance), 12 trades (no licence) and 3 driver "
+       "roles (a PrDP) that used to get the guide list",
+       OPEN, fixed_on="2026-10-02",
+       scope="stories/home_cleaner.json, plumber.json, electrician.json: step 2 in en/af/zu/xh/nso ('... follow the same steps') "
+             "and 'serves'; stories/gallery.json; stories/how_check.py walks the first and last role each guide serves.",
+       ref="OPEN_LOOPS L36(c), David 2 Oct 2026: 'are these 2 items still open? If yes please close them'. The claim is true "
+           "only while each role keeps the guide's screens and gate, so this entry also reads Quick's role registry: a Casual "
+           "served by the cleaner must have no licence or clearance gate (RUL-115's employer confirmation is its gate), a trade "
+           "served by the plumber no gate, a role served by the electrician a licence gate (LICENCE-GATE-1).")
+def rg_serves_roles_1():
+    import json as _j, re as _re
+    q = repo_file("quick.html")
+    st = {t: repo_file("stories/%s.json" % t) for t in ("home_cleaner", "plumber", "electrician")}
+    if q is None or None in st.values():
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"var SVC_ROLES = (\[.*?\]);\n", q)
+    if not m:
+        return [(FAIL, "Quick's role registry (SVC_ROLES) is not where this entry reads it")]
+    roles = {r["k"]: r for r in _j.loads(m.group(1))}
+    want = {"home_cleaner": (38, lambda r: r["c"] == "C" and not r.get("gate"), "every other job that needs no licence or police clearance"),
+            "plumber": (16, lambda r: r["c"] == "T" and not r.get("gate"), "welders, mechanics, plasterers, pavers"),
+            "electrician": (8, lambda r: r.get("gate") == "licence", "Drivers follow them too, with their PrDP as the licence.")}
+    bad = []
+    for t, (n, ok, words) in want.items():
+        d = _j.loads(st[t])
+        sv = d.get("serves") or []
+        if len(sv) < n:
+            bad.append("%s serves %d roles, not %d" % (t, len(sv), n))
+        wrong = [k for k in sv if k not in roles or not ok(roles[k])]
+        if wrong:
+            bad.append("%s claims roles whose screens or gate now differ: %s" % (t, ", ".join(wrong[:6])))
+        s2 = [x for x in d.get("steps", []) if x.get("n") == 2]
+        if not s2 or words not in s2[0]["en"][1] or any(len((s2[0].get(lg) or ["", ""])[1]) < 40 for lg in ("af", "zu", "xh", "nso")):
+            bad.append("%s's step 2 no longer says which jobs follow its steps, in all five languages" % t)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the cleaner, plumber and electrician guides serve the 50 + 3 roles that share their steps and gate")]
+
+@entry("RG-0656", "STAY-CARRY-1: a guest house listed in Quick opens in TrustSquare's Edit with its type and place filled in -- "
+       "Quick sends the kind she tapped ('Guest house') as prop_type, the column TrustSquare reads as a stay's type, and Edit "
+       "shows it as 'Guest House' and her area and city as 'Wilderness, George', instead of '— select —' and an empty box",
+       OPEN, fixed_on="2026-10-02",
+       scope="quick.html + genie/HARNESS.html FIELD_FROM.adventures; ms.js _elQuickCarry (stays only; a Coach or Sell answer "
+             "wins) and renderEditForm's case-blind select match.",
+       ref="F12 walk through Quick, 2 Oct 2026 (OPEN_LOOPS L36(a)), draft #460: Edit asked ACCOMMODATION TYPE and LOCATION / "
+           "AREA again beside the title 'Guest house — Wilderness' -- RUL-149 Q2's class (the app re-asks what Quick knows). "
+           "The type also never reached the Stays type filter (accommodation_type came from prop_type, which was empty). "
+           "Proven on the candidate before shipping: draft #461 opened with Guest House and Wilderness, George.")
+def rg_stay_carry_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); js = repo_file("ms.js")
+    if None in (q, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if " adventures:{prop_type:'kind'}};" not in q:
+        bad.append("Quick no longer sends a stay's kind")
+    for need in ("function _elQuickCarry(raw, fieldId)", "|| _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);",
+                 "if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();",
+                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());"):
+        if need not in js:
+            bad.append("Edit no longer carries a Quick stay's answers: " + need[:48])
+    i = js.find("function _msMapBeaListing")
+    if "l.prop_type || _msDescLine(desc, ['Type'])" not in js:
+        bad.append("the app no longer reads a stay's type from prop_type")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a Quick guest house opens in Edit with its type and place")]
+@entry("RG-0657", "HELP-LANG-SYNC-1: a language picked in Quick while the How guide is open re-speaks the guide behind it, "
        "on the step she is reading; the language menu closes on a pick and on a tap anywhere else (the guide included); "
        "the gallery follows Quick's '#lang=' and, inside Quick, shows no second language control of its own",
        OPEN, fixed_on="2026-10-01",
@@ -33929,7 +33998,7 @@ def rg_help_lang_sync_1():
     return [(INFO, "Quick's language reaches the open How guide and the gallery; the menu closes on a pick")]
 
 
-@entry("RG-0656", "PH-FIT-1: an example line (placeholder) is never shown cut -- a line that nearly fits its box is set a "
+@entry("RG-0658", "PH-FIT-1: an example line (placeholder) is never shown cut -- a line that nearly fits its box is set a "
        "little smaller; one that cannot fit is written in full beside the box (Quick and the guides: above it; the main "
        "app's sell form: the row stacks, then under the box) and the box's own copy is hidden",
        OPEN, fixed_on="2026-10-01",
@@ -33959,7 +34028,7 @@ def rg_ph_fit_1():
     return [(INFO, "example lines fit, shrink a little, or are written in full beside their box -- never cut")]
 
 
-@entry("RG-0657", "CUT-WORDS-1: longer languages no longer cut words -- Quick's tile names shrink until their longest word "
+@entry("RG-0659", "CUT-WORDS-1: longer languages no longer cut words -- Quick's tile names shrink until their longest word "
        "fits (Afrikaans 'Swembadskoonmaker'); Quick's top bar fits a 320px phone with isiZulu's 'Kanjani'; the guides' "
        "header wraps instead of running off the edge; the Tuppence step title wraps; the AI-services cards keep their "
        "price chip on screen",
@@ -33988,7 +34057,7 @@ def rg_cut_words_1():
     return [(INFO, "long words wrap or shrink to fit in Quick, the guides and the main app")]
 
 
-@entry("RG-0658", "I18N-APP-WORD-1: Afrikaans says 'app', never 'toep' -- the checked words, the guides and Quick carry no "
+@entry("RG-0660", "I18N-APP-WORD-1: Afrikaans says 'app', never 'toep' -- the checked words, the guides and Quick carry no "
        "'toep'; the server's translator is told to keep 'app'; migration 063 rewrote the cached machine words and "
        "ms.js DICTV 7 made every browser drop its saved copy",
        OPEN, fixed_on="2026-10-02",
