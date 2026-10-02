@@ -2688,6 +2688,8 @@ class Listing(BaseModel):
     drivetrain: Optional[str] = None
     colour: Optional[str] = None
     vehicle_specs: Optional[str] = None
+    collectible_type: Optional[str] = None   # COL-CARRY-1 (L38): Browse's Collectible Type vocabulary
+    condition: Optional[str] = None
     spec_confirmed: Optional[str] = None
     # Trust
     trust_score: Optional[int] = None
@@ -2751,6 +2753,8 @@ class ListingUpdate(BaseModel):
     drivetrain: Optional[str] = None
     colour: Optional[str] = None
     vehicle_specs: Optional[str] = None
+    collectible_type: Optional[str] = None   # COL-CARRY-1 (L38)
+    condition: Optional[str] = None
     spec_confirmed: Optional[str] = None
 
 class IntroRequest(BaseModel):
@@ -4074,6 +4078,39 @@ def _draft_mail_allowed(addr: str, ip: str) -> bool:
     return True
 
 
+# ── COL-CARRY-1 (L38, 2 Oct 2026): a collector's type and condition reach their columns ─────────────────────────
+# Quick asked them and Edit showed them, but nothing wrote `collectible_type` / `condition`, so Edit opened empty and
+# Browse -> Collectors -> Collectible Type compared a column that only seed data filled. ONE vocabulary: the Browse
+# filter's (the seed data already uses it); Quick's and Edit's words are mapped onto it here, in one place.
+_COL_TYPES = ("Coins & Notes", "Stamps", "Cards & Memorabilia", "Art & Prints", "Medals & Militaria",
+              "Watches & Jewellery", "Books & Maps", "Cameras & Tech", "Antiques", "Firearms", "Other")
+_COL_TYPE_ALIAS = {"coins": "Coins & Notes", "coin": "Coins & Notes", "notes": "Coins & Notes", "banknotes": "Coins & Notes",
+                   "stamps": "Stamps", "cards": "Cards & Memorabilia", "trading cards": "Cards & Memorabilia",
+                   "trading cards (mtg / pokémon / baseball)": "Cards & Memorabilia", "memorabilia": "Cards & Memorabilia",
+                   "militaria": "Medals & Militaria", "medals": "Medals & Militaria", "watches": "Watches & Jewellery",
+                   "jewellery": "Watches & Jewellery", "jewelry": "Watches & Jewellery", "art": "Art & Prints",
+                   "books": "Books & Maps", "maps": "Books & Maps", "cameras": "Cameras & Tech"}
+_COL_COND = {"mint": "Mint", "near mint": "Near Mint", "good": "Good", "played": "Played", "ungraded": "Ungraded",
+             "lightly played": "Lightly Played", "moderately played": "Moderately Played",
+             "heavily played": "Heavily Played", "damaged": "Damaged"}
+
+
+def _norm_collectible_type(v):
+    t = str(v or "").strip()
+    if not t:
+        return None
+    k = t.lower()
+    for c in _COL_TYPES:
+        if c.lower() == k:
+            return c
+    return _COL_TYPE_ALIAS.get(k, t[:60])
+
+
+def _norm_condition(v):
+    t = str(v or "").strip()
+    return (_COL_COND.get(t.lower(), t[:80])) if t else None
+
+
 @app.post("/listings")
 def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key),
                    request: Request = None, response: Response = None):
@@ -4129,6 +4166,9 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     )
     new_id = cursor.lastrowid
     conn.execute("UPDATE listings SET price_num = ? WHERE id = ?", (_price_number(listing.price), new_id))   # PRICE-NUM-1
+    if listing.collectible_type or listing.condition:   # COL-CARRY-1 (L38)
+        conn.execute("UPDATE listings SET collectible_type = COALESCE(?, collectible_type), condition = COALESCE(?, condition) "
+                     "WHERE id = ?", (_norm_collectible_type(listing.collectible_type), _norm_condition(listing.condition), new_id))
     # LANG-LAYER-1 (RUL-162): record the advert's original language when the composer knows it
     # (the Quick door does -- she chose it). Only a language we serve is stored; anything else is dropped.
     try:
@@ -5644,6 +5684,10 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     _reset_vehicle_confirmations(dict(existing), d)   # CARS-SPEC-1: edits clear section confirmations
     if "price" in d:
         d["price_num"] = _price_number(d["price"])   # PRICE-NUM-1 (25 Sep 2026 inspection, backend-10)
+    if "collectible_type" in d:   # COL-CARRY-1 (L38): Edit's words onto Browse's vocabulary
+        d["collectible_type"] = _norm_collectible_type(d["collectible_type"])
+    if "condition" in d:
+        d["condition"] = _norm_condition(d["condition"])
 
     # Preserve [photos:...] prefix if description is being updated without it
     if "description" in d:

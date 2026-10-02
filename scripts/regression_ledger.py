@@ -34451,5 +34451,32 @@ def rg_stay_word_1():
         return [(FAIL, "a guest whose stay was accepted is asked 'I hired them' again")]
     return [(INFO, "a stay's guest is asked 'I stayed with them'")]
 
+@entry("RG-0676", "COL-CARRY-1 (OPEN_LOOPS L38): a collector's Quick answers reach their columns -- Quick sends collectible_type "
+       "and condition, POST /listings and PUT /listings take them (mapped onto Browse's Collectible Type vocabulary, 'Coins' -> "
+       "'Coins & Notes'), Edit opens with them and saves them, and Browse -> Collectors -> Collectible Type finds the advert",
+       OPEN, fixed_on="2026-10-02",
+       scope="quick.html (= genie/HARNESS.html) FIELD_FROM.collectors + handoverPayload; bea_main.py Listing/ListingUpdate, "
+             "_norm_collectible_type/_norm_condition, create + update; ms.js Edit item_type options/read/save; marketsquare.html "
+             "adds 'Watches & Jewellery' to the filter.",
+       ref="F10 walks 30 Sep / 2 Oct; L38 opened 2 Oct by the STAY-CARRY-1 session on draft #466 (Edit empty, filter blind).")
+def rg_col_carry_1():
+    q = repo_file("quick.html"); bm = repo_file("bea_main.py"); ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (q, bm, ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "collectors:{collectible_type:'what', condition:'cond'}" not in q or "'service_type','collectible_type','condition']" not in q:
+        bad.append("Quick no longer sends a collector's type and condition")
+    if "def _norm_collectible_type(v):" not in bm or 'if "collectible_type" in d:' not in bm \
+            or "if listing.collectible_type or listing.condition:" not in bm:
+        bad.append("the server no longer stores a collector's type and condition")
+    if "item_type:     raw.collectible_type || ''," not in ms or "payload[id === 'item_type' ? 'collectible_type' : 'condition'] = v;" not in ms:
+        bad.append("Edit no longer reads or writes the collector columns")
+    if "Watches &amp; Jewellery" not in h:
+        bad.append("Browse's Collectible Type filter has no Watches & Jewellery (Quick offers Watches)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a collector's type and condition travel Quick -> server -> Edit -> Browse filter")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

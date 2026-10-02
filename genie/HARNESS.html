@@ -1012,7 +1012,10 @@ var FIELD_FROM={
  services:{service_type:'what'},
  /* STAY-CARRY-1 (2 Oct 2026, the F12 walk through Quick): a place to stay's kind ('Guest house') travels as prop_type --
     the column TrustSquare already reads as a stay's type -- so Edit and the Stays filter know it; a trip has no 'kind' */
- adventures:{prop_type:'kind'}};
+ adventures:{prop_type:'kind'},
+ /* COL-CARRY-1 (L38, 2 Oct 2026): a collector's type and condition reach their columns -- the server maps Quick's
+    words onto Browse's Collectible Type vocabulary ('Coins' -> 'Coins & Notes') */
+ collectors:{collectible_type:'what', condition:'cond'}};
 var NICE={prop_type:'property type',listing_type:'for sale or to rent',beds:'number of bedrooms',
  baths:'number of bathrooms',make:'make',model:'model',vehicle_year:'year',mileage_km:'mileage',
  transmission:'transmission',subject:'subject',level:'level',mode:'in person or online',
@@ -1426,7 +1429,7 @@ function handoverPayload(){
     source: 'quick'
   };
   if(_co.service_class) body.service_class=_co.service_class;
-  ['prop_type','listing_type','beds','baths','make','vehicle_year','subject','level','mode','service_type']
+  ['prop_type','listing_type','beds','baths','make','vehicle_year','subject','level','mode','service_type','collectible_type','condition']
     .forEach(function(f){
       var k=from[f]; if(!k) return;
       var pk=pickOf(k); if(!pk) return;
