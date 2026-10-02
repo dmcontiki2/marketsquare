@@ -1606,13 +1606,16 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         <svg class="ai-svc-chev" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </summary>
       <div class="ai-svc-body">
+      <!-- CUT-WORDS-1 (1 Oct 2026, David: words cut off in the other languages): each card's text column may shrink and
+           break a long word, so a longer language wraps inside the card instead of pushing the price chip off the screen
+           (scripts/i18n_pseudo_locale.py measured the chip off-screen in 35%-longer text). -->
       <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">Each AI service is charged from your Tuppence balance and is non-refundable. Each one below costs 1T.</p>
       <!-- Seller AI services -->
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:8px;">For sellers &middot; in your listing edit screen</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
           <div style="font-size:22px;flex-shrink:0;">&#10024;</div>
-          <div style="flex:1;">
+          <div style="flex:1;min-width:0;overflow-wrap:anywhere;">
             <div style="font-size:13px;font-weight:700;color:var(--text);">AI Listing Rewrite <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
             <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI rewrites your title and description using current SA market language and buyer psychology &mdash; pre-fills your edit form to review and save.</div>
             <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open one of your listings in Seller Hub &rarr; Edit &rarr; "&#10024; Rewrite"</div>
@@ -1621,7 +1624,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
           <div style="font-size:22px;flex-shrink:0;">&#128269;</div>
-          <div style="flex:1;">
+          <div style="flex:1;min-width:0;overflow-wrap:anywhere;">
             <div style="font-size:13px;font-weight:700;color:var(--text);">Why No Introductions? AI Audit <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
             <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI reviews your listing &mdash; title, description, price and Trust Score &mdash; then gives you 3 specific fixes to attract more buyers right now.</div>
             <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Open any listing &rarr; Edit &rarr; "&#128269; Why No Introductions?"</div>
@@ -1636,7 +1639,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
           <div style="font-size:22px;flex-shrink:0;">&#128161;</div>
-          <div style="flex:1;">
+          <div style="flex:1;min-width:0;overflow-wrap:anywhere;">
             <div style="font-size:13px;font-weight:700;color:var(--text);">Is This a Fair Price? <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
             <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI compares the asking price to current SA market rates and gives a verdict &mdash; fair, above or below market &mdash; plus a suggested fair range.</div>
             <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; On Property, Cars, Collectors and Local Market listings &rarr; "&#128161; Is this a fair price?" &mdash; charged only when we return a real figure</div>
@@ -1645,7 +1648,7 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
         </div>
         <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
           <div style="font-size:22px;flex-shrink:0;">&#128200;</div>
-          <div style="flex:1;">
+          <div style="flex:1;min-width:0;overflow-wrap:anywhere;">
             <div style="font-size:13px;font-weight:700;color:var(--text);">AI Yield Estimate <span style="font-size:11px;font-weight:400;color:var(--text-3);">&middot; 1T</span></div>
             <div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.5;">Our AI estimates rental yield and return for a property or accommodation listing using current SA market data. Sellers can run it from Edit too.</div>
             <div style="font-size:11px;color:var(--text-3);margin-top:4px;">&#128205; Property / accommodation listing &rarr; "&#128200; Investor Yield Calculator"</div>

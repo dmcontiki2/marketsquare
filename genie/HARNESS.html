@@ -60,6 +60,11 @@ body{background:#04070a;color:#eaf3ee;
 .steps i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:all .3s}
 .steps i.on{background:var(--c);width:22px;border-radius:4px}
 .steps i.done{background:var(--bright)}
+/* CUT-WORDS-1 (1 Oct 2026, David: words cut off in the other languages): the How button's word runs longer in
+   isiZulu ('Kanjani') and the bar ran past a 360px phone, cutting the start-again button. The progress dots give way
+   first, and a narrow phone's bar packs a little tighter. */
+.steps{min-width:0}.steps i{flex:0 1 7px;min-width:4px}.steps i.on{flex:0 1 22px;min-width:12px}
+@media (max-width:380px){.bar{gap:6px;padding-left:10px;padding-right:10px}}
 
 /* ---------- door ---------- */
 .screen{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
@@ -112,7 +117,8 @@ body{background:#04070a;color:#eaf3ee;
 @keyframes rise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .tile b{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 11px;font-size:14px;
- font-weight:800;background:linear-gradient(transparent,rgba(2,8,6,.92));text-shadow:0 1px 6px #000}
+ font-weight:800;background:linear-gradient(transparent,rgba(2,8,6,.92));text-shadow:0 1px 6px #000;
+ overflow-wrap:anywhere}   /* CUT-WORDS-1: 'Swembadskoonmaker' was cut at the tile's edge -- see fitWord() */
 .chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
 .chip{padding:15px 20px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);
  color:var(--bright);font-size:16px;font-weight:700;cursor:pointer;animation:rise .3s ease backwards;
@@ -1259,6 +1265,20 @@ function qHelpDoor(){ try{ var k=cat().key; return k==='homehelp' ? 'services' :
 var QHELP_WORD={en:'How',af:'Hoe',zu:'Kanjani',xh:'Njani',nso:'Bjang'};
 function qHelpWord(open){ return open ? 'Quick' : (QHELP_WORD[QLANG] || 'How'); }
 function qHelpLang(){ return QHELP_WORD[QLANG] ? QLANG : 'en'; }
+/* HELP-LANG-SYNC-1 (1 Oct 2026, David: "the background stays in the one language while the language selection is
+   already set to another"): the guide only learned Quick's language when How was tapped, so a language picked while the
+   guide was open changed Quick and the pill but left the guide behind it in the old one. Now the guide follows at once,
+   on the step she is reading, and the next How starts from the same place. Only the language in the page's hash changes
+   (2 Oct, live check): a guide she has moved through ('#s3') keeps her step, and the gallery keeps her door and place in
+   Quick (HOW-PLACE-1's door / at / seen) -- a bare '#lang=' had wiped them. */
+function qHelpRelang(){
+  var o=document.getElementById('qhov'); if(!o || o.style.display!=='block') return;
+  var l=qHelpLang(), ds=o.getAttribute('data-src')||'';
+  try{ var loc=o.firstChild.contentWindow.location, h=(loc.hash||'').slice(1);
+    loc.hash=/(^|&)lang=[a-z]+/.test(h) ? h.replace(/(^|&)lang=[a-z]+/, '$1lang='+l) : (!h || /^s\d+$/.test(h)) ? 'lang='+l : h+'&lang='+l;
+  }catch(e){}
+  o.setAttribute('data-src', ds.replace(/([#&])lang=[a-z]+/, '$1lang='+l));
+}
 function qHelpClose(){
   var o=document.getElementById('qhov'), b=document.getElementById('qhb');
   if(o) o.style.display='none';
@@ -1297,7 +1317,7 @@ function qHelpButton(){
   var b=document.createElement('button'); b.type='button'; b.id='qhb'; b.className='qhb';
   b.setAttribute('data-notr','1'); b.setAttribute('aria-pressed','false'); b.setAttribute('aria-label','How it works');
   b.textContent=qHelpWord(false);
-  b.onclick=function(e){ e.stopPropagation(); var o=document.getElementById('qhov');
+  b.onclick=function(e){ e.stopPropagation(); if(window.qLangMenuClose) qLangMenuClose(); var o=document.getElementById('qhov');
     if(o && o.style.display==='block') qHelpClose(); else qHelpOpen(); };
   bar.insertBefore(b, document.getElementById('qlbw') || document.getElementById('home'));
   ['back','home'].forEach(function(id){ var x=document.getElementById(id); if(x) x.addEventListener('click', qHelpClose); });
@@ -2656,7 +2676,7 @@ function qTranslate(root){
   _qBusy=false;
 }
 function qSetLang(l){
-  setTimeout(function(){ try{ var hb=document.getElementById('qhb'); if(hb && hb.getAttribute('aria-pressed')!=='true') hb.textContent=qHelpWord(false); }catch(e){} },0);   /* HELP-LANG-1 */
+  setTimeout(function(){ try{ var hb=document.getElementById('qhb'); if(hb && hb.getAttribute('aria-pressed')!=='true') hb.textContent=qHelpWord(false); else if(hb) qHelpRelang(); }catch(e){} },0);   /* HELP-LANG-1; HELP-LANG-SYNC-1 */
   QLANG=l; try{ localStorage.setItem('ts_qlang', l); }catch(e){}
   document.documentElement.lang=l; qTranslate(document.getElementById('app')); qPill();
 }
@@ -2701,6 +2721,66 @@ document.addEventListener('click', function(){ if(document.getElementById('qlm')
       if(a.nodeType===1) qTranslate(a); else if(a.nodeType===3) qTranslate(a.parentNode); } });
   }).observe(app, {childList:true, subtree:true});
   qPill();
+})();
+/* PH-FIT-1 (1 Oct 2026, David: "the words look cut off in the other languages -- look where it happens in the apps and
+   fix it"). A box's example line (its placeholder) was cut mid-word whenever it was wider than the box: measured on a
+   360px phone, 73 placeholder-and-language pairs in Quick, a few in English too. Every box is measured once it is
+   drawn: a line that nearly fits is set a little smaller (down to 13px); one that still does not fit is written in full
+   just above the box, like a label, and the box's own copy is hidden -- a line is shown whole, never cut. The placeholder
+   stays as the screen wrote it (a screen reader still reads it; the line above is aria-hidden). */
+(function(){
+  var app=document.getElementById('app'); if(!app || !window.MutationObserver) return;
+  var st=document.createElement('style');
+  st.textContent='#app input.phs::placeholder{font-size:var(--phfs)}#app input.pho::placeholder{color:transparent}'
+   +'#app .phl{font-size:12.5px;line-height:1.4;color:var(--dim);margin:10px 2px 6px;text-align:left}#app .phl+.bzin{margin-top:0!important}';
+  document.head.appendChild(st);
+  var cv=null, raf=0, FLOOR=13;
+  function fit(el){
+    if(!el.offsetWidth || el.type==='hidden') return;
+    var ph=el.getAttribute('placeholder')||'', cs=getComputedStyle(el), base=parseFloat(cs.fontSize)||16;
+    var room=el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;
+    cv=cv||document.createElement('canvas').getContext('2d');
+    function w(px){ cv.font=cs.fontStyle+' '+cs.fontWeight+' '+px+'px '+cs.fontFamily; return cv.measureText(ph).width; }
+    var px=base; while(px>FLOOR && w(px)>room) px-=0.5;
+    var fits=!ph || w(px)<=room, v=px+'px';
+    if(el.style.getPropertyValue('--phfs')!==v) el.style.setProperty('--phfs', v);
+    el.classList.toggle('phs', px<base); el.classList.toggle('pho', !fits);
+    var line=el.__phl;
+    if(fits){ if(line && line.parentNode) line.parentNode.removeChild(line); el.__phl=null; return; }
+    /* a box beside its button (a flex row) gets its line above the row */
+    var at=/flex|grid/.test(getComputedStyle(el.parentNode).display) ? el.parentNode : el;
+    if(!line || !line.parentNode || line.nextSibling!==at){
+      if(line && line.parentNode) line.parentNode.removeChild(line);
+      line=document.createElement('div'); line.className='phl'; line.setAttribute('data-notr','1'); line.setAttribute('aria-hidden','true');
+      at.parentNode.insertBefore(line, at); el.__phl=line;
+    }
+    if(line.textContent!==ph) line.textContent=ph;
+  }
+  /* CUT-WORDS-1 (1 Oct 2026): a tile's name is set smaller (down to 10.5px) until its longest word fits the tile --
+     Afrikaans compounds ('Swembadskoonmaker', 'Troeteldieroppasser') were cut at the tile's edge. A word that still
+     cannot fit then breaks (CSS overflow-wrap) rather than hides. */
+  function fitWord(el){
+    if(!el.offsetWidth) return;
+    if(el.__fs0===undefined){ el.style.fontSize=el.style.paddingLeft=el.style.paddingRight=''; var c0=getComputedStyle(el);
+      el.__fs0=parseFloat(c0.fontSize)||14; el.__pad0=parseFloat(c0.paddingLeft)+parseFloat(c0.paddingRight); }
+    var cs=getComputedStyle(el), base=el.__fs0, widest=0, ws=(el.textContent||'').split(/\s+/), full=el.clientWidth-1;
+    cv=cv||document.createElement('canvas').getContext('2d');
+    cv.font=cs.fontStyle+' '+cs.fontWeight+' '+base+'px '+cs.fontFamily;
+    for(var i=0;i<ws.length;i++) widest=Math.max(widest, cv.measureText(ws[i]).width);
+    var tight=widest>full-el.__pad0, px=tight ? Math.max(10.5, Math.min(base, Math.floor(base*(full-16)/widest*2)/2)) : base;
+    var v=px<base ? px+'px' : '', p=tight ? '8px' : '';   /* a tight word also gets the label's side padding back */
+    if(el.style.fontSize!==v) el.style.fontSize=v;
+    if(el.style.paddingLeft!==p){ el.style.paddingLeft=p; el.style.paddingRight=p; }
+  }
+  function run(){ raf=0; var i, ins=app.querySelectorAll('input[placeholder]'), tb=app.querySelectorAll('.tile b');
+    for(i=0;i<ins.length;i++){ try{ fit(ins[i]); }catch(e){} }
+    for(i=0;i<tb.length;i++){ try{ fitWord(tb[i]); }catch(e){} } }
+  function soon(){ if(!raf) raf=requestAnimationFrame(run); }
+  /* characterData: a language picked mid-flow re-words the screen's text in place (qTranslate), not by redrawing it */
+  new MutationObserver(soon).observe(app, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:['placeholder','hidden','class']});
+  document.addEventListener('click', soon, true);   /* a tab that shows a hidden box (Email / Phone) */
+  window.addEventListener('resize', soon);
+  soon();
 })();
 
 /* LANGUAGES SHE WORKS IN (RUL-151), Services only. David, 20 Sep: "we said we will only use the 4
@@ -2816,6 +2896,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
    '.qlm button{display:flex;width:100%;border:0;background:none;text-align:left;gap:10px;align-items:center;padding:11px 12px;border-radius:10px;color:#eee;font:600 15px system-ui,sans-serif;cursor:pointer}',
    '.qlm button em{font-style:normal;font-weight:800;min-width:34px;opacity:.7;font-size:12px}',
    '.qlm button.on{background:var(--c);color:var(--onc,#fff)}',
+   '.qlscrim{position:fixed;inset:0;z-index:79}',   /* HELP-LANG-SYNC-1: over the How guide too, under the menu */
    '.qlm i{display:block;padding:8px 12px 6px;color:#9fb3aa;font:400 12px/1.4 system-ui,sans-serif}',
    '.promise{text-align:center;margin:0 0 20px;padding:0 8px}',
    '.promise b{display:block;font-size:25px;font-weight:800;letter-spacing:-.4px;line-height:1.15}',
@@ -2871,18 +2952,26 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       +'<path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>'+QLANG.toUpperCase();
     b.onclick=function(e){
       e.stopPropagation();
-      var mm=document.getElementById('qlm'); if(mm){ mm.parentNode.removeChild(mm); b.setAttribute('aria-expanded','false'); return; }
-      w.insertAdjacentHTML('beforeend','<div class="qlm" id="qlm" role="menu">'+QLANGS.map(function(x){
+      if(document.getElementById('qlm')){ qLangMenuClose(); return; }
+      w.insertAdjacentHTML('beforeend','<div class="qlscrim" id="qlscrim"></div><div class="qlm" id="qlm" role="menu">'+QLANGS.map(function(x){
         return '<button type="button" role="menuitemradio" data-notr="1" aria-checked="'+(x[0]===QLANG?'true':'false')+'" data-l="'+x[0]+'" class="'+(x[0]===QLANG?'on':'')+'"><em>'+x[0].toUpperCase()+'</em>'+x[1]+'</button>'; }).join('')
         +'<i>Draft translations, being checked by readers. Tap any time to switch back.</i>'
         +(QLANG_PARTIAL[QLANG] ? '<i>Some categories are still in English in this language.</i>' : '')+'</div>');
       b.setAttribute('aria-expanded','true');
       var bs=w.querySelectorAll('[data-l]');
-      for(var i=0;i<bs.length;i++) bs[i].onclick=function(ev){ ev.stopPropagation(); qNextSetLang(this.getAttribute('data-l')); };
+      for(var i=0;i<bs.length;i++) bs[i].onclick=function(ev){ ev.stopPropagation(); var l=this.getAttribute('data-l');
+        qLangMenuClose(); qNextSetLang(l); try{ document.getElementById('qlb').focus(); }catch(_){} };
       try{ qTranslate(document.getElementById('qlm')); }catch(_){}
     };
   };
-  document.addEventListener('click', function(){ var mm=document.getElementById('qlm'); if(mm){ mm.parentNode.removeChild(mm); var b=document.getElementById('qlb'); if(b) b.setAttribute('aria-expanded','false'); } });
+  /* HELP-LANG-SYNC-1 (1 Oct 2026): a pick used to leave the menu open with the OLD language still marked (David's
+     screenshot: pill AF, menu marking EN, guide in Sepedi), and a tap on the How guide could not close it -- a tap inside
+     the guide's frame never reaches this page. The menu now closes on a pick, and the scrim under it takes the tap. */
+  window.qLangMenuClose=function(){
+    ['qlm','qlscrim'].forEach(function(id){ var x=document.getElementById(id); if(x) x.parentNode.removeChild(x); });
+    var b=document.getElementById('qlb'); if(b) b.setAttribute('aria-expanded','false');
+  };
+  document.addEventListener('click', function(){ qLangMenuClose(); });
   window.qNextSetLang=function(l){
     qSetLang(l);
     if(!mode) drawDoor();                                   /* the door's own buttons repaint */

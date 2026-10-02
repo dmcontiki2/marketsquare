@@ -23544,7 +23544,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
      old machine words kept being painted from it and no server fix could ever reach them.
      The stamp goes in the key: raise it whenever the checked words change, and every browser
      drops what it has and refetches once. Old copies are swept out on load. */
-  var DICTV='6';   /* I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
+  var DICTV='7';   /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
   var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=400, CHUNK=60;   /* 400: the longest card blurbs are ~340 */
   try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
        if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }
@@ -23784,4 +23784,51 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
     }).observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class']});
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+/* PH-FIT-1 (1 Oct 2026, David: "the words look cut off in the other languages -- look where it happens in the apps and
+   fix it"). The sell form's example lines (placeholders) are translated with the page (PH-PASS-1), and a box 56% of its
+   row wide cut them mid-word: measured on a 360px phone, 19 of the 64 were cut in English already, and the other
+   languages run longer. Each translated box is measured whenever it is drawn or re-worded: a row whose example does not
+   fit beside its label stacks (label above, box full width); a line that then nearly fits is set a little smaller (down
+   to 11px); one that still does not fit is written in full under the box and the box's own copy is hidden -- a line is
+   shown whole, never cut. The placeholder attribute itself is never written here: PH-PASS-1 owns it. */
+(function(){
+  if(!window.MutationObserver) return;
+  var cv=null, raf=0, FLOOR=11;
+  function fit(el){
+    if(el.tagName!=='INPUT' || !el.offsetWidth) return;
+    var ph=el.getAttribute('placeholder')||'', cs=getComputedStyle(el), base=parseFloat(cs.fontSize)||13, row=el.parentNode;
+    cv=cv||document.createElement('canvas').getContext('2d');
+    function w(px){ cv.font=cs.fontStyle+' '+cs.fontWeight+' '+px+'px '+cs.fontFamily; return cv.measureText(ph).width; }
+    function room(){ return el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2; }
+    var inRow=!!(row.classList && row.classList.contains('sf-frow'));
+    if(inRow && ph && w(base)>room() && !row.classList.contains('sf-stack')) row.classList.add('sf-stack');
+    var r=room(), px=base; while(px>FLOOR && w(px)>r) px-=0.5;
+    var fits=!ph || w(px)<=r, v=px+'px';
+    if(el.style.getPropertyValue('--phfs')!==v) el.style.setProperty('--phfs', v);
+    el.classList.toggle('phs', px<base); el.classList.toggle('pho', !fits);
+    var line=el.__phl;
+    if(fits){ if(line && line.parentNode) line.parentNode.removeChild(line); el.__phl=null; return; }
+    /* in a stacked form row the line is the row's last item; a box beside its button gets its line under the pair */
+    var at=(!inRow && /flex|grid/.test(getComputedStyle(row).display)) ? row : el;
+    if(!line || !line.parentNode || line.previousSibling!==at){
+      if(line && line.parentNode) line.parentNode.removeChild(line);
+      line=document.createElement('div'); line.className='phl'; line.setAttribute('data-notranslate','1'); line.setAttribute('aria-hidden','true');
+      at.parentNode.insertBefore(line, at.nextSibling); el.__phl=line;
+    }
+    if(line.textContent!==ph) line.textContent=ph;
+  }
+  function run(){ raf=0; var ins=document.querySelectorAll('input[data-i18n-ph]'); for(var i=0;i<ins.length;i++){ try{ fit(ins[i]); }catch(e){} } }
+  function soon(){ if(!raf) raf=requestAnimationFrame(run); }
+  function go(){
+    var st=document.createElement('style');
+    st.textContent='input[data-i18n-ph].phs::placeholder{font-size:var(--phfs)}input[data-i18n-ph].pho::placeholder{color:transparent}'
+      +'.sf-frow.sf-stack{flex-wrap:wrap}.sf-frow.sf-stack label{max-width:100%}.sf-frow.sf-stack input{width:100%}'
+      +'.phl{flex-basis:100%;font-size:12px;line-height:1.4;color:rgba(255,255,255,.55);margin:2px 0 0}';
+    document.head.appendChild(st);
+    new MutationObserver(soon).observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['placeholder','class']});
+    window.addEventListener('resize', soon);
+    soon();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
