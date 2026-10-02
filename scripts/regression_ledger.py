@@ -34070,6 +34070,8 @@ def rg_help_lang_sync_1():
         bad.append("quick.html and genie/HARNESS.html differ")
     if "function qHelpRelang(){" not in q or "else if(hb) qHelpRelang();" not in q:
         bad.append("a language picked while the guide is open no longer reaches the guide")
+    if "h.replace(/(^|&)lang=[a-z]+/, '$1lang='+l)" not in q:
+        bad.append("a language picked with the gallery open wipes her door and place in Quick (HOW-PLACE-1) again")
     if "qLangMenuClose(); qNextSetLang(l);" not in q or "'<div class=\"qlscrim\" id=\"qlscrim\"></div>" not in q:
         bad.append("the language menu stays open after a pick, or a tap on the guide cannot close it")
     if "window.addEventListener('hashchange'" not in g or "html.embed .top{display:none}" not in g:
