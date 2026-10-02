@@ -296,9 +296,10 @@ A fourth code surface now exists beside the three core files:
   (screen-agent-suite: profile editor, leads inbox accept/decline, bulk agency import),
   sell-flow agent step for all three verticals, Services CLASS filter third option
   'Professional Agents' routes to the directory (AGENT-CLASS-1).
-- **SUPER exemplars (SUPER-PIN-1):** every backend sort variant prefixes
-  `COALESCE(super_example,0) DESC`; exemplar listings + 3 super agents are LIVE LAUNCH FIXTURES,
-  always first, red ★ SUPER ADVERT ribbon. Exemplar copy must survive buyer-grade scrutiny
+- **AI examples come LAST (EXAMPLES-LAST-1, RUL-194, 2 Oct 2026 -- supersedes SUPER-PIN-1):** every
+  backend sort variant prefixes `_ex_last` (example = super_example, is_demo or a house account), every
+  app list runs `msExOrder()`, and the viewer's 'AI examples on/off' switch (starts ON, device key
+  `ts_show_examples`, shared with Quick) can hide them. Exemplars stay marked AI EXAMPLE GENERATED LISTING. Exemplar copy must survive buyer-grade scrutiny
   against its photos (SUPER-QA rulings, CHANGELOG Session 144-145).
 - **Standing filter ruling FILTER-DATA-2:** churny enumerations (vehicle makes, per-city lists)
   are a single free-text box — never chips/lists. Stable ontologies stay chips.

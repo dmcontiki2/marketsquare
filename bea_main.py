@@ -3641,20 +3641,23 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
     if (_gate_viewer or _gate_staff) and response is not None:
         response.headers["Cache-Control"] = "private, no-store"   # this answer is shaped by who is asking
     _extra_where = (" WHERE " + " AND ".join(_xw)) if _xw else ""
+    # EXAMPLES-LAST-1 (RUL-194, David 2 Oct 2026): real listings ALWAYS come before the AI examples, in every sort
+    # variant. An example is the same thing DEMO-INACTIVE-1 refuses an introduction to (_is_demo_example: is_demo or a
+    # house account) plus the super_example exemplars. This replaces SUPER-PIN-1 (20 Jul 2026), which pinned the
+    # exemplars first, and widens SHOWCASE-BANNER-1 (11 Aug 2026, showcase demos never outrank real sellers) to every
+    # example. Examples keep their order among themselves; the app's switch can hide them (ms.js msExOrder).
+    _ex_last = ("ORDER BY (CASE WHEN COALESCE(is_demo,0)=1 OR COALESCE(super_example,0)=1"
+                " OR LOWER(COALESCE(seller_email,'')) LIKE '%@trustsquare.co'"
+                " OR LOWER(COALESCE(seller_email,'')) LIKE '%@example.com' THEN 1 ELSE 0 END) ASC")
     _sort_map = {
-        # SUPER-PIN-1 (20 Jul 2026, David): super_example exemplars are LIVE LAUNCH
-        # fixtures — always the first listing in every view, the measuring stick
-        # every lister checks against. Every sort variant pins them first.
-        # SHOWCASE-BANNER-1 (11 Aug 2026, David): showcase demos share the banner
-        # but NOT the pin — the (1-showcase) factor keeps real sellers on top.
-        "newest":     "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, created_at DESC",
-        "price_asc":  "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (price_num IS NULL), price_num ASC",
-        "price_desc": "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (price_num IS NULL), price_num DESC",
-        "trust":      "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, COALESCE(trust_score,0) DESC, created_at DESC",
+        "newest":     _ex_last + ", created_at DESC",
+        "price_asc":  _ex_last + ", (price_num IS NULL), price_num ASC",
+        "price_desc": _ex_last + ", (price_num IS NULL), price_num DESC",
+        "trust":      _ex_last + ", COALESCE(trust_score,0) DESC, created_at DESC",
         # smart = the design's dials: trust (60%) + freshness decay over 30 days (40%)
-        "smart":      "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
+        "smart":      _ex_last + ", (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
     }
-    _order_clause = _sort_map.get((sort or "").strip().lower(), "ORDER BY (COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC, created_at DESC")
+    _order_clause = _sort_map.get((sort or "").strip().lower(), _ex_last + ", created_at DESC")
 
     if suburb:
         # Suburb filter only applies to home-city branch (extended listings have no suburb match)
@@ -8786,7 +8789,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
     if status == "all":
         if buyer_email:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE LOWER(i.buyer_email) = LOWER(?)
@@ -8795,7 +8798,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    ORDER BY i.created_at DESC"""
@@ -8803,7 +8806,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
     else:
         if buyer_email:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE i.status = ? AND LOWER(i.buyer_email) = LOWER(?)
@@ -8812,7 +8815,7 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT i.*, l.title as listing_title, l.category, l.city
+                """SELECT i.*, l.title as listing_title, l.category, l.city, l.listing_type
                    FROM intro_requests i
                    JOIN listings l ON i.listing_id = l.id
                    WHERE i.status = ?
@@ -8826,17 +8829,29 @@ def get_all_intros(status: str = "pending", buyer_email: Optional[str] = None,
         rows = [r for r in rows
                 if (r["buyer_email"] or "").strip().lower() == _scope or r["listing_id"] in _own_ids]
     conn.close()
-    return [dict(r) for r in rows]
+    return [_intro_for_viewer(dict(r), _scope) for r in rows]
+
+
+def _intro_for_viewer(d: dict, viewer) -> dict:
+    """INTRO-ADDR-HIDE-1 (L29, David 2 Oct 2026): contact details are revealed only when both accept. The seller's own
+    read of a request she has not accepted carries no buyer address -- the screen already showed only a first name
+    (RECV-REAL-1), but the response handed her the email. The buyer's own rows, accepted rows and staff reads keep it."""
+    v = (viewer or "").strip().lower()
+    if v and (d.get("buyer_email") or "").strip().lower() != v and (d.get("status") or "pending") != "accepted":
+        d["buyer_email"] = ""
+    return d
 
 @app.get("/intros/{listing_id}")
-def get_intros(listing_id: int):
+def get_intros(listing_id: int, ts_user: str = Cookie(default=None),
+               x_admin_key: str = Header(default=None), x_admin_token: str = Header(default=None)):
     conn = database.get_db()
     rows = conn.execute(
         "SELECT * FROM intro_requests WHERE listing_id = ? ORDER BY created_at DESC",
         (listing_id,)
     ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    _v = None if _summary_caller_is_admin(x_admin_key, x_admin_token) else (_session_email(ts_user) or "-")
+    return [_intro_for_viewer(dict(r), _v) for r in rows]   # INTRO-ADDR-HIDE-1
 
 def _seller_verification_notice(conn, seller_email, category=None):
     """
@@ -13374,7 +13389,10 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
             FROM listings l
             LEFT JOIN users u ON u.email = l.seller_email
             WHERE {where}
-            ORDER BY COALESCE(l.super_example,0) DESC, l.published_at DESC LIMIT ?""",
+            ORDER BY (CASE WHEN COALESCE(l.is_demo,0)=1 OR COALESCE(l.super_example,0)=1
+                        OR LOWER(COALESCE(l.seller_email,'')) LIKE '%@trustsquare.co'
+                        OR LOWER(COALESCE(l.seller_email,'')) LIKE '%@example.com' THEN 1 ELSE 0 END) ASC,
+                     l.published_at DESC LIMIT ?""",   # EXAMPLES-LAST-1 (RUL-194): real Local Market listings first
         params + [limit]
     ).fetchall()
     conn.close()
@@ -14929,6 +14947,24 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
                 headers={"Authorization": "Bearer " + _rk}, timeout=10)
     except Exception as _mx:
         _log.warning("credential decision mail failed (non-fatal): %s", _mx)
+    # CRED-SCORE-SYNC-1 (2 Oct 2026, F2 family-half walk): a checked police clearance lifted her score to 60 on her
+    # profile, but her advert and search card kept showing 50 until someone happened to open the profile (the only
+    # read that heals the stored badge). The decision itself now writes the score each of her adverts is scored
+    # under -- the same evidence set and the same Local Market rule as /sellers/credentials.
+    try:
+        _em = (req.email or "").strip().lower()
+        _rows = conn.execute("SELECT DISTINCT category, service_class FROM listings WHERE LOWER(seller_email) = ?",
+                             (_em,)).fetchall()
+        _lm_any = any((r["category"] or "").strip().lower() in ("local_market", "local market") for r in _rows)
+        for _r in _rows:
+            _ck = "local_market" if _lm_any else (_norm_cat_key(_r["category"], _r["service_class"])
+                                                  or _category_key_for_user(conn, _em))
+            _sc = int(_trust_evidence(conn, _em, _ck)["score"])
+            conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND category = ? "
+                         "AND COALESCE(service_class,'') = COALESCE(?,'') AND COALESCE(trust_score,-1) != ?",
+                         (_sc, _em, _r["category"], _r["service_class"], _sc))
+    except Exception as _sx:
+        _log.warning("CRED-SCORE-SYNC-1: score sync after a credential decision failed (non-fatal): %s", _sx)
     conn.commit()
     conn.close()
     return {"message": "Credential updated", "signal_id": req.signal_id, "status": req.status}
@@ -24708,10 +24744,15 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
             "charged":          False,
             "sa_context":       "",
             "sa_range":         "N/A",
-            "assessment":       ("We don\u2019t yet have a verified price source for this "
+            # PRICE-MISS-WORD-1 (2 Oct 2026, F10 walk): a chip the buyer chose was offered because its source is
+            # live -- when it finds nothing (or fails) that is not "no source for this category".
+            "assessment":       (("We couldn\u2019t get a verified price for this item just now, so we "
+                                  "won\u2019t guess. No Tuppence was charged. Try again later, or compare the "
+                                  "asking price against similar listings before deciding.") if tier is not None else
+                                 ("We don\u2019t yet have a verified price source for this "
                                  "category, so we won\u2019t guess. No Tuppence was charged. "
                                  "Compare the asking price against similar local listings "
-                                 "before deciding."),
+                                 "before deciding.")),
             "official_context": "",
             "official_range":   "N/A",
             "local_vs_global":  "cannot_compare",
