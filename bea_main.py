@@ -20052,8 +20052,8 @@ def passkey_register(req: _PkIn, ts_user: str = Cookie(default=None)):
         raise HTTPException(status_code=400, detail="This phone's Face ID could not be set up. Please try again.")
     conn = database.get_db()
     try:
-        conn.execute("INSERT OR IGNORE INTO passkeys (email, cred_id, public_key, alg, sign_count, label, created_at) "
-                     "VALUES (?,?,?,?,?,?,?)", (em, r["cred_id"], r["public_key"], r["alg"], r["sign_count"],
+        conn.execute("INSERT INTO passkeys (email, cred_id, public_key, alg, sign_count, label, created_at) "
+                     "VALUES (?,?,?,?,?,?,?) ON CONFLICT(cred_id) DO NOTHING", (em, r["cred_id"], r["public_key"], r["alg"], r["sign_count"],
                                                  _plain_text(req.label or "")[:60],
                                                  datetime.now(timezone.utc).isoformat(timespec="seconds")))
         conn.commit()
