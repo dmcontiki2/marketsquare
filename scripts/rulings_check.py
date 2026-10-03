@@ -102,6 +102,14 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-199": [
+   # The SO-6 cost sweep answered (3 Oct): tester cap, no phone points, 'checked' licences, protected-items wording.
+   ("RULINGS.md", ["THE SO-6 COST SWEEP, ANSWERED"], []),
+   ("ripple_features.py", ["TESTER_CAP = 4", "_tester_people(conn) >= TESTER_CAP"], []),
+   ("bea_main.py", ["TESTER-CAP-1 (RUL-199(2))", "Not offered: TrustSquare sends no SMS"], ["Add and verify your mobile number in your profile."]),
+   ("ms.js", ["lab + ' not checked yet'", "SINGLE-ITEM-NOTE-1"], ["lab + ' not verified'"]),
+   ("assets/legal-must-haves/legal-cards.js", ["ONLY FOR PROTECTED ITEMS"], ["SEVERE PENALTIES"]),
+ ],
  "RUL-198": [
    # A plain driving licence is shown, not a gate (3 Oct, amends RUL-156 (a)/(b)).
    ("RULINGS.md", ["A PLAIN DRIVING LICENCE IS SHOWN, NOT A GATE"], []),

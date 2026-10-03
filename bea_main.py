@@ -14444,7 +14444,7 @@ _CATEGORY_SIGNALS = {
     },
     "local_market": {
         # ── Identity (max ~20 from category — Universal also contributes) ──
-        "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 2,  "how_to_earn": "Add and verify your mobile number in your profile.", "evidence_required": False},
+        "category.lm.phone_verified":      {"name": "Phone number verified",               "points": 2,  "how_to_earn": "Not offered: TrustSquare sends no SMS, so it checks you by your email address (RUL-199(4)).", "evidence_required": False},
         # ── RUL-176/178 (David, 27 Sep 2026): the two banking credentials below were
         # RETIRED, and these two replace their 5 points with checks that hold NO
         # customer data. What the old pair actually measured was "a bank has checked
@@ -23123,6 +23123,20 @@ def admin_tuppence_grant(body: _TuppenceGrant, admin=Depends(_require_admin)):
         u = conn.execute("SELECT id, name, seller_tier FROM users WHERE lower(email) = ?", (email,)).fetchone()
         if not u:
             raise HTTPException(status_code=404, detail="No user with that email — they must have an account first.")
+        if kind == "tester_grant" and not (email.startswith("dmcontiki2") or email.endswith("@trustsquare.co")):
+            # TESTER-CAP-1 (RUL-199(2)): four named testers besides David, while testing lasts
+            _is_t = conn.execute("SELECT 1 FROM transactions WHERE LOWER(user_email)=? AND type='tester_grant' LIMIT 1", (email,)).fetchone()
+            if not _is_t:
+                _others = conn.execute("SELECT COUNT(DISTINCT LOWER(user_email)) AS n FROM transactions WHERE type='tester_grant' "
+                                       "AND LOWER(user_email) NOT LIKE 'dmcontiki2%' AND LOWER(user_email) NOT LIKE '%@trustsquare.co'").fetchone()["n"]
+                _inv = 0
+                try:
+                    _inv = conn.execute("SELECT COUNT(*) AS n FROM tester_invites WHERE LOWER(label) NOT LIKE 'qa%' "
+                                        "AND (claimed_by IS NULL OR LOWER(claimed_by) NOT LIKE 'dmcontiki2%')").fetchone()["n"]
+                except Exception:
+                    pass
+                if int(_others or 0) + int(_inv or 0) >= 4:
+                    raise HTTPException(status_code=409, detail="The tester list is full (4 testers besides David, RUL-199).")
         if kind == "first_lister_bonus":
             prior = conn.execute(
                 "SELECT id, amount, created_at FROM transactions WHERE lower(user_email) = ? AND type = ?",

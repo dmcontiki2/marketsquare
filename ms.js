@@ -7031,7 +7031,7 @@ function _msLicenceNote(id){
     if(!blk || blk.parentNode.querySelector('.ms-licnote')) return;
     const n = document.createElement('div'); n.className = 'ms-licnote';
     n.style.cssText = 'margin:-4px 0 14px;padding:9px 12px;border-radius:10px;background:#fff7e6;border:1px solid #f0c36d;color:#5c3d00;font-size:12.5px;line-height:1.45';
-    const b = document.createElement('b'); b.textContent = lab + ' not verified';
+    const b = document.createElement('b'); b.textContent = lab + ' not checked yet';   /* LICENCE-WORD-1 (RUL-199(5)) */
     const t = document.createElement('span'); t.textContent = ' \u2014 it adds nothing to the Trust Score until our team has checked it. You can still ask for an introduction.';
     n.appendChild(b); n.appendChild(t);
     blk.parentNode.insertBefore(n, blk.nextSibling);
@@ -11855,7 +11855,7 @@ function msLicenceShownNote(lid, raw){
   const lab = String(raw.licence_shown || 'Licence');
   const lw = raw.licence_status === 'pending';
   return '<div class="ms-licshown-note" style="margin:8px 0;border:1.5px solid #93c5fd;background:#eff6ff;border-radius:11px;padding:10px 12px;">'
-    + '<div style="font-size:12.5px;font-weight:700;color:#1e3a8a;">Customers see this listing \u2014 with \u201c' + lab + ' not verified\u201d</div>'
+    + '<div style="font-size:12.5px;font-weight:700;color:#1e3a8a;">Customers see this listing \u2014 with \u201c' + lab + ' not checked yet\u201d</div>'
     + (lw
       ? '<div style="font-size:12px;color:#1e40af;margin:3px 0 0;line-height:1.45;">Your licence is with our team. Once checked, the note goes and it counts towards your Trust Score.</div>'
       : '<div style="font-size:12px;color:#1e40af;margin:3px 0 8px;line-height:1.45;">Upload it and our team checks it \u2014 then the note goes and it counts towards your Trust Score.</div>'
@@ -22345,6 +22345,11 @@ function sfLegalS(){
   var mut='var(--text-3,#8b93a7)';
   var h='<div class="sf-hdr"><div class="sf-step">Step 6 of 6 · '+f.label+'</div><h2>The legal side — and who can carry it</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div>'+L.note+'</div></div>';
+  /* SINGLE-ITEM-NOTE-1 (RUL-199, David 3 Oct 2026: "it should be understood to be for illegal items"): a person selling one
+     thing of her own is told first that the dealer rows are not hers and the permit rows are only for protected items. */
+  if(L.cat==='collectors') h+='<div class="sf-card" style="border-color:rgba(74,222,128,.45);margin-bottom:12px;font-size:13px;line-height:1.5;">'+
+    '<b>Selling one thing of your own?</b> The dealer rules below don\'t apply to you \u2014 keep any certificate and describe it honestly. '+
+    'The permit rows apply only to protected items such as ivory, rhino horn or heritage objects; trading those without a permit is a crime.</div>';
   if(L.data){
     var a=L.data.accent, d=L.data;
     h+='<div class="sf-card" style="padding:0;overflow:hidden;">'+

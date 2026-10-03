@@ -109,7 +109,7 @@ CONTENT["ZA"] = {
  "collectors": ([
   ("gem","Provenance & Authenticity","Certificates, receipts, grading reports","Seller provides documentation to buyer","PROTECTS VALUE & BUYER TRUST"),
   ("id","Second-Hand Goods Act Registration","If dealing / trading regularly","Dealer registers with SAPS","REQUIRED FOR DEALERS — NOT ONE-OFF SALES"),
-  ("tree","Heritage & Wildlife Permits","NHRA export permits; CITES (ivory, horn, etc.)","Seller obtains before sale or export","LEGALLY REQUIRED — SEVERE PENALTIES"),
+  ("tree","Heritage & Wildlife Permits","NHRA export permits; CITES (ivory, horn, etc.)","Seller obtains before sale or export","ONLY FOR PROTECTED ITEMS (ivory, horn, heritage objects) — trading them without a permit is a crime"),
   ("form","Sales Agreement (Voetstoots)","Condition & authenticity documented","Both parties sign","PROTECTS SELLER"),
   ("cash","Traceable Payment","Avoid large cash transactions","Use bank transfer / platform payment","STRONGLY RECOMMENDED"),
  ],"Rare items attract rare rules — provenance and permits before price.",
@@ -169,7 +169,7 @@ CONTENT["US"] = {
    "Minors need parent / guardian-signed waivers."),
  "collectors": ([
   ("gem","Provenance & Authentication","Certificates, receipts, grading reports","Seller provides documentation to buyer","PROTECTS VALUE & BUYER TRUST"),
-  ("tree","Wildlife & Cultural Property Laws","ESA / ivory, eagle feathers, Native American items","Seller confirms the item is legal to sell — permits where applicable","FEDERAL LAW — SEVERE PENALTIES"),
+  ("tree","Wildlife & Cultural Property Laws","ESA / ivory, eagle feathers, Native American items","Seller confirms the item is legal to sell — permits where applicable","ONLY FOR PROTECTED ITEMS — trading them without a permit is a federal crime"),
   ("form","Bill of Sale (As-Is)","Condition & authenticity documented","Both parties sign","PROTECTS SELLER"),
   ("cash","IRS Form 8300 — Cash Over $10,000","Trade or business receipts","Report within 15 days — better: traceable payment","IRS REQUIREMENT"),
   ("bank","Sales Tax Obligations","If selling regularly","Seller checks state nexus / marketplace rules","VARIES BY STATE"),
@@ -288,7 +288,7 @@ CONTENT["AU"] = {
    "Minors need parent / guardian-signed waivers."),
  "collectors": ([
   ("gem","Provenance & Authentication","Certificates, receipts, grading reports","Seller provides documentation to buyer","PROTECTS VALUE & BUYER TRUST"),
-  ("tree","Cultural Heritage & Wildlife Permits","PMCH Act export permits; EPBC / CITES species","Seller obtains before sale or export","LEGALLY REQUIRED — SEVERE PENALTIES"),
+  ("tree","Cultural Heritage & Wildlife Permits","PMCH Act export permits; EPBC / CITES species","Seller obtains before sale or export","ONLY FOR PROTECTED ITEMS (ivory, horn, heritage objects) — trading them without a permit is a crime"),
   ("id","Second-Hand Dealer Licence","If trading regularly (state laws)","Dealer registers with the state","REQUIRED FOR DEALERS"),
   ("form","Sale Agreement (As-Is)","Condition & authenticity documented","Both parties sign","PROTECTS SELLER"),
   ("cash","AUSTRAC — Cash Over $10,000","Reporting threshold","Use traceable payment instead","STRONGLY RECOMMENDED"),
