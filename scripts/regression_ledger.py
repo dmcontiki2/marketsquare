@@ -34995,12 +34995,16 @@ def rg_resend_plan_truth_1():
 
 @entry("RG-0807", "PASSKEY-PHONE-1: the Face ID / fingerprint offer and the 'Sign in with Face ID' button show on phones only -- "
        "never on a laptop, desktop or tablet, even one with Windows Hello or Touch ID",
-       OPEN, fixed_on="2026-10-03",
+       LOCKED, fixed_on="2026-10-03",
        scope="ms.js PASSKEY-1 block: pkPhone() (userAgentData.mobile, else an iPhone / Android-phone user agent) gates pkOn(), "
              "which both signinButton() and hubOffer() wait on. Server unchanged.",
        ref="David, 3 Oct 2026, Seller Hub on his laptop (screenshot): 'The face id and fingerprint message should not show on "
            "laptops or computers but only on phones'. Cause: the only device test was isUserVerifyingPlatformAuthenticatorAvailable(), "
-           "which Windows Hello answers yes.")
+           "which Windows Hello answers yes. "
+           "LOCKED 3 Oct 2026 after the rendered check in David's Chrome on his laptop (live af3fe40, ms.js v=916): with 'Not now' "
+           "cleared, the Hub drew no Face ID offer and the sign-in screen no Face ID button; msPasskeyPhone() false on the laptop, "
+           "true with the browser's mobile flag set; offline: iPhone, Android-phone Chrome and Firefox true, Windows, Mac, iPad and "
+           "an Android tablet false. His 'Not now' put back.")
 def rg_passkey_phone_1():
     bad = _fb28_need([("ms.js", [("function pkPhone(){", "the phone test is gone"),
                                  ("if(d && typeof d.mobile==='boolean') return d.mobile;", "the browser's own mobile flag is no longer read"),
@@ -35013,13 +35017,16 @@ def rg_passkey_phone_1():
 @entry("RG-0808", "HUB-GHOST-1: the Seller Hub never keeps a card for an advert the server no longer has -- every good "
        "/listings/mine answer prunes the hub to the server's list, an introduction cannot bring a deleted advert's card back, and "
        "Delete on an advert that is already gone (404) removes the card instead of saying 'Error'",
-       OPEN, fixed_on="2026-10-03",
+       LOCKED, fixed_on="2026-10-03",
        scope="ms.js loadLiveDash (_mineIds from /listings/mine; the step-2 intro merge skips adverts outside it) and "
              "elConfirmDeleteListing (404 = gone). Server: DELETE /listings/{id}/seller answers 404 for a missing advert.",
        ref="David, 3 Oct 2026: 'i can not delete the aflewerings ryer, this is an old recurring issue' (the fourth delete fault "
            "after 22 May empty email, DELETE-BIND-1 23 Sep, DEL-STUCK-2 24 Sep). Measured: #473 deleted on the server 18:45:27Z "
            "(200); his Hub read /listings/mine at 18:48:23Z and 18:49:22Z without #473 and still showed it; Delete at 18:49:03Z "
-           "-> 404 -> 'Error: Listing not found', card kept. Root cause: loadLiveDash only added or refreshed cards, never removed.")
+           "-> 404 -> 'Error: Listing not found', card kept. Root cause: loadLiveDash only added or refreshed cards, never removed. "
+           "LOCKED 3 Oct 2026 after the rendered check in David's Chrome (live af3fe40, ms.js v=916): his Hub reads 0 ACTIVE with no "
+           "#473 card; a #473 ghost put into the Hub was gone after one loadLiveDash(); a second ghost's Delete got 404, said "
+           "'Listing removed — it was already deleted' and the card left the Hub.")
 def rg_hub_ghost_1():
     bad = _fb28_need([("ms.js", [("_mineIds = new Set(mine.map(function(l){ return l.id; }));", "the hub no longer learns the server's list"),
                                  ("dashState.listings = dashState.listings.filter(function(d){ return !d.beaListingId || _mineIds.has(d.beaListingId); });",
