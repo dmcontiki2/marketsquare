@@ -34624,7 +34624,7 @@ def rg_col_carry_1():
     return [(INFO, "a collector's type and condition travel Quick -> server -> Edit -> Browse filter")]
 
 
-@entry("RG-0799", "HOME-EX-SWITCH-1: the AI-examples switch also sits on Home beside the Categories heading, so a viewer who "
+@entry("RG-0803", "HOME-EX-SWITCH-1: the AI-examples switch also sits on Home beside the Categories heading, so a viewer who "
        "switched the examples off sees why the tiles count only real listings -- and the Local Market tile follows the switch",
        OPEN, fixed_on="2026-10-03",
        scope="ms.js msExPaintHome (painted by renderCatCounts into #home-cat-grid's sec-head), renderCatCounts' fallback branch "

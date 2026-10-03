@@ -13,6 +13,6 @@ read Property 20, Tutors 3, Services 2, Adventures 9, Collectors 1, Cars 4, Loca
   hidden -- it now skips them too.
 - **Afrikaans:** the switch read "AI-voorbeelde af" beside "KI-voorbeelde aan"; checked words "KI-voorbeelde aan/af" (and the two
   toasts) in `roles/app_i18n_af.json`, applied by migration 064, browsers refreshed by DICTV 8.
-- Ledger RG-0799 (OPEN until proven on the rendered live page); rulings_check RUL-196.
+- Ledger RG-0803 (OPEN until proven on the rendered live page); rulings_check RUL-196.
 
 Cost model impact: none. Schema: none.
