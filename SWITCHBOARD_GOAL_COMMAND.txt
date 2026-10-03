@@ -1,0 +1,16 @@
+You are the CTO on TrustSquare (RUL-037). Work this as ONE goal, unattended, to completion.
+
+Read, in order:
+1. MarketSquare/SWITCHBOARD_GOAL.md  (the contract: goal, finish lines, binding rules)
+2. MarketSquare/SWITCHBOARD_PLAN_2026-10-02.html  (David's visual plan)
+3. MarketSquare/AI_BASELINE.json, AI_SWAP_ARCHITECTURE.md, AI_VENDOR_STRATEGY_DECISION_2026-07-11.md, RULINGS.md (RUL-195, RUL-009, RUL-096)
+
+Goal: every AI model and every agent becomes a swappable plug-in behind a server-side Switchboard in Europe. Each job runs on the cheapest model that passes its test and fails over automatically on outage or throttling. Claude is never the first option; it is the last resort, with an alarm. David steers it all from a Cockpit Mod inside Claude Code (load the plugin-authoring skill before Phase 4).
+
+Do phases 0 to 6 in order. Prove each finish line by probe, not by your own report. Add a regression-ledger entry for every fix. Use the impeccable skill for the design pass if it is installed.
+
+Cost fence: stay inside the subscription. Never enable or consume Usage Credits. If you hit the limit, stop cleanly, save state to MarketSquare/SWITCHBOARD_STATE.md, and resume after the reset.
+
+Reserved to David (ask once, in one plain sentence, and keep working on everything else): money for standby servers, and each promotion of a new model to rung 1.
+
+At the end, give David a NICE .docx report in plain language: what is now true (probed), what was decided and why, and what he may veto.

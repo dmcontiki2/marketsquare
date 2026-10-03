@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Switchboard Plan</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#14213d;--dim:#5b6782;--line:#dfe4ef;--navy:#1b2a4e;
+--cockpit:#7b3fe4;--switch:#0f9d8a;--model:#f08c00;--agent:#2f9e44;--server:#1971c2;--claude:#868e96;--speed:#e64980;
+--ok:#2f9e44;--part:#f59f00;--no:#e03131;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1424;--card:#172038;--ink:#e8ecf6;--dim:#9aa6c2;--line:#2a3657;--navy:#c9d6ff;}}
+:root[data-theme="dark"]{--bg:#0e1424;--card:#172038;--ink:#e8ecf6;--dim:#9aa6c2;--line:#2a3657;--navy:#c9d6ff;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:34px;margin:0;color:var(--navy)}h2{font-size:23px;margin:40px 0 6px;color:var(--navy)}
+.sub{color:var(--dim);margin:4px 0 0}.lead{font-size:18px}
+.hero{background:linear-gradient(120deg,#1b2a4e,#3b2a7a 55%,#0f6d63);color:#fff;border-radius:18px;padding:28px}
+.hero h1{color:#fff}.hero .sub{color:#d6defa}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600;color:#fff}
+.ok{background:var(--ok)}.part{background:var(--part)}.no{background:var(--no)}
+.legend span{display:inline-flex;align-items:center;gap:6px;margin:4px 14px 4px 0;font-size:14px}
+.dot{width:14px;height:14px;border-radius:4px;display:inline-block}
+.row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}.row:first-child{border-top:0}
+.row .chip{flex:none;margin-top:2px;min-width:78px;text-align:center}
+.rung{border-radius:12px;padding:12px 14px;color:#fff;margin:8px 0;display:flex;gap:12px;align-items:center}
+.rung .n{font-size:26px;font-weight:800;opacity:.9;width:34px;text-align:center;flex:none}
+.agent{border-left:6px solid var(--agent)}.agent h3,.phase h3{margin:0 0 4px;font-size:17px}
+.small{font-size:14px;color:var(--dim)}
+.phase{border-top:6px solid var(--c)}
+.phase .tag{color:var(--c);font-weight:800;font-size:13px;letter-spacing:.5px}
+table{border-collapse:collapse;width:100%;font-size:15px}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:600}
+.trig{display:inline-block;margin:4px 6px 4px 0;padding:6px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:14px}
+.big{font-size:30px;font-weight:800}
+.bar{height:14px;border-radius:7px;background:var(--line);overflow:hidden;margin:6px 0}.bar i{display:block;height:100%}
+.david{border:2px solid var(--speed)}
+code{font-family:Consolas,monospace}
+svg text{font-family:"Segoe UI",system-ui,sans-serif}
+.scroll{overflow-x:auto}
+</style></head><body><div class="wrap">
+
+<div class="hero">
+<h1>The Switchboard Plan</h1>
+<p class="sub lead">How TrustSquare's AI models and agents become plug-ins: cheap, swappable, European, with Claude kept out of the app's way.</p>
+<p class="sub">Prepared 2 Oct 2026 for the Fable 5.1 session after the weekly usage reset. The facts below were checked in the code and files today.</p>
+</div>
+
+<h2>1 · The one big idea</h2>
+<p class="lead">The new <b>Mod</b> runs inside Claude Code on your PC. That makes it a great <b>cockpit</b>, but the wrong place for the live app's brain. If the app's AI ran through Claude Code, the app would stop whenever your PC or Claude Code was closed. Claude would also sit in the middle of every customer call, which is the conflict of interest you want to avoid.</p>
+<p class="lead">So the plan splits the work into <b>three layers</b>:</p>
+<div class="card scroll">
+<svg viewBox="0 0 1000 470" width="100%" style="min-width:640px" role="img" aria-label="Three layer diagram">
+ <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b6782"/></marker></defs>
+ <rect x="20" y="20" width="600" height="90" rx="14" fill="#7b3fe4"/>
+ <text x="40" y="55" fill="#fff" font-size="22" font-weight="700">① The Cockpit Mod (on David's PC, inside Claude Code)</text>
+ <text x="40" y="85" fill="#eadcff" font-size="16">Shows everything · one-tap permission buttons · turns written rules into hard rails</text>
+ <rect x="650" y="20" width="330" height="90" rx="14" fill="#868e96"/>
+ <text x="668" y="52" fill="#fff" font-size="19" font-weight="700">Claude = builder &amp; manager</text>
+ <text x="668" y="78" fill="#f1f3f5" font-size="15">Designs, codes, audits, runs the cockpit.</text>
+ <text x="668" y="98" fill="#f1f3f5" font-size="15">Never the app's first-choice brain.</text>
+ <line x1="320" y1="112" x2="320" y2="168" stroke="#5b6782" stroke-width="3" marker-end="url(#ar)" stroke-dasharray="6 5"/>
+ <text x="332" y="146" fill="#5b6782" font-size="14">reads and asks; never runs the app</text>
+ <rect x="20" y="172" width="960" height="100" rx="14" fill="#0f9d8a"/>
+ <text x="40" y="208" fill="#fff" font-size="22" font-weight="700">② The Switchboard (on the server in Europe, Nuremberg today)</text>
+ <text x="40" y="238" fill="#d3f9f1" font-size="16">One socket for every AI call · picks the cheapest model that passes the test · swaps in seconds on outage or throttling</text>
+ <text x="40" y="260" fill="#d3f9f1" font-size="16">Holds the price card, the cost caps and the alarm log · runs day and night, whether or not anyone is at a PC</text>
+ <line x1="250" y1="274" x2="250" y2="318" stroke="#5b6782" stroke-width="3" marker-end="url(#ar)"/>
+ <line x1="740" y1="274" x2="740" y2="318" stroke="#5b6782" stroke-width="3" marker-end="url(#ar)"/>
+ <rect x="20" y="322" width="470" height="130" rx="14" fill="#f08c00"/>
+ <text x="40" y="356" fill="#fff" font-size="20" font-weight="700">③a Model plug-ins</text>
+ <text x="40" y="384" fill="#fff4e6" font-size="15">OpenAI (base today) · Google · Mistral / Qwen on EU hosts</text>
+ <text x="40" y="406" fill="#fff4e6" font-size="15">Any new cheap model that passes the golden test</text>
+ <text x="40" y="430" fill="#fff4e6" font-size="15">Claude: bottom rung only, and an alarm rings if used</text>
+ <rect x="510" y="322" width="470" height="130" rx="14" fill="#2f9e44"/>
+ <text x="530" y="356" fill="#fff" font-size="20" font-weight="700">③b Agent plug-ins</text>
+ <text x="530" y="384" fill="#ebfbee" font-size="15">QA Bot · Maintenance · BIT self-test · CityLauncher</text>
+ <text x="530" y="406" fill="#ebfbee" font-size="15">AdvertAgent · SellerScraper · MinutesMaker · Genie</text>
+ <text x="530" y="430" fill="#ebfbee" font-size="15">Each gets a "passport": brain, permissions, cap, health</text>
+</svg>
+<div class="legend"><span><i class="dot" style="background:var(--cockpit)"></i>Cockpit (your view)</span><span><i class="dot" style="background:var(--switch)"></i>Switchboard (server)</span><span><i class="dot" style="background:var(--model)"></i>Models</span><span><i class="dot" style="background:var(--agent)"></i>Agents</span><span><i class="dot" style="background:var(--claude)"></i>Claude (a tool, not the brain)</span></div>
+</div>
+
+<h2>2 · Where we stand today</h2>
+<p class="sub">Checked 2 Oct 2026 by reading the code and the decision files. This was not a live server probe; Fable probes the live site in Phase 0.</p>
+<div class="card">
+ <div class="row"><span class="chip ok">DONE</span><div><b>Every app AI call goes through one socket.</b> 30 calls use the shared socket and none call Claude directly. In July only 7 of 22 did.</div></div>
+ <div class="row"><span class="chip ok">DONE</span><div><b>Claude is not the first choice.</b> The base model for everyday jobs is OpenAI's cheap tier (GPT-5.6 Luna / Terra).</div></div>
+ <div class="row"><span class="chip ok">DONE</span><div><b>An outage breaker and a European safety net exist.</b> The breaker trips on failures. Mistral on Scaleway (Paris) is the EU net.</div></div>
+ <div class="row"><span class="chip part">CHANGE</span><div><b>Claude is still backup number one.</b> When OpenAI fails, the app falls back to Claude first. Your rule says Claude should be the <i>last</i> resort, so the plan moves it to the bottom rung.</div></div>
+ <div class="row"><span class="chip part">PARTLY</span><div><b>"Cheapest" is set by hand, so it goes stale.</b> For the "reason" job, Mistral (0.78×) and Gemini (0.34×) already cost less than the base on paper. Nothing re-tests that automatically.</div></div>
+ <div class="row"><span class="chip no">NOT YET</span><div><b>Agents have no common plug-in socket.</b> Each agent is wired its own way, with different keys, schedules and health checks.</div></div>
+ <div class="row"><span class="chip no">NOT YET</span><div><b>There is only one server.</b> It is a Hetzner box in Nuremberg, Germany, so it is European. But if that box or that company has a bad day, everything stops.</div></div>
+ <div class="row"><span class="chip no">NOT YET</span><div><b>There is no cockpit.</b> You see the state on the +1 page in a browser. Nothing shows it in your working window.</div></div>
+ <div class="row"><span class="chip part">HEAVY</span><div><b>The app's main script is 1.68 MB</b> (ms.js) and the Quick page is 0.62 MB. They are the biggest drag on "quick and fluid" on a phone.</div></div>
+</div>
+
+<h2>3 · The model ladder for every job</h2>
+<p class="lead">Each job (fast replies, reasoning, reading photos and so on) gets its own ladder. The Switchboard always starts at the top and only steps down when something goes wrong.</p>
+<div class="grid">
+<div>
+ <div class="rung" style="background:#2f9e44"><span class="n">1</span><div><b>The cheapest model that passes the test</b><br><span style="opacity:.9">Never Claude. Today this is OpenAI Luna / Terra.</span></div></div>
+ <div class="rung" style="background:#1971c2"><span class="n">2</span><div><b>The next cheapest, from a different company</b><br><span style="opacity:.9">One company's outage can't take out both rungs.</span></div></div>
+ <div class="rung" style="background:#0f9d8a"><span class="n">3</span><div><b>An open model hosted in Europe</b><br><span style="opacity:.9">Mistral / Qwen on Scaleway or OVH. The data stays in the EU.</span></div></div>
+ <div class="rung" style="background:#868e96"><span class="n">4</span><div><b>Claude, as the last resort</b><br><span style="opacity:.9">Used only when rungs 1–3 are all down. An alarm rings, and it is time-limited.</span></div></div>
+</div>
+<div class="card" style="margin-top:8px">
+ <b>What makes it step down (automatically, in seconds)</b><br>
+ <span class="trig">🔴 Model down</span><span class="trig">🟠 Throttled (too many requests)</span><span class="trig">🐢 Too slow</span><span class="trig">🔒 Key blocked</span><span class="trig">💸 Daily cost cap close</span>
+ <p style="margin:12px 0 0"><b>What needs you (one tap)</b><br>
+ <span class="trig">⬆ Promote a new, cheaper model to rung 1</span><span class="trig">↩ Return to the normal model after an outage</span></p>
+ <p class="small">Stepping down is automatic. Stepping back up is your call, because of your 14 Aug ruling: a silent model change can move profit from good to very bad.</p>
+</div>
+</div>
+<div class="card">
+ <b>New: the weekly Model Scout.</b> Once a week it reads the price lists of every vendor we have connected. It tests any new cheap model on our golden test set for each job. Then it puts a card in your cockpit, for example: <i>"Gemini 3.7 Flash passes the reason job at one third of today's cost. Promote?"</i> You tap yes or no. The Scout only suggests. It never switches anything by itself.
+</div>
+
+<h2>4 · Agents as plug-ins, each with a passport</h2>
+<p class="lead">Every agent plugs into the same socket and carries the same five things. One screen can then show them all, and any agent's brain can be swapped without touching the agent.</p>
+<div class="card"><table>
+<tr><th>Passport field</th><th>What it says</th></tr>
+<tr><td>🧠 Brain</td><td>Which job ladder it uses. It never names a model directly.</td></tr>
+<tr><td>🔑 Permissions</td><td>What it may read, write, send or deploy (the host-queue allowlist, per agent)</td></tr>
+<tr><td>💰 Cost cap</td><td>Its own daily spending limit. It stops cleanly when it reaches it.</td></tr>
+<tr><td>⏰ Schedule</td><td>When it runs. Runs happen on the server, never in a paid chat session.</td></tr>
+<tr><td>❤️ Health</td><td>A check the cockpit reads: last run, last result, red / green / grey</td></tr>
+</table></div>
+<div class="grid">
+ <div class="card agent"><h3>QA Bot</h3><div class="small">The independent auditor. Its brain stays OpenAI on purpose, because Claude must never audit Claude.</div></div>
+ <div class="card agent"><h3>Maintenance agent</h3><div class="small">Watches the system and repairs faults. Its brain comes from the Switchboard ladder.</div></div>
+ <div class="card agent"><h3>BIT self-test</h3><div class="small">The built-in test, kept separate from the app it tests. It needs no AI.</div></div>
+ <div class="card agent"><h3>CityLauncher</h3><div class="small">Finds and invites sellers in each city. Sending stays inside the approved waves.</div></div>
+ <div class="card agent"><h3>AdvertAgent</h3><div class="small">Writes and checks adverts. Uses the cheap text ladder.</div></div>
+ <div class="card agent"><h3>SellerScraper</h3><div class="small">Supply only: it gathers prospects and sends nothing.</div></div>
+ <div class="card agent"><h3>MinutesMaker</h3><div class="small">Turns meeting recordings into minutes. Uses the speech and text ladders.</div></div>
+ <div class="card agent"><h3>Genie (in-app helper)</h3><div class="small">Talks to customers. Uses the fast ladder, with a strict cost cap per user.</div></div>
+</div>
+
+<h2>5 · The Cockpit Mod: what you would see</h2>
+<div class="grid">
+ <div class="card" style="border-top:6px solid var(--cockpit)"><h3 style="margin:0">Band above the prompt</h3><p class="small">One line that is always visible: <b>Ledger 🟢 · AI today R41 · OpenAI serving · 0 alarms</b></p></div>
+ <div class="card" style="border-top:6px solid var(--cockpit)"><h3 style="margin:0">Switchboard pane</h3><p class="small">Every job's ladder, which rung is serving, today's cost against the cap, and the last failover, all colour-coded.</p></div>
+ <div class="card" style="border-top:6px solid var(--cockpit)"><h3 style="margin:0">Agent pane</h3><p class="small">Every agent's passport on one screen, in red / green / grey, with its last run time.</p></div>
+ <div class="card" style="border-top:6px solid var(--cockpit)"><h3 style="margin:0">One-tap buttons</h3><p class="small">Promote a Scout pick, run a failover drill, or request a deploy. Each one is a permission request, not a job for you to click through.</p></div>
+ <div class="card" style="border-top:6px solid var(--speed)"><h3 style="margin:0">Rules become rails ★</h3><p class="small">The Mod can <b>block</b> an action before it happens. The CLAUDE.md rules that keep getting broken (no Edit/Write on big project files, no direct copies to the server, no Claude-first model) stop being reminders and become walls.</p></div>
+ <div class="card" style="border-top:6px solid var(--speed)"><h3 style="margin:0">Alerts as pop-ups</h3><p class="small">A small pop-up appears while you work when a failover happens or a cost cap gets close.</p></div>
+</div>
+<p class="small">★ = my addition to your brief. Being able to stop an action before it runs is the Mod's most useful power for this project.</p>
+
+<h2>6 · Servers: Europe first, a spare elsewhere</h2>
+<div class="card scroll">
+<svg viewBox="0 0 1000 230" width="100%" style="min-width:640px" role="img" aria-label="Server redundancy steps">
+ <rect x="10" y="20" width="230" height="190" rx="14" fill="#1971c2"/>
+ <text x="26" y="52" fill="#fff" font-size="13" font-weight="700">TODAY</text>
+ <text x="26" y="80" fill="#fff" font-size="19" font-weight="700">Nuremberg 🇩🇪</text>
+ <text x="26" y="106" fill="#dbe9fb" font-size="14">Hetzner · one box</text>
+ <text x="26" y="128" fill="#dbe9fb" font-size="14">Cloudflare in front</text>
+ <text x="26" y="150" fill="#dbe9fb" font-size="14">Backups to R2 storage</text>
+ <text x="26" y="190" fill="#ffd8a8" font-size="14" font-weight="700">Risk: one box, one company</text>
+ <rect x="260" y="20" width="230" height="190" rx="14" fill="#0f9d8a"/>
+ <text x="276" y="52" fill="#fff" font-size="13" font-weight="700">STEP 1 · CHEAP · NOW</text>
+ <text x="276" y="80" fill="#fff" font-size="19" font-weight="700">Live data copy</text>
+ <text x="276" y="106" fill="#d3f9f1" font-size="14">Database copied off</text>
+ <text x="276" y="128" fill="#d3f9f1" font-size="14">the box continuously</text>
+ <text x="276" y="150" fill="#d3f9f1" font-size="14">to EU storage</text>
+ <text x="276" y="190" fill="#fff" font-size="14" font-weight="700">Lose the box, lose ~0 data</text>
+ <rect x="510" y="20" width="230" height="190" rx="14" fill="#7b3fe4"/>
+ <text x="526" y="52" fill="#fff" font-size="13" font-weight="700">STEP 2 · SMALL MONTHLY COST</text>
+ <text x="526" y="80" fill="#fff" font-size="19" font-weight="700">Paris standby 🇫🇷</text>
+ <text x="526" y="106" fill="#eadcff" font-size="14">A DIFFERENT company</text>
+ <text x="526" y="128" fill="#eadcff" font-size="14">(e.g. Scaleway / OVH)</text>
+ <text x="526" y="150" fill="#eadcff" font-size="14">Cloudflare flips traffic</text>
+ <text x="526" y="190" fill="#fff" font-size="14" font-weight="700">Down for minutes, not days</text>
+ <rect x="760" y="20" width="230" height="190" rx="14" fill="#e64980"/>
+ <text x="776" y="52" fill="#fff" font-size="13" font-weight="700">STEP 3 · LATER</text>
+ <text x="776" y="80" fill="#fff" font-size="19" font-weight="700">Johannesburg 🇿🇦</text>
+ <text x="776" y="106" fill="#ffe3ec" font-size="14">Outside the EU</text>
+ <text x="776" y="128" fill="#ffe3ec" font-size="14">Close to your first users</text>
+ <text x="776" y="150" fill="#ffe3ec" font-size="14">Faster pages in SA</text>
+ <text x="776" y="190" fill="#fff" font-size="14" font-weight="700">A spare and speed in one</text>
+</svg>
+<p class="small" style="margin:6px 0 0"><b>Why a different company in Step 2:</b> a second Hetzner box in Helsinki would not help if Hetzner itself blocks or loses the account. <b>Why Johannesburg in Step 3:</b> your users are in South Africa, and every page currently travels to Germany and back. A local spare also makes the app feel quicker.</p>
+</div>
+
+<h2>7 · Quick, easy, fluid: measured, not hoped for</h2>
+<div class="grid">
+ <div class="card"><div class="small">First screen on a mid-range phone</div><div class="big" style="color:var(--speed)">&lt; 1.5 s</div><div class="bar"><i style="width:40%;background:var(--speed)"></i></div><div class="small">The biggest lever is splitting the 1.68 MB ms.js, so a phone loads only what the screen needs.</div></div>
+ <div class="card"><div class="small">AI answer starts appearing</div><div class="big" style="color:var(--model)">&lt; 1 s</div><div class="bar"><i style="width:55%;background:var(--model)"></i></div><div class="small">Show words as they arrive, and use cheap, fast models first.</div></div>
+ <div class="card"><div class="small">Longest blank spinner allowed</div><div class="big" style="color:var(--switch)">3 s</div><div class="bar"><i style="width:70%;background:var(--switch)"></i></div><div class="small">After 3 s, show a saved or simple answer. Never a frozen screen.</div></div>
+ <div class="card"><div class="small">Taps to reach what you want</div><div class="big" style="color:var(--agent)">≤ 4</div><div class="bar"><i style="width:85%;background:var(--agent)"></i></div><div class="small">The limit from your Zoom ruling, used as a test on every page.</div></div>
+</div>
+<p class="small">Each target becomes a check in the regression ledger, so it can't quietly slip later. The bars are illustrative only; nobody has measured the targets yet, and Phase 6 does that. The design pass uses the <i>impeccable</i> skill if it is installed in the Fable session. It is not installed in this one, so the design-critique and accessibility skills cover it otherwise.</p>
+
+<h2>8 · The Fable session road map</h2>
+<p class="lead">It runs as one <b>Goal</b>, the method you used for onboarding on 5 Sep. Fable gets the goal file, works through the phases, and proves each finish line itself.</p>
+<div class="grid">
+ <div class="card phase" style="--c:#5b6782"><span class="tag">PHASE 0</span><h3>Look before touching</h3><div class="small">Run the ledger and rulings checks, probe the live site, and read this plan and the AI decision files.</div><p class="small"><b>Done when:</b> a dated "true today" list exists.</p></div>
+ <div class="card phase" style="--c:#2f9e44"><span class="tag">PHASE 1</span><h3>Claude to the bottom rung</h3><div class="small">Re-order every job ladder: the cheapest non-Claude model first, Claude last with an alarm.</div><p class="small"><b>Done when:</b> a ledger check proves no job starts with Claude or fails over to Claude first.</p></div>
+ <div class="card phase" style="--c:#f08c00"><span class="tag">PHASE 2</span><h3>Model Scout</h3><div class="small">A weekly server job reads vendor price lists, runs the golden test and posts "promote?" cards.</div><p class="small"><b>Done when:</b> the first Scout card appears with real test scores.</p></div>
+ <div class="card phase" style="--c:#0f9d8a"><span class="tag">PHASE 3</span><h3>Agent passports</h3><div class="small">One registry file. Every agent reads its brain and cost cap from it.</div><p class="small"><b>Done when:</b> no agent names a model directly.</p></div>
+ <div class="card phase" style="--c:#7b3fe4"><span class="tag">PHASE 4</span><h3>Cockpit Mod</h3><div class="small">The band, two panes, pop-ups, one-tap requests, and the rails that block forbidden actions.</div><p class="small"><b>Done when:</b> it loads in Claude Code and refuses an Edit on a big file.</p></div>
+ <div class="card phase" style="--c:#1971c2"><span class="tag">PHASE 5</span><h3>Data off the box</h3><div class="small">Copy the database continuously to EU storage. Design the Paris standby (the spending waits for you).</div><p class="small"><b>Done when:</b> a restore test rebuilds the database from the copy.</p></div>
+ <div class="card phase" style="--c:#e64980"><span class="tag">PHASE 6</span><h3>Quick &amp; fluid pass</h3><div class="small">Turn the speed targets into ledger checks, split ms.js and polish the design.</div><p class="small"><b>Done when:</b> the four targets above are measured on the live site.</p></div>
+</div>
+
+<h2>9 · Only two things are yours to decide</h2>
+<div class="card david">
+ <div class="row"><span class="chip" style="background:var(--speed)">MONEY</span><div><b>The Paris standby server (Step 2), and later Johannesburg (Step 3).</b> Each has a small monthly cost. Fable designs and prices it, then it waits for your yes.</div></div>
+ <div class="row"><span class="chip" style="background:var(--speed)">MODELS</span><div><b>Each time a new model is promoted to rung 1.</b> The Scout shows the full field and the test scores, and you tap yes or no in the cockpit.</div></div>
+ <p class="small" style="margin:10px 0 0">Everything else is technical, and Fable decides it from the rulings and canon files. Your rule "Claude is never the first option" is now written into the rulings register (RUL-195), so it can't drift.</p>
+</div>
+
+<h2>10 · How to start the Fable session</h2>
+<div class="card"><p>After the reset, open a new Claude Code session in the MarketSquare folder, choose <b>Fable 5.1</b>, and paste the text from <code>SWITCHBOARD_GOAL_COMMAND.txt</code>. It points Fable to the goal file and to this plan.</p></div>
+
+</div></body></html>

@@ -8,9 +8,11 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-09-28 - 28 Sep 2026 maintenance loop (05)
+## Last Completed (2026-10-02 - 2 Oct 2026 — EXAMPLES-LAST-1 (RUL-194))
 
-- **28 Sep 2026 maintenance loop (05:43Z, PROBED):** ledger green (0 regressed, 0 unverified); fault queue empty (new 0, fix-shipped 0, verified 26); no fixes needed; no escalations. Host queue STALLED: 1 commit on main unpushed 2.2 h. Five OPEN entries (RG-0532/0534/0536/0537/0539) await a rendered live walk before LOCK.
+- **2 Oct 2026 — EXAMPLES-LAST-1 (RUL-194):** real listings now come before the AI examples in every list of both apps and
+  every server sort; viewers have an "AI examples on/off" switch (starts ON, shared by TrustSquare and Quick). Replaces
+  SUPER-PIN-1. Ledger RG-0700 (OPEN until the rendered check on the live site), RG-0052 amended.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +37,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **2 Oct 2026 — EXAMPLES-LAST-1 (RUL-194):** real listings now come before the AI examples in every list of both apps and
+  every server sort; viewers have an "AI examples on/off" switch (starts ON, shared by TrustSquare and Quick). Replaces
+  SUPER-PIN-1. Ledger RG-0700 (OPEN until the rendered check on the live site), RG-0052 amended.
 
 - **28 Sep 2026 maintenance loop (05:43Z, PROBED):** ledger green (0 regressed, 0 unverified); fault queue empty (new 0, fix-shipped 0, verified 26); no fixes needed; no escalations. Host queue STALLED: 1 commit on main unpushed 2.2 h. Five OPEN entries (RG-0532/0534/0536/0537/0539) await a rendered live walk before LOCK.
 

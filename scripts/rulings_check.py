@@ -102,6 +102,13 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-195": [
+   # Claude never first (2 Oct). Base lane is non-Claude; the goal contract carries the rule;
+   # absence needle trips if a later session puts Claude back as the base lane.
+   ("RULINGS.md", ["CLAUDE IS NEVER THE FIRST OPTION IN THE APP"], []),
+   ("SWITCHBOARD_GOAL.md", ["Claude is never the first option", "Cockpit Mod"], []),
+   ("AI_BASELINE.json", ['"baseline_lane": "openai"'], ['"baseline_lane": "anthropic"']),
+ ],
  "RUL-194": [
    ("RULINGS.md", ["REAL LISTINGS ALWAYS COME BEFORE THE AI EXAMPLES"], []),
    ("bea_main.py", ["EXAMPLES-LAST-1", '_ex_last + ", created_at DESC"'], ["(COALESCE(super_example,0)*(1-COALESCE(showcase,0))) DESC"]),

@@ -1942,3 +1942,82 @@ DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
  ============================================================
 Press any key to continue . . . 
 Fri 10/02/2026  2:02:07.38  SHIPPED rc=0 â€” server runs migrations + smoke itself
+============================================================
+Sat 10/03/2026  2:00:01.83  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Sat 10/03/2026  2:00:01.91
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 375 files already current - upload skipped.
+ [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
+   [OK] SYNC email_strip: all 24 files already current - upload skipped.
+ [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
+   [OK] SYNC quick_ph: all 298 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 4 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Sat 10/03/2026  2:01:28.15  drift: DEPLOY DRIFT: 4 files differ from live - LIVE IS AHEAD by 7 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: bea_main.py, marketsquare.html, ms.js, quick.html
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Sat 10/03/2026  2:01:28.26
+ ============================================================
+
+ git.exe is running - leaving any .git locks in place (not stale).
+  [autobump] ms.js changed -> marketsquare.html ref ?v=515
+  [autobump] ms.css changed -> marketsquare.html ref ?v=299
+  [autobump] 2 reference(s) bumped
+harness-parity: quick.html == genie/HARNESS.html
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 60 honestly not-wired, 2 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  [FAIL] line 691: registered static surface 'cost R 0' passed its review date 2026-09-30 -- re-verify it or wire it
+  [FAIL] line 779: registered static surface 'free tier' passed its review date 2026-09-30 -- re-verify it or wire it
+folded 14, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+folded 1, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-03T00:01:31Z   mode=strict
+  Working tree: 43 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  289626 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 1 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: REVIEW   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 14160), TTL 30 min.
