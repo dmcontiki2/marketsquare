@@ -2297,12 +2297,13 @@
     "category.services_cas.ref_2",
     "category.services_cas.profile"
    ],
-   "gate": {
-    "type": "licence",
+   "gate": null,
+   "licence_shown": {
     "licences": [
      "driving_licence_code_a"
     ],
-    "ruling": "RUL-156"
+    "label": "Driving licence",
+    "ruling": "RUL-198"
    },
    "employer_kinds": [
     "fast_food_franchise",
@@ -2316,7 +2317,7 @@
     "en": "Delivery rider available in {where}",
     "af": "Afleweringsryer beskikbaar in {where}"
    },
-   "note": "Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Licence gate (RUL-155): verified driving licence (code A for a motorbike) opens public visibility."
+   "note": "Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Driving licence SHOWN, not a gate (RUL-198, 3 Oct 2026; was RUL-155/156): listed publicly at once; buyers see 'Driving licence not verified' until it is checked (code A for a motorbike); no Trust Score credit until then; introductions go ahead."
   },
   {
    "key": "courier_on_foot",
@@ -4126,12 +4127,13 @@
     "category.services_tech.exp_7plus",
     "category.services_tech.strong_cv"
    ],
-   "gate": {
-    "type": "licence",
+   "gate": null,
+   "licence_shown": {
     "licences": [
      "driving_licence"
     ],
-    "ruling": "RUL-156"
+    "label": "Driving licence",
+    "ruling": "RUL-198"
    },
    "employer_kinds": [
     "freight_operator",
@@ -4147,7 +4149,7 @@
     "en": "Driver available in {where}",
     "af": "Bestuurder beskikbaar in {where}"
    },
-   "note": "David's list. Renamed 19 Sep (was 'Transport / business driver'). Goods and errands in a light vehicle; people-for-reward stays in Taxi / shuttle (HOLD). Licence gate (RUL-155): verified driving licence opens public visibility."
+   "note": "David's list. Renamed 19 Sep (was 'Transport / business driver'). Goods and errands in a light vehicle; people-for-reward stays in Taxi / shuttle (HOLD). Driving licence SHOWN, not a gate (RUL-198, 3 Oct 2026; was RUL-155/156): listed publicly at once; buyers see 'Driving licence not verified' until it is checked; no Trust Score credit until then; introductions go ahead."
   },
   {
    "key": "code_10_code_14_driver",

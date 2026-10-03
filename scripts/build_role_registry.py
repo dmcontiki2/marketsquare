@@ -59,7 +59,7 @@ CLEAR = {"type": "police_clearance", "ruling": "RUL-153"}
 def LIC(*l): return {"type": "licence", "licences": list(l), "ruling": "RUL-156"}
 GATES = {
     "nanny": CLEAR, "caregiver": CLEAR, "creche_assistant": CLEAR,
-    "driver": LIC("driving_licence"), "delivery_rider": LIC("driving_licence_code_a"),
+    # LICENCE-SHOWN-1 (RUL-198, David 3 Oct 2026): a plain driving licence is no longer a gate -- see SHOWN below.
     "code_10_code_14_driver": LIC("driving_licence", "prdp_g"),
     "taxi_shuttle_driver": LIC("driving_licence", "prdp_p"),
     "security_guard": LIC("psira"), "car_guard": LIC("psira"),
@@ -251,6 +251,12 @@ AF.update({"pet_sitter_dog_walker": "Troeteldieroppasser / hondestapper", "carpe
  "griller_braai": "Braaier", "hotel_porter": "Hotelportier", "lodge_staff": "Lodge-personeel",
  "caterer": "Spysenier", "bodyguard": "Lyfwag"})
 GATES.update({"au_pair": CLEAR, "bodyguard": LIC("psira")})
+# ---- LICENCE-SHOWN-1 (RUL-198, David 3 Oct 2026, amends RUL-156 (a)/(b) for the plain driving licence): "We are
+# denying this listing based on us not having verified the drivers license but this is not the same as the caretakers
+# checks that is legally required ... still allow him to list but we just show his TS as license not verified." A role
+# whose only licence is a driving licence is listed publicly at once; buyers see 'Driving licence not verified' until
+# our team checks it, it earns nothing until then, and introductions go ahead. A PrDP (a professional permit) stays a gate.
+SHOWN = {"driver": ["driving_licence"], "delivery_rider": ["driving_licence_code_a"]}
 EK.update({"pool_cleaner": ["household", "estate"], "window_cleaner": ["household", "contract_cleaner"],
  "pet_sitter_dog_walker": ["household"], "carpet_washer": ["household", "contract_cleaner"], "au_pair": ["household"],
  "tree_cutter": ["household", "estate", "municipality"], "garden_waste_removal": ["household", "estate"],
@@ -291,6 +297,8 @@ def main():
             row["signals"] = ["category.services_%s.%s" % ("cas" if cls == "Casuals" else "tech", s)
                               for s in (CAS_SIGNALS if cls == "Casuals" else TECH_SIGNALS)]
             row["gate"] = GATES.get(key)
+            if key in SHOWN:   # LICENCE-SHOWN-1: shown to buyers as checked or not, never a gate
+                row["licence_shown"] = {"licences": SHOWN[key], "label": "Driving licence", "ruling": "RUL-198"}
             row["employer_kinds"] = EK.get(key, ["household"] if cls == "Casuals" else [])
             if key not in PIC: sys.exit("NO ROLE PICTURE SUBJECT for %s (RUL-157)" % key)
             row["role_picture"] = {"file": "roles/pictures/%s.png" % key,

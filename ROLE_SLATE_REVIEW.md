@@ -99,7 +99,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 | Picker / packer |  | IN | Renamed 19 Sep (was 'Warehouse picker / packer') — the SA job-advert phrase. |
 | Loader |  | OUT | 19 Sep: merged into General worker (was General labourer) — same hire. |
 | Removals helper |  | IN | Renamed 19 Sep (was 'Removals / moving help'). Households hire directly. |
-| Delivery rider |  | IN | Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Licence gate (RUL-155): verified driving licence (code A for a motorbike) opens public visibility. |
+| Delivery rider |  | IN | Renamed 19 Sep (was 'Delivery rider (e-hailing / food)'). Already gig workers. Driving licence SHOWN, not a gate (RUL-198, 3 Oct 2026; was RUL-155/156): listed publicly at once; buyers see 'Driving licence not verified' until it is checked (code A for a motorbike); no Trust Score credit until then; introductions go ahead. |
 | Courier on foot |  | OUT | 19 Sep: not a role hired at any scale in SA. |
 
 ### Site & general labour
@@ -161,7 +161,7 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 | Role | D | Decision | Notes |
 |---|:--:|:--:|---|
-| Driver | D | IN | David's list. Renamed 19 Sep (was 'Transport / business driver'). Goods and errands in a light vehicle; people-for-reward stays in Taxi / shuttle (HOLD). Licence gate (RUL-155): verified driving licence opens public visibility. |
+| Driver | D | IN | David's list. Renamed 19 Sep (was 'Transport / business driver'). Goods and errands in a light vehicle; people-for-reward stays in Taxi / shuttle (HOLD). Driving licence SHOWN, not a gate (RUL-198, 3 Oct 2026; was RUL-155/156): listed publicly at once; buyers see 'Driving licence not verified' until it is checked; no Trust Score credit until then; introductions go ahead. |
 | Code 10 / Code 14 driver |  | IN | Renamed 19 Sep (the SA advert wording). Absorbs Long-haul driver. Licence gate (RUL-155): verified licence AND PrDP-G (goods vehicle over 3,500 kg). |
 | Long-haul driver |  | OUT | 19 Sep: merged into Code 10 / Code 14 driver — long-haul is Code 14 work by definition. |
 | Taxi / shuttle driver |  | IN | 19 Sep: was HOLD (s15c). Licence gate (RUL-155/156): publicly visible once licence AND PrDP-P (passengers) are verified. |

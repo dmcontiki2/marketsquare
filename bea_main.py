@@ -3424,6 +3424,43 @@ def _gate_licence_roles():
     return _GATE_LIC["roles"]
 
 
+_LIC_SHOWN = {"roles": None}
+
+
+def _licence_shown_roles():
+    """LICENCE-SHOWN-1 (RUL-198, David 3 Oct 2026): {lowercased role name: licence label} for the roles whose licence is
+    SHOWN to buyers but is not a gate -- today the plain driving licence (Driver, Delivery rider). Such an advert is public
+    at once; while the licence is not checked buyers read 'Driving licence not verified', it earns no Trust Score, and
+    introductions go ahead. A PrDP, PSIRA, DoEL or SAQCC licence stays a gate (_gate_licence_roles)."""
+    if _LIC_SHOWN["roles"] is None:
+        m = {}
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"),
+                      encoding="utf-8") as _fh:
+                for _r in json.load(_fh).get("roles", []):
+                    _ls = _r.get("licence_shown") or {}
+                    if _ls:
+                        _names = {str((_r.get("label") or {}).get("en") or "").strip().lower()}
+                        _names |= {str(_a).strip().lower() for _a in (_r.get("aliases") or [])}
+                        _names.discard("")
+                        for _n in _names:
+                            m[_n] = str(_ls.get("label") or "Licence")
+        except Exception as _rex:
+            _log.warning("LICENCE-SHOWN-1: role registry unreadable (%s)", _rex)
+        _LIC_SHOWN["roles"] = m
+    return _LIC_SHOWN["roles"]
+
+
+def _licence_checked(conn, seller_email) -> bool:
+    """LICENCE-SHOWN-1: True when a person has checked this seller's licence (the licence credential is earned)."""
+    em = (seller_email or "").strip().lower()
+    if not em:
+        return False
+    r = conn.execute("SELECT 1 FROM user_credentials WHERE LOWER(TRIM(email)) = ? AND status = 'earned' AND signal_id IN (%s) "
+                     "LIMIT 1" % ",".join("?" * len(_GATE_LICENCE_SIGNALS)), (em,) + _GATE_LICENCE_SIGNALS).fetchone()
+    return bool(r)
+
+
 def _gate_role_names():
     """(casual role names, police-clearance role names), lowercased, from roles/role_registry.json (English label and
     aliases). The Quick Services door sends the role's English label as service_type; the old Housekeeping door and
@@ -3488,6 +3525,24 @@ def _stranger_visible_sql(p: str = "l.", viewer: str = "") -> str:
     v = (viewer or "").strip().lower()
     own = (" OR LOWER(TRIM(COALESCE(%sseller_email,''))) = %s" % (p, _sql_lit(v))) if v else ""
     return "(NOT %s%s)" % (_stranger_hidden_sql(p), own)
+
+
+def _buyer_live_sql(p: str = "l.") -> str:
+    """FEED-LIVE-1 (David 3 Oct 2026): SQL, TRUE when a buyer can open this advert right now -- live and not suspended,
+    the same answer GET /listings/{id} gives. Paused, draft and archived adverts stay out of every buyer feed, so no
+    card can lead to 'That listing is not available any more'. A paused advert that goes live again comes back by
+    itself: its match row is kept."""
+    return ("(LOWER(TRIM(COALESCE(%slisting_status,'live'))) IN ('live','active') "
+            "AND COALESCE(%ssuspension_reason,'') = '')" % (p, p))
+
+
+def _example_sql(p: str = "l.") -> str:
+    """FEED-LIVE-1: SQL, TRUE for an AI example -- the EXAMPLES-LAST-1 / DEMO-INACTIVE-1 definition (is_demo, a
+    super_example exemplar, or a house account). An example has no product behind it, so it is never counted as a
+    'matching listing' that a paid plan would unlock."""
+    return ("(COALESCE(%sis_demo,0)=1 OR COALESCE(%ssuper_example,0)=1"
+            " OR LOWER(COALESCE(%sseller_email,'')) LIKE '%%@trustsquare.co'"
+            " OR LOWER(COALESCE(%sseller_email,'')) LIKE '%%@example.com')" % (p, p, p, p))
 
 
 def _hidden_from_strangers(conn, listing_id) -> bool:
@@ -5456,6 +5511,7 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
     except Exception:
         _clr = None
     _lic_roles = _gate_licence_roles()
+    _shown_roles = _licence_shown_roles()   # LICENCE-SHOWN-1
     try:
         _lic = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id IN (%s) "
                             "ORDER BY CASE status WHEN 'earned' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END LIMIT 1"
@@ -5473,6 +5529,10 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
             d["clearance_status"] = _clr
         elif d["hidden_from_strangers"] and (d.get("service_type") or "").strip().lower() in _lic_roles:
             d["gate"] = "licence"          # LICENCE-GATE-1: her card names the licence and where it is
+            d["licence_status"] = _lic
+        elif (d.get("service_type") or "").strip().lower() in _shown_roles and _lic != "earned":
+            # LICENCE-SHOWN-1 (RUL-198): public already; her card says buyers see it as not verified, with the upload
+            d["licence_shown"] = _shown_roles[(d.get("service_type") or "").strip().lower()]
             d["licence_status"] = _lic
         if (d.get("category") or "").lower() == "property":
             d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
@@ -5564,6 +5624,19 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
             _d["seller_id_checked"] = _seller_id_checked(_gc, _d.get("seller_email") or "")   # RUL-188: warning only
         finally:
             _gc.close()
+    except Exception:
+        pass
+    # LICENCE-SHOWN-1 (RUL-198, David 3 Oct 2026): a driver's advert is public with its licence unchecked; the buyer is
+    # told so beside the Trust Score and in the introduction form -- a yes/no and a label only, never a refusal.
+    try:
+        _sl = _licence_shown_roles().get((_d.get("service_type") or "").strip().lower())
+        if _sl:
+            _lc = database.get_db()
+            try:
+                if not _licence_checked(_lc, _d.get("seller_email") or ""):
+                    _d["licence_unverified"] = _sl
+            finally:
+                _lc.close()
     except Exception:
         pass
     if _is_demo_example(_d):           # DEMO-INACTIVE-1
@@ -5838,6 +5911,7 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
             conn.close()
             raise HTTPException(status_code=403, detail="Showcase listings are admin-managed.")
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
+    conn.execute("DELETE FROM wishlist_matches WHERE listing_id = ?", (listing_id,))   # FEED-LIVE-1
     conn.commit()
     conn.close()
     return {"message": "Listing deleted"}
@@ -5866,6 +5940,7 @@ def delete_listing_by_seller(listing_id: int, email: str = "",
         raise HTTPException(status_code=403, detail="Showcase listings are admin-managed.")
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
     conn.execute("DELETE FROM listing_cities WHERE listing_id = ?", (listing_id,))
+    conn.execute("DELETE FROM wishlist_matches WHERE listing_id = ?", (listing_id,))   # FEED-LIVE-1
     conn.commit()
     conn.close()
     return {"message": "Listing deleted"}
@@ -12500,6 +12575,7 @@ def get_wishlist_feed(buyer_token: str, min_trust_override: int = 0, limit: int 
            WHERE m.buyer_token = ?
              AND m.seller_trust >= ?
              AND """ + _stranger_visible_sql("l.") + """
+             AND """ + _buyer_live_sql("l.") + """          -- FEED-LIVE-1: never a paused/draft/archived advert
            ORDER BY m.boost_rank DESC, m.matched_at DESC
            LIMIT ?""",
         (buyer_token, max(0, min_trust_override), limit)
@@ -12527,23 +12603,30 @@ def get_wishlist_feed(buyer_token: str, min_trust_override: int = 0, limit: int 
             cats = [c["category"] for c in cats_row]
             if cats:
                 placeholders = ",".join("?" * len(cats))
-                row = conn.execute(
-                    f"""SELECT COUNT(DISTINCT l.id) AS n,
-                              (SELECT gc2.country_iso2 FROM listings l2
-                               JOIN geo_cities gc2 ON gc2.id = l2.geo_city_id
-                               WHERE l2.category IN ({placeholders})
-                                 AND gc2.country_iso2 != ?
-                               ORDER BY l2.published_at DESC LIMIT 1) AS sample_country
+                # FEED-LIVE-1 (David 3 Oct 2026): the banner counted EVERY advert abroad -- paused, draft and archived
+                # ones, and the AI examples (on 3 Oct all 30 'matching listings' were house-account exemplars) -- and
+                # named one country ('in KE') for a count spread over four. It now counts only real adverts a buyer
+                # could open, and names the one country or says how many.
+                per = conn.execute(
+                    f"""SELECT gc.country_iso2 AS cc, COUNT(DISTINCT l.id) AS n
                        FROM listings l
                        JOIN geo_cities gc ON gc.id = l.geo_city_id
                        WHERE l.category IN ({placeholders})
-                         AND gc.country_iso2 != ?""",
-                    (*cats, buyer_country, *cats, buyer_country)
-                ).fetchone()
-                if row and (row["n"] or 0) > 0:
+                         AND gc.country_iso2 != ?
+                         AND {_buyer_live_sql("l.")}
+                         AND {_stranger_visible_sql("l.")}
+                         AND NOT {_example_sql("l.")}
+                       GROUP BY gc.country_iso2
+                       ORDER BY n DESC""",
+                    (*cats, buyer_country)
+                ).fetchall()
+                total = sum(int(p["n"] or 0) for p in per)
+                if total > 0:
+                    ccs = [p["cc"] for p in per]
                     upgrade_prompt = {
-                        "matches_elsewhere": int(row["n"]),
-                        "sample_country": row["sample_country"],
+                        "matches_elsewhere": total,
+                        "sample_country": ccs[0] if len(ccs) == 1 else "%d other countries" % len(ccs),
+                        "countries": ccs,
                         "message": "Upgrade to Global to see matching listings in other countries."
                     }
 

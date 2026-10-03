@@ -156,7 +156,6 @@
     "cctv_alarm_installer",
     "gate_garage_door_technician",
     "locksmith",
-    "driver",
     "code_10_code_14_driver",
     "taxi_shuttle_driver"
    ]
@@ -316,6 +315,7 @@
     "diesel_mechanic",
     "motor_mechanic",
     "auto_electrician",
+    "driver",
     "plasterer",
     "paver",
     "solar_pv_installer",
