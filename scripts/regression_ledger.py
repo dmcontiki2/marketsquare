@@ -33326,7 +33326,7 @@ def rg_passkey_1():
                                        ('raise _PasskeyError("signature counter went backwards")', "a cloned passkey would be accepted"),
                                        ('if p["ch"] in _pk_used:', "a passkey challenge could be used twice"),
                                        ('out["passkey"] = _pk_on()', "the app cannot tell whether passkeys are switched on")]),
-                      ("migrations/DEFERRED.txt", [("064_passkeys.py", "the passkey table would be created without David's approval")]),
+                      ("migrations/064_passkeys.py", [("CREATE TABLE IF NOT EXISTS passkeys", "the passkey migration is gone")]),
                       ("ms.js", [("window.msPasskeySignIn = async function(){", "no Face ID button on the sign-in screen"),
                                  ("oc.className = 'sticky-cta owner-cta';", "the owner sees the buyer's Join queue again")])])
     return bad or [(INFO, "passkeys checked and held for approval; owners see Edit/Share")]
