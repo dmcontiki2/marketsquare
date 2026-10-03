@@ -2021,3 +2021,70 @@ folded 1, skipped 0 (already present) - verify OK
   Verdict: REVIEW   (logged -> deploy_audit.log)
   ------------------------------------------------------------
   [LOCK] acquired by LAPTOP-S0AC8CVC (pid 14160), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-10-03T00:01:33Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-10-02 (1 days ago)
+    - CHANGELOG newest    : 2026-10-02
+    - Ship pending        : marketsquare.html
+    - (note) CHANGE_REGISTER.md not modified this session
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 9166848 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'checkpoint_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'marketsquare.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_ship_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'scripts/static_versions.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'TSL_READY.flag', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+00c1af9 Release Sat 10/03/2026  2:01:34.33
+sync-origin [MarketSquare]: took in 7 commit(s) from origin/main by merge -> 4a30b63
+ [5/6] Pushing to the mirror - backup ref main...
+To https://github.com/dmcontiki2/marketsquare.git
+   1d27d25..4a30b63  HEAD -> main
+ [5/6] Publishing the deploy ref - THIS is the deploy...
+
+  DEPLOY-GATE-ALL-1: publishing the deploy ref -- running the pre-deploy scan.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-03T00:01:44Z   mode=strict
+  Working tree: 1 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: ok   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  Pre-deploy scan: ok -- push allowed.
+To https://github.com/dmcontiki2/marketsquare.git
+   1d27d25..4a30b63  HEAD -> deploy
+
+  PUBLISHED. The server deploys it within ~2 minutes - with health check,
+  monotonic cache-buster, auto-rollback, then seed + migrations hook.
+
+ [6/6] Waiting ~3 minutes for the server to apply and settle...
+ERROR: Input redirection is not supported, exiting the process immediately.
+  [OK] /health answers ok 
+  DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_COUNTER.json, STATUS.md
+  [WAIT] Not clean yet - one more 2-minute server tick...
+ERROR: Input redirection is not supported, exiting the process immediately.
+DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_COUNTER.json, STATUS.md
+  If still ahead: watch  ssh root@178.104.73.239 "tail -20 /var/log/marketsquare-deploy.log"
+  [LOCK] released.
+
+ ============================================================
+  RELEASE COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Sat 10/03/2026  2:02:00.09  SHIPPED rc=0 â€” server runs migrations + smoke itself
