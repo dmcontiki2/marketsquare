@@ -1332,8 +1332,13 @@ def _screen_walk_lane():
     Windows host. ~30 s, hard cap 120 s, never raises. The witness it writes is what ledger
     RG-0456 judges -- a producer that lives in code, not in a sentence (BACKUP-IN-AGENT-1)."""
     rec = {"ran": False, "state": "NOT_MEASURED", "outcome": ""}
-    if os.path.realpath(REPO).startswith("/opt/marketsquare-src") or not sys.platform.startswith("linux"):
-        rec["outcome"] = "skipped: the screen walk runs in the Linux sandbox only"
+    # SCREEN-WALK-ORIGIN-1 (3 Oct 2026): the daily Cowork loop that ran this lane was retired on 28 Sep (the single
+    # Goal run took its place and dropped health checks: "other lanes and the server's own timers own that"), and the
+    # server's timer skipped the walk -- so it last ran 28 Sep. The origin keeps Playwright browsers at
+    # /opt/ms-playwright, so it walks here now; only a host with neither the kit nor those browsers skips.
+    _origin = os.path.realpath(REPO).startswith("/opt/marketsquare-src")
+    if not sys.platform.startswith("linux") or (_origin and not os.path.isdir("/opt/ms-playwright")):
+        rec["outcome"] = "skipped: no browser toolkit on this host"
         say("screen walk lane: %s" % rec["outcome"])
         return rec
     try:
@@ -1343,7 +1348,9 @@ def _screen_walk_lane():
         else:
             rec["ran"] = True
             r = subprocess.run([sys.executable, prod], cwd=REPO, capture_output=True, text=True,
-                               timeout=120, env=dict(os.environ, MS_BEA_URL=BASE))
+                               timeout=240 if _origin else 120,
+                               # the walk reads the PUBLIC app (nginx + static); the origin's agent talks to uvicorn on localhost
+                               env=dict(os.environ, MS_BEA_URL=("https://trustsquare.co" if BASE.startswith("http://localhost") else BASE)))
             rec["state"] = {0: "OK", 1: "MISMATCH"}.get(r.returncode, "NOT_MEASURED")
             tail = [l for l in ((r.stdout or "") + (r.stderr or "")).splitlines() if l.strip()]
             rec["outcome"] = " | ".join(tail[-4:])[:400] if tail else "(no output)"

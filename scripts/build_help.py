@@ -18,6 +18,12 @@ sites-enabled/marketsquare, 'HELP-STORIES-1'.
   python3 scripts/build_help.py          # validate, write gallery.json + manifest block
   python3 scripts/build_help.py --check  # validate only; exit 1 if anything is stale or broken
   python3 scripts/build_help.py --push-images   # copy new or changed screens to the server (never deletes)
+  python3 scripts/build_help.py --pull-images   # copy screens the laptop lacks FROM the server (never deletes or overwrites)
+
+HELP-PULL-1 (3 Oct 2026): the server is where the screens live -- cloud story walks put theirs there through
+/qa/help-image and the laptop never saw them, so on 3 Oct --check read 235 'missing' screens that were all
+live. --check on the laptop now pulls whatever it lacks from the server first (rsync --ignore-existing: it
+never deletes or overwrites a local file), then judges. A screen missing on the server too still fails.
 """
 import hashlib, json, os, re, subprocess, sys
 
@@ -166,8 +172,36 @@ def push_images(stories):
     print("pushed %d screen(s)" % sent)
 
 
+def pull_images():
+    """HELP-PULL-1: screens the laptop lacks <- the server. Never deletes, never overwrites. Returns a short note."""
+    if os.environ.get("TS_HELP_IMG"):
+        return "pull skipped: TS_HELP_IMG points at the screens (the server's own gate)"
+    loader = os.path.join(ROOT, "load_sandbox_ssh.sh")
+    if os.path.isfile(loader):
+        try:
+            _run(["bash", loader])
+        except Exception:
+            pass
+    os.makedirs(IMG_ROOT, exist_ok=True)
+    try:
+        r = _run(["rsync", "-a", "--ignore-existing", "--itemize-changes", "-e", "ssh -o ConnectTimeout=15 -o BatchMode=yes",
+                  "%s:%s/" % (SERVER, REMOTE_IMG), IMG_ROOT.rstrip("/") + "/"])
+    except Exception as e:
+        return "pull skipped: %s" % type(e).__name__
+    if r.returncode != 0:
+        return "pull skipped: server unreachable (%s)" % (r.stderr or r.stdout).strip()[-120:]
+    got = sum(1 for ln in r.stdout.splitlines() if ln.startswith(">f"))
+    return "pulled %d screen(s) from the server" % got
+
+
 def main():
     check = "--check" in sys.argv
+    if "--pull-images" in sys.argv:
+        print(pull_images()); return
+    if check and not os.environ.get("TS_HELP_IMG"):
+        stories0, errs0 = load_stories()
+        if any("is missing" in e for e in errs0):
+            print("HELP-PULL-1: " + pull_images())
     if "--push-images" in sys.argv:
         stories, errs = load_stories()
         for e in errs:

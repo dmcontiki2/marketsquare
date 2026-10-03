@@ -776,7 +776,10 @@
   <div class="om-blk omf-ext" style="left:1040px;top:376px;width:180px">
     <h3>Resend</h3><div class="om-role">outbound mail (acks, closure letters)</div>
     <div class="om-chips omc-traffic"><span class="om-chip nw" id="om-mailsent"><span class="om-dot"></span>auto-sent 30d <span class="om-v">—</span></span></div>
-    <div class="om-chips omc-money"><span class="om-chip g"><span class="om-dot"></span>free tier</span></div>
+    <!-- RESEND-PLAN-TRUTH-1 (3 Oct 2026): this chip said a green "free tier" fed by nothing. Resend's Free plan caps at
+         100 emails a day; this account (one key for the app and CityLauncher) accepted 398 on 5 Sep and 317 on 9 Sep, so it
+         is not on Free. The send-only key cannot read the plan, so the chip states what is proven, in the not-wired style. -->
+    <div class="om-chips omc-money"><span class="om-chip nw"><span class="om-dot"></span>plan <span class="om-v">above free cap</span></span></div>
     <!-- INSTRUMENT-TRUTH-2: Resend had NO chip on the Switches view, so a live mail lane
          rendered blank exactly where an operator looks for its state. -->
     <div class="om-chips omc-switches"><span class="om-chip nw" id="om-resendsvc"><span class="om-dot"></span>key <span class="om-v">—</span></span></div>

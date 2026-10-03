@@ -15851,13 +15851,22 @@ def rg_invite_vision_gate():
            "you manage the blocks and wait out their clearance, and then redeploy if possible again.' Born of "
            "the 15 daily clicks that held him at the keyboard; corollary 4 recorded the same session: sandbox "
            "SSH egress is INTERMITTENT (blocked ~19:00 2 Sep, open 04:54 3 Sep), so the lane is flags + a host "
-           "timer, never Claude's live hand on the server.")
+           "timer, never Claude's live hand on the server."
+           " ASSERTION CORRECTED 3 Oct 2026 (RED-SWEEP-3OCT): SYNC-ORIGIN-1 (RUL-193, 1 Oct) moved the relay's --is-ancestor guard into scripts/sync_origin.py, the one step every pushing lane calls; the needle now follows it there (origin-inside-HEAD test + merge --abort), not weakened.")
 def rg_autodeploy_agent():
     out = []
     rq = repo_file(os.path.join("scripts", "request_deploy.py")) or ""
-    for n in ("def relay(", "claude-relay:main claude-relay:deploy", "--is-ancestor"):
+    for n in ("def relay(", "claude-relay:main claude-relay:deploy", "sync_origin.py"):
         if n not in rq:
             out.append((FAIL, "request_deploy.py lost the relay lane piece '%s'" % n))
+    # RED-SWEEP-3OCT: SYNC-ORIGIN-1 (RUL-193, 1 Oct 2026) moved the relay's ancestry guard out of request_deploy.py
+    # ('git merge-base --is-ancestor origin/main HEAD') into the ONE shared step every pushing lane calls. The guard is
+    # asserted where it now lives -- origin inside HEAD before any push, a conflict aborted -- never dropped.
+    so = repo_file(os.path.join("scripts", "sync_origin.py")) or ""
+    for n, what in (("'rev-list', '--count', 'HEAD..' + up", "the 'is origin already inside HEAD' test"),
+                    ("'merge', '--abort'", "the abort on a conflicting merge")):
+        if n not in so:
+            out.append((FAIL, "sync_origin.py lost %s -- the relay could push over work it never took in" % what))
     for f, needles in (("autodeploy_agent.bat", ["git_unlock.bat", "nightly_tsl.bat", "DEPLOY_REQUEST.flag", "CL_DEPLOY_REQUEST.flag", "UNATTENDED=1"]),
                        ("register_autodeploy_agent.bat", ["autodeploy_agent.bat", "/SC MINUTE"]),
                        ("scripts/request_deploy.py", ["DEPLOY_REQUEST.flag", "py_compile"]),
@@ -28444,7 +28453,8 @@ def rg_sec_gate_1():
              "screens are the next increments -- add them to LANGS / the read, not a new instrument.",
        ref="RG-0452 I18N-KEY-1 (the fault that proved the gap) · BACKUP-IN-AGENT-1 (producer in code, "
            "not prose) · WAVE-WITNESS-1 (a freshness guard names its producer) · RG-0187 (blind reads "
-           "NOT EVALUATED) · scripts/smoke_harness (the older English-only harness, on demand only)")
+           "NOT EVALUATED) · scripts/smoke_harness (the older English-only harness, on demand only)"
+           " PRODUCER MOVED 3 Oct 2026 (SCREEN-WALK-ORIGIN-1, RG-0805): the Cowork daily loop was retired 28 Sep; the server's maintenance timer walks now and this entry reads the origin witness by SSH, judging the newer walk.")
 def rg_screen_walk_1():
     out = []
     sw = repo_file(os.path.join("scripts", "screen_walk.py"))
@@ -28460,7 +28470,27 @@ def rg_screen_walk_1():
     if 'report["screen_walk"] = _screen_walk_lane()' not in ag:
         out.append((FAIL, "the daily agent no longer runs the screen walk -- the witness will go "
                           "stale with nobody the wiser"))
+    if "SCREEN-WALK-ORIGIN-1" not in ag or "ORIGIN_BROWSERS" not in sw:
+        out.append((FAIL, "the server's maintenance timer no longer walks the screens -- the only daily producer "
+                          "since the Cowork loop was retired on 28 Sep"))
     wit = repo_file(os.path.join("ledger_runs", "screen_walk_status.json"))
+    # SCREEN-WALK-ORIGIN-1 (3 Oct 2026): the producer is the server's maintenance timer now, so its witness lives on
+    # the origin. Read both; the NEWER walk is judged. Read-only, short timeout; no SSH -> the local witness alone.
+    try:
+        import subprocess as _sp
+        _r = _sp.run(["ssh", "-o", "ConnectTimeout=8", "-o", "BatchMode=yes", "root@178.104.73.239",
+                      "cat /opt/marketsquare-src/ledger_runs/screen_walk_status.json"],
+                     capture_output=True, text=True, timeout=25)
+        if _r.returncode == 0 and _r.stdout.strip().startswith("{"):
+            def _at(t):
+                try:
+                    return json.loads(t).get("at", "")
+                except Exception:
+                    return ""
+            if wit is None or _at(_r.stdout) > _at(wit):
+                wit = _r.stdout
+    except Exception:
+        pass
     if wit is None:
         out.append((INFO, "NOT EVALUATED - no screen-walk witness from this vantage"))
         return out
@@ -34079,7 +34109,8 @@ def rg_how_gate_f4():
        ref="HOW-CHECK-1, 1 Oct 2026, measured live (21 walks, 167 screens, How pressed on each): a sedan, stamps, a science "
            "tutor, crafts, a caregiver, a gas installer and a bricklayer all got the guide LIST although a guide says in its "
            "step 2 that they follow its steps; a house to let got 'Type your asking price' beside 'What is the rent a month?'; "
-           "Quick's new stay path (STAY-WHERE-1) opened the guest-house guide at 'Tap Sell, then Adventures'. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md.")
+           "Quick's new stay path (STAY-WHERE-1) opened the guest-house guide at 'Tap Sell, then Adventures'. LOCKED 1 Oct 2026 after the live check (0d59f6b, shipped 19:40Z): stories/how_check.py on trustsquare.co read 0 FAIL (91 before the ship) and 6 WARN, all six the bathrooms screen opening the bedrooms card -- docs/HOW_CHECK_2026-10-01.md."
+           " ASSERTION CORRECTED 3 Oct 2026 (RED-SWEEP-3OCT): the guest-house guide was walked THROUGH Quick on 2 Oct (L36 closed live), so 'quick:false' became wrong; asserted now as the class -- every guide's quick flag equals its own passed steps -- plus the guest house offered from Quick.")
 def rg_how_nearest_1():
     import json as _j
     q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); g = repo_file("stories/gallery.json")
@@ -34101,8 +34132,19 @@ def rg_how_nearest_1():
             bad.append("%s no longer serves %s" % (t, x))
     if idx.get("property_house", {}).get("deal") != "sale" or idx.get("property_flat", {}).get("deal") != "let":
         bad.append("the property guides lost their deal -- a house to let gets the for-sale guide again")
-    if idx.get("adventures_guest_house", {}).get("quick") is not False:
-        bad.append("the guest-house guide (walked in TrustSquare's Sell) is no longer marked as not walked in Quick")
+    # RED-SWEEP-3OCT: the 1 Oct line asserted the guest-house guide stayed quick:false. On 2 Oct the F12 lane walked it
+    # THROUGH Quick (23 steps, Quick cards for every stay screen; L36(a)/(c) closed live), so quick:true is now the truth
+    # and the old line went red on a correct change. Asserted instead as the CLASS the entry is about: every guide's
+    # 'quick' flag equals whether its own steps were walked in Quick, so a Sell-only guide is never opened from Quick.
+    for t, s_ in idx.items():
+        sj = repo_file(os.path.join("stories", t + ".json"))
+        if sj is None:
+            continue
+        walked_q = any(st.get("quick") for st in _j.loads(sj).get("steps", []) if st.get("pass"))
+        if bool(s_.get("quick")) != walked_q:
+            bad.append("%s is marked quick=%s but its steps say %s" % (t, s_.get("quick"), walked_q))
+    if idx.get("adventures_guest_house", {}).get("quick") is not True:
+        bad.append("the guest-house guide (walked through Quick on 2 Oct, L36) is not offered from Quick")
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "How opens the guide that serves her listing and deal")]
@@ -34818,6 +34860,106 @@ def rg_licence_shown_1():
     if bad:
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a driver is public at once with 'Driving licence not verified'; PrDP / PSIRA / DoEL / SAQCC stay gates")]
+
+@entry("RG-0804", "HELP-PULL-1: the laptop's help-guide check takes the screens it lacks from the server before judging -- "
+       "the server is where the screens live, so a cloud walk's screens never read as 'missing' and no screen is ever "
+       "deleted or overwritten on either side",
+       LOCKED, fixed_on="2026-10-03",
+       scope="scripts/build_help.py pull_images() (rsync --ignore-existing from /var/www/marketsquare/help/img; skipped "
+             "when TS_HELP_IMG is set, i.e. the server's own gate) and main(): --check pulls only when a screen is "
+             "missing; --pull-images on demand. A screen missing on the server too still fails RG-0546.",
+       ref="RED-SWEEP-3OCT: RG-0546 read 235 'missing' screens across 11 guides that were all live on the server (cloud "
+           "walks post them through /qa/help-image; the laptop never pulled). David asked: 'it dont mean we lose any "
+           "photos?' -- none: 249 pulled, the 38 local ones untouched (287 = the server's 287). LOCKED 3 Oct after the "
+           "proof: one screen moved off the laptop -> --check pulled it back byte-identical (md5 d49981f6a8f6) -> 0 errors.")
+def rg_help_pull_1():
+    bh = repo_file(os.path.join("scripts", "build_help.py"))
+    if bh is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "def pull_images(" not in bh or '"--ignore-existing"' not in bh:
+        bad.append("build_help.py no longer pulls missing screens from the server (or may overwrite)")
+    i = bh.find("def pull_images(")
+    if i >= 0 and "--delete" in bh[i:i + 1600]:
+        bad.append("the pull carries --delete -- it could remove screens")
+    if 'if any("is missing" in e for e in errs0):' not in bh:
+        bad.append("--check no longer pulls before judging a missing screen")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the check takes missing screens from the server; nothing is deleted")]
+
+
+@entry("RG-0805", "SCREEN-WALK-ORIGIN-1: the every-language screen walk runs on the server's twice-daily maintenance timer "
+       "-- its only producer since the daily Cowork loop was retired on 28 Sep",
+       OPEN, fixed_on="2026-10-03",
+       scope="scripts/screen_walk.py (_kit_env uses /opt/ms-playwright when there is no Projects/.tools kit; walks without "
+             "a review credential only when the public home page IS the app), scripts/maintenance_agent.py "
+             "_screen_walk_lane (no longer skips on /opt/marketsquare-src; reads the public site, 240 s cap), "
+             "maintenance-agent.timer on the origin (05:20Z + 17:21Z), RG-0456 reads the origin witness by SSH.",
+       ref="RED-SWEEP-3OCT: RG-0456 red -- last walk 28 Sep 05:44Z. The Cowork daily loop ran it; GOAL_RUN_PROMPT.md "
+           "(28 Sep) retired that loop and said health checks belong to 'other lanes and the server's own timers', but "
+           "the server timer's lane skipped the walk ('Linux sandbox only'). Proven on the server 3 Oct 18:58Z from a "
+           "scratch copy: 5 languages in 23 s, OK, every language 20/3/2/29/1/4. OPEN until the timer itself writes the "
+           "witness after the deploy.")
+def rg_screen_walk_origin_1():
+    sw = repo_file(os.path.join("scripts", "screen_walk.py")); ag = repo_file(os.path.join("scripts", "maintenance_agent.py"))
+    if sw is None or ag is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'ORIGIN_BROWSERS = "/opt/ms-playwright"' not in sw or "def _gate_open(" not in sw:
+        bad.append("screen_walk.py cannot run on the server")
+    if "skipped: the screen walk runs in the Linux sandbox only" in ag or "SCREEN-WALK-ORIGIN-1" not in ag:
+        bad.append("the server's maintenance lane skips the walk again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    try:
+        import subprocess as _sp
+        r = _sp.run(["ssh", "-o", "ConnectTimeout=8", "-o", "BatchMode=yes", "root@178.104.73.239",
+                     "cat /opt/marketsquare-src/ledger_runs/screen_walk_status.json"], capture_output=True, text=True, timeout=25)
+    except Exception as e:
+        return [(INFO, "source holds; origin witness NOT EVALUATED (%s)" % type(e).__name__)]
+    if r.returncode != 0 or not r.stdout.strip().startswith("{"):
+        return [(FAIL, "the server has written no screen-walk witness yet")]
+    w = json.loads(r.stdout)
+    try:
+        age = (datetime.datetime.utcnow() - datetime.datetime.strptime(w.get("at", ""), "%Y-%m-%dT%H:%M:%SZ")).total_seconds() / 3600
+    except Exception:
+        age = 999
+    if w.get("state") != "OK" or age > 30:
+        return [(FAIL, "origin witness %s, %.0f h old (the timer runs twice a day)" % (w.get("state"), age))]
+    return [(INFO, "the server walked every language %.0f h ago: OK" % age)]
+
+
+@entry("RG-0806", "RESEND-PLAN-TRUTH-1: the operations map no longer paints a green 'free tier' on Resend -- the account "
+       "is above the free cap -- and Cloudflare's 'cost R 0' stands on a dated re-check of the live plan",
+       LOCKED, fixed_on="2026-10-03",
+       scope="dashboard.server.html (-> /dashboard.html) Resend money chip, now 'plan: above free cap' in the not-wired "
+             "style; DASHBOARD_PROVENANCE.json: free-tier entry retired with its evidence, cost-r-0 re-verified "
+             "(review 2026-12-31). SCOPE: the two static money chips RG-0155 found past review.",
+       ref="RED-SWEEP-3OCT: RG-0155 red -- both registered static surfaces passed review 30 Sep. Re-checked 3 Oct: "
+           "Cloudflare API answered plan 'Free Website' for trustsquare.co (true, kept). Resend's Free plan caps at "
+           "100 emails/day (resend.com/docs/knowledge-base/what-is-resend-pricing); the one key the app and CityLauncher "
+           "share accepted 398 on 5 Sep and 317 on 9 Sep (CityLauncher email_events, written after Resend accepts), "
+           "2,482 in September -- so 'free tier' had been false since 5 Sep. The send-only key cannot read the plan.")
+def rg_resend_plan_truth_1():
+    h = repo_file("dashboard.server.html"); pv = repo_file("DASHBOARD_PROVENANCE.json")
+    if h is None or pv is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '<span class="om-dot"></span>free tier</span>' in h:
+        bad.append("the dashboard paints 'free tier' on Resend again")
+    if "above free cap" not in h:
+        bad.append("the Resend chip lost its proven wording")
+    try:
+        d = json.loads(pv)
+        slugs = [e.get("slug") for e in d.get("static_surfaces", [])]
+        if "dashboard.server.html#free-tier" in slugs:
+            bad.append("the retired free-tier surface is registered again")
+        cf = [e for e in d.get("static_surfaces", []) if e.get("slug") == "dashboard.server.html#cost-r-0"]
+        if not cf or not cf[0].get("reverified"):
+            bad.append("Cloudflare's cost chip has no dated re-check")
+    except Exception:
+        bad.append("DASHBOARD_PROVENANCE.json does not parse")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Resend says what is proven; Cloudflare's R 0 re-checked live")]
+
 
 if __name__ == "__main__":
     sys.exit(main())

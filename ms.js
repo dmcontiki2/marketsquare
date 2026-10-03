@@ -21096,7 +21096,7 @@ var SF_PROP_RENTAL_SEC_C = {key:'C',title:'Tenant Costs & Responsibilities',pts:
    type), and its advert never showed it. Hire: the price is a day rate, and Condition asks the terms a hirer needs;
    sfComposeDescription() writes them into the advert, where the buyer reads them before asking. */
 var SF_CAR_HIRE_SEC_B = {key:'B',title:'Hire terms',pts:20,
-  coach:'<b>What every hirer asks first.</b> Say it here and it shows on your advert, before anyone asks.',rows:[
+  coach:'<b>What every hirer asks first.</b> Say it here and it shows on your listing, before anyone asks.',rows:[
   ['mileage','Mileage (km)','number','e.g. 85 000'],
   ['deposit','Deposit (R)','number','e.g. 3 000'],
   ['min_days','Shortest hire (days)','number','e.g. 2'],

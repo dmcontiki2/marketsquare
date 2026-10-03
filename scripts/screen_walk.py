@@ -54,8 +54,16 @@ def say(m):
     print("[screen-walk] " + m, flush=True)
 
 
+ORIGIN_BROWSERS = "/opt/ms-playwright"   # SCREEN-WALK-ORIGIN-1: the server's own Playwright browsers
+
+
 def _kit_env():
     py = os.path.join(KIT, "py")
+    # SCREEN-WALK-ORIGIN-1 (3 Oct 2026): on the server (no Projects/.tools kit) use its system Playwright and the
+    # browsers it already keeps for the QA bot and CityLauncher, so the twice-daily maintenance timer can walk.
+    if not os.path.isdir(py) and os.path.isdir(ORIGIN_BROWSERS):
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = ORIGIN_BROWSERS
+        return
     if os.path.isdir(py) and py not in sys.path:
         sys.path.insert(0, py)
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(KIT, "browsers")
@@ -152,6 +160,17 @@ BROWSE_JS = r"""(cats) => {
 }"""
 
 
+def _gate_open():
+    """SCREEN-WALK-ORIGIN-1: the site is public since launch -- with no review credential, walk only when the
+    home page a stranger gets IS the app (it carries the category grid), never a login page."""
+    try:
+        import urllib.request
+        req = urllib.request.Request(BASE + "/", headers={"User-Agent": "TrustSquare-ScreenWalk/1.0"})
+        return b'id="home-cat-grid"' in urllib.request.urlopen(req, timeout=20).read()
+    except Exception:
+        return False
+
+
 def _ready(snap, lang):
     if not snap or not snap.get("live"):
         return False
@@ -170,9 +189,9 @@ def walk():
         return _write("NOT_MEASURED", reason="browser toolkit missing (%s) -- run screen_walk.py --install"
                       % type(e).__name__)
     cookie = _cookie()
-    if not cookie:
+    if not cookie and not _gate_open():
         return _write("NOT_MEASURED", reason="no review credential -- the gate would show a login page")
-    name, val = cookie.split("=", 1)
+    name, val = cookie.split("=", 1) if cookie else ("", "")
     res = {}
     t0 = time.time()
     with sync_playwright() as p:
@@ -183,8 +202,9 @@ def walk():
         pages = {}
         for lang in LANGS:                      # open all five at once: ~30 s, not ~100 s
             ctx = b.new_context(viewport={"width": 412, "height": 915}, is_mobile=True, has_touch=True)
-            ctx.add_cookies([{"name": name, "value": val, "domain": BASE.split("//")[1],
-                              "path": "/", "secure": True, "httpOnly": True}])
+            if cookie:
+                ctx.add_cookies([{"name": name, "value": val, "domain": BASE.split("//")[1],
+                                  "path": "/", "secure": True, "httpOnly": True}])
             ctx.add_init_script("try{localStorage.setItem('ts_lang','%s')}catch(e){}" % lang)
             pg = ctx.new_page()
             if SERVE_MSJS:                      # proof mode: serve a chosen ms.js instead of the live one
