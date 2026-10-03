@@ -12451,6 +12451,8 @@ function _elFieldVal(raw, fieldId) {
     service_class: raw.service_class || '',
     service_type:  raw.service_type  || '',
     availability:  raw.availability  || '',
+    item_type:     raw.collectible_type || '',   // COL-CARRY-1 (L38): the column Browse filters on
+    condition:     raw.condition     || '',
   };
   /* EDIT-KEEP-1 read side (25 Sep 2026 inspection, ts3-08): the answers stored in columns of another name open filled
      in -- a car's make, model, year, mileage, colour, gearbox, fuel and body, and an Adventure's nightly / per-person
@@ -12530,7 +12532,8 @@ function renderEditForm(raw) {
     let val = _elFieldVal(raw, f.id) || _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);   // STAY-CARRY-1
     if (f.id === 'desc') val = String(val).replace(/^\[photos:[^\]]*\]\n?/, '');
     if (f.type === 'select' && val && (f.options || []).indexOf(val) < 0) {   // STAY-CARRY-1: 'Guest house' is 'Guest House'
-      const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());
+      const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase())
+               || (f.id === 'item_type' && (f.options || []).find(o => o.toLowerCase().indexOf(String(val).toLowerCase().split(' ')[0]) === 0));   // COL-CARRY-1: 'Coins' -> 'Coins & Notes'
       if (_ci) val = _ci;
     }
     const v = _lmEsc(val);
@@ -13552,6 +13555,15 @@ function _elApplyExtraFields(fd, payload, raw) {
     desc = _elHdrSet(desc, labels, v, !!EL_HDR_LABELS[id]);
   });
   if (desc !== before) payload.description = desc;
+  // COL-CARRY-1 (L38): a collector's type and condition also go to their columns, so Browse's filter finds the advert
+  if (/collect/i.test(String(raw.category || ''))) {
+    ['item_type', 'condition'].forEach(function(id){
+      if (!(id in fd)) return;
+      const v = String(fd[id] || '').trim();
+      if (!v || v === String((id === 'item_type' ? raw.collectible_type : raw.condition) || '').trim()) return;
+      payload[id === 'item_type' ? 'collectible_type' : 'condition'] = v;
+    });
+  }
   // 3. Adventures: the nightly / per-person price IS the advert's price, sent with its basis
   ['price_per_night', 'price_per_person'].forEach(function(id){
     if (!(id in fd) || payload.price !== undefined) return;
@@ -14704,7 +14716,7 @@ const AA_CATEGORIES = {
     phase: 2,
     fields: [
       {id:'title',       label:'Item name / headline',  type:'text',   placeholder:'e.g. 1d Cape of Good Hope Triangle 1853 · VF'},
-      {id:'item_type',   label:'Collection type',       type:'select', options:['Stamps','Trading Cards (MTG / Pokémon / Baseball)','Coins','Memorabilia','Other']},
+      {id:'item_type',   label:'Collection type',       type:'select', options:['Coins & Notes','Stamps','Cards & Memorabilia','Art & Prints','Medals & Militaria','Watches & Jewellery','Books & Maps','Cameras & Tech','Antiques','Firearms','Other']},   // COL-CARRY-1 (L38): Browse's vocabulary
       {id:'condition',   label:'Condition',             type:'text',   placeholder:'e.g. PSA 9, VF, Fine, Mint…'},
       {id:'catalogue_ref',label:'Catalogue reference',  type:'text',   placeholder:'e.g. SG 1, Scott 1, PSA label…'},
       {id:'edition_year',label:'Edition / year of issue',type:'text',  placeholder:'e.g. 1853, Alpha set, 1st edition…'},
@@ -23729,6 +23741,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
          fixed button bar -- the language can be changed from any other screen. */
       st.textContent='#ts-lang{position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);z-index:90;font:600 12px system-ui,sans-serif}'
        +'body:has(#screen-detail.active) #ts-lang,body:has(#screen-local-market-detail.active) #ts-lang,body:has(#screen-sell-flow.active) #ts-lang,'
+       +'body:has(#screen-seller-onboard.active) #ts-lang,'   /* LANG-PILL-SOB-1 (Goal run 27): it sat on the terms step's Back button */
        +'body:has(#screen-seller-cv.active) #ts-lang,body:has(#screen-publish.active) #ts-lang,body:has(#screen-sell-b.active) #ts-lang{display:none}'
        +'#ts-lang .pill{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;cursor:pointer;'
        +'background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,.28);box-shadow:0 6px 18px rgba(0,0,0,.35)}'

@@ -33246,6 +33246,77 @@ def rg_funnel_webdriver_1():
     return [(INFO, "script-driven walks are kept out of the stranger funnel")]
 
 
+@entry("RG-0790", "QUICK-ONE-TAB-1: Quick's key step no longer draws a one-tab bar -- with e-mail the only key (RUL-192) the "
+       "lone 'Email' tab looked like a big orange button that did nothing",
+       OPEN, fixed_on="2026-10-02",
+       scope="quick.html + genie/HARNESS.html: CSS hides .qpid-tabs unless a second tab is visible",
+       ref="Goal run 27, 2 Oct 2026: stranger walk (Home cleaner, Pretoria) -- tapping 'Email' changed nothing.")
+def rg_quick_one_tab_1():
+    for f in ("quick.html", "genie/HARNESS.html"):
+        h = repo_file(f)
+        if h is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        if ".qpid-tabs:not(:has(.qpid-tab+.qpid-tab:not([style*=\"display:none\"])" not in h:
+            return [(FAIL, f + " shows the key bar even when Email is its only tab")]
+    return [(INFO, "the key bar shows only when there is a choice to make")]
+
+
+@entry("RG-0791", "TERMS-NOTE-1: the terms step no longer tells a first-time Quick seller she has 'an existing account'",
+       OPEN, fixed_on="2026-10-02",
+       scope="marketsquare.html #sob-returning-eula-note",
+       ref="Goal run 27, 2 Oct 2026: Quick -> e-mail link -> Publish my listing -> 'You have an existing account but haven't "
+           "yet accepted our Terms of Use' to someone who made her first listing two minutes earlier.")
+def rg_terms_note_1():
+    h = repo_file("marketsquare.html")
+    if h is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = h.find('id="sob-returning-eula-note"')
+    seg = h[i:i + 900] if i >= 0 else ""
+    if not seg:
+        return [(FAIL, "the terms-step note is gone")]
+    if "existing account" in seg:
+        return [(FAIL, "the terms step tells a first-time seller she has an existing account")]
+    if "Read the Terms of Use below and accept them" not in seg:
+        return [(FAIL, "the terms-step note lost its plain instruction")]
+    return [(INFO, "the terms step says what to do, not what account she has")]
+
+
+@entry("RG-0792", "LANG-PILL-SOB-1 + LETTER-WORD-1: the language pill stays off the terms step's Back button, and the way-back "
+       "letter says the listing is 'saved' (Quick's word), not 'composed'",
+       OPEN, fixed_on="2026-10-02",
+       scope="ms.js #ts-lang hide list; bea_main.py _quick_draft_return subject",
+       ref="Goal run 27, 2 Oct 2026: screenshot of seller-onboard step 3 at 375x812 -- the pill covered '<- Back'.")
+def rg_lang_pill_sob_1():
+    js, py = repo_file("ms.js"), repo_file("bea_main.py")
+    if js is None or py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "body:has(#screen-seller-onboard.active) #ts-lang" not in js:
+        return [(FAIL, "the language pill sits on the terms step's Back button again")]
+    if "listing is composed" in py:
+        return [(FAIL, "the way-back letter says 'composed' again")]
+    return [(INFO, "terms step clear of the pill; letter says saved")]
+
+
+@entry("RG-0793", "QUICK-DUP-1: a signed-in member who walks Quick twice with the same answers gets her live advert back, "
+       "not a second identical live advert",
+       OPEN, fixed_on="2026-10-02",
+       scope="bea_main.py quick_publish: same seller + title + category + price + city + suburb, live, last 24 h -> that id",
+       ref="Goal run 27, 2 Oct 2026: #468 and #469 'Townhouse -- To sell', R2 900 000, Rietvalleirand, same seller, "
+           "published 08:52 and 09:04 from Quick, both in the public grid.")
+def rg_quick_dup_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = py.find("def quick_publish(")
+    seg = py[i:i + 16000] if i >= 0 else ""
+    a, b = seg.find("QUICK-DUP-1"), seg.find('created = create_listing(listing, background_tasks, "quick-door")')
+    if a < 0 or b < 0 or a > b:
+        return [(FAIL, "quick_publish makes a second live copy of an advert she already has live")]
+    if '"duplicate": True' not in seg[a:b]:
+        return [(FAIL, "the duplicate guard no longer answers with her existing advert")]
+    return [(INFO, "a repeated Quick publish returns the advert already live")]
+
+
 @entry("RG-0641", "DECLINE-TOAST-TRUTH-1: the F3 story walk -- Decline no longer says 'Listing reactivated' for an advert that "
        "never paused; it says the buyer is told and any held Tuppence goes back, and 'open again' only when her request held it",
        OPEN, fixed_on="2026-09-30",
@@ -34040,11 +34111,14 @@ def rg_stay_carry_1():
     bad = []
     if h is not None and h != q:
         bad.append("genie/HARNESS.html differs from quick.html")
-    if " adventures:{prop_type:'kind'}};" not in q:
+    # STAY-CARRY-1b (2 Oct 2026): read the meaning, not one spelling of the line -- COL-CARRY-1 (RG-0676) added
+    # FIELD_FROM.collectors after this entry and a second matcher to the select match, and this check convicted both
+    import re as _re
+    if not _re.search(r"var FIELD_FROM=\{.*?\badventures:\{prop_type:'kind'\}[,}]", q, _re.S):
         bad.append("Quick no longer sends a stay's kind")
     for need in ("function _elQuickCarry(raw, fieldId)", "|| _elDescField(raw, f.id) || _elQuickCarry(raw, f.id);",
                  "if (fieldId === 'accommodation_type') return String(raw.prop_type || '').trim();",
-                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase());"):
+                 "const _ci = (f.options || []).find(o => o.toLowerCase() === String(val).toLowerCase())"):
         if need not in js:
             bad.append("Edit no longer carries a Quick stay's answers: " + need[:48])
     i = js.find("function _msMapBeaListing")
@@ -34450,6 +34524,33 @@ def rg_stay_word_1():
     if i < 0 or "'I stayed with them'" not in body or (j >= 0 and i > j):
         return [(FAIL, "a guest whose stay was accepted is asked 'I hired them' again")]
     return [(INFO, "a stay's guest is asked 'I stayed with them'")]
+
+@entry("RG-0676", "COL-CARRY-1 (OPEN_LOOPS L38): a collector's Quick answers reach their columns -- Quick sends collectible_type "
+       "and condition, POST /listings and PUT /listings take them (mapped onto Browse's Collectible Type vocabulary, 'Coins' -> "
+       "'Coins & Notes'), Edit opens with them and saves them, and Browse -> Collectors -> Collectible Type finds the advert",
+       OPEN, fixed_on="2026-10-02",
+       scope="quick.html (= genie/HARNESS.html) FIELD_FROM.collectors + handoverPayload; bea_main.py Listing/ListingUpdate, "
+             "_norm_collectible_type/_norm_condition, create + update; ms.js Edit item_type options/read/save; marketsquare.html "
+             "adds 'Watches & Jewellery' to the filter.",
+       ref="F10 walks 30 Sep / 2 Oct; L38 opened 2 Oct by the STAY-CARRY-1 session on draft #466 (Edit empty, filter blind).")
+def rg_col_carry_1():
+    q = repo_file("quick.html"); bm = repo_file("bea_main.py"); ms = repo_file("ms.js"); h = repo_file("marketsquare.html")
+    if None in (q, bm, ms, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "collectors:{collectible_type:'what', condition:'cond'}" not in q or "'service_type','collectible_type','condition']" not in q:
+        bad.append("Quick no longer sends a collector's type and condition")
+    if "def _norm_collectible_type(v):" not in bm or 'if "collectible_type" in d:' not in bm \
+            or "if listing.collectible_type or listing.condition:" not in bm:
+        bad.append("the server no longer stores a collector's type and condition")
+    if "item_type:     raw.collectible_type || ''," not in ms or "payload[id === 'item_type' ? 'collectible_type' : 'condition'] = v;" not in ms:
+        bad.append("Edit no longer reads or writes the collector columns")
+    if "Watches &amp; Jewellery" not in h:
+        bad.append("Browse's Collectible Type filter has no Watches & Jewellery (Quick offers Watches)")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a collector's type and condition travel Quick -> server -> Edit -> Browse filter")]
+
 
 if __name__ == "__main__":
     sys.exit(main())

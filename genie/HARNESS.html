@@ -1012,7 +1012,10 @@ var FIELD_FROM={
  services:{service_type:'what'},
  /* STAY-CARRY-1 (2 Oct 2026, the F12 walk through Quick): a place to stay's kind ('Guest house') travels as prop_type --
     the column TrustSquare already reads as a stay's type -- so Edit and the Stays filter know it; a trip has no 'kind' */
- adventures:{prop_type:'kind'}};
+ adventures:{prop_type:'kind'},
+ /* COL-CARRY-1 (L38, 2 Oct 2026): a collector's type and condition reach their columns -- the server maps Quick's
+    words onto Browse's Collectible Type vocabulary ('Coins' -> 'Coins & Notes') */
+ collectors:{collectible_type:'what', condition:'cond'}};
 var NICE={prop_type:'property type',listing_type:'for sale or to rent',beds:'number of bedrooms',
  baths:'number of bathrooms',make:'make',model:'model',vehicle_year:'year',mileage_km:'mileage',
  transmission:'transmission',subject:'subject',level:'level',mode:'in person or online',
@@ -1426,7 +1429,7 @@ function handoverPayload(){
     source: 'quick'
   };
   if(_co.service_class) body.service_class=_co.service_class;
-  ['prop_type','listing_type','beds','baths','make','vehicle_year','subject','level','mode','service_type']
+  ['prop_type','listing_type','beds','baths','make','vehicle_year','subject','level','mode','service_type','collectible_type','condition']
     .forEach(function(f){
       var k=from[f]; if(!k) return;
       var pk=pickOf(k); if(!pk) return;
@@ -3456,6 +3459,10 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
    ' background:var(--panel);color:#fff;font:inherit;font-size:16px}',   /* ZOOM-OK-1 (shell-21): a valid font rule, 16px */
    '.qpterms{font-size:12.5px;color:var(--dim);text-align:center;margin-top:8px}.qpterms a{color:var(--bright)}',
    '.qpid-tabs{display:flex;gap:6px;margin:0 0 8px}.qpid-tab{flex:1;padding:10px 6px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);color:#cfe0d8;font:700 13px inherit}',
+   /* QUICK-ONE-TAB-1 (Goal run 27, 2 Oct 2026): with SMS off (RUL-192) e-mail is the only key, and a bar of ONE tab
+      drew a full-width orange 'Email' button above the boxes that did nothing when tapped. One choice is no
+      choice: the bar shows only while a second tab is visible. */
+   '.qpid-tabs:not(:has(.qpid-tab+.qpid-tab:not([style*="display:none"]):not([style*="display: none"]))){display:none}',
    '.qpid-tab.on{background:var(--c);color:var(--onc,#fff);border-color:var(--c)}',
    '.qpid-hint{font-size:12.5px;color:var(--dim);margin:6px 2px 0;line-height:1.4}',
    '.qpid-row{display:flex;gap:8px;margin-top:8px}.qpid-row[hidden]{display:none}.qpid-row input{flex:1}.qpid-row button{padding:0 16px;border-radius:14px;border:0;background:var(--c);color:var(--onc,#fff);font:700 14px inherit}',   /* CODE-ROW-HIDDEN-1 (25 Sep 2026 inspection, seen while checking shell-21): the code box waits until a code is sent */
