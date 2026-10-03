@@ -33246,6 +33246,76 @@ def rg_funnel_webdriver_1():
     return [(INFO, "script-driven walks are kept out of the stranger funnel")]
 
 
+def _fb28_need(files_snips):
+    for f, snips in files_snips:
+        h = repo_file(f)
+        if h is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        for sn, why in snips:
+            if sn not in h:
+                return [(FAIL, f + ": " + why)]
+    return None
+
+
+@entry("RG-0794", "HUB-SIGNIN-TRUTH-1: a Seller Hub whose sign-in the server refuses (401) says 'sign in again' with her email "
+       "filled in -- never an empty list and 'First time here' over adverts she has",
+       OPEN, fixed_on="2026-10-03", scope="ms.js loadLiveDash /listings/mine; msSessionEnded('hub')",
+       ref="David Jnr, 2 Oct 2026: 30+ 401s 08:42-08:55 from his phone; hub empty over #458/#468/#469 (WhatsApp screenshots).")
+def rg_hub_signin_truth_1():
+    bad = _fb28_need([("ms.js", [("if (_mr && _mr.status === 401)", "the hub swallows a sign-in refusal again"),
+                                 ("msSessionEnded('hub')", "a refused hub no longer sends her to sign in"),
+                                 ("localStorage.setItem('ts_quick_email', _old)", "sign-in no longer keeps her email filled in")])])
+    return bad or [(INFO, "a lapsed hub asks her to sign in, email filled in")]
+
+
+@entry("RG-0795", "OWNER-BAR-1: the signed-in owner of an advert sees 'This is your listing' with Edit and My listings on it",
+       OPEN, fixed_on="2026-10-03", scope="ms.js msOwnerBar / msMineIds, openDetail wrapper",
+       ref="David Jnr, 2 Oct 2026: could not edit #469 after it went live -- the advert page had buyer buttons only.")
+def rg_owner_bar_1():
+    bad = _fb28_need([("ms.js", [("function msOwnerBar(id)", "no owner bar on the advert page"),
+                                 ("openEditListing(parseInt(n, 10))", "the owner bar lost its Edit button"),
+                                 ("window.openDetail = function(id){ var r = _odOwn.apply(this, arguments); try{ msOwnerBar(id);",
+                                  "openDetail no longer checks for the owner")])])
+    return bad or [(INFO, "owners can edit from their own advert")]
+
+
+@entry("RG-0796", "SESSION-SLIDE-1 + SIGNIN-LINK-7D + CODE-RESEND-1: a session runs 180 days from the last visit; the emailed "
+       "sign-in button lasts 7 days; the right code typed late sends a fresh one by itself",
+       OPEN, fixed_on="2026-10-03", scope="bea_main.py _session_slide middleware, auth_request_link, auth_verify_code",
+       ref="David, 3 Oct 2026: 'a blocker for anyone that hits a snag like waiting longer than the timer, or that gets logged out'.")
+def rg_session_slide_1():
+    bad = _fb28_need([("bea_main.py", [("async def _session_slide(", "sessions end on a calendar again"),
+                                       ("timedelta(days=_SIGNIN_LINK_DAYS),   # SIGNIN-LINK-7D", "the emailed sign-in link dies in 20 minutes again"),
+                                       ("if _signin_code_expired(email, req.code or \"\"):", "a late code is called wrong again"),
+                                       ("The code works for 20 minutes; the button works for 7 days.", "the sign-in letter misstates how long it works")])])
+    return bad or [(INFO, "no calendar sign-outs, no 20-minute dead links, late codes re-sent")]
+
+
+@entry("RG-0797", "QUICK-HANDOFF-1 + QUICK-DOOR-HUB-1: Quick hands a proven session a one-use sign-in to its own advert ('See my "
+       "listing', 'My listings', a listing waiting), and its door says 'Sign in' to everyone else",
+       OPEN, fixed_on="2026-10-03", scope="bea_main.py quick_publish open_url, GET /quick/handoff, /quick/me mine/drafts; quick.html qDoorHub",
+       ref="David Jnr, 2-3 Oct 2026: his home-screen 'TrustSquare Quick' opens Quick only; he re-made one Townhouse three times.")
+def rg_quick_door_hub_1():
+    bad = _fb28_need([("bea_main.py", [('"open_url": _mint_signin_url(em, lid, 60)}', "a live Quick publish no longer signs her into her advert"),
+                                       ('def quick_handoff(', "Quick has no way to her listings")]),
+                      ("route_policy.json", [('"GET /quick/handoff"', "the hand-off route is undeclared (the gate refuses it)")]),
+                      ("quick.html", [("window.qDoorHub=function(){", "Quick's door has no My listings / Sign in"),
+                                      ("fetch(location.origin+'/quick/handoff'", "the door button does not ask for the hand-off")])])
+    return bad or [(INFO, "Quick leads back to her listings, signed in")]
+
+
+@entry("RG-0798", "QUICK-GOOGLE-1 + QA-SUBJECT-1: Quick offers 'Continue with Google' and brings her answers back; mail to a +qa- "
+       "address says [QA test] in the subject",
+       OPEN, fixed_on="2026-10-03", scope="quick.html #qpgoogle, ?resume=; bea_main.py _send_html_email",
+       ref="David, 3 Oct 2026: 'why cant people use the sign in with google'; #467 read like his own advert.")
+def rg_quick_google_1():
+    bad = _fb28_need([("quick.html", [('id="qpgoogle"', "Quick has no Google sign-in"),
+                                      ("window.qWipPack=function(){", "her answers do not ride the Google round trip"),
+                                      ("new URLSearchParams(location.search).get('resume')", "Quick does not restore after Google")]),
+                      ("bea_main.py", [('subject = "[QA test] " + str(subject or "")', "test mail reads like David's own again")])])
+    return bad or [(INFO, "Google in Quick; test mail labelled")]
+
+
 @entry("RG-0790", "QUICK-ONE-TAB-1: Quick's key step no longer draws a one-tab bar -- with e-mail the only key (RUL-192) the "
        "lone 'Email' tab looked like a big orange button that did nothing",
        OPEN, fixed_on="2026-10-02",

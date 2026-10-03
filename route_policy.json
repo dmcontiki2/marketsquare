@@ -266,6 +266,10 @@
    "level": "public"
   },
   {
+   "key": "GET /quick/handoff",
+   "level": "public"
+  },
+  {
    "key": "POST /quick-invite",
    "level": "public"
   },

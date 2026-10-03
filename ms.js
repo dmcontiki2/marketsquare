@@ -644,7 +644,17 @@ async function loadLiveDash() {
      proceeds, and the answer is identical either way. */
   {
     try {
-      const mine = await apiGet('/listings/mine' + (sellerEmail ? '?email=' + encodeURIComponent(sellerEmail) : ''));
+      /* HUB-SIGNIN-TRUTH-1 (David Jnr, 2 Oct 2026): the app remembered his email but the server had never signed this
+         phone in -- every call came back 401 and the hub showed an empty list and "First time here" over his three
+         adverts. A refusal for sign-in now says so: the sign-in screen, his email filled in, his listings straight after. */
+      const _mr = await fetch(BEA_URL + '/listings/mine' + (sellerEmail ? '?email=' + encodeURIComponent(sellerEmail) : ''),
+                              {credentials: 'include', headers: {'X-Api-Key': API_KEY}}).catch(function(){ return null; });
+      if (_mr && _mr.status === 401) {
+        const _act = document.querySelector('.screen.active');
+        if (_act && _act.id === 'screen-dashboard') { msSessionEnded('hub'); }
+        return;
+      }
+      const mine = (_mr && _mr.ok) ? await _mr.json().catch(function(){ return null; }) : null;
       if (mine && mine.length) {
         mine.forEach(l => {
           let dl = dashState.listings.find(d => d.beaListingId === l.id);
@@ -1107,11 +1117,13 @@ function msAdoptSession(){
   })();
   return _msAdoptP;
 }
-function msSessionEnded(){
+function msSessionEnded(why){
+  try{ var _old = localStorage.getItem('ms_aa_email') || ''; if (_old && !/@key\.trustsquare/i.test(_old)) localStorage.setItem('ts_quick_email', _old); }catch(_){}   /* HUB-SIGNIN-TRUTH-1: her address is not asked twice */
   try{ localStorage.removeItem('ms_aa_email'); }catch(_){}
   try{ if (typeof updateHeaderAuthBtn === 'function') updateHeaderAuthBtn(); }catch(_){}
   try{ var _qe = localStorage.getItem('ts_quick_email') || ''; var _si = document.getElementById('si-email'); if (_qe && _si && !_si.value) _si.value = _qe; }catch(_){}
-  showToast('Your sign-in on this phone has ended — sign in again and your listing opens straight after.', 7000);
+  showToast(why === 'hub' ? 'Sign in again on this phone to see your listings \u2014 they are safe and waiting.'
+                          : 'Your sign-in on this phone has ended — sign in again and your listing opens straight after.', 7000);
   goTo('signin');   // ts_land_draft stays: DRAFT-AFTER-SIGNIN-1 opens the advert after she signs in
 }
 
@@ -1186,6 +1198,15 @@ async function _msInit(){
       }catch(e){}
       });
     }, 600);
+  }
+  /* QUICK-DOOR-HUB-1 (David, 3 Oct 2026): Quick's "Sign in" lands here. */
+  if(sp.get('go')==='signin' && !sp.get('signin')){
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(function(){ try{
+      if(_msIsSignedIn()){ _msNav.user = true; goTo('dashboard'); return; }
+      var _qe=localStorage.getItem('ts_quick_email')||''; var _si=document.getElementById('si-email'); if(_qe && _si && !_si.value) _si.value=_qe;
+      _msNav.user = true; goTo('signin');
+    }catch(_){} }, 400);
   }
   if(sp.get('signin')){
     const _tok = sp.get('signin');
@@ -23844,4 +23865,47 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
     soon();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+
+
+/* OWNER-BAR-1 (David Jnr, 2 Oct 2026: "could not edit his listing after it went live"). Quick's "See my listing" opened the
+   public advert, which carries buyer buttons only; Edit lived in the Seller Hub alone. When the signed-in person opens an
+   advert that is hers, a bar says so and offers Edit and My listings. Ownership is the server's answer (/listings/mine,
+   bound to the session), asked once a minute at most -- never a guess from the page. */
+var _msMine = {at: 0, ids: null, p: null};
+function msMineIds(){
+  if (_msMine.ids && Date.now() - _msMine.at < 60000) return Promise.resolve(_msMine.ids);
+  if (_msMine.p) return _msMine.p;
+  var em = localStorage.getItem('ms_aa_email') || '';
+  _msMine.p = fetch(BEA_URL + '/listings/mine' + (em ? '?email=' + encodeURIComponent(em) : ''), {credentials: 'include', headers: {'X-Api-Key': API_KEY}})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){ _msMine.p = null; if (!Array.isArray(rows)) return null;
+      _msMine.ids = rows.map(function(x){ return String(x.id); }); _msMine.at = Date.now(); return _msMine.ids; })
+    .catch(function(){ _msMine.p = null; return null; });
+  return _msMine.p;
+}
+function msOwnerBar(id){
+  if (typeof _msIsSignedIn !== 'function' || !_msIsSignedIn()) return;
+  var n = String(id == null ? '' : id).replace(/^bea_/, '');
+  if (!/^\d+$/.test(n)) return;
+  msMineIds().then(function(ids){
+    if (!ids || ids.indexOf(n) < 0) return;
+    var scr = document.getElementById('screen-detail');
+    if (!scr || !scr.classList.contains('active') || String(window._msLastDetail || '').replace(/^bea_/, '') !== n) return;
+    if (document.getElementById('ms-owner-bar')) return;
+    var bar = document.createElement('div'); bar.id = 'ms-owner-bar';
+    bar.style.cssText = 'position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;'
+      + 'background:#1e1b4b;color:#fff;font:600 13px Inter,system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)';
+    bar.innerHTML = '<span style="flex:1;min-width:150px;">This is your listing \u2014 buyers see it like this.</span>'
+      + '<button type="button" id="ms-owner-edit" style="background:#C8873A;color:#fff;border:none;border-radius:999px;padding:8px 16px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;">Edit</button>'
+      + '<button type="button" id="ms-owner-hub" style="background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:999px;padding:7px 14px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;">My listings</button>';
+    scr.insertBefore(bar, scr.firstChild);
+    document.getElementById('ms-owner-edit').onclick = function(){ try{ openEditListing(parseInt(n, 10)); }catch(e){ goTo('dashboard'); } };
+    document.getElementById('ms-owner-hub').onclick = function(){ _msNav.user = true; goTo('dashboard'); };
+  });
+}
+(function(){
+  var _odOwn = window.openDetail;
+  if (typeof _odOwn !== 'function') return;
+  window.openDetail = function(id){ var r = _odOwn.apply(this, arguments); try{ msOwnerBar(id); }catch(e){} return r; };
 })();

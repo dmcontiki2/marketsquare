@@ -4760,6 +4760,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         if _dup:
             _log.info("QUICK-DUP-1: %s already has this advert live as %s -- no second copy", em, _dup["id"])
             return {"id": int(_dup["id"]), "live": True, "duplicate": True, "identity": _qp_identity_kind(em),
+                    "open_url": _mint_signin_url(em, int(_dup["id"]), 60),   # QUICK-HANDOFF-1
                     "detail": "This listing is already live — nothing new was made."}
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
@@ -4798,6 +4799,11 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             return {"id": lid, "live": False, "need": "eula", "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, lid, 60),
                     "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
+        if sess:
+            # QUICK-HANDOFF-1: already proven (signed in here, e.g. with Google) -- straight to the terms, no letter to wait for
+            return {"id": lid, "live": False, "need": "eula", "identity": "email",
+                    "open_url": _mint_signin_url(em, lid, 60),
+                    "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
         return {"id": lid, "live": False, "need": "eula", "identity": "email",
                 "detail": "Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
     _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
@@ -4808,7 +4814,10 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code,
                 "identity": _qp_identity_kind(em)}   # SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07)
     background_tasks.add_task(_quick_live_mail, em, lid, listing.title)
-    return {"id": lid, "live": True, "identity": _qp_identity_kind(em)}   # SMS-TRUTH-1: how introductions reach her
+    # QUICK-HANDOFF-1 (David, 3 Oct 2026): "See my listing" signs whatever opens it in as her and lands on her own
+    # advert in the Seller Hub with Edit beside it -- an iPhone's home-screen app and Safari keep separate sign-ins.
+    return {"id": lid, "live": True, "identity": _qp_identity_kind(em),   # SMS-TRUTH-1: how introductions reach her
+            "open_url": _mint_signin_url(em, lid, 60)}
 
 
 @app.get("/k/{secret}")
@@ -6715,6 +6724,52 @@ def admin_registry_upsert(body: _RegistryUpsertIn, _admin=Depends(_require_admin
 _QUICK_BASE_TRUST = 40   # QUICK-TRUST-1: "All sellers start at 40 (Established base)" -- the value users.trust_score defaults to
 
 
+@app.middleware("http")
+async def _session_slide(request: Request, call_next):
+    """SESSION-SLIDE-1 (David, 3 Oct 2026): the 180 days run from her LAST visit, not her sign-in. Once a day a live session
+    is re-issued for another 180 days with the same session version, so signing out (SESSION-END-1) still ends it."""
+    resp = await call_next(request)
+    tok = request.cookies.get("ts_user")
+    if not tok:
+        return resp
+    try:
+        if any(k.lower() == b"set-cookie" and b"ts_user=" in v for k, v in resp.raw_headers):
+            return resp                                    # this response already signs in or out
+        p = _pyjwt.decode(tok, _JWT_SECRET, algorithms=[_JWT_ALGO])
+        if p.get("scope") != "user" or (datetime.now(timezone.utc).timestamp() - float(p.get("iat", 0))) < 86400:
+            return resp
+        em = _session_email(tok)                           # still valid (session version unchanged)
+        if not em:
+            return resp
+        new = _pyjwt.encode({"scope": "user", "sub": em, "sv": int(p.get("sv", 0) or 0),
+                             "exp": datetime.now(timezone.utc) + timedelta(days=180),
+                             "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+        resp.set_cookie("ts_user", new, max_age=180*24*3600, httponly=True, secure=True, samesite="lax", path="/")
+    except Exception:
+        pass
+    return resp
+
+
+@app.get("/quick/handoff")
+def quick_handoff(ts_user: str = Cookie(default=None)):
+    """QUICK-DOOR-HUB-1 (David, 3 Oct 2026): Quick had no way back to the adverts it made -- an iPhone's "TrustSquare Quick"
+    home-screen app opens Quick only, and the main app outside it keeps a separate sign-in. This hands the signed-in person a
+    one-use, 10-minute sign-in hop to her Seller Hub, on her newest advert. Signed out: the app's sign-in screen."""
+    em = _session_email(ts_user)
+    if not em:
+        return {"signed_in": False, "url": APP_URL + "/?go=signin"}
+    conn = database.get_db()
+    try:
+        # her newest LIVE advert first, else her newest draft, else her newest paused one
+        r = conn.execute("SELECT id AS last FROM listings WHERE LOWER(seller_email)=? "
+                         "AND IFNULL(listing_status,'live') IN ('live','draft','paused') "
+                         "ORDER BY CASE IFNULL(listing_status,'live') WHEN 'live' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END, id DESC LIMIT 1",
+                         (em,)).fetchone()
+    finally:
+        conn.close()
+    return {"signed_in": True, "url": _mint_signin_url(em, (r["last"] if r else None), 10)}
+
+
 @app.get("/quick/me")
 def quick_me(request: Request, ts_user: str = Cookie(default=None)):
     em = _session_email(ts_user)
@@ -6741,6 +6796,11 @@ def quick_me(request: Request, ts_user: str = Cookie(default=None)):
         if not u:
             return out
         n = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND (listing_status IS NULL OR listing_status='live')", (em,)).fetchone()["n"]
+        # QUICK-DOOR-HUB-1 (David, 3 Oct 2026): Quick's door shows "My listings" and "a listing is waiting" from these
+        _mine = conn.execute("SELECT COUNT(*) AS n, MAX(id) AS last FROM listings WHERE LOWER(seller_email)=? "
+                             "AND IFNULL(listing_status,'live') IN ('live','draft','paused')", (em,)).fetchone()
+        _drafts = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft'", (em,)).fetchone()["n"]
+        out.update({"mine": int(_mine["n"] or 0), "drafts": int(_drafts or 0)})
         out.update({"signed_in": True, "email": em, "name": _shown_name(u["name"], em),   # KEY-ID-HIDE-1 (backend-14)
                     "eula_accepted": bool(u["eula_accepted_at"]),   # BUGSWEEP-24SEP: quick-publish checks the main terms only
                     "city": u["last_city"], "listings": n,
@@ -19163,6 +19223,10 @@ def _send_html_email(to_email: str, subject: str, html: str, plain: str, reply_t
     if _is_key_identity(to_email):          # LINK-KEY-1: a key identity has no inbox
         _log.info("mail skipped: %s is a key identity", to_email)
         return "skipped"
+    # QA-SUBJECT-1 (David, 3 Oct 2026): test lanes sign up as dmcontiki2+qa-...@gmail.com, which lands in David's own inbox
+    # and read like his adverts (#467). Every mail to a +qa- address says it is a test in the subject.
+    if "+qa-" in (to_email or "").lower() and not str(subject or "").startswith("[QA test]"):
+        subject = "[QA test] " + str(subject or "")
     key = ai_provider.envkey("RESEND_API_KEY") or ""
     if key:
         try:
@@ -19400,12 +19464,12 @@ def _send_login_email(to_email: str, link: str, code: str = "") -> str:
         "to use, tap the button:</p>"
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Sign in &rarr;</a></p>"
-        "<p style='color:#6b7280;font-size:12px'>Both expire in 20 minutes. "
+        "<p style='color:#6b7280;font-size:12px'>The code works for 20 minutes; the button works for 7 days. "
         "If you didn't request this, you can ignore this email.</p>"
         "</div>"
     )
     plain = ("Your TrustSquare sign-in code: " + (code or "")
-             + "\n\nType it into the TrustSquare tab you have open, or sign in here:\n" + link + "  (expires in 20 minutes)")
+             + "\n\nType it into the TrustSquare tab you have open, or sign in here:\n" + link + "  (the code works for 20 minutes, the link for 7 days)")
     return _send_html_email(to_email, subject, html, plain)
 
 # ── SIGNIN-CODE-1 (19 Aug 2026, David) — zero-retry sign-in for REAL users ──────
@@ -19416,7 +19480,8 @@ def _send_login_email(to_email: str, link: str, code: str = "") -> str:
 # A typed code has none of that: it works on the device the person is actually using,
 # no app switch, no tab loss, no scanner can spend it. Link stays as the convenience
 # path for people already reading mail on the device they want to use.
-_SIGNIN_CODE_MIN   = 20     # matches the link's life
+_SIGNIN_CODE_MIN   = 20     # the typed code; the emailed link lives _SIGNIN_LINK_DAYS (single use either way)
+_SIGNIN_LINK_DAYS  = 7      # SIGNIN-LINK-7D (David, 3 Oct 2026): "a blocker for anyone ... waiting longer than the timer"
 _SIGNIN_CODE_TRIES = 6
 _signin_codes      = {}     # email -> {"code":str,"exp":epoch,"tries":int}
 
@@ -19424,7 +19489,9 @@ def _signin_code_ok(email: str, code: str) -> bool:
     """Consume a sign-in code. Constant-time, single use, budgeted."""
     import hmac as _hmac, time as _t
     now = _t.time()
-    for _k in [k for k, v in _signin_codes.items() if v.get("exp", 0) < now]:
+    # CODE-RESEND-1: an expired code is kept a day so its owner can be told it ran out (and sent a fresh one),
+    # instead of "wrong". It still never signs anyone in.
+    for _k in [k for k, v in _signin_codes.items() if v.get("exp", 0) < now - 86400]:
         _signin_codes.pop(_k, None)
     rec = _signin_codes.get(email)
     if not rec or rec["exp"] < now:
@@ -19437,6 +19504,13 @@ def _signin_code_ok(email: str, code: str) -> bool:
         _signin_codes.pop(email, None)
         return True
     return False
+
+def _signin_code_expired(email: str, code: str) -> bool:
+    """CODE-RESEND-1 (David, 3 Oct 2026): the RIGHT digits, typed after the 20 minutes ran out. Never signs in."""
+    import hmac as _hmac, time as _t
+    rec = _signin_codes.get(email)
+    return bool(rec) and rec["exp"] < _t.time() and _hmac.compare_digest(rec["code"], (code or "").strip())
+
 
 def _establish_user_session(email: str, response: Response):
     """The ONE place a user session is created. Both /auth/verify (link) and
@@ -19774,6 +19848,25 @@ def auth_verify_code(req: _SignInCodeVerify, request: Request, response: Respons
     if _signin_fail_blocked(email):
         raise HTTPException(status_code=429,
                             detail="Too many wrong codes for this address. Please wait an hour, or use the link in the email.")
+    if _signin_code_expired(email, req.code or ""):
+        # CODE-RESEND-1 (David, 3 Oct 2026): "a blocker for anyone that hits a snag like waiting longer than the timer".
+        # The right code, too late: send a fresh code and link by itself (same per-address send limit), and say so.
+        _signin_codes.pop(email, None)
+        _sent = "limited"
+        if _rate_ok(_signin_send_email, email, _SIGNIN_SEND_PER_EMAIL):
+            _rate_note_failure(_signin_send_email, email)
+            _tok = _pyjwt.encode({"email": email, "purpose": "signin",
+                                  "exp": datetime.now(timezone.utc) + timedelta(days=_SIGNIN_LINK_DAYS),
+                                  "iat": datetime.now(timezone.utc)}, _JWT_SECRET, algorithm=_JWT_ALGO)
+            import time as _t2
+            _c = _new_review_code()
+            _signin_codes[email] = {"code": _c, "exp": _t2.time() + _SIGNIN_CODE_MIN * 60, "tries": 0}
+            _sent = _send_login_email(email, APP_URL + "/?signin=" + _tok, _c)
+        _log.info("CODE-RESEND-1: expired code for %s -- fresh code %s", email, _sent)
+        raise HTTPException(status_code=401,
+                            detail=("That code had run out, so we have emailed you a new one. Type the new code, or tap the button in that email."
+                                    if _sent != "limited" else
+                                    "That code had run out. Tap the button in the email instead, or try again in a little while."))
     if not _signin_code_ok(email, req.code or ""):
         _signin_fail_note(email)   # SEC-GATE-1 (24 Sep 2026)
         _rate_note_failure(_signin_code_ip_fails, ip)   # CODE-NAT-1: a wrong code is what counts
@@ -19805,7 +19898,7 @@ def auth_request_link(req: _SignInRequest, request: Request):
     _rate_note_failure(_signin_send_email, email)
     token = _pyjwt.encode(
         {"email": email, "purpose": "signin",
-         "exp": datetime.now(timezone.utc) + timedelta(minutes=20),
+         "exp": datetime.now(timezone.utc) + timedelta(days=_SIGNIN_LINK_DAYS),   # SIGNIN-LINK-7D (David, 3 Oct 2026)
          "iat": datetime.now(timezone.utc)},
         _JWT_SECRET, algorithm=_JWT_ALGO)
     code = _new_review_code()

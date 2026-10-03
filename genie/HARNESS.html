@@ -1369,6 +1369,7 @@ var QUICK_LIVE=false;
     window.qMe=fetch(location.origin+'/quick/me',{credentials:'include'}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
     window.qMeApply=function(d){
       if(!d) return;
+      QUICK.mine=+d.mine||0; QUICK.drafts=+d.drafts||0;   /* QUICK-DOOR-HUB-1 */
       if(d.key && !HANDOVER.key){ HANDOVER.url=location.origin; HANDOVER.key=d.key; QUICK_LIVE=true; }
       QUICK.smsReady=!!d.sms_ready;                       /* PHONE-KEY-1: offer the phone code only when a code can be sent */
       /* QUICK-TRUST-SHOW-1 (25 Sep 2026 inspection, backend-09): Quick shows the trust the app puts on her advert
@@ -3462,6 +3463,8 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
    /* QUICK-ONE-TAB-1 (Goal run 27, 2 Oct 2026): with SMS off (RUL-192) e-mail is the only key, and a bar of ONE tab
       drew a full-width orange 'Email' button above the boxes that did nothing when tapped. One choice is no
       choice: the bar shows only while a second tab is visible. */
+   '.qpgoogle,.qpor{display:none}body.qg-on .qpgoogle{display:block;text-align:center;padding:13px;border-radius:999px;background:#fff;color:#1f1f1f;font:700 15px inherit;text-decoration:none;margin:0 0 8px}body.qg-on .qpor{display:block;text-align:center;font-size:12px;opacity:.7;margin:0 0 8px}',   /* QUICK-GOOGLE-1 */
+   '.qdoorhub{display:block;margin:14px auto 0;max-width:340px;padding:11px 14px;border-radius:14px;background:var(--panel);border:1.5px solid var(--c);color:inherit;font:700 14px inherit;text-align:center;cursor:pointer;width:100%}.qdoorhub small{display:block;font-weight:500;opacity:.75;margin-top:2px}.qdoorin{display:block;margin:12px auto 0;background:none;border:none;color:inherit;opacity:.85;font:600 13px inherit;text-decoration:underline;cursor:pointer}',   /* QUICK-DOOR-HUB-1 */
    '.qpid-tabs:not(:has(.qpid-tab+.qpid-tab:not([style*="display:none"]):not([style*="display: none"]))){display:none}',
    '.qpid-tab.on{background:var(--c);color:var(--onc,#fff);border-color:var(--c)}',
    '.qpid-hint{font-size:12.5px;color:var(--dim);margin:6px 2px 0;line-height:1.4}',
@@ -3492,6 +3495,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       var QUICK_LINK_KEY_ON = false;
       if(!QUICK.idMode || (QUICK.idMode==='link' && !QUICK_LINK_KEY_ON)) QUICK.idMode = 'email';
       foot.insertAdjacentHTML('afterbegin','<div class="qpbox" id="qpid">'
+        /* QUICK-GOOGLE-1 (David, 3 Oct 2026): Gmail users sign in with one tap -- no letter, no code. Shown only when the
+           server says Google sign-in is live (body.qg-on). */
+        +'<a href="#" id="qpgoogle" class="qpgoogle">'+qTr('Continue with Google')+'</a><div class="qpor">'+qTr('or use your email')+'</div>'
         +'<div class="qpid-tabs">'
         /* EMAIL-SPELL-1 (25 Sep 2026 inspection, langq-07): "Email", as the TrustSquare app writes it */
         +'<button type="button" class="qpid-tab" data-m="email">'+qTr('Email')+'</button>'
@@ -4647,6 +4653,13 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
   var WIPK='ts_q_wip', WIP_MAX_MS=6*3600*1000;
   function ssGet(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
   function ssSet(k,v){ try{ if(v===null) sessionStorage.removeItem(k); else sessionStorage.setItem(k,v); }catch(e){} }
+  /* QUICK-GOOGLE-1 (David, 3 Oct 2026): her answers ride the Google round trip IN the return address (?resume=), because
+     on an iPhone the page Google returns to may not share this tab's storage; she lands back on her listing, signed in. */
+  window.qWipPack=function(){ try{ var j=ssGet(WIPK); if(!j) return ''; return btoa(unescape(encodeURIComponent(j))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }catch(e){ return ''; } };
+  try{ var _rs=new URLSearchParams(location.search).get('resume');
+    if(_rs){ var _b=_rs.replace(/-/g,'+').replace(/_/g,'/'); while(_b.length%4) _b+='=';
+      var _w=JSON.parse(decodeURIComponent(escape(atob(_b)))); if(_w && _w.picks){ _w.t=Date.now(); ssSet(WIPK, JSON.stringify(_w)); window._qResumeNow=true; }
+      history.replaceState({}, '', location.pathname); } }catch(e){}
   window.qWipSave=function(){
     try{ if(!mode || !picks.length) return;
       ssSet(WIPK, JSON.stringify({t:Date.now(), cat:cat().key, mode:mode, step:step, taps:taps, picks:picks,
@@ -4677,9 +4690,57 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
       var pass=$('qspass'); if(pass) pass.insertAdjacentHTML('beforebegin', html); else scr.insertAdjacentHTML('beforeend', html);
       $('qswipx').onclick=function(){ qWipClear(); var b=$('qswip'); if(b) b.parentNode.removeChild(b); };
       $('qswipgo').onclick=function(ev){ ev.preventDefault(); restore(w); };
+      if(window._qResumeNow){ window._qResumeNow=false; setTimeout(function(){ restore(w); }, 60); }   /* QUICK-GOOGLE-1 */
       try{ qTranslate(scr); }catch(e){}
     }catch(e){}
   };
+})();
+
+/* QUICK-DOOR-HUB-1 (David, 3 Oct 2026). Quick saved to a phone's home screen opens Quick only: no sign-in, no "My
+   listings", no way back to the advert it made -- David Jnr made the same Townhouse three times (#458, #468, #469).
+   The door now shows "My listings" (and says when one is waiting to publish) to a signed-in person, and "Sign in" to
+   everyone else. Both ask the server for a one-use sign-in hop, so the TrustSquare page they open is signed in as her. */
+(function(){
+  function goHub(){
+    try{ qTrack('q_door_hub'); }catch(e){}
+    fetch(location.origin+'/quick/handoff',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){ location.href=(d&&d.url)||'/?go=signin'; }).catch(function(){ location.href='/?go=signin'; });
+  }
+  window.qDoorHub=function(){
+    try{
+      var scr=$('screen'); if(!scr || !/\bdoor\b/.test(scr.className)) return;
+      var old=$('qdoorhub'); if(old) old.parentNode.removeChild(old);
+      var acts=scr.querySelector('.acts'); if(!acts) return;
+      var html;
+      if(QUICK.member && QUICK.mine>0){
+        html='<button type="button" class="qdoorhub" id="qdoorhub">'
+          +((QUICK.drafts>0 && QUICK.drafts>=QUICK.mine) ? qTr('Your listing is waiting — open it to publish')+' &rsaquo;'
+                           : qTr('My listings')+' ('+QUICK.mine+') &rsaquo;')
+          +'<small>'+qTr('See, edit or publish what you have listed')+'</small></button>';
+      } else if(QUICK.member){
+        html='<button type="button" class="qdoorin" id="qdoorhub">'+qTr('My TrustSquare')+' &rsaquo;</button>';
+      } else {
+        html='<button type="button" class="qdoorin" id="qdoorhub">'+qTr('Listed with us before? Sign in')+' &rsaquo;</button>';
+      }
+      acts.insertAdjacentHTML('afterend', html);
+      $('qdoorhub').onclick=goHub;
+      try{ qTranslate(scr); }catch(e){}
+    }catch(e){}
+  };
+  var _ddH=drawDoor;
+  drawDoor=function(){ _ddH(); window.qDoorHub(); };
+  try{ (window.qMe||Promise.resolve(null)).then(function(){ setTimeout(window.qDoorHub, 0); }); }catch(e){}
+  /* QUICK-GOOGLE-1: the button appears only when Google sign-in is live; a tap keeps her answers and comes back to them */
+  try{ fetch(location.origin+'/auth/providers').then(function(r){ return r.ok?r.json():null; })
+    .then(function(p){ if(p && p.google) document.body.classList.add('qg-on'); }).catch(function(){}); }catch(e){}
+  document.addEventListener('click', function(ev){
+    var a=ev.target && ev.target.closest ? ev.target.closest('#qpgoogle') : null; if(!a) return;
+    ev.preventDefault();
+    try{ qTrack('q_google'); }catch(e){}
+    try{ window.qWipSave && qWipSave(); }catch(e){}
+    var pk=(window.qWipPack && qWipPack()) || '';
+    location.href='/auth/oauth/google/start?next='+encodeURIComponent('/quick/'+(pk?'?resume='+pk:''));
+  });
 })();
 
 drawDoor();
