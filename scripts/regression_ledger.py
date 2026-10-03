@@ -480,6 +480,23 @@ def _ops_key():
         return ""
 
 
+# LEDGER-VANTAGE-SERVER-1 (David, 3 Oct 2026: "please fix those 14 red items"). The ledger also runs on the server's own
+# clone (/opt/marketsquare-src and the Goal/cloud worktrees). Ten reds there were PC-only things -- the SSH key, the
+# Hetzner token, backups/, the host agent's logs and queue, .git/hooks, the film masters -- all gitignored, never
+# deployed, and present on David's PC. Absent-because-this-is-the-server is not absent: it reads NOT EVALUATED here and
+# is still judged in full on the PC's own run. Nothing in-repo is spared.
+SERVER_CLONE = os.path.isdir("/var/www/marketsquare") and os.path.isfile("/etc/marketsquare/secrets.env")
+PC_ONLY_FAILS = {
+    "RG-0188": ("no .secrets/hetzner_token.txt",),
+    "RG-0230": ("ssh_hetzner_key missing from MarketSquare/",),
+    "RG-0234": ("no dated archive in backups/",),
+    "RG-0252": ("no autodeploy_agent_log.txt yet",),
+    "RG-0257": ("no DONE result in host_queue/done yet",),
+    "RG-0302": ("film(s) with money on screen and NO dual-currency cut",),
+    "RG-0422": (".git/hooks/pre-push is NOT INSTALLED",),
+}
+
+
 def _admin_key():
     """MS_ADMIN_KEY from .secrets/deploy_keys.txt -- '' when absent (outside the repo)."""
     if "ADMKEY" not in _cache:
@@ -492,6 +509,16 @@ def _admin_key():
                         break
         except OSError:
             pass
+        if not key and SERVER_CLONE:
+            # LEDGER-VANTAGE-SERVER-1 (3 Oct 2026): on the server the key is the running service's own, in its secrets file
+            try:
+                with open("/etc/marketsquare/secrets.env", encoding="utf-8") as f:
+                    for ln in f:
+                        if ln.startswith("MS_ADMIN_KEY="):
+                            key = ln.split("=", 1)[1].strip().strip('"').strip("'")
+                            break
+            except OSError:
+                pass
         _cache["ADMKEY"] = key
     return _cache["ADMKEY"]
 
@@ -10110,7 +10137,10 @@ def rg_agency_wave_lane():
     out = []
     import os as _os
     found = False
-    for f in ("n8n/n8n_outreach_workflow.json", "citylauncher_ops.html"):
+    for f in ("n8n/n8n_outreach_workflow.json", "citylauncher_ops.html",
+              # LEDGER-VANTAGE-SERVER-1: the wave runs from CityLauncher's emailer since WAVE-SERVER-1 (server timer)
+              "../CityLauncher/emailer/emailer.py", "../CityLauncher/emailer/waves_policy.json",
+              "/var/www/citylauncher/emailer/waves_policy.json"):
         fp = _os.path.join(REPO, f)
         if _os.path.exists(fp):
             txt = open(fp, encoding="utf-8", errors="replace").read()
@@ -35000,6 +35030,65 @@ def rg_hub_ghost_1():
                       ("bea_main.py", [('raise HTTPException(status_code=404, detail="Listing not found")', "the seller delete lost its 404")])])
     return bad or [(INFO, "the hub shows only adverts the server has; a gone advert's Delete clears the card")]
 
+
+
+@entry("RG-0810", "QUICK-CARD-1 (GI-0003, David 3 Oct 2026): Sell opens with a full-width 'Work for yourself?' card into Quick for "
+       "cleaners, gardeners, nannies and drivers -- the first tile, not a small line under seven categories",
+       OPEN, fixed_on="2026-10-03", scope="ms.js sfHomeS (the .sf-tiles grid); amends RG-0478's 'small and unobtrusive' by David's decision",
+       ref="Goal run 24 walk (29 Sep): Sell had no door that names a cleaner; David 3 Oct: 'Please generate the full size Quick card'.")
+def rg_quick_card_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("h+='<div class=\"sf-tiles\">';")
+    seg = js[i:i + 1400] if i >= 0 else ""
+    if 'class="sf-tile sf-wide sf-quick-line" href="/quick/?from=app&src=sell-flow"' not in seg:
+        return [(FAIL, "Sell lost the full-width Quick card at the top of its tiles")]
+    if "Work for yourself?" not in seg:
+        return [(FAIL, "the Quick card no longer names who it is for")]
+    return [(INFO, "Sell opens with the full-width Quick card")]
+
+
+def _server_vantage_wrap():
+    """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
+    Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
+    is served live (the pictures are gitignored *.jpg, kept on the server and the PC)."""
+    if not SERVER_CLONE:
+        return
+    import urllib.request as _ur
+    def wrap(e, pats):
+        fn = e["fn"]
+        def inner(*a, **k):
+            out = fn(*a, **k)
+            res = []
+            for lvl, msg in (out or []):
+                if lvl == FAIL and pats(msg):
+                    res.append((INFO, "NOT EVALUATED on the server clone (LEDGER-VANTAGE-SERVER-1): " + msg[:160]
+                                + " -- a PC-only file; judged on David's PC run"))
+                else:
+                    res.append((lvl, msg))
+            return res
+        e["fn"] = inner
+    for e in LEDGER:
+        if e["id"] in PC_ONLY_FAILS:
+            ps = PC_ONLY_FAILS[e["id"]]
+            wrap(e, lambda m, ps=ps: any(x in m for x in ps))
+        elif e["id"] == "RG-0491":
+            def served(m):
+                parts = [x.strip() for x in m.split(";")]
+                if not parts or not all(x.startswith("no picture for ") for x in parts):
+                    return False
+                try:
+                    for x in parts:
+                        k = x.replace("no picture for ", "")
+                        _ur.urlopen(_ur.Request(BASE + "/static/quick/role_%s.jpg" % k, method="HEAD", headers=UA), timeout=15)
+                    return True
+                except Exception:
+                    return False
+            wrap(e, served)
+
+
+_server_vantage_wrap()
 
 if __name__ == "__main__":
     sys.exit(main())

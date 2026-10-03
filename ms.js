@@ -21593,6 +21593,12 @@ function sfHomeS(){
        '<button class="sf-btn gho" onclick="sfStartAgain()">Start again</button></div></div>';
   }
   h+='<div class="sf-tiles">';
+  /* QUICK-CARD-1 (David, 3 Oct 2026, GI-0003, amends RG-0478's 'small and unobtrusive'): a cleaner, gardener, nanny or
+     driver saw seven guided categories and a small purple line. Her door is now the first, full-width card in Sell. */
+  h+='<a class="sf-tile sf-wide sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:block;text-decoration:none;color:inherit;">'+
+     '<div class="sf-bg" style="background:linear-gradient(140deg,#4c1d95,#7C3AED)">🧹</div>'+
+     '<img class="sf-ph" src="/static/quick/role_home_cleaner.jpg" onerror="this.style.display=\'none\'">'+
+     '<div class="sf-lab"><div class="sf-nm">Work for yourself?</div><div class="sf-ct">Cleaner, gardener, nanny, driver \u2014 listed in a minute with Quick</div></div></a>';
   tiles.forEach(function(t){
     var im=SF_TILE_IMGS[t[0]];
     h+='<div class="sf-tile" onclick="sfStartCat(\''+t[0]+'\')"><div class="sf-bg" style="background:'+grads[t[0]]+'">'+t[1]+'</div>'+
@@ -21608,7 +21614,8 @@ function sfHomeS(){
   // someone who has chosen to sell. Quick carries the way back (?from=app), so this is no longer a one-way door.
   /* QUICK-LEAVE-1 (25 Sep 2026 inspection, ts4-08): with a listing in progress the Quick line asks first, and the
      listing is kept (SF-DRAFT-KEEP-1) so Sell carries on with it when she comes back. */
-  h+='<a class="sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:flex;align-items:center;justify-content:center;gap:7px;margin:14px 0 2px;font-size:13px;font-weight:600;color:#c4b5fd;text-decoration:none;"><span style="width:14px;height:14px;border-radius:4px;background:#8b5cf6;display:inline-block;"></span>Cleaner, gardener, nanny, driver? Quick listing &rsaquo;</a>';
+  /* QUICK-CARD-1 (David, 3 Oct 2026, GI-0003: "Please generate the full size Quick card for Sell for cleaners"): the small line
+     became the full-width card at the top of the tiles, above. */
   h+='<div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
   return h;
 }
