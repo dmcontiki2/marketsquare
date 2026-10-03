@@ -33316,6 +33316,22 @@ def rg_quick_google_1():
     return bad or [(INFO, "Google in Quick; test mail labelled")]
 
 
+@entry("RG-0799", "PASSKEY-1 + OWNER-CTA-1: Face ID / fingerprint sign-in verifies origin, rpId, user verification, signature and "
+       "counter and stays dormant until migration 064 (DEFERRED for David); the owner's advert shows Edit/Share, not 'Join queue'",
+       OPEN, fixed_on="2026-10-03", scope="bea_main.py PASSKEY-1 block + /auth/passkey/*; migrations/064_passkeys.py; ms.js PASSKEY-1, OWNER-CTA-1",
+       ref="David, 3 Oct 2026: 'I would like to test 10 first'; owner saw the buyer's Join queue on his own advert (OWNER-BAR-1 screenshot).")
+def rg_passkey_1():
+    bad = _fb28_need([("bea_main.py", [('if cd.get("origin") not in _PK_ORIGINS:', "a passkey from another site would be accepted"),
+                                       ('if not flags & 0x04:', "a passkey without Face ID / fingerprint would be accepted"),
+                                       ('raise _PasskeyError("signature counter went backwards")', "a cloned passkey would be accepted"),
+                                       ('if p["ch"] in _pk_used:', "a passkey challenge could be used twice"),
+                                       ('out["passkey"] = _pk_on()', "the app cannot tell whether passkeys are switched on")]),
+                      ("migrations/DEFERRED.txt", [("064_passkeys.py", "the passkey table would be created without David's approval")]),
+                      ("ms.js", [("window.msPasskeySignIn = async function(){", "no Face ID button on the sign-in screen"),
+                                 ("oc.className = 'sticky-cta owner-cta';", "the owner sees the buyer's Join queue again")])])
+    return bad or [(INFO, "passkeys checked and held for approval; owners see Edit/Share")]
+
+
 @entry("RG-0790", "QUICK-ONE-TAB-1: Quick's key step no longer draws a one-tab bar -- with e-mail the only key (RUL-192) the "
        "lone 'Email' tab looked like a big orange button that did nothing",
        OPEN, fixed_on="2026-10-02",

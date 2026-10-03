@@ -23902,10 +23902,125 @@ function msOwnerBar(id){
     scr.insertBefore(bar, scr.firstChild);
     document.getElementById('ms-owner-edit').onclick = function(){ try{ openEditListing(parseInt(n, 10)); }catch(e){ goTo('dashboard'); } };
     document.getElementById('ms-owner-hub').onclick = function(){ _msNav.user = true; goTo('dashboard'); };
+    /* OWNER-CTA-1 (David, 3 Oct 2026): the owner saw the buyer's "Join queue · 1T" under her own advert. Hers is Edit and
+       Share -- the buyer's button stays exactly as it was for everyone else. */
+    var cta = scr.querySelector('.sticky-cta');
+    if (cta && !cta.classList.contains('owner-cta')) {
+      var oc = document.createElement('div'); oc.className = 'sticky-cta owner-cta';
+      oc.innerHTML = '<div style="display:flex;gap:8px;">'
+        + '<button type="button" class="ms-owner-cta-edit" style="flex:1;background:#C8873A;color:#fff;border:none;border-radius:50px;padding:15px;font:700 15px Inter,system-ui,sans-serif;cursor:pointer;">Edit my listing</button>'
+        + '<button type="button" class="ms-owner-cta-share" style="background:#fff;color:#1e1b4b;border:1.5px solid #c7d2fe;border-radius:50px;padding:15px 18px;font:700 15px Inter,system-ui,sans-serif;cursor:pointer;">Share</button></div>';
+      cta.parentNode.replaceChild(oc, cta);
+      oc.querySelector('.ms-owner-cta-edit').onclick = function(){ try{ openEditListing(parseInt(n, 10)); }catch(e){ goTo('dashboard'); } };
+      oc.querySelector('.ms-owner-cta-share').onclick = function(){
+        var url = location.origin + '/?listing=' + n, t = (document.querySelector('#screen-detail h1, #screen-detail h2') || {}).textContent || 'My TrustSquare listing';
+        if (navigator.share) { navigator.share({title: t, url: url}).catch(function(){}); return; }
+        try{ navigator.clipboard.writeText(url).then(function(){ showToast('Link copied \u2014 paste it anywhere to share your listing.'); }); }catch(e){ showToast(url, 8000); }
+      };
+    }
   });
 }
 (function(){
   var _odOwn = window.openDetail;
   if (typeof _odOwn !== 'function') return;
   window.openDetail = function(id){ var r = _odOwn.apply(this, arguments); try{ msOwnerBar(id); }catch(e){} return r; };
+})();
+
+
+/* PASSKEY-1 (David, 3 Oct 2026: "I would like to test 10 first"). Sign in with Face ID / fingerprint -- no email, no
+   code, no timer. Shown only when the server says passkeys are switched on (migration 064) AND this phone can do it.
+   (1) The sign-in screen gets "Sign in with Face ID or fingerprint". (2) A signed-in person is offered, once per phone,
+   "Next time, sign in with Face ID". The phone keeps the private key; the server keeps only the public key. */
+(function(){
+  function u8(s){ s=String(s||'').replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var b=atob(s), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a.buffer; }
+  function b64u(buf){ var b=new Uint8Array(buf), s=''; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  var _on=null;
+  function pkOn(){
+    if(_on) return _on;
+    _on = (window.PublicKeyCredential && navigator.credentials && window.isSecureContext)
+      ? fetch(BEA_URL+'/auth/providers').then(function(r){ return r.ok?r.json():{}; }).then(function(p){ return !!(p && p.passkey); }).catch(function(){ return false; })
+      : Promise.resolve(false);
+    return _on;
+  }
+  window.msPasskeySignIn = async function(){
+    try{
+      var o = await fetch(BEA_URL+'/auth/passkey/login/options',{method:'POST',credentials:'include'}).then(function(r){ return r.json(); });
+      if(!o || !o.publicKey){ showToast((o&&o.detail)||'Face ID sign-in is not available right now.'); return; }
+      var pk=o.publicKey; pk.challenge=u8(pk.challenge); pk.allowCredentials=[];
+      var cred = await navigator.credentials.get({publicKey: pk});
+      var r = await fetch(BEA_URL+'/auth/passkey/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({state:o.state, id:b64u(cred.rawId), clientDataJSON:b64u(cred.response.clientDataJSON),
+                              authenticatorData:b64u(cred.response.authenticatorData), signature:b64u(cred.response.signature)})});
+      var d = await r.json().catch(function(){ return {}; });
+      if(!r.ok || !d.email){ showToast(d.detail||'Face ID did not work — sign in with your email instead.', 6000); return; }
+      localStorage.setItem('ms_aa_email', d.email);
+      localStorage.setItem('ms_aa_name', d.name || msShownEmail(d.email));
+      if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString());
+      try{ localStorage.setItem('ts_pk_here','1'); }catch(_){}
+      showToast('✓ Signed in — welcome back!');
+      try{ msSyncBalance(); }catch(_){}
+      if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
+      _msNav.user = true; goTo('dashboard');
+      try{ if(sessionStorage.getItem('ts_land_draft')) msLandDraft(); }catch(_){}
+    }catch(e){
+      if(e && e.name==='NotAllowedError') return;   // she cancelled the Face ID prompt -- nothing to say
+      showToast('Face ID did not work on this phone — sign in with your email instead.', 6000);
+    }
+  };
+  window.msPasskeyAdd = async function(btn){
+    try{
+      if(btn) btn.disabled=true;
+      var o = await fetch(BEA_URL+'/auth/passkey/register/options',{method:'POST',credentials:'include'}).then(function(r){ return r.json(); });
+      if(!o || !o.publicKey){ showToast((o&&o.detail)||'Please sign in again first.'); if(btn) btn.disabled=false; return; }
+      var pk=o.publicKey; pk.challenge=u8(pk.challenge); pk.user.id=u8(pk.user.id);
+      pk.excludeCredentials=(pk.excludeCredentials||[]).map(function(c){ return {type:'public-key', id:u8(c.id)}; });
+      var cred = await navigator.credentials.create({publicKey: pk});
+      var r = await fetch(BEA_URL+'/auth/passkey/register',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({state:o.state, id:b64u(cred.rawId), clientDataJSON:b64u(cred.response.clientDataJSON),
+                              attestationObject:b64u(cred.response.attestationObject), label:(navigator.platform||'').slice(0,40)})});
+      var d = await r.json().catch(function(){ return {}; });
+      if(!r.ok){ showToast(d.detail||'Could not set up Face ID — please try again.', 6000); if(btn) btn.disabled=false; return; }
+      try{ localStorage.setItem('ts_pk_here','1'); localStorage.setItem('ts_pk_offer','done'); }catch(_){}
+      var c=document.getElementById('pk-offer'); if(c) c.parentNode.removeChild(c);
+      showToast('✓ Done — next time, sign in with Face ID or fingerprint.', 6000);
+    }catch(e){
+      if(btn) btn.disabled=false;
+      if(e && (e.name==='NotAllowedError' || e.name==='InvalidStateError')){
+        if(e.name==='InvalidStateError'){ try{ localStorage.setItem('ts_pk_here','1'); }catch(_){} var c2=document.getElementById('pk-offer'); if(c2) c2.parentNode.removeChild(c2); showToast('This phone is already set up for Face ID sign-in.'); }
+        return;
+      }
+      showToast('Could not set up Face ID on this phone.', 6000);
+    }
+  };
+  function signinButton(){
+    var scr=document.getElementById('screen-signin'); if(!scr || document.getElementById('pk-signin')) return;
+    var host=document.getElementById('onetap-buttons'); if(!host) return;
+    pkOn().then(function(on){
+      if(!on || document.getElementById('pk-signin')) return;
+      host.insertAdjacentHTML('beforebegin','<button type="button" id="pk-signin" onclick="msPasskeySignIn()" style="width:100%;box-sizing:border-box;margin:0 0 10px;background:#0f172a;color:#fff;border:none;border-radius:50px;padding:14px;font-family:\'Syne\',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in with Face ID or fingerprint</button>');
+    });
+  }
+  function hubOffer(){
+    try{ if(localStorage.getItem('ts_pk_here') || localStorage.getItem('ts_pk_offer')) return; }catch(_){ return; }
+    if(typeof _msIsSignedIn!=='function' || !_msIsSignedIn()) return;
+    pkOn().then(function(on){
+      if(!on) return null;
+      var plat = (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable() : Promise.resolve(false));
+      return plat.then(function(ok){ if(!ok) return null; return fetch(BEA_URL+'/auth/passkey/status',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; }); });
+    }).then(function(st){
+      if(!st || !st.on) return;
+      var scr=document.getElementById('screen-dashboard'); var list=document.getElementById('my-listings');
+      if(!scr || !scr.classList.contains('active') || !list || document.getElementById('pk-offer')) return;
+      list.insertAdjacentHTML('beforebegin','<div id="pk-offer" style="margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#eef2ff;border:1.5px solid #c7d2fe;color:#1e1b4b;font:500 13px Inter,system-ui,sans-serif;">'
+        +'<b style="display:block;font-size:14px;margin-bottom:3px;">Next time, sign in with Face ID or fingerprint</b>No email, no code. Your face or fingerprint stays on your phone.'
+        +'<div style="display:flex;gap:8px;margin-top:9px;"><button type="button" onclick="msPasskeyAdd(this)" style="flex:1;background:#4338ca;color:#fff;border:none;border-radius:999px;padding:9px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;">Set it up</button>'
+        +'<button type="button" onclick="try{localStorage.setItem(\'ts_pk_offer\',\'later\')}catch(e){};this.closest(\'#pk-offer\').remove()" style="background:transparent;border:1.5px solid #c7d2fe;border-radius:999px;padding:9px 14px;color:#1e1b4b;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;">Not now</button></div></div>');
+    }).catch(function(){});
+  }
+  var _goPk = window.goTo;
+  if(typeof _goPk==='function'){
+    window.goTo = function(name){ var r=_goPk.apply(this, arguments);
+      try{ if(name==='signin') setTimeout(signinButton, 50); if(name==='dashboard') setTimeout(hubOffer, 1200); }catch(e){}
+      return r; };
+  }
 })();

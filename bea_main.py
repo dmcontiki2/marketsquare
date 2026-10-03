@@ -19632,7 +19632,9 @@ def auth_providers():
     lane that answers true here, so an unconfigured provider is invisible rather
     than a button that fails -- a dead button IS a retry, which is the whole thing
     we are removing."""
-    return {p: _oauth_ready(p) for p in _OIDC}
+    out = {p: _oauth_ready(p) for p in _OIDC}
+    out["passkey"] = _pk_on()   # PASSKEY-1: dormant until migration 064 has made the table
+    return out
 
 def _oauth_safe_next(nxt) -> str:
     # SEC-GATE-1 (24 Sep 2026): '//host' and '/\host' pass startswith('/') but browsers treat them as off-site (open redirect).
@@ -19789,6 +19791,330 @@ async def auth_oauth_apple_callback(request: Request):
     nxt = _oauth_safe_next(nxt)
     resp.headers["Location"] = nxt + ("&" if "?" in nxt else "?") + "signedin=1"
     return resp
+
+
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PASSKEY-1 (David, 3 Oct 2026: "I would like to test 10 first") -- sign in with Face ID / fingerprint
+# ══════════════════════════════════════════════════════════════════════════════
+# WebAuthn passkeys with NO new dependency: a small CBOR reader, COSE keys and signature checks on `cryptography`.
+# Checked on every sign-in: our own single-use challenge (signed state + used-set), clientDataJSON type and EXACT origin
+# https://trustsquare.co, rpIdHash = SHA-256("trustsquare.co"), user-present AND user-verified flags, the signature over
+# authenticatorData || SHA-256(clientDataJSON) with the stored PUBLIC key, and a sign counter that never goes back.
+# The private key never leaves the phone. DORMANT until migration 064_passkeys.py has created the `passkeys` table --
+# that migration is in migrations/DEFERRED.txt and runs only when David removes its line.
+import struct as _pk_struct
+from cryptography.hazmat.primitives import hashes as _pk_hashes
+from cryptography.hazmat.primitives.asymmetric import ec as _pk_ec, padding as _pk_padding, rsa as _pk_rsa
+from cryptography.exceptions import InvalidSignature as _PkInvalidSig
+import base64 as _pk_b64, hashlib as _pk_hl, json as _pk_json
+_PK_RP_ID = "trustsquare.co"
+_PK_ORIGINS = ("https://trustsquare.co",)
+
+
+def _pk_b64u(b: bytes) -> str:
+    return _pk_b64.urlsafe_b64encode(b).rstrip(b"=").decode("ascii")
+
+
+def _pk_ub64u(s: str) -> bytes:
+    s = str(s or "")
+    return _pk_b64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+class _PasskeyError(ValueError):
+    pass
+
+
+# ── a minimal CBOR reader (RFC 8949: the subset WebAuthn uses) ───────────────
+def _pk_cbor(b: bytes, i: int = 0):
+    if i >= len(b):
+        raise _PasskeyError("truncated CBOR")
+    ib = b[i]; mt = ib >> 5; ai = ib & 31; i += 1
+    if ai < 24:
+        val = ai
+    elif ai == 24:
+        val = b[i]; i += 1
+    elif ai == 25:
+        val = _pk_struct.unpack(">H", b[i:i + 2])[0]; i += 2
+    elif ai == 26:
+        val = _pk_struct.unpack(">I", b[i:i + 4])[0]; i += 4
+    elif ai == 27:
+        val = _pk_struct.unpack(">Q", b[i:i + 8])[0]; i += 8
+    else:
+        raise _PasskeyError("unsupported CBOR length")
+    if mt == 0:
+        return val, i
+    if mt == 1:
+        return -1 - val, i
+    if mt in (2, 3):
+        if i + val > len(b):
+            raise _PasskeyError("truncated CBOR string")
+        raw = b[i:i + val]
+        return (raw if mt == 2 else raw.decode("utf-8")), i + val
+    if mt == 4:
+        out = []
+        for _ in range(val):
+            x, i = _pk_cbor(b, i); out.append(x)
+        return out, i
+    if mt == 5:
+        out = {}
+        for _ in range(val):
+            k, i = _pk_cbor(b, i); v, i = _pk_cbor(b, i); out[k] = v
+        return out, i
+    if mt == 7:
+        return {20: False, 21: True, 22: None}.get(ai, None), i
+    raise _PasskeyError("unsupported CBOR type")
+
+
+def _pk_cbor_loads(b: bytes):
+    v, _ = _pk_cbor(b, 0)
+    return v
+
+
+# ── COSE public keys ────────────────────────────────────────────────────────
+def _pk_pubkey(cose: dict):
+    kty, alg = cose.get(1), cose.get(3)
+    if kty == 2 and alg == -7 and cose.get(-1) == 1:          # EC2, ES256, P-256
+        x, y = cose.get(-2), cose.get(-3)
+        if not (isinstance(x, bytes) and isinstance(y, bytes) and len(x) == 32 and len(y) == 32):
+            raise _PasskeyError("bad EC key")
+        return _pk_ec.EllipticCurvePublicNumbers(int.from_bytes(x, "big"), int.from_bytes(y, "big"), _pk_ec.SECP256R1()).public_key(), alg
+    if kty == 3 and alg == -257:                                # RSA, RS256
+        n, e = cose.get(-1), cose.get(-2)
+        if not (isinstance(n, bytes) and isinstance(e, bytes)):
+            raise _PasskeyError("bad RSA key")
+        return _pk_rsa.RSAPublicNumbers(int.from_bytes(e, "big"), int.from_bytes(n, "big")).public_key(), alg
+    raise _PasskeyError("unsupported key type")
+
+
+def _pk_check_client(client_json: bytes, want_type: str, challenge: str):
+    try:
+        cd = _pk_json.loads(client_json.decode("utf-8"))
+    except Exception:
+        raise _PasskeyError("bad clientDataJSON")
+    if cd.get("type") != want_type:
+        raise _PasskeyError("wrong ceremony")
+    if cd.get("challenge") != challenge:
+        raise _PasskeyError("wrong challenge")
+    if cd.get("origin") not in _PK_ORIGINS:
+        raise _PasskeyError("wrong origin")
+    if cd.get("crossOrigin"):
+        raise _PasskeyError("cross-origin")
+
+
+def _pk_check_auth_data(ad: bytes):
+    if len(ad) < 37:
+        raise _PasskeyError("short authenticatorData")
+    if ad[:32] != _pk_hl.sha256(_PK_RP_ID.encode()).digest():
+        raise _PasskeyError("wrong rpId")
+    flags = ad[32]
+    if not flags & 0x01:
+        raise _PasskeyError("user not present")
+    if not flags & 0x04:
+        raise _PasskeyError("user not verified")
+    return flags, _pk_struct.unpack(">I", ad[33:37])[0]
+
+
+def _pk_verify_registration(client_data_b64: str, attestation_b64: str, challenge: str):
+    """-> dict(cred_id=b64u, public_key=bytes(COSE), alg=int, sign_count=int). 'none'/'packed self' attestation
+    is accepted without checking the attestation statement: we ask for attestation 'none' -- the account's proof
+    is the signed-in session this ceremony runs under, not the make of phone."""
+    client = _pk_ub64u(client_data_b64)
+    _pk_check_client(client, "webauthn.create", challenge)
+    att = _pk_cbor_loads(_pk_ub64u(attestation_b64))
+    if not isinstance(att, dict) or not isinstance(att.get("authData"), bytes):
+        raise _PasskeyError("bad attestationObject")
+    ad = att["authData"]
+    flags, count = _pk_check_auth_data(ad)
+    if not flags & 0x40:
+        raise _PasskeyError("no credential in authenticatorData")
+    i = 37 + 16
+    clen = _pk_struct.unpack(">H", ad[i:i + 2])[0]; i += 2
+    cred_id = ad[i:i + clen]; i += clen
+    if not cred_id or len(cred_id) > 1023:
+        raise _PasskeyError("bad credential id")
+    cose, _ = _pk_cbor(ad, i)
+    _pkk, alg = _pk_pubkey(cose)                                    # proves the key parses
+    return {"cred_id": _pk_b64u(cred_id), "public_key": ad[i:_pk_cbor(ad, i)[1]], "alg": alg, "sign_count": count}
+
+
+def _pk_verify_assertion(client_data_b64: str, auth_data_b64: str, signature_b64: str, challenge: str,
+                     public_key_cose: bytes, stored_count: int) -> int:
+    """-> the new sign counter. Raises PasskeyError on any failure."""
+    client = _pk_ub64u(client_data_b64)
+    _pk_check_client(client, "webauthn.get", challenge)
+    ad = _pk_ub64u(auth_data_b64)
+    _flags, count = _pk_check_auth_data(ad)
+    pk, alg = _pk_pubkey(_pk_cbor_loads(public_key_cose))
+    data = ad + _pk_hl.sha256(client).digest()
+    sig = _pk_ub64u(signature_b64)
+    try:
+        if alg == -7:
+            pk.verify(sig, data, _pk_ec.ECDSA(_pk_hashes.SHA256()))
+        else:
+            pk.verify(sig, data, _pk_padding.PKCS1v15(), _pk_hashes.SHA256())
+    except _PkInvalidSig:
+        raise _PasskeyError("bad signature")
+    if (count or stored_count) and count <= int(stored_count or 0):
+        raise _PasskeyError("signature counter went backwards")
+    return count
+
+
+_PK_CHALLENGE_MIN = 5
+_pk_used = {}            # challenge -> expiry epoch (single use)
+
+
+def _pk_on() -> bool:
+    try:
+        conn = database.get_db()
+        try:
+            return bool(conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='passkeys'").fetchone())
+        finally:
+            conn.close()
+    except Exception:
+        return False
+
+
+def _pk_state(purpose: str, email: str = ""):
+    import secrets as _sx
+    ch = _pk_b64u(_sx.token_bytes(32))
+    st = _pyjwt.encode({"scope": "passkey", "p": purpose, "ch": ch, "em": email,
+                        "exp": datetime.now(timezone.utc) + timedelta(minutes=_PK_CHALLENGE_MIN)},
+                       _JWT_SECRET, algorithm=_JWT_ALGO)
+    return ch, st
+
+
+def _pk_take(state: str, purpose: str):
+    import time as _tt
+    try:
+        p = _pyjwt.decode(state or "", _JWT_SECRET, algorithms=[_JWT_ALGO])
+    except Exception:
+        raise HTTPException(status_code=400, detail="That took too long — please try again.")
+    if p.get("scope") != "passkey" or p.get("p") != purpose:
+        raise HTTPException(status_code=400, detail="Please try again.")
+    now = _tt.time()
+    for k in [k for k, v in _pk_used.items() if v < now]:
+        _pk_used.pop(k, None)
+    if p["ch"] in _pk_used:
+        raise HTTPException(status_code=400, detail="Please try again.")
+    _pk_used[p["ch"]] = now + _PK_CHALLENGE_MIN * 60 + 60
+    return p
+
+
+class _PkIn(_BaseModel):
+    state: str
+    id: str = ""
+    clientDataJSON: str = ""
+    attestationObject: str = ""
+    authenticatorData: str = ""
+    signature: str = ""
+    label: str = ""
+
+
+@app.post("/auth/passkey/register/options")
+def passkey_register_options(ts_user: str = Cookie(default=None)):
+    """PASSKEY-1: a signed-in person asks to add Face ID / fingerprint sign-in on this phone."""
+    if not _pk_on():
+        raise HTTPException(status_code=503, detail="Face ID sign-in is not switched on yet.")
+    em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in first.")
+    ch, st = _pk_state("reg", em)
+    conn = database.get_db()
+    try:
+        have = [r["cred_id"] for r in conn.execute("SELECT cred_id FROM passkeys WHERE LOWER(email)=?", (em,)).fetchall()]
+    finally:
+        conn.close()
+    return {"state": st, "publicKey": {
+        "challenge": ch, "rp": {"id": _PK_RP_ID, "name": "TrustSquare"},
+        "user": {"id": _pk_b64u(_pk_hl.sha256(("ts-user:" + em).encode()).digest()), "name": em, "displayName": em},
+        "pubKeyCredParams": [{"type": "public-key", "alg": -7}, {"type": "public-key", "alg": -257}],
+        "authenticatorSelection": {"residentKey": "required", "requireResidentKey": True, "userVerification": "required"},
+        "attestation": "none", "timeout": _PK_CHALLENGE_MIN * 60000,
+        "excludeCredentials": [{"type": "public-key", "id": c} for c in have]}}
+
+
+@app.post("/auth/passkey/register")
+def passkey_register(req: _PkIn, ts_user: str = Cookie(default=None)):
+    if not _pk_on():
+        raise HTTPException(status_code=503, detail="Face ID sign-in is not switched on yet.")
+    em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in first.")
+    p = _pk_take(req.state, "reg")
+    if (p.get("em") or "") != em:
+        raise HTTPException(status_code=400, detail="Please try again.")
+    try:
+        r = _pk_verify_registration(req.clientDataJSON, req.attestationObject, p["ch"])
+    except _PasskeyError as exc:
+        _log.info("PASSKEY-1 register refused for %s: %s", em, exc)
+        raise HTTPException(status_code=400, detail="This phone's Face ID could not be set up. Please try again.")
+    conn = database.get_db()
+    try:
+        conn.execute("INSERT OR IGNORE INTO passkeys (email, cred_id, public_key, alg, sign_count, label, created_at) "
+                     "VALUES (?,?,?,?,?,?,?)", (em, r["cred_id"], r["public_key"], r["alg"], r["sign_count"],
+                                                 _plain_text(req.label or "")[:60],
+                                                 datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        conn.commit()
+    finally:
+        conn.close()
+    _log.info("PASSKEY-1: passkey added for %s", em)
+    return {"ok": True}
+
+
+@app.post("/auth/passkey/login/options")
+def passkey_login_options():
+    """PASSKEY-1: anyone may ask for a challenge; only a phone holding a registered passkey can answer it."""
+    if not _pk_on():
+        raise HTTPException(status_code=503, detail="Face ID sign-in is not switched on yet.")
+    ch, st = _pk_state("login")
+    return {"state": st, "publicKey": {"challenge": ch, "rpId": _PK_RP_ID, "userVerification": "required",
+                                       "timeout": _PK_CHALLENGE_MIN * 60000, "allowCredentials": []}}
+
+
+@app.post("/auth/passkey/login")
+def passkey_login(req: _PkIn, response: Response):
+    if not _pk_on():
+        raise HTTPException(status_code=503, detail="Face ID sign-in is not switched on yet.")
+    p = _pk_take(req.state, "login")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT id, email, public_key, sign_count FROM passkeys WHERE cred_id=?", (req.id or "",)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(status_code=401, detail="This phone's Face ID is not linked to a TrustSquare account yet — sign in with your email once, then add it.")
+    try:
+        cnt = _pk_verify_assertion(req.clientDataJSON, req.authenticatorData, req.signature, p["ch"],
+                                   row["public_key"], row["sign_count"])
+    except _PasskeyError as exc:
+        _log.info("PASSKEY-1 login refused for %s: %s", row["email"], exc)
+        raise HTTPException(status_code=401, detail="Face ID did not match. Please try again, or sign in with your email.")
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE passkeys SET sign_count=?, last_used_at=? WHERE id=?",
+                     (cnt, datetime.now(timezone.utc).isoformat(timespec="seconds"), row["id"]))
+        conn.commit()
+    finally:
+        conn.close()
+    _log.info("PASSKEY-1: signed in %s with a passkey", row["email"])
+    return _establish_user_session(row["email"], response)
+
+
+@app.get("/auth/passkey/status")
+def passkey_status(ts_user: str = Cookie(default=None)):
+    em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in first.")
+    if not _pk_on():
+        return {"on": False, "count": 0}
+    conn = database.get_db()
+    try:
+        n = conn.execute("SELECT COUNT(*) AS n FROM passkeys WHERE LOWER(email)=?", (em,)).fetchone()["n"]
+    finally:
+        conn.close()
+    return {"on": True, "count": int(n)}
 
 
 class _SignInCodeVerify(_BaseModel):
