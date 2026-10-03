@@ -34162,8 +34162,10 @@ def rg_serves_roles_1():
         return [(FAIL, "Quick's role registry (SVC_ROLES) is not where this entry reads it")]
     roles = {r["k"]: r for r in _j.loads(m.group(1))}
     want = {"home_cleaner": (38, lambda r: r["c"] == "C" and not r.get("gate"), "every other job that needs no licence or police clearance"),
-            "plumber": (16, lambda r: r["c"] == "T" and not r.get("gate"), "welders, mechanics, plasterers, pavers"),
-            "electrician": (8, lambda r: r.get("gate") == "licence", "Drivers follow them too, with their PrDP as the licence.")}
+            # LICENCE-SHOWN-1 (RUL-198, 3 Oct 2026): 'driver' (a plain driving licence, no longer a gate) moved from the
+            # electrician guide (licence gate) to the plumber guide (a trade with no gate) -- 17 and 7
+            "plumber": (17, lambda r: r["c"] == "T" and not r.get("gate"), "welders, mechanics, plasterers, pavers"),
+            "electrician": (7, lambda r: r.get("gate") == "licence", "Drivers follow them too, with their PrDP as the licence.")}
     bad = []
     for t, (n, ok, words) in want.items():
         d = _j.loads(st[t])
@@ -34637,6 +34639,180 @@ def rg_col_carry_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "a collector's type and condition travel Quick -> server -> Edit -> Browse filter")]
 
+
+@entry("RG-0803", "HOME-EX-SWITCH-1: the AI-examples switch also sits on Home beside the Categories heading, so a viewer who "
+       "switched the examples off sees why the tiles count only real listings -- and the Local Market tile follows the switch",
+       OPEN, fixed_on="2026-10-03",
+       scope="ms.js msExPaintHome (painted by renderCatCounts into #home-cat-grid's sec-head), renderCatCounts' fallback branch "
+             "(a city holding only examples counted them while hidden), the demo-mode Local Market count, initLMHomeTile "
+             "(non-demo Local Market tile) and msToggleExamples (refreshes that tile); roles/app_i18n_af.json + migrations/"
+             "064_i18n_af_ex_switch.py + DICTV 8 (the switch said 'AI-voorbeelde af' beside 'KI-voorbeelde aan'). SCOPE: every "
+             "city and country, every language (only Afrikaans carried mixed words).",
+       ref="David, 3 Oct 2026, Home in Afrikaans showed Eiendom 16, Onderrig 2 and 0 elsewhere: 'i had the adverts switched off, "
+           "but that switch only shows on the Browse page and not the Home page'. Measured in his Chrome: ts_show_examples='0', "
+           "tiles = real listings only (Property 16, Tutors 2), correct per RUL-194 but unexplained on Home; switched on they read "
+           "20/3/2/9/1/4 and Local Market 2, matching the live DB. Local Market read 2 with the switch off -- Pretoria holds 1 "
+           "real (#273) and 1 example (#272). RUL-196 extends RUL-194 (b) to Home.")
+def rg_home_ex_switch_1():
+    js = repo_file("ms.js"); af = repo_file("roles/app_i18n_af.json")
+    if js is None or af is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need, what in (("function msExPaintHome(", "the Home switch painter"),
+                       ("msExPaintHome(_homeEx);   // HOME-EX-SWITCH-1", "renderCatCounts no longer paints the Home switch"),
+                       ("if (msIsExample(l)) { if (!msShowExamples()) return; _homeEx++; }", "the fallback count counts hidden examples"),
+                       ("if (!msShowExamples()) resolvedListings = resolvedListings.filter(l => !msIsExample(l));",
+                        "the Local Market tile counts hidden examples"),
+                       ("try{ if(typeof initLMHomeTile === 'function') initLMHomeTile(); }catch(e){}   // HOME-EX-SWITCH-1",
+                        "the switch no longer refreshes the Local Market tile")):
+        if need not in js:
+            bad.append(what)
+    m = re.search(r"var DICTV='(\d+)'", js)
+    if not m or int(m.group(1)) < 8:
+        bad.append("ms.js DICTV below 8 -- browsers keep 'AI-voorbeelde af'")
+    try:
+        t = json.loads(af).get("t", {})
+    except Exception as e:
+        t = {}; bad.append("roles/app_i18n_af.json does not parse")
+    want = {"AI examples on": "KI-voorbeelde aan", "AI examples off": "KI-voorbeelde af"}
+    for en, w in want.items():
+        if t.get(en) != w:
+            bad.append("checked Afrikaans has %r for %r" % (t.get(en), en))
+    if repo_file("migrations/064_i18n_af_ex_switch.py") is None:
+        bad.append("migration 064 is missing")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    try:
+        req = urllib.request.Request(BASE + "/i18n/translate", method="POST",
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     data=json.dumps({"lang": "af", "strings": list(want)}).encode())
+        out = json.loads(urllib.request.urlopen(req, timeout=20).read().decode()).get("out", {})
+    except Exception as e:
+        return [(INFO, "source holds; live half NOT EVALUATED - %s" % str(e)[:60])]
+    live_bad = ["live serves %r for %r" % (out.get(en), en) for en, w in want.items() if out.get(en) != w]
+    if live_bad:
+        return [(FAIL, "; ".join(live_bad))]
+    return [(INFO, "Home carries the switch, every home count follows it, and Afrikaans says 'KI-voorbeelde aan/af' live")]
+
+
+@entry("RG-0800", "FEED-LIVE-1: For You never shows an advert the buyer cannot open -- paused, draft and archived adverts stay "
+       "out of the feed, a card whose advert goes off the market is dropped on the tap that finds it gone, and the free-tier "
+       "banner counts only real, live adverts abroad (never AI examples) and names the countries truthfully",
+       OPEN, fixed_on="2026-10-03",
+       scope="bea_main.py _buyer_live_sql + _example_sql; get_wishlist_feed (feed rows and the upgrade_prompt count); both "
+             "advert deletes clear wishlist_matches; ms.js _wlRenderCards data-lid + openDetail's not-found branch.",
+       ref="David, 3 Oct 2026: tapped '2000 Krugerrand, 1 oz gold' in For You and was told the advert is not available any "
+           "more -- 'it should have been removed here and not even been viewable'. Measured: all 5 of his cards (#442, #446, "
+           "#454, #455, #464) were paused or draft; 166 of 212 feed rows across 81 buyers pointed at non-live adverts; 44 rows "
+           "pointed at deleted adverts; the banner's '30 matching listings in KE' was 30 AI examples over KE, AU, GB and US.")
+def rg_feed_live_1():
+    py = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if py is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "def _buyer_live_sql(" not in py or "def _example_sql(" not in py:
+        bad.append("the live / example SQL helpers are gone")
+    i = py.find("def get_wishlist_feed(")
+    seg = py[i:i + 9000] if i >= 0 else ""
+    a = seg.find("FROM wishlist_matches m")
+    if a < 0 or '_buyer_live_sql("l.")' not in seg[a:a + 900]:
+        bad.append("the For You query no longer leaves out paused/draft/archived adverts")
+    if 'AND NOT {_example_sql("l.")}' not in seg or '{_buyer_live_sql("l.")}' not in seg:
+        bad.append("the free-tier banner counts AI examples or adverts that are not live")
+    if '"%d other countries" % len(ccs)' not in seg:
+        bad.append("the banner names one country for a count spread over several")
+    if py.count('conn.execute("DELETE FROM wishlist_matches WHERE listing_id = ?", (listing_id,))   # FEED-LIVE-1') < 2:
+        bad.append("deleting an advert leaves its feed rows behind")
+    if "'<div class=\"wf-card\" data-lid=\"'" not in js:
+        bad.append("feed cards carry no data-lid")
+    if "_wf.querySelectorAll('.wf-card[data-lid=\"' + _raw + '\"]').forEach(c => c.remove());" not in js:
+        bad.append("a tap that finds the advert gone leaves the card in the feed")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "For You holds only adverts a buyer can open; the banner counts only real, live adverts abroad")]
+
+@entry("RG-0801", "PIECE-RATE-1 (RUL-197): Quick never refuses a per-visit, per-job or call-out price against the hourly minimum "
+       "wage -- 'Per besoek R25' goes on; Per hour and Per day keep the floor, and so does a call-out's 'then per hour' rate",
+       OPEN, fixed_on="2026-10-03",
+       scope="quick.html drawRate (B.x = 0 for visit/job/callout; ok() needs an amount above zero and the floor only where x > 0; "
+             "paint() shows no floor for a visit or a job and the hourly floor for a call-out) + genie/HARNESS.html (identical). "
+             "SCOPE: every country in MINW, every language (the floor line is only removed, no new words).",
+       ref="David, 3 Oct 2026, Quick in Afrikaans, courier, Menlyn, Per besoek R25: 'Dit is onder die nasionale minimumloon. Laagste "
+           "toegelate bedrag: R30.23 -- een uur teen die minimumloon' and Next stayed off. 'per visit ... typically takes 20 minutes "
+           "... can not really be linked or compared against the hourly minimum rate'.")
+def rg_piece_rate_1():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for b in ("visit", "job"):
+        if not re.search(r"%s:\s*\{t:'Per %s',\s*u:' / %s',\s*x:0\}" % (b, b, b), q):
+            bad.append("a %s still carries an hourly floor" % b)
+    if not re.search(r"callout:\{t:'Call-out \+ per hour',u:' / call-out', x:0\}", q):
+        bad.append("a call-out fee still carries an hourly floor")
+    if not re.search(r"hour:\s*\{t:'Per hour',\s*u:' / hour',\s*x:1\}", q) or not re.search(r"day:\s*\{t:'Per day',\s*u:' / day',\s*x:8\}", q):
+        bad.append("the hour/day floor was lost")
+    if "if(!(a>0) || a<fl) return false;" not in q:
+        bad.append("ok() lets an empty or zero amount through, or no longer applies the floor")
+    if "if(basis==='callout'){ var h=num('rth'); if(h>0 && h<F) return false; }" not in q:
+        bad.append("the call-out's hourly rate lost its floor")
+    if "one hour at the minimum wage.';" in q:
+        bad.append("the screen still states a visit/job floor as one hour at the minimum wage")
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "per visit / per job / call-out fee carry no wage floor; hour and day keep it")]
+
+@entry("RG-0802", "LICENCE-SHOWN-1 (RUL-198): a Driver or Delivery rider is listed publicly at once -- the plain driving licence "
+       "is no longer a gate; buyers read 'Driving licence not verified' beside the Trust Score and in the introduction form, it "
+       "earns nothing until checked, and introductions go ahead. A PrDP, PSIRA, DoEL or SAQCC licence stays a gate",
+       OPEN, fixed_on="2026-10-03",
+       scope="scripts/build_role_registry.py SHOWN -> roles/role_registry.json licence_shown (driver, delivery_rider; no gate) -> "
+             "quick.html SVC_ROLES (gate null) + genie/HARNESS.html; bea_main.py _licence_shown_roles / _licence_checked, GET "
+             "/listings/{id} licence_unverified, /listings/mine licence_shown; ms.js _msLicenceNote / _introLicNote / "
+             "msLicenceShownNote; stories: 'driver' moved from the electrician guide to the plumber guide (RG-0655 17/7). "
+             "UNCHANGED: RUL-115's casual check (one confirmation or an ID check) still applies to a Delivery rider.",
+       ref="David, 3 Oct 2026, Seller Hub, #473 'Afleweringsryer -- Menlyn, Pretoria East' (Delivery rider): 'Only people you send "
+           "your link to can see this listing ... Upload my licence'. 'We are denying this listing based on us not having "
+           "verified the drivers license but this is not the same as the caretakers checks that is legally required ... "
+           "we just show his TS as license not verified ... the people shopping for a driver can then still be introduced'.")
+def rg_licence_shown_1():
+    import json as _j
+    py = repo_file("bea_main.py"); js = repo_file("ms.js"); q = repo_file("quick.html"); reg = repo_file("roles/role_registry.json")
+    if None in (py, js, q, reg):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    try:
+        roles = {r["key"]: r for r in _j.loads(reg).get("roles", [])}
+    except Exception:
+        roles = {}; bad.append("roles/role_registry.json does not parse")
+    for k in ("driver", "delivery_rider"):
+        r = roles.get(k) or {}
+        if r.get("gate"):
+            bad.append("%s is gated again" % k)
+        if not (r.get("licence_shown") or {}).get("licences"):
+            bad.append("%s no longer shows its licence to buyers" % k)
+    for k in ("code_10_code_14_driver", "taxi_shuttle_driver", "security_guard", "electrician", "gas_installer"):
+        if ((roles.get(k) or {}).get("gate") or {}).get("type") != "licence":
+            bad.append("%s lost its licence gate" % k)
+    import re as _re
+    m = _re.search(r"var SVC_ROLES = (\[.*?\]);\n", q)
+    sv = {r["k"]: r for r in _j.loads(m.group(1))} if m else {}
+    if not sv or sv.get("driver", {}).get("gate") or sv.get("delivery_rider", {}).get("gate"):
+        bad.append("Quick still tells a driver her advert waits for the licence (SVC_ROLES not re-synced)")
+    for need, what in (("def _licence_shown_roles(", "the shown-licence roles"), ("def _licence_checked(", "the licence check"),
+                       ('_d["licence_unverified"] = _sl', "GET /listings/{id} no longer tells the buyer"),
+                       ('d["licence_shown"] = _shown_roles[', "/listings/mine no longer tells her card")):
+        if need not in py:
+            bad.append(what)
+    for need, what in (("function _msLicenceNote(", "the Trust Score note"), ("_introLicNote(id);   // LICENCE-SHOWN-1", "the introduction-form line"),
+                       ("function msLicenceShownNote(", "the Hub card")):
+        if need not in js:
+            bad.append(what)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "a driver is public at once with 'Driving licence not verified'; PrDP / PSIRA / DoEL / SAQCC stay gates")]
 
 if __name__ == "__main__":
     sys.exit(main())

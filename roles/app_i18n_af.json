@@ -2,6 +2,12 @@
  "lang": "af",
  "note": "Hand-written South African Afrikaans for the main app, 20 Sep 2026. Replaces the machine translation that produced Dutch forms (Uitgelicht for Featured, Wereld Erfenis for World Heritage) and translated acronyms (KPA for CPA, FOUTE for OPS). 't' is the checked Afrikaans. 'en' is every phrase deliberately LEFT IN ENGLISH -- EULA and legal clauses (RUL-143: the English binds), acronyms, codes and admin references -- seeded as itself so the app never machine-translates them again.",
  "t": {
+  "AI examples on": "KI-voorbeelde aan",
+  "AI examples off": "KI-voorbeelde af",
+  "AI examples are shown, below the real listings.": "KI-voorbeelde word gewys, onder die regte advertensies.",
+  "AI examples are hidden. Only real listings show.": "KI-voorbeelde is versteek. Net regte advertensies wys.",
+  "Show AI examples": "Wys KI-voorbeelde",
+  "Show or hide the AI example listings": "Wys of versteek die KI-voorbeeldadvertensies",
   "Me": "Ek",
   "No": "Nee",
   "to": "tot",

@@ -1811,6 +1811,20 @@ function msExPaint(slotId, anchorId, nEx, before, css){
   }
   s.innerHTML = msExSwitchHtml(nEx);
 }
+/* HOME-EX-SWITCH-1 (David 3 Oct 2026: "i had the adverts switched off, but that switch only shows on the Browse page and not the
+   Home page"). The Home tiles follow the switch (RUL-194), so with it off the counts drop to real listings only -- and Home gave
+   no sign of it, so the numbers read as wrong. The same switch now sits beside the Categories heading, one tap from either state. */
+function msExPaintHome(nEx){
+  const grid = document.getElementById('home-cat-grid');
+  const head = grid && grid.previousElementSibling;
+  if(!head || !head.classList || !head.classList.contains('sec-head')) return;
+  let s = document.getElementById('ms-ex-home');
+  if(!s){
+    s = document.createElement('div'); s.id = 'ms-ex-home'; s.style.cssText = 'margin-left:auto;margin-right:12px;display:flex;align-items:center;';
+    head.insertBefore(s, head.querySelector('a'));
+  }
+  s.innerHTML = msExSwitchHtml(nEx);
+}
 function msExHiddenNote(nEx){
   return '<div class="no-res">No real listings here yet' + (nEx ? ' — ' + nEx + ' AI example' + (nEx === 1 ? ' is' : 's are') + ' hidden.' : '.')
     + '<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msToggleExamples()">Show AI examples</span></div>';
@@ -1824,6 +1838,7 @@ function msToggleExamples(){
   try{ const lg = document.getElementById('lm-grid'); if(lg && lg.offsetParent !== null) lmLoadGrid(); }catch(e){}
   try{ if(typeof viewMode !== 'undefined' && viewMode === 'map') renderMap(); }catch(e){}
   try{ renderCatCounts(); }catch(e){}
+  try{ if(typeof initLMHomeTile === 'function') initLMHomeTile(); }catch(e){}   // HOME-EX-SWITCH-1: the Local Market tile follows the switch too
 }
 function fspark(l){
   return _demoBadge(l) + (isFounders(l)
@@ -4857,6 +4872,7 @@ function renderCatCounts() {
   const counts = {};
   // Count live listings only (non-placeholder); suburb filter applies
   const liveCounts = {};
+  let _homeEx = 0;   // HOME-EX-SWITCH-1: examples the tiles count while the switch is on
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
     if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
@@ -4894,6 +4910,7 @@ function renderCatCounts() {
     }
     return true;
   }).forEach(l => {
+    if (msIsExample(l)) _homeEx++;   // HOME-EX-SWITCH-1
     const cat = normCat(l.cat);
     liveCounts[cat] = (liveCounts[cat] || 0) + 1;
   });
@@ -4926,6 +4943,7 @@ function renderCatCounts() {
         const lc = (l.country || l.city_country || 'ZA').toUpperCase();
         if (lc !== advCountry) return;
       }
+      if (msIsExample(l)) { if (!msShowExamples()) return; _homeEx++; }   // HOME-EX-SWITCH-1: hidden examples are not counted here either
       const cat = _cat0;
       counts[cat] = (counts[cat] || 0) + 1;
     });
@@ -4938,7 +4956,8 @@ function renderCatCounts() {
         const demoLMCount = LISTINGS.filter(l =>
           !l.id.startsWith('ph_') &&
           normCat(l.cat) === 'LocalMarket' &&
-          (!_aCity || !l.city || l.city === _aCity)
+          (!_aCity || !l.city || l.city === _aCity) &&
+          (msShowExamples() || !msIsExample(l))   // HOME-EX-SWITCH-1
         ).length;
         tile.style.display = '';
         const countEl = document.getElementById('lm-home-count');
@@ -4955,6 +4974,7 @@ function renderCatCounts() {
     // display the full category structure (David: don't remove the cards, show 0).
     tile.style.display = '';
   });
+  msExPaintHome(_homeEx);   // HOME-EX-SWITCH-1
 }
 
 // ── Rental availability (occupancy) — buyer-facing label/badge (Session 139) ──
@@ -5962,6 +5982,15 @@ function openDetail(id){
           if (findListing('bea_' + row.id)) { if (!_fromPop && !window._msLandingDetail) { try { goTo('browse'); } catch(e){} } window._msLandingDetail = false; openDetail('bea_' + row.id); window._msDetailFetching = null; return; }
         }
         window._msDetailFetching = null;
+        /* FEED-LIVE-1 (David 3 Oct 2026): a card whose advert went off the market after the feed loaded leaves the
+           feed the moment the tap finds it gone -- it never stays to be tapped again. */
+        try {
+          const _wf = document.getElementById('wishlist-feed');
+          if (_wf) {
+            _wf.querySelectorAll('.wf-card[data-lid="' + _raw + '"]').forEach(c => c.remove());
+            if (!_wf.querySelector('.wf-card') && typeof _wlRenderCards === 'function') _wf.innerHTML = _wlRenderCards([], false);
+          }
+        } catch (e) {}
         if (typeof showToast === 'function') showToast('That listing is not available any more.');
       }).catch(() => { window._msDetailFetching = null; if (typeof showToast === 'function') showToast('That listing is not in view right now — try Browse.'); });
       return;
@@ -6208,6 +6237,7 @@ function openDetail(id){
   // E2E-HMI-1 (24 Sep 2026): the CTA offered 'Join Queue' on adverts whose seller has no verified
   // ID, which the server refuses. Say so on the button itself.
   _msSellerCanReceive(id).then(function(ok){
+    _msLicenceNote(id);   // LICENCE-SHOWN-1: beside the Trust Score
     if (ok==='demo') {   // DEMO-INACTIVE-1: say it on the button; a tap explains
       const b = document.querySelector('#screen-detail .sticky-cta .cta-btn');
       if (b) { b.innerHTML = 'Demo example \u2014 no real product or service'; b.style.opacity = '.6'; b.style.fontSize = '13px'; }
@@ -6957,6 +6987,7 @@ async function _msSellerCanReceive(id){
     const beaId=parseInt(String(l.id).replace('bea_',''),10); if(!beaId) return true;
     const r=await fetch(BEA_URL+'/listings/'+beaId); if(!r.ok) return true;
     const d=await r.json();
+    try{ (window._msLicUnv = window._msLicUnv || {})[id] = (d && d.licence_unverified) || null; }catch(_){}   // LICENCE-SHOWN-1
     if (d && d.demo_example) return 'demo';   // DEMO-INACTIVE-1: an example, never a real seller
     /* INTRO-GATE-MATCH-1 (25 Sep 2026 inspection, ts4-01): gate on the server's own answer. The paid Home Affairs
        tick alone locked 44 of the 65 live adverts whose sellers the server accepts (verified ID document or agency). */
@@ -6973,7 +7004,38 @@ function openModal(id){
     /* STORY-WALK-FIX-1 (29 Sep 2026): the ID note sat as a toast over the message box and the Join queue button -- it is now a line inside the form */   /* RUL-188: warn, never block */
     _openModalNow(id);
     _introIdNote(ok==='unchecked');
+    _introLicNote(id);   // LICENCE-SHOWN-1
   });
+}
+/* LICENCE-SHOWN-1 (RUL-198, David 3 Oct 2026): "this is not the same as the caretakers checks that is legally required ...
+   we just show his TS as license not verified ... the people shopping for a driver can then still be introduced if they
+   still want to be introduced". A driver's advert is public with an unchecked driving licence; the buyer reads it beside
+   the Trust Score and in the introduction form -- never a block. */
+function _msLicLabel(id){ try{ return (window._msLicUnv && window._msLicUnv[id]) || ''; }catch(_){ return ''; } }
+function _msLicenceNote(id){
+  try{
+    const lab = _msLicLabel(id); if(!lab) return;
+    const blk = document.querySelector('#screen-detail .trust-block');
+    if(!blk || blk.parentNode.querySelector('.ms-licnote')) return;
+    const n = document.createElement('div'); n.className = 'ms-licnote';
+    n.style.cssText = 'margin:-4px 0 14px;padding:9px 12px;border-radius:10px;background:#fff7e6;border:1px solid #f0c36d;color:#5c3d00;font-size:12.5px;line-height:1.45';
+    const b = document.createElement('b'); b.textContent = lab + ' not verified';
+    const t = document.createElement('span'); t.textContent = ' \u2014 it adds nothing to the Trust Score until our team has checked it. You can still ask for an introduction.';
+    n.appendChild(b); n.appendChild(t);
+    blk.parentNode.insertBefore(n, blk.nextSibling);
+  }catch(_){}
+}
+function _introLicNote(id){
+  try{
+    const old = document.getElementById('m-licnote'); if(old) old.remove();
+    const lab = _msLicLabel(id); if(!lab) return;
+    const msg = document.getElementById('m-msg'); const fld = msg && msg.closest('.field'); if(!fld) return;
+    const d = document.createElement('div'); d.id = 'm-licnote';
+    d.style.cssText = 'margin:6px 0 10px;padding:10px 12px;border-radius:10px;background:#fff7e6;border:1px solid #f0c36d;color:#5c3d00;font-size:13px;line-height:1.45';
+    d.textContent = "This seller's " + lab.toLowerCase() + " has not been checked yet. TrustSquare still introduces you \u2014 ask to see it before the work starts.";
+    const idn = document.getElementById('m-idnote');
+    (idn || fld).parentNode.insertBefore(d, (idn || fld).nextSibling);
+  }catch(_){}
 }
 function _introIdNote(show){   /* STORY-WALK-FIX-1 */
   try{
@@ -11776,6 +11838,18 @@ function msHiddenCasualNote(lid, raw){
     + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
     + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
 }
+/* LICENCE-SHOWN-1 (RUL-198): a driver's advert is public; her card says what buyers see until her licence is checked. */
+function msLicenceShownNote(lid, raw){
+  const lab = String(raw.licence_shown || 'Licence');
+  const lw = raw.licence_status === 'pending';
+  return '<div class="ms-licshown-note" style="margin:8px 0;border:1.5px solid #93c5fd;background:#eff6ff;border-radius:11px;padding:10px 12px;">'
+    + '<div style="font-size:12.5px;font-weight:700;color:#1e3a8a;">Customers see this listing \u2014 with \u201c' + lab + ' not verified\u201d</div>'
+    + (lw
+      ? '<div style="font-size:12px;color:#1e40af;margin:3px 0 0;line-height:1.45;">Your licence is with our team. Once checked, the note goes and it counts towards your Trust Score.</div>'
+      : '<div style="font-size:12px;color:#1e40af;margin:3px 0 8px;line-height:1.45;">Upload it and our team checks it \u2014 then the note goes and it counts towards your Trust Score.</div>'
+        + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msClearanceUpload(' + Number(lid) + ',\'licence\')">Upload my licence</button>')
+    + '</div>';
+}
 function msClearanceUpload(lid, kind){
   const _lic = kind === 'licence';   // LICENCE-GATE-1: the same shortcut chooses the licence credential
   openEditListing(lid);
@@ -11887,7 +11961,7 @@ function renderDashCard(dl){
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
-      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId, dl._raw) : ''}
+      ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId, dl._raw) : ''}${(dl._raw && !dl._raw.hidden_from_strangers && dl._raw.licence_shown && _ls==='live') ? msLicenceShownNote(dl.beaListingId, dl._raw) : ''}
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
@@ -16838,7 +16912,7 @@ function _wlRenderCards(cards, isShowcase) {
       ? '<span style="position:absolute;top:6px;right:6px;background:' + trustTier(c.trust_score).bg + ';color:' + trustTier(c.trust_score).c + ';font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;pointer-events:none;">★ ' + c.trust_score + '</span>'
       : '';
     return (
-      '<div class="wf-card" onclick="' + onClick + '">'
+      '<div class="wf-card" data-lid="' + _wlEsc(String(c.listing_id).replace(/^bea_/, '')) + '" onclick="' + onClick + '">'
       + '<div style="position:relative;height:88px;overflow:hidden;flex-shrink:0;background:var(--surface-2);">' + img + featBadge + wfTrustOverlay + '</div>'
       + '<div class="wf-card-body">'
       +   '<div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">' + _wlEsc(c.category || '') + '</div>'
@@ -17308,6 +17382,7 @@ async function initLMHomeTile() {
       resolvedListings = Array.isArray(data) ? data : (data.listings || []);
     }
     if (_seq !== _lmHomeSeq) return;
+    if (!msShowExamples()) resolvedListings = resolvedListings.filter(l => !msIsExample(l));   // HOME-EX-SWITCH-1: as the page it opens
     const n = resolvedListings.length;
     // Update count
     const countEl = document.getElementById('lm-home-count');
@@ -23577,7 +23652,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
      old machine words kept being painted from it and no server fix could ever reach them.
      The stamp goes in the key: raise it whenever the checked words change, and every browser
      drops what it has and refetches once. Old copies are swept out on load. */
-  var DICTV='7';   /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
+  var DICTV='8';   /* HOME-EX-SWITCH-1 (3 Oct 2026): the switch reads 'KI-voorbeelde aan/af' in checked Afrikaans (it said 'AI-voorbeelde af' beside 'KI-voorbeelde aan'). */ /* was 7:    /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
   var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=400, CHUNK=60;   /* 400: the longest card blurbs are ~340 */
   try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
        if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }

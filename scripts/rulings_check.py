@@ -102,6 +102,26 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-198": [
+   # A plain driving licence is shown, not a gate (3 Oct, amends RUL-156 (a)/(b)).
+   ("RULINGS.md", ["A PLAIN DRIVING LICENCE IS SHOWN, NOT A GATE"], []),
+   ("scripts/build_role_registry.py", ['SHOWN = {"driver": ["driving_licence"], "delivery_rider": ["driving_licence_code_a"]}'],
+    ['"driver": LIC("driving_licence")', '"delivery_rider": LIC("driving_licence_code_a")']),
+   ("bea_main.py", ["def _licence_shown_roles(", '_d["licence_unverified"] = _sl'], []),
+   ("ms.js", ["function _msLicenceNote(", "function msLicenceShownNote("], []),
+ ],
+ "RUL-197": [
+   # A visit, a job or a call-out fee carries no minimum-wage floor (3 Oct, amends RUL-168 (b)).
+   ("RULINGS.md", ["A VISIT, A JOB OR A CALL-OUT FEE HAS NO MINIMUM-WAGE FLOOR"], []),
+   ("quick.html", ["PIECE-RATE-1", "visit: {t:'Per visit',           u:' / visit',    x:0}", "if(!(a>0) || a<fl) return false;"],
+    ["one hour at the minimum wage.';"]),
+ ],
+ "RUL-196": [
+   # Home carries the AI-examples switch and every Home count follows it (3 Oct, extends RUL-194 (b)).
+   ("RULINGS.md", ["THE AI-EXAMPLES SWITCH ALSO SITS ON HOME"], []),
+   ("ms.js", ["function msExPaintHome(", "msExPaintHome(_homeEx);", "resolvedListings = resolvedListings.filter(l => !msIsExample(l));"], []),
+   ("roles/app_i18n_af.json", ['"AI examples off": "KI-voorbeelde af"'], []),
+ ],
  "RUL-195": [
    # Claude never first (2 Oct). Base lane is non-Claude; the goal contract carries the rule;
    # absence needle trips if a later session puts Claude back as the base lane.
