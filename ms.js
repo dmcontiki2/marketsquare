@@ -620,6 +620,7 @@ async function loadLiveDash() {
 
   // ── Step 1: Load seller\'s own listings ──────────────────
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
+  let _mineIds = null;   // HUB-GHOST-1: the advert ids the server says are hers (null = not known this run)
   /* KEY-ACCOUNT-HUB-1 (28 Sep 2026). The hub used to fetch a seller's listings ONLY when it
      could put an e-mail in the query string. A worker enrolled through the employer door
      (org_enrol) signs in with a KEY -- she has a session cookie and a key identity
@@ -655,6 +656,16 @@ async function loadLiveDash() {
         return;
       }
       const mine = (_mr && _mr.ok) ? await _mr.json().catch(function(){ return null; }) : null;
+      /* HUB-GHOST-1 (David, 3 Oct 2026: "i can not delete the 'aflewerings ryer', this is an old recurring issue"). The hub
+         only ever ADDED or refreshed cards from /listings/mine -- it never took one away. #473 was deleted on the server at
+         18:45Z; his open Hub kept the card through two later /listings/mine reads, Delete then answered 404 and the card
+         stayed. The server's answer is the truth: a card whose advert the server no longer returns leaves the hub, and an
+         introduction for such an advert does not bring the card back (step 2). Only a good answer prunes -- a failed read
+         keeps what is shown. */
+      if (_mr && _mr.ok && Array.isArray(mine)) {
+        _mineIds = new Set(mine.map(function(l){ return l.id; }));
+        dashState.listings = dashState.listings.filter(function(d){ return !d.beaListingId || _mineIds.has(d.beaListingId); });
+      }
       if (mine && mine.length) {
         mine.forEach(l => {
           let dl = dashState.listings.find(d => d.beaListingId === l.id);
@@ -715,6 +726,7 @@ async function loadLiveDash() {
       const photo = listing ? listing.photo : null;
 
       let dl = dashState.listings.find(d => d.beaListingId === intro.listing_id);
+      if (!dl && _mineIds && !_mineIds.has(intro.listing_id)) return;   // HUB-GHOST-1: no card for an advert the server says is gone
       if (!dl) {
         dl = {
           id: 'bea_dl_' + intro.listing_id,
@@ -13911,7 +13923,9 @@ async function elConfirmDeleteListing() {
       BEA_URL + '/listings/' + elCurrentId + '/seller?email=' + encodeURIComponent(email),
       { method: 'DELETE', credentials: 'include' }  // DELETE-BIND-1: session-bound
     );
-    if (!res.ok) {
+    // HUB-GHOST-1: 404 = the advert is already gone on the server -- take the card away, never 'Error: Listing not found'.
+    const _gone = res.status === 404;
+    if (!res.ok && !_gone) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'Delete failed (' + res.status + ')');
     }
@@ -13921,7 +13935,7 @@ async function elConfirmDeleteListing() {
     if (btn) { btn.textContent = 'Delete this listing'; btn.style.pointerEvents = 'auto'; }  // DEL-STUCK-2
     await loadLiveListings();
     renderDash();
-    showToast('Listing deleted');
+    showToast(_gone ? 'Listing removed — it was already deleted' : 'Listing deleted');
     goTo('dashboard');
   } catch(e) {
     showToast('Error: ' + e.message);
@@ -24010,9 +24024,18 @@ function msOwnerBar(id){
   function u8(s){ s=String(s||'').replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var b=atob(s), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a.buffer; }
   function b64u(buf){ var b=new Uint8Array(buf), s=''; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
   var _on=null;
+  /* PASSKEY-PHONE-1 (David, 3 Oct 2026: "The face id and fingerprint message should not show on laptops or computers but
+     only on phones"). Windows Hello and a Mac's Touch ID also pass the platform-authenticator test, so that test alone put
+     the offer on his laptop's Hub. Phone = the browser reports itself mobile (userAgentData.mobile) or the user agent is an
+     iPhone / Android phone. A laptop, desktop or tablet gets neither the sign-in button nor the Hub offer. */
+  function pkPhone(){
+    try{ var d=navigator.userAgentData; if(d && typeof d.mobile==='boolean') return d.mobile; }catch(_){}
+    return /iPhone|iPod|Android.+Mobile|Windows Phone|Mobi/i.test(navigator.userAgent||'');
+  }
+  window.msPasskeyPhone = pkPhone;
   function pkOn(){
     if(_on) return _on;
-    _on = (window.PublicKeyCredential && navigator.credentials && window.isSecureContext)
+    _on = (pkPhone() && window.PublicKeyCredential && navigator.credentials && window.isSecureContext)
       ? fetch(BEA_URL+'/auth/providers').then(function(r){ return r.ok?r.json():{}; }).then(function(p){ return !!(p && p.passkey); }).catch(function(){ return false; })
       : Promise.resolve(false);
     return _on;

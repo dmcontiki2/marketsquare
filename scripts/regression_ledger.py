@@ -34889,7 +34889,7 @@ def rg_help_pull_1():
 
 @entry("RG-0805", "SCREEN-WALK-ORIGIN-1: the every-language screen walk runs on the server's twice-daily maintenance timer "
        "-- its only producer since the daily Cowork loop was retired on 28 Sep",
-       OPEN, fixed_on="2026-10-03",
+       LOCKED, fixed_on="2026-10-03",
        scope="scripts/screen_walk.py (_kit_env uses /opt/ms-playwright when there is no Projects/.tools kit; walks without "
              "a review credential only when the public home page IS the app), scripts/maintenance_agent.py "
              "_screen_walk_lane (no longer skips on /opt/marketsquare-src; reads the public site, 240 s cap), "
@@ -34897,8 +34897,10 @@ def rg_help_pull_1():
        ref="RED-SWEEP-3OCT: RG-0456 red -- last walk 28 Sep 05:44Z. The Cowork daily loop ran it; GOAL_RUN_PROMPT.md "
            "(28 Sep) retired that loop and said health checks belong to 'other lanes and the server's own timers', but "
            "the server timer's lane skipped the walk ('Linux sandbox only'). Proven on the server 3 Oct 18:58Z from a "
-           "scratch copy: 5 languages in 23 s, OK, every language 20/3/2/29/1/4. OPEN until the timer itself writes the "
-           "witness after the deploy.")
+           "scratch copy: 5 languages in 23 s, OK, every language 20/3/2/29/1/4. LOCKED 3 Oct 19:05Z after the deployed "
+           "code (2fc1353) ran the timer's own lane on the origin -- maintenance_agent._screen_walk_lane() -> OK, 5 "
+           "languages in 20 s, witness written -- with maintenance-agent.timer enabled and active (next 05:20Z). This "
+           "entry fails by itself if the timer stops: the witness must stay under 30 h old.")
 def rg_screen_walk_origin_1():
     sw = repo_file(os.path.join("scripts", "screen_walk.py")); ag = repo_file(os.path.join("scripts", "maintenance_agent.py"))
     if sw is None or ag is None:
@@ -34959,6 +34961,44 @@ def rg_resend_plan_truth_1():
     except Exception:
         bad.append("DASHBOARD_PROVENANCE.json does not parse")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Resend says what is proven; Cloudflare's R 0 re-checked live")]
+
+
+@entry("RG-0807", "PASSKEY-PHONE-1: the Face ID / fingerprint offer and the 'Sign in with Face ID' button show on phones only -- "
+       "never on a laptop, desktop or tablet, even one with Windows Hello or Touch ID",
+       OPEN, fixed_on="2026-10-03",
+       scope="ms.js PASSKEY-1 block: pkPhone() (userAgentData.mobile, else an iPhone / Android-phone user agent) gates pkOn(), "
+             "which both signinButton() and hubOffer() wait on. Server unchanged.",
+       ref="David, 3 Oct 2026, Seller Hub on his laptop (screenshot): 'The face id and fingerprint message should not show on "
+           "laptops or computers but only on phones'. Cause: the only device test was isUserVerifyingPlatformAuthenticatorAvailable(), "
+           "which Windows Hello answers yes.")
+def rg_passkey_phone_1():
+    bad = _fb28_need([("ms.js", [("function pkPhone(){", "the phone test is gone"),
+                                 ("if(d && typeof d.mobile==='boolean') return d.mobile;", "the browser's own mobile flag is no longer read"),
+                                 ("return /iPhone|iPod|Android.+Mobile|Windows Phone|Mobi/i.test(navigator.userAgent||'');",
+                                  "the phone user-agent fallback changed"),
+                                 ("_on = (pkPhone() && window.PublicKeyCredential", "Face ID is offered on laptops and desktops again")])])
+    return bad or [(INFO, "Face ID / fingerprint is offered on phones only")]
+
+
+@entry("RG-0808", "HUB-GHOST-1: the Seller Hub never keeps a card for an advert the server no longer has -- every good "
+       "/listings/mine answer prunes the hub to the server's list, an introduction cannot bring a deleted advert's card back, and "
+       "Delete on an advert that is already gone (404) removes the card instead of saying 'Error'",
+       OPEN, fixed_on="2026-10-03",
+       scope="ms.js loadLiveDash (_mineIds from /listings/mine; the step-2 intro merge skips adverts outside it) and "
+             "elConfirmDeleteListing (404 = gone). Server: DELETE /listings/{id}/seller answers 404 for a missing advert.",
+       ref="David, 3 Oct 2026: 'i can not delete the aflewerings ryer, this is an old recurring issue' (the fourth delete fault "
+           "after 22 May empty email, DELETE-BIND-1 23 Sep, DEL-STUCK-2 24 Sep). Measured: #473 deleted on the server 18:45:27Z "
+           "(200); his Hub read /listings/mine at 18:48:23Z and 18:49:22Z without #473 and still showed it; Delete at 18:49:03Z "
+           "-> 404 -> 'Error: Listing not found', card kept. Root cause: loadLiveDash only added or refreshed cards, never removed.")
+def rg_hub_ghost_1():
+    bad = _fb28_need([("ms.js", [("_mineIds = new Set(mine.map(function(l){ return l.id; }));", "the hub no longer learns the server's list"),
+                                 ("dashState.listings = dashState.listings.filter(function(d){ return !d.beaListingId || _mineIds.has(d.beaListingId); });",
+                                  "a deleted advert's card stays on the hub"),
+                                 ("if (!dl && _mineIds && !_mineIds.has(intro.listing_id)) return;", "an introduction brings a deleted advert's card back"),
+                                 ("const _gone = res.status === 404;", "Delete on an advert already gone says 'Error' and keeps the card"),
+                                 ("if (!res.ok && !_gone) {", "Delete on an advert already gone says 'Error' and keeps the card")]),
+                      ("bea_main.py", [('raise HTTPException(status_code=404, detail="Listing not found")', "the seller delete lost its 404")])])
+    return bad or [(INFO, "the hub shows only adverts the server has; a gone advert's Delete clears the card")]
 
 
 if __name__ == "__main__":
