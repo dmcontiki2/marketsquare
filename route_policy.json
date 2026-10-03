@@ -266,7 +266,7 @@
    "level": "public"
   },
   {
-   "key": "GET /quick/handoff",
+   "key": "GET /auth/handoff",
    "level": "public"
   },
   {

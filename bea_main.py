@@ -6750,7 +6750,7 @@ async def _session_slide(request: Request, call_next):
     return resp
 
 
-@app.get("/quick/handoff")
+@app.get("/auth/handoff")   # QUICK-DOOR-HUB-1: under /auth/, which nginx already sends to the BEA (/quick/* is the Quick page)
 def quick_handoff(ts_user: str = Cookie(default=None)):
     """QUICK-DOOR-HUB-1 (David, 3 Oct 2026): Quick had no way back to the adverts it made -- an iPhone's "TrustSquare Quick"
     home-screen app opens Quick only, and the main app outside it keeps a separate sign-in. This hands the signed-in person a

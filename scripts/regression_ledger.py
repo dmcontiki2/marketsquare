@@ -33293,14 +33293,14 @@ def rg_session_slide_1():
 
 @entry("RG-0797", "QUICK-HANDOFF-1 + QUICK-DOOR-HUB-1: Quick hands a proven session a one-use sign-in to its own advert ('See my "
        "listing', 'My listings', a listing waiting), and its door says 'Sign in' to everyone else",
-       OPEN, fixed_on="2026-10-03", scope="bea_main.py quick_publish open_url, GET /quick/handoff, /quick/me mine/drafts; quick.html qDoorHub",
+       OPEN, fixed_on="2026-10-03", scope="bea_main.py quick_publish open_url, GET /auth/handoff, /quick/me mine/drafts; quick.html qDoorHub",
        ref="David Jnr, 2-3 Oct 2026: his home-screen 'TrustSquare Quick' opens Quick only; he re-made one Townhouse three times.")
 def rg_quick_door_hub_1():
     bad = _fb28_need([("bea_main.py", [('"open_url": _mint_signin_url(em, lid, 60)}', "a live Quick publish no longer signs her into her advert"),
                                        ('def quick_handoff(', "Quick has no way to her listings")]),
-                      ("route_policy.json", [('"GET /quick/handoff"', "the hand-off route is undeclared (the gate refuses it)")]),
+                      ("route_policy.json", [('"GET /auth/handoff"', "the hand-off route is undeclared (the gate refuses it)")]),
                       ("quick.html", [("window.qDoorHub=function(){", "Quick's door has no My listings / Sign in"),
-                                      ("fetch(location.origin+'/quick/handoff'", "the door button does not ask for the hand-off")])])
+                                      ("fetch(location.origin+'/auth/handoff'", "the door button does not ask for the hand-off")])])
     return bad or [(INFO, "Quick leads back to her listings, signed in")]
 
 

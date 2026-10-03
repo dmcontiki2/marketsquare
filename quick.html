@@ -4703,7 +4703,7 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
 (function(){
   function goHub(){
     try{ qTrack('q_door_hub'); }catch(e){}
-    fetch(location.origin+'/quick/handoff',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; })
+    fetch(location.origin+'/auth/handoff',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; })
       .then(function(d){ location.href=(d&&d.url)||'/?go=signin'; }).catch(function(){ location.href='/?go=signin'; });
   }
   window.qDoorHub=function(){
