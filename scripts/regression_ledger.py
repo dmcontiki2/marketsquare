@@ -34622,5 +34622,96 @@ def rg_col_carry_1():
     return [(INFO, "a collector's type and condition travel Quick -> server -> Edit -> Browse filter")]
 
 
+@entry("RG-0799", "HOME-EX-SWITCH-1: the AI-examples switch also sits on Home beside the Categories heading, so a viewer who "
+       "switched the examples off sees why the tiles count only real listings -- and the Local Market tile follows the switch",
+       OPEN, fixed_on="2026-10-03",
+       scope="ms.js msExPaintHome (painted by renderCatCounts into #home-cat-grid's sec-head), renderCatCounts' fallback branch "
+             "(a city holding only examples counted them while hidden), the demo-mode Local Market count, initLMHomeTile "
+             "(non-demo Local Market tile) and msToggleExamples (refreshes that tile); roles/app_i18n_af.json + migrations/"
+             "064_i18n_af_ex_switch.py + DICTV 8 (the switch said 'AI-voorbeelde af' beside 'KI-voorbeelde aan'). SCOPE: every "
+             "city and country, every language (only Afrikaans carried mixed words).",
+       ref="David, 3 Oct 2026, Home in Afrikaans showed Eiendom 16, Onderrig 2 and 0 elsewhere: 'i had the adverts switched off, "
+           "but that switch only shows on the Browse page and not the Home page'. Measured in his Chrome: ts_show_examples='0', "
+           "tiles = real listings only (Property 16, Tutors 2), correct per RUL-194 but unexplained on Home; switched on they read "
+           "20/3/2/9/1/4 and Local Market 2, matching the live DB. Local Market read 2 with the switch off -- Pretoria holds 1 "
+           "real (#273) and 1 example (#272). RUL-196 extends RUL-194 (b) to Home.")
+def rg_home_ex_switch_1():
+    js = repo_file("ms.js"); af = repo_file("roles/app_i18n_af.json")
+    if js is None or af is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need, what in (("function msExPaintHome(", "the Home switch painter"),
+                       ("msExPaintHome(_homeEx);   // HOME-EX-SWITCH-1", "renderCatCounts no longer paints the Home switch"),
+                       ("if (msIsExample(l)) { if (!msShowExamples()) return; _homeEx++; }", "the fallback count counts hidden examples"),
+                       ("if (!msShowExamples()) resolvedListings = resolvedListings.filter(l => !msIsExample(l));",
+                        "the Local Market tile counts hidden examples"),
+                       ("try{ if(typeof initLMHomeTile === 'function') initLMHomeTile(); }catch(e){}   // HOME-EX-SWITCH-1",
+                        "the switch no longer refreshes the Local Market tile")):
+        if need not in js:
+            bad.append(what)
+    m = re.search(r"var DICTV='(\d+)'", js)
+    if not m or int(m.group(1)) < 8:
+        bad.append("ms.js DICTV below 8 -- browsers keep 'AI-voorbeelde af'")
+    try:
+        t = json.loads(af).get("t", {})
+    except Exception as e:
+        t = {}; bad.append("roles/app_i18n_af.json does not parse")
+    want = {"AI examples on": "KI-voorbeelde aan", "AI examples off": "KI-voorbeelde af"}
+    for en, w in want.items():
+        if t.get(en) != w:
+            bad.append("checked Afrikaans has %r for %r" % (t.get(en), en))
+    if repo_file("migrations/064_i18n_af_ex_switch.py") is None:
+        bad.append("migration 064 is missing")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    try:
+        req = urllib.request.Request(BASE + "/i18n/translate", method="POST",
+                                     headers=dict(UA, **{"Content-Type": "application/json"}),
+                                     data=json.dumps({"lang": "af", "strings": list(want)}).encode())
+        out = json.loads(urllib.request.urlopen(req, timeout=20).read().decode()).get("out", {})
+    except Exception as e:
+        return [(INFO, "source holds; live half NOT EVALUATED - %s" % str(e)[:60])]
+    live_bad = ["live serves %r for %r" % (out.get(en), en) for en, w in want.items() if out.get(en) != w]
+    if live_bad:
+        return [(FAIL, "; ".join(live_bad))]
+    return [(INFO, "Home carries the switch, every home count follows it, and Afrikaans says 'KI-voorbeelde aan/af' live")]
+
+
+@entry("RG-0800", "FEED-LIVE-1: For You never shows an advert the buyer cannot open -- paused, draft and archived adverts stay "
+       "out of the feed, a card whose advert goes off the market is dropped on the tap that finds it gone, and the free-tier "
+       "banner counts only real, live adverts abroad (never AI examples) and names the countries truthfully",
+       OPEN, fixed_on="2026-10-03",
+       scope="bea_main.py _buyer_live_sql + _example_sql; get_wishlist_feed (feed rows and the upgrade_prompt count); both "
+             "advert deletes clear wishlist_matches; ms.js _wlRenderCards data-lid + openDetail's not-found branch.",
+       ref="David, 3 Oct 2026: tapped '2000 Krugerrand, 1 oz gold' in For You and was told the advert is not available any "
+           "more -- 'it should have been removed here and not even been viewable'. Measured: all 5 of his cards (#442, #446, "
+           "#454, #455, #464) were paused or draft; 166 of 212 feed rows across 81 buyers pointed at non-live adverts; 44 rows "
+           "pointed at deleted adverts; the banner's '30 matching listings in KE' was 30 AI examples over KE, AU, GB and US.")
+def rg_feed_live_1():
+    py = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if py is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "def _buyer_live_sql(" not in py or "def _example_sql(" not in py:
+        bad.append("the live / example SQL helpers are gone")
+    i = py.find("def get_wishlist_feed(")
+    seg = py[i:i + 9000] if i >= 0 else ""
+    a = seg.find("FROM wishlist_matches m")
+    if a < 0 or '_buyer_live_sql("l.")' not in seg[a:a + 900]:
+        bad.append("the For You query no longer leaves out paused/draft/archived adverts")
+    if 'AND NOT {_example_sql("l.")}' not in seg or '{_buyer_live_sql("l.")}' not in seg:
+        bad.append("the free-tier banner counts AI examples or adverts that are not live")
+    if '"%d other countries" % len(ccs)' not in seg:
+        bad.append("the banner names one country for a count spread over several")
+    if py.count('conn.execute("DELETE FROM wishlist_matches WHERE listing_id = ?", (listing_id,))   # FEED-LIVE-1') < 2:
+        bad.append("deleting an advert leaves its feed rows behind")
+    if "'<div class=\"wf-card\" data-lid=\"'" not in js:
+        bad.append("feed cards carry no data-lid")
+    if "_wf.querySelectorAll('.wf-card[data-lid=\"' + _raw + '\"]').forEach(c => c.remove());" not in js:
+        bad.append("a tap that finds the advert gone leaves the card in the feed")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "For You holds only adverts a buyer can open; the banner counts only real, live adverts abroad")]
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -102,6 +102,12 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-196": [
+   # Home carries the AI-examples switch and every Home count follows it (3 Oct, extends RUL-194 (b)).
+   ("RULINGS.md", ["THE AI-EXAMPLES SWITCH ALSO SITS ON HOME"], []),
+   ("ms.js", ["function msExPaintHome(", "msExPaintHome(_homeEx);", "resolvedListings = resolvedListings.filter(l => !msIsExample(l));"], []),
+   ("roles/app_i18n_af.json", ['"AI examples off": "KI-voorbeelde af"'], []),
+ ],
  "RUL-195": [
    # Claude never first (2 Oct). Base lane is non-Claude; the goal contract carries the rule;
    # absence needle trips if a later session puts Claude back as the base lane.

@@ -1811,6 +1811,20 @@ function msExPaint(slotId, anchorId, nEx, before, css){
   }
   s.innerHTML = msExSwitchHtml(nEx);
 }
+/* HOME-EX-SWITCH-1 (David 3 Oct 2026: "i had the adverts switched off, but that switch only shows on the Browse page and not the
+   Home page"). The Home tiles follow the switch (RUL-194), so with it off the counts drop to real listings only -- and Home gave
+   no sign of it, so the numbers read as wrong. The same switch now sits beside the Categories heading, one tap from either state. */
+function msExPaintHome(nEx){
+  const grid = document.getElementById('home-cat-grid');
+  const head = grid && grid.previousElementSibling;
+  if(!head || !head.classList || !head.classList.contains('sec-head')) return;
+  let s = document.getElementById('ms-ex-home');
+  if(!s){
+    s = document.createElement('div'); s.id = 'ms-ex-home'; s.style.cssText = 'margin-left:auto;margin-right:12px;display:flex;align-items:center;';
+    head.insertBefore(s, head.querySelector('a'));
+  }
+  s.innerHTML = msExSwitchHtml(nEx);
+}
 function msExHiddenNote(nEx){
   return '<div class="no-res">No real listings here yet' + (nEx ? ' — ' + nEx + ' AI example' + (nEx === 1 ? ' is' : 's are') + ' hidden.' : '.')
     + '<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msToggleExamples()">Show AI examples</span></div>';
@@ -1824,6 +1838,7 @@ function msToggleExamples(){
   try{ const lg = document.getElementById('lm-grid'); if(lg && lg.offsetParent !== null) lmLoadGrid(); }catch(e){}
   try{ if(typeof viewMode !== 'undefined' && viewMode === 'map') renderMap(); }catch(e){}
   try{ renderCatCounts(); }catch(e){}
+  try{ if(typeof initLMHomeTile === 'function') initLMHomeTile(); }catch(e){}   // HOME-EX-SWITCH-1: the Local Market tile follows the switch too
 }
 function fspark(l){
   return _demoBadge(l) + (isFounders(l)
@@ -4857,6 +4872,7 @@ function renderCatCounts() {
   const counts = {};
   // Count live listings only (non-placeholder); suburb filter applies
   const liveCounts = {};
+  let _homeEx = 0;   // HOME-EX-SWITCH-1: examples the tiles count while the switch is on
   LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
     if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
@@ -4894,6 +4910,7 @@ function renderCatCounts() {
     }
     return true;
   }).forEach(l => {
+    if (msIsExample(l)) _homeEx++;   // HOME-EX-SWITCH-1
     const cat = normCat(l.cat);
     liveCounts[cat] = (liveCounts[cat] || 0) + 1;
   });
@@ -4926,6 +4943,7 @@ function renderCatCounts() {
         const lc = (l.country || l.city_country || 'ZA').toUpperCase();
         if (lc !== advCountry) return;
       }
+      if (msIsExample(l)) { if (!msShowExamples()) return; _homeEx++; }   // HOME-EX-SWITCH-1: hidden examples are not counted here either
       const cat = _cat0;
       counts[cat] = (counts[cat] || 0) + 1;
     });
@@ -4938,7 +4956,8 @@ function renderCatCounts() {
         const demoLMCount = LISTINGS.filter(l =>
           !l.id.startsWith('ph_') &&
           normCat(l.cat) === 'LocalMarket' &&
-          (!_aCity || !l.city || l.city === _aCity)
+          (!_aCity || !l.city || l.city === _aCity) &&
+          (msShowExamples() || !msIsExample(l))   // HOME-EX-SWITCH-1
         ).length;
         tile.style.display = '';
         const countEl = document.getElementById('lm-home-count');
@@ -4955,6 +4974,7 @@ function renderCatCounts() {
     // display the full category structure (David: don't remove the cards, show 0).
     tile.style.display = '';
   });
+  msExPaintHome(_homeEx);   // HOME-EX-SWITCH-1
 }
 
 // ── Rental availability (occupancy) — buyer-facing label/badge (Session 139) ──
@@ -5962,6 +5982,15 @@ function openDetail(id){
           if (findListing('bea_' + row.id)) { if (!_fromPop && !window._msLandingDetail) { try { goTo('browse'); } catch(e){} } window._msLandingDetail = false; openDetail('bea_' + row.id); window._msDetailFetching = null; return; }
         }
         window._msDetailFetching = null;
+        /* FEED-LIVE-1 (David 3 Oct 2026): a card whose advert went off the market after the feed loaded leaves the
+           feed the moment the tap finds it gone -- it never stays to be tapped again. */
+        try {
+          const _wf = document.getElementById('wishlist-feed');
+          if (_wf) {
+            _wf.querySelectorAll('.wf-card[data-lid="' + _raw + '"]').forEach(c => c.remove());
+            if (!_wf.querySelector('.wf-card') && typeof _wlRenderCards === 'function') _wf.innerHTML = _wlRenderCards([], false);
+          }
+        } catch (e) {}
         if (typeof showToast === 'function') showToast('That listing is not available any more.');
       }).catch(() => { window._msDetailFetching = null; if (typeof showToast === 'function') showToast('That listing is not in view right now — try Browse.'); });
       return;
@@ -16838,7 +16867,7 @@ function _wlRenderCards(cards, isShowcase) {
       ? '<span style="position:absolute;top:6px;right:6px;background:' + trustTier(c.trust_score).bg + ';color:' + trustTier(c.trust_score).c + ';font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;pointer-events:none;">★ ' + c.trust_score + '</span>'
       : '';
     return (
-      '<div class="wf-card" onclick="' + onClick + '">'
+      '<div class="wf-card" data-lid="' + _wlEsc(String(c.listing_id).replace(/^bea_/, '')) + '" onclick="' + onClick + '">'
       + '<div style="position:relative;height:88px;overflow:hidden;flex-shrink:0;background:var(--surface-2);">' + img + featBadge + wfTrustOverlay + '</div>'
       + '<div class="wf-card-body">'
       +   '<div style="font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">' + _wlEsc(c.category || '') + '</div>'
@@ -17308,6 +17337,7 @@ async function initLMHomeTile() {
       resolvedListings = Array.isArray(data) ? data : (data.listings || []);
     }
     if (_seq !== _lmHomeSeq) return;
+    if (!msShowExamples()) resolvedListings = resolvedListings.filter(l => !msIsExample(l));   // HOME-EX-SWITCH-1: as the page it opens
     const n = resolvedListings.length;
     // Update count
     const countEl = document.getElementById('lm-home-count');
@@ -23577,7 +23607,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
      old machine words kept being painted from it and no server fix could ever reach them.
      The stamp goes in the key: raise it whenever the checked words change, and every browser
      drops what it has and refetches once. Old copies are swept out on load. */
-  var DICTV='7';   /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
+  var DICTV='8';   /* HOME-EX-SWITCH-1 (3 Oct 2026): the switch reads 'KI-voorbeelde aan/af' in checked Afrikaans (it said 'AI-voorbeelde af' beside 'KI-voorbeelde aan'). */ /* was 7:    /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
   var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=400, CHUNK=60;   /* 400: the longest card blurbs are ~340 */
   try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
        if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }
