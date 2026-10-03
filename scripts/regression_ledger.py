@@ -34642,7 +34642,7 @@ def rg_col_carry_1():
 
 @entry("RG-0803", "HOME-EX-SWITCH-1: the AI-examples switch also sits on Home beside the Categories heading, so a viewer who "
        "switched the examples off sees why the tiles count only real listings -- and the Local Market tile follows the switch",
-       OPEN, fixed_on="2026-10-03",
+       LOCKED, fixed_on="2026-10-03",
        scope="ms.js msExPaintHome (painted by renderCatCounts into #home-cat-grid's sec-head), renderCatCounts' fallback branch "
              "(a city holding only examples counted them while hidden), the demo-mode Local Market count, initLMHomeTile "
              "(non-demo Local Market tile) and msToggleExamples (refreshes that tile); roles/app_i18n_af.json + migrations/"
@@ -34652,7 +34652,12 @@ def rg_col_carry_1():
            "but that switch only shows on the Browse page and not the Home page'. Measured in his Chrome: ts_show_examples='0', "
            "tiles = real listings only (Property 16, Tutors 2), correct per RUL-194 but unexplained on Home; switched on they read "
            "20/3/2/9/1/4 and Local Market 2, matching the live DB. Local Market read 2 with the switch off -- Pretoria holds 1 "
-           "real (#273) and 1 example (#272). RUL-196 extends RUL-194 (b) to Home.")
+           "real (#273) and 1 example (#272). RUL-196 extends RUL-194 (b) to Home. "
+           "LOCKED 3 Oct 2026 after the rendered check in David's Chrome (live 07:16Z in c058fc8, ms.js v=913, migration "
+           "064_i18n_af_ex_switch applied): Home, Pretoria, English, switch off -> pill 'AI examples off' beside Categories, "
+           "tiles 16/2/1/0/0/0 and Local Market 1; one tap on the Home pill -> 'AI examples on', 20/3/3/9/1/4 and Local "
+           "Market 2 (live DB: Services gained real #473 at 06:49); Afrikaans -> 'KI-voorbeelde aan' / 'KI-voorbeelde af' "
+           "with the same counts; header fits a phone (89+151+47 px of 343). His settings put back as found (en, off).")
 def rg_home_ex_switch_1():
     js = repo_file("ms.js"); af = repo_file("roles/app_i18n_af.json")
     if js is None or af is None:
