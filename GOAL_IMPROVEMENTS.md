@@ -5,48 +5,44 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 2 Oct 2026 (run 27). Four decisions, nothing else waits on you.*
+*Open actions only — updated 4 Oct 2026 (run 28). One decision.*
 
-### GI-0008 · SO-6 rulings sweep — six rulings that spend without a stated cost or contradict an earlier ruling
-You asked for this on 30 Sep: find every "small yes" that, like RUL-167 with SMS, quietly adds a running cost or breaks
-an earlier ruling. Six did. Each needs keep or amend; nothing has been changed or built on any of them.
+### GI-0020 · The 1T fair-price check — the cost breakdown you asked for (RUL-199(3))
+Measured on the live spend log, 27 Sep – 2 Oct (18 web look-ups, 16 with the provider's real cost):
 
-| # | Ruling | What it does today | What it clashes with | Recommendation |
-|---|--------|--------------------|----------------------|----------------|
-| 1 | RUL-138 (17 Sep) | The maintenance agent never stops on cost — it steps down to the cheapest model and keeps answering | RUL-007 / RUL-096(e): only flat, cappable costs; raising a ceiling is yours | Keep the step-down and add a daily rand stop you name — this reverses your own "a hard cap is wrong", so it is your call |
-| 2 | RUL-189 + RUL-191(4) (27 Sep) | Testers run every paid AI feature for ever, and each named tester gets 200T (~$400 face value); 3 invites so far, no limit on how many | Pricing canon §5: paid-feed AI is Pro-only because granted Tuppence funding it leaked ~$3,264/month | Cap testers per month and pay grants from a named budget line |
-| 3 | RUL-191(3) (27 Sep) | A 1T fair-price check on Collectors and Local Market, run on OpenAI web lookups | Canon §5: a paid-feed function needs a stated cost and a ceiling | State the cost per check and which plans may fire it |
-| 4 | RUL-144 + RUL-178 | A "verified phone" earns 2 Trust points, and a phone check is an SMS code at our cost | RUL-192(b): the app sends no SMS at our cost | Verify by e-mail or the draft link only; also state BANKRESOLVE-1's price per lookup |
-| 5 | RUL-155 / RUL-156 (19 Sep) | A licence shows "VERIFIED" once a person has checked the upload | RUL-039: only the paid check may say "VERIFIED" | Change the word (e.g. "Licence checked"); keep the gate |
-| 6 | RUL-192(a) (30 Sep) | Our SMS account may carry cold outreach to phone-only prospects (the Gumtree 1,111) | The opt-out list (RUL-054) and 60-day gap (RUL-106) live only in the e-mail sender, so SMS would skip both; RUL-101(a) requires opt-in for personal addresses and does not say whether phones count | Same opt-out list, same 60-day gap and "reply STOP" in every text before the first one goes; say whether RUL-101(a) covers phones |
+| | per check | note |
+|---|---|---|
+| Web comparables (OpenAI web search, `/listings/price-check#web-comps`) | **$0.052 average, $0.098 worst** (≈ R0.95, R1.75) | the whole cost; spent even when it finds fewer than 3 named sources |
+| Reasoning step (`/listings/ai-price-check`) | $0.002–$0.004 | negligible |
+| Catalogue feeds (Numista coins, JustTCG cards, BrickLink Lego) | $0 | free tiers, used first when they answer |
+| **Price to the person** | **1T = $2 (≈ R36)** | charged only when a verified range is delivered (deliver-then-charge); a miss costs us ≈R1 and her nothing |
 
-Do 1 and 2 first — they are the only two that can spend without a stop.
-FYI, no action needed: RUL-130 turned the tester REPORT tab back on without citing RUL-040/064; RUL-179(e) refuses a
-new Circle connection when full, against RUL-173(b)/135(h); RUL-162/163 cap translation per advert but have no rand ceiling.
+Ceilings already in force: $0.50 per person per day and $10 for the whole platform per day (ai_spend_config) — the platform
+stop (RUL-199(1)) also stops this check. Today any signed-in person with 1T can fire it, buyer or seller, on Collectors and
+Local Market (Property's paid tiers are off).
 
-### GI-0006 · Collectors step 6 greets a one-coin seller with "SEVERE PENALTIES"
-For one R350 coin the last step is an auction-house pitch, dealer registration and CITES; that she is exempt is small
-print at the foot. Recommend yes to one line at the top when she picked "Single item": "Selling one thing of your own?
-The dealer rules don't apply — keep any certificate and describe it honestly."
-
-### GI-0003 · A cleaner has no door in Sell that names her
-A full-width "Work for yourself?" card opening Quick; it changes RG-0478 ("small and unobtrusive"). Recommend yes.
-
-### GI-0017 · Two identical live Townhouse adverts (#468, #469) in the public grid
-Same family seller (davidconradie1234@), published from Quick 12 minutes apart; #458 is a third, draft copy. QUICK-DUP-1 stops it
-happening again; the two already live are real data. Recommend: pause #469 (keep #468). Your call or his.
+Options: **(a)** keep it as it is — 1T, any plan, inside the two ceilings (worst day: $10); **(b)** as (a), plus the seller's
+*first* check on each new listing free — costs ≈R1 per new listing (R20 a month at the 20-seller target) and lets a
+collector shop see the product work before she has bought a Tuppence; **(c)** Pro-only — takes it away from the free plan,
+where every new seller starts. **Recommend (a) now and (b) as soon as a stranger reaches the Collectors score card** — say (b) and it
+is built in a day.
 
 ### Closed since the last list
-- **GI-0009 OpenAI credit:** answering again since 04:15Z on 1 Oct (last 429 at 03:50Z; 42 good calls since). Run 26
-  listed it as open without re-checking — that was wrong.
-- **GI-0004 phone-only sellers:** overtaken by RUL-192; the SMS account exists, and outreach SMS is item 6 above.
-- **eBay keys for Local Market fair price:** not needed — the check runs on named-source web comparables
-  (FAIR-PRICE-WEB-1, 27 Sep); eBay is an optional extra source.
+- **GI-0008 SO-6 sweep:** answered by you on 3 Oct (RUL-199) and shipped the same evening (db67a6e, RG-0811). Only item 3
+  stayed open — it is GI-0020 above.
+- **GI-0006 Collectors step 6:** shipped with RUL-199(7) — seen live on today's walk ("Selling one thing of your own? The
+  dealer rules below don't apply to you…", permit rows "ONLY FOR PROTECTED ITEMS").
+- **GI-0003 Quick card in Sell:** shipped 3 Oct (QUICK-CARD-1, RG-0810, 60acafd) — seen live on today's walk.
+- **GI-0017 twin Townhouse adverts:** #469 paused 3 Oct 06:00Z; #468 stays live.
+- **GI-0009 OpenAI credit:** answering (fair-price look-ups and vision reads ran through 2–4 Oct).
 
 ## Rows
 
 | id | date | change | evidence | expected effect / how we'd know | size | status |
 |----|------|--------|----------|---------------------------------|------|--------|
+| GI-0020 | 4 Oct | The 1T fair-price check: cost breakdown and options (RUL-199(3), OPEN) | ai_spend_log: 18 web look-ups $0.052 avg / $0.098 max; 1T = $2; deliver-then-charge; $0.50 user / $10 platform daily ceilings | David picks (a), (b) or (c) | small | **REVIEW NOW** |
+| GI-0019 | 4 Oct | **MAGIC-HELLO-1** (RG-0813): an invited seller is greeted by name on step 1 of the sell flow ("This is the TrustSquare invitation we e-mailed you — … Start with one listing … free plan"); the Home long-press tip no longer fires over her form | walk B (`docs/E2E_2026-10-04.md`): the Collector Shops letter's link opened on "Step 1 of 6 · Photos" with no word of who or why, a Home tip floating over it; the old "Welcome, <name>" banner was left behind by SELL-FLOW-REDO-2 (15 Jul) — every invitee since then has landed this way | invited arrivals that pick a photo or press Item Details (funnel `photo_pick` / `q_step` after `landed` with magic) rise above today's 0 | small | **SHIPPED** — see GOAL_STATE run 28 for commit and live proof |
+| GI-0018 | 4 Oct | **COL-DRAFT-1** (RG-0812): on Collectors the photo read fills Category, Year / era and Maker blanks from what it already knows (the vision prompt now asks for `collectible_type`, a legible year and maker) | walk A step 5: the read titled the coin "1947 Vintage Coin" and left Category "—" and Year empty | fewer blank Category values on Collectors drafts; Browse's Collectible Type filter finds new items | small | **SHIPPED** — see GOAL_STATE run 28 for commit and live proof |
 | GI-0016 | 2 Oct | **QUICK-DUP-1** (RG-0793): a signed-in member whose Quick publish matches an advert she already has live from the last 24 h (title, category, price, city, suburb) gets that advert back; no second copy | #468 / #469 identical Townhouse adverts, same seller, 12 min apart, both public | no identical twins in the grid; log line `QUICK-DUP-1:` when it fires | small | **SHIPPED** 2 Oct 21:14Z, 26db01f, ms.js?v=905 — live proof in GOAL_STATE run 27. Proven on the live DB read-only: #469's fields → finds 469; changed price → none |
 | GI-0015 | 2 Oct | **LANG-PILL-SOB-1 + LETTER-WORD-1** (RG-0792): language pill hidden on the terms step; way-back letter says "saved", not "composed" | walk steps 11, 14 | Back button tappable; letter uses Quick's word | small | **SHIPPED** 2 Oct 21:14Z, 26db01f, ms.js?v=905 — live proof in GOAL_STATE run 27 |
 | GI-0014 | 2 Oct | **TERMS-NOTE-1** (RG-0791): terms-step note "Read the Terms of Use below and accept them — your listing goes live straight after" (was "You have an existing account but haven't yet accepted…") | walk step 13: said to a seller two minutes old | fewer Quick drafts stopping at the terms step | small | **SHIPPED** 2 Oct 21:14Z, 26db01f, ms.js?v=905 — live proof in GOAL_STATE run 27 |
