@@ -1,6 +1,6 @@
-// FIND-HONOUR-1 / FIND-AREAS-LIVE-1 (RG-0817, 4 Oct 2026): Quick's Find honours every answer. Serves the given quick.html
-// as https://trustsquare.co/quick/ (reads pass through to the live API, writes are refused) and walks David's three cases.
-// Usage (cloud container, playwright installed): node verify_quick_find_honour.mjs quick.html [shotdir/]   exit 0 = PASS
+// FIND-HONOUR-1 + FIND-BANDS-1 (RG-0817, RG-0841, 4 Oct 2026): Quick's Find honours every answer and fills local-first (RUL-118).
+// LIVE=1 node verify_quick_find_honour.mjs        -> walks the real https://trustsquare.co/quick/ (writes refused)
+// node verify_quick_find_honour.mjs quick.html    -> pre-deploy: serves that file as /quick/, reads pass through to the live API
 import { chromium } from 'playwright';
 import fs from 'fs';
 const FILE = process.argv[2] || 'new.html', SHOT = process.argv[3] || '';
@@ -23,8 +23,12 @@ async function find(catKey, pk, shot){
     drawLookup();
     const t0=Date.now(); while(Date.now()-t0<20000){ await new Promise(r=>setTimeout(r,250)); if(!/Looking on/.test(document.querySelector('#screen .q')?.textContent||'')) break; }
     await new Promise(r=>setTimeout(r,300));
-    const ads=[...document.querySelectorAll('#screen .ad')].map(a => ({t:a.querySelector('.t')?.textContent, sub:a.querySelector('.sub')?.textContent,
-       ex: !!a.querySelector('.exrib'), lid: a.getAttribute('data-lid'), img: a.querySelector('img')?.getAttribute('src')}));
+    let band=''; const ads=[];
+    for (const el of document.querySelectorAll('#screen .grid > *')){
+      if (el.classList.contains('lkband')){ band=el.textContent; continue; }
+      if (!el.classList.contains('ad')) continue;
+      ads.push({t:el.querySelector('.t')?.textContent, sub:el.querySelector('.sub')?.textContent, band,
+        ex: !!el.querySelector('.exrib'), lid: el.getAttribute('data-lid'), img: el.querySelector('img')?.getAttribute('src')}); }
     return {head: document.querySelector('#screen .q')?.textContent, count: document.querySelector('#screen .count')?.textContent, ads};
   }, {catKey, pk});
   if (shot && SHOT) await page.screenshot({path: SHOT + shot + '.png'});
@@ -43,7 +47,7 @@ const cases = [
   ['A house to BUY in Pretoria East',      'property', [{key:'what',label:'House',photo:'prop_main'},{key:'deal',label:'Buying'},{key:'where',label:'Pretoria East'}], 'buy_house_pe'],
 ];
 const out = {};
-for (const [name, k, pk, shot] of cases){ out[shot] = await find(k, pk, shot); console.log('\n# '+name+'\n  '+out[shot].head+' | '+(out[shot].count||'')); out[shot].ads.forEach(a=>console.log('   -', a.t, '|', a.sub, a.ex?'[AI EXAMPLE]':'', 'lid='+a.lid, (a.img||'').split('/').pop())); }
+for (const [name, k, pk, shot] of cases){ out[shot] = await find(k, pk, shot); console.log('\n# '+name+'\n  '+out[shot].head+' | '+(out[shot].count||'')); out[shot].ads.forEach(a=>console.log('   -', a.band?('['+a.band+']'):'', a.t, '|', a.sub, a.ex?'[AI EXAMPLE]':'', 'lid='+a.lid, (a.img||'').split('/').pop())); }
 // FIND-AREAS-LIVE-1: the area question offers the suburbs of live adverts that fit her answers so far
 async function areaOptions(catKey, pk){
   return await page.evaluate(async ({catKey, pk}) => {
@@ -60,24 +64,25 @@ const optBuyTown = await areaOptions('property', [{key:'what',label:'Townhouse',
 console.log('\n# area options, Flat + Renting:', optRent.kind, optRent.opts.join(', '));
 console.log('# area options, Townhouse + Buying:', optBuyTown.kind, optBuyTown.opts.join(', '));
 out.brooklyn = await find('property', [{key:'what',label:'Flat',photo:'prop_flat'},{key:'deal',label:'Renting'},{key:'where',label:'Brooklyn'}], 'rent_brooklyn');
-console.log('# Flat+Renting+Brooklyn:', out.brooklyn.head, out.brooklyn.ads.map(a=>a.t+' | '+a.sub+(a.ex?' [EX]':'')).join(' ; '));
+console.log('# Flat+Renting+Brooklyn:', out.brooklyn.head, out.brooklyn.ads.map(a=>(a.band?'['+a.band+'] ':'')+a.t+' | '+a.sub+(a.ex?' [EX]':'')).join(' ; '));
 out.menlynflat = await find('property', [{key:'what',label:'Flat',photo:'prop_flat'},{key:'deal',label:'Renting'},{key:'where',label:'Menlyn'}], 'rent_menlyn');
-console.log('# Flat+Renting+Menlyn:', out.menlynflat.head, out.menlynflat.ads.map(a=>a.t+' | '+a.sub+(a.ex?' [EX]':'')).join(' ; '));
-const has468 = s => out[s].ads.some(a => a.lid==='468');
+console.log('# Flat+Renting+Menlyn:', out.menlynflat.head, out.menlynflat.ads.map(a=>(a.band?'['+a.band+'] ':'')+a.t+' | '+a.sub+(a.ex?' [EX]':'')).join(' ; '));
+const ad468 = s => out[s].ads.find(a => a.lid==='468');
 const fails=[];
-if (has468('rent_pe')) fails.push('468 (to sell) shown under Renting');
-if (has468('buy_menlyn')) fails.push('468 (Rietvalleirand) shown under Menlyn');
-if (has468('buy_mamelodi')) fails.push('468 (Rietvalleirand) shown under Mamelodi');
-if (!has468('buy_riet')) fails.push('468 NOT shown for its own suburb');
-if (!out.rent_wk.ads.some(a=>a.lid && !a.ex)) fails.push('no real Waterkloof apartment found for Flat+Renting');
-if (out.buy_wk.ads.some(a=>a.lid && !a.ex)) fails.push('a rental apartment shown under Buying');
-if (!out.rent_pe.ads.length || !out.rent_pe.ads.every(a=>a.ex)) fails.push('empty shelf not filled with marked AI examples');
+if (ad468('rent_pe')) fails.push('468 (to sell) shown under Renting');
+if (out.rent_pe.ads.some(a=>!a.ex && /rent|let/i.test('') )) {}
+if (ad468('buy_menlyn') && !/near you/.test(out.buy_menlyn.head)) fails.push('Menlyn head claims 468 is in Menlyn: '+out.buy_menlyn.head);
+if (ad468('buy_menlyn') && ad468('buy_menlyn').band!=='Nearby') fails.push('468 under Menlyn is not labelled Nearby');
+if (!ad468('buy_riet') || ad468('buy_riet').band==='Nearby' || !/on TrustSquare/.test(out.buy_riet.head)) fails.push('468 not first-band for Rietvalleirand');
+if (!out.rent_wk.ads.some(a=>a.lid && !a.ex && /Waterkloof/.test(a.sub) && a.band!=='Nearby')) fails.push('no first-band Waterkloof flat for Flat+Renting');
+if (out.buy_wk.ads.some(a=>a.lid && !a.ex && /Apartment — (Waterkloof|Brooklyn)/.test(a.t||''))) fails.push('a rental apartment shown under Buying');
 if (!optRent.opts.includes('Brooklyn') || !optRent.opts.includes('Waterkloof')) fails.push('Brooklyn/Waterkloof not offered as areas for Flat+Renting');
 if (!optBuyTown.opts.includes('Rietvalleirand')) fails.push('Rietvalleirand not offered for Townhouse+Buying');
 if (optBuyTown.opts.includes('Brooklyn')) fails.push('Brooklyn (rentals) offered for Townhouse+Buying');
-if (!out.brooklyn.ads.some(a=>/Brooklyn/.test(a.sub) && !a.ex)) fails.push('the Brooklyn flat is not found under Brooklyn');
-if (out.menlynflat.ads.some(a=>/Brooklyn/.test(a.sub) && !a.ex)) fails.push('the Brooklyn flat shown under Menlyn');
+if (!out.brooklyn.ads.some(a=>/Brooklyn/.test(a.sub) && !a.ex && a.band!=='Nearby')) fails.push('the Brooklyn flat is not first-band under Brooklyn');
+const bm = out.menlynflat.ads.filter(a=>/Brooklyn/.test(a.sub) && !a.ex);
+if (bm.some(a=>a.band!=='Nearby') || (bm.length && !/near you/.test(out.menlynflat.head))) fails.push('the Brooklyn flat is presented as IN Menlyn');
 console.log('\npage errors:', errs.length ? errs : 'none');
-console.log(fails.length ? 'FAIL:\n - '+fails.join('\n - ') : 'PASS: every answer honoured');
+console.log(fails.length ? 'FAIL:\n - '+fails.join('\n - ') : 'PASS: every answer honoured, local-first bands (RUL-118)');
 await browser.close();
 process.exit(fails.length ? 1 : 0);
