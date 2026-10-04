@@ -31337,12 +31337,14 @@ def _anon_names_find(text, place="", who=""):
     return True, out
 
 
-def _anon_names_apply(text, names):
+def _anon_names_apply(text, names, title=False):
     if not text or not names:
         return text
     out = text
     for n in sorted(names, key=lambda x: -len(x["text"])):
-        out = re.sub(r"(?i)(?<![\w])" + re.escape(n["text"]) + r"(?![\w])", n["replace"], out)
+        # a title is a short descriptor: the name simply goes ("3 Bed 2 Bath Modern unit for sale")
+        out = re.sub(r"(?i)(?<![\w])" + re.escape(n["text"]) + r"(?![\w])", "" if title else n["replace"], out)
+    out = re.sub(r"(?i)\b(the|a|an)\s+(the|a|an)\b", lambda m: m.group(2) if m.group(1)[0].islower() else m.group(2).capitalize(), out)
     out = re.sub(r"[ \t]{2,}", " ", out)
     out = re.sub(r" +([,.;:!?])", r"\1", out)
     out = re.sub(r"(?im)^[ \t]+|[ \t]+$", "", out)
@@ -31365,7 +31367,7 @@ def _anon_names_scrub(title, desc, place="", who="", where=""):
     ok, names = _anon_names_find(joined, place, who)
     if not names:
         return title, desc, []
-    t2 = _anon_names_apply(title, names) if title else title
+    t2 = _anon_names_apply(title, names, title=True) if title else title
     b2 = _anon_names_apply(body, names)
     if items is not None:
         rebuilt = "|".join(it[0] + ("::" + _anon_names_apply(it[1], names) if len(it) > 1 else "") for it in items)
@@ -31399,16 +31401,18 @@ def _private_text_scrub(title, desc, who="", where="", place=""):
     strip is returned untouched (no whitespace rewrites)."""
     hits = []
     out = []
-    for v in (title, desc):
+    _pm = _PHOTOS_PREFIX_RX.match(desc or "")   # PHOTOS-PREFIX-SAFE-1: photo addresses are not contact details
+    _pfx, _body = ((_pm.group(0), (desc or "")[_pm.end():]) if _pm else ("", desc))
+    for i, v in enumerate((title, _body)):
         if not v:
-            out.append(v)
+            out.append((_pfx or v) if i == 1 else v)
             continue
         clean, h = _anon_regex_clean(v)
         if h:
             hits.extend(h)
-            out.append(clean)
+            out.append(_pfx + clean if i == 1 else clean)
         else:
-            out.append(v)
+            out.append(desc if i == 1 else v)
     if hits:
         _log.info("E2E-HMI-1 contact scrub (%s) for %s: %s", where, who, sorted(set(hits)))
     # ANON-NAMES-1: then the NAMES -- complexes, estates, buildings, businesses, people -- in title, body and captions

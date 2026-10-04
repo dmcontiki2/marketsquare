@@ -35891,7 +35891,9 @@ def rg_anon_names():
                     ("caps = [it[1] for it in (items or []) if len(it) > 1 and it[1].strip()]", "photo captions are no longer read"),
                     ("listing.area, _an = _anon_names_area(", "a typed area on create is no longer checked"),
                     ("update.area, _an = _anon_names_area(", "a typed area on edit is no longer checked"),
-                    ("await asyncio.to_thread(_private_text_scrub, title, desc, email, \"aa-publish\")", "guided publish skips the name pass or blocks the event loop")):
+                    ("await asyncio.to_thread(_private_text_scrub, title, desc, email, \"aa-publish\")", "guided publish skips the name pass or blocks the event loop"),
+                    ("_pm = _PHOTOS_PREFIX_RX.match(desc or \"\")", "the contact regex reads the [photos:] prefix again and strips photo addresses"),
+                    ("\"\" if title else n[\"replace\"]", "a title gets a replacement phrase instead of losing the name")):
         if sn not in code:
             return [(FAIL, "bea_main.py: " + why)]
     if "complex" not in b[b.find("_ANON_NAMES_SYSTEM = ("):b.find("_ANON_NAMES_SYSTEM = (") + 2000]:
