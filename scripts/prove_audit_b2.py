@@ -171,9 +171,9 @@ x("INSERT INTO listings (id, title, price, category, city, suburb, street_addres
 c = database.get_db(); rows, _ = b._zoom_candidates(c, "Property", "Pretoria", 1, "global"); c.close()
 check(rows and all("street_address" not in r and "seller_email" not in r for r in rows), "candidate rows carry no street_address or seller_email")
 
-print("AUD-024 -- before accepting, a first name and no contact details")
+print("AUD-024 + RUL-202 -- before accepting, no name and no contact details")
 d = b._intro_for_viewer({"buyer_email": "t@x.test", "buyer_name": "Thandi Mokoena", "message": "call me on 082 555 1234", "status": "pending"}, "sel@x.test")
-check(d["buyer_name"] == "Thandi" and "555" not in d["message"] and not d["buyer_email"], "seller read: %r / %r" % (d["buyer_name"], d["message"]))
+check(d["buyer_name"] == "" and "555" not in d["message"] and not d["buyer_email"], "seller read, RUL-202 no name: %r / %r" % (d["buyer_name"], d["message"]))
 
 print("AUD-026 -- Squire text loses contact details")
 check("555" not in b._squire_minimise("call me on 082 555 1234", False), "the approach / answer scrub removes a phone number")

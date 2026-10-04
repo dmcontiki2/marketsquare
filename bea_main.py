@@ -9095,7 +9095,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             "listing_title": listing["title"],
             "category":      listing["category"],
             "buyer_email":   intro.buyer_email,
-            "buyer_name":    _first_name_only(intro.buyer_name),   # AUD-024
+            "buyer_name":    "A buyer",   # RUL-202: no name reaches the seller before she accepts
             "message":       intro.message,
             "seller_email":  listing["seller_email"] if listing["seller_email"] else None,
             "timestamp":     datetime.now(timezone.utc).isoformat(),
@@ -9176,9 +9176,9 @@ def _intro_for_viewer(d: dict, viewer) -> dict:
     v = (viewer or "").strip().lower()
     if v and (d.get("buyer_email") or "").strip().lower() != v and (d.get("status") or "pending") != "accepted":
         d["buyer_email"] = ""
-        # AUD-024 (4 Oct 2026 audit): before she accepts, the seller sees a first name and a message with no contact
-        # details -- the full name and a typed phone number let her reach the buyer without accepting.
-        d["buyer_name"] = _first_name_only(d.get("buyer_name"))
+        # AUD-024 (4 Oct 2026 audit) + RUL-202 (David 4 Oct 2026: 100% anonymous until accepted): before she accepts,
+        # the seller gets NO name at all -- the app says "A buyer" -- and a message with no contact details.
+        d["buyer_name"] = ""
         if d.get("message"):
             d["message"] = _anon_regex_clean(d["message"])[0]
     return d
@@ -14033,7 +14033,7 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
             "intro_id":       new_intro_id,
             "listing_id":     req.listing_id,
             "listing_title":  listing.get("title"),
-            "buyer_name":     _first_name_only(req.buyer_name),   # AUD-024
+            "buyer_name":     "A buyer",   # RUL-202: no name reaches the seller before she accepts
             "buyer_trust_score": buyer_score,   # seller's accept/decline signal
             "seller_email":   seller_email,
             "tuppence_charged_to_seller": 0,   # RUL-190: she pays on accept

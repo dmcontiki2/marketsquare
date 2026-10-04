@@ -112,7 +112,7 @@
   "sev": "High",
   "status": "fixed",
   "raw_status": "FIXED",
-  "note": "Confirmed. Before she accepts, the seller sees a first name and a message without phone numbers or emails; messages are cleaned before they are stored.",
+  "note": "Confirmed. Tightened the same day by your rule (RUL-202): before she accepts, the seller sees no buyer name at all ('A buyer') and the request text with phone numbers and emails removed; messages are cleaned before they are stored.",
   "check": "scripts/prove_audit_b2.py on a throwaway database; ledger RG-0827.",
   "live_since": "2026-10-04 (6c57385)"
  },

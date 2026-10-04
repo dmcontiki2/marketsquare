@@ -1,0 +1,1 @@
+- **4 Oct 2026 — RUL-202:** before she accepts, a seller sees "A buyer" — no name, no contact details (RG-0827 tightened).

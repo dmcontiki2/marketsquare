@@ -102,6 +102,12 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-202": [
+   # 100% anonymous until accepted: no buyer name, not even a first name, reaches the seller before she accepts.
+   ("RULINGS.md", ["NOT EVEN A FIRST NAME"], []),
+   ("bea_main.py", ['the seller gets NO name at all -- the app says "A buyer"', '"buyer_name":    "A buyer",   # RUL-202'], ['"buyer_name":    _first_name_only(intro.buyer_name)']),
+   ("ms.js", ["RUL-202 (David 4 Oct 2026): 100% anonymous until she accepts"], ["First name only until then."]),
+ ],
  "RUL-201": [
    # AUDIT-4OCT Batch 2 (4 Oct): a paid plan lapses at the end of its 30 days; the monthly reset never takes bought Tuppence.
    ("RULINGS.md", ["A PAID SELLER PLAN ENDS WHEN ITS 30 DAYS RUN OUT"], []),
