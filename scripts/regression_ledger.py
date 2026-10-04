@@ -35850,7 +35850,7 @@ def rg_quick_fresh():
 @entry("RG-0873", "PHOTO-CAP-2 (David via Dave jnr 4 Oct 2026: 'up our number of photos per property to 20'): ONE photo cap "
        "for every screen -- PHOTO-CAP-1's 24 for property, cars and places to stay, 12 elsewhere; Edit (where every Quick "
        "listing gets its photos) no longer stops at a hard-coded 10",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="ms.js msPhotoCap(cat, sub) is the one rule; sfMaxPhotos() and elAddPhoto() both read it.",
        ref="CHANGELOG 2026-07-15 PHOTO-CAP-1 (David-approved costing); scripts/apply_photo_cap_2.py")
 def rg_photo_cap_2():
@@ -35876,7 +35876,7 @@ def rg_photo_cap_2():
        "while the photo pass caught the complex IDs): every private publish and edit reads the advert's NAMES -- complexes, "
        "estates, buildings, residences, businesses, people -- in title, body and every photo caption, and the typed area, "
        "and replaces them; suburbs, towns and public landmarks stay",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="bea_main.py _private_text_scrub() -> _anon_names_scrub() (one AI read per changed text, memo of identical "
              "text, fail-open logged); create / edit / guided publish (off the event loop) / Local Market / profile; "
              "_anon_names_area() on create + edit. Listing 475 cleaned with the same function after deploy.",
