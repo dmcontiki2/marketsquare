@@ -35514,6 +35514,45 @@ def rg_aud_b2_executed():
     return [(INFO, "Batch 2 proof passes; live ms.js carries the escapes; live Zoom offers no street")]
 
 
+@entry("RG-0841", "FIND-BANDS-1 (David 4 Oct 2026: 'stick to our set up rule with these new fixes'): Quick's Find fills "
+       "local-first per RUL-118 -- her area first, then the rest of her city under a 'Nearby' label, RS -> TS -> LS inside "
+       "each band; every other answer stays a gate; 'Yes -- N on TrustSquare' counts her area only; and every picture the "
+       "live door shows comes from the server, never a local drive",
+       OPEN, fixed_on="2026-10-04",
+       scope="quick.html (= genie/HARNESS.html) qFindHonour(): an area miss sets l._band=1 instead of dropping the advert, "
+             "any other test miss drops it; paint() labels the bands ('Nearby' -- roles/quick_i18n.json, five languages) "
+             "and heads 'Yes -- N near you' when only the city band has adverts. PH_BASE is https://trustsquare.co/static/quick/ "
+             "and the door names no file:// or drive path. EXECUTED 4 Oct in headless Chromium (verify_quick_find_honour.mjs, "
+             "band version): townhouse to buy in Menlyn -> 'Yes -- 2 near you', both under NEARBY; in Rietvalleirand -> "
+             "'Yes -- 2 on TrustSquare'; to rent anywhere -> never. All 180 picture URLs on the live door answer 200 from "
+             "trustsquare.co / R2.",
+       ref="David 4 Oct 2026 after FIND-HONOUR-1 shipped; RUL-118(b); RUL-200(c) as amended")
+def rg_find_bands():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    code = re.sub(r"/\*.*?\*/", "", q, flags=re.S)
+    for sn, why in (("if(tests[i][2]==='area'){ band=1; continue; } return; }", "an area miss drops the advert again (RUL-118 lost) or a gate miss no longer drops it"),
+                    ("l._band=band; out.push(l);", "adverts no longer carry their band"),
+                    ("(a._band-b._band) || ((0.5*ls(b)+0.5*ts(b))-(0.5*ls(a)+0.5*ts(a)))", "bands are no longer ordered local-first, RS inside"),
+                    ("E(l._band ? T('Nearby') : placeName)", "the bands are no longer labelled"),
+                    ("n0 ? T('Yes')+' — '+n0+' '+T('on TrustSquare') : T('Yes — '+n1+' near you')", "'Yes' counts adverts outside her area again")):
+        if sn not in code:
+            return [(FAIL, "quick.html: " + why)]
+    if 'var PH_BASE = "https://trustsquare.co/static/quick/";' not in q:
+        return [(FAIL, "quick.html: the door's pictures no longer come from the server (PH_BASE)")]
+    m = re.search(r"(file:///|[A-Za-z]:\\\\Users\\\\|C:/Users/)", code)
+    if m:
+        return [(FAIL, "quick.html names a local-drive path: " + m.group(1))]
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html differs from quick.html")]
+    live = _get("/quick/")
+    if "l._band=band; out.push(l);" not in live:
+        return [(FAIL, "the live /quick/ does not fill local-first yet (not deployed yet?)")]
+    return [(INFO, "Quick's Find fills her area first, then the city under 'Nearby'; pictures from the server -- live")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
