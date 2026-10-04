@@ -35128,6 +35128,45 @@ def rg_magic_hello_1():
     return [(INFO, "the invited seller is welcomed by name on step 1; the Home tip waits")]
 
 
+@entry("RG-0876", "AI-DESC-SHOWN-1 + AI-PRICE-HINT-1 (Goal run 29, 4 Oct 2026): the photo read's description is shown to the seller "
+       "in her first story box (cleaned of notes-to-self) before it can be published, and a low-confidence price guess is a hint, "
+       "not her price",
+       LOCKED, fixed_on="2026-10-04",
+       scope="ms.js sfApplyDraft (priceHint), sfSpecS (price placeholder; first textarea prefilled + note), sfAiDescRow, "
+             "sfCleanAiDesc, sfComposeDescription, sfDraftSnapshot/Restore; bea_main.py vision prompt description_draft wording",
+       ref="docs/E2E_2026-10-04_run29.md: a marmalade seller's advert would have gone live with an AI paragraph she never saw, about "
+           "honey, bread loaves, a jug and flowers 'as market styling', ending 'Jar sizes, flavours, ingredients, allergens, production "
+           "dates and pricing are not visible.' The read's R80 guess (price_confidence 0.28) sat in her price box unmarked.")
+def rg_ai_desc_shown_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function sfCleanAiDesc(t){")
+    if i < 0 or "function sfAiDescRow(){" not in js:
+        return [(FAIL, "the AI description cleaner / story-box finder is gone")]
+    seg = js[i:i + 900]
+    for w in ("not (clearly )?(visible", "styling", "props?"):
+        if w not in seg:
+            return [(FAIL, "the cleaner no longer drops '" + w + "' sentences")]
+    k = js.find("function sfComposeDescription(){")
+    comp = js[k:k + 2600]
+    if "ai=sfCleanAiDesc(ai);" not in comp or "if(sfState.aiDescShown) ai='';" not in comp:
+        return [(FAIL, "the published description can again carry an AI paragraph the seller never saw")]
+    j = js.find("function sfSpecS(secKey){")
+    spec = js[j:j + 6000]
+    if "sfAiDescRow()===id" not in spec or "I drafted this from your photo" not in spec:
+        return [(FAIL, "the story box no longer shows the seller the AI's description")]
+    if "_phP=sfState.priceHint" not in spec:
+        return [(FAIL, "the low-confidence price guess is no longer shown as a hint")]
+    a = js.find("function sfApplyDraft(d){")
+    if "_pc<0.5){ sfState.priceHint=" not in js[a:a + 900]:
+        return [(FAIL, "a low-confidence price guess lands in the price box again")]
+    b = repo_file("bea_main.py") or ""
+    if "never say what you cannot see or confirm" not in b:
+        return [(FAIL, "the vision prompt no longer tells the read that description_draft is buyer-facing")]
+    return [(INFO, "the seller sees the AI description before publishing; a weak price guess is a hint")]
+
+
 @entry("RG-0814", "AUD-001 (4 Oct 2026 audit, Critical): only a PENDING introduction can be accepted or declined -- a request the "
        "buyer withdrew (or that expired) can never be accepted, charged 1T and revealed, nor rewritten to 'declined'",
        LOCKED, fixed_on="2026-10-04",

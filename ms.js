@@ -21037,7 +21037,7 @@ function sfDraftSnapshot(){
   var s=sfState; if(!s || s._done || !s.cat) return null;
   var ca=s.coachAsk||{}, D=s.dcb;
   return {v:1, t:Date.now(), id:s._draftId, active:sfFlowActive(),
-    screen:s.screen, cat:s.cat, sub:s.sub, lmType:s.lmType, A:s.A, B:s.B, C:s.C, features:s.features, price:s.price,
+    screen:s.screen, cat:s.cat, sub:s.sub, lmType:s.lmType, A:s.A, B:s.B, C:s.C, features:s.features, price:s.price, priceHint:s.priceHint||'', aiDescShown:s.aiDescShown||0,
     area:s.area, areaSeed:s._areaSeed||'', lastStep:s._lastStep||'', email:s.email, name:s.name, city:s.city, country:s.country,
     photos:s.photos, mainPhase:s.mainPhase, mainMsg:s.mainMsg, visionDraft:s.visionDraft, vehicle:s.vehicle,
     anonFlags:s.anonFlags||{}, mvSig:s.mvSig||'', coachSid:s.coachSid,
@@ -21124,7 +21124,7 @@ function sfValidStep(to){   // a step this listing can actually show (Back/resto
 function sfPhotosBack(){ var c=SF_CATS[sfState.cat]||{}; return c.subPick ? 'subpick' : (sfState.cat==='local_market' ? 'lmpick' : 'home'); }
 function sfDraftRestore(d){
   var s=sfNewState();
-  ['cat','sub','lmType','A','B','C','features','price','area','email','name','city','country','photos','mainPhase','mainMsg','visionDraft','vehicle','anonFlags','mvSig','coachSid'].forEach(function(k){ if(d[k]!==undefined && d[k]!==null) s[k]=d[k]; });
+  ['cat','sub','lmType','A','B','C','features','price','priceHint','aiDescShown','area','email','name','city','country','photos','mainPhase','mainMsg','visionDraft','vehicle','anonFlags','mvSig','coachSid'].forEach(function(k){ if(d[k]!==undefined && d[k]!==null) s[k]=d[k]; });
   s._draftId=d.id; s._areaSeed=d.areaSeed||''; s._lastStep=d.lastStep||'';
   s.coachAsk=Object.assign(s.coachAsk, d.coachAsk||{}, {open:false, busy:false});
   Object.keys(s.photos||{}).forEach(function(k){ if(s.photos[k]===1) s.photos[k]=2; });   // a check still running when the page went is done on upload
@@ -21311,7 +21311,7 @@ function sfResetListing(){
   sfState.dcb=null;   // DCB-001: a fresh listing starts with an empty photo set
   sfState.coachSid='sf'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);   // SF-COACH-ASK-1: one cap per listing session
   sfState.coachAsk={open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false};
-  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price='';
+  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price=''; sfState.priceHint=''; sfState.aiDescShown=0;   // AI-PRICE-HINT-1 / AI-DESC-SHOWN-1
   sfState.area=(typeof magicLink!=='undefined' && magicLink.active && magicLink.suburb) ? String(magicLink.suburb).slice(0,80) : '';   // INVITE-PLACE-1
   sfState._areaSeed=sfState.area;
   sfState.visionDraft=null; sfState.vehicle=null;
@@ -22331,7 +22331,11 @@ async function sfRunMultiVision(){
 }
 function sfApplyDraft(d){
   var A=sfState.A, B=sfState.B, C=sfState.C, cat=sfState.cat;
-  if(d.suggested_price && !String(sfState.price).trim()) sfState.price=String(d.suggested_price);
+  /* AI-PRICE-HINT-1 (Goal run 29, 4 Oct 2026): a low-confidence price guess (the jars photo: R80 at 0.28) no longer lands in
+     her price box as if it were her price -- it is shown as a hint in the box instead and she types her own. */
+  var _pc=(typeof d.price_confidence==='number')?d.price_confidence:1;
+  if(d.suggested_price && _pc<0.5){ sfState.priceHint=String(d.suggested_price); }
+  else if(d.suggested_price && !String(sfState.price).trim()) sfState.price=String(d.suggested_price);
   if(cat==='Cars'){
     if(d.make && !A.make) A.make=String(d.make);
     if(d.model && !A.model) A.model=String(d.model);
@@ -22393,6 +22397,15 @@ function sfColType(d){   // COL-DRAFT-1: the read's item type onto the Collector
   for(var j=0;j<rules.length;j++){ if(rules[j][1].test(w)) return rules[j][0]; }
   return '';
 }
+/* AI-DESC-SHOWN-1: the flow's first story box (first textarea row) is where the photo read's description is shown */
+function sfAiDescRow(){ var f=sfFlow(); if(!f) return ''; for(var i=0;i<f.sections.length;i++){ var r=f.sections[i].rows.filter(function(x){return x[2]==='textarea';})[0]; if(r) return r[0]; } return ''; }
+/* AI-DESC-SHOWN-1: drop the read's notes-to-self -- what it could not see, the props and styling around the item */
+function sfCleanAiDesc(t){
+  t=String(t||'').trim(); if(!t) return '';
+  var parts=t.match(/[^.!?]+[.!?]*(\s+|$)/g)||[t];
+  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration)/i;
+  return parts.filter(function(x){ return !bad.test(x); }).join('').trim();
+}
 function sfSkip(warnKey,next){
   var w=document.getElementById('sf-warn-'+warnKey);
   if(w && w.style.display!=='block'){ w.style.display='block'; setTimeout(function(){sfGo(next);},1600); }
@@ -22417,7 +22430,8 @@ function sfSpecS(secKey){
       else if(/sale/i.test(_lt)) _pl='Asking price';
     }
     _pl=_pl+' ('+_sfCcySym()+')';   // RG-0006: symbol follows the seller's market
-    rows=rows.concat([['__price',_pl,'number','e.g. 500','root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
+    var _phP=sfState.priceHint?('Photo guess '+_sfCcySym()+sfState.priceHint+' \u2014 your price'):'e.g. 500';   // AI-PRICE-HINT-1
+    rows=rows.concat([['__price',_pl,'number',_phP,'root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
   }
   rows.forEach(function(r){
     var id=r[0], lbl=r[1], typ=r[2], ph=r[3], root=(r[4]==='root');
@@ -22429,7 +22443,13 @@ function sfSpecS(secKey){
       ph.split('|').forEach(function(o){opts+='<option value="'+String(o).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"'+(val===o?' selected':'')+'>'+o+'</option>';});
       h+='<div class="sf-frow"><label>'+lbl+'</label><select onchange="'+oninp+'">'+opts+'</select></div>';
     } else if(typ==='textarea'){
-      h+='<div class="sf-frow" style="flex-direction:column;align-items:stretch;"><label style="margin-bottom:6px;max-width:100%;">'+lbl+'</label><textarea rows="3" data-i18n-ph="1" placeholder="'+ph+'" oninput="'+oninp+'">'+val+'</textarea></div>';   // PH-PASS-1 (ts4-20)
+      /* AI-DESC-SHOWN-1 (Goal run 29): the photo read's description used to lead the published advert unseen. The first story
+         box now holds it (cleaned, editable) so she reads every word buyers will read; clearing it means no AI text. */
+      var _aiNote='';
+      if(sfAiDescRow()===id && !String(val).trim() && !sfState.aiDescShown){ var _ad=sfCleanAiDesc((sfState.visionDraft||{}).description_draft); if(_ad){ val=_ad; sfState[secKey][id]=_ad; sfState.aiDescShown=1; sfDraftSaveSoon(); } }
+      if(sfAiDescRow()===id && sfState.aiDescShown) _aiNote='<div style="font-size:12px;color:#f2b035;margin:0 0 6px;">\u270e I drafted this from your photo \u2014 buyers will read it as written. Change anything that isn\u2019t right.</div>';
+      val=String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      h+='<div class="sf-frow" style="flex-direction:column;align-items:stretch;"><label style="margin-bottom:6px;max-width:100%;">'+lbl+'</label>'+_aiNote+'<textarea rows="'+(_aiNote?6:3)+'" data-i18n-ph="1" placeholder="'+ph+'" oninput="'+oninp+'">'+val+'</textarea></div>';   // PH-PASS-1 (ts4-20)
     } else {
       // AREA-SUGGEST-1: the suburb/area input offers the city's suburbs as
       // datalist suggestions (tap shows the list, typing filters it)
@@ -22666,6 +22686,8 @@ function sfComposeDescription(){
   if(sfState.features.length) out.push('Features: '+sfState.features.join(', '));
   var ai='';
   try{ ai=String((sfState.visionDraft&&sfState.visionDraft.description_draft)||'').trim(); }catch(e){ ai=''; }
+  ai=sfCleanAiDesc(ai);                                // AI-DESC-SHOWN-1: no notes-to-self in an advert
+  if(sfState.aiDescShown) ai='';                       // AI-DESC-SHOWN-1: she saw it in her story box; what is there now is hers
   var lead = prose.length ? prose.join('\n\n') : ai;   // seller prose wins over the AI draft
   if(!lead) return out.join('\n');
   return out.length ? lead+'\n\n'+out.join('\n') : lead;
