@@ -35127,14 +35127,14 @@ def rg_magic_hello_1():
 
 @entry("RG-0814", "AUD-001 (4 Oct 2026 audit, Critical): only a PENDING introduction can be accepted or declined -- a request the "
        "buyer withdrew (or that expired) can never be accepted, charged 1T and revealed, nor rewritten to 'declined'",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="bea_main.py accept_intro (_settled is an allow-list: anything but pending is closed; the conditional UPDATE "
              "requires status pending) and decline_intro (same UPDATE precondition); estate_agents.py decline_agent_intro "
              "(its UPDATE now also requires pending -- the accept already did). CLASS: every intro status write in the "
              "deployed code is pending-only (withdraw and the expiry sweep already were). PROVEN by "
              "scripts/prove_intro_charge_once.py section 6 on a throwaway replica (withdrawn / expired / odd-cased: 409, no "
              "charge, record untouched; legacy NULL still counts as pending).",
-       ref="AUDIT_2026-10-04_findings.json AUD-001 (B3-02), graded READ-LEAD; confirmed in today's code 4 Oct 2026.")
+       ref="AUDIT_2026-10-04_findings.json AUD-001 (B3-02), graded READ-LEAD; confirmed in today's code 4 Oct 2026. LOCKED 4 Oct 2026 after deploy a49f606: replica proof passes against the live source (no live probe -- accepting a real request would change data).")
 def rg_aud001_pending_only():
     bad = _fb28_need([("bea_main.py", [('_settled = (_row["status"] or "pending").strip().lower() != "pending"',
                                         "accept_intro lists settled states one by one again (withdrawn slips through)")]),
@@ -35158,14 +35158,14 @@ def rg_aud001_pending_only():
 @entry("RG-0815", "AUD-002 (4 Oct 2026 audit, Critical): one Paystack payment credits exactly once -- a reference is plain "
        "characters only, sent URL-encoded, and the once-only claim keys on the reference PAYSTACK returns, on all three "
        "verify doors (Tuppence, seller plan, wishlist)",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="payments.py valid_reference() (fullmatch ^[A-Za-z0-9_.=-]{1,100}$) + verify_payment (refuses before sending, "
              "urllib quote, refuses an answer naming another reference); bea_main.py _paystack_verified() -- the ONE caller "
              "of payments.verify_payment -- used by /payment/verify, /payment/seller-subscription/verify and "
              "/wishlist/subscription/verify. The webhook already keyed on Paystack's signed reference. PROVEN by "
              "scripts/prove_paystack_ref_once.py (fake Paystack that drops #fragments, ?queries and resolves ../). Live: "
              "a '#a' variant is refused 400 'not valid' before Paystack is asked (read-only probe, claims nothing).",
-       ref="AUDIT_2026-10-04_findings.json AUD-002 (B3-01 + H1-01), graded READ-LEAD; confirmed in today's code 4 Oct 2026.")
+       ref="AUDIT_2026-10-04_findings.json AUD-002 (B3-01 + H1-01), graded READ-LEAD; confirmed in today's code 4 Oct 2026 (live before: a #a reference reached Paystack). LOCKED 4 Oct 2026 after deploy a49f606: all three verify doors answer 'not valid' to #a / ?x=1 / ../ variants live; a plain reference still reaches Paystack.")
 def rg_aud002_paystack_ref_once():
     bad = _fb28_need([("payments.py", [("_REFERENCE_RE.fullmatch(reference)", "the reference check is gone or uses match again"),
                                        ("_quote(reference, safe='')", "the reference is pasted into the Paystack URL raw again"),
@@ -35201,14 +35201,14 @@ def rg_aud002_paystack_ref_once():
 @entry("RG-0816", "AUD-003 (4 Oct 2026 audit, Critical): Quick paints her answers as TEXT -- a crafted /quick/?resume= link "
        "can no longer run script on trustsquare.co, kept answers are rebuilt from an allow-list, and only her own "
        "Google round trip restores without a tap",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="quick.html (= genie/HARNESS.html, = /q/): qEsc()/qPh() beside $(); every answer trail (7 painters), the draft "
              "card's title, body and facts, the hero picture; qRefreshItem body as textContent; qCleanWip() on the ?resume= "
              "reader AND the door's stored copy; restore() clamps step to the flow; the Google tap writes a one-use number "
              "(localStorage ts_q_gn) carried as &rn=, and a link without it waits on 'Carry on'. EXECUTED 4 Oct in headless "
              "Chromium (scripts/smoke_harness/verify_quick_resume_xss.mjs): the old file ran the injected handler 1-6 times "
              "per link, the new file 0 times with and without a tap, and showed the payload as text.",
-       ref="AUDIT_2026-10-04_findings.json AUD-003 (Q1-01 + Q2-01), graded PROBED by the audit; reproduced on the old file 4 Oct 2026.")
+       ref="AUDIT_2026-10-04_findings.json AUD-003 (Q1-01 + Q2-01), graded PROBED by the audit; reproduced on the old file 4 Oct 2026. LOCKED 4 Oct 2026 after deploy a49f606 and a rendered check in David's Chrome: the crafted link ran nothing, waited on Carry on, and after the tap the draft card showed the markup as plain text.")
 def rg_aud003_quick_escape():
     q = repo_file("quick.html")
     if q is None:

@@ -1,0 +1,29 @@
+[
+ {
+  "id": "AUD-001",
+  "sev": "Critical",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed in today's code: accept and decline both missed 'withdrawn'. Now only a pending introduction can be accepted or declined, in bea_main.py and in the estate-agent decline. A withdrawn or expired request answers 409, nothing is charged, nothing is revealed, no decline message is sent.",
+  "check": "scripts/prove_intro_charge_once.py section 6 on a throwaway replica (withdrawn, expired, odd case: 409, no charge, record untouched); ledger RG-0814. Not probed live: accepting a real request would change data.",
+  "live_since": "2026-10-04 (a49f606)"
+ },
+ {
+  "id": "AUD-002",
+  "sev": "Critical",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed in today's code and live: a '#a' reference reached Paystack. Now a reference must be plain characters, is sent URL-encoded, and the once-only claim keys on the reference Paystack returns, through one shared door used by the Tuppence, seller-plan and wishlist verify handlers.",
+  "check": "scripts/prove_paystack_ref_once.py (fake Paystack: every variant refused, five attempts = one credit); live: all three verify doors answer 'That payment reference is not valid.' to #a / ?x=1 / ../ and a plain reference still reaches Paystack; ledger RG-0815.",
+  "live_since": "2026-10-04 (a49f606)"
+ },
+ {
+  "id": "AUD-003",
+  "sev": "Critical",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Reproduced on the old file (the injected handler ran 1-6 times per link, no tap). Every answer Quick paints is now escaped, resumed answers are rebuilt from an allow-list, and only her own Google round trip restores without a tap; any other link waits on 'Carry on'.",
+  "check": "Headless Chromium old vs new (scripts/smoke_harness/verify_quick_resume_xss.mjs): new = 0 runs with and without a tap. Rendered in David's Chrome on trustsquare.co/quick: nothing ran, 'Carry on' shown; after the tap the draft card showed the markup as plain text; ledger RG-0816.",
+  "live_since": "2026-10-04 (a49f606)"
+ }
+]
