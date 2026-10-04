@@ -23745,6 +23745,10 @@ def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo
             "Note any visible condition details, markings, signatures, or authentication features. "
             "suggested_price is the asking price for the item. "
             "Set condition to 'Excellent', 'Good', or 'Fair' based on visible state. "
+            # COL-DRAFT-1 (Goal run 28): the item type, and a year / maker only when legible, fill the Collectors form
+            "Set collectible_type to exactly one of: Coins, Trading cards, Stamps, Art, Militaria, Wine, Books, Toys, Watches, Other. "
+            "Set year to the date or era ONLY if it is legible on the item (e.g. the date on a coin), else null. "
+            "Set maker to the mint, maker or artist ONLY if legible on the item, else null. "
             "Set category to 'collectors' in the response."
         ),
         "local_market": (
@@ -23800,6 +23804,8 @@ TASK: Return a single JSON object with exactly these fields:
   "mileage": null,
   "condition": null,
   "vehicle_specs": null,
+  "collectible_type": null,
+  "maker": null,
   "missing_shots": [],
   "coach_tips": [],
   "warnings": [],

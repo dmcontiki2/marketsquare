@@ -35077,6 +35077,54 @@ def rg_rul199():
     return [(INFO, "testers capped at four, no phone points, licences 'checked', permit rows scoped")]
 
 
+
+@entry("RG-0812", "COL-DRAFT-1 (Goal run 28, 4 Oct 2026): on Collectors the photo read fills Category, Year / era and Maker when it "
+       "knows them -- blanks only, Category only from the list, a year only when legible or in its own title",
+       LOCKED, fixed_on="2026-10-04", scope="ms.js sfApplyDraft + sfColType; bea_main.py _build_vision_prompt (collectors asks for "
+       "collectible_type, year, maker)",
+       ref="docs/E2E_2026-10-04.md step 6: the read wrote '1947 Vintage Coin' and left Category '--' and Year empty.")
+def rg_col_draft_1():
+    bad = _fb28_need([("ms.js", [("function sfColType(d)", "the Collectors read no longer maps an item type onto Category"),
+                                 ("if(ty && !A.icat) A.icat=ty;", "the read's item type no longer fills a blank Category"),
+                                 ("if(yr && !A.era) A.era=yr;", "the read's year no longer fills a blank Year / era")]),
+                      ("bea_main.py", [("Set collectible_type to exactly one of: Coins, Trading cards", "the vision prompt stopped asking for the item type"),
+                                       ('"collectible_type": null,', "the vision JSON lost its collectible_type field")])])
+    if bad:
+        return bad
+    js = repo_file("ms.js") or ""
+    i = js.find("function sfColType(d)")
+    seg = js[i:i + 1600]
+    if "Coins" not in seg or "coins?" not in seg:
+        return [(FAIL, "sfColType cannot name a coin any more")]
+    return [(INFO, "the Collectors photo read fills Category, Year and Maker blanks")]
+
+
+@entry("RG-0813", "MAGIC-HELLO-1 (Goal run 28, 4 Oct 2026): a seller who arrives from our invitation e-mail is greeted by name on step 1 "
+       "of the sell flow (escaped), and the Home long-press tip does not cover her form",
+       LOCKED, fixed_on="2026-10-04", scope="ms.js sfMagicHello + sfPhotosS; showCatHomeHint",
+       ref="docs/E2E_2026-10-04.md: the Collector Shops invitation link opened on 'Step 1 of 6 - Photos' with no word of who or why; "
+           "the old guided screen's 'Welcome, <name>' banner (renderMagicBanner) was left behind by SELL-FLOW-REDO-2 on 15 Jul.")
+def rg_magic_hello_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function sfMagicHello(){")
+    if i < 0:
+        return [(FAIL, "the invited seller's greeting is gone from the sell flow")]
+    seg = js[i:i + 1200]
+    if "_lmEsc(nm" not in seg:
+        return [(FAIL, "the invited name reaches the page unescaped (INVITE-ESC-1)")]
+    if "magicLink.active" not in seg:
+        return [(FAIL, "the greeting no longer depends on an invitation link")]
+    j = js.find("function sfPhotosS(){")
+    if "sfMagicHello()+sfMeter()" not in js[j:j + 400]:
+        return [(FAIL, "step 1 no longer shows the invited seller's greeting")]
+    k = js.find("function showCatHomeHint() {")
+    if "magicLink.active) return;" not in js[k:k + 400]:
+        return [(FAIL, "the Home long-press tip covers the invited seller's form again")]
+    return [(INFO, "the invited seller is welcomed by name on step 1; the Home tip waits")]
+
+
 @entry("RG-0814", "AUD-001 (4 Oct 2026 audit, Critical): only a PENDING introduction can be accepted or declined -- a request the "
        "buyer withdrew (or that expired) can never be accepted, charged 1T and revealed, nor rewritten to 'declined'",
        OPEN, fixed_on="2026-10-04",

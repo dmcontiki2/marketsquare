@@ -19788,6 +19788,8 @@ function _catHomeStatsText(cat) {
 
 function showCatHomeHint() {
   if (localStorage.getItem(CAT_HOME_HINT)) return;
+  // MAGIC-HELLO-1: an invited seller is on her listing form, not Home -- the tip waits for a visit to Home (not marked shown)
+  if (typeof magicLink!=='undefined' && magicLink.active) return;
   try { localStorage.setItem(CAT_HOME_HINT, '1'); } catch(_) {}
   const hint = document.createElement('div');
   hint.className = 'cat-home-hint';
@@ -21679,10 +21681,21 @@ function sfSlotHtml(sl){
   return '<div class="sf-slot'+(st===2?' sf-done':'')+'" onclick="sfPickFile(\''+key+'\')"><div class="sf-thumb">'+thumb+
   '</div><div class="sf-info"><div class="sf-nm">'+sl[1]+'</div><div class="sf-hint">'+(st===2?'Tap to replace':sl[2])+'</div></div>'+badge+clr+'</div>';
 }
+/* MAGIC-HELLO-1 (Goal run 28, 4 Oct 2026): since SELL-FLOW-REDO-2 (15 Jul) an invited seller lands straight on "Step 1 of 6 -
+   Photos": the old guided screen's "Welcome, <name>" banner never came with her, so a shop owner who clicked our e-mail met a
+   form that did not say who it was for or why she was there. One line, on the first step only, name escaped (INVITE-ESC-1). */
+function sfMagicHello(){
+  if(typeof magicLink==='undefined' || !magicLink.active || !sfState || sfState.screen!=='photos') return '';
+  var nm=String(magicLink.name||'').trim();
+  return '<div class="sf-magic-hello" style="margin:0 18px 12px;padding:12px 14px;border-radius:14px;background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.40);color:#e5e7eb;font-size:14px;line-height:1.45;">'+
+    '<b style="color:#34d399;">'+(nm ? 'Welcome, '+_lmEsc(nm.slice(0,80))+'.' : 'Welcome.')+'</b> '+
+    'This is the TrustSquare invitation we e-mailed you — your details are already filled in. Start with one listing: a photo and a few details. '+
+    'It goes live on the free plan, and everything else can follow later.</div>';
+}
 function sfPhotosS(){
   if(sfDcbOn()) return sfDcbPhotosS();   // DCB-001 under the flag: batch upload, then order
   var f=sfFlow();
-  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
+  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMagicHello()+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Start with your main photo, or continue and add it later.</b> I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
   if(sfState.mainPhase===1){
     h+='<div class="sf-aipanel">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'">':'')+
@@ -22212,7 +22225,29 @@ function sfApplyDraft(d){
     if(d.level && !A.levels) A.levels=d.level;
   }
   if(cat==='local_market' && d.title && !A.title) A.title=d.title;
-  if(cat==='Collectors' && d.title && !A.name) A.name=d.title;
+  if(cat==='Collectors'){
+    if(d.title && !A.name) A.name=d.title;
+    /* COL-DRAFT-1 (Goal run 28, 4 Oct 2026): the photo read named a stranger's coin "1947 Vintage Coin" and then left
+       Category and Year empty for her to fill in. What the read already knows fills the blanks -- only blanks, only a
+       Category the list offers, a year only when it is written on the item or in the title. Condition stays hers. */
+    var ty=sfColType(d); if(ty && !A.icat) A.icat=ty;
+    var yr=(d.year!=null && String(d.year).trim()) ? String(d.year).trim().slice(0,40) : ((String(d.title||'').match(/\b(1[0-9]{3}|20[0-2][0-9])\b/)||[])[0]||'');
+    if(yr && !A.era) A.era=yr;
+    if(d.maker && !A.maker) A.maker=String(d.maker).slice(0,80);
+  }
+}
+function sfColType(d){   // COL-DRAFT-1: the read's item type onto the Collectors Category list, else from its own words
+  var opts=['Coins','Trading cards','Stamps','Art','Militaria','Wine','Books','Toys','Watches'];
+  var t=String((d&&d.collectible_type)||'').trim().toLowerCase();
+  for(var i=0;i<opts.length;i++){ if(opts[i].toLowerCase()===t) return opts[i]; }
+  var w=(String((d&&d.title)||'')+' '+(((d&&d.tags)||[]).join ? ((d&&d.tags)||[]).join(' ') : '')).toLowerCase();
+  var rules=[['Trading cards',/\b(trading cards?|pok[eé]mon|magic: the gathering|yu-gi-oh|baseball cards?|rugby cards?)\b/],
+    ['Stamps',/\bstamps?\b/],['Coins',/\b(coins?|krugerrands?|shillings?|pennies|penny|tickey|florins?|banknotes?)\b/],   // a Penny Black is a stamp
+    ['Watches',/\b(watch|watches|wristwatch|pocket watch)\b/],['Militaria',/\b(medals?|militaria|bayonets?|military)\b/],
+    ['Wine',/\b(wines?|brandy|whisky|whiskey)\b/],['Books',/\b(books?|first edition|novel|atlas)\b/],
+    ['Toys',/\b(toys?|dinky|lego|dolls?|action figures?|model trains?)\b/],['Art',/\b(painting|artwork|art print|sculpture|lithograph|etching)\b/]];
+  for(var j=0;j<rules.length;j++){ if(rules[j][1].test(w)) return rules[j][0]; }
+  return '';
 }
 function sfSkip(warnKey,next){
   var w=document.getElementById('sf-warn-'+warnKey);

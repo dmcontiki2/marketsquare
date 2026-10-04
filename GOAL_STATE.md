@@ -5,6 +5,38 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 28 — Sun 4 Oct 2026, 07:32–08:10 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; this run's write probe is `_to_delete/goalrun28_write_probe`).
+  Laptop 1 behind origin, untouched. Built in server worktree `/root/w28` (removed at the end), shipped `claude/goal-run28`
+  bb5d7d5 via CLOUD-SHIP-1 (07:53Z SHIPPED, server cache-buster ms.js?v=920; Cloudflare still handed out the v=919 page for
+  a few minutes after — a fresh browser got v=920). The scheduled run of 3 Oct never finished (the session's tools dropped
+  after the first reads), so there is no run-28 entry for Saturday; this is run 28.
+- **Walk (Collectors / goods, `docs/E2E_2026-10-04.md`):** A — cold Home → Sell → Collectors → photo → six steps → score card
+  (70, "Publish now — I accept the Terms"); stopped at Publish (contract). About 2 minutes, no errors. B — the Collector
+  Shops letter's own link shape (QA address): lands on "Step 1 of 6 · Photos" with no word of who or why, a Home tip over it.
+  RUL-199's Collectors legal card and QUICK-CARD-1 are live as David ruled.
+- **Number: 0** (6,748 listed · 2,614 emailed · 5 registered · 0 qualifying). Live 104 (#469 paused 3 Oct 06:00Z). Every live
+  listing is seeded (`*@trustsquare.co`), AI-example, or family (miconradie1 15, marietjie.marais59 3, davidconradie1234 1).
+  **By a stranger's hand: 0.** No listing of any kind created since 2 Oct 21Z; the 13 accounts made since 2 Oct are all
+  `dmcontiki2+qa-…`.
+- **Where people stop:** still no strangers arriving. Human (bot=0) sessions since run 27: David Jnr's iPhone (3 Oct 05:01–05:52,
+  Quick services, to step 3) and one Windows Chrome Sell→Quick tap at 19:04Z (David's PC, the hour QUICK-CARD-1 shipped).
+- **Outreach:** now one letter a night, all to **Collector Shops** (Pencafe 30 Sep, Clarke's Books 1 Oct, Fanaticus 2 Oct,
+  ts-collectibles 3 Oct); 26 sent since 28 Sep, none bounced since 29 Sep. `click_register` counts 10 non-QA "human clicks"
+  ever; the newest (Curro Hazeldean, 30 Sep 10:01Z) is an e-mail scanner, not a person — opened from 51.89.103.123 and clicked
+  from 144.217.233.238 (both OVH data centres, Edge 122) and no `landed` row followed. Treat that tier as an upper bound.
+  Note: ts-collectibles@**t-online.de** (a German mailbox) was sent as a Cape Town shop.
+- **Shipped (bb5d7d5):** GI-0018 COL-DRAFT-1 (RG-0812) and GI-0019 MAGIC-HELLO-1 (RG-0813), both LOCKED after the live check.
+  Full ledger on the new tree: 0 !!!! (base /opt/marketsquare-src 4e5a15b: 1, RG-0194, pre-existing). Live proof in the rows.
+- **Found, not changed:** the photo read's price guess (R200) lands in Asking price unmarked; the score did not move for nine
+  fields after the photo (it is the server's listing score; only photos lift it). Invited QA addresses get a 401 from the photo
+  read by design (INVITE-VISION-1 passes only real invitees) — walk B's photo step cannot be proven with a QA address.
+- **REVIEW NOW:** GI-0020 only — the fair-price cost breakdown David asked for (measured: $0.052 average per check, 1T = $2).
+- **QA data:** nothing published, nothing saved to the server; this walk's funnel rows are bot=2.
+- **Not reached:** what the Collector Shops letters did after the open (none clicked); whether CityLauncher should drop
+  non-South-African mailboxes from SA city lists (outreach is not this run's to change — flagged above).
+
 ## RUN 27 — Fri 2 Oct 2026, 20:56–21:25 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; my write probe moved to `_to_delete/goalrun27_write_probe`).
@@ -126,6 +158,25 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   deploy (waits for the lock and for the tree to go quiet, SO-5).
 - **FOR RUN 25 (David asked, 30 Sep morning):** under new SO-6, sweep RULINGS.md for every ruling David approved that quietly adds a per-use/monthly cost or contradicts an earlier ruling (the RUL-167 vs RUL-122 SMS case, now corrected by RUL-192); list each in GOAL_IMPROVEMENTS REVIEW NOW with the cost, the ruling it collides with, and a recommendation. Also: BulkSMS account trustsquare_sms is OUTREACH-ONLY (RUL-192); the test texts failed NOT_SENT pending BulkSMS support.
 - **Stray file:** `.goalrun_write_test` (empty, repo root) — my write probe; `rm` is not permitted from this shell.
+
+## SUNDAY SUMMARY — written by run 28, Sunday 4 October 2026
+
+**The number is still 0.** Nobody we wrote to has published a listing, and this week nobody new arrived to try: every
+person who touched the sell flow was family, a QA address or a script. Twenty-seven days left to the 20-seller target.
+
+**What moved.** You answered the whole cost sweep in one go (RUL-199) and it shipped the same evening; the Quick card now
+opens Sell; the funnel finally separates people from scripts, so when a stranger does arrive we will see exactly where she
+stops. The product path itself is in good shape: a Local Market seller (Thursday), a cleaner (Friday) and today a coin
+collector each walked from a cold Home page to the Publish button in two minutes without an error.
+
+**What today's walk found.** The letters now go to collector shops, one a night, and their link drops a shop owner onto
+"Step 1 of 6 · Photos" without a word of who it is for — the welcome banner was lost in July when the sell flow was
+rebuilt, so every invitee since then has landed like that. It now greets her by name. The photo reader also stopped making
+her retype what it had just worked out (a coin, 1947).
+
+**What is next.** The letters are the bottleneck, not the app: one a night to shops, and the one recent "human click" was a
+mail scanner. The one decision on your desk is the fair-price check's cost — it costs us about R1 a check and earns R36;
+my recommendation is to keep it as it is, and to give a new seller her first check free once strangers start arriving.
 
 ## SUNDAY SUMMARY — written by run 22, Sunday 27 September 2026
 
