@@ -35079,7 +35079,7 @@ def rg_rul199():
 
 @entry("RG-0812", "COL-DRAFT-1 (Goal run 28, 4 Oct 2026): on Collectors the photo read fills Category, Year / era and Maker when it "
        "knows them -- blanks only, Category only from the list, a year only when legible or in its own title",
-       OPEN, fixed_on="2026-10-04", scope="ms.js sfApplyDraft + sfColType; bea_main.py _build_vision_prompt (collectors asks for "
+       LOCKED, fixed_on="2026-10-04", scope="ms.js sfApplyDraft + sfColType; bea_main.py _build_vision_prompt (collectors asks for "
        "collectible_type, year, maker)",
        ref="docs/E2E_2026-10-04.md step 6: the read wrote '1947 Vintage Coin' and left Category '--' and Year empty.")
 def rg_col_draft_1():
@@ -35100,7 +35100,7 @@ def rg_col_draft_1():
 
 @entry("RG-0813", "MAGIC-HELLO-1 (Goal run 28, 4 Oct 2026): a seller who arrives from our invitation e-mail is greeted by name on step 1 "
        "of the sell flow (escaped), and the Home long-press tip does not cover her form",
-       OPEN, fixed_on="2026-10-04", scope="ms.js sfMagicHello + sfPhotosS; showCatHomeHint",
+       LOCKED, fixed_on="2026-10-04", scope="ms.js sfMagicHello + sfPhotosS; showCatHomeHint",
        ref="docs/E2E_2026-10-04.md: the Collector Shops invitation link opened on 'Step 1 of 6 - Photos' with no word of who or why; "
            "the old guided screen's 'Welcome, <name>' banner (renderMagicBanner) was left behind by SELL-FLOW-REDO-2 on 15 Jul.")
 def rg_magic_hello_1():
