@@ -12981,8 +12981,9 @@ async function elAddPhoto(event) {
   const inp = event.target;
   const files = Array.from((inp && inp.files) || []);
   if (!files.length || !elCurrentId) { if (inp) inp.value = ''; return; }
-  const room = 10 - _elPhotoUrls.length;
-  if (room <= 0) { showToast('Maximum 10 photos'); inp.value = ''; return; }
+  const _cap = msPhotoCap(elCurrentCat);   // PHOTO-CAP-2: Edit obeys PHOTO-CAP-1 (24 property/cars/stays, 12 elsewhere) -- was a hard 10
+  const room = _cap - _elPhotoUrls.length;
+  if (room <= 0) { showToast('Maximum ' + _cap + ' photos'); inp.value = ''; return; }
   const take = files.slice(0, room);
   const leftOut = files.length - take.length;
   const failed = [];
@@ -13020,7 +13021,7 @@ async function elAddPhoto(event) {
   const _n = added + ' photo' + (added !== 1 ? 's' : '');
   let _tail = '';
   if (failed.length) _tail += ' — not uploaded: ' + failed.join(' · ');
-  if (leftOut > 0) _tail += ' — ' + leftOut + ' left out (10-photo maximum)';
+  if (leftOut > 0) _tail += ' — ' + leftOut + ' left out (' + _cap + '-photo maximum)';
   // Auto-save photos immediately - ONE save for the whole batch
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
   if (!(sellerEmail && elCurrentId)) {
@@ -21285,13 +21286,18 @@ function sfFlow(){
   }
   return c;
 }
+/* PHOTO-CAP-2 (4 Oct 2026): ONE photo cap for every screen that adds photos -- PHOTO-CAP-1's numbers. */
+function msPhotoCap(cat, sub){
+  var c=String(cat||'');
+  if(/^(property|cars?)(_|$)/i.test(c)) return 24;
+  if(/accommodation|^stays?$/i.test(c) || (/^adventures?$/i.test(c) && sub==='accommodation')) return 24;
+  return 12;
+}
 function sfMaxPhotos(){
   // PHOTO-CAP-1 (15 Jul 2026, David-approved costing): photo-rich categories
   // get 24 total (named slots + extras); everything else 12. Extras never
   // affect the quality score — named slots stay the quality drivers.
-  if(sfState.cat==='Cars'||sfState.cat==='Property') return 24;
-  if(sfState.cat==='Adventures'&&sfState.sub==='accommodation') return 24;
-  return 12;
+  return msPhotoCap(sfState.cat, sfState.sub);   /* PHOTO-CAP-2: the one rule */
 }
 function sfPhotoCount(){
   return Object.keys(sfState.files).length;

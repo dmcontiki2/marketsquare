@@ -35819,6 +35819,89 @@ def rg_aud_b3_executed():
     return [(INFO, "Batch 3 proofs pass; live ms.js carries the fixes")]
 
 
+@entry("RG-0872", "QUICK-FRESH-1 (David 4 Oct 2026: 'i dont see the near you option in the live Quick app yet'): an open or "
+       "installed Quick loads the newest version on Start again (and when she returns to it at the door) -- a live fix can "
+       "no longer sit unseen in a Quick that stayed open",
+       LOCKED, fixed_on="2026-10-04",
+       scope="quick.html (= genie/HARNESS.html): the Start-again button wraps its old handler -- HEAD /quick/ (no-store), "
+             "compare Last-Modified with the one the page loaded with, reload when newer; visibilitychange does the same "
+             "only at the door (mode null). EXECUTED 4 Oct in headless Chromium: newer server -> reload; unchanged -> back "
+             "to the door, no reload; the old file never reloaded. Shipped e4fdd84 (relay), live 18:43Z.",
+       ref="David 4 Oct 2026; scripts/apply_quick_fresh.py")
+def rg_quick_fresh():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    code = re.sub(r"/\*.*?\*/", "", q, flags=re.S)
+    for sn, why in (("fetch('/quick/', {method:'HEAD', cache:'no-store'", "the door no longer asks the server which version is live"),
+                    ("h.onclick=function(){ var self=this, args=arguments;", "Start again no longer checks for a newer version"),
+                    ("if(n){ try{ qTrack('q_fresh_reload'); }catch(e){} location.reload(); return; } _on.apply(self, args);", "Start again no longer reloads a stale Quick"),
+                    ("if(document.visibilityState!=='visible' || mode ||", "a returning Quick could reload mid-answer, or never")):
+        if sn not in code:
+            return [(FAIL, "quick.html: " + why)]
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html differs from quick.html")]
+    if "h.onclick=function(){ var self=this, args=arguments;" not in _get("/quick/"):
+        return [(FAIL, "the live /quick/ does not refresh itself yet (not deployed?)")]
+    return [(INFO, "Start again loads the newest Quick when the server has one -- live")]
+
+
+@entry("RG-0873", "PHOTO-CAP-2 (David via Dave jnr 4 Oct 2026: 'up our number of photos per property to 20'): ONE photo cap "
+       "for every screen -- PHOTO-CAP-1's 24 for property, cars and places to stay, 12 elsewhere; Edit (where every Quick "
+       "listing gets its photos) no longer stops at a hard-coded 10",
+       OPEN, fixed_on="2026-10-04",
+       scope="ms.js msPhotoCap(cat, sub) is the one rule; sfMaxPhotos() and elAddPhoto() both read it.",
+       ref="CHANGELOG 2026-07-15 PHOTO-CAP-1 (David-approved costing); scripts/apply_photo_cap_2.py")
+def rg_photo_cap_2():
+    m = repo_file("ms.js")
+    if m is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    code = re.sub(r"/\*.*?\*/", "", m, flags=re.S)
+    if "function msPhotoCap(cat, sub){" not in code or "return msPhotoCap(sfState.cat, sfState.sub);" not in code \
+            or "const _cap = msPhotoCap(elCurrentCat);" not in code:
+        return [(FAIL, "ms.js: the Sell flow and Edit no longer share one photo cap")]
+    if re.search(r"const room = 10 - _elPhotoUrls\.length", code) or "'Maximum 10 photos'" in code:
+        return [(FAIL, "ms.js: Edit has its own hard-coded photo cap again")]
+    if "if(/^(property|cars?)(_|$)/i.test(c)) return 24;" not in code:
+        return [(FAIL, "ms.js: property/cars no longer get PHOTO-CAP-1's 24")]
+    v = re.search(r"ms\.js\?v=(\d+)", _get("/"))
+    live = _get("/static/ms.js?v=%s" % v.group(1)) if v else ""
+    if "const _cap = msPhotoCap(elCurrentCat);" not in live:
+        return [(FAIL, "the live ms.js still caps Edit at 10 (not deployed yet?)")]
+    return [(INFO, "one photo cap (24 property/cars/stays, 12 elsewhere) on Sell and Edit -- live")]
+
+
+@entry("RG-0874", "ANON-NAMES-1 (David 4 Oct 2026: the complex name 'iQ Rondebosch' stayed in his title and description "
+       "while the photo pass caught the complex IDs): every private publish and edit reads the advert's NAMES -- complexes, "
+       "estates, buildings, residences, businesses, people -- in title, body and every photo caption, and the typed area, "
+       "and replaces them; suburbs, towns and public landmarks stay",
+       OPEN, fixed_on="2026-10-04",
+       scope="bea_main.py _private_text_scrub() -> _anon_names_scrub() (one AI read per changed text, memo of identical "
+             "text, fail-open logged); create / edit / guided publish (off the event loop) / Local Market / profile; "
+             "_anon_names_area() on create + edit. Listing 475 cleaned with the same function after deploy.",
+       ref="David 4 Oct 2026, listing 475; scripts/apply_anon_names.py")
+def rg_anon_names():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    code = "\n".join(l for l in b.splitlines() if not l.lstrip().startswith("#"))
+    for sn, why in (("def _anon_names_scrub(title, desc, place=\"\", who=\"\", where=\"\"):", "the name pass is gone"),
+                    ("_t, _d, _nh = _anon_names_scrub(out[0], out[1], place, who, where)", "the private text scrub no longer runs the name pass"),
+                    ("caps = [it[1] for it in (items or []) if len(it) > 1 and it[1].strip()]", "photo captions are no longer read"),
+                    ("listing.area, _an = _anon_names_area(", "a typed area on create is no longer checked"),
+                    ("update.area, _an = _anon_names_area(", "a typed area on edit is no longer checked"),
+                    ("await asyncio.to_thread(_private_text_scrub, title, desc, email, \"aa-publish\")", "guided publish skips the name pass or blocks the event loop")):
+        if sn not in code:
+            return [(FAIL, "bea_main.py: " + why)]
+    if "complex" not in b[b.find("_ANON_NAMES_SYSTEM = ("):b.find("_ANON_NAMES_SYSTEM = (") + 2000]:
+        return [(FAIL, "bea_main.py: the name prompt no longer asks for complex names")]
+    t = _get("/listings?city=Pretoria&category=Property&page_size=200")
+    if re.search(r"(?i)\biq\s+rondebosch\b", t):
+        return [(FAIL, "a live Pretoria advert still names 'iQ Rondebosch'")]
+    return [(INFO, "names are read out of advert text on every private publish and edit; listing 475 clean live")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
