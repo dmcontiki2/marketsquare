@@ -131,6 +131,28 @@ def build_router(g):
         n = (name or "").strip() or (email or "").split("@")[0]
         return n.split(" ")[0]
 
+
+    # TESTER-CAP-1 (RUL-199(2), David 3 Oct 2026: "only temporarily and limited to 4 current testers excluding me").
+    TESTER_CAP = 4
+
+    def _tester_people(conn):
+        """The named testers who are not David: invites (other than his QA ones) plus people given a tester grant."""
+        def _david(e):
+            e = (e or "").strip().lower()
+            return e.startswith("dmcontiki2") or e.endswith("@trustsquare.co") or e.endswith(".invalid")
+        n = 0
+        claimed = set()
+        for r in conn.execute("SELECT label, claimed_by FROM tester_invites").fetchall():
+            if str(r["label"] or "").strip().lower().startswith("qa") or _david(r["claimed_by"]):
+                continue
+            n += 1
+            if r["claimed_by"]:
+                claimed.add(str(r["claimed_by"]).strip().lower())
+        for r in conn.execute("SELECT DISTINCT LOWER(user_email) AS e FROM transactions WHERE type='tester_grant'").fetchall():
+            if not _david(r["e"]) and r["e"] not in claimed:
+                n += 1
+        return n
+
     # ── TESTER-INVITE-1 ──────────────────────────────────────────────────────
     @r.post("/admin/tester-invite")
     def tester_invite(body: _InviteIn, admin=Depends(require_admin)):
@@ -142,6 +164,9 @@ def build_router(g):
         conn = database.get_db()
         try:
             _ensure(conn)
+            if not label.lower().startswith("qa") and _tester_people(conn) >= TESTER_CAP:
+                raise HTTPException(status_code=409, detail="The tester list is full (4 testers besides David, RUL-199) -- "
+                                                            "revoke one first, or David widens the limit.")
             conn.execute("INSERT INTO tester_invites (nonce, label, amount, created_by) VALUES (?,?,?,?)",
                          (nonce, label, amt, str(admin)[:80]))
             conn.commit()

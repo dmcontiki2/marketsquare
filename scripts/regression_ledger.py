@@ -33507,7 +33507,7 @@ def rg_licence_gate_1():
         bad.append("/listings/mine no longer tells the Hub the licence holds the advert")
     if "raw.gate === 'licence'" not in js or "['category.services_tech.coc', 'Licence to practise" not in js:
         bad.append("the Hub card / Edit no longer ask for the licence")
-    if "once your licence is verified in TrustSquare." not in q or (h is not None and h != q):
+    if "once your licence is checked in TrustSquare." not in q or (h is not None and h != q):
         bad.append("Quick's draft screen lost the licence line (or HARNESS differs)")
     if bad:
         return [(FAIL, "; ".join(bad))]
@@ -34842,7 +34842,7 @@ def rg_piece_rate_1():
     return [(INFO, "per visit / per job / call-out fee carry no wage floor; hour and day keep it")]
 
 @entry("RG-0802", "LICENCE-SHOWN-1 (RUL-198): a Driver or Delivery rider is listed publicly at once -- the plain driving licence "
-       "is no longer a gate; buyers read 'Driving licence not verified' beside the Trust Score and in the introduction form, it "
+       "is no longer a gate; buyers read 'Driving licence not checked yet' beside the Trust Score and in the introduction form, it "
        "earns nothing until checked, and introductions go ahead. A PrDP, PSIRA, DoEL or SAQCC licence stays a gate",
        OPEN, fixed_on="2026-10-03",
        scope="scripts/build_role_registry.py SHOWN -> roles/role_registry.json licence_shown (driver, delivery_rider; no gate) -> "
@@ -34889,7 +34889,7 @@ def rg_licence_shown_1():
             bad.append(what)
     if bad:
         return [(FAIL, "; ".join(bad))]
-    return [(INFO, "a driver is public at once with 'Driving licence not verified'; PrDP / PSIRA / DoEL / SAQCC stay gates")]
+    return [(INFO, "a driver is public at once with 'Driving licence not checked yet'; PrDP / PSIRA / DoEL / SAQCC stay gates")]
 
 @entry("RG-0804", "HELP-PULL-1: the laptop's help-guide check takes the screens it lacks from the server before judging -- "
        "the server is where the screens live, so a cloud walk's screens never read as 'missing' and no screen is ever "
@@ -35054,6 +35054,26 @@ def rg_quick_card_1():
     if "Work for yourself?" not in seg:
         return [(FAIL, "the Quick card no longer names who it is for")]
     return [(INFO, "Sell opens with the full-width Quick card")]
+
+
+@entry("RG-0811", "RUL-199 (David 3 Oct 2026, the SO-6 cost sweep): four testers besides David, no phone points, a licence a person "
+       "looked at is 'checked', and the Collectors permit rows say they are only for protected items",
+       OPEN, fixed_on="2026-10-03", scope="ripple_features.py TESTER-CAP-1; bea_main.py admin grant + trust catalogue; ms.js LICENCE-WORD-1, "
+       "SINGLE-ITEM-NOTE-1; quick.html + HARNESS; assets/legal-must-haves/legal-cards.js",
+       ref="GOAL_IMPROVEMENTS GI-0008 items 1-6 and GI-0006; RULINGS RUL-199.")
+def rg_rul199():
+    bad = _fb28_need([("ripple_features.py", [("_tester_people(conn) >= TESTER_CAP", "a fifth tester can be invited")]),
+                      ("bea_main.py", [("TESTER-CAP-1 (RUL-199(2))", "a fifth tester can be granted Tuppence")]),
+                      ("ms.js", [("lab + ' not checked yet'", "a licence reads 'verified' again"),
+                                 ("SINGLE-ITEM-NOTE-1", "a one-coin seller meets the dealer rows with no word")]),
+                      ("quick.html", [("once your licence is checked in TrustSquare.", "Quick says 'verified' for a licence")]),
+                      ("assets/legal-must-haves/legal-cards.js", [("ONLY FOR PROTECTED ITEMS", "the permit rows lost 'only for protected items'")])])
+    if bad:
+        return bad
+    lc = repo_file("assets/legal-must-haves/legal-cards.js") or ""
+    if "SEVERE PENALTIES" in lc:
+        return [(FAIL, "a bare 'SEVERE PENALTIES' is back on a legal card")]
+    return [(INFO, "testers capped at four, no phone points, licences 'checked', permit rows scoped")]
 
 
 def _server_vantage_wrap():
