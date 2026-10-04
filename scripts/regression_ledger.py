@@ -35238,7 +35238,7 @@ def rg_aud003_quick_escape():
 @entry("RG-0817", "FIND-HONOUR-1 (David 4 Oct 2026): Quick's Find honours EVERY answer -- a townhouse listed TO SELL in "
        "Rietvalleirand no longer shows under 'Renting', nor under every area; Maroushka's Brooklyn flats show only under "
        "Brooklyn, and Brooklyn is offered as an area; an empty shelf is filled with marked AI examples on the generated photos",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="quick.html (= genie/HARNESS.html): FIND_FROM declares every Find step of all eight doors as a test, 'text' or "
              "'ask'; qFindHonour() tests deal / prop_type / area / place / price / level / day / len / kind on the adverts "
              "themselves (contradiction hides, silence does not); the area test is by name or within the area's reach "
@@ -35248,7 +35248,8 @@ def rg_aud003_quick_escape():
              "file failed 8 checks (468 under Renting, Menlyn and Mamelodi; the Brooklyn flat under Menlyn; no Brooklyn "
              "option), the new file passed all.",
        ref="David's three screenshots, 4 Oct 2026 (Townhouse - To sell under Renting; under Buying + every area; "
-           "1-bed Apartment - Brooklyn under Renting + any area)")
+           "1-bed Apartment - Brooklyn under Renting + any area). LOCKED 4 Oct 2026 16:3xZ after it shipped in release 6c57385 "
+           "and the same walk passed against the LIVE /quick/ (16 cases, 0 page errors), photos rendered")
 def rg_find_honour():
     import json as _j
     q = repo_file("quick.html")
