@@ -145,13 +145,17 @@ def verify_webhook_signature(payload_bytes: bytes, signature: str) -> bool:
     payload_bytes: raw request body bytes
     signature: value of the X-Paystack-Signature header
 
-    Returns True if valid. PAYSTACK_WEBHOOK_SECRET must be set in .env.
+    Returns True if valid. Paystack signs webhooks with the account SECRET KEY (there is no
+    separate webhook secret in its dashboard). AUD-022 (4 Oct 2026 audit): PAYSTACK_WEBHOOK_SECRET
+    is honoured if set (on the server it holds the secret key -- checked 4 Oct without reading it),
+    and otherwise the secret key itself is used, so an unset variable can never silently refuse
+    every webhook. The header is compared as bytes, so a non-ASCII header is refused, not a crash.
     """
     import hmac
     import hashlib
 
-    secret = os.getenv("PAYSTACK_WEBHOOK_SECRET", "")
-    if not secret:
+    secret = os.getenv("PAYSTACK_WEBHOOK_SECRET", "") or os.getenv("PAYSTACK_SECRET_KEY", "") or PAYSTACK_SECRET_KEY
+    if not secret or not signature:
         return False
 
     expected = hmac.new(
@@ -159,7 +163,10 @@ def verify_webhook_signature(payload_bytes: bytes, signature: str) -> bool:
         payload_bytes,
         hashlib.sha512,
     ).hexdigest()
-    return hmac.compare_digest(expected, signature)
+    try:
+        return hmac.compare_digest(expected.encode("ascii"), str(signature).strip().encode("utf-8"))
+    except Exception:
+        return False
 
 
 # ══════════════════════════════════════════════════════════════════════════════

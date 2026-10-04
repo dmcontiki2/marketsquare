@@ -543,8 +543,34 @@ class AgentProfileIn(BaseModel):
 def _new_ref():
     return "TS-" + uuid.uuid4().hex[:6].upper()
 
+_EMAIL_STRICT = re.compile(r"[a-z0-9._%+\-]{1,64}@[a-z0-9\-]+(\.[a-z0-9\-]+)*\.[a-z]{2,24}")
+
+
+def _pt(v):
+    """AUD-031 / AUD-054 (4 Oct 2026 audit): plain text -- the same rule as bea_main._plain_text. Seller and agent text
+    is painted into the app; markup is removed at the door so no render path can run it."""
+    if v is None:
+        return v
+    v = re.sub(r"<[^>]*>", "", str(v))
+    return v.replace("<", "\u2039").replace(">", "\u203a")
+
+
+def _pt_deep(o):
+    if isinstance(o, str):
+        return _pt(o)
+    if isinstance(o, dict):
+        return {k: _pt_deep(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_pt_deep(v) for v in o]
+    return o
+
+
 def _upsert_profile(conn, p: AgentProfileIn, sold_source: str = "declared"):
     email = p.email.strip().lower()
+    # AUD-054: every profile field an agent types is plain text before it is stored (covers bulk onboarding too).
+    for _f in ("headline", "bio", "city", "suburbs", "specialties", "languages"):
+        if getattr(p, _f, None):
+            setattr(p, _f, _pt(getattr(p, _f)))
     head, _h = _anon(p.headline or "")
     bio, _b = _anon(p.bio or "")
     conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
@@ -785,8 +811,8 @@ def bulk_onboard_agents(agency_id: int, req: BulkOnboardIn,
         report = []
         for a in req.agents:
             email = (a.email or "").strip().lower()
-            if "@" not in email:
-                report.append({"email": a.email, "ok": False, "error": "invalid email"})
+            if not _EMAIL_STRICT.fullmatch(email):   # AUD-051: a real address shape, nothing that can carry markup
+                report.append({"email": _pt(a.email), "ok": False, "error": "invalid email"})
                 continue
             cap = int(a.listing_cap or 10)
             # SEC-GATE-1 (24 Sep 2026): provision seats this roster CREATES or already manages; never re-tier anyone
@@ -917,8 +943,8 @@ def agents_nearby(city: str, suburb: str = "", limit: int = 10, vertical: str = 
         agents = _rank_agents(conn, city, suburb, limit, vertical)
     finally:
         conn.close()
-    return {"city": city, "suburb": suburb or None, "vertical": _vert(vertical),
-            "count": len(agents), "agents": agents}
+    return _pt_deep({"city": city, "suburb": suburb or None, "vertical": _vert(vertical),   # AUD-054: rows saved before
+            "count": len(agents), "agents": agents})                                             # the door rule, too
 
 @router.get("/agents/pitch")
 def agent_pitch(city: str = "", suburb: str = "", vertical: str = "property", side: str = "sell"):
@@ -1012,8 +1038,10 @@ def agent_intro_inbox(email: str, status: str = "pending"):
                 lrow = conn.execute("SELECT title, city, suburb, prop_type, beds, baths, price FROM listings WHERE id=?",
                                     (r["listing_id"],)).fetchone()
                 if lrow:
-                    listing = {k: lrow[k] for k in lrow.keys()}
+                    listing = _pt_deep({k: lrow[k] for k in lrow.keys()})   # AUD-031: the gate skips this nested dict
             item["listing"] = listing
+            if item.get("message"):
+                item["message"] = _pt(item["message"])
             if r["status"] != "accepted":
                 item.pop("seller_email", None)
             out.append(item)

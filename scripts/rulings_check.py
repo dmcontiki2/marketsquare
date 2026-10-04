@@ -102,6 +102,13 @@ REFLECTIONS = {
    ("ms.js", ["function bzMyLink(", "function aiLoadMyReports(", "function msReportBadge("], []),
    ("quick.html", ["AREAS-MULTI-1", "where.areas ? where.areas[0]"], []),
  ],
+ "RUL-201": [
+   # AUDIT-4OCT Batch 2 (4 Oct): a paid plan lapses at the end of its 30 days; the monthly reset never takes bought Tuppence.
+   ("RULINGS.md", ["A PAID SELLER PLAN ENDS WHEN ITS 30 DAYS RUN OUT"], []),
+   ("bea_main.py", ["AUD-016 (4 Oct 2026 audit; RUL-201", "AUD-016: paid period over, plan lapsed"], []),
+   ("launch_redemption.py", ["_unspent = max(0, _prev_grant - _spent)"], ["_sweep = min(_balance, _prev_grant)"]),
+   ("PRICING_CANON.md", ["RUL-201"], []),
+ ],
  "RUL-199": [
    # The SO-6 cost sweep answered (3 Oct): tester cap, no phone points, 'checked' licences, protected-items wording.
    ("RULINGS.md", ["THE SO-6 COST SWEEP, ANSWERED"], []),

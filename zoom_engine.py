@@ -289,8 +289,10 @@ def facets_for(cat: str):
 # spec 3.3 table: levels a category may ask, in order. The first level is where the chip
 # STARTS (already known for non-travel: the buyer's city).
 GEO_LEVELS = {
-    "Property":     ["city", "suburb", "street"],
-    "Services":     ["city", "suburb", "street"],
+    # AUD-023 (4 Oct 2026 audit): no 'street' level -- the street is the seller's PRIVATE address (street_address,
+    # kept for geocoding only) and a street chip on a narrowed set handed it to anyone. Suburb is as fine as it goes.
+    "Property":     ["city", "suburb"],
+    "Services":     ["city", "suburb"],
     "Tutors":       ["city", "suburb"],
     "Cars":         ["city", "suburb"],
     "Collectors":   ["city"],            # never asked below city

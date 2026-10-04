@@ -393,23 +393,26 @@ class SecurityGate:
             for b in pol.get("bind", []):
                 name, where = b["name"], b["in"]
                 if where == "path":
-                    if name in path_params and _norm(path_params[name]) != session:
+                    # AUD-019 (4 Oct 2026 audit): rewrite unless the value is EXACTLY the session email. Comparing the
+                    # lower-cased value let 'Thandi@Gmail.com' through unchanged, and handlers then read the wallet by
+                    # that spelling (exact match) and found 0T. The bound value is now always the canonical address.
+                    if name in path_params and str(path_params[name]) != session:
                         path_params[name] = session
                         new_path = True
                 elif where == "query":
                     vals = [v for (k, v) in query if k == name]
-                    if vals and any(_norm(v) != session for v in vals):
+                    if vals and any(str(v) != session for v in vals):   # AUD-019: exact, not lower-cased
                         query = [(k, v) for (k, v) in query if k != name] + [(name, session)]
                         new_query = True
                 elif where == "json":
                     cur = _get_dotted(json_obj, name) if isinstance(json_obj, dict) else None
-                    if cur not in (None, "") and _norm(cur) != session:
+                    if cur not in (None, "") and str(cur) != session:   # AUD-019: exact, not lower-cased
                         if _set_dotted(json_obj, name, session):
                             rewritten = True
                 elif where == "form":
                     if form_pairs is not None:
                         vals = [v for (k, v) in form_pairs if k == name]
-                        if vals and any(_norm(v) != session for v in vals):
+                        if vals and any(str(v) != session for v in vals):   # AUD-019: exact, not lower-cased
                             form_pairs = [(k, v) for (k, v) in form_pairs if k != name] + [(name, session)]
                             rewritten = True
                     elif multipart is not None:

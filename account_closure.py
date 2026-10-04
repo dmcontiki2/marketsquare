@@ -170,13 +170,23 @@ def restore_on_return(conn, email, id_number_hash=None):
     amount = int(row["retained_tuppence"])
     _u = conn.execute("SELECT email FROM users WHERE lower(email)=lower(?)", (email,)).fetchone()
     email = _u["email"] if _u else (email or "").strip()
+    # AUD-015 (4 Oct 2026 audit): CLAIM FIRST, credit second. The old order read the row, inserted the +N credit,
+    # then marked it restored -- two parallel sign-ins both read 'not restored' and both credited. The conditional
+    # UPDATE's rowcount is the single authority: only the call that flips restored_at writes the money row.
+    claim = conn.execute(
+        "UPDATE account_closures SET restored_at=?, restored_to_email=?, restore_match=? "
+        "WHERE id=? AND restored_at IS NULL", (_now(), email, match, row["id"]))
+    if claim.rowcount != 1:
+        conn.rollback()
+        return None
     conn.execute(
         "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",
         (email, "closure_restore", amount,
          f"Welcome back - {amount}T restored from your previous account (EULA 14.1/14.3)"))
-    conn.execute(
-        "UPDATE account_closures SET restored_at=?, restored_to_email=?, restore_match=? "
-        "WHERE id=?", (_now(), email, match, row["id"]))
+    try:   # AUD-018: she is back -- the account is open again
+        conn.execute("UPDATE users SET closed_at=NULL WHERE lower(email)=lower(?)", (email,))
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     return {"restored": amount, "match": match, "from_email": row["email"],
             "closed_at": row["closed_at"]}

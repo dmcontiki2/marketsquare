@@ -250,13 +250,15 @@ def grant_monthly_tuppence(conn, email: str, tier: str, period: str = None):
     # Granted Tuppence does NOT roll over: before crediting this period, expire the
     # UNSPENT portion of the PREVIOUS grant so allowances cannot be banked and burst on
     # the paid-feed class. Rule (grant-spent-first, balance-bounded):
-    #     sweep = min(current wallet balance, previous grant's total amount)
-    # This can never remove more than the user actually holds (so purchased/earned
-    # Tuppence is never touched) nor more than the last grant (so a long account does
-    # not drift). One offsetting `grant_expiry` row keeps the wallet a pure txn sum.
-    # A8-safe: this resets a grant, it is never a penalty deduction.
+    #     unspent = max(0, previous grant - what she spent since that grant)
+    #     sweep   = min(current wallet balance, unspent)
+    # AUD-021 (4 Oct 2026 audit; David 4 Oct 2026: "we never remove paid tuppences as per our rules" --
+    # PRICING_CANON s5). The old rule, min(balance, previous grant), ignored what she had already spent: grant 10T,
+    # spend 12T, buy 10T -> balance 8T, all of it bought, and the old sweep removed all 8. Spending since the grant
+    # (net of holds and refunds handed back) is now subtracted first, so only free grant can ever be swept.
+    # One offsetting `grant_expiry` row keeps the wallet a pure txn sum. A8-safe: a grant reset, never a penalty.
     _prev = conn.execute(
-        "SELECT COALESCE(amount,0) + COALESCE(badge_bonus,0) AS prev "
+        "SELECT COALESCE(amount,0) + COALESCE(badge_bonus,0) AS prev, granted_at "
         "FROM tuppence_monthly_grants WHERE email=? AND period<>? "
         "ORDER BY period DESC LIMIT 1", (email, period)).fetchone()
     _prev_grant = int(_prev["prev"]) if _prev else 0
@@ -265,7 +267,15 @@ def grant_monthly_tuppence(conn, email: str, tier: str, period: str = None):
             "SELECT COALESCE(SUM(amount),0) AS b FROM transactions WHERE user_email=?",
             (email,)).fetchone()
         _balance = int(_bal_row["b"])
-        _sweep = min(_balance, _prev_grant)
+        _since = _prev["granted_at"] or "1970-01-01 00:00:00"
+        _sp = conn.execute(
+            "SELECT COALESCE(SUM(CASE WHEN amount < 0 AND type <> 'grant_expiry' THEN -amount ELSE 0 END), 0) AS out_t, "
+            "       COALESCE(SUM(CASE WHEN amount > 0 AND type IN ('intro_hold_release','ai_release','refund') "
+            "                         THEN amount ELSE 0 END), 0) AS back_t "
+            "FROM transactions WHERE user_email=? AND created_at >= ?", (email, _since)).fetchone()
+        _spent = max(0, int(_sp["out_t"]) - int(_sp["back_t"]))
+        _unspent = max(0, _prev_grant - _spent)
+        _sweep = min(_balance, _unspent)
         if _sweep > 0:
             conn.execute(
                 "INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,?,?)",

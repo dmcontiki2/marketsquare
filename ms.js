@@ -1273,16 +1273,24 @@ async function _msInit(){
        starting. Inside this block a value that cannot be decoded again is kept exactly as it is. */
     const decodeURIComponent = function(v){ try{ return window.decodeURIComponent(v); }catch(_){ return v; } };
     _msNav.user = true;   // BACK-NAV-1: the invited seller's flow sits on top of Home, so Back stays in the app
+    /* AUD-053 (4 Oct 2026 audit): every invite value read from the address bar is checked at the door, the way
+       _msLinkCity is -- a place is letters, spaces and . ' ( ) - (60 max); a name has no markup characters; an email
+       is an address shape; a category and a source are plain words. Anything else is dropped, so no screen can paint
+       a crafted '?city=<img onerror=...>'. */
+    const _mlPlace = function(v){ v=String(v||'').trim(); return (v.length<=60 && /^[A-Za-zÀ-ɏ0-9 .'()-]*$/.test(v)) ? v : ''; };
+    const _mlName  = function(v){ v=String(v||'').trim().slice(0,60); return /[<>"`]/.test(v) ? '' : v; };
+    const _mlMail  = function(v){ v=String(v||'').trim().slice(0,200); return /^[^\s@<>"'`]+@[^\s@<>"'`]+\.[A-Za-z]{2,}$/.test(v) ? v : ''; };
+    const _mlWord  = function(v){ v=String(v||'').trim().slice(0,60); return /^[A-Za-z0-9 _.-]*$/.test(v) ? v : ''; };
     magicLink = {
       active: true,
-      name:   decodeURIComponent(sp.get('name')  || ''),
-      email:  decodeURIComponent(sp.get('email') || ''),
-      cat:    decodeURIComponent(sp.get('cat')   || ''),
-      area:   decodeURIComponent(sp.get('city')  || activeCity.name || ''),
+      name:   _mlName(decodeURIComponent(sp.get('name')  || '')),
+      email:  _mlMail(decodeURIComponent(sp.get('email') || '')),
+      cat:    _mlWord(decodeURIComponent(sp.get('cat')   || '')),
+      area:   _mlPlace(decodeURIComponent(sp.get('city')  || '')) || activeCity.name || '',
       // INVITE-PLACE-1: country from the link, else inferred from the city (legacy links)
       country: String(decodeURIComponent(sp.get('country')||'')||_mlCountryFor(sp.get('city')||'')).toUpperCase().slice(0,2),
-      suburb:  decodeURIComponent(sp.get('suburb') || sp.get('neighborhood') || sp.get('neighbourhood') || ''),
-      src:    decodeURIComponent(sp.get('src')   || '')   // ONBOARD-FUNNEL-1: which wave sent them
+      suburb:  _mlPlace(decodeURIComponent(sp.get('suburb') || sp.get('neighborhood') || sp.get('neighbourhood') || '')),
+      src:    _mlWord(decodeURIComponent(sp.get('src')   || ''))   // ONBOARD-FUNNEL-1: which wave sent them
     };
     // Strip params from URL bar without reloading
     window.history.replaceState({}, '', window.location.pathname);
@@ -2274,14 +2282,22 @@ async function openAgencyConsole(aidOverride, forceNew){
   if(!agencyId){ el.innerHTML=_agencyCreateHtml(isSuper,email); return; }
   window._agencyId=agencyId; await _renderAgency(agencyId);
 }
+/* AUD-051 (4 Oct 2026 audit): the agency console's per-agent buttons carry the address as data, never as script --
+   one delegated listener reads it, so an address with a quote (o'brien@...) or markup can neither break nor run. */
+document.addEventListener('click', function(ev){
+  var b = ev.target && ev.target.closest ? ev.target.closest('[data-ag-act]') : null; if(!b) return;
+  var em = b.getAttribute('data-email') || '';
+  if(b.getAttribute('data-ag-act')==='remove') agencyRemove(em);
+  else if(b.getAttribute('data-ag-act')==='proinvite') agencyProInvite(em, parseInt(b.getAttribute('data-cap'),10)||10);
+});
 function _agencyCreateHtml(isSuper,email){
   return '<div style="max-width:460px;margin:30px auto;text-align:center;">'
     +'<h2 style="font-family:Syne,sans-serif;">'+_agL('title')+'</h2>'
-    +'<p style="color:var(--text-3);font-size:13px;">No '+_agL('org')+' is linked to '+(email||'this account')+' yet.</p>'
+    +'<p style="color:var(--text-3);font-size:13px;">No '+_agL('org')+' is linked to '+_lmEsc(email||'this account')+' yet.</p>'
     +(isSuper?('<div style="text-align:left;border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">'
       +'<div style="font-weight:700;margin-bottom:8px;">'+_agL('createTest')+'</div>'
       +'<input id="ag-new-name" placeholder="'+_agL('namePh')+'" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:8px;">'
-      +'<input id="ag-new-admin" placeholder="Admin email" value="'+(email||'')+'" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:8px;">'
+      +'<input id="ag-new-admin" placeholder="Admin email" value="'+_lmEsc(email||'')+'" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:8px;">'
       +'<input id="ag-new-countries" placeholder="Countries e.g. ZA,GB" style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;margin-bottom:10px;">'
       +'<button onclick="agencyCreate()" style="width:100%;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:50px;padding:12px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">Create agency</button></div>')
       :'<p style="color:var(--text-3);font-size:12px;margin-top:14px;">'+_agL('setup')+'</p>'
@@ -2324,16 +2340,16 @@ async function _renderAgency(agencyId){
     // (EULA + payment) -- the console invites the upgrade, it never grants one.
     const acts=m.role==='admin'?'':((m.seat_paid
         ?'<span title="Set up by TrustSquare after a manual payment." style="font-size:11px;font-weight:700;color:#1e40af;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:5px 9px;">Pro seat · paid</span> '
-        :'<button onclick="agencyProInvite(\''+m.email+'\','+(m.listing_cap||10)+')" title="The agent takes the $5/month Pro seat themselves — EULA + subscription" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Pro seat? · $5</button> ')
-      +'<button onclick="agencyRemove(\''+m.email+'\')" style="border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Remove</button>');
+        :'<button data-ag-act="proinvite" data-email="'+_lmEsc(m.email)+'" data-cap="'+(parseInt(m.listing_cap,10)||10)+'" title="The agent takes the $5/month Pro seat themselves — EULA + subscription" style="border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Pro seat? · $5</button> ')
+      +'<button data-ag-act="remove" data-email="'+_lmEsc(m.email)+'" style="border:1px solid #fecaca;background:#fff;color:#b91c1c;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">Remove</button>');
     return '<tr style="border-bottom:1px solid #f1f3f7;">'
-      +'<td style="padding:10px;"><div style="font-weight:600;">'+(m.name||m.email)+'</div><div style="font-size:11px;color:var(--text-3);">'+m.email+'</div>'
-        +((m.credentials&&m.credentials.length)?'<div style="font-size:10.5px;margin-top:2px;">'+m.credentials.map(function(c){return '<span style="color:'+(c.status==='earned'?'#166534':'#92400e')+';font-weight:'+(c.gate?'700':'400')+';">'+c.label+(c.status==='earned'?' ✓':' · pending')+'</span>';}).join(' <span style="color:var(--text-3);">·</span> ')+'</div>':'')
+      +'<td style="padding:10px;"><div style="font-weight:600;">'+_lmEsc(m.name||m.email)+'</div><div style="font-size:11px;color:var(--text-3);">'+_lmEsc(m.email)+'</div>'
+        +((m.credentials&&m.credentials.length)?'<div style="font-size:10.5px;margin-top:2px;">'+m.credentials.map(function(c){return '<span style="color:'+(c.status==='earned'?'#166534':'#92400e')+';font-weight:'+(c.gate?'700':'400')+';">'+_lmEsc(c.label)+(c.status==='earned'?' ✓':' · pending')+'</span>';}).join(' <span style="color:var(--text-3);">·</span> ')+'</div>':'')
         +'</td>'
       +'<td style="padding:10px;">'+m.listings_live+' / '+cap+' <span style="display:inline-block;width:54px;height:6px;background:#eef1f6;border-radius:6px;vertical-align:middle;margin-left:6px;"><i style="display:block;height:100%;width:'+pct+'%;background:#C8873A;border-radius:6px;"></i></span>'+((m.listings_draft||0)?' <span onclick="agencyDraftsView(\''+m.email+'\');event.stopPropagation();" title="Tap to view this agent\'s drafts (read-only)" style="cursor:pointer;font-size:10.5px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:1px 7px;margin-left:6px;">'+m.listings_draft+' draft'+(m.listings_draft>1?'s':'')+' ▸</span>':'')+'</td>'
       +'<td style="padding:10px;color:'+tc+';font-weight:700;">'+m.trust_score+'</td>'
       +'<td style="padding:10px;">'+m.intros+'</td>'
-      +'<td style="padding:10px;font-size:11px;">'+(m.role==='admin'?'admin':((m.tier==='pro'?'Pro':'Starter')+' · '+m.status))+'</td>'
+      +'<td style="padding:10px;font-size:11px;">'+(m.role==='admin'?'admin':((m.tier==='pro'?'Pro':'Starter')+' · '+_lmEsc(m.status)))+'</td>'
       +'<td style="padding:10px;white-space:nowrap;">'+acts+'</td></tr>';
   }; window._agRowFn=_agRowFn;
   const rows=window._agAgents.map(_agRowFn).join('');
@@ -2366,8 +2382,8 @@ async function _renderAgency(agencyId){
   }
   el.innerHTML= opsBar
     +'<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:14px;">'
-      +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+a.name+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your listings: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a> <a href="/static/agents-as-a-service.html" target="_blank" title="The buy-in page: three categories, the screens each prospect and agent sees, the scores and the 1T lead deal" style="display:inline-block;border:1px solid rgba(232,201,123,.6);background:rgba(232,201,123,.15);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">&#9733; Agents as a Service</a>'+'</div>'
-      +'<div style="font-size:12px;opacity:.7;margin-top:4px;">Admin '+a.admin_email+' · operating in '+(a.countries||'—')+'</div></div>'
+      +'<div style="font-family:Syne,sans-serif;font-weight:800;font-size:19px;">'+_lmEsc(a.name)+' <span style="font-size:11px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">✓ '+(a.verified?'Verified':'Pending')+' '+_agL('brand')+'</span>'+(localStorage.getItem('ms_superuser')==='1'?' <button onclick="agencyRename()" title="Rename before a demo" style="background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:6px;">\u270E Rename</button>':'')+' <a href="'+_agL('manualUrl')+'" target="_blank" title="Open the onboarding playbook (PDF)" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">User manual</a> <a href="/static/agency-import-guide.html" target="_blank" title="Bulk-import your listings: schema, rules, error report" style="display:inline-block;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">Import guide</a> <a href="/static/agents-as-a-service.html" target="_blank" title="The buy-in page: three categories, the screens each prospect and agent sees, the scores and the 1T lead deal" style="display:inline-block;border:1px solid rgba(232,201,123,.6);background:rgba(232,201,123,.15);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;text-decoration:none;margin-left:6px;">&#9733; Agents as a Service</a>'+'</div>'
+      +'<div style="font-size:12px;opacity:.7;margin-top:4px;">Admin '+_lmEsc(a.admin_email)+' · operating in '+_lmEsc(a.countries||'—')+'</div></div>'
     +'<div style="background:#f0f7f2;border-left:4px solid #1e7d4f;border-radius:0 10px 10px 0;padding:8px 13px;margin-bottom:12px;font-size:12px;color:#274536;line-height:1.5;">'+_agL('gate')+'</div>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">'
       +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:22px;font-weight:800;font-family:Syne,sans-serif;">'+a.rollup.agents+'</div><div style="font-size:11px;color:var(--text-3);">'+_agL('people')+'</div></div>'
@@ -2376,7 +2392,7 @@ async function _renderAgency(agencyId){
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">'
       +'<div style="font-weight:700;font-size:14px;">'+_agL('imports')+'</div>'
       +'<div style="font-size:12px;color:var(--text-3);margin:4px 0 8px;">POST listings (each with an agent_email) to <code>/agencies/'+a.id+'/import</code> with this key — each lands as a draft under that agent.</div>'
-      +'<div style="font-family:monospace;background:#0f172a;color:#a7f3d0;border-radius:8px;padding:8px 11px;font-size:12px;word-break:break-all;">'+a.api_key+'</div>'
+      +'<div style="font-family:monospace;background:#0f172a;color:#a7f3d0;border-radius:8px;padding:8px 11px;font-size:12px;word-break:break-all;">'+_lmEsc(a.api_key)+'</div>'
       +'<div style="margin-top:10px;"><button onclick="advertBulkOpen()" title="Paste your stock list — every listing lands as a draft under the right agent" style="background:#fff;color:var(--navy,#0c1a2e);border:1.5px solid var(--navy,#0c1a2e);border-radius:50px;padding:9px 16px;font-family:Syne,sans-serif;font-weight:700;cursor:pointer;">⇪ Bulk import listings</button>'
       +'<span style="font-size:11px;color:var(--text-3);margin-left:10px;">No IT needed — same pipeline as the API.</span></div></div>'
     +'<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">'
@@ -3296,6 +3312,8 @@ async function zoomSave(){
   }
   showToast('Saved — this path now runs fresh under For You');
 }
+/* AUD-052 (4 Oct 2026 audit): Zoom buttons carry their values as data-* attributes and read this.dataset -- a value
+   with an apostrophe (St John's Road) or a crafted make can no longer break out of a script string. */
 function _zoomEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function _zoomRender(){
   const el = _zoomEl();
@@ -3306,12 +3324,12 @@ function _zoomRender(){
   const chips = r ? (r.chips||[]) : [];
   // geography is ONE chip that deepens (rule 3): fold geo_* chips into one Pretoria › Menlo Park › 12th Street
   const geo = chips.filter(c => c.geo), nongeo = chips.filter(c => !c.geo);
-  let rail = nongeo.map(c => `<span class="zoom-chip${c.auto?' auto':''}" onclick="zoomDrop('${_zoomEsc(c.facet)}')" title="${c.auto?'Applied for you — every match shares it':'Tap to remove'}">${_zoomEsc(c.label)}<span class="x">×</span></span>`).join('');
+  let rail = nongeo.map(c => `<span class="zoom-chip${c.auto?' auto':''}" data-facet="${_zoomEsc(c.facet)}" onclick="zoomDrop(this.dataset.facet)" title="${c.auto?'Applied for you — every match shares it':'Tap to remove'}">${_zoomEsc(c.label)}<span class="x">×</span></span>`).join('');
   if(geo.length){
     const order = {country:0, city:1, suburb:2, street:3};
     geo.sort((a,b)=> (order[a.level]||0)-(order[b.level]||0));
     const last = geo[geo.length-1];
-    rail += `<span class="zoom-chip geo" onclick="zoomDrop('${_zoomEsc(last.facet)}')" title="Tap to step back one level">${geo.map((g,i)=> (i?'<span class="lvl"> › </span>':'📍 ') + _zoomEsc(g.label)).join('')}<span class="x">×</span></span>`;
+    rail += `<span class="zoom-chip geo" data-facet="${_zoomEsc(last.facet)}" onclick="zoomDrop(this.dataset.facet)" title="Tap to step back one level">${geo.map((g,i)=> (i?'<span class="lvl"> › </span>':'📍 ') + _zoomEsc(g.label)).join('')}<span class="x">×</span></span>`;
   }
   if(!chips.length) rail = `<span style="font-size:12.5px;color:var(--text-3);">Narrow ${_zoomEsc(zoomState.cat)} one question at a time</span>`;
   rail += `<span class="zoom-count">${zoomState.busy ? '…' : total + ' match' + (total===1?'':'es')}</span>`;
@@ -3324,10 +3342,10 @@ function _zoomRender(){
     if(total===0 && !(r && r.question)) body += `<div class="zoom-note">Nothing left on this path — widen a chip or start again.</div>`;
   } else {
     const q = r.question;
-    const opts = (q.options||[]).map(o => `<button class="zoom-opt" onclick="zoomPick('${_zoomEsc(q.facet)}','${_zoomEsc(o.v).replace(/'/g,'&#39;')}')"><span class="lbl">${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('');
-    const locked = (q.locked||[]).map(o => `<button class="zoom-opt locked" onclick="zoomLockedTap('${_zoomEsc(o.v).replace(/'/g,'&#39;')}',${o.n})"><span class="lbl">🔒 ${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('');
+    const opts = (q.options||[]).map(o => `<button class="zoom-opt" data-facet="${_zoomEsc(q.facet)}" data-v="${_zoomEsc(o.v)}" onclick="zoomPick(this.dataset.facet,this.dataset.v)"><span class="lbl">${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('');
+    const locked = (q.locked||[]).map(o => `<button class="zoom-opt locked" data-v="${_zoomEsc(o.v)}" data-n="${(+o.n)||0}" onclick="zoomLockedTap(this.dataset.v,+this.dataset.n)"><span class="lbl">🔒 ${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('');
     const tailN = (q.tail||[]).length;
-    const more = tailN ? `<button class="zoom-opt more" onclick="document.getElementById('zoom-tail').style.display='grid';this.style.display='none';">${tailN} more…</button><div id="zoom-tail" class="zoom-tail" style="display:none;">${(q.tail||[]).map(o => `<button class="zoom-opt" onclick="zoomPick('${_zoomEsc(q.facet)}','${_zoomEsc(o.v).replace(/'/g,'&#39;')}')"><span class="lbl">${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('')}</div>` : '';
+    const more = tailN ? `<button class="zoom-opt more" onclick="document.getElementById('zoom-tail').style.display='grid';this.style.display='none';">${tailN} more…</button><div id="zoom-tail" class="zoom-tail" style="display:none;">${(q.tail||[]).map(o => `<button class="zoom-opt" data-facet="${_zoomEsc(q.facet)}" data-v="${_zoomEsc(o.v)}" onclick="zoomPick(this.dataset.facet,this.dataset.v)"><span class="lbl">${_zoomEsc(o.label)}</span><span class="n">${o.n}</span></button>`).join('')}</div>` : '';
     const relax = r.relax ? `<div class="zoom-bar"><span>Only ${total} left</span><span class="act" onclick="zoomWiden()">Widen: drop ${_zoomEsc(r.relax.label)} → ${r.relax.n}</span></div>` : '';
     body = `<div class="zoom-q"><span>${_zoomEsc(q.q)}</span><small>${zoomState.taps} tap${zoomState.taps===1?'':'s'} · <span class="act" style="cursor:pointer;color:var(--accent);" onclick="zoomState.mode='bar';_zoomRender();">done</span></small></div>
       <div class="zoom-opts">${opts}${locked}${more}</div>${relax}
@@ -5658,14 +5676,18 @@ function cvAvatarHtml(sellerIdx, listingId, isOwner){
 
 function maskContactInfo(html, introAccepted){
   if(introAccepted) return html;
-  // SA phone numbers: 0xx-xxx-xxxx, +27xx, 0xxxxxxxxx, spaces/dashes allowed
-  const phoneRe = /(\+27|0)[0-9][\s\-\.]?[0-9]{3}[\s\-\.]?[0-9]{4}/g;
+  // AUD-050 (4 Oct 2026 audit): any phone shape -- '+' and a country code, or a 0 then a non-zero digit, followed by
+  // 8-13 more digits with spaces, dots, dashes or brackets between them ('082 123 4567', '+27 82 123 4567',
+  // '(012) 345-6789', '+44 20 7946 0958'). The old pattern caught one SA spacing and left the last digit of
+  // '0821234567' showing. Prices never start with a 0 then a digit, so 'R2 450 000' is untouched.
+  const phoneRe = /(?:\+\d{1,3}[\s().\-]{0,2}|\b0(?=[\s().\-]{0,2}[1-9]))(?:[\s().\-]{0,2}\d){8,13}/g;
   // Email addresses
   const emailRe = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
   const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
-  return html
+  // Text only: never inside a tag or an attribute (a picture address can hold digits).
+  return String(html == null ? '' : html).replace(/(^|>)([^<]+)/g, (m, lead, txt) => lead + txt
     .replace(phoneRe, `<span class="contact-masked">${lockIcon}📞 Revealed after introduction</span>`)
-    .replace(emailRe, `<span class="contact-masked">${lockIcon}✉️ Revealed after introduction</span>`);
+    .replace(emailRe, `<span class="contact-masked">${lockIcon}✉️ Revealed after introduction</span>`));
 }
 
 function credPhotoHtml(c, introAccepted){
@@ -6352,15 +6374,15 @@ function tvsReloadChips(id, service){
   if(service==='yield') tvsLoadService(id,'yield','detail-yield-'+id,'detail-yield-chips-'+id);
   else tvsLoadService(id,'fair_price','detail-price-check-'+id,'detail-pc-chips-'+id);
 }
-function tvsCard(opts){
-  const flag=opts.flag?`<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#78350f;"><b>${opts.flag.headline||''}</b><br>${opts.flag.detail||''}</div>`:'';
-  const range=(opts.range&&opts.range!=='N/A')?`<div style="font-size:13px;font-weight:800;color:#111827;margin:4px 0;">${opts.range}</div>`:'';
+function tvsCard(opts){   // AUD-029: model text is painted escaped
+  const flag=opts.flag?`<div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#78350f;"><b>${esc(opts.flag.headline||'')}</b><br>${esc(opts.flag.detail||'')}</div>`:'';
+  const range=(opts.range&&opts.range!=='N/A')?`<div style="font-size:13px;font-weight:800;color:#111827;margin:4px 0;">${esc(opts.range)}</div>`:'';
   const badge=opts.tier?`<span style="font-size:10px;font-weight:700;background:#eef2ff;color:#3730a3;padding:2px 8px;border-radius:20px;">${opts.tier==='0T'?'Free':opts.tier}</span>`:'';
-  const prov=opts.provenance?`<div style="font-size:10.5px;color:#6b7280;margin-top:7px;">Source: ${opts.provenance}</div>`:'';
+  const prov=opts.provenance?`<div style="font-size:10.5px;color:#6b7280;margin-top:7px;">Source: ${esc(opts.provenance)}</div>`:'';
   // MONEY-LINE-CONTRAST-1 (25 Sep 2026 inspection, shell-19): what was charged and what is left is money -- readable
   // (--text-3 is about 6:1 on this card, was about 2.4:1) and at least 11px.
   const bal=(opts.remaining!==undefined&&opts.remaining!==null)?`<div style="font-size:11px;color:var(--text-3);margin-top:3px;">${opts.charged?('Charged '+opts.charged+' - '):''}${opts.remaining}T balance</div>`:'';
-  return `<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:11px;padding:13px 15px;">${flag}<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;"><span style="font-size:12px;font-weight:800;color:#111827;">${opts.title||''}</span>${badge}</div>${range}<div style="font-size:12px;color:#374151;line-height:1.55;">${opts.body||''}</div>${prov}<div style="font-size:10px;color:#9ca3af;margin-top:5px;font-style:italic;">${opts.label||''}</div>${bal}</div>`;
+  return `<div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:11px;padding:13px 15px;">${flag}<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;"><span style="font-size:12px;font-weight:800;color:#111827;">${esc(opts.title||'')}</span>${badge}</div>${range}<div style="font-size:12px;color:#374151;line-height:1.55;">${esc(opts.body||'')}</div>${prov}<div style="font-size:10px;color:#9ca3af;margin-top:5px;font-style:italic;">${opts.label||''}</div>${bal}</div>`;
 }
 async function tvsPriceCheck(id, tier){
   const res=document.getElementById('detail-pc-result-'+id), box=document.getElementById('detail-pc-chips-'+id);
@@ -6451,8 +6473,8 @@ async function tvsYieldCalc(id, tier){
       ${d.gross_formula?`<div style="font-size:11px;color:#374151;margin-bottom:4px;">Workings: ${d.gross_formula}</div>`:''}
       ${d.annual_rent_used?`<div style="font-size:11px;color:#374151;margin-bottom:4px;">Annual rent ${d.annual_rent_used}${d.purchase_price_used?(' on '+d.purchase_price_used+' purchase'):''}.</div>`:''}
       ${band.typical?`<div style="font-size:11px;color:#374151;margin-bottom:4px;">Net assumes ~${band.typical}% costs (${band.components||''}).</div>`:''}
-      <div style="font-size:12px;color:#374151;line-height:1.55;margin-bottom:4px;">${d.market_context||''}</div>
-      ${d.sa_yield_benchmark?`<div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:4px;">Benchmark: ${d.sa_yield_benchmark}</div>`:''}
+      <div style="font-size:12px;color:#374151;line-height:1.55;margin-bottom:4px;">${esc(d.market_context||'')}</div>
+      ${d.sa_yield_benchmark?`<div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:4px;">Benchmark: ${esc(d.sa_yield_benchmark)}</div>`:''}
       <div style="font-size:10.5px;color:#6b7280;margin-bottom:3px;">Price source: ${d.purchase_price_source||'listing'} | Rent source: ${d.monthly_rent_source||'your figure'}</div>
       <div style="font-size:10px;color:#9ca3af;font-style:italic;">${d.disclaimer||label}</div>
       ${(d.tuppence_remaining!==undefined&&d.tuppence_remaining!==null)?`<div style="font-size:11px;color:var(--text-3);margin-top:3px;">${d.charged?('Charged '+(tier==='2T'?'2T':'1T')+' - '):''}${d.tuppence_remaining}T balance</div>`:''}<!-- MONEY-LINE-CONTRAST-1 (shell-19) -->
@@ -6547,7 +6569,7 @@ async function buyerPriceCheck(id) {
             <span style="font-size:15px;">ℹ️</span>
             <span style="font-size:12px;font-weight:700;color:#374151;">No verified price — not charged</span>
           </div>
-          <div style="font-size:12px;color:#374151;line-height:1.55;">${data.assessment || 'We could not verify a market price for this item, so no Tuppence was charged.'}</div>
+          <div style="font-size:12px;color:#374151;line-height:1.55;">${esc(data.assessment || 'We could not verify a market price for this item, so no Tuppence was charged.')}</div>
           <div style="font-size:10px;color:#9ca3af;margin-top:7px;">0T charged · ${data.tuppence_remaining}T balance</div>
         </div>`;
       btn.style.display = 'none';
@@ -6573,9 +6595,9 @@ async function buyerPriceCheck(id) {
         <!-- Panel 1: SA Market -->
         <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 14px;">
           <div style="font-size:11px;font-weight:700;color:#15803d;letter-spacing:.04em;margin-bottom:5px;">${_panelLocal}</div>
-          <div style="font-size:12px;color:#166534;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.sa_context || data.context}</div>
+          <div style="font-size:12px;color:#166534;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${esc(data.sa_context || data.context)}</div>
           ${data.sa_range && data.sa_range !== 'N/A' && data.sa_range !== 'Cannot determine'
-            ? `<div style="font-size:12px;font-weight:700;color:#15803d;margin-top:6px;">Range: ${data.sa_range}</div>`
+            ? `<div style="font-size:12px;font-weight:700;color:#15803d;margin-top:6px;">Range: ${esc(data.sa_range)}</div>`
             : ''}
         </div>
 
@@ -6585,7 +6607,7 @@ async function buyerPriceCheck(id) {
             <span style="font-size:16px;">${vc.icon}</span>
             <span style="font-size:11px;font-weight:700;color:${vc.color};letter-spacing:.04em;">ASSESSMENT${data.asking_price ? ' · Asking ' + data.asking_price : ''}</span>
           </div>
-          <div style="font-size:12px;color:#374151;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${data.assessment || data.context}</div>
+          <div style="font-size:12px;color:#374151;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;">${esc(data.assessment || data.context)}</div>
         </div>
 
         <!-- Panel 3: Official / Global -->
@@ -6704,8 +6726,8 @@ async function buyerYieldCalc(id) {
         </div>
         ${data.monthly_rent_estimate && data.monthly_rent_estimate !== 'N/A'
           ? `<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Rent estimate: ${data.monthly_rent_estimate}</div>` : ''}
-        <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${data.market_context}</div>
-        <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${data.sa_yield_benchmark}</div>
+        <div style="font-size:12px;color:#374151;line-height:1.6;margin-bottom:6px;">${esc(data.market_context)}</div>
+        <div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Benchmark: ${esc(data.sa_yield_benchmark)}</div>
         ${data.purchase_price_used && data.monthly_rent_used
           ? `<div style="font-size:11px;color:#374151;margin-bottom:4px;">Computed from ${data.purchase_price_used} purchase · ${data.monthly_rent_used}/month · net assumes ${data.net_cost_assumption_pct} costs</div>` : ''}
         <div style="font-size:10px;color:#9ca3af;">✅ Calculated figure (not an AI guess) · ${data.tuppence_remaining}T remaining · not financial advice</div>
@@ -14032,8 +14054,8 @@ async function elRunRewrite() {
     if (out) out.innerHTML = `
       <div style="background:#f5f3ff;border:1.5px solid #a78bfa;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:6px;">✨ AI Rewrite complete — fields pre-filled below</div>
-        <div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>New title:</strong> ${data.new_title}</div>
-        <div style="font-size:12px;color:#374151;line-height:1.5;"><strong>New description:</strong> ${data.new_description}</div>
+        <div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>New title:</strong> ${esc(data.new_title)}</div>
+        <div style="font-size:12px;color:#374151;line-height:1.5;"><strong>New description:</strong> ${esc(data.new_description)}</div>
         <div style="font-size:10px;color:#7c3aed;margin-top:8px;">Review the fields below and tap Save Changes when happy · ${data.tuppence_remaining}T remaining</div>
       </div>`;
     showToast('✨ Rewrite ready — review fields and save');
@@ -14071,8 +14093,8 @@ async function elRunAudit() {
       `<div style="display:flex;gap:10px;margin-bottom:10px;">
         <div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#0e7490;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
         <div>
-          <div style="font-size:12px;font-weight:700;color:#164e63;">${a.step}</div>
-          <div style="font-size:11px;color:#374151;margin-top:2px;line-height:1.4;">${a.reason}</div>
+          <div style="font-size:12px;font-weight:700;color:#164e63;">${esc(a.step)}</div>
+          <div style="font-size:11px;color:#374151;margin-top:2px;line-height:1.4;">${esc(a.reason)}</div>
         </div>
       </div>`
     ).join('');
@@ -14144,8 +14166,8 @@ async function elRunYield() {
             <div style="font-size:22px;font-weight:800;color:#065f46;">${data.net_yield_estimate_pct}</div>
           </div>
         </div>
-        <div style="font-size:11px;font-weight:600;color:#065f46;margin-bottom:4px;">Benchmark: ${data.sa_yield_benchmark}</div>
-        ${data.market_context ? `<div style="font-size:11px;color:#374151;line-height:1.5;margin-top:6px;">${data.market_context}</div>` : ''}
+        <div style="font-size:11px;font-weight:600;color:#065f46;margin-bottom:4px;">Benchmark: ${esc(data.sa_yield_benchmark)}</div>
+        ${data.market_context ? `<div style="font-size:11px;color:#374151;line-height:1.5;margin-top:6px;">${esc(data.market_context)}</div>` : ''}
         ${data.purchase_price_used && data.monthly_rent_used ? `<div style="font-size:10px;color:#374151;margin-top:6px;">Computed from ${data.purchase_price_used} purchase · ${data.monthly_rent_used}/month</div>` : ''}
         <div style="font-size:10px;color:#6ee7b7;margin-top:8px;">✅ Calculated figure · ${data.tuppence_remaining}T remaining</div>
       </div>`;
@@ -22651,7 +22673,7 @@ function sfAgentsS(){
   var f=sfFlow();
   var h='<div class="sf-hdr"><div class="sf-step">Optional · '+f.label+'</div><h2>Boost your sale?</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>You can sell privately — or let a local '+sfAgentNoun()+' carry it.</b> Either way your listing publishes. This is optional, and free for you.</div></div>'+
-  '<div id="sf-agents-body"><div style="padding:26px;text-align:center;color:var(--text-3,#8b93a7);">Finding trusted '+sfAgentNoun()+'s near '+(sfState.area||sfState.city)+'…</div></div>'+
+  '<div id="sf-agents-body"><div style="padding:26px;text-align:center;color:var(--text-3,#8b93a7);">Finding trusted '+sfAgentNoun()+'s near '+esc(sfState.area||sfState.city)+'…</div></div>'+
   '<div class="sf-foot"><button class="sf-btn gho" aria-label="Back" onclick="sfGo(\'legal\')">←</button>'+
   '<button class="sf-btn pri" onclick="sfGo(\'scorecard\')">No thanks — see my score →</button></div>';
   setTimeout(sfAgentsLoad,30);
@@ -22679,7 +22701,7 @@ async function sfAgentsLoad(){
   }
   var ags=(near&&near.agents)||[];
   if(!ags.length){
-    h+='<div class="sf-card" style="text-align:center;"><div class="sf-title">No listed '+sfAgentNoun()+'s near '+city+' yet</div>'+
+    h+='<div class="sf-card" style="text-align:center;"><div class="sf-title">No listed '+sfAgentNoun()+'s near '+esc(city)+' yet</div>'+
        '<div style="font-size:12.5px;color:'+mut+';">New '+sfAgentNoun()+'s appear here as they register — you can continue privately.</div></div>';
   } else {
     h+='<div class="sf-card" style="padding:12px 14px;"><div class="sf-title">'+(sfAgentVertical()==='cars'?'Car sales agents':'Agents')+' near you — ranked by trust</div>'+
@@ -22689,7 +22711,19 @@ async function sfAgentsLoad(){
   }
   el.innerHTML=h;
 }
+/* AUD-054 (4 Oct 2026 audit): an agent's own words (suburbs, city, experience, badges) are painted escaped -- a
+   profile saved as '<img onerror=...>' ran in every visitor's browser. One copy, every string escaped, used by
+   both agent cards. */
+function _agentSafe(a){
+  var o={}; a=a||{};
+  Object.keys(a).forEach(function(k){
+    var v=a[k];
+    o[k]=(typeof v==='string')?esc(v):(Array.isArray(v)?v.map(function(x){return typeof x==='string'?esc(x):x;}):v);
+  });
+  return o;
+}
 function sfAgentCardHtml(a,top){
+  a=_agentSafe(a);
   var mut='var(--text-3,#8b93a7)';
   var badges=(a.badges_earned||[]).map(function(b){return '<span style="display:inline-block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);color:#34d399;border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;margin:2px 3px 0 0;">✓ '+b+'</span>';}).join('');
   var sold=a.properties_sold?(' · <b>'+a.properties_sold+'</b>'+(a.sold_source==='agency'?' <i style="color:'+mut+';font-size:10px;">(agency-declared)</i>':'')):'';
@@ -22936,13 +22970,13 @@ async function _asLeadsLoad(){
     var st=x.status;
     h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:11px;">'+
       '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">'+
-        '<div style="font-weight:800;font-size:14px;">'+(l.title||'Property lead')+'</div>'+
+        '<div style="font-weight:800;font-size:14px;">'+esc(l.title||'Property lead')+'</div>'+
         '<span style="font-size:10px;font-weight:800;border-radius:14px;padding:3px 10px;'+(st==='pending'?'background:#fff4e5;color:#8a4a10;':st==='accepted'?'background:#e7f2e3;color:#2f5d20;':'background:#f1f3f7;color:#6b7280;')+'">'+st.toUpperCase()+'</span></div>'+
-      '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">'+[(l.suburb||l.city||''),(l.beds?l.beds+' bed':''),(l.baths?l.baths+' bath':''),(l.price||'')].filter(Boolean).join(' · ')+(x.listing_quality_snapshot?' · listing quality '+x.listing_quality_snapshot+'/100':'')+'</div>'+
+      '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">'+[(l.suburb||l.city||''),(l.beds?l.beds+' bed':''),(l.baths?l.baths+' bath':''),(l.price||'')].filter(Boolean).map(esc).join(' · ')+(x.listing_quality_snapshot?' · listing quality '+x.listing_quality_snapshot+'/100':'')+'</div>'+
       '<div style="display:flex;align-items:center;gap:10px;margin:9px 0;">'+
-        '<div style="width:44px;height:44px;border-radius:50%;border:4px solid '+tc+';display:flex;align-items:center;justify-content:center;font-weight:800;">'+x.seller_trust_snapshot+'</div>'+
-        '<div style="font-size:12px;line-height:1.4;"><b>Seller trust score '+x.seller_trust_snapshot+'</b><br><span style="color:var(--text-3);">'+(st==='accepted'?('Contact: '+(x.seller_email||'shared')):'Seller stays anonymous until you accept')+'</span></div></div>'+
-      (x.message?'<div style="font-size:12px;font-style:italic;color:var(--text-3);margin-bottom:8px;">"'+x.message+'"</div>':'')+
+        '<div style="width:44px;height:44px;border-radius:50%;border:4px solid '+tc+';display:flex;align-items:center;justify-content:center;font-weight:800;">'+esc(x.seller_trust_snapshot)+'</div>'+
+        '<div style="font-size:12px;line-height:1.4;"><b>Seller trust score '+esc(x.seller_trust_snapshot)+'</b><br><span style="color:var(--text-3);">'+(st==='accepted'?('Contact: '+esc(x.seller_email||'shared')):'Seller stays anonymous until you accept')+'</span></div></div>'+
+      (x.message?'<div style="font-size:12px;font-style:italic;color:var(--text-3);margin-bottom:8px;">"'+esc(x.message)+'"</div>':'')+
       (st==='pending'?('<div style="display:flex;gap:8px;">'+
         '<button onclick="asLeadAccept('+x.id+')" style="flex:2;background:#166534;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;">Accept lead — 1T</button>'+
         '<button onclick="asLeadDecline('+x.id+')" style="flex:1;background:#fff;color:#8a2b2b;border:1.5px solid #d6b1b1;border-radius:10px;padding:11px;cursor:pointer;">Decline (free)</button></div>'+
@@ -23070,7 +23104,7 @@ async function agencyBulkRun(){
     var h='<div style="font-size:12.5px;font-weight:700;margin-bottom:4px;">'+d.onboarded+' onboarded · '+d.failed+' failed</div>';
     (d.agents||[]).forEach(function(a){
       h+='<div style="font-size:11.5px;padding:3px 0;border-bottom:1px dashed var(--border);">'+
-        (a.ok?('✓ '+a.email+' → <b>Agent '+a.anon_ref+'</b>'+(a.credentials_pending&&a.credentials_pending.length?' · pending: '+a.credentials_pending.join(', '):''))+(a.link==='sent'?' · ✉ sign-in link emailed':(a.link?' · ✉ email did not send — they can sign in at trustsquare.co with their email':'')):('✗ '+a.email+' — '+a.error))+'</div>';
+        (a.ok?('✓ '+esc(a.email)+' → <b>Agent '+esc(a.anon_ref)+'</b>'+(a.credentials_pending&&a.credentials_pending.length?' · pending: '+esc(a.credentials_pending.join(', ')):''))+(a.link==='sent'?' · ✉ sign-in link emailed':(a.link?' · ✉ email did not send — they can sign in at trustsquare.co with their email':'')):('✗ '+a.email+' — '+a.error))+'</div>';
     });
     h+='<div style="font-size:11px;color:var(--text-3);margin-top:6px;">'+(d.next||'')+'</div>';
     if(rep) rep.innerHTML=h;
@@ -23266,7 +23300,7 @@ async function advAgentsLoad(){
   }
   var ags=(near&&near.agents)||[];
   if(!ags.length){
-    h+='<div style="'+card+'text-align:center;"><b>No accredited tour agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:#68758c;margin-top:4px;">Accredited agents join weekly — browse and book directly meanwhile.</div></div>';
+    h+='<div style="'+card+'text-align:center;"><b>No accredited tour agents near '+esc(city||'you')+' yet</b><div style="font-size:12px;color:#68758c;margin-top:4px;">Accredited agents join weekly — browse and book directly meanwhile.</div></div>';
   } else {
     ags.forEach(function(a){ h+=advAgentCard(a,card); });
     h+='<div style="font-size:10.5px;color:rgba(255,255,255,.65);font-style:italic;margin-top:8px;">Anonymous until introduced — the agent\'s identity is shared only if they accept. Free for you; the agent pays 1T.</div>';
@@ -23274,6 +23308,7 @@ async function advAgentsLoad(){
   p.innerHTML=h;
 }
 function advAgentCard(a,card){
+  a=_agentSafe(a);   // AUD-054
   var badges=(a.badges_earned||[]).map(function(b){return '<span style="display:inline-block;background:#e7f3ec;border:1px solid #b7dcc6;color:#1e7d4f;border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;margin:2px 3px 0 0;">✓ '+b+'</span>';}).join('');
   var sold=a.properties_sold?(' · <b>'+a.properties_sold+'</b>'+(a.sold_source==='agency'?' <i style="font-size:10px;color:#68758c;">(agency-declared)</i>':'')):'';
   return '<div id="adv-ag-'+a.anon_ref+'" style="'+card+'overflow:hidden;">'+
@@ -23378,7 +23413,7 @@ async function catAgentsLoad(v){
   }
   var ags=(near&&near.agents)||[];
   if(!ags.length){
-    h+='<div style="'+card+'text-align:center;"><b>No credential-verified agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:var(--text-3,#68758c);margin-top:4px;">Verified agents join weekly — browse listings directly meanwhile.</div></div>';
+    h+='<div style="'+card+'text-align:center;"><b>No credential-verified agents near '+esc(city||'you')+' yet</b><div style="font-size:12px;color:var(--text-3,#68758c);margin-top:4px;">Verified agents join weekly — browse listings directly meanwhile.</div></div>';
   } else {
     ags.forEach(function(a){ h+=advAgentCard(a,card); });
     h+='<div style="font-size:10.5px;color:var(--text-3,#68758c);font-style:italic;margin-top:8px;">Anonymous until introduced — the agent\'s identity is shared only if they accept. Free for you; the agent pays 1T.</div>';
@@ -23413,7 +23448,7 @@ async function agentDirLoad(){
   var card='background:var(--surface,#fff);border:1px solid var(--border,#dde3ec);border-radius:12px;padding:12px 14px;color:var(--text,#1c2434);';
   var ags=(near&&near.agents)||[];
   if(!ags.length){
-    el.innerHTML='<div style="grid-column:1/-1;'+card+'text-align:center;"><b>No listed agents near '+(city||'you')+' yet</b><div style="font-size:12px;color:var(--text-3,#68758c);margin-top:4px;">Credential-verified agents join weekly.</div></div>';
+    el.innerHTML='<div style="grid-column:1/-1;'+card+'text-align:center;"><b>No listed agents near '+esc(city||'you')+' yet</b><div style="font-size:12px;color:var(--text-3,#68758c);margin-top:4px;">Credential-verified agents join weekly.</div></div>';
     return;
   }
   var h=''; ags.forEach(function(a){ h+=advAgentCard(a,card); });

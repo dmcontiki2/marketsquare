@@ -1911,6 +1911,36 @@ def _apply_pending_downgrades():
             _log.info("Downgrade applied: %s → %s", row["email"], new_tier)
         if rows:
             conn.commit()
+        # AUD-016 (4 Oct 2026 audit; RUL-201, David 4 Oct 2026: a paid plan ends when its 30 days run out). A Starter or
+        # Pro payment is a one-off Paystack charge with no renewal, so a plan whose paid period has passed (and that
+        # was not re-paid, which moves billing_period_end forward) returns to the tier she has without paying: Free,
+        # or her agency's seat. Superusers are left alone; adverts above the new limit rest, nothing is deleted.
+        lapsed = conn.execute(
+            "SELECT email FROM users WHERE LOWER(COALESCE(seller_tier,'')) IN ('starter','pro') "
+            "AND pending_downgrade_tier IS NULL AND billing_period_end IS NOT NULL "
+            "AND billing_period_end <= strftime('%Y-%m-%dT%H:%M:%SZ','now') "
+            "AND COALESCE(is_superuser, 0) = 0").fetchall()
+        for row in lapsed:
+            em = (row["email"] or "").lower()
+            upd = conn.execute(
+                "UPDATE users SET seller_tier='free', slot_limit=?, billing_period_end=NULL "
+                "WHERE LOWER(email)=? AND billing_period_end IS NOT NULL "
+                "AND billing_period_end <= strftime('%Y-%m-%dT%H:%M:%SZ','now')", (_tier_slot_limit("free"), em))
+            if upd.rowcount < 1:
+                continue
+            new_tier = "free"
+            for mm in conn.execute("SELECT agency_id, listing_cap, seat_paid FROM agency_members "
+                                   "WHERE LOWER(agent_email)=? AND COALESCE(status,'') != 'removed'", (em,)).fetchall():
+                conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?",
+                             (max(1, min(int(mm["listing_cap"] or 10), 20 if mm["seat_paid"] else 10)), em))
+                _sync_agency_member_tiers(conn, mm["agency_id"])
+                _t = conn.execute("SELECT seller_tier FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+                new_tier = (_t["seller_tier"] if _t else None) or new_tier
+                break
+            _plan_changed(conn, row["email"], new_tier, lowered=True)
+            _log.info("AUD-016: paid period over, plan lapsed: %s -> %s", em, new_tier)
+        if lapsed:
+            conn.commit()
     except Exception as exc:
         _log.warning("Pending downgrade worker error: %s", exc)
     finally:
@@ -2640,7 +2670,57 @@ JPEG_QUALITY_MEDIUM = 82
 
 # ── MODELS ──────────────────────────────────────────────────
 
-class Listing(BaseModel):
+from pydantic import field_validator as _field_validator
+_MEDIA_NAME_RX = re.compile(r"^/media/[A-Za-z0-9][A-Za-z0-9._-]{0,200}$")
+
+
+def _safe_client_photo_url(v):
+    """AUD-027 (4 Oct 2026 audit): a photo address a client sends is an https address or a plain /media/<name> --
+    never a path with '..', a backslash or a nested folder. A listing whose thumb_url was '/media/../.env' made the
+    photo migration copy the server's secrets file to public storage. Anything else is dropped (None)."""
+    if v in (None, ""):
+        return v
+    u = str(v).strip()
+    if u.lower().startswith("https://") and " " not in u and "\\" not in u and len(u) <= 1000:
+        return u
+    if _MEDIA_NAME_RX.match(u) and ".." not in u:
+        return u
+    return None
+
+
+def _safe_client_photo_list(v):
+    """AUD-027: the JSON photo list gets the same rule, element by element."""
+    if v in (None, ""):
+        return v
+    try:
+        arr = json.loads(v) if isinstance(v, str) else v
+    except Exception:
+        return None
+    if not isinstance(arr, list):
+        return None
+    return json.dumps([u for u in (_safe_client_photo_url(x) for x in arr[:20]) if u])
+
+
+class _PhotoSafe:
+    @_field_validator("thumb_url", "medium_url", mode="before", check_fields=False)
+    @classmethod
+    def _aud027_photo(cls, v):
+        return _safe_client_photo_url(v)
+
+    @_field_validator("photo_urls", mode="before", check_fields=False)
+    @classmethod
+    def _aud027_photos(cls, v):
+        return _safe_client_photo_list(v)
+
+    @_field_validator("city", "area", "suburb", "price", mode="before", check_fields=False)
+    @classmethod
+    def _aud031_plain(cls, v):
+        # AUD-031 (4 Oct 2026 audit): POST /listings cleaned only title and description; a suburb or price of
+        # '<img onerror=...>' reached an agent's lead inbox. Every short text field on an advert is plain text.
+        return _plain_text(v) if isinstance(v, str) else v
+
+
+class Listing(_PhotoSafe, BaseModel):
     title: str
     price: Optional[str] = None
     category: str
@@ -2713,7 +2793,7 @@ class User(BaseModel):
     name: Optional[str] = None
     ai_sessions: Optional[int] = None   # free sessions to credit on registration
 
-class ListingUpdate(BaseModel):
+class ListingUpdate(_PhotoSafe, BaseModel):
     """Partial update model for seller edits — all fields optional."""
     title: Optional[str] = None
     price: Optional[str] = None
@@ -3921,7 +4001,29 @@ def _buyer_reach_tier(conn, email: str) -> str:
             return "free"
     return "free"
 
+_ZOOM_PRIVATE_COLS = ("street_address", "listing_lat", "listing_lng", "seller_email", "attested_email",
+                      "seller_phone", "phone", "contact_email", "contact_phone")
+
+
 def _zoom_candidates(conn, cat_norm: str, city: str, demo: int, tier: str, viewer: str = ""):
+    """AUD-023 (4 Oct 2026 audit): the ONE door every Zoom / Squire caller reads candidates through. Private columns
+    never reach the engine (so no facet, chip or label can carry them), and unconfirmed vehicle specs are scrubbed
+    exactly as on every other public read."""
+    rows, locked = _zoom_candidates_raw(conn, cat_norm, city, demo, tier, viewer)
+    for r in rows:
+        _em = str(r.get("seller_email") or "").strip().lower()
+        if _em.endswith("@trustsquare.co") or _em.endswith("@example.com"):
+            r["demo_example"] = 1   # keeps EXAMPLES-LAST-1 ordering without carrying the address
+        for k in _ZOOM_PRIVATE_COLS:
+            r.pop(k, None)
+        try:
+            _scrub_vehicle_specs(r)
+        except Exception:
+            pass
+    return rows, locked
+
+
+def _zoom_candidates_raw(conn, cat_norm: str, city: str, demo: int, tier: str, viewer: str = ""):
     """The reach-scoped set. Travel is borderless (canon 2a); online-mode rows are borderless
     (canon 2b); physical categories are the buyer's city (+ extended) for Free and every city
     for Global. Returns (rows, locked_geo) where locked_geo carries the TRUE counts of cities a
@@ -5192,7 +5294,11 @@ def withdraw_listing(listing_id: int, email: str = "", t: str = "", confirm: int
         u = str(u or "")
         if u.startswith(R2_PUBLIC_URL + "/"):
             k = u[len(R2_PUBLIC_URL) + 1:].split("?")[0]
-            if k and k not in keys:
+            # AUD-027 class: a seller can only delete pictures no OTHER listing uses -- her photo list is her own
+            # text, so a stranger's picture address in it must never delete the stranger's picture.
+            if k and k not in keys and ".." not in k and not conn.execute(
+                    "SELECT 1 FROM listings WHERE id <> ? AND (thumb_url LIKE ? OR medium_url LIKE ? OR photo_urls LIKE ?) LIMIT 1",
+                    (listing_id, "%" + k, "%" + k, "%" + k + "%")).fetchone():
                 keys.append(k)
     if _S3_CONFIGURED:
         for k in keys:
@@ -5687,6 +5793,12 @@ def seller_summary_for_listing(listing_id: int, ts_user: str = Cookie(default=No
         for _k in ("headline", "about", "tags"):
             if _p.get(_k):
                 out[_k] = _p[_k]
+        # AUD-025 (4 Oct 2026 audit): profiles saved before the tag scrub are cleaned on the way out too.
+        for _k in ("headline", "about"):
+            if out.get(_k):
+                out[_k] = _anon_regex_clean(str(out[_k]))[0]
+        if out.get("tags"):
+            out["tags"] = [t for t in (_anon_regex_clean(str(x))[0].strip() for x in out["tags"]) if t]
     except Exception:
         pass
     return out
@@ -5910,10 +6022,13 @@ def delete_listing(listing_id: int, _key: str = Depends(auth.require_api_key),
         except HTTPException:
             conn.close()
             raise HTTPException(status_code=403, detail="Showcase listings are admin-managed.")
+    _t = conn.execute("SELECT title FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    _closed = _close_intros_for_removed_listing(conn, listing_id, "listing removed")   # AUD-017
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
     conn.execute("DELETE FROM wishlist_matches WHERE listing_id = ?", (listing_id,))   # FEED-LIVE-1
     conn.commit()
     conn.close()
+    _tell_buyers_listing_removed(_closed, _t["title"] if _t else "")
     return {"message": "Listing deleted"}
 
 
@@ -5938,11 +6053,14 @@ def delete_listing_by_seller(listing_id: int, email: str = "",
     if row["showcase"] or row["super_example"]:   # SUPER-IMMORTAL-2
         conn.close()
         raise HTTPException(status_code=403, detail="Showcase listings are admin-managed.")
+    _t = conn.execute("SELECT title FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    _closed = _close_intros_for_removed_listing(conn, listing_id, "listing removed by seller")   # AUD-017
     conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
     conn.execute("DELETE FROM listing_cities WHERE listing_id = ?", (listing_id,))
     conn.execute("DELETE FROM wishlist_matches WHERE listing_id = ?", (listing_id,))   # FEED-LIVE-1
     conn.commit()
     conn.close()
+    _tell_buyers_listing_removed(_closed, _t["title"] if _t else "")
     return {"message": "Listing deleted"}
 
 # ── GEO HIERARCHY ────────────────────────────────────────────
@@ -7381,33 +7499,47 @@ def create_user(user: User, _key: str = Depends(auth.require_api_key)):
     conn = database.get_db()
     # INSERT OR IGNORE so existing sellers don't raise an error.
     # Track whether the row is new so we only credit ai_sessions once.
-    result = conn.execute(
-        "INSERT OR IGNORE INTO users (email, name) VALUES (?,?)",
-        (user.email, user.name)
-    )
-    is_new = result.rowcount > 0
+    # AUD-018 (4 Oct 2026 audit): every real caller already HAS a row -- sign-in inserts it first, closure keeps it --
+    # so "the INSERT created the row" was never true and the name, the welcome sessions and the closure restore never
+    # happened. Each now keys on its own once-only fact instead of the INSERT's rowcount.
+    conn.execute("INSERT OR IGNORE INTO users (email, name) VALUES (?,?)", (user.email, user.name))
+    if (user.name or "").strip():
+        conn.execute("UPDATE users SET name=? WHERE email=? AND (name IS NULL OR TRIM(name)='')",
+                     (user.name.strip(), user.email))
     conn.commit()
-    # Credit free AI sessions only on first registration — not on repeat calls.
-    if is_new and user.ai_sessions and user.ai_sessions > 0:
-        conn.execute(
-            "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
-            # SEC-GATE-1 (24 Sep 2026): the grant is the server's (3, what the app sends), never a client-chosen number.
-            (min(int(user.ai_sessions), 3), user.email)
-        )
-        conn.commit()
-    # ACCOUNT-CLOSE-1: a returning user gets their retained Tuppence back (EULA 14.1/14.3).
-    # Matched on the verified ID hash where one exists, else the email address. Never
-    # raises into the signup path — a restore failure must not block registration.
-    restored = None
-    if is_new:
+    # The welcome AI sessions: once per account, marked by a zero-amount ledger row (no schema change), claimed
+    # inside one immediate transaction so two parallel calls cannot both grant.
+    is_new = False
+    if user.ai_sessions and user.ai_sessions > 0:
         try:
-            _row = conn.execute(
-                "SELECT id_number_hash FROM users WHERE lower(email)=lower(?)",
-                (user.email,)).fetchone()
-            _idh = _row["id_number_hash"] if _row and "id_number_hash" in _row.keys() else None
-            restored = account_closure.restore_on_return(conn, user.email, _idh)
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+            except Exception:
+                pass
+            if not conn.execute("SELECT 1 FROM transactions WHERE user_email=? AND type='welcome_ai_sessions' LIMIT 1",
+                                (user.email,)).fetchone():
+                conn.execute("INSERT INTO transactions (user_email, type, amount, description) VALUES (?,?,0,?)",
+                             (user.email, "welcome_ai_sessions", "Welcome: 3 free AI sessions (once per account)"))
+                conn.execute(
+                    "UPDATE users SET aa_sessions_remaining = aa_sessions_remaining + ? WHERE email = ?",
+                    # SEC-GATE-1 (24 Sep 2026): the grant is the server's (3, what the app sends), never a client-chosen number.
+                    (min(int(user.ai_sessions), 3), user.email))
+                is_new = True
+            conn.commit()
         except Exception as exc:
-            _log.error("ACCOUNT-CLOSE-1 restore check failed for %s: %s", user.email, exc)
+            conn.rollback()
+            _log.warning("AUD-018 welcome sessions not granted for %s: %s", user.email, exc)
+    # ACCOUNT-CLOSE-1: a returning user gets their retained Tuppence back (EULA 14.1/14.3). restore_on_return is
+    # once-only by its own claim (AUD-015), so it runs on every call. Never raises into the signup path.
+    restored = None
+    try:
+        _row = conn.execute(
+            "SELECT id_number_hash FROM users WHERE lower(email)=lower(?)",
+            (user.email,)).fetchone()
+        _idh = _row["id_number_hash"] if _row and "id_number_hash" in _row.keys() else None
+        restored = account_closure.restore_on_return(conn, user.email, _idh)
+    except Exception as exc:
+        _log.error("ACCOUNT-CLOSE-1 restore check failed for %s: %s", user.email, exc)
     conn.close()
     if is_new:
         _brevo_mark_signed_up(user.email)   # EMAIL-WAVE-1: wave suppression on signup
@@ -8845,7 +8977,11 @@ def _commitment_resume(conn, intro_id) -> int:
 @app.post("/intros")
 def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
                  ts_user: str = Cookie(default=None)):
-    _bind_charged_email(intro.buyer_email, ts_user, "create-intro")   # ACCOUNT-BIND-1
+    # AUD-019: keep the canonical address the bind returns -- the wallet, terms, duplicate check and hold all read it.
+    intro.buyer_email = (_bind_charged_email(intro.buyer_email, ts_user, "create-intro")   # ACCOUNT-BIND-1
+                         or (intro.buyer_email or "").strip().lower())
+    if intro.message:   # AUD-024: contact details never stored on a request the seller has not accepted
+        intro.message = _anon_regex_clean(intro.message)[0]
     conn = database.get_db()
     listing = conn.execute("SELECT * FROM listings WHERE id = ?", (intro.listing_id,)).fetchone()
     if not listing:
@@ -8958,7 +9094,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             "listing_title": listing["title"],
             "category":      listing["category"],
             "buyer_email":   intro.buyer_email,
-            "buyer_name":    intro.buyer_name,
+            "buyer_name":    _first_name_only(intro.buyer_name),   # AUD-024
             "message":       intro.message,
             "seller_email":  listing["seller_email"] if listing["seller_email"] else None,
             "timestamp":     datetime.now(timezone.utc).isoformat(),
@@ -9039,7 +9175,17 @@ def _intro_for_viewer(d: dict, viewer) -> dict:
     v = (viewer or "").strip().lower()
     if v and (d.get("buyer_email") or "").strip().lower() != v and (d.get("status") or "pending") != "accepted":
         d["buyer_email"] = ""
+        # AUD-024 (4 Oct 2026 audit): before she accepts, the seller sees a first name and a message with no contact
+        # details -- the full name and a typed phone number let her reach the buyer without accepting.
+        d["buyer_name"] = _first_name_only(d.get("buyer_name"))
+        if d.get("message"):
+            d["message"] = _anon_regex_clean(d["message"])[0]
     return d
+
+
+def _first_name_only(n):
+    """AUD-024: the first word of a typed name, at most 30 characters -- what a seller sees before accepting."""
+    return ((str(n or "").strip().split() or [""])[0])[:30]
 
 @app.get("/intros/{listing_id}")
 def get_intros(listing_id: int, ts_user: str = Cookie(default=None),
@@ -9386,6 +9532,36 @@ def id_status(email: str):
             conn.close()
         except Exception:
             pass
+
+
+def _close_intros_for_removed_listing(conn, listing_id, reason):
+    """AUD-017 (4 Oct 2026 audit): a listing that is removed closes its pending introductions and returns every held
+    Tuppence, in the caller's transaction. Without this the request stayed 'pending' for ever (the expiry sweep joins
+    listings, so a request whose listing is gone was never reached) and the buyer's 1T stayed held.
+    Returns the buyer addresses whose request was closed by THIS call (for the courtesy email)."""
+    out = []
+    for ir in conn.execute("SELECT id, buyer_email FROM intro_requests WHERE listing_id = ? "
+                           "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'", (listing_id,)).fetchall():
+        upd = conn.execute("UPDATE intro_requests SET status='expired' WHERE id=? "
+                           "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'", (ir["id"],))
+        if upd.rowcount == 1:
+            _release_intro_hold(conn, ir["id"], reason)
+            if ir["buyer_email"]:
+                out.append(ir["buyer_email"])
+    return out
+
+
+def _tell_buyers_listing_removed(buyers, title):
+    for b in buyers or []:
+        try:
+            _send_system_email(b, "We couldn\u2019t make this introduction",
+                               _lc_email_html("This introduction couldn\u2019t be made",
+                                              "The advert \u201c" + (title or "you asked about") + "\u201d was "
+                                              "removed before the seller answered, so we\u2019ve closed your request. "
+                                              "You were not charged \u2014 your Tuppence is back in your wallet.",
+                                              "Find another seller"))
+        except Exception as _mx:
+            _log.warning("AUD-017 buyer notice failed for %s: %s", b, _mx)
 
 
 def _release_intro_hold(conn, intro_id, reason):
@@ -10002,7 +10178,8 @@ async def paystack_webhook(request: Request):
 
     Setup: In your Paystack dashboard → Settings → API Keys & Webhooks,
     set the webhook URL to: https://trustsquare.co/payment/webhook
-    Copy the 'Webhook Secret' value into PAYSTACK_WEBHOOK_SECRET in .env.
+    Paystack signs with the account SECRET KEY (no separate webhook secret exists); payments.py
+    uses PAYSTACK_WEBHOOK_SECRET if set, else PAYSTACK_SECRET_KEY (AUD-022).
     """
     raw_body = await request.body()
     signature = request.headers.get("X-Paystack-Signature", "")
@@ -10372,6 +10549,25 @@ def admin_ai_spend_daily_summary(_admin=Depends(_require_admin_or_key)):
     }
 
 
+_MEDIA_ROOT = "/var/www/marketsquare/media/"
+
+
+def _media_file_or_none(url_path):
+    """AUD-027: the local file behind a /media/ address, only if it resolves INSIDE the media folder (symlinks and
+    '..' resolved) and starts like a JPEG, PNG, GIF or WebP picture. Anything else -> None."""
+    try:
+        p = os.path.realpath("/var/www/marketsquare" + str(url_path or ""))
+        if not p.startswith(_MEDIA_ROOT) or not os.path.isfile(p):
+            return None
+        with open(p, "rb") as fh:
+            head = fh.read(12)
+        if head[:3] == b"\xff\xd8\xff" or head[:8] == b"\x89PNG\r\n\x1a\n" or head[:4] == b"GIF8" or (head[:4] == b"RIFF" and head[8:12] == b"WEBP"):
+            return p
+    except Exception:
+        pass
+    return None
+
+
 @app.post("/admin/migrate-photos")
 def migrate_photos(_admin=Depends(_require_admin_or_key)):
     """Migrate existing local photos to Hetzner Object Storage.
@@ -10394,7 +10590,11 @@ def migrate_photos(_admin=Depends(_require_admin_or_key)):
             skipped += 1
             continue
         try:
-            thumb_local = f"/var/www/marketsquare{thumb_path}"
+            thumb_local = _media_file_or_none(thumb_path)   # AUD-027: inside /media and a real picture, or skipped
+            if not thumb_local:
+                _log.warning("AUD-027: migrate-photos skipped listing %s -- %r is not a picture inside /media", listing_id, thumb_path[:80])
+                skipped += 1
+                continue
             with open(thumb_local, "rb") as fh:
                 thumb_data = fh.read()
             thumb_key = f"media/{uuid.uuid4().hex}_{os.path.basename(thumb_local)}"
@@ -10402,8 +10602,8 @@ def migrate_photos(_admin=Depends(_require_admin_or_key)):
             # Upload medium separately if it also has a local path
             new_medium = new_thumb
             if medium_path.startswith("/media/"):
-                medium_local = f"/var/www/marketsquare{medium_path}"
-                if os.path.exists(medium_local):
+                medium_local = _media_file_or_none(medium_path)   # AUD-027
+                if medium_local:
                     with open(medium_local, "rb") as fh:
                         medium_data = fh.read()
                     medium_key = f"media/{uuid.uuid4().hex}_{os.path.basename(medium_local)}"
@@ -13299,7 +13499,7 @@ LM_NOSHOW_REASONS = {         # LM-NOSHOW-1: what happened, in the seller's word
 }
 
 
-class LMListingIn(BaseModel):
+class LMListingIn(_PhotoSafe, BaseModel):
     """Local Market listing creation payload — no category field, free description."""
     title: str
     price: Optional[str] = None
@@ -13812,7 +14012,8 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
         """INSERT INTO intro_requests
              (listing_id, buyer_email, buyer_name, message, intro_type)
            VALUES (?, ?, ?, ?, 'local_market')""",
-        (req.listing_id, req.buyer_email or req.buyer_token, req.buyer_name, req.message)
+        (req.listing_id, req.buyer_email or req.buyer_token, req.buyer_name,
+         _anon_regex_clean(req.message)[0] if req.message else req.message)   # AUD-024
     )
     new_intro_id = cur.lastrowid
 
@@ -13831,7 +14032,7 @@ def lm_create_intro(req: LMIntroIn, background_tasks: BackgroundTasks, ts_user: 
             "intro_id":       new_intro_id,
             "listing_id":     req.listing_id,
             "listing_title":  listing.get("title"),
-            "buyer_name":     req.buyer_name,
+            "buyer_name":     _first_name_only(req.buyer_name),   # AUD-024
             "buyer_trust_score": buyer_score,   # seller's accept/decline signal
             "seller_email":   seller_email,
             "tuppence_charged_to_seller": 0,   # RUL-190: she pays on accept
@@ -15992,6 +16193,25 @@ def _next_signal_for_doc(doc_type: str, conn, email: str) -> Optional[str]:
 # copy already promises the agent "ops verifies before points". The code awarded
 # them instantly for any file. These land 'pending' and go through the existing
 # ops queue (GET /trust-score/credentials/pending).
+_SIGNAL_RESULT_RX = re.compile(r"(_verified$|\.id_ai_|\.id_admin_|id_number_valid|\.tx_|_name_verified)")
+
+
+def _client_may_name_signal(sid: str) -> bool:
+    """AUD-028 (4 Oct 2026 audit): an upload may name a signal only when it is a real category credential that a
+    document can evidence. A verification RESULT (ID checked by AI or a person, name matched to a bank or a
+    certificate, phone checked), a 'system tracked' sales count (tx_*), a claim-only title, or a signal that needs
+    no evidence is never self-awarded by naming it -- one of those (id_ai_verified) opened the stranger gate with
+    no ID check. Anything else falls back to the doc-type chain."""
+    sid = (sid or "").strip()
+    if not sid.startswith("category.") or _SIGNAL_RESULT_RX.search(sid):
+        return False
+    for _grp in _CATEGORY_SIGNALS.values():
+        meta = _grp.get(sid) if isinstance(_grp, dict) else None
+        if meta is not None:
+            return not meta.get("claim_only") and meta.get("evidence_required", True) is not False
+    return False
+
+
 _LEGAL_SIGNALS = {
     "category.property.ppra",
     "category.property.ffc",
@@ -16094,6 +16314,9 @@ async def upload_seller_document(
     # so each additional upload of the same type fills the next slot
     # SEC-GATE-1 (24 Sep 2026): only category credentials may be named by the client; universal/track_record signals have their own flows.
     if signal_id and not str(signal_id).startswith("category."):
+        signal_id = None
+    if signal_id and not _client_may_name_signal(str(signal_id)):   # AUD-028 (4 Oct 2026 audit)
+        _log.warning("AUD-028: %s named signal %r on an upload -- ignored, doc_type chain used", email, signal_id)
         signal_id = None
     conn_pre = database.get_db()
     try:
@@ -19633,6 +19856,13 @@ def _establish_user_session(email: str, response: Response):
         conn.commit()
         row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
         name = _shown_name(row["name"] if row else None, email)   # KEY-ID-HIDE-1 (backend-14)
+        # AUD-018: a returning member's retained Tuppence comes back at sign-in -- every sign-in door lands here.
+        # Once-only by the closure row's own claim (AUD-015); a failure never blocks the sign-in.
+        try:
+            _ir = conn.execute("SELECT id_number_hash FROM users WHERE email=?", (email,)).fetchone()
+            account_closure.restore_on_return(conn, email, (_ir["id_number_hash"] if _ir and "id_number_hash" in _ir.keys() else None))
+        except Exception as _rx:
+            _log.error("ACCOUNT-CLOSE-1 restore at sign-in failed for %s: %s", email, _rx)
     finally:
         conn.close()
     # ACCOUNT-BIND-1 (5 Aug 2026): proven email possession, kept as an HttpOnly cookie.
@@ -20657,7 +20887,7 @@ def set_agency_verified(agency_id: int, req: _AgencyVerify, _key: str = Depends(
 def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.require_api_key)):
     """Add an agent: membership + cap mirrored into slot_limit + magic sign-in link."""
     email = (req.email or "").strip().lower()
-    if "@" not in email:
+    if not re.fullmatch(r"[a-z0-9._%+\-]{1,64}@[a-z0-9\-]+(\.[a-z0-9\-]+)*\.[a-z]{2,24}", email):   # AUD-051: strict shape
         raise HTTPException(status_code=400, detail="valid email required")
     cap = int(req.listing_cap) if req.listing_cap else 10
     cap = max(1, min(cap, 20))   # SEC-GATE-1 (24 Sep 2026): an invite cannot write a negative or oversized users.slot_limit (20 = Pro seat max)
@@ -20704,11 +20934,18 @@ def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate,
                      ts_user: str = Cookie(default=None),
                      x_admin_key: str = Header(default=None)):
     _agency_admin_or_refuse(agency_id, ts_user, x_admin_key, "agent-cap")
+    # AUD-020 (4 Oct 2026 audit), enforcing RUL-048: a Pro seat is the agent's OWN paid subscription. seat_paid is the
+    # ops/reconciliation lever only (X-Admin-Key, after a recorded payment); an agency admin's session may set a cap
+    # inside the seat she already has, never grant a seat, never write a tier, never a negative or oversized cap.
+    import hmac as _hm
+    _ops = bool(x_admin_key and MS_ADMIN_KEY and _hm.compare_digest(str(x_admin_key), str(MS_ADMIN_KEY)))
+    if req.seat_paid is not None and not _ops:
+        raise HTTPException(status_code=403, detail="A Pro seat is the agent's own subscription - the console cannot grant one.")
     email = (email or "").strip().lower()
     conn = database.get_db()
     try:
-        m = conn.execute("SELECT listing_cap, seat_paid FROM agency_members WHERE agency_id=? AND LOWER(agent_email)=?", (agency_id, email)).fetchone()
-        if not m:
+        m = conn.execute("SELECT listing_cap, seat_paid, status FROM agency_members WHERE agency_id=? AND LOWER(agent_email)=?", (agency_id, email)).fetchone()
+        if not m or (m["status"] or "") == "removed":
             raise HTTPException(status_code=404, detail="Agent not in this agency")
         cap = m["listing_cap"]; paid = m["seat_paid"]
         if req.seat_paid is not None:
@@ -20716,11 +20953,15 @@ def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate,
             cap = 20 if paid else 10
         if req.listing_cap is not None:
             cap = int(req.listing_cap)
+        cap = max(1, min(int(cap or 10), 20 if paid else 10))   # AUD-020: 10 free seat, 20 only with a paid seat
         conn.execute("UPDATE agency_members SET listing_cap=?, seat_paid=? WHERE agency_id=? AND LOWER(agent_email)=?", (cap, paid, agency_id, email))
         # SEC-GATE-1 (24 Sep 2026): never downgrade a self-subscribed member (billing_period_end set) -- same rule as _sync_agency_member_tiers.
         _u = conn.execute("SELECT billing_period_end FROM users WHERE LOWER(email)=?", (email,)).fetchone()
         if paid or not (_u and _u["billing_period_end"]):
-            conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, ('pro' if paid else 'starter'), email))
+            if _ops:
+                conn.execute("UPDATE users SET slot_limit=?, seller_tier=? WHERE LOWER(email)=?", (cap, ('pro' if paid else 'starter'), email))
+            else:   # AUD-020: a session caller moves the cap only; the tier has one writer (_sync_agency_member_tiers)
+                conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?", (cap, email))
         conn.commit()
     finally:
         conn.close()
@@ -24394,7 +24635,30 @@ def _require_tuppence(email: str, amount: int = 1) -> None:
 
 # ── AI1 — Listing Rewrite ─────────────────────────────────────────────────────
 
+def _plain_deep(o):
+    """AUD-029 (4 Oct 2026 audit): plain text all the way down -- every string value in an AI answer (verdicts,
+    context, rewrites, audit steps, drafts, web-comps site names) loses any markup, because the model can be told by
+    a seller's own advert text to write an <img onerror=...> and the app paints these answers into the page."""
+    if isinstance(o, str):
+        return _plain_text(o)
+    if isinstance(o, dict):
+        return {k: _plain_deep(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_plain_deep(v) for v in o]
+    return o
+
+
+def _ai_plain_out(fn):
+    import functools as _ft
+
+    @_ft.wraps(fn)
+    async def _w(*a, **k):
+        return _plain_deep(await fn(*a, **k))
+    return _w
+
+
 @app.post("/listings/{listing_id}/ai-rewrite")
+@_ai_plain_out   # AUD-029: every model-written string leaves as plain text
 async def ai_listing_rewrite(listing_id: int, email: str, ts_user: str = Cookie(default=None)):
     """AI1: Seller pays 1T — Claude Haiku rewrites title + description.
     Uses current market language and buyer psychology for the listing category.
@@ -24484,6 +24748,7 @@ async def ai_listing_rewrite(listing_id: int, email: str, ts_user: str = Cookie(
 # ── AI2 — Seller Audit ────────────────────────────────────────────────────────
 
 @app.post("/listings/{listing_id}/ai-audit")
+@_ai_plain_out   # AUD-029: every model-written string leaves as plain text
 async def ai_seller_audit(listing_id: int, email: str, ts_user: str = Cookie(default=None)):
     """AI2: Seller pays 1T — Claude Haiku reviews listing quality and returns
     3 specific, actionable improvement steps.
@@ -25185,6 +25450,7 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
 
 
 @app.post("/listings/{listing_id}/price-check")
+@_ai_plain_out   # AUD-029: every model-written string leaves as plain text
 async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None,
                          ts_user: str = Cookie(default=None)):
     """AI3: Buyer pays 1T — honest, three-panel price intelligence.
@@ -25505,6 +25771,7 @@ async def _yield_fill_missing(need, tier, country, city, suburb, listing, listin
 
 
 @app.post("/listings/{listing_id}/yield-calc")
+@_ai_plain_out   # AUD-029: every model-written string leaves as plain text
 async def ai_yield_calc(listing_id: int, email: str,
                         ts_user: str = Cookie(default=None),
                         rent: float | None = None,
@@ -25747,6 +26014,7 @@ class BatchCardRequest(BaseModel):
 
 
 @app.post("/listings/batch-cards")
+@_ai_plain_out   # AUD-029: every model-written string leaves as plain text
 async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(default=None)):
     """AI5: Seller pays 2T — Claude Sonnet Vision analyses up to 10 card photos and
     returns an array of draft listing JSONs ready for review and publish.
@@ -25759,7 +26027,8 @@ async def ai_batch_card_listings(req: BatchCardRequest, ts_user: str = Cookie(de
 
     if not req.images:
         raise HTTPException(status_code=400, detail="At least one image is required")
-    _bind_charged_email(req.seller_email, ts_user, "ai5-batch-cards")   # ACCOUNT-BIND-1
+    req.seller_email = (_bind_charged_email(req.seller_email, ts_user, "ai5-batch-cards")   # ACCOUNT-BIND-1
+                        or (req.seller_email or "").strip().lower())   # AUD-019: canonical address
     _check_cost_ceiling(req.seller_email)   # P2 — hard daily rail, BEFORE the Tuppence charge
 
     # Cap at 10 cards
@@ -26353,7 +26622,7 @@ def _ref_footer(ref: str, is_report: bool) -> str:
 async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str = "",
                           body_in: str = "", message_id: str = None,
                           ref_override: str = None, source: str = "email",
-                          has_attachments: bool = False):
+                          has_attachments: bool = False, proven_sender: bool = True):
     """Classify one customer message, store it, and answer it if that is safe.
 
     ref_override lets a caller that ALREADY has a reference (the support form's TS-nnnn)
@@ -26415,6 +26684,10 @@ async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str 
     # answer. So attachment mail is never auto-answered: it is marked and held for
     # /admin/email-triage, which is the escalation path RUL-069 names. The sender still
     # gets the plain acknowledgement, so nobody is left in silence.
+    # AUD-030 (4 Oct 2026 audit): an address nobody has proven (the anonymous support form) never gets an AI answer;
+    # the draft is stored for /admin/email-triage and the person gets the fixed acknowledgement only.
+    if not proven_sender:
+        can_auto = False
     if has_attachments:
         can_auto = False
         body = ("[THIS MESSAGE ARRIVED WITH ONE OR MORE ATTACHMENTS. The triage pipeline "
@@ -26861,14 +27134,18 @@ def _support_subject(ref: str, title: str) -> str:
     return "[%s] %s" % (ref, t or "your message")
 
 
-async def _support_followup(ref: str, email: str, title: str, message: str):
+async def _support_followup(ref: str, email: str, title: str, message: str, proven: bool = False):
     """Run one support-form message through the customer AI lane, and make sure the
-    person is answered exactly once (ONE-REPLY-1) even if that lane cannot run."""
+    person is answered exactly once (ONE-REPLY-1) even if that lane cannot run.
+    AUD-030 (4 Oct 2026 audit): to an address that is not the signed-in person's own, TrustSquare Support sends ONLY
+    the fixed acknowledgement -- no subject line or AI body written from the sender's text (that made our mailbox
+    deliver a stranger's 'your payout is on hold - confirm at ...' to any address typed in)."""
     handled = None
     try:
         handled = await _triage_message(
-            email, "support@trustsquare.co", _support_subject(ref, title), message,
-            ref_override=ref, source="support-form")
+            email, "support@trustsquare.co",
+            _support_subject(ref, title) if proven else ("TrustSquare " + ref + " - we have your message"),
+            message, ref_override=ref, source="support-form", proven_sender=proven)
     except Exception as exc:
         _log.error("support triage failed for %s: %s", ref, exc)
 
@@ -26909,6 +27186,7 @@ async def support_message(
     topic: str = Form(""),
     page_url: str = Form(""),
     website: str = Form(""),        # HONEYPOT: humans never see it, bots fill it in
+    ts_user: str = Cookie(default=None),
 ):
     """A visitor writes to us from /support. Anonymous, always open.
 
@@ -26948,10 +27226,12 @@ async def support_message(
         # SEC-GATE-1 (24 Sep 2026): per-recipient hourly cap on the AI triage + ack mail, so the
         # anonymous form cannot be used to mail-bomb an address; the message itself is still stored.
         _since_s = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(sep=" ", timespec="seconds")[:19]
-        _prior_s = conn.execute(
-            "SELECT COUNT(*) AS n FROM app_faults WHERE reporter_email = ? AND source = 'support-form' "
-            "AND filed_at >= ?", (email, _since_s)).fetchone()
-        _over_cap = (_prior_s["n"] or 0) >= _SUPPORT_MAX_ACK_PER_EMAIL
+        # AUD-030: the cap counts the MAILBOX, not the spelling -- victim+1@ / v.i.c.t.i.m@ are one recipient.
+        _box = _support_mailbox(email)
+        _prior_n = sum(1 for _r in conn.execute(
+            "SELECT reporter_email FROM app_faults WHERE source = 'support-form' AND filed_at >= ? LIMIT 2000",
+            (_since_s,)).fetchall() if _support_mailbox(_r["reporter_email"]) == _box)
+        _over_cap = _prior_n >= _SUPPORT_MAX_ACK_PER_EMAIL or not _support_ip_rcpt_ok(ip, _box)
         cur = conn.execute(
             "INSERT INTO app_faults (ref, bin, reporter_email, reporter_name, source, severity, "
             " title, detail, page_url, app_version, user_agent, viewport, console_tail, "
@@ -26987,8 +27267,40 @@ async def support_message(
         # SEC-GATE-1 (24 Sep 2026): stored for the triage board, but no further AI call or mail this hour.
         _log.warning("support-form per-recipient cap hit for %s (%s stored, not auto-answered)", email, ref)
         return {"ok": True, "ref": ref, "queued": False}
-    background_tasks.add_task(_support_followup, ref, email, title, message)
+    _proven = bool(_session_email(ts_user) and _session_email(ts_user) == email)   # AUD-030
+    background_tasks.add_task(_support_followup, ref, email, title, message, _proven)
     return {"ok": True, "ref": ref, "queued": True}
+
+
+def _support_mailbox(addr) -> str:
+    """AUD-030: one mailbox, however it is spelled -- '+tag' dropped, dots in the local part dropped, lower case."""
+    a = str(addr or "").strip().lower()
+    if "@" not in a:
+        return a
+    local, dom = a.rsplit("@", 1)
+    return local.split("+", 1)[0].replace(".", "") + "@" + dom
+
+
+_SUPPORT_IP_RCPT = {}
+_SUPPORT_IP_RCPT_DAILY = 3
+
+
+def _support_ip_rcpt_ok(ip, box) -> bool:
+    """AUD-030: one IP may have TrustSquare write to at most 3 different mailboxes a day from the support form
+    (the message is still stored; only the mail is withheld). Per worker process -- a brake, not a ledger."""
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    rec = _SUPPORT_IP_RCPT.get(ip)
+    if not rec or rec[0] != day:
+        rec = (day, set())
+        _SUPPORT_IP_RCPT[ip] = rec
+        if len(_SUPPORT_IP_RCPT) > 5000:
+            _SUPPORT_IP_RCPT.clear(); _SUPPORT_IP_RCPT[ip] = rec
+    if box in rec[1]:
+        return True
+    if len(rec[1]) >= _SUPPORT_IP_RCPT_DAILY:
+        return False
+    rec[1].add(box)
+    return True
 
 
 @app.get("/app/faults/mine")
@@ -28667,6 +28979,21 @@ def _lifecycle_sweep(dry_run: bool = False, email_cap: int = None) -> dict:
                       "the next " + str(RESP_REMOVE_AT_H - RESP_PENALTY_AT_H) +
                       " hours or the introduction is removed.", "Respond now"))
 
+        # ── AUD-017: a pending request whose listing no longer exists (deleted before this fix) is closed and its
+        # hold returned on the next sweep -- the joins below can never reach it.
+        _orph = conn.execute(
+            """SELECT ir.id FROM intro_requests ir LEFT JOIN listings l ON l.id = ir.listing_id
+               WHERE l.id IS NULL AND COALESCE(LOWER(TRIM(ir.status)), 'pending') = 'pending'""").fetchall()
+        res["orphan_intros_closed"] = 0
+        for ir in _orph:
+            if not dry_run:
+                _oup = conn.execute("UPDATE intro_requests SET status='expired' WHERE id=? "
+                                    "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'", (ir["id"],))
+                if _oup.rowcount != 1:
+                    continue
+                _release_intro_hold(conn, ir["id"], "listing removed")
+            res["orphan_intros_closed"] += 1
+
         # ── RESP-1: remove at 96h, inform both parties ──
         gone = conn.execute(
             """SELECT ir.id, ir.listing_id, ir.buyer_email, ir.created_at,
@@ -30178,7 +30505,12 @@ def save_my_profile(req: _ProfileIn, _key: str = Depends(auth.require_api_key),
                 if k in fields:
                     cur[k] = _plain_text(str(fields[k]))[:(160 if k != "about" else 1500)]
             if "tags" in fields:
-                cur["tags"] = [_plain_text(str(t))[:40] for t in (fields["tags"] or [])][:20]
+                # AUD-025 (4 Oct 2026 audit): tags are public on /sellers/summary -- contact-scrubbed like the headline,
+                # and a tag that was only a phone number or address is dropped.
+                cur["tags"] = [t for t in (_anon_regex_clean(_plain_text(str(t))[:40])[0].strip()
+                                           for t in (fields["tags"] or [])) if t][:20]
+            if cur.get("region"):
+                cur["region"] = _anon_regex_clean(cur["region"])[0]
             cur["headline"], cur["about"], _h = _private_text_scrub(cur.get("headline", ""), cur.get("about", ""), me, "profile")
             conn.execute("UPDATE users SET profile_json=? WHERE email=?", (_pj.dumps(cur), me))
         conn.commit()
@@ -30315,7 +30647,9 @@ _SCHOOL_RX = re.compile(r"\b[A-Z][\w'&-]*(?:\s+[A-Z][\w'&-]*)*\s+(School|College
 def _squire_minimise(text: str, is_minor: bool) -> str:
     """POPIA (boundary 6): a brief about a child carries the NEED, never the child. Names,
     schools and addresses come out; the grade and the gap stay."""
-    t = text or ""
+    # AUD-026 (4 Oct 2026 audit): every Squire text that crosses between buyer and seller passes through here, so
+    # here is where contact details come out -- a phone number, email or address is the introduction bypassed.
+    t = _anon_regex_clean(_plain_text(text or ""))[0] if (text or "") else ""
     if not is_minor:
         return t
     t = re.sub(r"\b(my|our)\s+\d{1,2}[- ]?year[- ]?old(\s+(son|daughter|child|kid|boy|girl))?\b", "a learner", t, flags=re.I)
@@ -30469,7 +30803,7 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
         questions = _FORGOT_QUESTIONS.get(cat_norm, ["When do you need it by?", "What is your budget?"])
         now = _squire_now()
         cur = conn.execute("INSERT INTO squire_briefs (email, category, city, need_text, path, brief_text, questions, answers, is_minor, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                           (em, cat_norm, city, _squire_minimise(need, bool(is_minor)) if is_minor else need, path, brief_text,
+                           (em, cat_norm, city, _squire_minimise(need, bool(is_minor)), path, brief_text,   # AUD-026: always scrubbed
                             json.dumps(questions), "{}", is_minor, "active", now, now))
         bid = cur.lastrowid
         b = dict(conn.execute("SELECT * FROM squire_briefs WHERE id=?", (bid,)).fetchone())
@@ -31150,7 +31484,7 @@ def squire_approach_answer(approach_id: int, body: _SquireAnswerIn, ts_user: str
         if not a or (a["seller_email"] or "").lower() != em:
             raise HTTPException(status_code=404, detail="not yours")
         conn.execute("UPDATE squire_approaches SET answer=?, status='answered', answered_at=? WHERE id=?",
-                     ((body.answer or "").strip()[:1200], _squire_now(), approach_id))
+                     (_squire_minimise((body.answer or "").strip(), False)[:1200], _squire_now(), approach_id))   # AUD-026
         conn.commit()
         try:
             _push_to_seller(conn, a["email"], "A seller answered your brief", "Open Squire to read the answer -- then request an introduction if it fits.")

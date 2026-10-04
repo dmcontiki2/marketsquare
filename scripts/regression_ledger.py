@@ -35300,6 +35300,217 @@ def rg_find_honour():
     return [(INFO, "every Find step of all eight doors is declared and tested; live /quick/ carries FIND-HONOUR-1")]
 
 
+def _aud_b2_check(needs, forbids):
+    """AUDIT-4OCT Batch 2: each entry names the guard text that must stay in the file and the old text that may not return."""
+    for f, snip, why in needs:
+        h = repo_file(f)
+        if h is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        if snip not in h:
+            return [(FAIL, f + ": " + why)]
+    for snip in forbids:
+        for f in ("bea_main.py", "ms.js", "launch_redemption.py", "account_closure.py"):
+            h = repo_file(f) or ""
+            if snip in h:
+                return [(FAIL, f + " carries the old faulty text again: " + snip[:80])]
+    return None
+
+
+@entry('RG-0818', 'AUD-015 (4 Oct 2026 audit, High Money): retained Tuppence is restored once however many sign-ins race -- the closure row is CLAIMED before the credit is written',
+       OPEN, fixed_on="2026-10-04",
+       scope='account_closure.py restore_on_return',
+       ref="AUDIT_2026-10-04_findings.json AUD-015; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud015_b2():
+    _bad = _aud_b2_check([('account_closure.py', 'WHERE id=? AND restored_at IS NULL', 'the restore no longer claims the closure row before crediting')], [])
+    return _bad or [(INFO, 'retained Tuppence is restored once however many sign-ins race -- the closure row is CLAIMED before the credit is written')]
+
+@entry('RG-0819', 'AUD-016 (4 Oct 2026 audit, High Money): a Starter or Pro plan returns to Free (or the agency seat) when its paid 30 days are over and it was not paid again; superusers untouched (RUL-201)',
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py _apply_pending_downgrades (lapse pass) -- RUL-201(a)',
+       ref="AUDIT_2026-10-04_findings.json AUD-016; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud016_b2():
+    _bad = _aud_b2_check([('bea_main.py', 'AUD-016: paid period over, plan lapsed', 'the lapse pass is gone -- one payment keeps a paid plan for ever again')], [])
+    return _bad or [(INFO, 'a Starter or Pro plan returns to Free (or the agency seat) when its paid 30 days are over and it was not paid again; sup')]
+
+@entry('RG-0820', 'AUD-017 (4 Oct 2026 audit, High Money): removing an advert closes its pending introductions and returns every held Tuppence; requests orphaned before the fix are closed by the next sweep',
+       OPEN, fixed_on="2026-10-04",
+       scope="bea_main.py _close_intros_for_removed_listing (both delete routes) + the lifecycle sweep's orphan pass",
+       ref="AUDIT_2026-10-04_findings.json AUD-017; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud017_b2():
+    _bad = _aud_b2_check([('bea_main.py', '_closed = _close_intros_for_removed_listing(conn, listing_id, "listing removed by seller")', 'the seller delete orphans its requests again'), ('bea_main.py', '_closed = _close_intros_for_removed_listing(conn, listing_id, "listing removed")', 'the admin delete orphans its requests again'), ('bea_main.py', "WHERE l.id IS NULL AND COALESCE(LOWER(TRIM(ir.status)), 'pending') = 'pending'", 'the sweep no longer reaches orphaned requests')], [])
+    return _bad or [(INFO, 'removing an advert closes its pending introductions and returns every held Tuppence; requests orphaned before the fix ar')]
+
+@entry('RG-0821', "AUD-018 (4 Oct 2026 audit, High Money): a returning member's retained Tuppence comes back at sign-in; POST /users keeps the sell flow's name and grants the welcome sessions once, keyed on their own facts, not on 'the INSERT made the row'",
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py create_user + _establish_user_session',
+       ref="AUDIT_2026-10-04_findings.json AUD-018; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud018_b2():
+    _bad = _aud_b2_check([('bea_main.py', "AUD-018: a returning member's retained Tuppence comes back at sign-in", 'sign-in no longer restores retained Tuppence'), ('bea_main.py', "type='welcome_ai_sessions'", 'the welcome sessions are keyed on the INSERT again')], ['is_new = result.rowcount > 0'])
+    return _bad or [(INFO, "a returning member's retained Tuppence comes back at sign-in; POST /users keeps the sell flow's name and grants the welc")]
+
+@entry('RG-0822', "AUD-019 (4 Oct 2026 audit, High Money): a capitalised typed address is rewritten to the session's exact address before any handler reads the wallet -- 'Thandi@Gmail.com' no longer gets 402 over a funded wallet",
+       OPEN, fixed_on="2026-10-04",
+       scope='security_gate.py bind (path/query/json/form) + bea_main.py create_intro / batch-cards',
+       ref="AUDIT_2026-10-04_findings.json AUD-019; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud019_b2():
+    _bad = _aud_b2_check([('security_gate.py', 'if name in path_params and str(path_params[name]) != session:', 'the gate compares lower-cased values again (path)'), ('security_gate.py', 'if cur not in (None, "") and str(cur) != session:', 'the gate compares lower-cased values again (json)'), ('bea_main.py', 'intro.buyer_email = (_bind_charged_email(intro.buyer_email, ts_user, "create-intro")', 'create_intro throws the canonical address away again')], [])
+    return _bad or [(INFO, "a capitalised typed address is rewritten to the session's exact address before any handler reads the wallet -- 'Thandi@G")]
+
+@entry('RG-0823', "AUD-021 (4 Oct 2026 audit, High Money): the monthly reset sweeps only the unused part of last month's grant -- bought and earned Tuppence is never swept (RUL-201)",
+       OPEN, fixed_on="2026-10-04",
+       scope='launch_redemption.py grant_monthly_tuppence -- RUL-201(b), PRICING_CANON s5',
+       ref="AUDIT_2026-10-04_findings.json AUD-021; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud021_b2():
+    _bad = _aud_b2_check([('launch_redemption.py', '_unspent = max(0, _prev_grant - _spent)', 'the reset no longer subtracts what she spent')], ['_sweep = min(_balance, _prev_grant)'])
+    return _bad or [(INFO, "the monthly reset sweeps only the unused part of last month's grant -- bought and earned Tuppence is never swept (RUL-20")]
+
+@entry('RG-0824', "AUD-020 (4 Oct 2026 audit, High Money): an agency admin's session can neither grant a Pro seat nor write an oversized or negative cap or a tier; seat_paid is the ops (admin key) lever only (RUL-048)",
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py update_agent_cap -- enforces RUL-048',
+       ref="AUDIT_2026-10-04_findings.json AUD-020; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud020_b2():
+    _bad = _aud_b2_check([('bea_main.py', "A Pro seat is the agent's own subscription - the console cannot grant one.", 'a session caller can set seat_paid again'), ('bea_main.py', 'cap = max(1, min(int(cap or 10), 20 if paid else 10))', 'the cap is written unclamped again')], [])
+    return _bad or [(INFO, "an agency admin's session can neither grant a Pro seat nor write an oversized or negative cap or a tier; seat_paid is th")]
+
+@entry('RG-0825', 'AUD-022 (4 Oct 2026 audit, High Money): the Paystack webhook check falls back to the secret key when PAYSTACK_WEBHOOK_SECRET is unset and compares bytes -- an unset variable can never silently refuse every webhook',
+       OPEN, fixed_on="2026-10-04",
+       scope='payments.py verify_webhook_signature (hardening; NOT A BUG in production)',
+       ref="AUDIT_2026-10-04_findings.json AUD-022; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud022_b2():
+    _bad = _aud_b2_check([('payments.py', 'os.getenv("PAYSTACK_WEBHOOK_SECRET", "") or os.getenv("PAYSTACK_SECRET_KEY", "") or PAYSTACK_SECRET_KEY', 'the webhook check depends on the hand-set variable alone again')], [])
+    return _bad or [(INFO, 'the Paystack webhook check falls back to the secret key when PAYSTACK_WEBHOOK_SECRET is unset and compares bytes -- an u')]
+
+@entry('RG-0826', "AUD-023 (4 Oct 2026 audit, High Privacy): Zoom never offers a seller's private street: no street level for Property or Services, and private columns never reach the engine",
+       OPEN, fixed_on="2026-10-04",
+       scope='zoom_engine.py GEO_LEVELS + bea_main.py _zoom_candidates (every Zoom/Squire caller)',
+       ref="AUDIT_2026-10-04_findings.json AUD-023; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud023_b2():
+    _bad = _aud_b2_check([('zoom_engine.py', '"Property":     ["city", "suburb"],', 'Property has a street level again'), ('bea_main.py', 'rows, locked = _zoom_candidates_raw(conn, cat_norm, city, demo, tier, viewer)', 'Zoom reads candidates around the private-column scrub again')], [])
+    return _bad or [(INFO, "Zoom never offers a seller's private street: no street level for Property or Services, and private columns never reach t")]
+
+@entry('RG-0827', "AUD-024 (4 Oct 2026 audit, High Privacy): before she accepts, a seller sees the buyer's first name and a message with no contact details; contact details are never stored on a request",
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py _intro_for_viewer + create_intro + Local Market intro + n8n payloads',
+       ref="AUDIT_2026-10-04_findings.json AUD-024; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud024_b2():
+    _bad = _aud_b2_check([('bea_main.py', 'd["buyer_name"] = _first_name_only(d.get("buyer_name"))', 'the pending read carries the full name again'), ('bea_main.py', 'intro.message = _anon_regex_clean(intro.message)[0]', "a request's message is stored with contact details again")], [])
+    return _bad or [(INFO, "before she accepts, a seller sees the buyer's first name and a message with no contact details; contact details are neve")]
+
+@entry('RG-0828', "AUD-025 (4 Oct 2026 audit, High Privacy): seller profile tags are contact-scrubbed when saved and when read -- a 'WhatsApp 082 ...' tag never reaches a stranger",
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py profile save (tags, region) + /sellers/summary read',
+       ref="AUDIT_2026-10-04_findings.json AUD-025; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud025_b2():
+    _bad = _aud_b2_check([('bea_main.py', 'cur["tags"] = [t for t in (_anon_regex_clean(_plain_text(str(t))[:40])[0].strip()', 'tags are stored unscrubbed again'), ('bea_main.py', 'AUD-025 (4 Oct 2026 audit): profiles saved before the tag scrub are cleaned on the way out too.', 'old profiles reach buyers unscrubbed again')], [])
+    return _bad or [(INFO, "seller profile tags are contact-scrubbed when saved and when read -- a 'WhatsApp 082 ...' tag never reaches a stranger")]
+
+@entry('RG-0829', 'AUD-026 (4 Oct 2026 audit, High Privacy): Squire text crossing between buyer and seller loses phone numbers, emails and addresses before it is stored',
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py _squire_minimise (approach text, brief answers, need text, seller answer)',
+       ref="AUDIT_2026-10-04_findings.json AUD-026; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud026_b2():
+    _bad = _aud_b2_check([('bea_main.py', 't = _anon_regex_clean(_plain_text(text or ""))[0] if (text or "") else ""', 'Squire text is stored with contact details again'), ('bea_main.py', '(_squire_minimise((body.answer or "").strip(), False)[:1200], _squire_now(), approach_id))   # AUD-026', "the seller's Squire answer is stored raw again")], [])
+    return _bad or [(INFO, 'Squire text crossing between buyer and seller loses phone numbers, emails and addresses before it is stored')]
+
+@entry('RG-0830', "AUD-027 (4 Oct 2026 audit, High Security): a photo address is https or a plain /media/<name>; the migration copies only real pictures inside /media -- '/media/../.env' can no longer publish the server's secrets",
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py _safe_client_photo_url (Listing / ListingUpdate / LMListingIn) + _media_file_or_none (migrate-photos) + withdraw delete',
+       ref="AUDIT_2026-10-04_findings.json AUD-027; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud027_b2():
+    _bad = _aud_b2_check([('bea_main.py', 'thumb_local = _media_file_or_none(thumb_path)', 'migrate-photos opens any path a listing names again'), ('bea_main.py', 'class Listing(_PhotoSafe, BaseModel):', 'POST /listings stores a client photo path unchecked again')], ['thumb_local = f"/var/www/marketsquare{thumb_path}"'])
+    return _bad or [(INFO, "a photo address is https or a plain /media/<name>; the migration copies only real pictures inside /media -- '/media/../.")]
+
+@entry('RG-0831', 'AUD-028 (4 Oct 2026 audit, High Security): an upload cannot self-award a verification result (id_ai_verified, *_name_verified), a tx_* count, a claim-only title or a no-evidence signal -- the stranger gate opens only on a real check',
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py _client_may_name_signal (document upload)',
+       ref="AUDIT_2026-10-04_findings.json AUD-028; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud028_b2():
+    _bad = _aud_b2_check([('bea_main.py', 'if signal_id and not _client_may_name_signal(str(signal_id)):', 'uploads accept any category.* signal again')], [])
+    return _bad or [(INFO, 'an upload cannot self-award a verification result (id_ai_verified, *_name_verified), a tx_* count, a claim-only title or')]
+
+@entry('RG-0832', "AUD-029 (4 Oct 2026 audit, High Security): every model-written string leaves the server as plain text and is painted escaped -- a seller's advert cannot make the AI answer run script for the buyer",
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py _ai_plain_out on the five AI routes + ms.js tvsCard / price / yield / rewrite / audit renders',
+       ref="AUDIT_2026-10-04_findings.json AUD-029; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud029_b2():
+    _bad = _aud_b2_check([('bea_main.py', '@app.post("/listings/{listing_id}/price-check")\n@_ai_plain_out', 'the price check returns raw model text again'), ('ms.js', '${esc(data.sa_context || data.context)}', 'the price card paints model text raw again')], [])
+    return _bad or [(INFO, "every model-written string leaves the server as plain text and is painted escaped -- a seller's advert cannot make the A")]
+
+@entry('RG-0833', 'AUD-030 (4 Oct 2026 audit, High Security): to an address nobody proved, Support sends only the fixed acknowledgement (no sender-written subject, no AI body); the hourly cap counts the mailbox, and one IP reaches at most 3 mailboxes a day',
+       OPEN, fixed_on="2026-10-04",
+       scope='bea_main.py support form (_support_followup proven flag, _support_mailbox cap, _support_ip_rcpt_ok)',
+       ref="AUDIT_2026-10-04_findings.json AUD-030; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud030_b2():
+    _bad = _aud_b2_check([('bea_main.py', '_support_subject(ref, title) if proven else ("TrustSquare " + ref + " - we have your message")', 'the support form mails a sender-written subject to unproven addresses again'), ('bea_main.py', 'if not proven_sender:\n        can_auto = False', 'the AI answers an unproven address again')], [])
+    return _bad or [(INFO, 'to an address nobody proved, Support sends only the fixed acknowledgement (no sender-written subject, no AI body); the h')]
+
+@entry('RG-0834', "AUD-031 (4 Oct 2026 audit, High Security): an agent's lead inbox carries plain listing text and paints it escaped; advert city/area/suburb/price are plain text at the door",
+       OPEN, fixed_on="2026-10-04",
+       scope='estate_agents.py lead inbox + bea_main.py advert short-text fields + ms.js _asLeadsLoad',
+       ref="AUDIT_2026-10-04_findings.json AUD-031; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud031_b2():
+    _bad = _aud_b2_check([('estate_agents.py', 'listing = _pt_deep({k: lrow[k] for k in lrow.keys()})', 'the lead inbox returns listing fields raw again'), ('bea_main.py', '@_field_validator("city", "area", "suburb", "price", mode="before", check_fields=False)', 'advert short-text fields accept markup again'), ('ms.js', "'+esc(l.title||'Property lead')+'", 'the lead inbox paints listing text raw again')], [])
+    return _bad or [(INFO, "an agent's lead inbox carries plain listing text and paints it escaped; advert city/area/suburb/price are plain text at ")]
+
+@entry('RG-0835', "AUD-050 (4 Oct 2026 audit, High Privacy): the description mask catches every phone shape ('082 123 4567', '+27 82 ...', '(012) 345-6789', foreign numbers) in text only -- PROBED 4 Oct: 0 of 164 live adverts hold a phone or email, so no backfill was needed",
+       OPEN, fixed_on="2026-10-04",
+       scope='ms.js maskContactInfo',
+       ref="AUDIT_2026-10-04_findings.json AUD-050; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud050_b2():
+    _bad = _aud_b2_check([('ms.js', 'const phoneRe = /(?:\\+\\d{1,3}[\\s().\\-]{0,2}|\\b0(?=[\\s().\\-]{0,2}[1-9]))(?:[\\s().\\-]{0,2}\\d){8,13}/g;', 'the phone mask is the narrow SA-only pattern again')], ['const phoneRe = /(\\+27|0)[0-9][\\s\\-\\.]?[0-9]{3}[\\s\\-\\.]?[0-9]{4}/g;'])
+    return _bad or [(INFO, "the description mask catches every phone shape ('082 123 4567', '+27 82 ...', '(012) 345-6789', foreign numbers) in text")]
+
+@entry('RG-0836', 'AUD-051 (4 Oct 2026 audit, High Security): the agency console paints agent names, emails and org fields escaped and its buttons carry the address as data, never as script',
+       OPEN, fixed_on="2026-10-04",
+       scope='ms.js agency console (_agRowFn, header, create form) + delegated data-ag-act listener; invite/bulk strict email',
+       ref="AUDIT_2026-10-04_findings.json AUD-051; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud051_b2():
+    _bad = _aud_b2_check([('ms.js', 'data-ag-act="remove" data-email="\'+_lmEsc(m.email)+\'"', 'the Remove button builds script from the email again')], ['onclick="agencyRemove(\\\'\'+m.email+\'\\\')"'])
+    return _bad or [(INFO, 'the agency console paints agent names, emails and org fields escaped and its buttons carry the address as data, never as')]
+
+@entry('RG-0837', 'AUD-052 (4 Oct 2026 audit, High Security): Zoom buttons read their values from data-* attributes -- an apostrophe or a crafted value can no longer break out of a script string',
+       OPEN, fixed_on="2026-10-04",
+       scope='ms.js Zoom option / drop / locked buttons',
+       ref="AUDIT_2026-10-04_findings.json AUD-052; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud052_b2():
+    _bad = _aud_b2_check([('ms.js', 'onclick="zoomPick(this.dataset.facet,this.dataset.v)"', 'Zoom builds script from values again')], ["zoomPick('${_zoomEsc(q.facet)}'"])
+    return _bad or [(INFO, 'Zoom buttons read their values from data-* attributes -- an apostrophe or a crafted value can no longer break out of a s')]
+
+@entry('RG-0838', "AUD-053 (4 Oct 2026 audit, High Security): an invite link's city, suburb, name, email, category and source are checked at the URL door, and every 'near <city>' line is painted escaped",
+       OPEN, fixed_on="2026-10-04",
+       scope="ms.js magic-link reader (_mlPlace/_mlName/_mlMail/_mlWord) + the five 'near <city>' paints",
+       ref="AUDIT_2026-10-04_findings.json AUD-053; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud053_b2():
+    _bad = _aud_b2_check([('ms.js', "area:   _mlPlace(decodeURIComponent(sp.get('city')  || '')) || activeCity.name || '',", "the invite link's city is taken unchecked again"), ('ms.js', "s near '+esc(sfState.area||sfState.city)+'", 'the agents step paints the city raw again')], [])
+    return _bad or [(INFO, "an invite link's city, suburb, name, email, category and source are checked at the URL door, and every 'near <city>' lin")]
+
+@entry('RG-0839', "AUD-054 (4 Oct 2026 audit, High Security): an agent's suburbs, city and experience are plain text when saved and when served, and painted escaped on every agent card",
+       OPEN, fixed_on="2026-10-04",
+       scope='ms.js _agentSafe (sfAgentCardHtml, advAgentCard) + estate_agents.py _upsert_profile / agents_nearby',
+       ref="AUDIT_2026-10-04_findings.json AUD-054; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840).")
+def rg_aud054_b2():
+    _bad = _aud_b2_check([('ms.js', 'function sfAgentCardHtml(a,top){\n  a=_agentSafe(a);', 'the seller agent card paints the profile raw again'), ('estate_agents.py', 'for _f in ("headline", "bio", "city", "suburbs", "specialties", "languages"):', 'agent profile text is stored with markup again')], [])
+    return _bad or [(INFO, "an agent's suburbs, city and experience are plain text when saved and when served, and painted escaped on every agent ca")]
+
+@entry("RG-0840", "AUDIT-4OCT Batch 2 EXECUTED: every money, privacy and security fix of Batch 2 holds against the real bea_main.py on a throwaway database (scripts/prove_audit_b2.py)",
+       OPEN, fixed_on="2026-10-04",
+       scope="scripts/prove_audit_b2.py imports bea_main with a temp SQLite file and exercises AUD-015..031 (restore once, lapse, orphan intros, canonical wallet, seat refusal, unspent-only sweep, webhook fallback, Zoom scrub, first-name read, Squire scrub, photo paths, signal refusal, AI plain text, support mailbox caps, agent text). ~8 s; needs fastapi, boto3, PyJWT, pillow (missing = NOT EVALUATED).",
+       ref="AUDIT-4OCT Batch 2, 4 Oct 2026.")
+def rg_aud_b2_executed():
+    ok, blind, det = _harness([sys.executable, os.path.join(REPO, "scripts", "prove_audit_b2.py")], timeout=120, cwd=REPO)
+    if blind:
+        return [(INFO, det)]
+    if not ok:
+        return [(FAIL, "prove_audit_b2.py fails: " + str(det)[-240:])]
+    live = _get("/static/ms.js")
+    if "function _agentSafe(a)" not in live or "zoomPick(this.dataset.facet,this.dataset.v)" not in live:
+        return [(FAIL, "the live ms.js does not carry the Batch 2 escapes yet (not deployed yet?)")]
+    z = _get("/zoom/next?category=Property&city=Pretoria") + _get("/zoom/next?category=Services&city=Pretoria")
+    if "geo_street" in z:
+        return [(FAIL, "live Zoom still offers a street level")]
+    return [(INFO, "Batch 2 proof passes; live ms.js carries the escapes; live Zoom offers no street")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
