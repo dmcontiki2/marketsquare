@@ -25,5 +25,203 @@
   "note": "Reproduced on the old file (the injected handler ran 1-6 times per link, no tap). Every answer Quick paints is now escaped, resumed answers are rebuilt from an allow-list, and only her own Google round trip restores without a tap; any other link waits on 'Carry on'.",
   "check": "Headless Chromium old vs new (scripts/smoke_harness/verify_quick_resume_xss.mjs): new = 0 runs with and without a tap. Rendered in David's Chrome on trustsquare.co/quick: nothing ran, 'Carry on' shown; after the tap the draft card showed the markup as plain text; ledger RG-0816.",
   "live_since": "2026-10-04 (a49f606)"
+ },
+ {
+  "id": "AUD-015",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed: read then credit then mark. The closure row is now claimed first; only the call that claims it writes the credit.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: two sign-ins + a direct call restore 5T once; ledger RG-0818.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-016",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "By your decision (RUL-201): a Starter or Pro plan returns to Free, or the agency seat, when its paid 30 days end without a new payment. Superusers are left alone; nothing is deleted. Nobody holds a paid plan today.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: a lapsed Pro plan is Free, a plan inside its period and a superuser untouched; ledger RG-0819; rulings check RUL-201.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-017",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Deleting an advert now closes its waiting requests and returns the held Tuppence (the buyer is emailed); the hourly sweep closes requests orphaned earlier.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; live: the sweep at 16:00 closed 3 orphaned requests and returned the one held 1T; ledger RG-0820.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-018",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed: every real caller already had a row, so restore, name and welcome sessions never ran. Restore now runs at every sign-in; the name is saved on an existing row; welcome sessions are granted once.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: restore at sign-in, name kept, sessions granted once; ledger RG-0821.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-019",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The security gate now rewrites any bound address that is not exactly the signed-in one, and the request handler keeps the canonical address.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: a request typed as 'Thandi@X.test' is stored under the signed-in address and holds 1T from her wallet; ledger RG-0822.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-020",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Enforces RUL-048: only an ops key can record a paid seat; an agency admin's cap is clamped to 10 (20 with a paid seat) and never changes the tier.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: seat refused 403, cap 100000 clamped to 10, ops key still works; ledger RG-0824.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-021",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed, and your rule applied: the monthly reset removes only the unused part of last month's free grant; bought and earned Tuppence is never removed. The monthly grant is switched off live today.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: the audit's own example now sweeps 0T (was 8T); a 7T unused grant sweeps exactly 7T; ledger RG-0823.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-022",
+  "sev": "High",
+  "status": "not a bug",
+  "raw_status": "NOT_A_BUG",
+  "note": "Does not hold in production: checked on the server (without reading the value) that the webhook secret variable holds the secret key, so webhooks are accepted. Hardened anyway: falls back to the secret key, compares bytes, wording corrected.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: a signed webhook passes with only the secret key; ledger RG-0825.",
+  "live_since": "2026-10-04 (6c57385) (hardening)"
+ },
+ {
+  "id": "AUD-023",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Zoom has no street level for Property or Services, and private columns (street address, exact location, seller email) never reach it.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; live Zoom for Property and Services offers no street; ledger RG-0826.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-024",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Before she accepts, the seller sees a first name and a message without phone numbers or emails; messages are cleaned before they are stored.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; ledger RG-0827.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-025",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Profile tags and region are cleaned of contact details when saved, and headline, about and tags again when shown publicly.",
+  "check": "Source checks; ledger RG-0828.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-026",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Every Squire text between buyer and seller loses phone numbers, emails and addresses before it is stored.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; ledger RG-0829.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-027",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Photo addresses must be https or a plain /media/ name; the photo move copies only real pictures inside the media folder; taking an advert down never deletes a picture another advert uses.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database: '..' paths dropped by the advert form and refused by the photo move; ledger RG-0830.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-028",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. An upload can no longer name a check result (ID checked, name matched), a sales count, a claim-only title or a no-evidence signal.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; ledger RG-0831.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-029",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. All five AI answers leave the server as plain text, and the app paints them escaped.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; rendered in your Chrome: the price card painted a planted script as text, nothing ran; ledger RG-0832.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-030",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. To an address nobody proved, Support sends only a fixed 'we have your message' note; the hourly limit counts the mailbox however it is spelled; one IP reaches at most 3 mailboxes a day.",
+  "check": "scripts/prove_audit_b2.py on a throwaway database; ledger RG-0833.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-031",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The agent's lead inbox returns plain listing text and paints it escaped; advert city, area, suburb and price are plain text when saved.",
+  "check": "estate_agents tests 56/56; scripts/prove_audit_b2.py on a throwaway database; ledger RG-0834.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-050",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The description mask now catches every phone shape, in text only. Checked live: none of the 164 adverts carries a phone or email, so no clean-up of old adverts was needed.",
+  "check": "Rendered in your Chrome: both numbers masked, the price kept; ledger RG-0835.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-051",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The agency console paints names, emails and org details escaped; its buttons carry the address as data, read by one listener.",
+  "check": "Rendered in your Chrome on the agency console: rows and buttons work, a planted address shows as text and nothing ran; ledger RG-0836.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-052",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Zoom buttons read their values from data attributes, so an apostrophe or crafted value cannot break out.",
+  "check": "Live ms.js v=923 carries the data-attribute buttons and none of the old ones; ledger RG-0837.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-053",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Invite-link values are checked when read from the address, and every 'near <city>' line is painted escaped.",
+  "check": "Live ms.js v=923: a crafted city is refused by the deployed check, a real one with an apostrophe passes; ledger RG-0838.",
+  "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-054",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Agent profile text is plain when saved and when served, and both agent cards paint from an escaped copy.",
+  "check": "Rendered in your Chrome: both agent cards painted planted scripts as text, nothing ran; ledger RG-0839.",
+  "live_since": "2026-10-04 (6c57385)"
  }
 ]
