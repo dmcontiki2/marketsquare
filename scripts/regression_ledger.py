@@ -35233,6 +35233,73 @@ def rg_aud003_quick_escape():
     return [(INFO, "Quick escapes every answer, rebuilds resumed answers, and waits for a tap on a foreign link -- live")]
 
 
+@entry("RG-0817", "FIND-HONOUR-1 (David 4 Oct 2026): Quick's Find honours EVERY answer -- a townhouse listed TO SELL in "
+       "Rietvalleirand no longer shows under 'Renting', nor under every area; Maroushka's Brooklyn flats show only under "
+       "Brooklyn, and Brooklyn is offered as an area; an empty shelf is filled with marked AI examples on the generated photos",
+       OPEN, fixed_on="2026-10-04",
+       scope="quick.html (= genie/HARNESS.html): FIND_FROM declares every Find step of all eight doors as a test, 'text' or "
+             "'ask'; qFindHonour() tests deal / prop_type / area / place / price / level / day / len / kind on the adverts "
+             "themselves (contradiction hides, silence does not); the area test is by name or within the area's reach "
+             "(city suburb list via /geo, districts in AREA_R); FIND-AREAS-LIVE-1 adds the suburbs of fitting live adverts "
+             "to the area question; qLocalExamples() fills an empty shelf; Quick stores 'For Sale' / 'For Rent'. EXECUTED "
+             "4 Oct in headless Chromium against the live API (scripts/smoke_harness/verify_quick_find_honour.mjs): the old "
+             "file failed 8 checks (468 under Renting, Menlyn and Mamelodi; the Brooklyn flat under Menlyn; no Brooklyn "
+             "option), the new file passed all.",
+       ref="David's three screenshots, 4 Oct 2026 (Townhouse - To sell under Renting; under Buying + every area; "
+           "1-bed Apartment - Brooklyn under Renting + any area)")
+def rg_find_honour():
+    import json as _j
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = re.search(r"var CATS = (\[.*?\]);?\n", q)
+    if not m:
+        return [(FAIL, "quick.html: the CATS table cannot be read")]
+    cats = _j.loads(m.group(1))
+    fm = re.search(r"var FIND_FROM=\{(.*?)\};", q, re.S)
+    if not fm:
+        return [(FAIL, "quick.html: FIND_FROM is gone -- Find answers are no longer declared")]
+    decl = {k: dict(re.findall(r"(\w+):'(\w+)'", body)) for k, body in re.findall(r"(\w+):\s*\{([^}]*)\}", fm.group(1))}
+    tm = re.search(r"var FIND_TEST=\{(.*?)\n  \};", q, re.S)
+    tests = set(re.findall(r"\n    (\w+):function\(l", tm.group(1))) if tm else set()
+    bad = []
+    for c in cats:
+        keys = [s["key"] for s in c.get("find", {}).get("steps", [])]
+        if c["key"] in ("services", "homehelp"):
+            keys += ["group", "what", "where", "when"]          # svcSteps() builds the Services find flow
+        for k in keys:
+            d = decl.get(c["key"], {}).get(k)
+            if d is None:
+                bad.append("%s/%s undeclared" % (c["key"], k))
+            elif d not in ("text", "ask") and d not in tests:
+                bad.append("%s/%s -> '%s' has no test" % (c["key"], k, d))
+        if c["key"] == "property":
+            deal = [s for s in c["find"]["steps"] if s["key"] == "deal"]
+            if not deal or [t["t"] for t in deal[0]["tiles"]][:2] != ["Buying", "Renting"]:
+                bad.append("property deal tiles are not [Buying, Renting] -- the deal test reads position 0 as sale")
+            if decl.get("property", {}).get("deal") in (None, "text", "ask") or decl.get("property", {}).get("where") in (None, "text", "ask"):
+                bad.append("property deal/where are no longer tested")
+    if bad:
+        return [(FAIL, "quick.html Find answers dropped: " + "; ".join(bad[:6]))]
+    code = re.sub(r"/\*.*?\*/", "", q, flags=re.S)
+    for sn, why in (("paint(qFindHonour(typeFilter(", "the results are no longer tested against her answers"),
+                    ("qAnchors(city)", "the area reach is no longer loaded"),
+                    ("_exAll=qLocalExamples(c, where, city)", "an empty shelf is no longer filled with marked examples"),
+                    ("flow=function(){\n    var f=_flLive();", "live suburbs are no longer offered as areas"),
+                    ("? 'For Rent' : (/sell|sale/i.test(body.listing_type) ? 'For Sale'", "Quick stores its chip wording as listing_type again")):
+        if sn not in code:
+            return [(FAIL, "quick.html: " + why)]
+    if "'&page_size='+(grp?200:20)" in code:
+        return [(FAIL, "quick.html: Find asks for 20 rows again -- answers tested on a truncated shelf")]
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html differs from quick.html")]
+    live = _get("/quick/")
+    if "function qFindHonour(list, A)" not in live:
+        return [(FAIL, "the live /quick/ does not test Find answers yet (not deployed yet?)")]
+    return [(INFO, "every Find step of all eight doors is declared and tested; live /quick/ carries FIND-HONOUR-1")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
