@@ -574,7 +574,11 @@ def _upsert_profile(conn, p: AgentProfileIn, sold_source: str = "declared"):
     head, _h = _anon(p.headline or "")
     bio, _b = _anon(p.bio or "")
     conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
-    existing = conn.execute("SELECT anon_ref FROM agent_profiles WHERE agent_email=?", (email,)).fetchone()
+    existing = conn.execute("SELECT anon_ref, vertical FROM agent_profiles WHERE agent_email=?", (email,)).fetchone()
+    if existing and p.vertical and _vert(p.vertical) != _vert(existing["vertical"]):
+        # AUD-011 (4 Oct 2026 audit): a new vertical is a new gate -- a car dealer who switches to 'institution' goes
+        # back to draft until the institution gate (child-safety clearance) is met; she republishes through the gate.
+        conn.execute("UPDATE agent_profiles SET profile_status='draft' WHERE agent_email=?", (email,))
     if existing:
         conn.execute("""UPDATE agent_profiles SET
             headline=COALESCE(NULLIF(?,''), headline), bio_anon=COALESCE(NULLIF(?,''), bio_anon),
@@ -703,6 +707,13 @@ def get_agent_profile(email: str):
                 "badges": badges, "go_live_gaps": gate}
     finally:
         conn.close()
+
+def _house_agent(email) -> bool:
+    """AUD-011: TrustSquare's own example agents (house accounts) are examples, not traders -- the live-gate re-check
+    applies to real agents only (RUL-194 keeps examples marked as examples)."""
+    e = str(email or "").strip().lower()
+    return e.endswith("@trustsquare.co") or e.endswith("@example.com")
+
 
 def _go_live_gaps(conn, prof: dict) -> list:
     gaps = []
@@ -905,6 +916,8 @@ def _rank_agents(conn, city: str, suburb: str = "", limit: int = 10, vertical: s
     rows = conn.execute(q, params).fetchall()
     out = []
     for prof in rows:
+        if not _house_agent(prof["agent_email"]) and _go_live_gaps(conn, dict(prof)):
+            continue   # AUD-011: a live profile whose gate has lapsed or been rejected is not offered (house examples exempt)
         email = prof["agent_email"]
         user = conn.execute("SELECT trust_score FROM users WHERE LOWER(email)=?", (email,)).fetchone()
         trust = int(user["trust_score"] or 0) if user else 0
@@ -989,7 +1002,7 @@ def request_agent_intro(req: AgentIntroIn):
         init_schema(conn)
         prof = conn.execute("SELECT * FROM agent_profiles WHERE anon_ref=? AND profile_status='live'",
                             (req.agent_ref,)).fetchone()
-        if not prof:
+        if not prof or (not _house_agent(prof["agent_email"]) and _go_live_gaps(conn, dict(prof))):   # AUD-011: the gate must still hold
             raise HTTPException(status_code=404, detail="Agent not found or not live")
         if prof["agent_email"] == seller:
             raise HTTPException(status_code=409, detail="You cannot request an introduction to yourself")

@@ -494,6 +494,7 @@ function _msMapBeaListing(l){
              '**Environment:** ...' into the description -- there is no column. Without this no live stay or
              experience ever carried environment_type, so every Environment filter showed 'No Adventures yet'. */
           environment_type: l.environment_type || _msDescLine(desc, ['Environment']) || null,
+          activity_type: l.activity_type || _msDescLine(desc, ['Activity type']) || null,   // AUD-037: the seller's own line
           /* ADV-LEVEL-SEASON-1 (30 Sep 2026 F13 walk): how hard a trip is and when it is best, from the advert's own lines */
           difficulty: l.difficulty || String(_msDescLine(desc, ['Fitness level', 'Difficulty level', 'Difficulty']) || '').split(' \u2014 ')[0] || null,
           season: l.season || _msDescLine(desc, ['Best season']) || null,
@@ -712,12 +713,19 @@ async function loadLiveDash() {
   // ── Step 2: Merge pending intros ────────────────────────
   try {
     const intros = await apiGet('/intros');
-    if (!intros || !intros.length) return;
-
     const _me = String(sellerEmail || '').toLowerCase();
     // BUGSWEEP-24SEP: /intros also returns requests this person made AS A BUYER.
-    const pending = intros.filter(i => i.status === 'pending' && String(i.buyer_email || '').toLowerCase() !== _me);
-    if (!pending.length) return;
+    const pending = (Array.isArray(intros) ? intros : []).filter(i => i.status === 'pending' && String(i.buyer_email || '').toLowerCase() !== _me);
+    /* AUD-035 (4 Oct 2026 audit): the hub is rebuilt from the server's answer, not only added to. A request the buyer
+       withdrew, that expired, or that was answered on another device is dropped from its card -- no live Accept is
+       left on a closed request. Only when the server answered (an array); a failed read changes nothing. */
+    if (Array.isArray(intros)) {
+      const _openIds = new Set(pending.map(i => i.id));
+      dashState.listings.forEach(function(d){
+        if (!Array.isArray(d.intros)) return;
+        d.intros = d.intros.filter(function(i){ return !(i.status === 'pending' && i.beaId && !_openIds.has(i.beaId)); });
+      });
+    }
 
     pending.forEach(intro => {
       const listing = LISTINGS.find(l => l.id === 'bea_' + intro.listing_id || l.id === intro.listing_id);
@@ -790,10 +798,11 @@ function formatZAR(value) {
   /* PRICE-PLUS-1 (30 Sep 2026, F3 plumber walk): Quick's trade prices join two amounts ('R450 / call-out + R350 / hour
      + parts'). Squeezed to its digits it read R450,350 on the advert. A price of two amounts is shown as the seller gave it. */
   if (_priceIsCompound(s)) return _lmEsc(s.trim());
-  const numStr = s.replace(/[^0-9.]/g, '');
-  if (!numStr) return null;
-  const n = parseFloat(numStr);
-  if (isNaN(n)) return null;
+  /* AUD-036 (4 Oct 2026 audit): the shown price is the FIRST amount, read by the one shared parser (PRICE-NUM-1: k/m,
+     thousands spaces, decimal comma) -- squeezing every digit together showed 'R85 000 (2019 model)' as R850,002,019
+     and 'R1.5 million' as R1.50. The rest of the text is the card's basis line (_priceBasisSuffix). */
+  const n = _msPriceNum({price: s});
+  if (!n) return null;
   const parts = n.toFixed(2).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return 'R' + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
@@ -3083,7 +3092,7 @@ function renderFilterBar(){
   }
 
   const cat = activeFilter.toLowerCase();
-  const fs = filterState[cat];
+  const fs = filterState[cat] || {};   // AUD-038: an unknown category draws an empty bar instead of throwing
 
   // Count active filters (skip empty strings, empty arrays, empty price fields)
   let activeCount = 0;
@@ -3983,6 +3992,38 @@ const ADV_ACCOM_CATS = [
   {key:'caravan_camping', icon:'🚐', name:'Caravan & camping',   desc:'Sites, glamping, rooftop tents'},
 ];
 
+/* AUD-037 (4 Oct 2026 audit): the Adventures chips filtered on a field no live advert carried, so every chip showed
+   'No Adventures yet'. One table maps what the seller actually chose (Activity type / Accommodation type, then the
+   title) onto the chip keys; demo rows that already carry a chip key keep it. */
+const _ADV_EXP_RULES = [
+  ['luxury_train',     /\b(train|rail|rovos|blue train|shongololo)\b/i],
+  ['sky_aerial',       /(balloon|helicopter|paraglid|skydiv|aerial|scenic flight|zipline|zip line)/i],
+  ['once_in_lifetime', /(dark sky|gorilla|private island|once in a lifetime|stargaz)/i],
+  ['water_coastal',    /(water|sail|dive|diving|snorkel|kayak|canoe|surf|boat|cruise|mokoro|coastal|fishing|whale)/i],
+  ['luxury_safari',    /(safari|wildlife|game drive|big ?5|birding|bush walk)/i],
+  ['arts_culture',     /(cultur|township|\barts?\b|craft|cooking|music|heritage village|rock art)/i],
+  ['guided_tours',     /(tour|guided|heritage|walking|food|wine|hik|trail|cycl|mtb|horse|farm|climb|abseil|wellness|retreat|family|photograph)/i],
+];
+const _ADV_ACC_RULES = [
+  ['caravan_camping',  /(caravan|camp ?site|camping|glamp|rooftop)/i],
+  ['bush_camp',        /(bush camp|tented|fly camp)/i],
+  ['private_lodge',    /\blodge\b/i],
+  ['mountain_retreat', /(chalet|hut|mountain|highland|cabin)/i],
+  ['coastal_island',   /(beach|island|coastal|surf)/i],
+  ['unique_stays',     /(treehouse|tree house|cave|star ?bed|dome|hostel|unique)/i],
+  ['self_catering',    /(self[- ]?catering|cottage|villa|farm stay)/i],
+  ['boutique_hotel',   /(guest ?house|b ?& ?b|bed and breakfast|hotel|inn)/i],
+];
+function _advCatKey(l, isAccom){
+  const own = String((isAccom ? l.accommodation_type : l.experience_type) || '');
+  const keys = (isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS).map(c => c.key);
+  if (keys.indexOf(own) > -1) return own;
+  const txt = [own, isAccom ? '' : (l.activity_type || ''), l.title || ''].join(' ');
+  const rules = isAccom ? _ADV_ACC_RULES : _ADV_EXP_RULES;
+  for (let i = 0; i < rules.length; i++) if (rules[i][1].test(txt)) return rules[i][0];
+  return '';
+}
+
 // Pin-3 chips per subcat (shown in header without opening sheet)
 const ADV_PINS = {
   adventures_experiences:   ['luxury_safari','luxury_train','guided_tours'],
@@ -3994,7 +4035,7 @@ const ADV_PINS = {
 function advCatLabel(l){
   const isAccom = ((l.advType||'')+' '+(l.cat||'')).toLowerCase().includes('accommodation');   // ADV-ENV-1: live rows carry it in advType
   const cats = isAccom ? ADV_ACCOM_CATS : ADV_EXP_CATS;
-  const match = cats.find(c=>c.key===(l.experience_type||l.accommodation_type||''));
+  const match = cats.find(c=>c.key===_advCatKey(l, isAccom));   // AUD-037
   return match ? match.icon+' '+match.name : (isAccom ? ADV_SUBCAT_LABELS.adventures_accommodation : ADV_SUBCAT_LABELS.adventures_experiences);
 }
 
@@ -4062,6 +4103,18 @@ function refreshAdvCatChips(){
     chip.textContent = ADV_PIN_LABELS[key] || key;
     chip.dataset.catKey = key;
     chip.onclick = ()=>setAdvCat(key, chip);
+    // AUD-037: a chip with nothing behind it is hidden (once adverts have loaded), never an empty grid
+    try {
+      const _adv = (LISTINGS || []).filter(l => String(l.cat || '').toLowerCase().startsWith('adventures'));
+      if (_adv.length) {
+        const _isAcc = ADV_ACCOM_CATS.some(c => c.key === key);
+        const _n = _adv.filter(l => {
+          const _s = (l.advType && l.advType.startsWith('adventures_')) ? l.advType : String(l.cat || '').toLowerCase();
+          return _s.includes('accommodation') === _isAcc && _advCatKey(l, _isAcc) === key;
+        }).length;
+        chip.style.display = (_n || advCat === key) ? '' : 'none';
+      }
+    } catch (_) {}
   });
 
   // Reapply active highlight
@@ -4215,8 +4268,7 @@ function renderAdvGrid(){
     // Category filter (experience_type or accommodation_type)
     if(advCat !== 'all'){
       const isAccom = _sub.includes('accommodation');   // ADV-ENV-1: a live row's sub-type is in advType
-      const typeVal = (isAccom ? (l.accommodation_type||'') : (l.experience_type||l.activity_type||'')).toLowerCase().replace(/\s*&\s*/g,'_and_').replace(/[\s,-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
-      if(!typeVal || typeVal !== advCat) return false;
+      if(_advCatKey(l, isAccom) !== advCat) return false;   // AUD-037: one table maps both seller vocabularies onto the chips
     }
 
     // Filtered Search (fs-adventures) — applies to both Stays & Experiences
@@ -5134,7 +5186,7 @@ function _msApplyChip(cat){
 function msRouteToMatches(rows, parsedCategory, explicit){
   if (!rows || !rows.length) return;
   const counts = {};
-  rows.forEach(r => { const c = r.category || ''; if (c) counts[c] = (counts[c]||0) + 1; });
+  rows.forEach(r => { const c = r.category ? normCat(r.category) : ''; if (c) counts[c] = (counts[c]||0) + 1; });   // AUD-038: count by the chip key ('adventures_experiences' -> 'Adventures')
   const cats = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
   if (!cats.length) return;
   const top = cats[0], topShare = counts[top] / rows.length;
@@ -5363,7 +5415,10 @@ function renderGrid(){
       const fv = filterState.services;
       if(fv.maxRate && l.priceNum > parseInt(fv.maxRate)) return false;
       if(fv.serviceClass && fv.serviceClass!=='' && l.service_class !== fv.serviceClass) return false;
-      if(fv.serviceType && fv.serviceType!=='' && l.serviceType !== fv.serviceType) return false;
+      if(fv.serviceType && fv.serviceType!==''){   // AUD-039: live adverts carry service_type (Quick sends the role label there)
+        const _st = String(l.service_type || l.serviceType || '').toLowerCase(), _want = String(fv.serviceType).toLowerCase();
+        if(!_st || (_st !== _want && _st.indexOf(_want) < 0 && _want.indexOf(_st) < 0)) return false;
+      }
       if(fv.availability && fv.availability!=='' && l.availability !== fv.availability) return false;
       if(fv.area && fv.area!=='' && l.suburb !== fv.area) return false;
     }
@@ -6950,6 +7005,7 @@ async function sbPublishBatchListings() {
   const city    = (activeCity && activeCity.name) || localStorage.getItem('ms_city') || 'Pretoria';
   const suburb  = (activeSuburb && activeSuburb.name) || '';
   let published = 0, failed = 0;
+  let _sbTermsOk = false;   // AUD-040: the Terms are asked once per batch
 
   for (let i = 0; i < _sbBatchDrafts.length; i++) {
     if (!_sbBatchChecked[i]) continue;
@@ -6965,7 +7021,7 @@ async function sbPublishBatchListings() {
     fd.append('fields',   JSON.stringify({
       title:       d.title,
       desc:        d.description,
-      price:       (d.price_suggestion.match(/[0-9]+/)||[''])[0],  // take first number from range e.g. 'R25-R45' → '25'
+      price:       String(_msPriceNum({price: d.price_suggestion}) || ''),  // AUD-046: first amount, thousands kept ('R1,200-R1,500' -> 1200, was 1)
       suburb:      suburb,
       condition:   d.condition,
       item_type:   'Trading Card',
@@ -6987,6 +7043,23 @@ async function sbPublishBatchListings() {
       else if (r.status === 402) {
         showToast('Slot limit reached'); openPlans('aa-publish', true);
         btn.disabled = false; btn.textContent = '⏳ Publish'; break;
+      }
+      else if (r.status === 409) {
+        /* AUD-040 (4 Oct 2026 audit): 409 'need eula' means the card WAS saved as a draft and the Seller Terms come
+           first -- not a connection failure. Never post it again; open the Terms once, then publish the saved draft. */
+        let _j = null; try { _j = await r.json(); } catch(_) {}
+        _sbBatchChecked[i] = false;
+        if (_j && _j.need === 'eula') {
+          if (!_sbTermsOk) {
+            _sbTermsOk = await _tsSellerTermsGate({ email: sellerEmail, intro: 'Your cards are saved. Read and accept the Seller Terms to publish them.' });
+            if (!_sbTermsOk) { showToast('Saved as drafts. Accept the Terms in your hub to publish them.', 6000); btn.disabled = false; btn.textContent = 'Publish listings →'; goTo('dashboard'); return; }
+          }
+          const _lid = _j.listing_id || _j.id;
+          if (_lid) {
+            const _pr = await fetch(BEA_URL + '/listings/' + _lid + '/publish?email=' + encodeURIComponent(sellerEmail), { method: 'PUT' }).catch(() => null);
+            if (_pr && _pr.ok) published++; else failed++;
+          }
+        } else { failed++; }
       }
       else { console.error('Batch publish failed', r.status, await r.text().catch(()=>'')); failed++; }
     } catch(_) { failed++; }
@@ -12295,6 +12368,7 @@ async function openEditListing(beaId) {
   // delete left it on 'Deleting...' with clicks disabled for every later listing.
   { const _db = document.getElementById('el-delete-btn'); if (_db) { _db.textContent = 'Delete this listing'; _db.style.pointerEvents = 'auto'; } }
   elCurrentCat = normCat(dl.cat || dl._raw.category || '');
+  elCurrentTrustCat = _elTrustCat(elCurrentCat, dl._raw || {});   // AUD-047: the score's own category, not the form's
   elCurrentRaw = dl._raw;
   // Derive gate-aware category for trust score panel (Property_private / Property_agent)
   try {
@@ -12424,7 +12498,19 @@ async function elLangRender(raw){
   }catch(e){ console.warn('elLangRender', e); }
 }
 
+/* AUD-047 (4 Oct 2026 audit): the Trust Score has finer categories than the Edit form. A nanny (Services, casual) or a
+   guest-house host (Adventures, accommodation) was scored against the technical / experiences set -- her earned police
+   clearance did not count, and that wrong score was written onto her cards. */
+var elCurrentTrustCat = '';
+function _elTrustCat(formCat, raw) {
+  raw = raw || {};
+  const rc = String(raw.category || '').toLowerCase(), sc = String(raw.service_class || '').toLowerCase();
+  if (formCat === 'Services') return /casual/.test(sc + ' ' + rc) ? 'Services-Casuals' : 'Services-Technical';
+  if (formCat === 'Adventures') return /accom/.test(rc + ' ' + sc) ? 'Adventures-Accommodation' : 'Adventures-Experiences';
+  return formCat;
+}
 async function elLoadSidebarPanels(email, category) {
+  if (category && category === elCurrentCat && elCurrentTrustCat) category = elCurrentTrustCat;   // AUD-047
   // ── Trust Score panel ──
   const tshSec = document.getElementById('el-tsh-section');
   if (tshSec) {
@@ -12486,18 +12572,30 @@ async function elLoadSidebarPanels(email, category) {
   // ── AI Guidance panel ──
   const agSec = document.getElementById('el-aiguidance-section');
   if (agSec && category) {
+    /* AUD-041 (4 Oct 2026 audit): opening Edit used to spend an AI call on every open (against her daily AI limit) and
+       then threw the answer away (the server sends intro/steps/closing, not 'guidance'). It now waits for her tap and
+       paints what the server really sends, escaped. */
     agSec.style.display = 'block';
-    agSec.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px 0;">✨ Generating Trust Score action plan…</div>';
-    try {
-      const g = await apiPostAuth('/trust-score/guidance', { email, category });
-      if (g && g.guidance) {
-        agSec.innerHTML = `
-          <div style="border:1.5px solid #a78bfa;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#f5f3ff,#ede9fe);">
-            <div style="padding:10px 14px;font-size:13px;font-weight:700;color:#5b21b6;">✨ Trust Score Action Plan</div>
-            <div style="padding:0 14px 12px;font-size:12px;color:#374151;line-height:1.6;">${g.guidance.replace(/\n/g,'<br>')}</div>
-          </div>`;
-      } else { agSec.style.display = 'none'; }
-    } catch(e) { agSec.style.display = 'none'; }
+    agSec.innerHTML = '<button type="button" id="el-ag-go" style="width:100%;border:1.5px solid #a78bfa;background:#f5f3ff;color:#5b21b6;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;">✨ Get my Trust Score action plan</button>';
+    const _agBtn = document.getElementById('el-ag-go');
+    if (_agBtn) _agBtn.onclick = async function(){
+      agSec.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px 0;">✨ Making your Trust Score action plan…</div>';
+      try {
+        const g = await apiPostAuth('/trust-score/guidance', { email, category });
+        const steps = (g && Array.isArray(g.steps)) ? g.steps : [];
+        if (g && (g.intro || steps.length || g.closing)) {
+          agSec.innerHTML = '<div style="border:1.5px solid #a78bfa;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#f5f3ff,#ede9fe);">'
+            + '<div style="padding:10px 14px;font-size:13px;font-weight:700;color:#5b21b6;">✨ Trust Score Action Plan</div>'
+            + '<div style="padding:0 14px 12px;font-size:12px;color:#374151;line-height:1.6;">'
+            + (g.intro ? '<p style="margin:0 0 8px;">' + _lmEsc(g.intro) + '</p>' : '')
+            + (steps.length ? '<ol style="margin:0 0 8px;padding-left:18px;">' + steps.map(function(st){
+                return '<li style="margin-bottom:6px;"><b>' + _lmEsc((st && (st.action || st.step)) || '') + '</b>'
+                  + ((st && st.why) ? '<br><span style="color:#6b7280;">' + _lmEsc(st.why) + '</span>' : '') + '</li>'; }).join('') + '</ol>' : '')
+            + (g.closing ? '<p style="margin:0;">' + _lmEsc(g.closing) + '</p>' : '')
+            + '</div></div>';
+        } else { agSec.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px 0;">No action plan just now — try again later.</div>'; }
+      } catch(e) { agSec.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:6px 0;">The action plan could not load — try again later.</div>'; }
+    };
   }
 
   // ── Document Hub ──
@@ -13273,6 +13371,7 @@ async function elDocHubUpload(email) {
   const _sig = document.getElementById('el-dh-signal')?.value || '';
   if (_sig) fd.append('signal_id', _sig);
   if (_sig === 'category.property.mandate' && elCurrentId) fd.append('listing_id', String(elCurrentId));
+  if (elCurrentCat) fd.append('category', String(elCurrentCat));   // AUD-012: the server files a generic upload under THIS advert's category
   try {
     const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/documents', {
       method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
@@ -14409,6 +14508,19 @@ async function feaLmSubmit() {
       resp = await _lmPost();
       j = await resp.json().catch(() => ({}));
     }
+    /* AUD-042 (4 Oct 2026 audit): the server SAVES the listing as a draft and answers 409 need:'eula'. Show the Terms,
+       then publish the draft it already saved (never POST again -- every retry used to add one more hidden draft). */
+    if (resp.status === 409 && j && j.need === 'eula' && (j.id || j.listing_id)) {
+      const _lid = j.id || j.listing_id;
+      status.textContent = 'Saved. One step first: the TrustSquare Seller Terms.';
+      const _tok2 = await _tsSellerTermsGate({ email,
+        intro: 'Your Local Market listing is saved. Read and accept the TrustSquare Seller Terms and it goes live.' });
+      if (!_tok2) { status.textContent = 'Saved as a draft — accept the Seller Terms in your hub to publish it.'; btn.disabled = false; return; }
+      status.textContent = 'Publishing listing…';
+      resp = await fetch(BEA_URL + '/listings/' + _lid + '/publish?email=' + encodeURIComponent(email), { method: 'PUT' });
+      j = await resp.json().catch(() => ({}));
+      if (resp.ok) j = Object.assign({ id: _lid }, j || {});
+    }
     if (!resp.ok) {
       status.textContent = 'Error: ' + ((j && typeof j.detail === 'string' && j.detail) || resp.status);
       btn.disabled = false;
@@ -15101,14 +15213,13 @@ const aaDB = (() => {
 // ── AA currency helper ────────────────────────────────────────
 // Returns { code, symbol } for the active country. Drives price field labels.
 function aaCurrency() {
-  const map = {
-    ZA: { code: 'ZAR', symbol: 'R' },
-    US: { code: 'USD', symbol: '$' },
-    GB: { code: 'GBP', symbol: '£' },
-    DE: { code: 'EUR', symbol: '€' },
-    EU: { code: 'EUR', symbol: '€' },
-  };
-  return map[(activeCountry && activeCountry.iso2) || 'ZA'] || { code: 'USD', symbol: '$' };
+  /* AUD-049 (4 Oct 2026 audit): the Coach takes its symbol from the same country table as the rest of the app
+     (ADV_COUNTRY_CURRENCY) -- Kenya, Namibia, Botswana, Mozambique, Canada, Australia and New Zealand were priced in
+     US dollars. An unknown country falls back to the ZA entry, never to USD. */
+  const codes = { ZA:'ZAR', NA:'NAD', MZ:'MZN', BW:'BWP', KE:'KES', US:'USD', CA:'CAD', GB:'GBP', DE:'EUR', EU:'EUR', AU:'AUD', NZ:'NZD' };
+  const iso = String((activeCountry && activeCountry.iso2) || 'ZA').toUpperCase();
+  const sym = (typeof ADV_COUNTRY_CURRENCY !== 'undefined' && ADV_COUNTRY_CURRENCY[iso]) || null;
+  return sym ? { code: codes[iso] || 'ZAR', symbol: sym } : { code: 'ZAR', symbol: 'R' };
 }
 
 // Formats a raw number as a price string using the active currency symbol.
@@ -15592,8 +15703,10 @@ function aaRenderPhotosScreen(draft) {
     ? cfg.photos.map(p => {
         const done     = captured.has(p.slot);
         const photoObj = photos.find(x => x.slot === p.slot);
-        const thumbHtml = photoObj?.dataUrl
-          ? `<div class="aa-photo-thumb"><img src="${photoObj.dataUrl}" alt="${p.label}"></div>`
+        // AUD-048: a photo kept as a blob (drafts from the AI report) shows its own thumbnail too
+        const _thumbSrc = photoObj?.dataUrl || ((photoObj && photoObj.blob instanceof Blob) ? (photoObj._objUrl || (photoObj._objUrl = URL.createObjectURL(photoObj.blob))) : '');
+        const thumbHtml = _thumbSrc
+          ? `<div class="aa-photo-thumb"><img src="${_thumbSrc}" alt="${p.label}"></div>`
           : `<div class="aa-photo-thumb">${emoji}</div>`;
         return `
           <div class="aa-photo-slot ${done ? 'captured' : ''} ${p.required ? 'required-slot' : ''}"
@@ -16083,7 +16196,7 @@ async function aaDoPublish() {
 
   const fd = new FormData();
   fd.append('email',         email);
-  fd.append('category',      draft.category);
+  fd.append('category',      draft.category === 'LocalMarket' ? 'local_market' : draft.category);   // AUD-043
   if (draft.service_class) fd.append('service_class', draft.service_class);
   /* COACH-CITY-1 (25 Sep 2026 inspection, ts3-05): nothing said where she is, so the server's default filed every
      Coach advert under Pretoria -- invisible to her own city's buyers. Send her city (and its id and country). */
@@ -16111,6 +16224,10 @@ async function aaDoPublish() {
 
   // Append photos — convert base64 dataUrl to Blob for upload
   for (const p of (draft.photos || [])) {
+    if (p.blob instanceof Blob) {   // AUD-048: drafts from the AI report keep their photos as blobs -- send them
+      fd.append('photos', p.blob, `${p.slot || 'photo'}.jpg`);
+      continue;
+    }
     if (p.dataUrl) {
       try {
         const parts = p.dataUrl.split(',');
@@ -22761,7 +22878,9 @@ async function sfAgentIntro(ref){
 
 /* ── Agent Hub (screen-agent-suite): profile + seller leads, one template ── */
 var _asState={tab:'profile', template:null, profile:null, vertical:'property'};
-var AS_VERT={property:{label:'Estate agent',certs:'PPRA (15 pts) · FFC (10 pts, <b>required to go live</b> — the legal minimum to trade) · NQF4/5/6+ (6/+6/+8) · professional body (5).'},cars:{label:'Car sales agent',certs:'MIRA dealer/trader registration (8 pts, <b>required to go live</b> — the professional minimum to trade) · independent inspection partner (5 pts). NATIS ownership, RWC and service history score per vehicle listing.'},travel:{label:'Tour agent',certs:'ASATA membership (10 pts, <b>required to go live</b> — the professional minimum to trade) · IATA accreditation (10 pts) · CIPC company registration (6 pts, must be submitted) · financial bonding / client payment guarantee (5 pts).'}};
+/* AUD-045 (4 Oct 2026 audit): every vertical the agency consoles onboard has an entry; an unknown one falls back. */
+var AS_VERT={property:{label:'Estate agent',certs:'PPRA (15 pts) · FFC (10 pts, <b>required to go live</b> — the legal minimum to trade) · NQF4/5/6+ (6/+6/+8) · professional body (5).'},cars:{label:'Car sales agent',certs:'MIRA dealer/trader registration (8 pts, <b>required to go live</b> — the professional minimum to trade) · independent inspection partner (5 pts). NATIS ownership, RWC and service history score per vehicle listing.'},travel:{label:'Tour agent',certs:'ASATA membership (10 pts, <b>required to go live</b> — the professional minimum to trade) · IATA accreditation (10 pts) · CIPC company registration (6 pts, must be submitted) · financial bonding / client payment guarantee (5 pts).'},collector:{label:'Collector dealer',certs:'SAPS Second-Hand Goods dealer registration (<b>required to go live</b>) · CIPC company registration · dealer association (SAADA / SAAND / NAADA) · grading partner (SANGS / NGC / PCGS).'},institution:{label:'Tutor',certs:'Safety clearances — SAPS police clearance, Child Protection Register and Sexual Offenders Register (<b>required to go live</b>) · SACE registration · SAQA-verified qualification.'},service_company:{label:'Technician',certs:'Trade licence — PIRB / DoEL installation electrician / class-statutory (<b>required to go live</b>) · CIPC company registration · public liability insurance · CIDB grading (construction).'},placement:{label:'Placement consultant',certs:'DEL private employment agency registration (<b>required to go live</b>) · CIPC company registration.'}};
+function _asV(){ return AS_VERT[_asState.vertical] || {label:'Professional agent', certs:''}; }   // AUD-045
 function agentSuiteInit(){
   var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
   _asState.email=email;
@@ -22787,7 +22906,9 @@ async function _asProfileLoad(){
     _asState.profile = rp.ok ? await rp.json() : null;
     if(_asState.profile && _asState.profile.vertical) _asState.vertical=_asState.profile.vertical;
   }catch(e){}
-  pane.innerHTML=_asProfileHtml(_asState.profile,_asState.template);
+  try { pane.innerHTML=_asProfileHtml(_asState.profile,_asState.template); }
+  catch(e){ console.warn('agent hub render failed', e);   // AUD-045: never leave 'Loading…' for ever
+    pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Your agent profile could not be shown just now. Please reload, or tell us at trustsquare.co/support.</div>'; }
 }
 function _asFld(id,label,val,ph,type){
   return '<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--text-3);display:block;margin-bottom:3px;">'+label+'</label>'+
@@ -22800,7 +22921,7 @@ function _asProfileHtml(p,tpl){
   var live=p.profile_status==='live';
   var badges=p.badges||{earned:[],pending:[]};
   var h='<div style="background:var(--navy,#0c1a2e);color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:12px;">'+
-    '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:17px;">'+(p.anon_ref?('Agent '+p.anon_ref+' · '+AS_VERT[_asState.vertical].label):'List yourself as a professional agent')+
+    '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:17px;">'+(p.anon_ref?('Agent '+p.anon_ref+' · '+_asV().label):'List yourself as a professional agent')+
     (live?' <span style="font-size:10px;background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.4);border-radius:20px;padding:3px 10px;margin-left:6px;">● LIVE</span>':' <span style="font-size:10px;background:rgba(255,255,255,.12);border-radius:20px;padding:3px 10px;margin-left:6px;">DRAFT</span>')+'</div>'+
     '<div style="font-size:11.5px;opacity:.75;margin-top:4px;">Anonymous to sellers until you accept an introduction. Your certificates drive your rank: 50% listing quality · 50% Trust Score.</div>'+
     (p.anon_ref?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">'+
@@ -22850,7 +22971,7 @@ function _asProfileHtml(p,tpl){
     '</div>';
   h+='<div style="background:var(--surface,#fff);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;">'+
     '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Your certificates</div>'+
-    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px;">'+AS_VERT[_asState.vertical].certs+' Upload each one here — we verify before the points count, so a document earns nothing until a person has checked it.</div>'+
+    '<div style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px;">'+_asV().certs+' Upload each one here — we verify before the points count, so a document earns nothing until a person has checked it.</div>'+
     (p.credential_slots||[]).map(function(s){
       var st = s.status||'missing';
       var pill = st==='earned' ? '<span style="font-size:10px;background:#e7f2e3;border:1px solid #538135;color:#2f5d20;border-radius:8px;padding:2px 7px;font-weight:700;">✓ verified</span>'
@@ -23195,15 +23316,15 @@ async function agencyDraftsView(email){
   var tblEl=tb.closest('table'); var card=tblEl?tblEl.parentElement:null; if(!card) return;
   var d=document.createElement('div'); d.id='ag-drafts-panel'; d.setAttribute('data-email',email);
   d.style.cssText='border:1.5px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:12px 14px;margin-top:12px;';
-  d.innerHTML='<div style="font-size:12px;color:var(--text-3);">Loading '+email+' drafts…</div>';
+  d.innerHTML='<div style="font-size:12px;color:var(--text-3);">Loading '+_lmEsc(email)+' drafts…</div>';
   card.appendChild(d); d.scrollIntoView({behavior:'smooth',block:'nearest'});
   var ls=[];
   try{
-    var r=await fetch(BEA_URL+'/listings/mine?email='+encodeURIComponent(email),{headers:{'X-Api-Key':API_KEY}});
+    var r=await fetch(BEA_URL+'/agencies/'+window._agencyId+'/agents/'+encodeURIComponent(email)+'/drafts',{headers:{'X-Api-Key':API_KEY}});   // AUD-044: the agent's drafts, not the admin's
     var j=await r.json(); ls=(Array.isArray(j)?j:(j.listings||[])).filter(function(l){return (l.listing_status||'')==='draft';});
   }catch(e){ d.innerHTML='<div style="color:#b91c1c;font-size:12px;">Could not load drafts — try again.</div>'; return; }
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    +'<div style="font-weight:700;font-size:13.5px;color:#92400e;">Drafts — '+email+' <span style="font-weight:400;font-size:11px;color:var(--text-3);">(read-only — the agent reviews and publishes from their own sign-in)</span></div>'
+    +'<div style="font-weight:700;font-size:13.5px;color:#92400e;">Drafts — '+_lmEsc(email)+' <span style="font-weight:400;font-size:11px;color:var(--text-3);">(read-only — the agent reviews and publishes from their own sign-in)</span></div>'
     +'<button onclick="document.getElementById(\'ag-drafts-panel\').remove()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;">Close</button></div>';
   if(!ls.length){ h+='<div style="font-size:12px;color:var(--text-3);">No drafts right now.</div>'; d.innerHTML=h; return; }
   ls.forEach(function(l){
@@ -23217,10 +23338,10 @@ async function agencyDraftsView(email){
     var nph=null; try{ var pu=l.photo_urls; if(typeof pu==='string') pu=JSON.parse(pu||'[]'); if(Array.isArray(pu)&&pu.length) nph=pu.length; }catch(e){}
     var photoTxt = nph!==null ? (nph+' photo'+(nph===1?'':'s')) : (l.thumb_url ? 'photos attached ✓' : 'no photos yet');
     h+='<div style="display:flex;gap:10px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:7px;align-items:center;">'
-      +(l.thumb_url?'<img src="'+l.thumb_url+'" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;">':'<div style="width:52px;height:52px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📄</div>')
+      +(l.thumb_url?'<img src="'+_lmEsc(l.thumb_url)+'" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;">':'<div style="width:52px;height:52px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📄</div>')
       +'<div style="min-width:0;">'
-      +'<div style="font-weight:700;font-size:13px;color:var(--navy,#0c1a2e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(l.title||'(untitled)')+'</div>'
-      +'<div style="font-size:11.5px;color:var(--text-3);">'+[(l.price||''),[l.suburb,l.city].filter(Boolean).join(', '),spec].filter(Boolean).join(' · ')+'</div>'
+      +'<div style="font-weight:700;font-size:13px;color:var(--navy,#0c1a2e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_lmEsc(l.title||'(untitled)')+'</div>'
+      +'<div style="font-size:11.5px;color:var(--text-3);">'+_lmEsc([(l.price||''),[l.suburb,l.city].filter(Boolean).join(', '),spec].filter(Boolean).join(' · '))+'</div>'
       +'<div style="font-size:11px;color:var(--text-3);">'+photoTxt+(l.created_at?' · imported '+String(l.created_at).slice(0,10):'')+' · <span style="color:#92400e;font-weight:700;">draft</span></div>'
       +'</div></div>';
   });

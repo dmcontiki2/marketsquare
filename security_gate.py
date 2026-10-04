@@ -634,6 +634,18 @@ def _text_field(v):
 
 def _url_field(v):
     if isinstance(v, str):
+        # AUD-014 (4 Oct 2026 audit): photo_urls is stored and returned as a JSON-array STRING. Testing that string as one
+        # link emptied every gallery (Local Market and Coach adverts showed one cover photo). Decode it, keep the links
+        # that pass, and hand back the same string shape the app expects.
+        st = v.strip()
+        if st.startswith("[") and st.endswith("]"):
+            try:
+                arr = json.loads(st)
+            except ValueError:
+                return ""
+            if isinstance(arr, list):
+                return json.dumps([x for x in arr if isinstance(x, str) and x and _URL_OK.match(x)])
+            return ""
         return v if (not v or _URL_OK.match(v)) else ""
     if isinstance(v, list):
         return [x for x in (_url_field(y) for y in v) if x or x == 0]

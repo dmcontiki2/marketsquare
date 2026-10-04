@@ -5375,6 +5375,20 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
     if current_status == "live":
         conn.close()
         return {"message": "Listing is already live", "listing_id": listing_id}
+    # AUD-006 (4 Oct 2026 audit): publish moves a DRAFT (or her own resting / faded advert) live -- nothing else. A
+    # blocked or archived advert is reinstated by staff, a paused one through its own pause/resume route (which
+    # respects the one-buyer-at-a-time pause), and while any of her adverts is blocked (EULA 14.5) nothing new goes live.
+    if (current_status or "").strip().lower() not in ("draft", "resting", "faded"):
+        conn.close()
+        raise HTTPException(status_code=409, detail=(
+            "This listing is paused - use Resume to put it back." if current_status == "paused" else
+            "This listing was taken down and cannot be republished here. Please contact support."))
+    if existing["seller_email"] and conn.execute(
+            "SELECT 1 FROM listings WHERE LOWER(seller_email)=LOWER(?) AND listing_status='blocked' LIMIT 1",
+            (existing["seller_email"],)).fetchone():
+        conn.close()
+        raise HTTPException(status_code=403, detail="Your adverts are blocked for now, so nothing new can go live. "
+                                                    "Please contact support.")
     # Pull the seller's account to enforce EULA gate + get current trust_score
     user_row = conn.execute(
         "SELECT trust_score, eula_accepted_at, is_superuser FROM users WHERE email = ?",
@@ -7147,8 +7161,36 @@ def quick_invite_qr(token: str):
     return _Resp(content=buf.getvalue(), media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
 
 
+_PHOTO_IP_LOG = {}
+_PHOTO_IP_MAX_PER_HOUR = 40
+
+
+def _photo_bill_who(sess, own, listing_id, request):
+    """AUD-004 (4 Oct 2026 audit): whose AI allowance a photo scan spends. A signed-in caller pays from her own
+    account. An anonymous composer holding a draft token is billed to THAT DRAFT ('draft:<id>', its own daily cap) and
+    capped per IP per hour -- never to a shared 'photo-upload' pot one stranger could empty for every seller, and never
+    to the address she typed (a stranger could burn a named person's allowance)."""
+    if sess:
+        return sess
+    ip = ""
+    try:
+        ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "")).split(",")[0].strip()
+    except Exception:
+        pass
+    import time as _t
+    now = _t.time()
+    hits = [x for x in _PHOTO_IP_LOG.get(ip, []) if now - x < 3600]
+    if len(hits) >= _PHOTO_IP_MAX_PER_HOUR:
+        raise HTTPException(status_code=429, detail="That is a lot of photos at once - please wait a little and try again.")
+    hits.append(now); _PHOTO_IP_LOG[ip] = hits
+    if len(_PHOTO_IP_LOG) > 20000:
+        _PHOTO_IP_LOG.clear(); _PHOTO_IP_LOG[ip] = hits
+    return "draft:%s" % int(listing_id) if listing_id else "photo-anon:" + (ip or "?")
+
+
 @app.post("/listings/photo")
-async def upload_listing_photo(
+def upload_listing_photo(
+    request: Request,
     file: UploadFile = File(...),
     listing_id: Optional[int] = Form(None),
     is_primary: Optional[str] = Form(None),
@@ -7178,13 +7220,19 @@ async def upload_listing_photo(
                                      or _purpose_token_ok(ts_draft, "draft", int(listing_id))))):
                 raise HTTPException(status_code=403, detail="Not authorised to add photos to this listing")
 
+    # AUD-004: a photo with no advert yet is a signed-in seller's (the Edit screen, the Local Market form) -- the
+    # public app key alone no longer buys a vision scan.
+    _is_ops = bool(x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY)
+    if not listing_id and not _is_ops and not _session_email(ts_user):
+        raise HTTPException(status_code=401, detail="Please sign in to add photos.")
+
     # Validate file type
     # PHOTO-TYPE-1 (TS-0025): the bytes decide, not the browser's guess.
     content_type = (file.content_type or "").strip()
     if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
         raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
-    raw = await file.read()
+    raw = file.file.read()   # AUD-032: sync handler -> FastAPI runs it in the threadpool, off the event loop
     if len(raw) > 20 * 1024 * 1024:  # 20MB hard limit
         raise HTTPException(status_code=400, detail="Photo too large — max 20MB")
 
@@ -7202,7 +7250,7 @@ async def upload_listing_photo(
         # spend logging lives inside _vision_orient_image (P2 sweep, 12 Jun 2026)
 
     # SELLER-ANON GATE (11 Jul 2026) — scan BEFORE thumb/medium so blurs propagate.
-    _anon_who = "photo-upload"
+    _anon_who = "ops-upload" if _is_ops else _photo_bill_who(_session_email(ts_user), "", listing_id, request)   # AUD-004
     # WRONG-TYPE-1: the advert cover is the primary photo - explicit flag, or
     # first photo of a listing that has no cover yet. Category falls back to
     # the listing row when the caller didn't send one (the gate needs it).
@@ -7213,8 +7261,6 @@ async def upload_listing_photo(
             _c0 = database.get_db()
             _r0 = _c0.execute("SELECT seller_email, thumb_url, category FROM listings WHERE id=?", (listing_id,)).fetchone()
             _c0.close()
-            if _r0 and _r0["seller_email"]:
-                _anon_who = _r0["seller_email"]
             if _r0 and not _r0["thumb_url"]:
                 _gate_primary = True
             if _r0 and not _gate_cat:
@@ -7320,7 +7366,8 @@ async def upload_listing_photo(
     }
 
 @app.post("/listings/{listing_id}/photo/draft")
-async def upload_draft_listing_photo(
+def upload_draft_listing_photo(
+    request: Request,
     listing_id: int,
     email: str,
     file: UploadFile = File(...),
@@ -7342,7 +7389,7 @@ async def upload_draft_listing_photo(
     if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
         raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
-    raw = await file.read()
+    raw = file.file.read()   # AUD-032: sync handler -> FastAPI runs it in the threadpool, off the event loop
     if len(raw) > 20 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Photo too large — max 20MB")
 
@@ -7380,7 +7427,9 @@ async def upload_draft_listing_photo(
     # SELLER-ANON GATE (11 Jul 2026) — same fail-closed scan as /listings/photo.
     try:
         img, _anon_note = _seller_photo_anon_gate(
-            img, row["category"] or "", email,
+            img, row["category"] or "",
+            ("ops-upload" if (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY)
+             else _photo_bill_who(_sess if (_sess and _sess == _own) else None, _own, listing_id, request)),   # AUD-004
             is_primary=not (row["thumb_url"] or ""))   # WRONG-TYPE-1: first photo = advert cover
     except HTTPException:
         conn.close()
@@ -8046,7 +8095,7 @@ def get_user_trust(email: str):
     }
 
 @app.post("/users/{email}/photo")
-async def upload_user_photo(email: str, file: UploadFile = File(...),
+def upload_user_photo(email: str, file: UploadFile = File(...),
                             ts_user: str = Cookie(default=None),
                             x_admin_key: str = Header(default=None)):
     """Upload a seller profile photo. Compresses to 400×400 JPEG, stores to R2 or local,
@@ -8059,7 +8108,7 @@ async def upload_user_photo(email: str, file: UploadFile = File(...),
     if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
         raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
-    raw = await file.read()
+    raw = file.file.read()   # AUD-032: sync handler -> FastAPI runs it in the threadpool, off the event loop
     if len(raw) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Photo too large — max 10MB")
 
@@ -8107,7 +8156,7 @@ async def upload_user_photo(email: str, file: UploadFile = File(...),
 
 
 @app.post("/users/{email}/upload-id")
-async def upload_user_id(email: str, file: UploadFile = File(...),
+def upload_user_id(email: str, file: UploadFile = File(...),
                          xborder_consent: str = Form(default=""),
                          _key: str = Depends(auth.require_api_key),
                          ts_user: str = Cookie(default=None),
@@ -8123,7 +8172,7 @@ async def upload_user_id(email: str, file: UploadFile = File(...),
     if not _photo_type_ok(content_type, getattr(file, "filename", "") or ""):
         raise HTTPException(status_code=400, detail=_photo_reject_msg())
 
-    raw = await file.read()
+    raw = file.file.read()   # AUD-032: sync handler -> FastAPI runs it in the threadpool, off the event loop
     if len(raw) > 15 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large — max 15MB")
     if len(raw) < 5000:
@@ -9398,10 +9447,13 @@ def verify_identity_npr(email: str, payload: NPRVerifyRequest,
         )
 
         if res.verified:
+            # AUD-008 (4 Oct 2026 audit): keep the name the register confirmed -- the bank-, payment- and certificate-name
+            # checks compare against users.id_name, which only the admin ID route used to write, so a seller who
+            # verified in the app was told 'Verify your ID first' for ever.
             conn.execute(
                 """UPDATE users SET id_npr_verified_at=?,
-                   id_npr_provider=?, id_npr_ref=? WHERE lower(email)=?""",
-                (_utc_now(), res.provider, res.reference, em)
+                   id_npr_provider=?, id_npr_ref=?, id_name=? WHERE lower(email)=?""",
+                (_utc_now(), res.provider, res.reference, " ".join((payload.full_name or "").split())[:120], em)
             )
         conn.commit()
 
@@ -11432,6 +11484,10 @@ async def aa_publish(
     import json as _json
     # SEC-GATE-1 (24 Sep 2026): one canonical spelling, so the owner, slot and velocity checks all see the same account.
     email = (email or "").strip().lower()
+    # AUD-043 (4 Oct 2026 audit): one category name at the door -- the Coach sends 'LocalMarket', the Local Market page
+    # and its introductions look for 'local_market', so Coach adverts were invisible there.
+    if re.sub(r"[\s_]+", "", (category or "")).lower() == "localmarket":
+        category = "local_market"
 
     try:
         field_data = _json.loads(fields)
@@ -12033,6 +12089,7 @@ def run_match_job(listing_id: int):
     insert qualifying matches, flag pings. Never raises — logs and exits.
     Re-entrant: the unique (buyer_token, listing_id) constraint on wishlist_matches
     means re-running for the same listing is a no-op for already-matched buyers."""
+    _pushes = []   # AUD-033: (buyer_token, match_id) sent after the match job has committed
     try:
         conn = database.get_db()
         listing = conn.execute(
@@ -12106,15 +12163,17 @@ def run_match_job(listing_id: int):
                         "UPDATE wishlist_matches SET pinged = 1 WHERE id = ?",
                         (new_match_id,)
                     )
-                    # Section 5: actually deliver the push. Synchronous-ish (8s timeout
-                    # per device), but this whole function is already running in a
-                    # FastAPI BackgroundTask so it never blocks the request handler.
-                    _send_push_for_match(buyer_token, new_match_id, listing)
+                    # Section 5: deliver the push -- AFTER the commit below (AUD-033, 4 Oct 2026 audit): the push
+                    # writes on its own connection, and sending it while this job held the write lock stalled every
+                    # writer in the app ~5 s per device and lost last_ping_at / dead-subscription clean-up.
+                    _pushes.append((buyer_token, new_match_id))
             except Exception:
                 # Unique-constraint violation = already matched — skip silently
                 pass
         conn.commit()
         conn.close()
+        for _bt, _mid in _pushes:
+            _send_push_for_match(_bt, _mid, listing)
         _log.info("run_match_job listing=%s matcher=%s inserts=%d boosted=%s",
                   listing_id, MATCHER.name, match_inserts, is_boosted)
     except Exception as exc:
@@ -13359,6 +13418,12 @@ def register_wearable(req: WearableRegisterReq, ts_user: str = Cookie(default=No
             conn.close()
             raise HTTPException(status_code=403,
                                 detail="Sign in to the account this device list belongs to.")
+    # AUD-033: at most 5 active devices per buyer -- a new one replaces nothing silently; the oldest is switched off.
+    _n_dev = conn.execute("SELECT COUNT(*) AS n FROM wearable_devices WHERE buyer_token=? AND enabled=1 AND push_endpoint<>?",
+                          (req.buyer_token, req.push_endpoint)).fetchone()["n"]
+    if _n_dev >= 5:
+        conn.execute("UPDATE wearable_devices SET enabled=0 WHERE id IN (SELECT id FROM wearable_devices WHERE buyer_token=? "
+                     "AND enabled=1 AND push_endpoint<>? ORDER BY id ASC LIMIT ?)", (req.buyer_token, req.push_endpoint, _n_dev - 4))
     conn.execute(
         """INSERT INTO wearable_devices
              (buyer_token, push_endpoint, push_keys, platform, device_label)
@@ -13421,7 +13486,7 @@ def _send_push_for_match(buyer_token: str, match_id: int, listing: dict):
         conn = database.get_db()
         rows = conn.execute(
             """SELECT id, push_endpoint, push_keys, platform FROM wearable_devices
-               WHERE buyer_token = ? AND enabled = 1""",
+               WHERE buyer_token = ? AND enabled = 1 ORDER BY id DESC LIMIT 5""",   # AUD-033: at most 5 devices
             (buyer_token,)
         ).fetchall()
         if not rows:
@@ -16218,8 +16283,10 @@ _LEGAL_SIGNALS = {
     "category.property.ffc",
     "category.property.mandate",
     "category.cars.dealer_reg",
-    "category.travel.asata",
-    "category.services.trade_licence",
+    # AUD-007 (4 Oct 2026 audit): these two ids were misspelt ('category.travel.asata', 'category.services.trade_licence'),
+    # so the real catalogue signals earned on ANY upload; every agent go-live gate signal is added below from the one table.
+    "category.travel.asata_member",
+    "category.service.trade_licence",
     # CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): RUL-153 opens a nanny's, caregiver's, au pair's or creche
     # assistant's advert to strangers on a VERIFIED police clearance (STRANGER-GATE-1). Any file uploaded here
     # auto-earned it, so a photo of anything opened the child-care gate. A person checks it first now.
@@ -16229,12 +16296,17 @@ _LEGAL_SIGNALS = {
     # so a person checks it first instead of any upload earning it.
     "category.services_tech.coc",
 }
+try:   # AUD-007: every vertical's go-live gate credential waits for a person -- built from the gate's own table, so it cannot drift
+    from estate_agents import VERTICALS as _GATE_VERTS
+    _LEGAL_SIGNALS |= {v.get("gate_signal") for v in _GATE_VERTS.values() if v.get("gate_signal")}
+except Exception as _gx:
+    _log.error("AUD-007: could not read the agent gate signals: %s", _gx)
 # A mandate is granted per property, so it must arrive with the listing it covers.
 _PER_LISTING_SIGNALS = {"category.property.mandate"}
 
 
 @app.post("/users/{email}/documents")
-async def upload_seller_document(
+def upload_seller_document(
     email: str,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -16245,6 +16317,7 @@ async def upload_seller_document(
     x_admin_key: str = Header(default=None),
     signal_id: str = Form(None),
     listing_id: int = Form(None),
+    category: str = Form(None),
     _key: str = Depends(auth.require_api_key),
 ):
     """Upload a document for a seller. Stores to R2, records in seller_documents.
@@ -16282,7 +16355,7 @@ async def upload_seller_document(
                 "That file type isn't accepted - please upload a PDF, JPEG, PNG, WebP or "
                 "Word document (a clear photo of the certificate is fine)."))
 
-    raw = await file.read()
+    raw = file.file.read()   # AUD-032: sync handler -> FastAPI runs it in the threadpool, off the event loop
     if len(raw) > 25 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Document too large — max 25MB")
 
@@ -16321,7 +16394,15 @@ async def upload_seller_document(
         signal_id = None
     conn_pre = database.get_db()
     try:
-        effective_signal = signal_id or _next_signal_for_doc(doc_type, conn_pre, email)
+        # AUD-012 (4 Oct 2026 audit): the doc-type chain is Local Market's (category.lm.*). An upload made for another
+        # advert (the app now sends its category) is filed with no signal, so it shows in that advert's own list and
+        # never earns a Local Market credential by accident. No category at all keeps the old (Local Market) lane.
+        _ucat = (category or "").strip().lower().replace(" ", "_")
+        if not _ucat and listing_id:
+            _lr = conn_pre.execute("SELECT category FROM listings WHERE id=?", (listing_id,)).fetchone()
+            _ucat = ((_lr["category"] if _lr else "") or "").strip().lower().replace(" ", "_")
+        _lm_lane = (not _ucat) or _ucat in ("local_market", "localmarket")
+        effective_signal = signal_id or (_next_signal_for_doc(doc_type, conn_pre, email) if _lm_lane else None)
     finally:
         conn_pre.close()
 
@@ -16444,6 +16525,7 @@ def list_seller_documents(
                    OR signal_id LIKE ?
                    OR signal_id LIKE 'universal.%'
                    OR signal_id LIKE 'track_record.%'
+                   OR (signal_id LIKE 'category.lm.%' AND doc_type NOT IN ('id_doc'))   -- AUD-012: older generic uploads filed under Local Market
                  )
                ORDER BY uploaded_at DESC""",
             (email, prefix + "%")
@@ -19848,12 +19930,14 @@ def _establish_user_session(email: str, response: Response):
         conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
         # AGENCY-MEMBER-1 (3 Aug 2026): first successful sign-in IS the join.
         try:
-            conn.execute(
+            _joined = conn.execute(
                 "UPDATE agency_members SET status='active', joined_at=? "
                 "WHERE LOWER(agent_email)=? AND status='invited'",
                 (datetime.now(timezone.utc).isoformat(), email))
-        except Exception:
-            pass
+            if _joined.rowcount:
+                _agency_join_provision(conn, email)   # AUD-013: her acceptance is when her seat is set up
+        except Exception as _jx:
+            _log.warning("AUD-013 join provisioning failed for %s: %s", email, _jx)
         conn.commit()
         row = conn.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
         name = _shown_name(row["name"] if row else None, email)   # KEY-ID-HIDE-1 (backend-14)
@@ -20592,9 +20676,9 @@ def auth_verify(req: _SignInVerify, response: Response, ts_user: str = Cookie(de
     except Exception:
         _same_session = False
     import time as _t
-    _iat = payload.get("iat")
-    if isinstance(_iat, (int, float)) and _t.time() - float(_iat) > 72 * 3600 and not _same_session:
-        raise HTTPException(status_code=401, detail="This sign-in link is too old — request a new one.")
+    # AUD-009 (4 Oct 2026 audit): the link's own expiry decides how long it lives -- SIGNIN-LINK-7D (David, 3 Oct) made
+    # sign-in links last 7 days and agency console links 14-30, but a hard-coded 72-hour test here still killed them
+    # on day 3. The token's exp is checked when it is decoded; once-only use (below) is unchanged.
     _h = hashlib.sha256(req.token.encode("utf-8")).hexdigest()
     conn = database.get_db()
     try:
@@ -20605,7 +20689,7 @@ def auth_verify(req: _SignInVerify, response: Response, ts_user: str = Cookie(de
         if not _row:
             conn.execute("INSERT INTO used_signin_links (link_hash, used_at) VALUES (?, ?) "
                          "ON CONFLICT(link_hash) DO NOTHING", (_h, _t.time()))  # portable: pg-ratchet (PG-PORTABLE-4)
-            conn.execute("DELETE FROM used_signin_links WHERE used_at < ?", (_t.time() - 8 * 86400,))
+            conn.execute("DELETE FROM used_signin_links WHERE used_at < ?", (_t.time() - 31 * 86400,))   # AUD-009: kept past the longest link life (30 d)
             conn.commit()
     finally:
         conn.close()
@@ -20844,7 +20928,7 @@ def _sync_agency_member_tiers(conn, agency_id: int) -> dict:
         """SELECT m.agent_email, m.seat_paid, u.seller_tier, u.billing_period_end
              FROM agency_members m
              LEFT JOIN users u ON LOWER(u.email) = LOWER(m.agent_email)
-            WHERE m.agency_id = ?""", (agency_id,)).fetchall()
+            WHERE m.agency_id = ? AND COALESCE(m.status, 'active') = 'active'""", (agency_id,)).fetchall()   # AUD-013: members who accepted
     moved = skipped = 0
     for m in members:
         if (m["seat_paid"] or 0) or m["billing_period_end"]:
@@ -20856,6 +20940,33 @@ def _sync_agency_member_tiers(conn, agency_id: int) -> dict:
                          (target, (m["agent_email"] or "").lower()))
             moved += 1
     return {"agency_id": agency_id, "moved": moved, "skipped_paying": skipped, "target": target}
+
+
+_AGENCY_INVITE_LOG = {}
+_AGENCY_INVITES_PER_DAY = 200
+
+
+def _agency_invite_budget_ok(agency_id) -> bool:
+    import time as _t
+    now = _t.time()
+    k = int(agency_id)
+    hits = [x for x in _AGENCY_INVITE_LOG.get(k, []) if now - x < 86400]
+    if len(hits) >= _AGENCY_INVITES_PER_DAY:
+        return False
+    hits.append(now); _AGENCY_INVITE_LOG[k] = hits
+    return True
+
+
+def _agency_join_provision(conn, email: str):
+    """AUD-013: when an invited person accepts (her first sign-in), her agency seat is set up -- the cap the agency
+    offered, on a free tier only (a paying seller keeps what she pays for), and the tier follows the agency."""
+    for m in conn.execute("SELECT agency_id, listing_cap, seat_paid FROM agency_members WHERE LOWER(agent_email)=? "
+                          "AND status='active'", (email,)).fetchall():
+        u = conn.execute("SELECT seller_tier, billing_period_end FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        if u and (u["seller_tier"] or "free") in ("free", "starter", "agency") and not u["billing_period_end"]:
+            conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?",
+                         (max(1, min(int(m["listing_cap"] or 10), 20 if m["seat_paid"] else 10)), email))
+        _sync_agency_member_tiers(conn, m["agency_id"])
 
 
 class _AgencyVerify(BaseModel):
@@ -20891,11 +21002,20 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
     if not re.fullmatch(r"[a-z0-9._%+\-]{1,64}@[a-z0-9\-]+(\.[a-z0-9\-]+)*\.[a-z]{2,24}", email):   # AUD-051: strict shape
         raise HTTPException(status_code=400, detail="valid email required")
     cap = int(req.listing_cap) if req.listing_cap else 10
-    cap = max(1, min(cap, 20))   # SEC-GATE-1 (24 Sep 2026): an invite cannot write a negative or oversized users.slot_limit (20 = Pro seat max)
+    cap = max(1, min(cap, 10))   # SEC-GATE-1 + AUD-013/RUL-048: an invite gives the free seat (10); 20 needs the agent's own paid seat
     conn = database.get_db()
     try:
         if not conn.execute("SELECT id FROM agencies WHERE id=?", (agency_id,)).fetchone():
             raise HTTPException(status_code=404, detail="Agency not found")
+        if not _agency_invite_budget_ok(agency_id):   # AUD-013: an invite budget per agency per day
+            raise HTTPException(status_code=429, detail="That is a lot of invitations today - please continue tomorrow.")
+        # AUD-013 (4 Oct 2026 audit): an invitation changes nobody's plan. Only an account THIS invite creates, or one
+        # that is already an active member of this agency on a free tier, has its slots set now; anyone else is set up
+        # when she accepts by signing in (_agency_join_provision) -- her sign-in is the consent.
+        _pre = conn.execute("SELECT seller_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        _active_here = conn.execute("SELECT 1 FROM agency_members WHERE agency_id=? AND LOWER(agent_email)=? AND status='active'",
+                                    (agency_id, email)).fetchone()
+        _provision_now = (_pre is None) or (bool(_active_here) and (_pre["seller_tier"] or "free") in ("free", "starter", "agency"))
         conn.execute("INSERT OR IGNORE INTO users (email) VALUES (?)", (email,))
         # AGENCY-TIER-1 (3 Aug 2026, David): _SELLER_SUB_TIERS carried an "agency"
         # tier and _FADE_WINDOWS gave it 90 days, but nobody was ever assigned it —
@@ -20906,7 +21026,8 @@ def invite_agent(agency_id: int, req: _AgentInvite, _key: str = Depends(auth.req
         # AGENCY-REACH-1: the cap is this invite's business; the TIER is not. It is derived
         # from the agency's verification by the one writer below, after the membership row
         # exists — so invite-then-verify and verify-then-invite end in the same place.
-        conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?", (cap, email))
+        if _provision_now:
+            conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?", (cap, email))
         conn.execute("INSERT INTO agency_members (agency_id, agent_email, listing_cap, status, agent_name, city, country) VALUES (?,?,?, 'invited', ?,?,?) "
                      "ON CONFLICT(agency_id, agent_email) DO UPDATE SET listing_cap=excluded.listing_cap, "
                      "agent_name=COALESCE(excluded.agent_name, agent_name), city=COALESCE(excluded.city, city), country=COALESCE(excluded.country, country)",
@@ -20967,6 +21088,29 @@ def update_agent_cap(agency_id: int, email: str, req: _AgentCapUpdate,
     finally:
         conn.close()
     return {"ok": True, "email": email, "listing_cap": cap, "seat_paid": bool(paid)}
+
+@app.get("/agencies/{agency_id}/agents/{email}/drafts")
+def agency_agent_drafts(agency_id: int, email: str, _key: str = Depends(auth.require_api_key),
+                        ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """AUD-044 (4 Oct 2026 audit): the agency console's read-only view of ONE member's drafts. The console used the
+    self-bound /listings/mine, which the security gate rewrites to the caller -- so the admin saw her own drafts under
+    the agent's name. Bound to this agency's admin (or the ops key) and to a member of THIS agency."""
+    _agency_admin_or_refuse(agency_id, ts_user, x_admin_key, "agent-drafts")
+    email = (email or "").strip().lower()
+    conn = database.get_db()
+    try:
+        if not conn.execute("SELECT 1 FROM agency_members WHERE agency_id=? AND LOWER(agent_email)=? "
+                            "AND COALESCE(status,'') != 'removed'", (agency_id, email)).fetchone():
+            raise HTTPException(status_code=404, detail="Agent not in this agency")
+        rows = conn.execute(
+            "SELECT id, title, price, category, city, suburb, prop_type, beds, baths, listing_type, vehicle_year, make, "
+            "model, mileage_km, transmission, subject, service_type, thumb_url, photo_urls, created_at, listing_status "
+            "FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft' ORDER BY id DESC LIMIT 200",
+            (email,)).fetchall()
+    finally:
+        conn.close()
+    return {"agent_email": email, "listings": [dict(r) for r in rows]}
+
 
 @app.delete("/agencies/{agency_id}/agents/{email}")
 def remove_agent(agency_id: int, email: str, _key: str = Depends(auth.require_api_key),
@@ -22104,7 +22248,8 @@ def agency_import(agency_id: int, req: _AgencyImport):
                          _imp_s("body_type"), _imp_s("colour"), _vspecs]
             assert len(_imp_cols) == len(_imp_vals)   # poka-yoke: lists move together
             conn.execute("INSERT INTO listings (" + ",".join(_imp_cols) + ") VALUES (" + ",".join("?" * len(_imp_cols)) + ")", _imp_vals)
-            imported += 1
+            conn.commit()   # AUD-034 (4 Oct 2026 audit): one short write per advert -- the next advert's AI and photo work runs
+            imported += 1   # with no write lock held (it used to block every writer in the app for the whole import)
             rows.append({"title": t_clean[:80], "agent_email": agent,
                          "needs_review": row_needs_review, "removed": removed,
                          "photos": {"received": (len(photo_srcs) if isinstance(photo_srcs, list) else 0),
@@ -24901,13 +25046,14 @@ def _comp_count(listing) -> int:
             row = conn.execute(
                 "SELECT COUNT(*) AS n FROM listings "
                 "WHERE category = ? AND city = ? AND id <> ? "
-                "AND COALESCE(status,'active') != 'paused'",
+                "AND COALESCE(listing_status,'live')='live' AND COALESCE(is_demo,0)=0 AND COALESCE(super_example,0)=0 AND LOWER(COALESCE(seller_email,'')) NOT LIKE '%@trustsquare.co' AND LOWER(COALESCE(seller_email,'')) NOT LIKE '%@example.com'",   # AUD-010: live, real adverts only (there is no 'status' column)
                 ((listing["category"] or ""), (listing["city"] or ""), listing["id"]),
             ).fetchone()
             return int(row["n"]) if row else 0
         finally:
             conn.close()
-    except Exception:
+    except Exception as _cx:
+        _log.error("AUD-010: comp count failed: %s", _cx)   # never silent again
         return 0
 
 def _tierkey_for(listing, service: str) -> str:
@@ -25147,12 +25293,12 @@ def _comp_amounts(category, city, exclude_id, rentals_only=False, ref_title=None
             try:
                 rows = conn.execute(
                     "SELECT price, title, COALESCE(listing_type,\'\') AS lt FROM listings "
-                    "WHERE category=? AND city=? AND id<>? AND COALESCE(status,\'active\')!=\'paused\'",
+                    "WHERE category=? AND city=? AND id<>? AND COALESCE(listing_status,\'live\')=\'live\' AND COALESCE(is_demo,0)=0 AND COALESCE(super_example,0)=0 AND LOWER(COALESCE(seller_email,\'\')) NOT LIKE \'%@trustsquare.co\' AND LOWER(COALESCE(seller_email,\'\')) NOT LIKE \'%@example.com\'",   # AUD-010
                     ((category or ""), (city or ""), exclude_id)).fetchall()
             except Exception:
                 rows = conn.execute(
                     "SELECT price, title, \'\' AS lt FROM listings "
-                    "WHERE category=? AND city=? AND id<>? AND COALESCE(status,\'active\')!=\'paused\'",
+                    "WHERE category=? AND city=? AND id<>? AND COALESCE(listing_status,\'live\')=\'live\' AND COALESCE(is_demo,0)=0 AND COALESCE(super_example,0)=0 AND LOWER(COALESCE(seller_email,\'\')) NOT LIKE \'%@trustsquare.co\' AND LOWER(COALESCE(seller_email,\'\')) NOT LIKE \'%@example.com\'",   # AUD-010
                     ((category or ""), (city or ""), exclude_id)).fetchall()
         finally:
             conn.close()
@@ -25167,7 +25313,8 @@ def _comp_amounts(category, city, exclude_id, rentals_only=False, ref_title=None
             amt = _parse_money(r["price"])
             if amt:
                 out.append(amt)
-    except Exception:
+    except Exception as _cx:
+        _log.error("AUD-010: comp amounts failed: %s", _cx)   # never silent again
         return []
     return out
 
@@ -25182,7 +25329,13 @@ def _wc_norm(u: str) -> str:
         return (u or "").strip().lower()
 
 
-async def _web_comps_band(title: str, city, country) -> dict | None:
+_WEBCOMP_TRIES = {}       # AUD-005: who -> [timestamps] of web searches today
+_WEBCOMP_MISS = {}        # AUD-005: item -> time a search found nothing
+_WEBCOMP_DAILY_PER_USER = 8
+_WEBCOMP_MISS_TTL_S = 6 * 3600
+
+
+async def _web_comps_band(title: str, city, country, who: str = "") -> dict | None:
     """FAIR-PRICE-WEB-1 (David, 27 Sep 2026: "Named source definitely, the users will pay Tuppence for it - not
     for a guess"). Comparable ASKING prices read on named web pages. The model searches and reports what each page
     shows; the system keeps only pages the search itself returned, needs at least three, converts USD at the live
@@ -25192,10 +25345,22 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
     title = (title or "").strip()
     if not key or not title:
         return None
+    # AUD-005 (4 Oct 2026 audit): the search is counted against the CALLER -- her own daily ceiling and spend log,
+    # at most 8 searches a day, and an item that found nothing is not searched again for 6 hours. A check that finds
+    # too few pages charges nothing, so without this one account could empty the platform's daily AI budget.
+    import time as _wt
+    _now = _wt.time()
+    _ikey = (title.split(" \u2014 ")[0].strip() or title).lower()[:160]
+    if _now - _WEBCOMP_MISS.get(_ikey, 0) < _WEBCOMP_MISS_TTL_S:
+        return None
+    _tries = [x for x in _WEBCOMP_TRIES.get(who or "?", []) if _now - x < 86400]
+    if len(_tries) >= _WEBCOMP_DAILY_PER_USER:
+        return None
     try:
-        _check_cost_ceiling("")   # platform daily rail, like every AI lane
+        _check_cost_ceiling(who or "")   # her own ceiling (and the platform rail)
     except HTTPException:
         return None
+    _tries.append(_now); _WEBCOMP_TRIES[who or "?"] = _tries
     instr = ("You find what comparable second-hand items are listed for right now. Search the web for items comparable "
              "to the one described, preferably offered in South Africa in rand. Return ONLY JSON: "
              '{"comps":[{"title":"...","price":1234,"currency":"ZAR","url":"https://...","site":"..."}]} with 3 to 8 '
@@ -25213,7 +25378,7 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
         _t, _urls, _it, _ot, model = await _wa.to_thread(ai_provider.web_search_json, instr, _q)
         seen |= {_wc_norm(x) for x in _urls}
         try:
-            _log_ai_spend("", "/listings/price-check#web-comps", "reason", _it, _ot, provider="openai", model=model)
+            _log_ai_spend(who or "", "/listings/price-check#web-comps", "reason", _it, _ot, provider="openai", model=model)   # AUD-005
         except Exception:
             pass
         text = _t or ""
@@ -25246,6 +25411,9 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
     if len(kept) < 3:
         _log.info("FAIR-PRICE-WEB-1: %r -> %d named comparables (need 3; %d proposed, %d search pages, %d chars) - nothing charged",
                   title[:60], len(kept), len(comps), len(seen), len(text or ""))
+        _WEBCOMP_MISS[_ikey] = _wt.time()   # AUD-005: the same item is not searched again for 6 hours
+        if len(_WEBCOMP_MISS) > 5000:
+            _WEBCOMP_MISS.clear()
         return None
     vals = sorted(k["zar"] for k in kept)
     today = datetime.now(timezone.utc).strftime("%d %b %Y")
@@ -25261,7 +25429,7 @@ async def _web_comps_band(title: str, city, country) -> dict | None:
             "provenance": prov, "comps": kept}
 
 
-async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, category, city, asking_zar):
+async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, category, city, asking_zar, who: str = ""):
     """STEP 3 fair-price resolver for non-card categories (FREE/owned sources only).
     Returns ('verified', {...}) | ('area_guide', {...}) | None. The NUMBER always
     comes from a feed or arithmetic; the model only narrates the verified branch."""
@@ -25405,7 +25573,7 @@ async def _fair_price_resolve(listing, listing_id, tier, tierkey, country, categ
             # not for a guess"): no catalogue and no eBay -> comparable asking prices READ on named web pages. Only
             # pages the search actually returned count, at least three of them, and the band is our arithmetic.
             if not feed or not feed.get("value"):
-                _wc = await _web_comps_band(title, city, country)
+                _wc = await _web_comps_band(title, city, country, who)   # AUD-005: billed and capped per caller
                 if _wc:
                     return ("verified", {
                         "source": "web_comps", "floor_zar": _wc["median"],
@@ -25558,7 +25726,7 @@ async def ai_price_check(listing_id: int, email: str, tier: Optional[str] = None
     if (not verified_block) and (tier is not None):
         _fpx = await _fair_price_resolve(
             listing, listing_id, tier, _tierkey_for(listing, "fair_price"),
-            _listing_country_iso2(listing), category, city, asking_zar)
+            _listing_country_iso2(listing), category, city, asking_zar, (email or "").strip().lower())   # AUD-005
         if _fpx and _fpx[0] == "verified":
             _e = _fpx[1]
             verified = True
@@ -30423,6 +30591,10 @@ def pause_listing(listing_id: int, req: _PauseIn,
             return {"listing_id": listing_id, "listing_status": st}
         if st not in ("live", "paused"):
             raise HTTPException(status_code=409, detail="Only a live listing can be paused (this one is %s)." % st)
+        if want == "live" and conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=LOWER(?) AND listing_status='blocked' LIMIT 1",
+                                           (row["seller_email"] or "",)).fetchone():
+            # AUD-006 class: while any of her adverts is blocked (EULA 14.5) a paused one does not come back either.
+            raise HTTPException(status_code=403, detail="Your adverts are blocked for now, so nothing can go live. Please contact support.")
         if want == "live" and _is_commitment_listing(row):
             # PROPERTY-ONE-1 (Terms 5.3: one Buyer at a time): while a Buyer waits for an answer, the listing cannot be
             # reopened around her. Answering (accept or decline) reopens it -- never a lock-out.
