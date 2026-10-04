@@ -8,11 +8,12 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-02 - 2 Oct 2026 — EXAMPLES-LAST-1 (RUL-194))
+## Last Completed (2026-10-03 - 3 Oct 2026 — RED-SWEEP-3OCT)
 
-- **2 Oct 2026 — EXAMPLES-LAST-1 (RUL-194):** real listings now come before the AI examples in every list of both apps and
-  every server sort; viewers have an "AI examples on/off" switch (starts ON, shared by TrustSquare and Quick). Replaces
-  SUPER-PIN-1. Ledger RG-0700 (OPEN until the rendered check on the live site), RG-0052 amended.
+- **3 Oct 2026 — RED-SWEEP-3OCT:** the seven older red ledger entries cleared (help screens pulled from the server,
+  screen walk moved to the server timer, combined secrets file removed, one 'advert' word, two assertions corrected
+  to follow moved code, dashboard money chips re-checked -- Resend is above its free cap since 5 Sep). David's test
+  driver #473 removed. Ledger RG-0804..0806.
 
 <!-- DASH-FEED-1:END -->
 
@@ -37,6 +38,30 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **3 Oct 2026 — RED-SWEEP-3OCT:** the seven older red ledger entries cleared (help screens pulled from the server,
+  screen walk moved to the server timer, combined secrets file removed, one 'advert' word, two assertions corrected
+  to follow moved code, dashboard money chips re-checked -- Resend is above its free cap since 5 Sep). David's test
+  driver #473 removed. Ledger RG-0804..0806.
+
+- **3 Oct 2026 — PIECE-RATE-1 (RUL-197):** Quick no longer refuses a per-visit, per-job or call-out price against an hour of
+  minimum wage (David's courier, "Per besoek R25"); hour and day rates keep the floor. Ledger RG-0801, FEEDBACK F-024.
+
+- **3 Oct 2026 — LICENCE-SHOWN-1 (RUL-198):** Driver and Delivery rider list publicly at once; buyers see "Driving licence not
+  verified" beside the Trust Score and in the intro form, no credit until checked; PrDP / PSIRA / DoEL / SAQCC stay gates.
+  Ledger RG-0802, FEEDBACK F-025.
+
+- **3 Oct 2026 — PASSKEY-PHONE-1 + HUB-GHOST-1:** Face ID / fingerprint offer and sign-in button on phones only; the Seller Hub
+  prunes to the server's /listings/mine and a 404 on Delete removes the card (the #473 ghost). Ledger RG-0807, RG-0808; FEEDBACK
+  F-026, F-027.
+
+- **3 Oct 2026 — HOME-EX-SWITCH-1 (RUL-196):** the AI-examples switch now also sits on Home beside Categories, and every Home
+  count (tiles, fallback, Local Market tile) follows it -- David had the examples off and Home gave no sign of it. Afrikaans
+  switch words checked ("KI-voorbeelde aan/af", migration 064, DICTV 8). Ledger RG-0803.
+
+- **3 Oct 2026 — FEED-LIVE-1:** For You no longer shows paused/draft/archived adverts (David's 5 cards were all off the market;
+  78% of all feed rows were dead), a card found gone on tap leaves the feed, deletes clear feed rows, and the free-tier banner
+  counts only real live adverts abroad (it was selling Global on 30 AI examples). Ledger RG-0800, FEEDBACK F-023.
 
 - **2 Oct 2026 — EXAMPLES-LAST-1 (RUL-194):** real listings now come before the AI examples in every list of both apps and
   every server sort; viewers have an "AI examples on/off" switch (starts ON, shared by TrustSquare and Quick). Replaces

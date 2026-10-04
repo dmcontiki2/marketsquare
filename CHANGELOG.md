@@ -1,3 +1,126 @@
+## 2026-10-03 — RED-SWEEP-3OCT: the seven older red ledger entries cleared; David's test driver removed
+
+David: "Please do Claude, but it dont mean we lose any photos? Please remove the driver if it was the one i created
+during testing."
+
+- **Test driver removed:** #473 "Afleweringsryer — Menlyn, Pretoria East" (Services, Delivery rider) was his own
+  (seller dmcontiki2@gmail.com, made 06:49Z during testing, no photos). Removed through the seller delete route
+  (DELETE /listings/473/seller, admin key), DB backed up first (.db-backups/pre-del473-20261003-184527.db).
+- **Help-guide screens (RG-0546) -- no photo lost:** all 235 "missing" screens were live on the server; the laptop had
+  never pulled the cloud walks' screens. 249 pulled (rsync --ignore-existing), the 38 local ones untouched.
+  HELP-PULL-1 (RG-0804): `build_help.py --check` now takes missing screens from the server before judging; never
+  deletes or overwrites.
+- **Screen walk (RG-0456):** last ran 28 Sep -- its daily Cowork loop was retired that day and the server timer's lane
+  skipped the walk. SCREEN-WALK-ORIGIN-1 (RG-0805): the server's twice-daily maintenance timer walks now
+  (/opt/ms-playwright; 5 languages in 23 s, proven on the server), RG-0456 reads the origin witness.
+- **Combined secrets file (RG-0189):** `.secrets/PASTE_INTO_CLAUDE_CODE_CLOUD_ENV.txt` removed; its MS_QA_KEY is the
+  same value as `.secrets/qa_cloud_key.txt` (fingerprint match), TS_BASE is just the site address.
+- **'advert' -> 'listing' (RG-0504):** the car-hire coach line in Sell.
+- **Relay guard (RG-0252):** the assertion followed the guard into scripts/sync_origin.py (SYNC-ORIGIN-1 moved it
+  there 1 Oct); not weakened.
+- **How-nearest (RG-0650):** the guest-house guide was walked through Quick on 2 Oct; the assertion now checks the class
+  (every guide's quick flag equals its own steps).
+- **Dashboard money chips (RG-0155):** Cloudflare re-checked live -- plan "Free Website" -- review moved to 31 Dec.
+  RESEND-PLAN-TRUTH-1 (RG-0806): "free tier" was false since 5 Sep -- Resend's Free plan caps at 100 emails a day and
+  the shared key accepted 398 that day (2,482 in September); the chip now says "plan: above free cap".
+
+Cost model impact: none (the Resend finding is a fact about the current plan, not a change). Schema: none.
+
+## 2026-10-03 — RUL-197 PIECE-RATE-1: a visit, a job or a call-out fee has no minimum-wage floor in Quick
+
+David, Quick in Afrikaans, a courier in Menlyn, "Per besoek R25": Quick said *Dit is onder die nasionale minimumloon. Laagste
+toegelate bedrag: R30.23 — een uur teen die minimumloon* and kept Next off. "per visit, which typically takes 20 minutes ... The
+per visit/trip can not really be linked or compared against the hourly minimum rate?" RUL-168 (b) had set the floor at one hour of
+minimum wage for a visit, a job or a call-out.
+
+- **Rate screen:** Per visit, Per job and the call-out fee are prices for a piece of work (`B.x = 0`): no floor, no floor line;
+  any amount above zero goes on.
+- **Kept:** Per hour (the legal minimum wage) and Per day (x8) keep the floor, and so does a call-out's optional "then per hour"
+  rate, whose floor line now sits under it.
+- quick.html + genie/HARNESS.html; ledger RG-0801; rulings_check RUL-197; FEEDBACK F-024.
+
+Cost model impact: none. Schema: none.
+
+## 2026-10-03 — RUL-198 LICENCE-SHOWN-1: a plain driving licence is shown, not a gate
+
+David's own Delivery rider advert (#473, "Afleweringsryer — Menlyn, Pretoria East") sat behind "Only people you send your link to
+can see this listing ... Upload my licence". "this is not the same as the caretakers checks that is legally required ... we just
+show his TS as license not verified ... the people shopping for a driver can then still be introduced".
+
+- **Registry:** Driver and Delivery rider lose the licence gate and carry `licence_shown` (scripts/build_role_registry.py SHOWN ->
+  roles/role_registry.json -> quick.html SVC_ROLES). Their adverts are public at once (a Delivery rider still passes RUL-115's
+  casual check -- one confirmation or an ID check -- like every casual worker).
+- **Buyer:** `GET /listings/{id}` carries `licence_unverified: "Driving licence"` until a person has checked it; the app shows
+  "Driving licence not verified — it adds nothing to the Trust Score until our team has checked it. You can still ask for an
+  introduction." under the Trust Score, and a line in the introduction form. Never a block.
+- **Seller:** her Hub card says customers see the listing with "Driving licence not verified", with Upload my licence.
+- **Kept as gates:** PrDP-G / PrDP-P (Code 10/14 driver, Taxi / shuttle driver), PSIRA, DoEL, SAQCC (RUL-156).
+- **Guides:** "driver" moved from the electrician guide (licence gate) to the plumber guide (no gate); gallery.json regenerated;
+  RG-0655 now 17 / 7.
+- Ledger RG-0802; rulings_check RUL-198; FEEDBACK F-025.
+
+Cost model impact: none. Schema: none (one registry field).
+
+## 2026-10-03 — PASSKEY-PHONE-1 + HUB-GHOST-1: Face ID offer on phones only; the Hub drops adverts the server no longer has
+
+David, Seller Hub on his laptop: *"The face id and fingerprint message should not show on laptops or computers but only on
+phones"* and *"i can not delete the 'aflewerings ryer', this is an old recurring issue."*
+
+- **PASSKEY-PHONE-1 (ms.js):** the only device test was `isUserVerifyingPlatformAuthenticatorAvailable()`, which Windows Hello
+  and Touch ID answer yes. `pkPhone()` (the browser's `userAgentData.mobile`, else an iPhone / Android-phone user agent) now gates
+  `pkOn()`, so a laptop, desktop or tablet gets neither the Hub offer nor "Sign in with Face ID or fingerprint". Server unchanged.
+- **HUB-GHOST-1 (ms.js):** #473 "Afleweringsryer — Menlyn, Pretoria East" was deleted on the server at 18:45:27Z. His open Hub
+  read `/listings/mine` twice afterwards (18:48:23Z, 18:49:22Z) and kept the card, because `loadLiveDash` only ever added or
+  refreshed cards and never removed one; Delete at 18:49:03Z got 404 and showed "Error: Listing not found". Now every good
+  `/listings/mine` answer prunes the Hub to the server's list, an introduction cannot bring a deleted advert's card back, and a
+  404 on Delete removes the card ("Listing removed — it was already deleted").
+- Why it kept coming back: each earlier delete fault (22 May empty email, 23 Sep DELETE-BIND-1, 24 Sep DEL-STUCK-2) was fixed at
+  the button; the Hub's own copy of the list was never reconciled with the server, so any advert removed elsewhere stayed as a
+  ghost that no button could clear.
+- Ledger RG-0807, RG-0808 (each proven to fail on a mutated copy); FEEDBACK F-026, F-027.
+
+Cost model impact: none. Schema: none.
+
+## 2026-10-03 — RUL-196 HOME-EX-SWITCH-1: the AI-examples switch also sits on Home, and every Home count follows it
+
+David opened Home (Afrikaans) and read Eiendom 16, Onderrig 2 and 0 everywhere else: "i had the adverts switched off, but that
+switch only shows on the Browse page and not the Home page". The tiles were obeying the switch (RUL-194), but Home gave no sign
+the examples were hidden, so the numbers read as wrong. Measured in his Chrome: `ts_show_examples` = '0'; switched on, the tiles
+read Property 20, Tutors 3, Services 2, Adventures 9, Collectors 1, Cars 4, Local Market 2 -- the live DB's counts.
+
+- **Home switch:** the same "AI examples on/off" pill now sits beside the Categories heading (`msExPaintHome`, painted by
+  `renderCatCounts`), by the Browse rule: shown whenever examples are in view, always while it is off.
+- **Local Market tile:** it counted the hidden example (Pretoria read 2; #273 is real, #272 an example). `initLMHomeTile` and the
+  demo-mode count now follow the switch, and flipping the switch refreshes the tile.
+- **Fallback count:** a city holding only examples fell through to `renderCatCounts`' fallback branch, which counted them while
+  hidden -- it now skips them too.
+- **Afrikaans:** the switch read "AI-voorbeelde af" beside "KI-voorbeelde aan"; checked words "KI-voorbeelde aan/af" (and the two
+  toasts) in `roles/app_i18n_af.json`, applied by migration 064, browsers refreshed by DICTV 8.
+- Ledger RG-0803 (OPEN until proven on the rendered live page); rulings_check RUL-196.
+
+Cost model impact: none. Schema: none.
+
+## 2026-10-03 — FEED-LIVE-1: For You shows only adverts a buyer can open
+
+David tapped "2000 Krugerrand, 1 oz gold — Near mint" in For You and was told the advert is not available any more: "it should
+have been removed here and not even been viewable? Otherwise the users list will just keep growing and clogged with stale cards?"
+Measured on the live DB: `GET /wishlist/feed` filtered only the stranger gate, never `listing_status` -- all 5 of his cards (#442,
+#446, #454, #455, #464) were paused or draft, and 166 of 212 feed rows across 81 buyers pointed at adverts nobody could open.
+
+- **Feed:** `_buyer_live_sql` (live, not suspended -- the answer `GET /listings/{id}` gives) now gates the For You query. Match rows
+  are kept, so a paused advert that goes live again returns by itself; the 30-card page fills with live adverts only.
+- **Banner:** "30 matching listings in KE -- hidden on the free tier" counted every advert abroad in any state, and all 30 were AI
+  examples spread over KE, AU, GB and US. It now counts only real, live, stranger-visible adverts (`_example_sql` = the
+  EXAMPLES-LAST-1 definition) and names the one country or says "N other countries". For David today: no banner.
+- **Tap:** a card whose advert goes off the market after the feed loaded is removed on the tap that finds it gone (ms.js
+  `openDetail` not-found branch; cards carry `data-lid`).
+- **Deletes:** both advert deletes now clear that advert's `wishlist_matches` rows (44 orphans had built up; cleared once).
+- Ledger RG-0800; FEEDBACK F-023.
+
+Cost model impact: none. Schema: none.
+
+- **COL-CARRY-1 (RG-0676, OPEN_LOOPS L38):** a collector answered "Coins" and "Near mint" in Quick, but nothing kept those answers: Edit opened with Collection type empty, and Browse → Collectors → Collectible Type could never find a real advert (the column it reads was never written). Quick now sends both answers, the server stores them in Browse's own words ("Coins" becomes "Coins & Notes"), Edit opens with them filled in and saves changes to them, and the Browse filter gains "Watches & Jewellery" (Quick offers Watches).
+
 - **BOUGHT-WORD-1 (RG-0671), from the F8 and F10 walks:** after an accepted introduction the buyer was asked "I hired them" even for a bakkie or a coin she bought. The button now says what she did: "I bought from them" (car for sale, collector's piece, Local Market), "I rented from them" (property to let), "I hired them" (a service or a car for hire). It still counts as a verified client.
 - **ACCEPT-PRIVATE-WORDS-1 (RG-0672):** an advert's how-it-works steps said "Accepted → 1T deducted · identities revealed", while the accept itself says you both get an email and your addresses stay private. The steps and the identity box now say that.
 - **PRICE-MISS-WORD-1 (RG-0673):** when the 1T price check finds no verified price, it now says "We couldn't get a verified price for this item just now" (still not charged), instead of claiming there is no price source for the whole category.
