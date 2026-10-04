@@ -28,6 +28,12 @@ def main():
     args = ap.parse_args()
 
     from PIL import Image, ImageOps
+    # EVAL-HONEST-1 (4 Oct 2026): the first Gemini run silently fell back to OpenAI on 15 of 22 photos (breaker tripped on
+    # Google 429s) and still read as a pass. An eval measures ONE lane: no breaker detour, no fallback -- a lane failure
+    # is recorded as FAILED, and any answer served by another lane voids the run.
+    sys.modules["ai_breaker"] = None
+    import ai_provider as _apx
+    _apx._cost_approved_fallbacks = lambda task, prov: []
     import bea_main  # heavy import: pulls the app; run on a machine with the repo DB layout
 
     out, folder = [], args.dir
@@ -48,6 +54,8 @@ def main():
         if scan and args.refine and scan.get("regions"):
             rec["refined"] = bea_main._anon_refine_regions(
                 img, scan["regions"], args.provider, args.category, "eval", "/eval")
+        if rec["served_by"] and rec["served_by"][0] != args.provider:
+            rec["scan"] = "LANE-MISMATCH (served by %s) -- run void" % rec["served_by"][0]   # EVAL-HONEST-1
         out.append(rec)
         v = scan.get("verdict") if scan else "FAIL"
         print(f"{fn:40s} {v:8s} conf={scan.get('confidence') if scan else '-'} "

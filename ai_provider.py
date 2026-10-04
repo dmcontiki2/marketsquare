@@ -245,7 +245,14 @@ def _gemini(messages, model, max_tokens, system, timeout=30):
             r=c.post("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
                      headers={"Authorization":"Bearer "+key,"content-type":"application/json"},
                      json=body)
-        j=r.json()
+        # GEMINI-429-TRUTH-1 (4 Oct 2026): Google's error body is a JSON LIST, so j.get() raised and a 429
+        # "quota exhausted" was reported as a CONNECTION failure -- the breaker and the logs named the wrong cause.
+        try:
+            j=r.json()
+        except Exception:
+            j={}
+        if not isinstance(j, dict):
+            j={}
         text=(j.get("choices",[{}])[0].get("message",{}).get("content","") or "")
         u=j.get("usage",{}) or {}
         _ok = (r.status_code==200 and bool(text))
