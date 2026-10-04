@@ -2354,6 +2354,27 @@ $('back').onclick=function(){
   drawDoor();
 };
 $('home').onclick=function(){ drawDoor(); };   /* BUGSWEEP-24SEP: call the CURRENT drawDoor (it is wrapped later) */
+/* QUICK-FRESH-1 (David 4 Oct 2026, "i dont see the 'near you' option in the live Quick app yet"): it was live -- his Quick
+   had been open since before the deploy, and Start again only redrew the door. The door now remembers the version it
+   loaded; Start again, and coming back to an idle Quick at the door, load the newest one when the server has it.
+   Nothing is cached and nothing she typed is lost. */
+(function(){
+  if(location.protocol==='file:') return;
+  var mine=null, lastCheck=0;
+  function ver(){ return fetch('/quick/', {method:'HEAD', cache:'no-store', credentials:'same-origin'})
+      .then(function(r){ return r.ok ? (r.headers.get('last-modified') || r.headers.get('etag') || '') : ''; })
+      .catch(function(){ return ''; }); }
+  ver().then(function(v){ mine=v; });
+  function newer(){ return ver().then(function(v){ return !!(v && mine && v!==mine); }); }
+  window.qFreshCheck=newer;
+  var h=$('home'), _on=h.onclick;
+  h.onclick=function(){ var self=this, args=arguments;
+    newer().then(function(n){ if(n){ try{ qTrack('q_fresh_reload'); }catch(e){} location.reload(); return; } _on.apply(self, args); }); };
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState!=='visible' || mode || Date.now()-lastCheck<60000) return;
+    lastCheck=Date.now();
+    newer().then(function(n){ if(n && !mode) location.reload(); }); });
+})();
 
 /* swipe on the door */
 var sx=null;
