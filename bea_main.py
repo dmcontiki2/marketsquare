@@ -1915,17 +1915,18 @@ def _apply_pending_downgrades():
         # Pro payment is a one-off Paystack charge with no renewal, so a plan whose paid period has passed (and that
         # was not re-paid, which moves billing_period_end forward) returns to the tier she has without paying: Free,
         # or her agency's seat. Superusers are left alone; adverts above the new limit rest, nothing is deleted.
+        _now_s = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")   # portable: no SQL date functions (PG-READINESS)
         lapsed = conn.execute(
             "SELECT email FROM users WHERE LOWER(COALESCE(seller_tier,'')) IN ('starter','pro') "
             "AND pending_downgrade_tier IS NULL AND billing_period_end IS NOT NULL "
-            "AND billing_period_end <= strftime('%Y-%m-%dT%H:%M:%SZ','now') "
-            "AND COALESCE(is_superuser, 0) = 0").fetchall()
+            "AND billing_period_end <= ? "
+            "AND COALESCE(is_superuser, 0) = 0", (_now_s,)).fetchall()
         for row in lapsed:
             em = (row["email"] or "").lower()
             upd = conn.execute(
                 "UPDATE users SET seller_tier='free', slot_limit=?, billing_period_end=NULL "
                 "WHERE LOWER(email)=? AND billing_period_end IS NOT NULL "
-                "AND billing_period_end <= strftime('%Y-%m-%dT%H:%M:%SZ','now')", (_tier_slot_limit("free"), em))
+                "AND billing_period_end <= ?", (_tier_slot_limit("free"), em, _now_s))
             if upd.rowcount < 1:
                 continue
             new_tier = "free"
