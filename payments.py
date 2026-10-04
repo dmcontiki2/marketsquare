@@ -16,7 +16,19 @@ Functions exported:
 """
 
 import os
+import re
 import requests
+from urllib.parse import quote as _quote
+
+# AUD-002 (4 Oct 2026 audit): a payment reference is plain characters only. The verify URL used to be built
+# from the caller's raw text, so "ref#a", "ref?x=1" or "../verify/ref" all reached the SAME paid transaction
+# while our once-only key saw a new string each time -- one payment, credited again and again.
+_REFERENCE_RE = re.compile(r"^[A-Za-z0-9_.=-]{1,100}$")
+
+
+def valid_reference(reference) -> bool:
+    """True only for a reference made of plain characters (letters, digits, _ . = -), 1-100 long."""
+    return isinstance(reference, str) and bool(_REFERENCE_RE.fullmatch(reference))   # fullmatch: "$" alone lets a trailing newline through
 
 # ── Key ──────────────────────────────────────────────────────────────────────
 
@@ -91,15 +103,23 @@ def verify_payment(reference: str) -> dict:
     Returns Paystack's raw response dict.
     Check result["status"] and result["data"]["status"] == "success".
     """
+    # AUD-002: refuse anything but a plain reference, encode it anyway, and only accept Paystack's answer
+    # when the reference it returns is exactly the one asked for.
+    if not valid_reference(reference):
+        return {"status": False, "message": "invalid reference"}
     try:
         resp = requests.get(
-            f"{_BASE_URL}/transaction/verify/{reference}",
+            f"{_BASE_URL}/transaction/verify/{_quote(reference, safe='')}",
             headers=_headers(),
             timeout=15,
         )
-        return resp.json()
+        out = resp.json()
     except Exception as exc:
         return {"status": False, "message": str(exc)}
+    data = out.get("data") if isinstance(out, dict) else None
+    if out.get("status") and (not isinstance(data, dict) or data.get("reference") != reference):
+        return {"status": False, "message": "reference mismatch"}
+    return out
 
 
 def get_balance() -> dict:

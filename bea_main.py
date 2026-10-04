@@ -9477,7 +9477,10 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         if _row is None:
             conn.rollback(); conn.close()
             raise HTTPException(status_code=404, detail="Intro not found")
-        _settled = (_row["status"] or "").strip().lower() in ("accepted", "declined", "expired")   # BUGSWEEP-24SEP: expired = hold already returned
+        # AUD-001 (4 Oct 2026 audit): only a PENDING request can be accepted. The old list named the settled
+        # states one by one and missed "withdrawn", so a seller could accept a request the buyer had already
+        # withdrawn (hold returned) -- charging her 1T and introducing them against her wish. Allow-list, not deny-list.
+        _settled = (_row["status"] or "pending").strip().lower() != "pending"
         _already_charged = int(_row["charged"] or 0)      # the tuppence_charged flag
         if _settled or _already_charged or _row["status"] == "accepted":
             conn.rollback(); conn.close()
@@ -9554,7 +9557,7 @@ def accept_intro(intro_id: int, background_tasks: BackgroundTasks,
         _upd = conn.execute(
             "UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 "
             "WHERE id = ? AND COALESCE(tuppence_charged, 0) = 0 "
-            "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined', 'expired')",
+            "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'",   # AUD-001: pending only
             (intro_id,))
         if _upd.rowcount != 1:
             # Someone else won the race between our read and our write.
@@ -9766,10 +9769,12 @@ def decline_intro(intro_id: int, background_tasks: BackgroundTasks,
         raise HTTPException(status_code=409,
                             detail="This introduction was already accepted and charged — "
                                    "it cannot be declined.")
+    # AUD-001: decline is pending-only too -- a withdrawn or expired request is closed; rewriting it to
+    # 'declined' fired a decline message at a buyer who had already walked away.
     _dupd = conn.execute(
         "UPDATE intro_requests SET status = 'declined' WHERE id = ? "
         "AND COALESCE(tuppence_charged, 0) = 0 "
-        "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined')",
+        "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'",
         (intro_id,))
     # INTRO-HOLD-1: a declined introduction returns the hold in full, as promised.
     if _dupd.rowcount == 1:
@@ -9822,6 +9827,22 @@ def _claim_payment_ref(conn, reference: str, kind: str) -> bool:
         "ON CONFLICT(kind, reference) DO NOTHING",  # portable: pg-ratchet (BUGSWEEP-24SEP)
         (kind, reference, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
     return cur.rowcount == 1
+
+
+def _paystack_verified(reference: str):
+    """AUD-002 (4 Oct 2026 audit): the one door every Paystack verify handler goes through.
+    Refuses a reference that is not plain characters (400), asks Paystack, and returns
+    (result, canonical_ref) where canonical_ref is the reference PAYSTACK returned -- the only value
+    used for the once-only claim, the already-credited check and the ledger text. A caller's
+    '#a' / '?x=1' / '../' variant can therefore never mint a second key for one payment."""
+    if not payments.valid_reference(reference):
+        raise HTTPException(status_code=400, detail="That payment reference is not valid.")
+    result = payments.verify_payment(reference)
+    data = result.get("data") if isinstance(result, dict) else None
+    canonical = (data or {}).get("reference") if isinstance(data, dict) else None
+    if result.get("status") and canonical != reference:
+        raise HTTPException(status_code=400, detail="Payment verification failed")
+    return result, (canonical or reference)
 
 
 def _safe_callback_url(url):
@@ -9897,7 +9918,7 @@ def initialize_payment(email: str, tuppence: int, ai_pack_sessions: int = 0, cal
 
 @app.get("/payment/verify")
 def verify_payment(reference: str):
-    result = payments.verify_payment(reference)
+    result, reference = _paystack_verified(reference)   # AUD-002: Paystack's own reference from here on
     if result.get("status") and result["data"]["status"] == "success":
         metadata = result["data"]["metadata"]
         tuppence = metadata.get("tuppence", 0)
@@ -10188,7 +10209,7 @@ def verify_seller_subscription(reference: str):
     Downgrades: pending_downgrade_tier set; applied at billing_period_end by worker.
     Returns {status, email, tier, label, is_downgrade, effective}
     """
-    result = payments.verify_payment(reference)
+    result, reference = _paystack_verified(reference)   # AUD-002: Paystack's own reference from here on
     if not (result.get("status") and result["data"]["status"] == "success"):
         raise HTTPException(status_code=400, detail="Payment verification failed or payment not successful")
 
@@ -12947,7 +12968,7 @@ def init_global_subscription(buyer_token: str, email: str):
 @app.get("/wishlist/subscription/verify")
 def verify_global_subscription(reference: str):
     """Paystack callback — activate Global tier on success."""
-    result = payments.verify_payment(reference)
+    result, reference = _paystack_verified(reference)   # AUD-002: Paystack's own reference from here on
     if result.get("status") and result["data"]["status"] == "success":
         meta = result["data"].get("metadata") or {}
         if int(meta.get("wishlist_global", 0)) != 1:

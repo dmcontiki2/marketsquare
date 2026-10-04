@@ -32827,7 +32827,8 @@ def rg_lm_walk_fix_1():
     if None in (q, js):
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = []
-    for need in ("h.textContent=qItemTitle(c); p.innerHTML=c.draftBody(picks);",
+    # AUD-003 (4 Oct 2026): the body redraw is textContent now (it was innerHTML -- a script door); same behaviour, safer paint.
+    for need in ("h.textContent=qItemTitle(c); p.textContent=c.draftBody(picks);",
                  "var item=(QUICK.itemName && /^(localmarket|collectors)$/.test(c.key)) ? QUICK.itemName : '';", "A.at(wl, where.label)"):
         if need not in q:
             bad.append("Quick lost: " + need[:60])
@@ -35074,6 +35075,114 @@ def rg_rul199():
     if "SEVERE PENALTIES" in lc:
         return [(FAIL, "a bare 'SEVERE PENALTIES' is back on a legal card")]
     return [(INFO, "testers capped at four, no phone points, licences 'checked', permit rows scoped")]
+
+
+@entry("RG-0812", "AUD-001 (4 Oct 2026 audit, Critical): only a PENDING introduction can be accepted or declined -- a request the "
+       "buyer withdrew (or that expired) can never be accepted, charged 1T and revealed, nor rewritten to 'declined'",
+       OPEN, fixed_on="2026-10-04",
+       scope="bea_main.py accept_intro (_settled is an allow-list: anything but pending is closed; the conditional UPDATE "
+             "requires status pending) and decline_intro (same UPDATE precondition); estate_agents.py decline_agent_intro "
+             "(its UPDATE now also requires pending -- the accept already did). CLASS: every intro status write in the "
+             "deployed code is pending-only (withdraw and the expiry sweep already were). PROVEN by "
+             "scripts/prove_intro_charge_once.py section 6 on a throwaway replica (withdrawn / expired / odd-cased: 409, no "
+             "charge, record untouched; legacy NULL still counts as pending).",
+       ref="AUDIT_2026-10-04_findings.json AUD-001 (B3-02), graded READ-LEAD; confirmed in today's code 4 Oct 2026.")
+def rg_aud001_pending_only():
+    bad = _fb28_need([("bea_main.py", [('_settled = (_row["status"] or "pending").strip().lower() != "pending"',
+                                        "accept_intro lists settled states one by one again (withdrawn slips through)")]),
+                      ("estate_agents.py", [("WHERE id=? AND status='pending'\",\n                             (_now(), intro_id))   # AUD-001",
+                                             "the agent-intro decline lost its pending-only precondition")])])
+    if bad:
+        return bad
+    b = repo_file("bea_main.py") or ""
+    if b.count("AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'") < 2:
+        return [(FAIL, "accept or decline no longer writes through a pending-only UPDATE")]
+    if "NOT IN ('accepted', 'declined'" in b:
+        return [(FAIL, "a deny-list status guard is back in bea_main.py")]
+    ok, blind, det = _harness([sys.executable, os.path.join(REPO, "scripts", "prove_intro_charge_once.py")], timeout=60)
+    if blind:
+        return [(INFO, det)]
+    if not ok:
+        return [(FAIL, "prove_intro_charge_once.py fails: " + str(det)[-200:])]
+    return [(INFO, "withdrawn / expired introductions can be neither accepted nor declined (replica proof passes)")]
+
+
+@entry("RG-0813", "AUD-002 (4 Oct 2026 audit, Critical): one Paystack payment credits exactly once -- a reference is plain "
+       "characters only, sent URL-encoded, and the once-only claim keys on the reference PAYSTACK returns, on all three "
+       "verify doors (Tuppence, seller plan, wishlist)",
+       OPEN, fixed_on="2026-10-04",
+       scope="payments.py valid_reference() (fullmatch ^[A-Za-z0-9_.=-]{1,100}$) + verify_payment (refuses before sending, "
+             "urllib quote, refuses an answer naming another reference); bea_main.py _paystack_verified() -- the ONE caller "
+             "of payments.verify_payment -- used by /payment/verify, /payment/seller-subscription/verify and "
+             "/wishlist/subscription/verify. The webhook already keyed on Paystack's signed reference. PROVEN by "
+             "scripts/prove_paystack_ref_once.py (fake Paystack that drops #fragments, ?queries and resolves ../). Live: "
+             "a '#a' variant is refused 400 'not valid' before Paystack is asked (read-only probe, claims nothing).",
+       ref="AUDIT_2026-10-04_findings.json AUD-002 (B3-01 + H1-01), graded READ-LEAD; confirmed in today's code 4 Oct 2026.")
+def rg_aud002_paystack_ref_once():
+    bad = _fb28_need([("payments.py", [("_REFERENCE_RE.fullmatch(reference)", "the reference check is gone or uses match again"),
+                                       ("_quote(reference, safe='')", "the reference is pasted into the Paystack URL raw again"),
+                                       ('data.get("reference") != reference', "Paystack's answer is no longer checked against the reference")]),
+                      ("bea_main.py", [("def _paystack_verified(reference: str):", "the shared verify door is gone")])])
+    if bad:
+        return bad
+    b = repo_file("bea_main.py") or ""
+    if b.count("payments.verify_payment(") != 1 or b.count("result, reference = _paystack_verified(reference)") != 3:
+        return [(FAIL, "a verify handler calls Paystack around the shared door (keys its claim on typed text again)")]
+    ok, blind, det = _harness([sys.executable, os.path.join(REPO, "scripts", "prove_paystack_ref_once.py")], timeout=60)
+    if blind:
+        return [(INFO, det)]
+    if not ok:
+        return [(FAIL, "prove_paystack_ref_once.py fails: " + str(det)[-200:])]
+    _require_net()
+    req = urllib.request.Request(BASE + "/payment/verify?reference=ms_tuppence_probe%23a", headers=UA)
+    try:
+        urllib.request.urlopen(req, timeout=TIMEOUT)
+        return [(FAIL, "live /payment/verify answered 200 to a '#a' reference")]
+    except urllib.error.HTTPError as e:
+        blind = _edge_refused(e)
+        if blind:
+            raise ProbeOffline(blind)
+        body = e.read().decode("utf-8", "replace")[:300]
+        if e.code in (401, 403):
+            return [(INFO, "NOT EVALUATED live -- the gate refused an anonymous read (%s); source + replica proof pass" % e.code)]
+        if e.code != 400 or "not valid" not in body:
+            return [(FAIL, "live /payment/verify does not refuse a '#a' reference as invalid yet (HTTP %s: %s)" % (e.code, body[:120]))]
+    return [(INFO, "a '#a' reference is refused live before Paystack is asked; one payment = one credit (replica proof passes)")]
+
+
+@entry("RG-0814", "AUD-003 (4 Oct 2026 audit, Critical): Quick paints her answers as TEXT -- a crafted /quick/?resume= link "
+       "can no longer run script on trustsquare.co, kept answers are rebuilt from an allow-list, and only her own "
+       "Google round trip restores without a tap",
+       OPEN, fixed_on="2026-10-04",
+       scope="quick.html (= genie/HARNESS.html, = /q/): qEsc()/qPh() beside $(); every answer trail (7 painters), the draft "
+             "card's title, body and facts, the hero picture; qRefreshItem body as textContent; qCleanWip() on the ?resume= "
+             "reader AND the door's stored copy; restore() clamps step to the flow; the Google tap writes a one-use number "
+             "(localStorage ts_q_gn) carried as &rn=, and a link without it waits on 'Carry on'. EXECUTED 4 Oct in headless "
+             "Chromium (scripts/smoke_harness/verify_quick_resume_xss.mjs): the old file ran the injected handler 1-6 times "
+             "per link, the new file 0 times with and without a tap, and showed the payload as text.",
+       ref="AUDIT_2026-10-04_findings.json AUD-003 (Q1-01 + Q2-01), graded PROBED by the audit; reproduced on the old file 4 Oct 2026.")
+def rg_aud003_quick_escape():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    for sn, why in (("function qEsc(t)", "the escape helper is gone"),
+                    ("window.qCleanWip=function(w)", "resumed answers are no longer rebuilt from an allow-list"),
+                    ("if(_w){ _w.t=Date.now(); ssSet(WIPK, JSON.stringify(_w)); if(_mine) window._qResumeNow=true; }",
+                     "a ?resume= link restores itself without her own one-use number again"),
+                    ("p.textContent=c.draftBody(picks);", "the item-name refresh paints the advert body as markup again")):
+        if sn not in q:
+            return [(FAIL, "quick.html: " + why)]
+    for raw in ("'<span>'+p.label+'</span>'", "'<span>'+pk.label+'</span>'", "src=\"'+PH[p.photo]+'\"",
+                "<h3>'+title+'</h3>", "<p>'+c.draftBody(picks)+'</p>", "p.innerHTML=c.draftBody("):
+        if raw in q:
+            return [(FAIL, "quick.html paints an answer raw again: " + raw)]
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html differs from quick.html")]
+    live = _get("/quick/")
+    if "function qEsc(t)" not in live or "'<span>'+p.label+'</span>'" in live:
+        return [(FAIL, "the live /quick/ still paints answers raw (not deployed yet?)")]
+    return [(INFO, "Quick escapes every answer, rebuilds resumed answers, and waits for a tap on a foreign link -- live")]
 
 
 def _server_vantage_wrap():

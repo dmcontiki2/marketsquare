@@ -1083,8 +1083,11 @@ def decline_agent_intro(intro_id: int, email: str):
             raise HTTPException(status_code=404, detail="Intro not found for this agent")
         if intro["status"] != "pending":
             raise HTTPException(status_code=409, detail=f"Intro already {intro['status']}")
-        conn.execute("UPDATE agent_intros SET status='declined', responded_at=? WHERE id=?", (_now(), intro_id))
+        _dupd = conn.execute("UPDATE agent_intros SET status='declined', responded_at=? WHERE id=? AND status='pending'",
+                             (_now(), intro_id))   # AUD-001 class: pending-only, race-safe
         conn.commit()
+        if _dupd.rowcount != 1:
+            raise HTTPException(status_code=409, detail="Intro already settled")
     finally:
         conn.close()
     return {"ok": True, "status": "declined", "charged": "0T"}

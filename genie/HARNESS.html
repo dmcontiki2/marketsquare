@@ -485,6 +485,11 @@ var CATS = [{"key": "homehelp", "name": "Housekeeping", "c": "#16A97C", "bg": "#
 /* QUICK-WHERE-1 (David, 24 Sep 2026): Cars, Tutors, Collectors and Adventures ask WHERE as their last tap,
    so a stranger's advert is filed where it really is - not under the Menlyn/Pretoria default. */
 function $(i){return document.getElementById(i);}
+/* AUD-003 (4 Oct 2026 audit): one escape for every answer painted into the page. Her answers (typed words, areas,
+   a resumed ?resume= link) are TEXT; written raw into innerHTML a crafted label ran script on trustsquare.co.
+   qPh() gives a picture address only for a key the app itself registered in PH, escaped. */
+function qEsc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return '&#'+c.charCodeAt(0)+';';});}
+function qPh(k){return (typeof k==='string' && Object.prototype.hasOwnProperty.call(PH,k)) ? qEsc(PH[k]) : '';}
 function el(h){var d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;}
 
 var ci=0, mode=null, step=0, picks=[], narrow=[], heroTimer=null, heroIx=0, taps=0;
@@ -674,7 +679,7 @@ function drawStep(){
   if(step>=f.steps.length){ drawResult(); return; }
   var s=f.steps[step];
   var trail=picks.map(function(p){
-    return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+    return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
   if(s.kind==='week'){ drawWeek(s,trail); return; }
   var items;
   if(s.kind==='chip'){
@@ -1476,7 +1481,7 @@ function drawDraft(){
   qTrack('q_draft');           /* QUICK-FUNNEL-1: the advert was composed and shown */
   var c=cat();
   var title=qItemTitle(c);
-  var facts=picks.filter(function(p){return p.key!=='group';}).map(function(p){return '<span>'+p.label+'</span>';}).join('');
+  var facts=picks.filter(function(p){return p.key!=='group';}).map(function(p){return '<span>'+qEsc(p.label)+'</span>';}).join('');
   var q=lsOf(picks,0), ts=SELLER.ts, rs=rsOf(q.score,ts), tb=trustBand(ts);
   var top=q.missing[0];
   /* THE ONLY PLACE A MODE EXISTS ON THE LISTING SIDE. Everything above this line
@@ -1552,8 +1557,8 @@ function drawDraft(){
    +(mem
       ? '<div class="draftflag"><span>&#9998;</span> Draft &mdash; publish now, polish it in the app</div>'
       : '<div class="draftflag"><span>&#9998;</span> Draft &mdash; '+(q.missing.length+2)+' things left to finish</div>')
-   +'<div class="card"><img class="hero" src="'+PH[heroPhoto()]+'" alt="">'
-   +'<div class="pad"><h3>'+title+'</h3><p>'+c.draftBody(picks)+'</p>'
+   +'<div class="card"><img class="hero" src="'+qPh(heroPhoto())+'" alt="">'
+   +'<div class="pad"><h3>'+qEsc(title)+'</h3><p>'+qEsc(c.draftBody(picks))+'</p>'   /* AUD-003 */
    +'<div class="facts">'+facts+'</div></div></div>'
    /* CLEARANCE-CHECK-1 (F2 story walk, 30 Sep 2026): a nanny, caregiver, au pair or creche assistant is shown to
       strangers only once her police clearance is checked (RUL-153). Quick said so only after a direct publish -- she
@@ -1730,7 +1735,7 @@ function drawLookup(){
   var c=cat(), all=c.ads(picks,[]);
   var five=all.slice(0,5);
   var trail=picks.map(function(p){
-    return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+    return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
   var cards=five.map(function(a,i){
     var tb=trustBand(a.ts);
     return '<div class="ad" style="animation-delay:'+(i*25)+'ms"><img src="'+PH[a.p]+'" alt="">'
@@ -1780,7 +1785,7 @@ function drawAds(){
      +'&#9733; '+a.ts+'</span></div></div></div>';
   });
   var trail=picks.concat(narrow).map(function(p){
-    return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+    return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
   $('screen').className='screen';
   $('screen').innerHTML=
     '<div class="q" style="font-size:18px">'+(nstep?nstep.q:'Your five')+'</div>'
@@ -3568,7 +3573,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
         try{
           var c=cat(), h=document.querySelector('#screen .card .pad h3'), p=document.querySelector('#screen .card .pad p');
           if(!h || !p) throw 0;
-          h.textContent=qItemTitle(c); p.innerHTML=c.draftBody(picks);
+          h.textContent=qItemTitle(c); p.textContent=c.draftBody(picks);   /* AUD-003: text, never markup */
         }catch(e){ try{ drawDraft(); }catch(_){} }
       };
     }
@@ -3685,7 +3690,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     try{ qTrack('q_step_'+(step+1)); }catch(e){}
     var cc=country(), F=MINW[cc].h, set=setsFor(s), basis=set.def, parts=false;
     var trail=picks.map(function(p){
-      return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+      return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
     var sc=$('screen'); sc.className='screen'; sc.setAttribute('data-step','price');
     sc.innerHTML='<div class="q">What do you charge?</div>'
       +(trail?'<div class="trail">'+trail+'</div>':'')
@@ -3780,7 +3785,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     try{ qTrack('q_step_'+(step+1)); }catch(e){}
     var cc=country(), d=pickOf('deal'), rent=!!(d && /let|rent/i.test(String(d.label||'')));
     var trail=picks.map(function(p){
-      return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+      return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
     var sc=$('screen'); sc.className='screen'; sc.setAttribute('data-step','price');
     sc.innerHTML='<div class="q">'+(rent?'What is the rent a month?':'What is your asking price?')+'</div>'
       +(trail?'<div class="trail">'+trail+'</div>':'')
@@ -3984,7 +3989,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   drawLookup=function(){
     atSub=null;                                          /* SUB-BACK-1 (quick-14) */
     var c=cat(), co=catOut(c), my=++_lkSeq;
-    var trail=picks.map(function(pk){ return pk.photo?'<img src="'+PH[pk.photo]+'" alt="">':'<span>'+E(pk.label)+'</span>'; }).join('');
+    var trail=picks.map(function(pk){ return pk.photo?'<img src="'+qPh(pk.photo)+'" alt="">':'<span>'+E(pk.label)+'</span>'; }).join('');
     var where=pickOf('where'), city=(where&&cityOf(where.label))||LOC.city||'Pretoria', what=roleLabel();
     $('screen').className='screen';
     $('screen').innerHTML='<div class="q" style="font-size:19px">'+E(T('Looking on TrustSquare'))+'&hellip;</div>'
@@ -4552,7 +4557,7 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
     if(isWhere && !QCITY && window.QCITY_OTHER && mode){
       /* CITY-OTHER-1 (quick-11): her own area, in words -- never another city's suburbs */
       setNav();
-      var trail=picks.map(function(p){ return p.photo?'<img src="'+PH[p.photo]+'" alt="">':'<span>'+p.label+'</span>'; }).join('');
+      var trail=picks.map(function(p){ return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
       drawFree(s, trail);
       try{ $('frback').onclick=function(){ window.QCITY_OTHER=null; drawCityPick(); }; }catch(e){}
       return;
@@ -4661,9 +4666,42 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
   /* QUICK-GOOGLE-1 (David, 3 Oct 2026): her answers ride the Google round trip IN the return address (?resume=), because
      on an iPhone the page Google returns to may not share this tab's storage; she lands back on her listing, signed in. */
   window.qWipPack=function(){ try{ var j=ssGet(WIPK); if(!j) return ''; return btoa(unescape(encodeURIComponent(j))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }catch(e){ return ''; } };
-  try{ var _rs=new URLSearchParams(location.search).get('resume');
+  /* AUD-003: kept answers are rebuilt field by field -- text stays short text, a picture is a plain key, the step
+     a whole number -- whatever a link or a stored copy carries. Nothing else survives. */
+  function qCleanStr(v,n){ return (typeof v==='string') ? v.slice(0,n) : null; }
+  window.qCleanWip=function(w){
+    if(!w || typeof w!=='object' || !Array.isArray(w.picks)) return null;
+    var out={t:+w.t||0, cat:qCleanStr(w.cat,40), mode:(w.mode==='find'||w.mode==='sell')?w.mode:null,
+             step:Math.max(0,Math.min(60,parseInt(w.step,10)||0)), taps:Math.max(0,Math.min(500,parseInt(w.taps,10)||0)),
+             city:qCleanStr(w.city,80), other:qCleanStr(w.other,80), picks:[]};
+    if(!out.cat || !out.mode) return null;
+    w.picks.slice(0,60).forEach(function(p){
+      if(!p || typeof p!=='object' || typeof p.label!=='string' || typeof p.key!=='string' || !/^[A-Za-z0-9_]{1,40}$/.test(p.key)) return;
+      var c={label:p.label.slice(0,200), key:p.key,
+             photo:(typeof p.photo==='string' && /^[a-z0-9_]{1,80}$/.test(p.photo)) ? p.photo : null};
+      Object.keys(p).forEach(function(k){
+        if(k in c || !/^[A-Za-z_]{1,20}$/.test(k)) return; var v=p[k];
+        if(typeof v==='boolean' || (typeof v==='number' && isFinite(v))) c[k]=v;
+        else if(typeof v==='string') c[k]=v.slice(0,200);
+        else if(Array.isArray(v)) c[k]=v.filter(function(x){ return typeof x==='string'; }).slice(0,20).map(function(x){ return x.slice(0,100); });
+      });
+      out.picks.push(c);
+    });
+    return out.picks.length ? out : null;
+  };
+  /* AUD-003: only HER OWN Google round trip comes back on its own. The tap that leaves for Google writes a one-use
+     number on this phone and puts it in the return address; a ?resume= link without that number (anyone else's
+     link) is kept as 'Carry on' on the door and waits for her tap. */
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+  window.qResumeNonce=function(){ var n=''; try{ var a=new Uint8Array(12); crypto.getRandomValues(a); for(var i=0;i<a.length;i++) n+=('0'+a[i].toString(16)).slice(-2); }catch(e){ n=String(Math.random()).slice(2)+String(Date.now()); }
+    lsSet('ts_q_gn', n+'|'+Date.now()); return n; };
+  try{ var _qs=new URLSearchParams(location.search), _rs=_qs.get('resume'), _rn=_qs.get('rn')||'';
     if(_rs){ var _b=_rs.replace(/-/g,'+').replace(/_/g,'/'); while(_b.length%4) _b+='=';
-      var _w=JSON.parse(decodeURIComponent(escape(atob(_b)))); if(_w && _w.picks){ _w.t=Date.now(); ssSet(WIPK, JSON.stringify(_w)); window._qResumeNow=true; }
+      var _w=window.qCleanWip(JSON.parse(decodeURIComponent(escape(atob(_b)))));
+      var _gn=(lsGet('ts_q_gn')||'').split('|'); lsSet('ts_q_gn', null);
+      var _mine=!!(_rn && _gn[0] && _rn===_gn[0] && (Date.now()-(+_gn[1]||0)) < 30*60*1000);
+      if(_w){ _w.t=Date.now(); ssSet(WIPK, JSON.stringify(_w)); if(_mine) window._qResumeNow=true; }
       history.replaceState({}, '', location.pathname); } }catch(e){}
   window.qWipSave=function(){
     try{ if(!mode || !picks.length) return;
@@ -4679,6 +4717,7 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
          else if(w.other){ window.QCITY=null; window.QCITY_OTHER=w.other; LOC.city=w.other; } }catch(e){}
     start(w.mode);
     picks=w.picks.slice(); taps=w.taps||picks.length; step=w.step||0;
+    try{ step=Math.min(step, flow().steps.length); }catch(e){}   /* AUD-003: never past the draft */
     try{ qTrack('q_wip_restore'); }catch(e){}
     paintTheme(); drawStep();
   }
@@ -4686,7 +4725,7 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
   drawDoor=function(){
     _ddW();
     try{
-      var w=JSON.parse(ssGet(WIPK)||'null');
+      var w=window.qCleanWip(JSON.parse(ssGet(WIPK)||'null'));   /* AUD-003 */
       if(!w || !w.picks || !w.picks.length || (Date.now()-(w.t||0))>WIP_MAX_MS) return;
       if(!CATS.some(function(c){ return c.key===w.cat; })) return;
       var scr=$('screen');
@@ -4744,7 +4783,8 @@ var SVC_CUSTOMER={"hair_braider": 1, "hairdresser": 1, "nail_technician": 1, "ca
     try{ qTrack('q_google'); }catch(e){}
     try{ window.qWipSave && qWipSave(); }catch(e){}
     var pk=(window.qWipPack && qWipPack()) || '';
-    location.href='/auth/oauth/google/start?next='+encodeURIComponent('/quick/'+(pk?'?resume='+pk:''));
+    var rn=(pk && window.qResumeNonce) ? qResumeNonce() : '';   /* AUD-003: her own trip comes back on its own */
+    location.href='/auth/oauth/google/start?next='+encodeURIComponent('/quick/'+(pk?'?resume='+pk+(rn?'&rn='+rn:''):''));
   });
 })();
 

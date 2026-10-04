@@ -16,10 +16,10 @@ SRC = os.path.join(REPO, "bea_main.py")
 
 GUARD_UPDATE = ("UPDATE intro_requests SET status = 'accepted', tuppence_charged = 1 "
                 "WHERE id = ? AND COALESCE(tuppence_charged, 0) = 0 "
-                "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined')")
+                "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'")   # AUD-001: pending only
 DECLINE_UPDATE = ("UPDATE intro_requests SET status = 'declined' WHERE id = ? "
                   "AND COALESCE(tuppence_charged, 0) = 0 "
-                  "AND COALESCE(LOWER(status), 'pending') NOT IN ('accepted', 'declined')")
+                  "AND COALESCE(LOWER(TRIM(status)), 'pending') = 'pending'")   # AUD-001: pending only
 
 fails = []
 def check(ok, msg):
@@ -44,6 +44,8 @@ check(flat(GUARD_UPDATE) in _fsrc, "accept uses a conditional UPDATE with its ow
 check(flat(DECLINE_UPDATE) in _fsrc, "decline uses a conditional UPDATE with its own precondition")
 check("BEGIN IMMEDIATE" in src, "the charge runs inside an immediate transaction")
 check("status_code=402" in src, "a below-balance accept answers 402, not a negative wallet")
+check('_settled = (_row["status"] or "pending").strip().lower() != "pending"' in src,
+      "AUD-001: accept treats every status except pending as settled (allow-list)")
 
 def replica():
     # isolation_level=None -> explicit transaction control, matching how the handler
@@ -69,7 +71,7 @@ def accept(c, who="buyer@x.test"):
                     "FROM intro_requests WHERE id=1").fetchone()
     if row is None:
         c.rollback(); return 404
-    if (row["status"] or "").strip().lower() in ("accepted", "declined") or int(row["charged"] or 0):
+    if (row["status"] or "pending").strip().lower() != "pending" or int(row["charged"] or 0):
         c.rollback(); return 409
     if balance(c, who) < 1:
         c.rollback(); return 402
@@ -122,6 +124,23 @@ c4 = replica()
 check(decline(c4) == 200, "declining a pending introduction succeeds")
 check(balance(c4) == 0, "no charge was made on decline")
 check(decline(c4) == 409, "declining twice is refused 409")
+
+print("\n6. AUD-001: a withdrawn or expired request can be neither accepted nor declined")
+for _closed in ("withdrawn", "expired", "Withdrawn "):
+    c5 = replica()
+    c5.execute("INSERT INTO transactions (user_email, type, amount, description) "
+               "VALUES ('buyer@x.test','topup',1,'seed 1T')"); c5.commit()
+    c5.execute("UPDATE intro_requests SET status=? WHERE id=1", (_closed,)); c5.commit()
+    check(accept(c5) == 409, "accepting a %r request is refused 409" % _closed)
+    check(balance(c5) == 1, "no charge on the %r request -- balance %dT" % (_closed, balance(c5)))
+    check(decline(c5) == 409, "declining a %r request is refused 409" % _closed)
+    st5 = c5.execute("SELECT status FROM intro_requests WHERE id=1").fetchone()["status"]
+    check(st5 == _closed, "the %r record is untouched -- got %r" % (_closed, st5))
+    # the raw guarded UPDATEs refuse it too, whatever a caller's pre-check does
+    check(c5.execute(GUARD_UPDATE, (1,)).rowcount == 0, "the accept UPDATE itself refuses %r" % _closed)
+    check(c5.execute(DECLINE_UPDATE, (1,)).rowcount == 0, "the decline UPDATE itself refuses %r" % _closed)
+c6 = replica(); c6.execute("UPDATE intro_requests SET status=NULL WHERE id=1"); c6.commit()
+check(decline(c6) == 200, "a legacy NULL-status request still counts as pending")
 
 print("\n" + "=" * 70)
 if fails:
