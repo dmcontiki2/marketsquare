@@ -6470,7 +6470,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
     scan, _it, _ot, _svd = _anon_photo_scan(
         _b64.b64encode(pbuf.getvalue()).decode(),
-        _anon_scan_provider(_ts_active_provider()), category or "")   # GEMINI-CANARY-1
+        _ts_active_provider(), category or "", first=True, who=spend_who)   # LUNA-FIRST-1 (RUL-203; Gemini dropped)
     if _it is not None or _ot is not None:
         _log_ai_spend(spend_who, "/listings/photo#anon-scan", "vision", _it, _ot,
                       provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
@@ -21558,7 +21558,26 @@ def _anon_photo_fetch(src):
     except Exception:
         return None, "fetch-failed"
 
-def _anon_photo_scan(jpeg_b64, provider, category=""):
+def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task="reason"):
+    """LUNA-FIRST-1 (RUL-203): first=True -> luna reads it first; only a photo luna does not pass as clean goes to
+    terra (this same function, the reason tier), whose answer is returned. The luna read is metered here."""
+    if first and _task == "reason":
+        try:
+            import ai_provider as _apf
+            _first_on = (_apf.envkey("PHOTO_SCAN_FIRST") or "luna").lower() != "terra"
+        except Exception:
+            _first_on = False
+        if _first_on:
+            _l, _lit, _lot, _lsv = _anon_photo_scan(jpeg_b64, "openai", category, False, who, "vision")
+            if _l and _l.get("verdict") == "clean" and float(_l.get("confidence") or 0) >= _ANON_PHOTO_CONF \
+                    and _l.get("flag") != "inappropriate" and _l.get("fits") is not False:
+                return _l, _lit, _lot, _lsv          # caller meters it, as for any scan
+            if _lit is not None or _lot is not None:  # luna flagged it: meter luna here, terra is metered by the caller
+                try:
+                    _log_ai_spend(who or "", "/photo#anon-first-luna", "vision", _lit, _lot,
+                                  provider=(_lsv[0] if _lsv else None), model=(_lsv[1] if _lsv else None))
+                except Exception:
+                    pass
     """ONE seam-routed vision call → verdict dict or None (None = hold the photo).
     Returns (scan|None, in_tokens, out_tokens, served|None) where served =
     (provider, model) that ACTUALLY answered (P6 spend attribution). Never raises."""
@@ -21569,7 +21588,8 @@ def _anon_photo_scan(jpeg_b64, provider, category=""):
                 {"type": "image", "source": {"type": "base64",
                  "media_type": "image/jpeg", "data": jpeg_b64}},
                 {"type": "text", "text": _anon_scan_prompt_for(category)}]}],
-            task="reason", max_tokens=1400, provider=provider)   # Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
+            task=_task, max_tokens=1400, provider=provider,
+            allow_fallback=(_task != "vision"))   # LUNA-FIRST-1: the luna read never falls to an untested lane; Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
         if not res.ok:
             _log.warning("anon photo scan: provider returned not-ok (provider=%s)", provider)
             return None, None, None, None
@@ -22053,7 +22073,7 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
             held += 1; notes.append("held:ai-ceiling"); continue
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
-        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
+        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category, first=True, who=agent)   # LUNA-FIRST-1
         if _it is not None or _ot is not None:
             _log_ai_spend(agent, "/agencies/import#photo-scan", "vision", _it, _ot,
                           provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))

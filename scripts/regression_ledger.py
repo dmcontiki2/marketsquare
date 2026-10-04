@@ -35904,6 +35904,32 @@ def rg_anon_names():
     return [(INFO, "names are read out of advert text on every private publish and edit; listing 475 clean live")]
 
 
+@entry("RG-0875", "LUNA-FIRST-1 (RUL-203, David 4 Oct 2026; Gemini dropped): every first photo check is read by gpt-5.6-luna "
+       "(~R0.008); only a photo luna does not pass as clean goes to gpt-5.6-terra, whose verdict drives everything after; "
+       "a luna outage goes to terra, never to an untested lane",
+       OPEN, fixed_on="2026-10-04",
+       scope="bea_main.py _anon_photo_scan(first=True): luna read (task 'vision', no fallback), accept only clean + conf >= "
+             "_ANON_PHOTO_CONF + no flag + fits not False, else terra (task 'reason'); seller gate + agency import call it with "
+             "first=True; luna spend on escalation logged as /photo#anon-first-luna. Kill switch PHOTO_SCAN_FIRST=terra. "
+             "Proven 4 Oct on the server before the switch: honest eval 22/22, 0 plate misses, 3 false flags (terra 4); "
+             "clean photos accepted on luna alone at $0.0004-0.0005, plates luna -> terra -> refused as before.",
+       ref="David 4 Oct 2026; RUL-203 (amends RUL-032); scripts/apply_luna_first.py")
+def rg_luna_first():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    code = "\n".join(l for l in b.splitlines() if not l.lstrip().startswith("#"))
+    for sn, why in (('def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task="reason"):', "the first-check lane is gone"),
+                    ('_anon_photo_scan(jpeg_b64, "openai", category, False, who, "vision")', "the first check no longer reads with luna"),
+                    ('and _l.get("flag") != "inappropriate" and _l.get("fits") is not False:', "luna can pass a flagged or wrong-subject photo on its own"),
+                    ('allow_fallback=(_task != "vision"))', "a luna failure can fall back to an untested lane"),
+                    ('_ts_active_provider(), category or "", first=True, who=spend_who)', "the seller gate no longer uses the first check"),
+                    ('provider, category, first=True, who=agent)', "agency imports no longer use the first check")):
+        if sn not in code:
+            return [(FAIL, "bea_main.py: " + why)]
+    return [(INFO, "first photo check on luna, terra on anything luna does not pass clean")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

@@ -16,3 +16,5 @@ $2/$12 per Mtok) -- 98 calls, 1,647 in / 39 out tokens, **$0.0038 a scan (~R0.06
   the canary is armed per RUL-032.
 Cost model impact: at the measured Gemini figure a 20-photo advert costs ~R0.27 to scan (budget R0.47); on terra today
 ~R1.25 (clean photos; blurred ones more).
+
+- **LUNA-FIRST-1 (RUL-203, David: "luna does the first check ... Drop Gemini")**: honest eval of gpt-5.6-luna 22/22, 0 plate misses, 3 false flags (terra 4). Every first photo check now reads with luna; a photo luna passes clean is accepted on that read (~$0.0005); anything else is re-read by terra and handled exactly as before. Proven on the server before shipping: clean photos $0.0004-0.0005, plate photos luna -> terra -> refused. Kill switch PHOTO_SCAN_FIRST=terra. Cost model impact: the photo check drops from ~R0.063 to ~R0.008 per clean photo -- below the Rev B budget (R0.024).
