@@ -35391,13 +35391,24 @@ def rg_aud023_b2():
     _bad = _aud_b2_check([('zoom_engine.py', '"Property":     ["city", "suburb"],', 'Property has a street level again'), ('bea_main.py', 'rows, locked = _zoom_candidates_raw(conn, cat_norm, city, demo, tier, viewer)', 'Zoom reads candidates around the private-column scrub again')], [])
     return _bad or [(INFO, "Zoom never offers a seller's private street: no street level for Property or Services, and private columns never reach t")]
 
-@entry('RG-0827', "AUD-024 (4 Oct 2026 audit, High Privacy): before she accepts, a seller sees the buyer's first name and a message with no contact details; contact details are never stored on a request",
+@entry('RG-0827', "AUD-024 (4 Oct 2026 audit, High Privacy) + RUL-202: before she accepts, a seller sees NO buyer name and a message with no contact details -- 100% anonymous until accepted; contact details are never stored on a request",
        LOCKED, fixed_on="2026-10-04",
-       scope='bea_main.py _intro_for_viewer + create_intro + Local Market intro + n8n payloads',
-       ref="AUDIT_2026-10-04_findings.json AUD-024; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840). LOCKED 4 Oct 2026 after deploy 6c57385 + the rendered check in David's Chrome.")
+       scope='bea_main.py _intro_for_viewer + create_intro + Local Market intro + n8n new-intro payloads ("A buyer"); ms.js live-intro card (name always "A buyer" while pending)',
+       ref="AUDIT_2026-10-04_findings.json AUD-024; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b2.py (RG-0840). LOCKED 4 Oct 2026 after deploy 6c57385. TIGHTENED same day by RUL-202 (David: the seller gets no name before accepting -- the first name the app showed since E2E-HMI-1 was never agreed); the assertion now demands no name at all.")
 def rg_aud024_b2():
-    _bad = _aud_b2_check([('bea_main.py', 'd["buyer_name"] = _first_name_only(d.get("buyer_name"))', 'the pending read carries the full name again'), ('bea_main.py', 'intro.message = _anon_regex_clean(intro.message)[0]', "a request's message is stored with contact details again")], [])
-    return _bad or [(INFO, "before she accepts, a seller sees the buyer's first name and a message with no contact details; contact details are neve")]
+    _bad = _aud_b2_check([('bea_main.py', '# the seller gets NO name at all -- the app says "A buyer" -- and a message with no contact details.\n        d["buyer_name"] = ""', 'the pending read carries a buyer name again (RUL-202)'),
+                          ('bea_main.py', 'intro.message = _anon_regex_clean(intro.message)[0]', "a request's message is stored with contact details again"),
+                          ('ms.js', "// E2E-HMI-1 (24 Sep 2026) + RUL-202 (David 4 Oct 2026): 100% anonymous until she accepts -- no name, no address.\n          name: 'A buyer',", "the pending intro card shows a buyer name again (RUL-202)")],
+                         ['"buyer_name":    _first_name_only(intro.buyer_name)'])
+    if _bad:
+        return _bad
+    try:
+        live = _get("/static/ms.js")
+    except ProbeOffline:
+        raise
+    if "RUL-202 (David 4 Oct 2026): 100% anonymous until she accepts" not in live:
+        return [(FAIL, "the live ms.js still shows a pending buyer's name (not deployed yet?)")]
+    return [(INFO, "before she accepts, a seller sees no buyer name and no contact details -- repo and live")]
 
 @entry('RG-0828', "AUD-025 (4 Oct 2026 audit, High Privacy): seller profile tags are contact-scrubbed when saved and when read -- a 'WhatsApp 082 ...' tag never reaches a stranger",
        LOCKED, fixed_on="2026-10-04",
@@ -35518,7 +35529,7 @@ def rg_aud_b2_executed():
        "local-first per RUL-118 -- her area first, then the rest of her city under a 'Nearby' label, RS -> TS -> LS inside "
        "each band; every other answer stays a gate; 'Yes -- N on TrustSquare' counts her area only; and every picture the "
        "live door shows comes from the server, never a local drive",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="quick.html (= genie/HARNESS.html) qFindHonour(): an area miss sets l._band=1 instead of dropping the advert, "
              "any other test miss drops it; paint() labels the bands ('Nearby' -- roles/quick_i18n.json, five languages) "
              "and heads 'Yes -- N near you' when only the city band has adverts. PH_BASE is https://trustsquare.co/static/quick/ "
@@ -35526,7 +35537,8 @@ def rg_aud_b2_executed():
              "band version): townhouse to buy in Menlyn -> 'Yes -- 2 near you', both under NEARBY; in Rietvalleirand -> "
              "'Yes -- 2 on TrustSquare'; to rent anywhere -> never. All 180 picture URLs on the live door answer 200 from "
              "trustsquare.co / R2.",
-       ref="David 4 Oct 2026 after FIND-HONOUR-1 shipped; RUL-118(b); RUL-200(c) as amended")
+       ref="David 4 Oct 2026 after FIND-HONOUR-1 shipped; RUL-118(b); RUL-200(c) as amended. LOCKED 4 Oct 2026 17:0xZ after "
+           "relay deploy a210351 and the walk passed on the LIVE /quick/ (Menlyn 'Yes -- 2 near you' under NEARBY, Brooklyn first-band, 0 page errors)")
 def rg_find_bands():
     q = repo_file("quick.html")
     if q is None:
