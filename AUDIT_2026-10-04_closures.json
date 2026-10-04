@@ -223,5 +223,266 @@
   "note": "Confirmed. Agent profile text is plain when saved and when served, and both agent cards paint from an escaped copy.",
   "check": "Rendered in your Chrome: both agent cards painted planted scripts as text, nothing ran; ledger RG-0839.",
   "live_since": "2026-10-04 (6c57385)"
+ },
+ {
+  "id": "AUD-004",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. A photo with no advert now needs a signed-in seller, and each AI photo check is billed to her own account or to the draft (capped per connection per hour) — never to one shared pot.",
+  "check": "scripts/prove_audit_b3.py; live: an anonymous upload is refused 401; ledger RG-0842.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-005",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Price-check web searches are counted against the person asking: her own limit, 8 a day, and an item that found nothing is not searched again for 6 hours. No price changed.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0843.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-006",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Publish now moves only a draft (or her own resting or faded advert) live; a blocked, archived or paused advert cannot be put back there, and nothing goes live while one of her adverts is blocked.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0844.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-007",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The two misspelt credential names are corrected and every agent go-live credential now waits for a person. Checked live: the only ones already earned belong to TrustSquare's example accounts.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0845.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-008",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The name Home Affairs confirms is now kept, so the bank-, payment- and certificate-name checks can run.",
+  "check": "Source check; ledger RG-0846.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-009",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Sign-in links now last as long as promised (7 days; agency links 14–30) — the hidden 72-hour cut-off is gone.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0847.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-010",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The price-comparison queries now read the right column and count only live, real adverts, so the 1T verified-comparables price check can appear again (its price is unchanged). Checked live: the query runs on the real database.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0848.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-011",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. An agent who changes type goes back to draft until the new type's check is met, and an agent whose check has lapsed is no longer listed. TrustSquare's example agents are left as they are.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0849.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-012",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. A document uploaded for a non-Local-Market advert is no longer filed under Local Market and now shows in that advert's own list.",
+  "check": "Source checks; ledger RG-0850.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-013",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. An agency invitation changes nobody's plan; a new account gets the free 10-advert seat, anyone else is set up only when she signs in to accept.",
+  "check": "scripts/prove_audit_b3.py: a paying Pro seller invited keeps Pro/30; ledger RG-0851.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-014",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The security filter now keeps a gallery's photo list instead of emptying it.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0852.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-032",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Photo and document uploads no longer freeze the server for other users while they are processed.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0853.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-033",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Wishlist alerts are sent after the match is saved (no database lock held), at most 5 devices per buyer.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0854.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-034",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. An agency import saves each advert on its own, so it no longer locks the database for minutes.",
+  "check": "scripts/prove_audit_b3.py; ledger RG-0855.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-035",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Seller Hub now drops a request that was withdrawn, expired or answered elsewhere.",
+  "check": "Source check; ledger RG-0856.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-036",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed (the audit ran the code). Prices now show the first amount correctly: 'R85 000 (2019 model)' shows R85,000 and 'R1.5 million' shows R1,500,000.",
+  "check": "scripts/prove_audit_b3_app.js; rendered in your Chrome: live card prices read correctly; ledger RG-0857.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-037",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Adventures categories now match what sellers actually choose; an empty one is hidden.",
+  "check": "scripts/prove_audit_b3_app.js; rendered in your Chrome: Safari shows its adverts (it always said 'No Adventures yet'); ledger RG-0858.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-038",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. A typed adventure search keeps the buyer on Adventures and no longer breaks the filter bar.",
+  "check": "Source checks; ledger RG-0859.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-039",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Services 'Service Type' filter now reads the field real adverts carry.",
+  "check": "Source check; ledger RG-0860.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-040",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Batch publish now treats 'accept the Terms' as saved drafts: it shows the Terms once and publishes them, never making duplicates.",
+  "check": "Source check; ledger RG-0861.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-041",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Edit screen no longer spends an AI call each time it opens; the action plan comes when the seller taps for it.",
+  "check": "Source check; ledger RG-0862.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-042",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Local Market form now shows the Terms and then publishes the draft it already saved, instead of making a new hidden draft on every tap.",
+  "check": "Source check; ledger RG-0863.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-043",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Coach adverts for Local Market now appear on the Local Market page.",
+  "check": "Source checks; ledger RG-0864.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-044",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The agency console now shows the agent's own drafts through its own agency-only route.",
+  "check": "Rendered in your Chrome: demo.agent's 2 drafts shown under her name; ledger RG-0865.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-045",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Agent Hub now works for collector, tutor-institution, service and placement agents, and never hangs on 'Loading'.",
+  "check": "Rendered in your Chrome: the hub renders for every type; ledger RG-0866.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-046",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Batch card prices keep their thousands ('R1,200–R1,500' becomes R1200, not R1).",
+  "check": "scripts/prove_audit_b3_app.js; ledger RG-0867.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-047",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Edit screen now asks for the Trust Score with the advert's real category (e.g. household help, accommodation).",
+  "check": "scripts/prove_audit_b3_app.js; ledger RG-0868.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-048",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. Adverts made from the AI report now publish with their photos and show them in the Coach.",
+  "check": "Source checks; ledger RG-0869.",
+  "live_since": "2026-10-04 (2c6aa6e)"
+ },
+ {
+  "id": "AUD-049",
+  "sev": "High",
+  "status": "fixed",
+  "raw_status": "FIXED",
+  "note": "Confirmed. The Coach now prices in each country's own currency (KSh, N$, P, MT, CA$, A$, NZ$), never US dollars by default.",
+  "check": "scripts/prove_audit_b3_app.js; ledger RG-0870.",
+  "live_since": "2026-10-04 (2c6aa6e)"
  }
 ]

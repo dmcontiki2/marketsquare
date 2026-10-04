@@ -5387,7 +5387,7 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
             "SELECT 1 FROM listings WHERE LOWER(seller_email)=LOWER(?) AND listing_status='blocked' LIMIT 1",
             (existing["seller_email"],)).fetchone():
         conn.close()
-        raise HTTPException(status_code=403, detail="Your adverts are blocked for now, so nothing new can go live. "
+        raise HTTPException(status_code=403, detail="Your listings are blocked for now, so nothing new can go live. "
                                                     "Please contact support.")
     # Pull the seller's account to enforce EULA gate + get current trust_score
     user_row = conn.execute(
@@ -30594,7 +30594,7 @@ def pause_listing(listing_id: int, req: _PauseIn,
         if want == "live" and conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=LOWER(?) AND listing_status='blocked' LIMIT 1",
                                            (row["seller_email"] or "",)).fetchone():
             # AUD-006 class: while any of her adverts is blocked (EULA 14.5) a paused one does not come back either.
-            raise HTTPException(status_code=403, detail="Your adverts are blocked for now, so nothing can go live. Please contact support.")
+            raise HTTPException(status_code=403, detail="Your listings are blocked for now, so nothing can go live. Please contact support.")
         if want == "live" and _is_commitment_listing(row):
             # PROPERTY-ONE-1 (Terms 5.3: one Buyer at a time): while a Buyer waits for an answer, the listing cannot be
             # reopened around her. Answering (accept or decline) reopens it -- never a lock-out.

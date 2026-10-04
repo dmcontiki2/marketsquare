@@ -10285,8 +10285,9 @@ def rg_eula_gates_live():
         s = open(fp, encoding="utf-8", errors="replace").read()
         if "EULA not accepted" not in s:
             out.append((FAIL, "publish_listing lost its EULA 403 -- drafts could go live without acceptance"))
-        i = s.find("def publish_listing")
-        if i >= 0 and "eula_accepted_at" not in s[i:i+3000]:
+        # FN-WINDOW-1 applied 4 Oct 2026: the AUD-006 status check pushed the EULA read past the old
+        # 3000-byte window -- read the whole function, not a slice of the file.
+        if "def publish_listing(" in s and "eula_accepted_at" not in fn_body(s, "def publish_listing("):
             out.append((FAIL, "publish_listing no longer reads eula_accepted_at"))
     else:
         out.append((FAIL, "bea_main.py not found"))
@@ -21357,7 +21358,7 @@ def rg_agency_tier_follows_verification():
                           "billing_period_end) -- it can now overwrite a tier somebody bought"))
     # invite must NOT carry its own second copy of the rule (the AGENCY-TIER-1 shape)
     j = src.find("def invite_agent(")
-    inv = src[j:j + 2600] if j >= 0 else ""
+    inv = fn_body(src, "def invite_agent(") if j >= 0 else ""   # FN-WINDOW-1 (4 Oct 2026: AUD-013 grew it past 2600 bytes)
     if '_tier = "agency" if' in inv:
         out.append((FAIL, "invite_agent has its own copy of the verified->tier rule again -- two "
                           "writers, and the second one is a stamp (AGENCY-REACH-1)"))
@@ -35566,241 +35567,241 @@ def rg_find_bands():
 
 
 @entry('RG-0842', 'AUD-004 (4 Oct 2026 audit, High Abuse & cost): a photo with no advert needs a signed-in seller; every vision scan is billed to her own account or to the draft (capped per IP) -- never to one shared pot a stranger can empty',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py upload_listing_photo / upload_draft_listing_photo (_photo_bill_who)',
-       ref="AUDIT_2026-10-04_findings.json AUD-004; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-004; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud004_b3():
     _bad = _aud_b2_check([('bea_main.py', 'raise HTTPException(status_code=401, detail="Please sign in to add photos.")', 'anonymous photo uploads are accepted again'), ('bea_main.py', 'def _photo_bill_who(sess, own, listing_id, request):', 'the per-account photo billing is gone')], ['_anon_who = "photo-upload"'])
     return _bad or [(INFO, 'a photo with no advert needs a signed-in seller; every vision scan is billed to her own account or to the draft (capped ')]
 
 @entry('RG-0843', 'AUD-005 (4 Oct 2026 audit, High Abuse & cost): price-check web searches are counted against the caller -- her own ceiling, 8 a day, and an item that found nothing is not searched again for 6 hours',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py _web_comps_band (who, daily cap, no-result cache) + _fair_price_resolve',
-       ref="AUDIT_2026-10-04_findings.json AUD-005; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-005; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud005_b3():
     _bad = _aud_b2_check([('bea_main.py', 'async def _web_comps_band(title: str, city, country, who: str = "") -> dict | None:', 'web comparables are no longer counted per caller'), ('bea_main.py', 'if len(_tries) >= _WEBCOMP_DAILY_PER_USER:', 'the daily cap on web searches is gone')], ['_log_ai_spend("", "/listings/price-check#web-comps"'])
     return _bad or [(INFO, 'price-check web searches are counted against the caller -- her own ceiling, 8 a day, and an item that found nothing is n')]
 
 @entry('RG-0844', 'AUD-006 (4 Oct 2026 audit, High Flow): publish moves only a draft (or her own resting / faded advert) live; blocked, archived and paused adverts are not republished there, and nothing goes live while one of her adverts is blocked (EULA 14.5)',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py publish_listing + pause/resume',
-       ref="AUDIT_2026-10-04_findings.json AUD-006; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-006; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud006_b3():
     _bad = _aud_b2_check([('bea_main.py', 'if (current_status or "").strip().lower() not in ("draft", "resting", "faded"):', 'publish accepts any status again')], [])
     return _bad or [(INFO, 'publish moves only a draft (or her own resting / faded advert) live; blocked, archived and paused adverts are not republ')]
 
 @entry('RG-0845', "AUD-007 (4 Oct 2026 audit, High Flow): every agent go-live gate credential waits for a person -- the two misspelt ids are corrected and the set is built from the gate's own table",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py _LEGAL_SIGNALS (built from estate_agents.VERTICALS gate signals)',
-       ref="AUDIT_2026-10-04_findings.json AUD-007; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-007; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud007_b3():
     _bad = _aud_b2_check([('bea_main.py', '_LEGAL_SIGNALS |= {v.get("gate_signal") for v in _GATE_VERTS.values() if v.get("gate_signal")}', 'the legal set no longer follows the gate table'), ('bea_main.py', '"category.travel.asata_member",', 'the ASATA id is misspelt again')], [])
     return _bad or [(INFO, 'every agent go-live gate credential waits for a person -- the two misspelt ids are corrected and the set is built from t')]
 
 @entry('RG-0846', 'AUD-008 (4 Oct 2026 audit, High Flow): the name the Home Affairs register confirmed is kept (users.id_name), so the bank-, payment- and certificate-name checks can run for a seller who verified in the app',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py verify_identity_npr',
-       ref="AUDIT_2026-10-04_findings.json AUD-008; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-008; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud008_b3():
     _bad = _aud_b2_check([('bea_main.py', 'id_npr_provider=?, id_npr_ref=?, id_name=? WHERE lower(email)=?', 'the confirmed ID name is not stored on the in-app check again')], [])
     return _bad or [(INFO, 'the name the Home Affairs register confirmed is kept (users.id_name), so the bank-, payment- and certificate-name checks')]
 
 @entry('RG-0847', 'AUD-009 (4 Oct 2026 audit, High Flow): an emailed sign-in link lives as long as its own expiry (7 days; agency links 14-30) -- no hard-coded 72-hour cut-off; used links are remembered 31 days',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py /auth/verify',
-       ref="AUDIT_2026-10-04_findings.json AUD-009; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-009; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud009_b3():
     _bad = _aud_b2_check([('bea_main.py', '(_t.time() - 31 * 86400,))   # AUD-009', 'used sign-in links are forgotten before the longest link expires')], ['> 72 * 3600 and not _same_session'])
     return _bad or [(INFO, 'an emailed sign-in link lives as long as its own expiry (7 days; agency links 14-30) -- no hard-coded 72-hour cut-off; u')]
 
 @entry('RG-0848', "AUD-010 (4 Oct 2026 audit, High Flow): the comparables queries read listing_status (live, real adverts only) and log a failure -- the 1T 'Verified comps' tier can appear again",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py _comp_count / _comp_amounts',
-       ref="AUDIT_2026-10-04_findings.json AUD-010; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-010; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud010_b3():
     _bad = _aud_b2_check([('bea_main.py', '_log.error("AUD-010: comp amounts failed: %s", _cx)', 'a comps failure is hidden again')], ["COALESCE(status,'active') != 'paused'"])
     return _bad or [(INFO, "the comparables queries read listing_status (live, real adverts only) and log a failure -- the 1T 'Verified comps' tier ")]
 
 @entry('RG-0849', 'AUD-011 (4 Oct 2026 audit, High Flow): a live agent who changes vertical goes back to draft, and an agent whose gate no longer holds is neither listed nor reachable (house examples exempt)',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='estate_agents.py _upsert_profile / _rank_agents / request_agent_intro',
-       ref="AUDIT_2026-10-04_findings.json AUD-011; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-011; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud011_b3():
     _bad = _aud_b2_check([('estate_agents.py', 'conn.execute("UPDATE agent_profiles SET profile_status=\'draft\' WHERE agent_email=?", (email,))', 'a vertical change leaves the profile live again'), ('estate_agents.py', 'if not _house_agent(prof["agent_email"]) and _go_live_gaps(conn, dict(prof)):', 'lapsed agents are listed again')], [])
     return _bad or [(INFO, 'a live agent who changes vertical goes back to draft, and an agent whose gate no longer holds is neither listed nor reac')]
 
 @entry('RG-0850', "AUD-012 (4 Oct 2026 audit, High Data): a document uploaded for a non-Local-Market advert is filed with no Local Market signal and shows in that advert's own list",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py upload_seller_document (category) + list_seller_documents; ms.js elDocHubUpload',
-       ref="AUDIT_2026-10-04_findings.json AUD-012; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-012; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud012_b3():
     _bad = _aud_b2_check([('bea_main.py', '_lm_lane = (not _ucat) or _ucat in ("local_market", "localmarket")', 'every generic upload is filed under Local Market again'), ('ms.js', "if (elCurrentCat) fd.append('category', String(elCurrentCat));", 'the Edit screen no longer tells the server which advert a document is for')], [])
     return _bad or [(INFO, "a document uploaded for a non-Local-Market advert is filed with no Local Market signal and shows in that advert's own li")]
 
 @entry('RG-0851', "AUD-013 (4 Oct 2026 audit, High Data): an agency invitation changes nobody's plan: only an account the invite creates gets the free seat (10) now; anyone else is set up when she accepts by signing in",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py invite_agent / _agency_join_provision / _sync_agency_member_tiers',
-       ref="AUDIT_2026-10-04_findings.json AUD-013; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-013; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud013_b3():
     _bad = _aud_b2_check([('bea_main.py', 'if _provision_now:\n            conn.execute("UPDATE users SET slot_limit=? WHERE LOWER(email)=?", (cap, email))', "an invitation rewrites an existing account's slots again"), ('bea_main.py', "WHERE m.agency_id = ? AND COALESCE(m.status, 'active') = 'active'", 'the tier sync moves invited (not accepted) members again')], [])
     return _bad or [(INFO, "an agency invitation changes nobody's plan: only an account the invite creates gets the free seat (10) now; anyone else ")]
 
 @entry('RG-0852', 'AUD-014 (4 Oct 2026 audit, High Data): the security gate keeps a JSON-text photo list (good links kept, bad dropped) instead of emptying the gallery',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='security_gate.py _url_field',
-       ref="AUDIT_2026-10-04_findings.json AUD-014; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-014; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud014_b3():
     _bad = _aud_b2_check([('security_gate.py', 'return json.dumps([x for x in arr if isinstance(x, str) and x and _URL_OK.match(x)])', 'the gate empties JSON photo lists again')], [])
     return _bad or [(INFO, 'the security gate keeps a JSON-text photo list (good links kept, bad dropped) instead of emptying the gallery')]
 
 @entry('RG-0853', 'AUD-032 (4 Oct 2026 audit, High Speed): the five upload handlers run in the threadpool, so image work, AI calls and storage writes never freeze the server for other users',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py upload handlers (listing photo, draft photo, user photo, ID upload, documents)',
-       ref="AUDIT_2026-10-04_findings.json AUD-032; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-032; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud032_b3():
     _bad = _aud_b2_check([('bea_main.py', 'def upload_listing_photo(\n    request: Request,', 'the listing photo upload runs on the event loop again')], ['async def upload_listing_photo(', 'async def upload_seller_document('])
     return _bad or [(INFO, 'the five upload handlers run in the threadpool, so image work, AI calls and storage writes never freeze the server for o')]
 
 @entry('RG-0854', 'AUD-033 (4 Oct 2026 audit, High Speed): wishlist pushes go out after the match job commits, at most 5 devices per buyer -- no push holds the database write lock',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py run_match_job / _send_push_for_match / register_wearable',
-       ref="AUDIT_2026-10-04_findings.json AUD-033; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-033; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud033_b3():
     _bad = _aud_b2_check([('bea_main.py', 'for _bt, _mid in _pushes:', 'pushes are sent while the match job holds the write lock again')], [])
     return _bad or [(INFO, 'wishlist pushes go out after the match job commits, at most 5 devices per buyer -- no push holds the database write lock')]
 
 @entry('RG-0855', 'AUD-034 (4 Oct 2026 audit, High Speed): an agency bulk import commits each advert on its own -- the AI and photo work for the next one runs with no write lock held',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py agency_import',
-       ref="AUDIT_2026-10-04_findings.json AUD-034; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-034; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud034_b3():
     _bad = _aud_b2_check([('bea_main.py', 'conn.commit()   # AUD-034', 'the import holds one transaction for the whole run again')], [])
     return _bad or [(INFO, 'an agency bulk import commits each advert on its own -- the AI and photo work for the next one runs with no write lock h')]
 
 @entry('RG-0856', 'AUD-035 (4 Oct 2026 audit, High App): the Seller Hub drops a request that is no longer pending (withdrawn, expired, answered elsewhere) -- no live Accept on a closed request',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js loadLiveDash step 2',
-       ref="AUDIT_2026-10-04_findings.json AUD-035; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-035; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud035_b3():
     _bad = _aud_b2_check([('ms.js', "d.intros = d.intros.filter(function(i){ return !(i.status === 'pending' && i.beaId && !_openIds.has(i.beaId)); });", 'the hub only adds requests again')], [])
     return _bad or [(INFO, 'the Seller Hub drops a request that is no longer pending (withdrawn, expired, answered elsewhere) -- no live Accept on a')]
 
 @entry('RG-0857', "AUD-036 (4 Oct 2026 audit, High App): the shown price is the first amount read by the one shared parser -- 'R85 000 (2019 model)' shows R85,000, 'R1.5 million' R1,500,000",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js formatZAR (via _msPriceNum)',
-       ref="AUDIT_2026-10-04_findings.json AUD-036; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-036; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud036_b3():
     _bad = _aud_b2_check([('ms.js', 'const n = _msPriceNum({price: s});', 'formatZAR squeezes every digit together again')], ["const numStr = s.replace(/[^0-9.]/g, '');"])
     return _bad or [(INFO, "the shown price is the first amount read by the one shared parser -- 'R85 000 (2019 model)' shows R85,000, 'R1.5 million")]
 
 @entry('RG-0858', 'AUD-037 (4 Oct 2026 audit, High App): the Adventures chips match what sellers actually choose (Activity / Accommodation type, then the title); an empty chip is hidden',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js _advCatKey + _ADV_EXP_RULES/_ADV_ACC_RULES; mapper activity_type; empty chips hidden',
-       ref="AUDIT_2026-10-04_findings.json AUD-037; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-037; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud037_b3():
     _bad = _aud_b2_check([('ms.js', 'if(_advCatKey(l, isAccom) !== advCat) return false;', 'the chips filter on a field no advert carries again')], [])
     return _bad or [(INFO, 'the Adventures chips match what sellers actually choose (Activity / Accommodation type, then the title); an empty chip i')]
 
 @entry('RG-0859', 'AUD-038 (4 Oct 2026 audit, High App): a typed adventure search counts by chip key and stays on Adventures; an unknown category draws an empty filter bar instead of crashing',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js msRouteToMatches + renderFilterBar',
-       ref="AUDIT_2026-10-04_findings.json AUD-038; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-038; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud038_b3():
     _bad = _aud_b2_check([('ms.js', "const c = r.category ? normCat(r.category) : '';", 'the search router counts raw categories again'), ('ms.js', 'const fs = filterState[cat] || {};', 'the filter bar throws on an unknown category again')], [])
     return _bad or [(INFO, 'a typed adventure search counts by chip key and stays on Adventures; an unknown category draws an empty filter bar inste')]
 
 @entry('RG-0860', 'AUD-039 (4 Oct 2026 audit, High App): the Service Type filter reads service_type (either spelling), case-insensitively',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js Services filter',
-       ref="AUDIT_2026-10-04_findings.json AUD-039; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-039; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud039_b3():
     _bad = _aud_b2_check([('ms.js', "const _st = String(l.service_type || l.serviceType || '').toLowerCase()", 'the Service Type filter reads a field live adverts lack again')], [])
     return _bad or [(INFO, 'the Service Type filter reads service_type (either spelling), case-insensitively')]
 
 @entry('RG-0861', "AUD-040 (4 Oct 2026 audit, High App): batch publish treats 409 'accept the Terms' as saved drafts: opens the Terms once, publishes the saved drafts, never re-posts them",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js sbPublishBatchListings',
-       ref="AUDIT_2026-10-04_findings.json AUD-040; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-040; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud040_b3():
     _bad = _aud_b2_check([('ms.js', 'let _sbTermsOk = false;   // AUD-040', 'batch publish counts a Terms answer as a failure again')], [])
     return _bad or [(INFO, "batch publish treats 409 'accept the Terms' as saved drafts: opens the Terms once, publishes the saved drafts, never re-")]
 
 @entry('RG-0862', 'AUD-041 (4 Oct 2026 audit, High App): the Edit screen spends no AI call on opening -- the Trust Score action plan comes on her tap and paints what the server sends, escaped',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js elLoadSidebarPanels guidance',
-       ref="AUDIT_2026-10-04_findings.json AUD-041; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-041; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud041_b3():
     _bad = _aud_b2_check([('ms.js', '✨ Get my Trust Score action plan', 'the Edit screen calls the AI on every open again')], ["${g.guidance.replace(/\\n/g,'<br>')}"])
     return _bad or [(INFO, 'the Edit screen spends no AI call on opening -- the Trust Score action plan comes on her tap and paints what the server ')]
 
 @entry('RG-0863', "AUD-042 (4 Oct 2026 audit, High App): the Local Market form handles 409 'accept the Terms': shows the Terms, then publishes the draft already saved (no new drafts on retry)",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js Local Market create form',
-       ref="AUDIT_2026-10-04_findings.json AUD-042; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-042; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud042_b3():
     _bad = _aud_b2_check([('ms.js', "if (resp.status === 409 && j && j.need === 'eula' && (j.id || j.listing_id)) {", 'the Local Market form ignores the Terms answer again')], [])
     return _bad or [(INFO, "the Local Market form handles 409 'accept the Terms': shows the Terms, then publishes the draft already saved (no new dr")]
 
 @entry('RG-0864', "AUD-043 (4 Oct 2026 audit, High App): Coach adverts in Local Market are saved as 'local_market' and appear on the Local Market page",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py aa_publish category door + ms.js aaDoPublish',
-       ref="AUDIT_2026-10-04_findings.json AUD-043; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-043; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud043_b3():
     _bad = _aud_b2_check([('bea_main.py', 'category = "local_market"', "aa_publish stores 'LocalMarket' again")], [])
     return _bad or [(INFO, "Coach adverts in Local Market are saved as 'local_market' and appear on the Local Market page")]
 
 @entry('RG-0865', "AUD-044 (4 Oct 2026 audit, High App): the agency console's drafts view shows the AGENT's drafts through its own agency-bound route, not the admin's",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='bea_main.py GET /agencies/{id}/agents/{email}/drafts (+ route_policy.json) + ms.js agencyDraftsView',
-       ref="AUDIT_2026-10-04_findings.json AUD-044; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-044; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud044_b3():
     _bad = _aud_b2_check([('bea_main.py', 'def agency_agent_drafts(agency_id: int, email: str,', 'the agency drafts route is gone'), ('route_policy.json', 'GET /agencies/{agency_id}/agents/{email}/drafts', 'the drafts route is undeclared in the gate policy'), ('ms.js', "'/agents/'+encodeURIComponent(email)+'/drafts'", 'the console reads the self-bound /listings/mine again')], [])
     return _bad or [(INFO, "the agency console's drafts view shows the AGENT's drafts through its own agency-bound route, not the admin's")]
 
 @entry('RG-0866', "AUD-045 (4 Oct 2026 audit, High App): the Agent Hub works for collector, institution, service-company and placement agents, and a render failure shows a line instead of 'Loading…' for ever",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js AS_VERT (+4 verticals) / _asV / _asProfileLoad try',
-       ref="AUDIT_2026-10-04_findings.json AUD-045; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-045; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud045_b3():
     _bad = _aud_b2_check([('ms.js', "function _asV(){ return AS_VERT[_asState.vertical] || {label:'Professional agent', certs:''}; }", 'the Agent Hub reads an unknown vertical unguarded again')], [])
     return _bad or [(INFO, 'the Agent Hub works for collector, institution, service-company and placement agents, and a render failure shows a line ')]
 
 @entry('RG-0867', "AUD-046 (4 Oct 2026 audit, High App): batch card publish takes the first amount with its thousands ('R1,200-R1,500' -> 1200, not 1)",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js batch cards price',
-       ref="AUDIT_2026-10-04_findings.json AUD-046; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-046; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud046_b3():
     _bad = _aud_b2_check([('ms.js', "price:       String(_msPriceNum({price: d.price_suggestion}) || '')", 'batch cards keep only the first digit group again')], [])
     return _bad or [(INFO, "batch card publish takes the first amount with its thousands ('R1,200-R1,500' -> 1200, not 1)")]
 
 @entry('RG-0868', "AUD-047 (4 Oct 2026 audit, High App): the Edit screen asks the Trust Score with the advert's real trust category (Services-Casuals, Adventures-Accommodation ...)",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js _elTrustCat / elLoadSidebarPanels',
-       ref="AUDIT_2026-10-04_findings.json AUD-047; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-047; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud047_b3():
     _bad = _aud_b2_check([('ms.js', 'if (category && category === elCurrentCat && elCurrentTrustCat) category = elCurrentTrustCat;', 'Edit asks the score with the form category again')], [])
     return _bad or [(INFO, "the Edit screen asks the Trust Score with the advert's real trust category (Services-Casuals, Adventures-Accommodation .")]
 
 @entry('RG-0869', 'AUD-048 (4 Oct 2026 audit, High App): drafts made from the AI report publish their photos (kept as blobs) and show their thumbnails in the Coach',
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js aaDoPublish + aaRenderPhotosScreen',
-       ref="AUDIT_2026-10-04_findings.json AUD-048; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-048; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud048_b3():
     _bad = _aud_b2_check([('ms.js', 'if (p.blob instanceof Blob) {   // AUD-048', 'report photos are dropped on publish again')], [])
     return _bad or [(INFO, 'drafts made from the AI report publish their photos (kept as blobs) and show their thumbnails in the Coach')]
 
 @entry('RG-0870', "AUD-049 (4 Oct 2026 audit, High Money): the Coach prices in the country's own currency from the shared table (KSh, N$, P, MT, CA$, A$, NZ$), never US dollars by default",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope='ms.js aaCurrency',
-       ref="AUDIT_2026-10-04_findings.json AUD-049; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871).")
+       ref="AUDIT_2026-10-04_findings.json AUD-049; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud049_b3():
     _bad = _aud_b2_check([('ms.js', "const codes = { ZA:'ZAR', NA:'NAD', MZ:'MZN', BW:'BWP', KE:'KES'", 'the Coach falls back to US dollars again')], [])
     return _bad or [(INFO, "the Coach prices in the country's own currency from the shared table (KSh, N$, P, MT, CA$, A$, NZ$), never US dollars by")]
 
 @entry("RG-0871", "AUDIT-4OCT Batch 3 EXECUTED: the remaining High fixes hold against the real bea_main.py on a throwaway database (scripts/prove_audit_b3.py) and in the shipped ms.js run in Node (scripts/prove_audit_b3_app.js)",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="prove_audit_b3.py: AUD-004/005/006/007/009/010/011/013/014/032/033/034; prove_audit_b3_app.js: AUD-036/037/046/047/049. ~10 s; missing fastapi/boto3/PyJWT/pillow or node = NOT EVALUATED.",
-       ref="AUDIT-4OCT Batch 3, 4 Oct 2026.")
+       ref="AUDIT-4OCT Batch 3, 4 Oct 2026. LOCKED after deploy 2c6aa6e (QA Bot gate pass): proofs pass; live ms.js v=926; rendered in David's Chrome (Adventures Safari chip shows its adverts, agency drafts view shows the agent's own drafts, Agent Hub renders every vertical, card prices read the first amount).")
 def rg_aud_b3_executed():
     ok, blind, det = _harness([sys.executable, os.path.join(REPO, "scripts", "prove_audit_b3.py")], timeout=120, cwd=REPO)
     if blind:
