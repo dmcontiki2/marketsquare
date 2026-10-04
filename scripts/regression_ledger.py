@@ -35077,7 +35077,7 @@ def rg_rul199():
     return [(INFO, "testers capped at four, no phone points, licences 'checked', permit rows scoped")]
 
 
-@entry("RG-0812", "AUD-001 (4 Oct 2026 audit, Critical): only a PENDING introduction can be accepted or declined -- a request the "
+@entry("RG-0814", "AUD-001 (4 Oct 2026 audit, Critical): only a PENDING introduction can be accepted or declined -- a request the "
        "buyer withdrew (or that expired) can never be accepted, charged 1T and revealed, nor rewritten to 'declined'",
        OPEN, fixed_on="2026-10-04",
        scope="bea_main.py accept_intro (_settled is an allow-list: anything but pending is closed; the conditional UPDATE "
@@ -35107,7 +35107,7 @@ def rg_aud001_pending_only():
     return [(INFO, "withdrawn / expired introductions can be neither accepted nor declined (replica proof passes)")]
 
 
-@entry("RG-0813", "AUD-002 (4 Oct 2026 audit, Critical): one Paystack payment credits exactly once -- a reference is plain "
+@entry("RG-0815", "AUD-002 (4 Oct 2026 audit, Critical): one Paystack payment credits exactly once -- a reference is plain "
        "characters only, sent URL-encoded, and the once-only claim keys on the reference PAYSTACK returns, on all three "
        "verify doors (Tuppence, seller plan, wishlist)",
        OPEN, fixed_on="2026-10-04",
@@ -35150,7 +35150,7 @@ def rg_aud002_paystack_ref_once():
     return [(INFO, "a '#a' reference is refused live before Paystack is asked; one payment = one credit (replica proof passes)")]
 
 
-@entry("RG-0814", "AUD-003 (4 Oct 2026 audit, Critical): Quick paints her answers as TEXT -- a crafted /quick/?resume= link "
+@entry("RG-0816", "AUD-003 (4 Oct 2026 audit, Critical): Quick paints her answers as TEXT -- a crafted /quick/?resume= link "
        "can no longer run script on trustsquare.co, kept answers are rebuilt from an allow-list, and only her own "
        "Google round trip restores without a tap",
        OPEN, fixed_on="2026-10-04",
