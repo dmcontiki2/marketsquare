@@ -33,3 +33,11 @@ B4 = ("    _pm = _PHOTOS_PREFIX_RX.match(desc or \"\")   # PHOTOS-PREFIX-SAFE-1:
 if B4 not in s:
     assert s.count(A4) == 1, "A4 %d" % s.count(A4); s = s.replace(A4, B4)
 io.open(P, "w", encoding="utf-8", newline="").write(s); print("PHOTOS-PREFIX-SAFE-1 applied")
+
+# BRANDS-STAY-1 (same day, first real run on 475): the model removed "Smeg" from "quality Smeg appliances". Makers and
+# brands of the goods and fittings describe the item; only the seller's OWN business is a name to remove.
+s = io.open(P, encoding="utf-8", newline="").read()
+for a, b in (('guest house when it is the seller\'s own; a business, shop, agency or brand used as the seller\'s identity; and any "\n    "person\'s name. Do NOT flag:', 'guest house when it is the seller\'s own; the seller\'s OWN business, shop or agency (the one selling, letting or "\n    "managing this advert, e.g. \'Smith Properties\', \'Pam\'s Cleaning\'); and any person\'s name. Do NOT flag:'), ('brands of the "\n    "goods or fittings (Toyota, Smeg, Caesarstone); or generic words', 'makers and brands of "\n    "the goods, appliances, fittings or materials -- they describe the item, not the seller (Toyota, Smeg, Bosch, "\n    "Defy, Caesarstone, Samsung, Weber are NEVER names to remove); or generic words')):
+    if b in s: continue
+    assert s.count(a) == 1, a[:40]; s = s.replace(a, b)
+io.open(P, "w", encoding="utf-8", newline="").write(s); print("BRANDS-STAY-1 applied")
