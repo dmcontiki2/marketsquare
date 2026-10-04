@@ -1,3 +1,118 @@
+## 2026-10-04 — FIND-HONOUR-1: Quick's Find honours every answer, in every category (RG-0817, RUL-200)
+
+David, three screenshots: *"David put this up for sale, and now it is showing as a rental. Please fix it, but fix the
+process so that it can't happen ... for the principle as it applies to all products"*; *"David listed this under
+Rietvalleirand, and it is being advertised in all suburbs ... use the generic demo photos we generated where there are
+no live ones"*; *"the Maroushka live apartments ... appears as a single unit (Brooklyn) but also in all suburbs, while
+there was no option for Brooklyn"*.
+
+- **CAUSE (one, not three):** Quick's Find (quick.html drawLookup) turned her FIRST answer into one search word and used
+  her area only to choose the city. Every other answer -- to buy or to rent, the area, the price band, the school level,
+  the day, the trip length -- was dropped without a word, in all eight doors. Listing 468 (Townhouse, 'To sell',
+  Rietvalleirand) therefore answered "Yes" to Renting and to every area; the Brooklyn flats answered every area too.
+  The record itself was right all along -- it reads as a sale everywhere.
+- **PROCESS FIX:** every Find question is now DECLARED in `FIND_FROM` as a test, 'text' (the existing search word / group /
+  role match) or 'ask' (no advert can state it -- urgency, season, rarity). `qFindHonour()` tests the adverts themselves:
+  an advert that CONTRADICTS an answer is never shown, one silent on it is not hidden. RG-0817 parses CATS and fails the
+  deploy the moment a Find step exists without a declaration, or a declared test is missing (mutation-proven: dropping
+  `deal`, adding a new step, bypassing the tests, or the old 20-row fetch each go red).
+- **AREA:** by name (suburb or any listed area) or within the area's reach -- 3 km from a suburb on the city's /geo list,
+  7-8 km for the districts (Pretoria East, Centurion, Midrand, Sandton). FIND-AREAS-LIVE-1: the area question also offers
+  the suburbs where a fitting live advert actually is (Flat + Renting offers Waterkloof and Brooklyn; Townhouse + Buying
+  offers Rietvalleirand).
+- **KIND:** a property's kind is tested on prop_type, not a word -- "Flat" now finds the Apartment adverts it never found.
+- **EMPTY SHELF:** where nothing real fits, three AI EXAMPLE cards on the category's generated photos (prop_townhouse.jpg
+  etc.), built from her answers, never tappable as a real advert.
+- **WRITE SIDE:** Quick stores 'For Sale' / 'For Rent' (the words Edit, Browse and imports use), not 'To sell' / 'To let'.
+- **VERIFIED** in headless Chromium against the live API (`scripts/smoke_harness/verify_quick_find_honour.mjs`): the old
+  file failed 8 checks reproducing all three screenshots; the new file passed all 12.
+
+Cost model impact: none (one extra /geo read per city per visit; Find reads 200 rows instead of 20).
+
+## 2026-10-04 — AUDIT-4OCT Batch 2: the High money, privacy and security bugs (AUD-015..031, AUD-050..054)
+
+David: *"proceed with batch 2"*; on the two questions put first: *"1 but we never remove paid tuppences as oper our rules"*
+(RUL-201). Every finding was confirmed in today's code before it was changed. EXECUTED end to end by
+`scripts/prove_audit_b2.py` (imports the real bea_main.py on a throwaway database; RG-0840).
+
+**Money**
+- AUD-015 (RG-0818): restore_on_return claims the closure row (`restored_at IS NULL`) before writing the credit -- parallel sign-ins restore once.
+- AUD-016 (RG-0819, RUL-201(a)): a paid Starter/Pro plan returns to Free (or the agency seat) when its paid 30 days end without a new payment; superusers untouched; nothing deleted. PROBED: no paid plans on the live DB today.
+- AUD-017 (RG-0820): both listing deletes close pending introductions and release holds (buyer told by email); the sweep closes orphans. PROBED: 3 orphaned pending requests live, 1 with an unreleased 1T hold -- the next sweep returns it.
+- AUD-018 (RG-0821): retained Tuppence is restored at every sign-in (the one session door); POST /users saves the name on an existing row and grants welcome sessions once (zero-amount `welcome_ai_sessions` marker row, no schema change).
+- AUD-019 (RG-0822): the security gate rewrites a bound address unless it is EXACTLY the session's; create_intro and batch-cards keep the canonical address.
+- AUD-020 (RG-0824, enforces RUL-048): seat_paid needs the admin key; a session cap is clamped to 10 (20 only with a paid seat) and never writes a tier.
+- AUD-021 (RG-0823, RUL-201(b)): the monthly reset sweeps only last month's unused grant (grant minus spending since it, net of returned holds/refunds).
+- AUD-022 (RG-0825): NOT A BUG in production -- PROBED: the server's PAYSTACK_WEBHOOK_SECRET equals the secret key (compared on the box, value never read). Hardened: falls back to the secret key, bytes compare, docstring corrected.
+
+**Privacy**
+- AUD-023 (RG-0826): no street level in Zoom for Property/Services; `_zoom_candidates` strips private columns for every caller (house accounts still sort last via a derived flag).
+- AUD-024 (RG-0827): a pending request shows the seller a first name and a contact-free message; messages are scrubbed before storage (also Local Market and the n8n payloads).
+- AUD-025 (RG-0828): profile tags/region scrubbed on save; headline/about/tags scrubbed again on the public read.
+- AUD-026 (RG-0829): `_squire_minimise` now strips contact details for every Squire text; need text and seller answers always pass through it.
+- AUD-050 (RG-0835): ms.js phone mask catches every phone shape, text nodes only. PROBED: 0 of 164 live adverts carry a phone/email, so no backfill.
+
+**Security**
+- AUD-027 (RG-0830): Listing/ListingUpdate/LMListingIn accept only https or plain /media/<name> photo addresses; migrate-photos copies only real pictures resolved inside /media; withdraw never deletes a picture another listing uses.
+- AUD-028 (RG-0831): uploads may not name verification-result, tx_*, claim-only or no-evidence signals.
+- AUD-029 (RG-0832): the five AI routes return plain text (`_ai_plain_out`); ms.js paints the model text escaped.
+- AUD-030 (RG-0833): unproven support-form addresses get the fixed acknowledgement only; mailbox-normalised hourly cap; 3 mailboxes per IP per day.
+- AUD-031 (RG-0834): lead inbox fields plain + escaped; advert city/area/suburb/price plain text at the model.
+- AUD-051 (RG-0836): agency console escaped; buttons use data attributes + one delegated listener; strict invite emails.
+- AUD-052 (RG-0837): Zoom buttons read data-* attributes.
+- AUD-053 (RG-0838): invite-link values validated at the URL door; the five "near <city>" lines escaped.
+- AUD-054 (RG-0839): agent profile text plain on save and on /agents/nearby; agent cards painted from an escaped copy.
+
+Ledger RG-0818..RG-0840. Rulings: RUL-201 (PRICING_CANON s1 note). Register: AUDIT_2026-10-04_closures.json.
+
+## 2026-10-04 — AUDIT-4OCT Batch 1: the three Critical bugs fixed (AUD-001, AUD-002, AUD-003)
+
+David: *"Resolve the findings of the 4 October 2026 audit ... Batch 1 (this session): the three Critical bugs."*
+Each was confirmed in today's code before it was changed (audit ran at db67a6e).
+
+- **AUD-001 — a withdrawn introduction could still be accepted (RG-0814).** CONFIRMED: accept_intro listed the settled
+  states one by one (accepted / declined / expired) and missed `withdrawn`, in both the pre-check and the conditional
+  UPDATE; decline_intro had the same gap and could rewrite a withdrawn or expired request to `declined` and fire the
+  decline webhook. FIX (class): every intro status write is pending-only — `_settled` is an allow-list, both UPDATEs
+  require `COALESCE(LOWER(TRIM(status)),'pending') = 'pending'`; estate_agents decline_agent_intro now carries the same
+  precondition (its accept already did). scripts/prove_intro_charge_once.py gained section 6 (withdrawn / expired /
+  odd case: 409, no charge, record untouched; NULL legacy still pending) and its stale SQL copies were brought up to date.
+- **AUD-002 — one Paystack payment could be credited many times (RG-0815).** CONFIRMED: payments.verify_payment pasted the
+  caller's text into the Paystack URL unencoded, so `ref#a`, `ref?x=1`, `../verify/ref` reached the same paid transaction
+  while the once-only claim keyed on the typed text; same on the seller-plan and wishlist verify doors. Live before the
+  fix: `/payment/verify?reference=…%23a` went to Paystack. FIX: payments.valid_reference() (plain characters, fullmatch),
+  URL-encoding, and an answer naming another reference is refused; bea_main `_paystack_verified()` is now the ONE caller of
+  payments.verify_payment, used by all three handlers, and returns Paystack's own reference — the only key for the claim,
+  the already-credited check and the ledger text. Proven by scripts/prove_paystack_ref_once.py (it also caught that `$`
+  lets a trailing newline through — fullmatch used).
+- **AUD-003 — a crafted Quick link ran script on trustsquare.co (RG-0816).** REPRODUCED in headless Chromium on the old
+  file: the injected handler ran 1-6 times per link with no tap. FIX (class, quick.html = genie/HARNESS.html = /q/):
+  qEsc()/qPh() beside $(); all seven answer trails, the draft card's title, body and facts, and the hero picture are
+  escaped; the item-name redraw uses textContent; qCleanWip() rebuilds resumed answers field by field (on the ?resume=
+  reader and the door's stored copy); restore() never goes past the draft; and only her own Google round trip restores
+  without a tap (one-use number in localStorage, carried as &rn=) — anyone else's link waits on "Carry on". After the
+  fix: 0 runs with and without a tap; the payload shows as text. Harness: scripts/smoke_harness/verify_quick_resume_xss.mjs.
+- **Ledger:** RG-0814..RG-0816 added; RG-0550's quick.html snippet updated from `p.innerHTML=c.draftBody` to
+  `p.textContent=…` (same behaviour, the assertion followed the safer paint — not weakened).
+- **Register:** AUDIT_2026-10-04_closures.json started (same shape as INSPECTION_2026-09-25_closures.json).
+
+## 2026-10-04 — AUDIT-4OCT: full read-only audit of the server, the TrustSquare app and Quick (no code changed)
+
+David: *"do a full comprehensive and in depth audit on your 1. code for the Quick and Trustsquare apps, and list all bugs with
+the fixes, 2. the HMI to user interface with suggestions for improvement; then give me a summary report."*
+
+- **What was read:** bea_main.py 1-31874, 21 helper modules, ms.js 1-24137, quick.html 1-4847 and the small shipped scripts, in
+  20 slices, at commit db67a6e; plus a rendered walk of both apps at 390px on the live site.
+- **Result:** 372 bugs (3 Critical, 51 High, 161 Medium, 157 Low) and 179 interface findings. Nothing was fixed in this session;
+  no ledger entries were written for them.
+- **Where it is:** `TrustSquare + Quick Full Audit 2026-10-04 — nice.docx` (summary + every bug with its fix),
+  `AUDIT_2026-10-04_findings.json` (the register as data, ids AUD-001..AUD-372), `AUDIT_2026-10-04_MAP.html` (numbers map,
+  tiled in Projects/Visuals).
+- **Evidence grade:** 1 bug probed on the live site, 1 by running the shipped code, 10 re-read by the lead, the rest read in the
+  code by the reviewers - treat as "the code says" until each is reproduced or fixed.
+- **Not covered:** marketsquare_admin.html, dashboard.server.html, CityLauncher, server/nginx settings, org_enrol,
+  ripple_features, ai_breaker, the map pages.
+
 ## 2026-10-03 — RED-SWEEP-3OCT: the seven older red ledger entries cleared; David's test driver removed
 
 David: "Please do Claude, but it dont mean we lose any photos? Please remove the driver if it was the one i created

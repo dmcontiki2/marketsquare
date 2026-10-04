@@ -8,12 +8,11 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-03 - 3 Oct 2026 — RED-SWEEP-3OCT)
+## Last Completed (2026-10-04 - 4 Oct 2026 — AUDIT-4OCT Batch 2 (High)
 
-- **3 Oct 2026 — RED-SWEEP-3OCT:** the seven older red ledger entries cleared (help screens pulled from the server,
-  screen walk moved to the server timer, combined secrets file removed, one 'advert' word, two assertions corrected
-  to follow moved code, dashboard money chips re-checked -- Resend is above its free cap since 5 Sep). David's test
-  driver #473 removed. Ledger RG-0804..0806.
+- **4 Oct 2026 — AUDIT-4OCT Batch 2 (High: money, privacy, security):** 21 findings closed (AUD-022 not a bug in production, hardened),
+  plus AUD-016 by David's ruling RUL-201 (a paid plan ends at its 30 days; bought Tuppence is never swept). Ledger RG-0818..0840;
+  proof `scripts/prove_audit_b2.py`. Next: Batch 3 (the remaining High bugs).
 
 <!-- DASH-FEED-1:END -->
 
@@ -38,6 +37,19 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **4 Oct 2026 — AUDIT-4OCT Batch 2 (High: money, privacy, security):** 21 findings closed (AUD-022 not a bug in production, hardened),
+  plus AUD-016 by David's ruling RUL-201 (a paid plan ends at its 30 days; bought Tuppence is never swept). Ledger RG-0818..0840;
+  proof `scripts/prove_audit_b2.py`. Next: Batch 3 (the remaining High bugs).
+
+- **4 Oct 2026 — AUDIT-4OCT Batch 1 (Critical):** AUD-001 (withdrawn intro accepted/charged), AUD-002 (Paystack reference
+  re-credit) and AUD-003 (Quick ?resume= script injection) fixed after confirming each in today's code; ledger RG-0814..0816;
+  outcomes in `AUDIT_2026-10-04_closures.json`. Next: Batch 2 (High: money, privacy, security) — AUD-016 and AUD-021 go to
+  David first.
+
+- **4 Oct 2026 — AUDIT-4OCT (read-only, no code changed):** full audit of the server, the TrustSquare app and Quick at commit
+  db67a6e - 372 bugs (3 Critical, 51 High) and 179 interface findings, none fixed yet. Register: `AUDIT_2026-10-04_findings.json`
+  (AUD-001..AUD-372); report: `TrustSquare + Quick Full Audit 2026-10-04 — nice.docx`; map: `AUDIT_2026-10-04_MAP.html`.
 
 - **3 Oct 2026 — RED-SWEEP-3OCT:** the seven older red ledger entries cleared (help screens pulled from the server,
   screen walk moved to the server timer, combined secrets file removed, one 'advert' word, two assertions corrected
