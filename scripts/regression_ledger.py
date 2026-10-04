@@ -35907,7 +35907,7 @@ def rg_anon_names():
 @entry("RG-0875", "LUNA-FIRST-1 (RUL-203, David 4 Oct 2026; Gemini dropped): every first photo check is read by gpt-5.6-luna "
        "(~R0.008); only a photo luna does not pass as clean goes to gpt-5.6-terra, whose verdict drives everything after; "
        "a luna outage goes to terra, never to an untested lane",
-       OPEN, fixed_on="2026-10-04",
+       LOCKED, fixed_on="2026-10-04",
        scope="bea_main.py _anon_photo_scan(first=True): luna read (task 'vision', no fallback), accept only clean + conf >= "
              "_ANON_PHOTO_CONF + no flag + fits not False, else terra (task 'reason'); seller gate + agency import call it with "
              "first=True; luna spend on escalation logged as /photo#anon-first-luna. Kill switch PHOTO_SCAN_FIRST=terra. "
