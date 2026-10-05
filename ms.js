@@ -9148,6 +9148,12 @@ async function msOpenBankNameCheck(){
   var email = _msBankEmail();
   if(!email){ showToast('Sign in first to confirm your bank name.'); return; }
   var banks = await _msLoadBanks();
+  /* BANKNAME-ID-1 (6 Oct 2026): ask first whether there is a confirmed ID name to compare against, so
+     nobody types an account number into a check that cannot run -- and the sheet is never a dead end.
+     David hit exactly that: "Verify your ID first" with nothing to press. */
+  var ready = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/verify-bank-name/ready',
+      { credentials: 'include', headers: { 'X-Api-Key': API_KEY } })
+    .then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
   var old = document.getElementById('ms-bank-overlay'); if(old) old.remove();
   var ov = document.createElement('div'); ov.id = 'ms-bank-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
@@ -9157,6 +9163,13 @@ async function msOpenBankNameCheck(){
     ? '<label style="'+lab+'" for="ms-bank-name">Your bank</label><select id="ms-bank-name" style="'+fld+'"><option value="">Choose your bank</option>'
       + banks.map(function(b){ return '<option value="'+b.code+'">'+b.name+'</option>'; }).join('') + '</select>'
     : '<p style="margin:0 0 12px;font-size:13px;color:#b91c1c;">We cannot load the bank list just now, so this check is unavailable. Nothing else is affected — try again later.</p>';
+  if(ready && !ready.ready){
+    picker = '<p style="margin:0 0 14px;font-size:13.5px;line-height:1.55;color:#334155;">' + (ready.message || '') + '</p>'
+      + (ready.why === 'no_confirmed_id'
+          ? '<button type="button" id="ms-bank-go-trust" style="width:100%;background:#0f172a;color:#fff;border:none;border-radius:50px;padding:13px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;">Go to the Trust tab \u2192</button>'
+          : '');
+    banks = null;
+  }
   ov.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="ms-bank-h" style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:18px 18px 26px;">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
     +   '<span id="ms-bank-h" style="font-size:16px;font-weight:800;color:#1e293b;">Confirm the name on your bank account</span>'
@@ -9173,6 +9186,13 @@ async function msOpenBankNameCheck(){
   var close = function(){ var o = document.getElementById('ms-bank-overlay'); if(o) o.remove(); };
   ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
   document.getElementById('ms-bank-x').onclick = close;
+  var goTrust = document.getElementById('ms-bank-go-trust');
+  if(goTrust) goTrust.onclick = function(){
+    close();
+    var t = document.querySelector('.ms-tab[onclick*="\'trust\'"]');
+    if(typeof msTab === 'function') msTab('trust', t);
+    setTimeout(function(){ var s = document.getElementById('ms-trust-signals'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
+  };
   if(!banks) return;
   document.getElementById('ms-bank-save').onclick = async function(){
     var code = document.getElementById('ms-bank-name').value;

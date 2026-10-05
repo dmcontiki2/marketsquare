@@ -16961,6 +16961,7 @@ async def _vision_verify_identity(doc_url: str, claimed_name: str,
         elif doc_url.lower().endswith(".webp"):
             media_type = "image/webp"
 
+        media_type = _sniff_image_type(img_bytes, media_type)   # BANKNAME-ID-1
         # SEAM-ROUTED (P0, 17 Jul 2026): KYC vision call goes through ai_provider.complete()
         # with task="reason" — same claude-sonnet-4-6 on the Anthropic path as the old SDK call.
         prompt = f"""You are a document verification assistant for TrustSquare marketplace.
@@ -17264,13 +17265,136 @@ def _payment_name_check(conn, email: str, verify_data: dict) -> dict:
 # body or an exception message — scripts/test_identity_verdicts.py asserts each of those
 # and fails if a later edit leaks one. The response tells her only whether it matched.
 # ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+# BANKNAME-ID-1 (6 Oct 2026). David tapped "Confirm the name on your bank account" and was
+# told "Verify your ID first" with nothing to press. His ID HAD been confirmed (27 May), but
+# through the upload route, which never recorded the name printed on the document — and the
+# only route that does record it (the Home Affairs check, AUD-008) is dark. So the bank check
+# was unreachable for every seller confirmed by upload.
+#
+# David's ruling, 6 Oct 2026: the verified ID name is READ OFF THE ID DOCUMENT already on
+# file (never typed by the seller — that would let anyone pass with someone else's account
+# by typing that person's name). Read once, lazily, the first time a name check needs it;
+# only for a seller whose ID is CONFIRMED; the name is stored in users.id_name like the
+# Home Affairs route does, and is never returned in a response.
+# ══════════════════════════════════════════════════════════════════════════════
+def _sniff_image_type(data: bytes, fallback: str = "image/jpeg") -> str:
+    """Trust the bytes, not the URL: /private-docs/ URLs carry no extension."""
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    return fallback
+
+
+def _vision_read_id_name(doc_url: str, email: str) -> str:
+    """Read the full name printed on a confirmed ID document. Returns "" if it cannot be
+    read clearly. Metered and ceiling-guarded like every other vision call."""
+    _check_cost_ceiling(email)
+    try:
+        img = _fetch_kyc_document(doc_url)
+        prompt = ("This is an identity document. Read the holder's FULL NAME exactly as printed "
+                  "(all forenames and surname). Respond ONLY with JSON: "
+                  '{"full_name": "<name or empty>", "legible": <true/false>, '
+                  '"document_appears_genuine": <true/false>}')
+        _sr = ai_provider.complete(
+            [{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64",
+                                             "media_type": _sniff_image_type(img),
+                                             "data": base64.standard_b64encode(img).decode()}},
+                {"type": "text", "text": prompt}]}],
+            task="reason", max_tokens=120,
+            provider=_ts_active_provider(), allow_fallback=False, timeout=120)   # KYC-PIN-1
+        _log_ai_spend(email, "/users/verify-bank-name/id-name", "vision",
+                      getattr(_sr, "in_tokens", None), getattr(_sr, "out_tokens", None),
+                      provider=getattr(_sr, "provider", None), model=getattr(_sr, "model", None))
+        m = re.search(r"\{[\s\S]*\}", _sr.text or "")
+        r = json.loads(m.group()) if m else {}
+        name = " ".join(str(r.get("full_name") or "").split())[:120]
+        if name and r.get("legible") and r.get("document_appears_genuine", True):
+            return name
+    except HTTPException:
+        raise
+    except Exception as _e:
+        _log.warning("BANKNAME-ID-1: ID name read failed (%s)", type(_e).__name__)
+    return ""
+
+
+_BANKNAME_WHY = {
+    "ok": "",
+    "no_confirmed_id": "This check compares the name your bank holds with the name on your "
+                       "confirmed ID. Upload your ID on the Trust tab first \u2014 once it is "
+                       "confirmed, this check opens.",
+    "unreadable": "We could not read the name on the ID document you uploaded, so there is "
+                  "nothing to compare yet. Tell us through Help & Support and we will confirm "
+                  "the name by hand. Nothing was saved.",
+    "unavailable": "The name check is not available just now. Nothing was saved \u2014 try "
+                   "again later.",
+}
+
+
+async def _ensure_id_name(email: str):
+    """(id_name, why). Fills users.id_name from the confirmed ID document when it is empty."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT id_name, id_verified_at, id_npr_verified_at FROM users "
+                           "WHERE email=?", (email,)).fetchone()
+        if not row:
+            return "", "no_confirmed_id"
+        have = " ".join((row["id_name"] or "").split())
+        if have:
+            return have, "ok"
+        if not (row["id_verified_at"] or row["id_npr_verified_at"]):
+            return "", "no_confirmed_id"
+        docs = [r["url"] for r in conn.execute(
+            "SELECT url FROM seller_documents WHERE lower(email)=? AND doc_type='id_doc' "
+            "AND url IS NOT NULL AND url<>'' ORDER BY id DESC LIMIT 3", (email,))]
+    finally:
+        conn.close()
+    if not docs:
+        return "", "no_confirmed_id"
+    if not ai_provider.any_lane_configured():
+        return "", "unavailable"
+    for url in docs:
+        try:
+            name = await asyncio.to_thread(_vision_read_id_name, url, email)
+        except HTTPException:
+            return "", "unavailable"            # cost ceiling: not measured, not a failure
+        if name:
+            conn = database.get_db()
+            try:
+                conn.execute("UPDATE users SET id_name=? WHERE email=? AND "
+                             "(id_name IS NULL OR trim(id_name)='')", (name, email))
+                conn.commit()
+            finally:
+                conn.close()
+            return name, "ok"
+    return "", "unreadable"
+
+
+@app.get("/users/{email}/verify-bank-name/ready")
+async def verify_bank_name_ready(
+    email: str,
+    _key: str = Depends(auth.require_api_key),
+    ts_user: str = Cookie(default=None),
+    x_admin_key: str = Header(default=None),
+):
+    """Asked when the sheet opens, so nobody types an account number for a check that cannot
+    run. Never returns the name itself (BANKNAME-ID-1)."""
+    email = _actor(ts_user, email, "verify-bank-name", x_admin_key).lower().strip()
+    name, why = await _ensure_id_name(email)
+    return {"ready": bool(name), "why": why, "message": _BANKNAME_WHY.get(why, "")}
+
+
 class BankNameCheckIn(BaseModel):
     account_number: str
     bank_code: str
 
 
 @app.post("/users/{email}/verify-bank-name")
-def verify_bank_name(
+async def verify_bank_name(
     email: str,
     payload: BankNameCheckIn,
     _key: str = Depends(auth.require_api_key),
@@ -17281,23 +17405,23 @@ def verify_bank_name(
     keep ONLY whether it matched. The number is never stored (BANKRESOLVE-1, RUL-176)."""
     email = _actor(ts_user, email, "verify-bank-name", x_admin_key)
     email = email.lower().strip()
+    id_name, why = await _ensure_id_name(email)      # BANKNAME-ID-1
     conn = database.get_db()
     try:
-        user = conn.execute("SELECT id_name FROM users WHERE email=?", (email,)).fetchone()
+        user = conn.execute("SELECT email FROM users WHERE email=?", (email,)).fetchone()
         if not user:
             raise HTTPException(status_code=404, detail="Seller not found")
-        id_name = (user["id_name"] or "").strip()
         if not id_name:
-            # Nothing to compare against — say so rather than award or half-award.
-            return {"checked": False, "matched": False,
-                    "reason": "Verify your ID first — there is no confirmed name to compare against yet."}
+            # Nothing to compare against — say so, and say what to do, rather than award or half-award.
+            return {"checked": False, "matched": False, "why": why,
+                    "reason": _BANKNAME_WHY.get(why) or _BANKNAME_WHY["no_confirmed_id"]}
 
         acct = (payload.account_number or "").strip()
         code = (payload.bank_code or "").strip()
         if not acct.isdigit() or not (6 <= len(acct) <= 20) or not code:
             raise HTTPException(status_code=400, detail="Check the account number and bank.")
 
-        res = payments.resolve_account_name(acct, code)
+        res = await asyncio.to_thread(payments.resolve_account_name, acct, code)
         # `acct` is not referenced again below this line, and neither the number nor the
         # resolved name is placed in any dict that is returned, logged or stored.
         if not res.get("ok"):
@@ -17352,6 +17476,7 @@ class _IdConfirmIn(BaseModel):
     email: str
     decision: str = "confirm"        # confirm | reject
     note: str = ""
+    id_name: str = ""                # BANKNAME-ID-1: name as printed on the document, read by the admin
 
 
 @app.post("/admin/identity/confirm")
@@ -17395,6 +17520,9 @@ def admin_identity_confirm(body: _IdConfirmIn, _admin=Depends(_require_admin_or_
             awarded.append("category.lm.id_admin_verified")
         conn.execute("UPDATE users SET id_verified_at=? WHERE email=?",
                      (_utc_now(), email))
+        _hand_name = " ".join((body.id_name or "").split())[:120]
+        if _hand_name:                                   # BANKNAME-ID-1
+            conn.execute("UPDATE users SET id_name=? WHERE email=?", (_hand_name, email))
         conn.commit()
         return {"ok": True, "decision": "confirm", "by": who,
                 "signals_awarded": awarded,
