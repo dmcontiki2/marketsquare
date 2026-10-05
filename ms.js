@@ -789,7 +789,10 @@ function formatZAR(value) {
   const currMatch = s.match(/^([A-Z]{1,3}\$?|[£$€¥₹])/);
   /* SELLER-TEXT-ESC-1 + PRICE-ESC-1 (25 Sep 2026 inspection, ts1-01 + ts3-02): "as-is" is the seller's own text and every
      caller paints it as HTML, so it leaves escaped here; callers must not escape this result again (only their raw fallback). */
-  if (currMatch && !s.match(/^R\s*[0-9]/i)) return _lmEsc(s);
+  /* PRICE-BASIS-INTL-1 (5 Oct 2026): a dollar / pound / A$ rate ('$65 / hour') kept its basis here AND the card's own
+     per-line added it again -- the detail page read '$65 / hour' over 'per hour'. Like the rand branch, the amount loses
+     its '/ basis' and the caller shows the basis once (l.per, or _priceBasisSuffix). A compound price stays whole. */
+  if (currMatch && !s.match(/^R\s*[0-9]/i)) return _lmEsc(_priceIsCompound(s) ? s : (s.replace(/\s*(\/|\bper\b).*$/i, '').trim() || s));
   /* PRICE-RANGE-1 (25 Sep 2026 inspection, ts3-01): Quick prices are often RANGES ('R1 000–R5 000', 'R150k–R300k').
      Reducing one to its digits showed buyers R10,005,000 and R150,300 on every card, edited or not. A range is
      shown as the seller gave it (any '/ basis' after it is shown by the card's own per-line). */

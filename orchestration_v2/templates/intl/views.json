@@ -1,0 +1,342 @@
+{
+"adventures_accommodation_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/adventures_accommodation_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/adventures_accommodation_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/adventures_accommodation_outreach.html",
+""
+]
+],
+"adventures_experiences_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/adventures_experiences_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/adventures_experiences_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/adventures_experiences_outreach.html",
+""
+]
+],
+"adventures_outfitter_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/adventures_outfitter_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/adventures_outfitter_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/adventures_outfitter_outreach.html",
+""
+]
+],
+"agency_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/agency_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/agency_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/agency_outreach.html",
+""
+]
+],
+"cars_dealer_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/cars_dealer_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/cars_dealer_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/cars_dealer_outreach.html",
+""
+]
+],
+"collectors_dealer_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/collectors_dealer_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/collectors_dealer_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/collectors_dealer_outreach.html",
+""
+]
+],
+"collectors_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/collectors_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/collectors_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/collectors_outreach.html",
+""
+]
+],
+"property_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/property_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/property_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/property_outreach.html",
+""
+]
+],
+"service_company_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/service_company_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/service_company_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/service_company_outreach.html",
+""
+]
+],
+"services_casuals_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/services_casuals_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/services_casuals_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/services_casuals_outreach.html",
+""
+]
+],
+"services_technical_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/services_technical_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/services_technical_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/services_technical_outreach.html",
+""
+]
+],
+"sports_club_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/sports_club_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/sports_club_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/sports_club_outreach.html",
+""
+]
+],
+"tour_guide_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+null,
+"SEND BLOCKED"
+],
+[
+"GB",
+"UK \u00b7 London",
+null,
+"SEND BLOCKED"
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+null,
+"SEND BLOCKED"
+]
+],
+"travel_agency_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+null,
+"SEND BLOCKED"
+],
+[
+"GB",
+"UK \u00b7 London",
+null,
+"SEND BLOCKED"
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+null,
+"SEND BLOCKED"
+]
+],
+"tutor_institution_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/tutor_institution_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/tutor_institution_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/tutor_institution_outreach.html",
+""
+]
+],
+"tutors_outreach.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/tutors_outreach.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/tutors_outreach.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/tutors_outreach.html",
+""
+]
+],
+"tutors_outreach.b.html": [
+[
+"US",
+"US \u00b7 New York",
+"templates/intl/US/tutors_outreach.b.html",
+""
+],
+[
+"GB",
+"UK \u00b7 London",
+"templates/intl/GB/tutors_outreach.b.html",
+""
+],
+[
+"AU",
+"AU \u00b7 Sydney",
+"templates/intl/AU/tutors_outreach.b.html",
+""
+]
+]
+}

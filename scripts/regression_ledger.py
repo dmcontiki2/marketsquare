@@ -36123,6 +36123,62 @@ def rg_email_cards_link():
         return [(FAIL, "letters with an example card that opens nothing: " + ", ".join(bad))]
     return [(INFO, "every example card in every letter opens its advert")]
 
+@entry("RG-0882", "EMAIL-EXAMPLES-INTL-1 + INTL-VIEW-1: a US, UK or Australian outreach letter shows example cards from the "
+       "reader's own country (each opening a live advert), and the Email Templates view shows every letter as those readers get it",
+       LOCKED, fixed_on="2026-10-05",
+       scope="CityLauncher/emailer/intl_examples.py + intl_examples.json (written from the live DB by refresh_intl_examples.py; "
+             "US/GB/AU x Tutors, Collectors, Services technical + casual, Property, Cars = 3 each, Stays/Experiences = 2 each); "
+             "{{intl_examples}} in every card letter, outside every ZA-ONLY block; adverts 484-522 from migrations/066. "
+             "orchestration_v2/templates/intl/<cc>/ rendered by build_email_templates_page.py through the real send path. "
+             "PROBED 5 Oct 2026: before the fix every US/UK/AU letter ended on an example heading with no cards; after, 187 "
+             "distinct links in the US/UK/AU renders and 193 in the dashboard views all answer 200.",
+       ref="David 5 Oct 2026 ('Did you actually test them and do they work as well as the ZA emails with their links and "
+           "advert demos?'); scripts/create_email_examples_intl.py; CityLauncher/emailer/intl_examples.py")
+def rg_email_examples_intl():
+    import json as _j
+    cl = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer")
+    if not os.path.isdir(cl):
+        return [(INFO, "NOT EVALUATED - CityLauncher not readable here")]
+    try:
+        d = _j.load(open(os.path.join(cl, "intl_examples.json"), encoding="utf-8"))
+    except Exception as e:
+        return [(FAIL, "CityLauncher/emailer/intl_examples.json unreadable: %s" % e)]
+    for cc in ("US", "GB", "AU"):
+        for k in ("Tutors", "Collectors", "Services:Technical", "Services:Casuals", "Property", "Cars"):
+            if len((d.get(cc) or {}).get(k) or []) < 3:
+                return [(FAIL, "%s has fewer than three %s examples for its letters" % (cc, k))]
+    t = os.path.join(cl, "templates")
+    for fn in sorted(os.listdir(t)):
+        if not fn.endswith(".html") or ".bak" in fn:
+            continue
+        x = open(os.path.join(t, fn), encoding="utf-8", errors="replace").read()
+        if "End live listings showcase" in x:
+            if "{{intl_examples}}" not in x:
+                return [(FAIL, "%s lost its {{intl_examples}} marker -- US/UK/AU readers get no examples" % fn)]
+            i = x.index("{{intl_examples}}")
+            if x[:i].count("<!--ZA-ONLY-->") != x[:i].count("<!--/ZA-ONLY-->"):
+                return [(FAIL, "%s: {{intl_examples}} sits inside a ZA-ONLY block and is stripped abroad" % fn)]
+    v = os.path.join(REPO, "orchestration_v2", "templates", "intl", "US", "tutors_outreach.html")
+    if not os.path.exists(v) or "listing=" not in open(v, encoding="utf-8").read():
+        return [(FAIL, "the Email Templates view has no US render of the tutors letter with its example cards")]
+    return [(INFO, "US/UK/AU letters carry their own country's example cards; dashboard shows each country's render")]
+
+
+@entry("RG-0883", "PRICE-BASIS-INTL-1: a dollar / pound / A$ rate shows its basis once ('$65' over 'per hour'), never "
+       "'$65 / hour' over 'per hour'",
+       LOCKED, fixed_on="2026-10-05",
+       scope="ms.js formatZAR() non-rand branch strips the '/ basis' (compound prices stay whole), exactly as the rand "
+             "branch already did; callers add the basis once through l.per or _priceBasisSuffix. Found on the new New York "
+             "tutor advert 484 while checking David's US letters; the same doubling sat on every existing US/UK/AU rate advert.",
+       ref="5 Oct 2026, found during EMAIL-EXAMPLES-INTL-1")
+def rg_price_basis_intl():
+    j = repo_file("ms.js")
+    if j is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "PRICE-BASIS-INTL-1" not in j or "_priceIsCompound(s) ? s : (s.replace(" not in j:
+        return [(FAIL, "ms.js: a non-rand rate keeps its basis inside the amount again (doubled basis on adverts)")]
+    return [(INFO, "non-rand rates show their basis once")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

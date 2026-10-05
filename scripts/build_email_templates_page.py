@@ -181,6 +181,7 @@ def preview_links(fn, html):
     html = html.replace("{{unsubscribe_link}}", "#unsubscribe-is-personal-to-each-reader")
     html = html.replace("{{optout_link}}", "#unsubscribe-is-personal-to-each-reader")
     html = html.replace("{{example_page}}", "https://trustsquare.co/static/examples/athletics.html")
+    html = html.replace("{{intl_examples}}", "")   # EMAIL-EXAMPLES-INTL-1: the ZA preview shows the ZA cards only
     return html
 
 
@@ -253,7 +254,7 @@ def badges_for(fn, raw, sent, special):
     return "".join(b)
 
 
-def card(href, title, meta, badges_html, open_label="Open the real letter ↗", txt=False):
+def card(href, title, meta, badges_html, open_label="Open the real letter ↗", txt=False, extra=""):
     frame = ('<iframe src="%s" loading="lazy" style="width:200%%;height:340px;transform:scale(.5);'
              'transform-origin:0 0;border:0;pointer-events:none;background:#fff"></iframe>' % href)
     return ('<div style="background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;display:flex;flex-direction:column">\n'
@@ -264,12 +265,74 @@ def card(href, title, meta, badges_html, open_label="Open the real letter ↗", 
             '    <div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">%s</div>\n'
             '    <div style="margin-bottom:8px">%s</div>\n'
             '    <a href="%s" target="_blank" style="display:inline-block;text-decoration:none;font-size:12px;font-weight:700;'
-            'padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">%s</a>\n  </div>\n</div>\n'
-            % (frame, href, href, title, meta, badges_html, href, open_label))
+            'padding:7px 13px;border-radius:9px;background:var(--navy);color:#fff">%s</a>%s\n  </div>\n</div>\n'
+            % (frame, href, href, title, meta, badges_html, href, open_label, extra))
 
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+# INTL-VIEW-1 (David, 5 Oct 2026: "how do these emails work for the other than ZA email recipients? I tried them but
+# cant test them by simulating i am from US"). The main preview is the South African letter. For every letter a
+# US, UK or Australian reader can receive, the REAL send path (emailer.render) is run for a sample reader in New
+# York, London and Sydney, and the card links each one. These renders carry the day's wave tag, so they are
+# rebuilt on every run and are NOT part of --check (the mirror stays the truth RG-0344 judges).
+INTL = (("US", "New York", "US · New York"), ("GB", "London", "UK · London"), ("AU", "Sydney", "AU · Sydney"))
+
+
+def intl_previews(lane):
+    import logging
+    logging.disable(logging.WARNING)
+    envp = os.path.join(CL, ".env")
+    if os.path.exists(envp) and not os.environ.get("TS_POSTAL_ADDRESS"):
+        for line in open(envp, encoding="utf-8", errors="replace"):
+            if line.startswith("TS_POSTAL_ADDRESS="):
+                os.environ["TS_POSTAL_ADDRESS"] = line.split("=", 1)[1].strip().strip('"')
+    if CL not in sys.path:
+        sys.path.insert(0, CL)
+    try:
+        from emailer import emailer as em
+    except Exception as e:
+        print("[email-page] INTL-VIEW-1: emailer not importable here (%s) -- no country views" % e)
+        return {}
+    done = {}
+    for fn, grp, keys, note in lane:
+        if not keys or not fn.endswith(".html"):
+            continue
+        cat = keys[0]
+        for cc, city, label in INTL:
+            p = {"id": 1, "name": "Sam Taylor", "email": "preview@example.com", "category": cat.split(":")[0],
+                 "city": city, "country": cc, "suburb": "",
+                 "source": "register:preview" if cat.endswith(":register") else "scrape:preview"}
+            try:
+                tpl = em.load_template(cat if cat.endswith(":register") else em.template_key_for(p))
+                if fn.endswith(".b.html"):
+                    tpl = em.load_template(em.template_key_for(p), "b")
+                html_out = em.render(tpl, p, "Example listing", "https://trustsquare.co")
+            except Exception as e:      # a lane the send path refuses for this country is shown as refused, not faked
+                done.setdefault(fn, []).append((cc, label, None, str(e).split(" — ")[0][:80]))
+                continue
+            d = os.path.join(MIRROR, "intl", cc)
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, fn), "w", encoding="utf-8") as fh:
+                fh.write(html_out)
+            done.setdefault(fn, []).append((cc, label, "templates/intl/%s/%s" % (cc, fn), ""))
+    logging.disable(logging.NOTSET)
+    return done
+
+
+def intl_row(views):
+    if not views:
+        return ""
+    parts = []
+    for cc, label, href, why in views:
+        if href:
+            parts.append('<a href="%s" target="_blank" style="font-weight:700;color:var(--navy)">%s</a>' % (href, label))
+        else:
+            parts.append('<span style="color:#b45309" title="%s">%s: not being sent (send lane closed)</span>' % (esc(why), label))
+    return ('\n    <div style="font-size:12px;color:var(--muted);margin-top:9px">The preview above is a reader in South Africa. '
+            'See it as a reader in: ' + " · ".join(parts) + '</div>')
 
 
 def build(check_only=False):
@@ -285,6 +348,14 @@ def build(check_only=False):
 
     # 1. mirror
     os.makedirs(MIRROR, exist_ok=True)
+    vj = os.path.join(MIRROR, "intl", "views.json")
+    if check_only:
+        views = json.load(open(vj, encoding="utf-8")) if os.path.exists(vj) else {}
+    else:
+        views = intl_previews(lane)
+        os.makedirs(os.path.dirname(vj), exist_ok=True)
+        with open(vj, "w", encoding="utf-8") as fh:
+            json.dump(views, fh, indent=0)
     cards = {"org": [], "clubs": [], "ind": [], "other": []}
     for fn, grp, keys, note in lane:
         sp = os.path.join(SRC, fn)
@@ -314,7 +385,8 @@ def build(check_only=False):
             meta.append(esc(note))
         meta.append("%d KB · sending copy last changed %s · as sent today" % (kb, mtime))
         cards[grp].append(card("templates/" + fn, esc(TITLES.get(fn, fn)), " · ".join(meta),
-                               badges_for(fn, raw, sent, special), txt=fn.endswith(".txt")))
+                               badges_for(fn, raw, sent, special), txt=fn.endswith(".txt"),
+                               extra=intl_row(views.get(fn))))
     lane_names = {x[0] for x in lane}
     for fn in sorted(os.listdir(MIRROR)):
         if fn.endswith((".html", ".txt")) and ".bak" not in fn and fn not in lane_names and fn not in ("placement_agency_outreach.html", "preview_placement_agency_outreach.html"):
