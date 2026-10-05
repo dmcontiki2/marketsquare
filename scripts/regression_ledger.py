@@ -36096,6 +36096,33 @@ def rg_preview_links():
         return [(FAIL, "preview letters with an unfilled link placeholder (404 on click): " + ", ".join(bad[:5]))]
     return [(INFO, "every preview link is a real URL")]
 
+@entry("RG-0881", "EMAIL-EXAMPLES-2: every example phone card in every outreach letter opens the live example advert it shows "
+       "(?listing=<id>) -- no card is a dead picture",
+       LOCKED, fixed_on="2026-10-05",
+       scope="CityLauncher/emailer/templates/*.html: every phone card (the '9:41' mock-ups) carries a ?listing= link. "
+             "Trios: collectors 269/476/477, tutors 266/478/479, services-technical 267/480/481, services-casual "
+             "268/482/483, property 315-317, experiences 321-323 (+ cars, stays, travel, tour, agency as before). "
+             "Adverts 476-483 made by migrations/065_email_examples_2.py on our own Quick pictures; card title, price, "
+             "area and score copied from the live rows. PROBED 5 Oct 2026: 478 opens in the app as an AI example.",
+       ref="David 5 Oct 2026 ('the three examples don't open up ... Should we perhaps then at least generate examples "
+           "as per these emails?'); scripts/create_email_examples_2.py")
+def rg_email_cards_link():
+    d = os.path.join(os.path.dirname(REPO), "CityLauncher", "emailer", "templates")
+    if not os.path.isdir(d):
+        return [(INFO, "NOT EVALUATED - CityLauncher not readable here")]
+    bad = []
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".html") or ".bak" in fn:
+            continue
+        t = open(os.path.join(d, fn), encoding="utf-8", errors="replace").read()
+        cards = re.findall(r'<td width="33%" align="center" valign="top" style="padding:0 6px;">.*?\n            </td>', t, re.S)
+        cards = [c for c in cards if "9:41" in c]
+        if any("?listing=" not in c for c in cards):
+            bad.append(fn)
+    if bad:
+        return [(FAIL, "letters with an example card that opens nothing: " + ", ".join(bad))]
+    return [(INFO, "every example card in every letter opens its advert")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
