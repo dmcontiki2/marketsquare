@@ -18937,7 +18937,13 @@ async function msUploadIdDoc(e){
         }).catch(()=>{});
       if(typeof loadLiveListings === 'function') loadLiveListings(0);
     } else if(data.already_verified){
+      // ID-UPLOAD-LEGACY-1: this branch used to leave the button on "Uploading..." forever.
       showToast('Your ID is already verified ✓');
+      if(btn){ btn.textContent = 'ID verified ✓'; btn.disabled = true; }
+      fetch(BEA_URL+'/users/'+encodeURIComponent(email)+'/trust')
+        .then(r=>r.ok?r.json():null)
+        .then(td=>{ if(!td) return; msRenderTrust(parseInt(td.score)||0); if(td.signals && td.signals.length) msRenderLiveSignals(td.signals); })
+        .catch(()=>{});
     } else {
       // Update cached trust score and re-render
       localStorage.setItem('ms_trust_score', data.trust_score);

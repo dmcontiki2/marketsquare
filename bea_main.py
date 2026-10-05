@@ -8248,7 +8248,17 @@ def upload_user_id(email: str, file: UploadFile = File(...),
         row = conn.execute(
             "SELECT trust_score, id_verified_at FROM users WHERE email=?", (email,)
         ).fetchone()
-        already_verified = bool(row and row["id_verified_at"])
+        # ID-UPLOAD-LEGACY-1 (6 Oct 2026). "Already verified" is read from the SAME credential
+        # the Trust tab scores (TRUST-ONE-SET-1), never from the legacy users.id_verified_at
+        # column. That column was stamped by the pre-C2 instant self-grant (May 2026), which
+        # wrote no credential the ladder counts -- so David's Trust tab said "ID not verified,
+        # Upload ID" while this handler said "already verified", threw the photo away, granted
+        # nothing, and the button sat on "Uploading..." forever. One surface, one answer.
+        _vc = conn.execute(
+            "SELECT 1 FROM user_credentials WHERE LOWER(email)=? AND status='earned' "
+            "AND signal_id IN (%s)" % ",".join("?" * len(_GATE_ID_SIGNALS)),
+            (email,) + tuple(_GATE_ID_SIGNALS)).fetchone()
+        already_verified = bool(_vc)
         current_score    = int(row["trust_score"] or 0) if row else 40
 
         # C2 fix (audit 16 Jul 2026): NO trust is granted here. Store the ID as a
