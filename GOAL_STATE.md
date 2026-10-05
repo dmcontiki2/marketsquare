@@ -24,8 +24,10 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 - **Where people stop:** no strangers again. Human (bot=0) sessions since run 29: David Jnr's iPhone, David's iPhone opening the
   `email-test-svc-pta` letter link (13:35–13:42Z, 18:57Z), one Mac (09:55Z, Maroushka's session), one Linux sell-sheet tap.
 - **Shipped (36437dc):** GI-0022 PIECE-WORK-DEFAULT-1 (RG-0889), GI-0023 CITY-HANDOFF-1 (RG-0890). Both fail on f9b6f5f, pass new.
-- **Found, not changed:** braid photo shown twice in the price step's trail; after sign-in Home stays on Pretoria for a
-  Johannesburg seller.
+- **Follow-up (David, same evening: "fix the two open actions"):** both found-not-changed items fixed and shipped —
+  GI-0024 TRAIL-ONE-PIC-1 (RG-0891), GI-0025 HOME-CITY-DRAFT-1 (RG-0892). QA draft #524 (qa-goal30b@) made to prove
+  GI-0025 and deleted by its own session. **Ledger id clash to watch:** another lane's SIGNIN-HOME-1 (08aa3c3) names
+  RG-0889 in its commit and changelog but has no ledger entry; RG-0889 in the ledger is PIECE-WORK-DEFAULT-1.
 - **REVIEW NOW:** GI-0020 only (fair-price cost; recommend (a) now, (b) when a stranger reaches the Collectors score card).
 - **QA data:** draft #523 deleted by its own session (row gone); user row qa-goal30@ left (account deletion is David's).
 - **Not reached:** outreach opens/clicks since run 29 (not pulled).

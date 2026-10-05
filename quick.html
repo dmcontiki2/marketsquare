@@ -678,8 +678,7 @@ function drawStep(){
   var f=flow();
   if(step>=f.steps.length){ drawResult(); return; }
   var s=f.steps[step];
-  var trail=picks.map(function(p){
-    return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
+  var trail=qTrail();
   if(s.kind==='week'){ drawWeek(s,trail); return; }
   var items;
   if(s.kind==='chip'){
@@ -904,6 +903,12 @@ function finish(){
 }
 
 /* ---------------- result ---------------- */
+/* TRAIL-ONE-PIC-1 (Goal run 30 follow-up, 5 Oct 2026): the group pick and the role pick wear the same picture
+   (role_<key>), so every later step showed it twice side by side. A picture the trail has just shown is not repeated. */
+function qTrail(){ var last=null;
+  return picks.map(function(p){
+    if(p.photo){ if(p.photo===last) return ''; last=p.photo; return '<img src="'+qPh(p.photo)+'" alt="">'; }
+    return '<span>'+qEsc(p.label)+'</span>'; }).join(''); }
 function pickOf(k){ for(var i=0;i<picks.length;i++) if(picks[i].key===k) return picks[i]; return null; }
 function heroPhoto(){
   for(var i=picks.length-1;i>=0;i--) if(picks[i].photo) return picks[i].photo;
@@ -1786,8 +1791,7 @@ function nameFromMail(m){
 function drawLookup(){
   var c=cat(), all=c.ads(picks,[]);
   var five=all.slice(0,5);
-  var trail=picks.map(function(p){
-    return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
+  var trail=qTrail();
   var cards=five.map(function(a,i){
     var tb=trustBand(a.ts);
     return '<div class="ad" style="animation-delay:'+(i*25)+'ms"><img src="'+PH[a.p]+'" alt="">'
@@ -3775,8 +3779,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     setNav();
     try{ qTrack('q_step_'+(step+1)); }catch(e){}
     var cc=country(), F=MINW[cc].h, set=setsFor(s), basis=set.def, parts=false;
-    var trail=picks.map(function(p){
-      return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
+    var trail=qTrail();
     var sc=$('screen'); sc.className='screen'; sc.setAttribute('data-step','price');
     sc.innerHTML='<div class="q">What do you charge?</div>'
       +(trail?'<div class="trail">'+trail+'</div>':'')
@@ -3870,8 +3873,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     setNav();
     try{ qTrack('q_step_'+(step+1)); }catch(e){}
     var cc=country(), d=pickOf('deal'), rent=!!(d && /let|rent/i.test(String(d.label||'')));
-    var trail=picks.map(function(p){
-      return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
+    var trail=qTrail();
     var sc=$('screen'); sc.className='screen'; sc.setAttribute('data-step','price');
     sc.innerHTML='<div class="q">'+(rent?'What is the rent a month?':'What is your asking price?')+'</div>'
       +(trail?'<div class="trail">'+trail+'</div>':'')
@@ -4875,7 +4877,7 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
     if(isWhere && !QCITY && window.QCITY_OTHER && mode){
       /* CITY-OTHER-1 (quick-11): her own area, in words -- never another city's suburbs */
       setNav();
-      var trail=picks.map(function(p){ return p.photo?'<img src="'+qPh(p.photo)+'" alt="">':'<span>'+qEsc(p.label)+'</span>'; }).join('');
+      var trail=qTrail();
       drawFree(s, trail);
       try{ $('frback').onclick=function(){ window.QCITY_OTHER=null; drawCityPick(); }; }catch(e){}
       return;

@@ -36379,6 +36379,54 @@ def rg_city_handoff_1():
     return out or [(INFO, "Quick links carry her chosen country and city")]
 
 
+@entry("RG-0891", "TRAIL-ONE-PIC-1 (Goal run 30 follow-up, 5 Oct 2026): Quick's trail of picks shows a picture once -- the group "
+       "and the role it opened wear the same photo and no longer sit side by side on every later step",
+       LOCKED, fixed_on="2026-10-05",
+       scope="quick.html (= genie/HARNESS.html) qTrail(); the five trail builders (drawStep, drawLookup, drawRate, the goods "
+             "price step, CITY-OTHER-1) call it",
+       ref="docs/E2E_2026-10-05.md 'Not fixed, noted': the braid photo twice at the top of the areas and price steps")
+def rg_trail_one_pic_1():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = q.find("function qTrail(){")
+    if i < 0:
+        return [(FAIL, "qTrail() is gone from quick.html")]
+    if "if(p.photo===last) return ''" not in q[i:i + 500]:
+        return [(FAIL, "qTrail() repeats a picture again")]
+    if q.count("qTrail()") < 6 or "picks.map(function(p){ return p.photo?'<img" in q:
+        return [(FAIL, "a trail builder no longer goes through qTrail()")]
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html differs from quick.html")]
+    return [(INFO, "one picture per kind in the trail")]
+
+
+@entry("RG-0892", "HOME-CITY-DRAFT-1 (Goal run 30 follow-up, 5 Oct 2026): a Quick seller who opens her letter's link gets the city "
+       "of the listing she just made as her app city (with its country) when she has never picked one; her own pick wins",
+       LOCKED, fixed_on="2026-10-05",
+       scope="ms.js msHomeFromDraft(id), called from msLandDraft when the draft's card is found",
+       ref="docs/E2E_2026-10-05.md: a Johannesburg braider signed in from the letter and the app stayed on Pretoria "
+           "(listings?city=Pretoria behind her Hub)")
+def rg_home_city_draft_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function msHomeFromDraft(id){")
+    if i < 0:
+        return [(FAIL, "msHomeFromDraft() is gone")]
+    seg = js[i:i + 700]
+    out = []
+    for n in ("if(localStorage.getItem('ms_user_city')) return;", "dl._raw.city", "_msRestoreCountryFor(city, false);",
+              "selectCity(null, city, null, null);"):
+        if n not in seg:
+            out.append((FAIL, "msHomeFromDraft lost %r" % n))
+    k = js.find("function msLandDraft(){")
+    if k < 0 or "msHomeFromDraft(id);" not in js[k:k + 900]:
+        out.append((FAIL, "msLandDraft no longer sets her city from the draft"))
+    return out or [(INFO, "a letter-link seller's app city is her listing's city unless she picked one")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
