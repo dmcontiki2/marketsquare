@@ -1,3 +1,134 @@
+# 5 Oct 2026 -- Sectional title / Full title on property adverts (RUL-208, Maroushka's advice)
+- TITLE-TYPE-1: optional 'Title' on the Sell flow, Edit and the Coach for Property; shown on the advert; Browse filter
+  'Title: Any / Sectional title / Full title' (Any by default; adverts that did not say are never hidden). Quick never asks.
+  New column listings.title_type (added at start-up). RG-0888.
+
+# 5 Oct 2026 -- the SMS lane gets its gates before its first text (RUL-206)
+
+David: "not to again make the same mistake we did with the emails where the app didnt work and we thought nobody was
+interested" -- then "please build 1, 2 and 4", and the phone-only limit of RUL-192(a) lifted ("it was a guide at the time").
+
+- **QUICK-ERR-BEACON-1** (quick.html = genie/HARNESS.html): Quick reports script errors, failed calls to our server
+  and the step she left on (q_error / q_api_fail / q_api_4xx / q_leave), capped per session. RG-0884.
+- **SMS-STATUS-1** (sms_provider.py): message id kept, delivery status and prepaid credit readable; nothing new can send. RG-0885.
+- **SMS-WAVE-2** (CityLauncher/sms_wave.py): found broken on a read-only walk -- wrong purpose (every text would have been
+  skipped), wrong MarketSquare path on the server, never shipped, untagged link. Now: purpose 'outreach'; batch tag
+  src=sms-b<N>-<door>-<city>; role from her own Gumtree title when exactly one job matches; texts built to fit one part
+  (all 1,080 Gumtree texts are one part, R216 for the lot); opt-outs, STOP, 60-day floor across e-mail AND text; prospects
+  pool (RUL-206(a)); refuses unless the path probe passed in 24 h; --refresh-status reads delivery.
+- **SMS-PATH-PROBE-1** (CityLauncher/sms_path_probe.py): nightly + before every wave, walks the exact text link on an
+  emulated Android phone to her draft for every door, checks the tag and the error beacon arrive, reads BulkSMS credit.
+- **SMS-FUNNEL-1** (CityLauncher/sms_funnel.py -> Ops cockpit "SMS Funnel"): one row per batch with the agreed reading rule.
+- RECONTACT-1 in the emailer now counts texts, so a letter never follows a text inside 60 days.
+
+# 5 Oct 2026 -- REPORTS-BELOW-1: My reports moves under the AI Feature cards
+
+David: "the previous reports list is shown first before the options to select Features, please change this for the
+previous reports to always show below the Feature selection options; otherwise they get lost out of screen."
+
+Fix (ms.js aiLoadMyReports): the My reports block is placed after the feature cards and after the run panel a chosen
+card opens, instead of before the cards.
+
+## 2026-10-05 — PREVIEW-LINKS-1: the Email Templates previews' buttons open real pages
+
+David clicked "Open Quick", the phone picture and "Open it in the full TrustSquare app" in the Ops Dashboard's Email
+Templates view and got 404 Not Found. Cause: the preview mirror served the sending copies raw, so `{{quick_link}}`,
+`{{magic_link}}` and `{{language_row}}` reached the browser as relative paths. build_email_templates_page.py now fills
+every LINK placeholder for a sample reader in Pretoria (Quick door per category, app front door, ZA language links,
+inert unsubscribe anchor); text placeholders stay visible. The CityLauncher sending copies are untouched — real letters
+were never affected. All 37 distinct links answer 200. Ledger RG-0880; RG-0344 still green.
+
+## 2026-10-05 — LANG-OPEN-1 (RUL-204): Quick speaks the US, UK and Australian languages
+
+David: "lets make the languages active - it is worth the small risk of people giving us more grammar complaints, and then
+we can use it to improve". PROBED first: the 'prepared' status had never meant translated — Quick held words for the five
+ZA languages only. Landed: Claude's drafts of all 786 words, 6 phrases and 34 patterns in Español, 中文 (simplified),
+Tagalog, Tiếng Việt, Cymraeg, Polski, Română, ਪੰਜਾਬੀ, العربية and 廣東話 (roles/quick_i18n.json, 15 columns); US/GB/AU
+switched to 'offered' in roles/lang_countries.json (NA/BW/MZ/KE/DE stay prepared); quick.html knows every language's
+name and Arabic text reads right-to-left inside each line. Also found: seven words Quick asks for ("Listed with us before?
+Sign in", "My listings", "Continue with Google"…) had no entry in ANY language, South Africa's included — drafted for all 15.
+Browser-tested against the patched file: US es (also picked automatically from a Spanish phone), GB pl/pa, AU ar/yue, ZA zu,
+door and first step; a ZA visitor asking for Spanish still gets English. Scripts: apply_lang_open_us_gb_au.py,
+apply_quick_missing_words.py. RULINGS RUL-204 (amends RUL-165(b)); ledger RG-0878.
+
+## 2026-10-05 — LANG-HOME-1 (RUL-205): Quick's languages follow the person, not the searched country
+
+David, with a New York nanny search open from South Africa: the searcher should see the ZA languages, and someone in New
+York the US ones. Before: switching the door to the US (or opening a link with ?cc=US) swapped the app's language list to
+the US one. Now the LANG-COUNTRY-1 block works out the person's own country once (phone clock first, else the door's first
+country) and offers that country's languages whatever country she searches or lists in; "Languages I work in" still
+follows the place of the work. Browser-tested before deploy (ZA clock + door US/GB -> ZA five; New York -> US; Sydney ->
+AU). RULINGS RUL-205; ledger RG-0879.
+
+# 5 Oct 2026 -- every outreach letter opens on a photo collage; the Email Templates page keeps itself current
+
+David: "i like the photo collage type of pictures we did for some of these email, can you please do the same for the ones
+that don't have these collages ... And then please keep the Orchestrator where all of these templates live updated".
+
+- HERO-COLLAGE-2: six new photo-rainbow heroes (collectors, technical services, casual services, tutors, stays,
+  experiences) composed with scripts/compose_email_rainbow.py from each category's own showcase-advert photos; 11 letters
+  that opened on an emoji now open on a photo (private property reuses the property hero). RG-0886.
+- EMAIL-PAGE-NIGHTLY-1: build_email_templates_page.py takes EMAIL_PAGE_CL / EMAIL_PAGE_OUT; CityLauncher/nightly_wave.sh
+  rebuilds the Ops Dashboard Email Templates page on the server every night from the letters the wave sends.
+
+# 5 Oct 2026 -- GEO-PAIR-1: the location badge can no longer read "South Africa / London"
+
+David: "How is it possible to have South Africa and London together?"
+
+Cause: only the CITY was remembered between visits (ms_user_city). On boot the city came back as London but the
+country stayed at its default, South Africa -- and _resolveActiveCity looked the city up in ZA regardless.
+
+Fix (ms.js): the country is saved with the city (ms_user_country) wherever the city is saved (city picker, onboarding);
+on boot the country is restored with it -- the saved pair, or for older saves the country the city belongs to
+(London -> United Kingdom, East London stays South Africa); _resolveActiveCity looks up the active country, not ZA.
+Checked: 6 restore cases in node (London, stale ZA+London pair, Pretoria, Berlin/DE, East London, link city New York).
+
+# 5 Oct 2026 -- Find never hides a real advert behind AI examples for one missed answer (RUL-207)
+
+Dave jnr searched Quick for his own townhouse in Rietvalleirand under House and saw only AI examples.
+- HOUSE-WIDE-1: 'House' also finds townhouses, clusters, duplexes, simplexes.
+- FIND-CLOSE-1: when nothing fits exactly, real adverts that miss by one answer show first under 'Close matches',
+  each ribboned with what differs; 4 new phrases in all 15 languages. RG-0887.
+
+## 2026-10-05 — EMAIL-EXAMPLES-INTL-1 + INTL-VIEW-1: US/UK/AU letters get their own example adverts; the dashboard shows them
+
+David asked whether the letters work for non-ZA readers as well as for ZA ones, and noted he could not see a US version.
+PROBED: they did not — the example cards are South-Africa-only, so every US/UK/Australian letter ended on an example
+heading with nothing under it; links were fine (187 checked). Built: migration 066 adds 39 showcase adverts (484–522) in
+New York, London and Sydney so each country has three per category (Stays/Experiences use the two existing each), and
+corrects the car details of 287/292/297 (a Classic Mini showed Toyota Hilux specs). CityLauncher/emailer/intl_examples.py
+fills a new {{intl_examples}} marker with the reader's own country's cards from intl_examples.json (written from the live DB
+by refresh_intl_examples.py). The Email Templates view now renders every letter through the real send path for a reader
+in New York, London and Sydney ("See it as a reader in: US · UK · AU" on each card). Found on the way: ms.js showed
+'$65 / hour' over 'per hour' on every non-rand rate advert — fixed (PRICE-BASIS-INTL-1). Ledger RG-0882, RG-0883.
+
+## 2026-10-05 — EMAIL-EXAMPLES-2: every example card in every outreach letter opens its advert
+
+David: the example phone cards in the tutors letter (and the other types) did not open, while the cars/stays/travel
+ones did — "the links that work are where we do have examples... should we generate examples as per these emails?"
+PROBED: 10 letters showed three cards each that opened nothing, on stock photos that did not match the card text.
+Built: migration 065 (scripts/create_email_examples_2.py) created eight AI-example adverts 476–483 on our own Quick
+pictures (watch, stamps, English, coding, plumber, solar, home cleaner, moving help); each trio pairs them with the
+existing super example (Krugerrand 269, maths tutor 266, electrician 267, garden service 268). Property and
+experiences cards now link to their existing adverts 315–317 / 321–323. Every card's title, price, area and score is
+copied from the live row (area as the app shows it: Pretoria / Pretoria East / Gauteng), with "Click to view" links;
+the card blocks in the collectors and experiences letters became South-Africa-only (they show rand prices). Synced to
+the wave server; Email Templates view rebuilt. Ledger RG-0881; RG-0880 / RG-0344 green.
+
+## 2026-10-04 · AI-DESC-SHOWN-1 + AI-PRICE-HINT-1 (Goal run 29, RG-0876)
+
+- **The photo read's description is shown before it can be published.** It used to lead the advert unseen when the
+  seller left her story box empty. It now fills her first story box ("What makes it special?" on Local Market; the
+  first textarea of every flow) with a note: "I drafted this from your photo — buyers will read it as written."
+  Clearing the box means no AI text in the advert.
+- **Notes-to-self are dropped** from the AI text (sentences about what is not visible or cannot be confirmed, props,
+  styling), and the vision prompt now says description_draft is buyer-facing advert text.
+- **A low-confidence price guess (< 0.5) is a hint, not her price**: the box stays empty with the placeholder
+  "Photo guess R80 — your price".
+- Evidence: docs/E2E_2026-10-04_run29.md — a marmalade seller's advert would have gone live describing honey, bread
+  loaves, a jug and flowers "as market styling", ending "…and pricing are not visible."; R80 (confidence 0.28) sat in
+  her price box.
+
 ## 2026-10-05 — LANG-COUNTRY-1: Quick's languages follow the visitor's country
 
 David asked whether Quick offers US, UK and Australian visitors their own languages. PROBED 5 Oct in a browser at

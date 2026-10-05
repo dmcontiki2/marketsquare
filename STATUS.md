@@ -8,10 +8,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-05 - 5 Oct 2026 — LANG-COUNTRY-1)
+## Last Completed (2026-10-05 - 5 Oct 2026 — RUL-204 / LANG-OPEN-1)
 
-- **5 Oct 2026 — LANG-COUNTRY-1:** Quick offered South Africa's languages to US/UK/AU visitors; now each country sees
-  only its switched-on languages (non-ZA: English only, per RUL-165) and "Languages I work in" follows the country. RG-0877.
+- **5 Oct 2026 — RUL-204 / LANG-OPEN-1:** Quick live in the US (Español, 中文, Tagalog, Tiếng Việt), UK (Cymraeg, Polski,
+  Română, ਪੰਜਾਬੀ) and Australia (中文, العربية, Tiếng Việt, 廣東話) on Claude's drafts; readers' flags drive corrections. RG-0878.
 
 <!-- DASH-FEED-1:END -->
 
@@ -36,6 +36,12 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **5 Oct 2026 — RUL-204 / LANG-OPEN-1:** Quick live in the US (Español, 中文, Tagalog, Tiếng Việt), UK (Cymraeg, Polski,
+  Română, ਪੰਜਾਬੀ) and Australia (中文, العربية, Tiếng Việt, 廣東話) on Claude's drafts; readers' flags drive corrections. RG-0878.
+
+- **5 Oct 2026 — RUL-205:** Quick's language choices follow the country the person is in, not the country she searches —
+  a South African looking for a New York nanny keeps the ZA languages. RG-0879.
 
 - **5 Oct 2026 — LANG-COUNTRY-1:** Quick offered South Africa's languages to US/UK/AU visitors; now each country sees
   only its switched-on languages (non-ZA: English only, per RUL-165) and "Languages I work in" follows the country. RG-0877.

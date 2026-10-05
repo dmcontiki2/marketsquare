@@ -671,3 +671,61 @@ sync-origin [MarketSquare]: STOP -- 2 commit(s) on origin/main could not be take
 Press any key to continue . . . 
 Mon 10/05/2026  5:45:16.56  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
 Mon 10/05/2026  7:15:13.21  SHIPPING - DEPLOY DRIFT: 6 files differ from live - LIVE IS AHEAD by 2 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: CHANGELOG.md, SESSION_COUNTER.json, STATUS.md, bea_main.py, ms.js, quick.html | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Mon 10/05/2026  7:15:13.28
+ ============================================================
+
+  [autobump] 0 reference(s) bumped
+harness-parity: quick.html == genie/HARNESS.html
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 61 honestly not-wired, 1 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 1, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+folded 1, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-05T05:15:16Z   mode=strict
+  Working tree: 9 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: ok   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 15220), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-10-05T05:15:18Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-10-05 (0 days ago)
+    - CHANGELOG newest    : 2026-10-05
+    - Ship pending        : none detected (working tree clean)
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 9781248 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_gate.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_log.txt', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+6893d5a Release Mon 10/05/2026  7:15:19.87
+sync-origin [MarketSquare]: STOP -- 2 commit(s) on origin/main could not be taken in cleanly (docs/E2E_2026-10-04_run29.md); nothing pushed, nothing overwritten. See SYNC_CONFLICT.txt
+ STOP: GitHub has commits this laptop could not take in cleanly - NOTHING was released,
+       nothing was overwritten. See SYNC_CONFLICT.txt. (SYNC-ORIGIN-1)
+  [LOCK] released.
+Press any key to continue . . . 
+Mon 10/05/2026  7:15:23.79  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
+Mon 10/05/2026 23:35:12.57  SHIPPING - DEPLOY DRIFT: 3 files differ from live - LIVE IS AHEAD by 2 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: marketsquare.html, ms.js, quick.html | gate green, releasing unattended

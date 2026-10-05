@@ -1254,6 +1254,25 @@ async function _msInit(){
       _msNav.user = true; goTo('signin');
     }catch(_){} }, 400);
   }
+  /* SIGNIN-HOME-1 (5 Oct 2026, David: "on selecting Google for the first time the user ends up on the sell page ... it
+     would have been better for the first time to end up on the Home page"): a Google / Apple sign-in returns to
+     /?signedin=1 -- land on Home with a welcome, never on a selling screen. A Quick draft waiting in this tab still
+     opens in the Hub (DRAFT-AFTER-SIGNIN-1): that person came to publish it. */
+  if(sp.get('signedin')==='1' && !sp.get('signin')){
+    window.history.replaceState({}, '', window.location.pathname);
+    let _siFirst=false; try{ _siFirst=!localStorage.getItem('ms_joined_date'); }catch(_){}
+    msAdoptSession().then(function(){
+      let _siDraft=false; try{ _siDraft=!!sessionStorage.getItem('ts_land_draft'); }catch(_){}
+      if(_siDraft) return;
+      try{ if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString()); }catch(_){}
+      setTimeout(function(){ try{
+        goTo('home');
+        if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
+        showToast(_siFirst ? '\u2713 Signed in \u2014 welcome to TrustSquare! Look around; tap Sell when you are ready.'
+                           : '\u2713 Signed in \u2014 welcome back!', 5000);
+      }catch(_){} }, 300);
+    });
+  }
   if(sp.get('signin')){
     const _tok = sp.get('signin');
     // AGENCY-LINK-1 (RG-0164, 23 Aug 2026): a console link carries signin+org params together.
