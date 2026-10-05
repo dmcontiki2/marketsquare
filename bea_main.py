@@ -24194,7 +24194,7 @@ TASK: Return a single JSON object with exactly these fields:
 {{
   "category": "property|services|adventures|cars|collectors|local_market",
   "title": "4–8 word title in Title Case, specific not generic",
-  "description_draft": "2–6 honest sentences describing what is visible, following the ADVERT SHAPE for the category if one is given above. Be specific. No hype.",
+  "description_draft": "2–6 honest sentences describing what is visible, following the ADVERT SHAPE for the category if one is given above. Be specific. No hype. This is the advert text a BUYER reads: describe only the item being sold, never the props, styling or background around it, and never say what you cannot see or confirm (put that in coach_tips).",
   "suggested_price": <number — monthly rent, per-session rate, per-person price, or sale price>,
   "currency_prefix": "{currency}",
   "tags": ["3 to 6 relevant keyword strings"],
