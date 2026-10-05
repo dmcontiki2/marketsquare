@@ -986,6 +986,17 @@
    "note": "BANKRESOLVE-1 (27 Sep 2026, RUL-176/178): replaces POST /users/{email}/banking, which stored account holder, bank, last-4 and branch code. This one holds nothing: the account number is a local variable for one Paystack /bank/resolve call and only the boolean verdict is written (users.bank_name_verified_at). Same 'user' level and same email binding as the route it replaces, so a Seller can only ever check her own account."
   },
   {
+   "key": "GET /users/{email}/verify-bank-name/ready",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ],
+   "note": "BANKNAME-ID-1 (6 Oct 2026): asked when the bank-name sheet opens, so nobody types an account number into a check that cannot run. May read the name off her own CONFIRMED ID document once (stored in users.id_name); returns only ready/why/message, never the name. Same level and binding as POST verify-bank-name."
+  },
+  {
    "key": "POST /admin/identity/confirm",
    "level": "admin",
    "note": "ID-CONFIRM-1 (27 Sep 2026, RUL-178): a human confirms or rejects an uploaded identity document. Admin only and deliberately NOT 'local: true' — confirming an identity is a judgement a person makes, never something automation on the box may do."
