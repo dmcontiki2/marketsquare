@@ -5,6 +5,31 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 30 — Mon 5 Oct 2026, 20:56–21:40 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe in `_to_delete/goalrun30_write_probe`). Built in server
+  worktree `/root/w30` (removed at the end), shipped `claude/goal-run30` 36437dc via CLOUD-SHIP-1 (21:25Z SHIPPED, ms.js?v=954).
+  Cloudflare served the v=953 page for a few minutes after; a fresh browser got v=954 by ~21:33Z. **Don't `git checkout` in
+  `/opt/marketsquare-src`** — this run detached it for a second by accident and put it back on `main` (same commit).
+- **Walk (casual / services, `docs/E2E_2026-10-05.md`):** cold Home → Sell → Quick → Beauty → Hair braider → Johannesburg
+  (Soweto, Rosebank) → Fri–Sun → price → Save → letter (21:05Z) → link → Seller Hub → Publish → terms; stopped at Go live.
+  **Break:** the price step opened on "Per day" with the R241.84 minimum-wage floor; her R150 left Next greyed. Fixed (GI-0022).
+  Also: Quick asked "Which city?" afresh after the app had a city (GI-0023). Both proven live.
+- **Number: 0** (6,748 listed · 2,614 emailed · 5 registered · 0 qualifying). Live 136 = 132 `*@trustsquare.co` (incl. 53
+  `showcase-email@` outreach examples, `demo_example`/`super_example` flagged, 47 of them made today for the US/UK/AU letters)
+  + Marietjie 3 + David Jnr 1. **By a stranger's hand: 0.**
+- **Family data moved:** Maroushka (miconradie1@, Google sign-in from the family IP) deleted **all 15 of her listings** herself,
+  5 Oct 09:57–10:20Z (`DELETE /listings/<id>/seller` 200 ×15); David Jnr deleted #458, #468, #469 on 4 Oct 18:47Z. Rows are gone
+  (seller delete is a hard delete). Not a fault; worth knowing that Local Market / Collectors now hold almost no real adverts.
+- **Where people stop:** no strangers again. Human (bot=0) sessions since run 29: David Jnr's iPhone, David's iPhone opening the
+  `email-test-svc-pta` letter link (13:35–13:42Z, 18:57Z), one Mac (09:55Z, Maroushka's session), one Linux sell-sheet tap.
+- **Shipped (36437dc):** GI-0022 PIECE-WORK-DEFAULT-1 (RG-0889), GI-0023 CITY-HANDOFF-1 (RG-0890). Both fail on f9b6f5f, pass new.
+- **Found, not changed:** braid photo shown twice in the price step's trail; after sign-in Home stays on Pretoria for a
+  Johannesburg seller.
+- **REVIEW NOW:** GI-0020 only (fair-price cost; recommend (a) now, (b) when a stranger reaches the Collectors score card).
+- **QA data:** draft #523 deleted by its own session (row gone); user row qa-goal30@ left (account deletion is David's).
+- **Not reached:** outreach opens/clicks since run 29 (not pulled).
+
 ## RUN 29 — Sun 4 Oct 2026, 20:56–21:25 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe in `_to_delete/goalrun29_write_probe`). Built in server
