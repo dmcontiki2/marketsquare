@@ -1,3 +1,28 @@
+## 2026-10-06 — ID-UPLOAD-LEGACY-1: ID upload no longer freezes on "Uploading…"
+
+David uploaded his ID and the button sat on "Uploading…" forever. The upload handler judged "already verified" from the legacy users.id_verified_at column (stamped 27 May by the pre-C2 self-grant), threw the photo away and granted nothing, while the Trust tab — which scores user_credentials — said "not verified, Upload ID". The handler now reads the same scored credential (_GATE_ID_SIGNALS earned), so an upload over a legacy stamp stores the document and grants the RUL-113 interim points; the page's already-verified branch now resolves the button and refreshes the trust list. Only one live account was in this state (David's). The first deploy request failed on a stale git lock (sandbox and host agent ran git in the same minute), not on the code. Ledger RG-0893.
+
+# 6 Oct 2026 -- BANKNAME-ID-1: the bank name check no longer dead-ends on "Verify your ID first"
+- David tried "Confirm the name on your bank account" and was told to verify his ID with nothing to press. His ID was
+  confirmed (27 May) by upload, a route that never recorded the name on the document; the only route that does (Home
+  Affairs, AUD-008) is dark. Every seller confirmed by upload was locked out of the check.
+- David's ruling (6 Oct 2026): the verified ID name is read off the confirmed ID document already on file, never typed
+  by the seller. Read once, the first time a name check needs it; stored in users.id_name; never returned.
+- New GET /users/{email}/verify-bank-name/ready: the sheet asks first, so nobody types an account number into a check
+  that cannot run. No confirmed ID -> plain explanation + "Go to the Trust tab". Unreadable document -> Help & Support,
+  and /admin/identity/confirm now takes an optional id_name to record it by hand.
+- KYC vision calls now take the image type from the bytes (/private-docs/ URLs carry no extension).
+- Cost model impact: one metered vision read per seller, once, only when that seller uses a name check.
+
+# 5 Oct 2026 -- SIGNIN-HOME-1: Google / Apple sign-in lands on Home with a welcome (a waiting Quick draft still opens in the Hub). RG-0889.
+
+# 5 Oct 2026 -- Goal run 30: piece workers price per visit / per job; the app's city goes to Quick
+- PIECE-WORK-DEFAULT-1 (quick.html = genie/HARNESS.html): hair braider, hairdresser, nail technician, pool cleaner open the
+  price step on Per visit; seamstress / tailor, car washer, carpet washer on Per job (was Per day with a minimum-wage floor,
+  which refused a braider's R150). RG-0889.
+- CITY-HANDOFF-1 (ms.js msQuickHref, marketsquare.html): the Quick links in Sell and the Sell sheet add cc= and city= from the
+  city she chose in the app; Quick no longer asks again or opens on the network's country. RG-0890.
+
 # 5 Oct 2026 -- Sectional title / Full title on property adverts (RUL-208, Maroushka's advice)
 - TITLE-TYPE-1: optional 'Title' on the Sell flow, Edit and the Coach for Property; shown on the advert; Browse filter
   'Title: Any / Sectional title / Full title' (Any by default; adverts that did not say are never hidden). Quick never asks.
