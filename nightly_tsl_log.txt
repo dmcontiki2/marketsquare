@@ -670,3 +670,4 @@ sync-origin [MarketSquare]: STOP -- 2 commit(s) on origin/main could not be take
   [LOCK] released.
 Press any key to continue . . . 
 Mon 10/05/2026  5:45:16.56  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
+Mon 10/05/2026  7:15:13.21  SHIPPING - DEPLOY DRIFT: 6 files differ from live - LIVE IS AHEAD by 2 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: CHANGELOG.md, SESSION_COUNTER.json, STATUS.md, bea_main.py, ms.js, quick.html | gate green, releasing unattended

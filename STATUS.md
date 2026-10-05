@@ -8,10 +8,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-04 - 4 Oct 2026 — AUDIT-4OCT Batch 3 (remaining High))
+## Last Completed (2026-10-05 - 5 Oct 2026 — LANG-COUNTRY-1)
 
-- **4 Oct 2026 — AUDIT-4OCT Batch 3 (remaining High):** 29 findings fixed (AUD-004..014, 032..049); ledger RG-0842..0871; proofs
-  `scripts/prove_audit_b3.py` + `scripts/prove_audit_b3_app.js`. All 54 High and 3 Critical findings are now closed. Next: Batch 4 (fix by class).
+- **5 Oct 2026 — LANG-COUNTRY-1:** Quick offered South Africa's languages to US/UK/AU visitors; now each country sees
+  only its switched-on languages (non-ZA: English only, per RUL-165) and "Languages I work in" follows the country. RG-0877.
 
 <!-- DASH-FEED-1:END -->
 
@@ -36,6 +36,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **5 Oct 2026 — LANG-COUNTRY-1:** Quick offered South Africa's languages to US/UK/AU visitors; now each country sees
+  only its switched-on languages (non-ZA: English only, per RUL-165) and "Languages I work in" follows the country. RG-0877.
 
 - **4 Oct 2026 — AUDIT-4OCT Batch 3 (remaining High):** 29 findings fixed (AUD-004..014, 032..049); ledger RG-0842..0871; proofs
   `scripts/prove_audit_b3.py` + `scripts/prove_audit_b3_app.js`. All 54 High and 3 Critical findings are now closed. Next: Batch 4 (fix by class).
