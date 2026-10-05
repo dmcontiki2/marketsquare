@@ -36291,6 +36291,32 @@ def rg_find_close():
     return out or [(INFO, "close matches show before examples; House finds townhouses")]
 
 
+@entry("RG-0888", "TITLE-TYPE-1: a property advert can say Sectional title / Full title in TrustSquare (Sell flow, Edit, "
+       "Coach), it shows on the advert, Browse filters on it only when asked -- and Quick never asks",
+       LOCKED, fixed_on="2026-10-05",
+       scope="bea_main.py listings.title_type (start-up column), Listing + ListingUpdate fields, create UPDATE, edit "
+             "normalisation, _AA_TEXT_COLS; ms.js Sell-flow row 'tenure', sfListingFields, AA_CATEGORIES Property field, "
+             "_elFieldVal, edit payload, app object, spec chip, Browse filter; marketsquare.html 'Title' filter section. RUL-208.",
+       ref="Maroushka via David, 5 Oct 2026")
+def rg_title_type():
+    out = []
+    checks = {"bea_main.py": ['("title_type",   "TEXT")', "def _norm_title_type(", "title_type: Optional[str] = None", '"condition", "title_type")'],
+              "ms.js": ["fields.title_type=A.tenure", "{id:'title_type',", "title_type:   raw.title_type", "payload.title_type = fd.title_type",
+                        "add('\\ud83d\\udcdc','Title', l.title_type)", "if(fp.titleType && l.title_type && l.title_type!==fp.titleType) return false;"],
+              "marketsquare.html": ["toggleOpt(this,'fp-title')"]}
+    for f, needles in checks.items():
+        t = repo_file(f)
+        if t is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        for n in needles:
+            if n not in t:
+                out.append((FAIL, "%s lost %r (TITLE-TYPE-1)" % (f, n)))
+    q = repo_file("quick.html") or ""
+    if "Sectional title" in q:
+        out.append((FAIL, "quick.html asks about title -- RUL-208(b) says Quick never asks"))
+    return out or [(INFO, "title type offered in TrustSquare, filtered only when asked, never asked in Quick")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

@@ -910,6 +910,16 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
       </div>
     </div>
 
+    <!-- TITLE-TYPE-1 (RUL-208): Any by default -- sectional and full title are interchangeable unless she insists -->
+    <div class="fs-section">
+      <div class="fs-label">Title</div>
+      <div class="fs-options">
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-title')">Any</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-title')">Sectional title</div>
+        <div class="fs-opt" onclick="toggleOpt(this,'fp-title')">Full title</div>
+      </div>
+    </div>
+
     <div class="fs-section">
       <div class="fs-label">Bedrooms</div>
       <div class="fs-options">

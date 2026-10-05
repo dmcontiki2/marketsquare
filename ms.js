@@ -503,6 +503,7 @@ function _msMapBeaListing(l){
           propType, beds, baths, garages, listingType, furnished, pets, features,
           floor_area:   l.floor_area   || null,
           erf_size:     l.erf_size     || null,
+          title_type:   l.title_type   || null,   // TITLE-TYPE-1 (RUL-208)
           subject:      l.subject      || null,
           level:        l.level        || null,
           mode:         l.mode         || null,
@@ -1751,6 +1752,7 @@ function catSummaryTiles(l){
   if(c==='Property'){
     const lt=(l.listingType||l.listing_type); add('\ud83c\udff7','Listing', lt==='rent'?'To Rent':(lt==='sale'?'For Sale':lt));
     add('\ud83c\udfe0','Type', l.propType||l.prop_type);
+    add('\ud83d\udcdc','Title', l.title_type);   /* TITLE-TYPE-1 (RUL-208) */
     add('\ud83d\udecf','Bedrooms', l.beds); add('\ud83d\udebf','Bathrooms', l.baths);
     add('\ud83d\udcd0','Floor', l.floor_area?l.floor_area+' m\u00b2':null);
     add('\ud83c\udf33','Erf', l.erf_size?l.erf_size+' m\u00b2':null);
@@ -3495,6 +3497,7 @@ function applyFilters(cat){
     // RENT-WORDS-1 (25 Sep 2026 inspection, langt-44): 'For Sale' and 'To Rent' everywhere, as sellers pick them
     filterState.property.listingType = (_ltSel==='To Rent' || _ltSel==='For Rent') ? 'rent' : (_ltSel==='For Sale' ? 'sale' : '');
     filterState.property.type        = getSelOptInSection('Property Type','fs-property');
+    filterState.property.titleType   = getSelOptInSection('Title','fs-property');   // TITLE-TYPE-1 (RUL-208)
     filterState.property.beds        = getSelOptInSection('Bedrooms','fs-property');
     filterState.property.baths       = getSelOptInSection('Bathrooms','fs-property');
     filterState.property.garages     = getSelOptInSection('Garages','fs-property');
@@ -5392,6 +5395,7 @@ function renderGrid(){
       if(fp.maxPrice && l.priceNum > parseInt(fp.maxPrice)) return false;
       if(fp.listingType && fp.listingType!=='' && l.listingType && l.listingType!==fp.listingType) return false;
       if(fp.type && fp.type!=='' && l.propType && l.propType!==fp.type) return false;
+      if(fp.titleType && l.title_type && l.title_type!==fp.titleType) return false;   // TITLE-TYPE-1: only if she insists, and only on adverts that said
       if(fp.beds){ const minBeds=parseInt(fp.beds); if(!isNaN(minBeds)&&l.beds<minBeds) return false; }
       if(fp.baths){ const minBaths=parseInt(fp.baths); if(!isNaN(minBaths)&&l.baths<minBaths) return false; }
       if(fp.garages){ const minGar=parseInt(fp.garages); if(!isNaN(minGar)&&l.garages<minGar) return false; }
@@ -12668,6 +12672,7 @@ function _elFieldVal(raw, fieldId) {
     suburb:       raw.suburb       || '',
     area:         raw.area || raw.suburb || '',
     prop_type:    raw.prop_type    || parseDescPropType(),
+    title_type:   raw.title_type   || '',   // TITLE-TYPE-1 (RUL-208)
     beds:         raw.beds    != null && raw.beds    !== 0 ? String(raw.beds)    : parseDescNum(/(\d+)[-\s]*bed/i),
     baths:        raw.baths   != null && raw.baths   !== 0 ? String(raw.baths)   : parseDescNum(/(\d+)[-\s]*bath/i),
     garages:      raw.garages != null && raw.garages !== 0 ? String(raw.garages) : parseDescNum(/(\d+)[-\s]*garage/i),
@@ -13894,6 +13899,7 @@ async function saveEditedListing(_termsJustAccepted) {
   if (fd.floor_area)   payload.floor_area   = parseInt(fd.floor_area) || undefined;
   if (fd.erf_size)     payload.erf_size     = parseInt(fd.erf_size)   || undefined;
   if (fd.listing_type) payload.listing_type = fd.listing_type;
+  if (fd.title_type !== undefined && fd.title_type !== null) payload.title_type = fd.title_type;   // TITLE-TYPE-1: '' clears it
   if (fd.subject)      payload.subject      = fd.subject;
   if (fd.level)        payload.level        = fd.level;
   if (fd.mode)         payload.mode         = fd.mode;
@@ -14822,6 +14828,7 @@ const AA_CATEGORIES = {
       {id:'price',        label:'Asking price',        type:'number', placeholder:'e.g. 2500000'},
       {id:'listing_type', label:'Listing type',        type:'select', options:['For Sale','For Rent'], labels:{'For Rent':'To Rent'}},   // RENT-WORDS-1 (langt-44): stored 'For Rent', shown 'To Rent'
       {id:'prop_type',    label:'Property type',       type:'select', options:['House','Apartment / Flat','Townhouse','Cluster','Simplex','Duplex','Bachelor / Studio','Granny Flat','Penthouse','Land / Plot','Smallholding','Farm','Commercial','Industrial','Other']},
+      {id:'title_type',   label:'Title (optional)',    type:'select', options:['Sectional title','Full title']},   /* TITLE-TYPE-1 (RUL-208) */
       {id:'beds',         label:'Bedrooms',            type:'number', placeholder:'e.g. 3'},
       {id:'baths',        label:'Bathrooms',           type:'number', placeholder:'e.g. 2'},
       {id:'garages',      label:'Garages / parking',   type:'number', placeholder:'e.g. 1'},
@@ -20724,6 +20731,7 @@ Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLa
    {key:'A',title:'Property Details',pts:20,coach:'<b>The essentials buyers filter by.</b> Get these right and you appear in every relevant search.',rows:[
     ['ltype','Listing type','select','For Sale|To Rent'],
     ['ptype','Property type','select','House|Townhouse|Apartment|Duet|Plot|Smallholding'],
+    ['tenure','Title (optional)','select','Sectional title|Full title'],   /* TITLE-TYPE-1 (RUL-208) */
     ['beds','Bedrooms','number','e.g. 3'],['baths','Bathrooms','number','e.g. 2'],
     ['parking','Covered parking','number','e.g. 2'],['erf','Erf size (m²)','number','e.g. 800']]},
    {key:'B',title:'Condition & Occupancy',pts:20,coach:'<b>Occupancy matters</b> — buyers and agents plan viewings around it.',rows:[
@@ -21421,6 +21429,7 @@ function sfListingFields(){   // the ONE place the flow's answers become listing
   // canonical 'For Rent'/'For Sale' the browse mapping and filters expect.
   if(A.parking) fields.garages=A.parking;
   if(A.ptype) fields.prop_type=A.ptype;
+  if(A.tenure) fields.title_type=A.tenure;   /* TITLE-TYPE-1 (RUL-208) */
   if(A.ltype) fields.listing_type=sfState.cat==='Cars' ? (/hire/i.test(String(A.ltype))?'For Hire / Rental':'For Sale')   // CAR-HIRE-1: Edit's own words
                                                       : (/rent|let/i.test(String(A.ltype))?'For Rent':'For Sale');
   if(A.subjects) fields.subject=A.subjects;
@@ -22680,7 +22689,7 @@ function sfComposeDescription(){
     });
   });
   // section A non-mapped fields fold in too (everything except the goState field map below)
-  var mapped={make:1,model:1,variant:1,year:1,beds:1,baths:1,ltype:1,subjects:1,levels:1,title:1,name:1,trade:1,work:1};
+  var mapped={make:1,model:1,variant:1,year:1,beds:1,baths:1,ltype:1,subjects:1,levels:1,title:1,name:1,trade:1,work:1,tenure:1};   /* TITLE-TYPE-1: a column, not a line */
   f.sections[0].rows.forEach(function(r){
     var v=sfState.A[r[0]];
     if(!String(v||'').trim() || mapped[r[0]]) return;

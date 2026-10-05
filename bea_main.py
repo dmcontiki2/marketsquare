@@ -536,6 +536,7 @@ def run_migrations(conn):
         ("floor_area",   "INTEGER"),
         ("erf_size",     "INTEGER"),
         ("listing_type", "TEXT"),
+        ("title_type",   "TEXT"),   # TITLE-TYPE-1 (RUL-208): Sectional title / Full title, NULL = not said
         ("subject",      "TEXT"),
         ("level",        "TEXT"),
         ("mode",         "TEXT"),
@@ -2739,6 +2740,7 @@ class Listing(_PhotoSafe, BaseModel):
     # BEDS-PUBLISH-1 (23 Jul 2026, Maroushka feedback): listing_type existed only on
     # ListingUpdate, so the sell-flow CREATE path silently dropped For Sale/For Rent.
     listing_type: Optional[str] = None
+    title_type: Optional[str] = None   # TITLE-TYPE-1 (RUL-208)
     # Tutor fields
     subject: Optional[str] = None
     level: Optional[str] = None
@@ -2808,6 +2810,7 @@ class ListingUpdate(_PhotoSafe, BaseModel):
     floor_area: Optional[int] = None
     erf_size: Optional[int] = None
     listing_type: Optional[str] = None
+    title_type: Optional[str] = None   # TITLE-TYPE-1 (RUL-208)
     subject: Optional[str] = None
     level: Optional[str] = None
     mode: Optional[str] = None
@@ -4325,6 +4328,8 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.spec_confirmed, _country)
     )
     new_id = cursor.lastrowid
+    if _norm_title_type(listing.title_type):   # TITLE-TYPE-1 (RUL-208)
+        conn.execute("UPDATE listings SET title_type=? WHERE id=?", (_norm_title_type(listing.title_type), new_id))
     conn.execute("UPDATE listings SET price_num = ? WHERE id = ?", (_price_number(listing.price), new_id))   # PRICE-NUM-1
     if listing.collectible_type or listing.condition:   # COL-CARRY-1 (L38)
         conn.execute("UPDATE listings SET collectible_type = COALESCE(?, collectible_type), condition = COALESCE(?, condition) "
@@ -5917,6 +5922,8 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     _validate_rental_fields(d.get("rental_status"), d.get("available_from"))
     _validate_vehicle_fields(d.get("vehicle_specs"), d.get("spec_confirmed"))
     _reset_vehicle_confirmations(dict(existing), d)   # CARS-SPEC-1: edits clear section confirmations
+    if "title_type" in d:   # TITLE-TYPE-1 (RUL-208): only the two words, or '' to clear
+        d["title_type"] = _norm_title_type(d["title_type"])
     if "price" in d:
         d["price_num"] = _price_number(d["price"])   # PRICE-NUM-1 (25 Sep 2026 inspection, backend-10)
     if "collectible_type" in d:   # COL-CARRY-1 (L38): Edit's words onto Browse's vocabulary
@@ -11452,7 +11459,17 @@ def aa_buy_pack(email: str):
 
 
 _AA_INT_COLS = ("beds", "baths", "garages", "floor_area", "erf_size")
-_AA_TEXT_COLS = ("prop_type", "listing_type", "subject", "level", "mode", "service_type", "availability", "condition")
+_AA_TEXT_COLS = ("prop_type", "listing_type", "subject", "level", "mode", "service_type", "availability", "condition", "title_type")
+
+
+def _norm_title_type(v) -> str:
+    """TITLE-TYPE-1 (RUL-208): 'Sectional title' | 'Full title' | '' (not said)."""
+    s = str(v or "").strip().lower()
+    if "section" in s:
+        return "Sectional title"
+    if "full" in s or "freehold" in s:
+        return "Full title"
+    return ""
 
 
 def _aa_structured_columns(field_data) -> dict:
