@@ -4652,7 +4652,11 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
       var _LSPK={"ZA":["English","isiZulu","isiXhosa","Afrikaans","Sepedi"],"NA":["English","Oshiwambo","Khoekhoegowab","Afrikaans","Otjiherero"],"BW":["English","Setswana","Ikalanga"],"MZ":["English","Português","Emakhuwa","Xichangana","Cisena"],"KE":["English","Kiswahili","Gikuyu","Luhya","Kalenjin"],"DE":["English","Deutsch","Türkçe","Русский","العربية"],"GB":["English","Cymraeg","Polski","Română","ਪੰਜਾਬੀ"],"US":["English","Español","中文","Tagalog","Tiếng Việt"],"AU":["English","中文","العربية","Tiếng Việt","廣東話"]};
       if(!window.QLANGS_ALL) window.QLANGS_ALL=QLANGS.slice();
       if(!window.SVC_SPEAKS_ZA) window.SVC_SPEAKS_ZA=[SVC_SPEAKS_MAIN.slice(), SVC_SPEAKS_MORE.slice()];
-      var _off=_LOFF[QCC]||['en'];
+      /* RUL-205 (David, 5 Oct 2026): the app speaks the languages of the country SHE is in -- her phone's clock first,
+         then the door's first country -- never the country she is searching or listing in. A searcher in South Africa
+         looking for a nanny in New York keeps South Africa's languages; someone in New York gets the US ones. */
+      if(!window.QHOME_CC){ var _tzc=null; try{ _tzc=tzCC(); }catch(_){ } window.QHOME_CC=(_tzc && _LOFF[_tzc]) ? _tzc : QCC; }
+      var _off=_LOFF[QHOME_CC]||['en'];
       QLANGS=QLANGS_ALL.filter(function(x){ return _off.indexOf(x[0])>=0; });
       if(!QLANGS.length) QLANGS=[['en','English']];
       if(_off.indexOf(QLANG)<0){ QLANG='en'; document.documentElement.lang='en'; }
