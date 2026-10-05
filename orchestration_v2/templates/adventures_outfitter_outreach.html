@@ -47,6 +47,21 @@
     <p class="greeting">Hi {{first_name}},</p>
 
     <p class="t">I found your business on your state association's own published member directory.</p>
+<!--QUICK-ONLY--><!-- QUICK-HERO-1 (20261005): TrustSquare Quick is the front door for every seller and buyer. -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:6px 0 26px;border:2px solid #169C95;border-radius:14px;">
+  <tr><td style="padding:18px 18px 4px;font-family:sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#169C95;">TrustSquare Quick &middot; the fastest way in</td></tr>
+  <tr><td style="padding:0 18px 8px;font-family:sans-serif;font-size:22px;line-height:1.25;font-weight:800;color:#1a1a2e;">List your stay or trip in a minute &mdash; free, from your phone</td></tr>
+  <tr><td style="padding:0 18px 14px;font-family:sans-serif;font-size:15px;line-height:1.55;color:#444;">Open Quick, tap <strong>List a trip</strong>, answer a few taps and type your price. You see your advert before anyone else does &mdash; no forms, no CV, no fee to list.</td></tr>
+  <tr><td align="center" style="padding:0 18px 14px;"><a href="{{quick_link}}" style="text-decoration:none;border:0;"><img src="https://trustsquare.co/static/qhero/adventures_door.jpg" width="240" alt="TrustSquare Quick on a phone: List a trip or Find a trip" style="width:240px;max-width:100%;display:block;border:0;outline:none;border-radius:18px;"></a></td></tr>
+  <tr><td align="center" style="padding:0 18px 4px;">
+    {{language_row}}
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" bgcolor="#169C95" style="border-radius:999px;">
+      <a href="{{quick_link}}" style="display:inline-block;padding:15px 34px;font-family:sans-serif;font-size:17px;font-weight:700;color:#ffffff;text-decoration:none;">Open Quick &mdash; list a trip</a>
+    </td></tr></table>
+  </td></tr>
+  <tr><td style="padding:14px 18px 18px;font-family:sans-serif;font-size:13px;line-height:1.6;color:#666;">Buying instead? Same app &mdash; tap <strong>Find a trip</strong>.<br>Already have regulars? Pass them Quick from your phone: they reach you free, and Tuppence is only ever paid when someone new asks for an introduction.</td></tr>
+</table><!--/QUICK-ONLY-->
+
 
     <p class="t">TrustSquare is a global marketplace where guides, outfitters and instructors list
     what they offer, and people find them by activity, by area and by season. <b>We take no commission on
@@ -97,8 +112,9 @@
     there is nothing to cancel.</p>
 
     <div class="cta-section">
-      <a class="cta-button" href="{{magic_link}}">See what your listing would look like</a>
+      <!--QUICK-ONLY--><a href="{{quick_link}}" class="cta-button">Open Quick &mdash; list a trip</a><!--/QUICK-ONLY--><!--NO-QUICK--><a href="{{magic_link}}" class="cta-button">See what your listing would look like</a><!--/NO-QUICK-->
       <div class="cta-note">Free, and it stays free. No card. No account until you publish.</div>
+        <!--QUICK-ONLY--><p class="cta-note" style="margin-top:10px;">Want the full profile, with every Trust point banked? <a href="{{magic_link}}" style="color:#6a2a80;">Open it in the full TrustSquare app &rarr;</a></p><!--/QUICK-ONLY-->
     </div>
 
     <p class="sign">Questions are answered in the app, at

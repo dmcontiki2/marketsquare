@@ -35972,13 +35972,13 @@ def rg_luna_first():
 @entry("RG-0877", "LANG-COUNTRY-1 (RUL-162/165/151): Quick offers only the languages switched on for the visitor's "
        "country -- US, UK, Australia and every other non-ZA country see English only (no South African languages), "
        "ZA keeps its five; 'Languages I work in' is seeded from her country's approved list",
-       OPEN,
+       LOCKED, fixed_on="2026-10-05",
        scope="quick.html + genie/HARNESS.html (kept identical): the LANG-COUNTRY-1 block inside applyPack, generated "
              "from roles/lang_countries.json by scripts/apply_lang_country.py; door language row and top-bar button "
              "hidden when one language. PROBED 5 Oct 2026 before the fix: ?cc=US/GB/AU all offered isiZulu, isiXhosa, "
              "Afrikaans, Sepedi. Covers all nine pack countries, not only US/GB/AU.",
        ref="David 5 Oct 2026 ('are the Quick app correctly listing in the US, UK and AUS in their language'); "
-           "scripts/apply_lang_country.py; RUL-162(c) / RUL-165(b) / RUL-151")
+           "scripts/apply_lang_country.py; RUL-162(c) / RUL-165(b) / RUL-151. LOCKED 5 Oct 2026: PROBED live in a browser after deploy 22c0dd9 -- US/GB/AU services+property doors offer English only, no row, no top button; ZA keeps its five")
 def rg_lang_country():
     import json as _j
     q = repo_file("quick.html")
