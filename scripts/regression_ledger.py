@@ -36085,10 +36085,13 @@ def rg_preview_links():
         return [(INFO, "NOT EVALUATED - preview mirror not here")]
     bad = []
     for fn in sorted(os.listdir(d)):
-        if fn.endswith(".html") and ".bak" not in fn:
+        if fn.endswith(".html") and ".bak" not in fn and fn != "placement_agency_outreach.html":   # a SOURCE; its card opens preview_placement_...
             t = open(os.path.join(d, fn), encoding="utf-8", errors="replace").read()
             if re.search(r'href="\{\{', t) or "{{language_row}}" in t:
                 bad.append(fn)
+    page = os.path.join(REPO, "orchestration_v2", "email_templates.html")
+    if os.path.exists(page) and 'href="templates/placement_agency_outreach.html"' in open(page, encoding="utf-8").read():
+        bad.append("email_templates.html still opens the raw placement letter")
     if bad:
         return [(FAIL, "preview letters with an unfilled link placeholder (404 on click): " + ", ".join(bad[:5]))]
     return [(INFO, "every preview link is a real URL")]

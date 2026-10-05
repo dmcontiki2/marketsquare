@@ -233,6 +233,7 @@ studywork_hu_map.html      | static/studywork_hu_map.html
 studywork_us_map.html      | static/studywork_us_map.html
 # ── SAW-5 (23 Aug 2026): placement-agency lane — outreach + 8-email onboarding (RUL-046) ──
 orchestration_v2/templates/placement_agency_outreach.html | orchestrator/v2/templates/placement_agency_outreach.html
+orchestration_v2/templates/preview_placement_agency_outreach.html | orchestrator/v2/templates/preview_placement_agency_outreach.html
 orchestration_v2/templates/placement_onboarding/onboard_1.html | orchestrator/v2/templates/placement_onboarding/onboard_1.html
 orchestration_v2/templates/placement_onboarding/onboard_2.html | orchestrator/v2/templates/placement_onboarding/onboard_2.html
 orchestration_v2/templates/placement_onboarding/onboard_3.html | orchestrator/v2/templates/placement_onboarding/onboard_3.html

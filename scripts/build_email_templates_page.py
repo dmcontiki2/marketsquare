@@ -317,7 +317,7 @@ def build(check_only=False):
                                badges_for(fn, raw, sent, special), txt=fn.endswith(".txt")))
     lane_names = {x[0] for x in lane}
     for fn in sorted(os.listdir(MIRROR)):
-        if fn.endswith((".html", ".txt")) and ".bak" not in fn and fn not in lane_names and fn != "placement_agency_outreach.html":
+        if fn.endswith((".html", ".txt")) and ".bak" not in fn and fn not in lane_names and fn not in ("placement_agency_outreach.html", "preview_placement_agency_outreach.html"):
             orphans.append(fn)
 
     # 2. placement lane (David's reserved send, lives only here)
@@ -325,7 +325,16 @@ def build(check_only=False):
     pa = os.path.join(MIRROR, "placement_agency_outreach.html")
     if os.path.exists(pa):
         raw = read(pa)
-        pl.append(card("templates/placement_agency_outreach.html", "Placement Agencies — cold invite",
+        # PREVIEW-LINKS-1: this letter's source lives in the mirror folder itself (David's reserved send), so it is
+        # never rewritten; the card opens a preview copy with its links filled instead of the raw placeholders.
+        pv = os.path.join(MIRROR, "preview_placement_agency_outreach.html")
+        pv_want = preview_links("placement_agency_outreach.html", raw).encode("utf-8")
+        if (read_bytes(pv) if os.path.exists(pv) else None) != pv_want:
+            stale.append("preview_placement_agency_outreach.html")
+            if not check_only:
+                with open(pv, "wb") as fh:
+                    fh.write(pv_want)
+        pl.append(card("templates/preview_placement_agency_outreach.html", "Placement Agencies — cold invite",
                        "J-1 · cruise · H-2A · education consultancies · %d KB · last changed %s · sending reserved to David (RUL-046)"
                        % (max(1, round(len(raw) / 1024)), _dt.datetime.fromtimestamp(os.path.getmtime(pa)).strftime("%d %b %Y")),
                        badges_for("placement_agency_outreach.html", raw, raw, special)))
