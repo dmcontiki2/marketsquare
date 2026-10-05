@@ -1,3 +1,103 @@
+## 2026-10-04 — Photo scan lane: what actually runs, and why it costs ~5x the budget (GEMINI-429-TRUTH-1, EVAL-HONEST-1)
+
+David: *"the cost for 20 photos at R2.60 is way too much and much more than our budgeted figures. Which photo AI are you
+using?"* MEASURED (ai_spend_log, 45 days): every seller photo scan runs on **OpenAI gpt-5.6-terra** (the reasoning tier,
+$2/$12 per Mtok) -- 98 calls, 1,647 in / 39 out tokens, **$0.0038 a scan (~R0.063)**. The budget (Rev B) assumed the
+**Gemini** lane at $0.0014 a photo. The Gemini canary (RUL-032) was never armed: its eval had never been run.
+- Ran `eval_photo_anon.py` on the server: the first "pass" was false -- Google answered 7 photos, then returned 429s, the
+  breaker tripped and the rest silently fell back to terra. **EVAL-HONEST-1:** the eval now disables fallback and the
+  breaker detour and voids any answer served by another lane. The brief arming of PHOTO_SCAN_CANARY (≈10 min) was
+  REVERSED as soon as this was seen; production stayed on terra throughout (no photo left unscanned).
+- Honest run: Gemini answered 10 of 22 -- all 10 correct -- at **866 in / 40 out tokens = ~$0.0008 a scan (~R0.013)**;
+  the other 12 were Google 429 **RESOURCE_EXHAUSTED: "You exceeded your current quota, please check your plan and
+  billing"**. **GEMINI-429-TRUTH-1:** the adapter reported that 429 as a "connection" failure (Google's error body is a
+  JSON list); it now reports the real status.
+- ⏳ David: raise the Gemini key's quota/billing in Google AI Studio; then the eval is re-run and, at 100% plate recall,
+  the canary is armed per RUL-032.
+Cost model impact: at the measured Gemini figure a 20-photo advert costs ~R0.27 to scan (budget R0.47); on terra today
+~R1.25 (clean photos; blurred ones more).
+
+- **LUNA-FIRST-1 (RUL-203, David: "luna does the first check ... Drop Gemini")**: honest eval of gpt-5.6-luna 22/22, 0 plate misses, 3 false flags (terra 4). Every first photo check now reads with luna; a photo luna passes clean is accepted on that read (~$0.0005); anything else is re-read by terra and handled exactly as before. Proven on the server before shipping: clean photos $0.0004-0.0005, plate photos luna -> terra -> refused. Kill switch PHOTO_SCAN_FIRST=terra. Cost model impact: the photo check drops from ~R0.063 to ~R0.008 per clean photo -- below the Rev B budget (R0.024).
+
+## 2026-10-04 — QUICK-FRESH-1, PHOTO-CAP-2, ANON-NAMES-1 (RG-0872..0874)
+
+- **QUICK-FRESH-1** (David: *"i dont see the 'near you' option in the live Quick app yet"*): it was live; his Quick had
+  been open since before the deploy and Start again only redrew the door. Start again (and returning to an idle Quick at
+  the door) now loads the newest version when the server has one. Shipped e4fdd84.
+- **PHOTO-CAP-2** (Dave jnr via David: *"up our number of photos per property to 20"*): PHOTO-CAP-1 (15 Jul, David-approved
+  after costing) already allows **24** for property, cars and places to stay (12 elsewhere) in the Sell flow; the Edit
+  screen -- where every Quick listing gets its photos -- had its own hard-coded 10. One rule now: `msPhotoCap()`, read by
+  both. No server change (the server never capped the count). Cost model impact: none beyond PHOTO-CAP-1's budget
+  (Rev C plans 16.8 photos per listing); measured anon-scan cost $0.0038 per scan call (ai_spend_log, 45 days).
+- **ANON-NAMES-1** (David: the complex name *"iQ Rondebosch"* stayed in his title and description while the photo pass
+  removed the complex IDs): the text scrub had regexes only, and a name has no shape a regex can see. Every private
+  publish and edit now asks the AI for the NAMES in the title, body and every photo caption -- complexes, estates,
+  buildings, residences, developments, businesses, people -- and replaces them; the typed area is checked the same way.
+  Suburbs, towns and public landmarks (malls, schools, highways) stay. Fail-open and logged; ~$0.0002 per changed text.
+  Cost model impact: one small fast-tier read per publish/edit of changed text, inside the C1 ceilings.
+
+## 2026-10-04 — FIND-BANDS-1: Quick's Find fills local-first again, on top of FIND-HONOUR-1 (RG-0841, RUL-200(c) amended)
+
+David, after FIND-HONOUR-1 shipped: *"I agree regarding the suburbs and have forgotten what our design intent was - to show
+what is close, or to be told which area, or in the quick to just click one with available items in the current vicinity.
+Let us then stick to our set up rule with these new fixes ... No visuals should be from the local drive, live should only
+operate from the server."*
+
+- **RUL-118 restored inside the new fixes:** the area answer is the FIRST BAND, not a gate. Her area first, then the rest of
+  her city under a **Nearby** label, RS -> TS -> LS inside each band. Every other answer stays a gate -- a townhouse to sell
+  still never shows under Renting.
+- **Honest head:** "Yes -- N on TrustSquare" counts adverts in her area only; with none there but some in the city it says
+  "Yes -- N near you" (an existing translated pattern). 'Nearby' added to roles/quick_i18n.json in all five languages.
+- **The area chips** keep offering the suburbs that have a fitting live advert (FIND-AREAS-LIVE-1) -- "just click one with
+  available items".
+- **Pictures:** all 180 picture URLs the live door uses answer 200 from trustsquare.co / R2 -- none from a local drive;
+  RG-0841 fails if PH_BASE leaves the server or a file:// / drive path appears.
+- **Verified** in headless Chromium before shipping: Menlyn -> "Yes -- 2 near you", both Rietvalleirand townhouses under
+  NEARBY; Rietvalleirand -> "Yes -- 2 on TrustSquare"; a flat to rent in Brooklyn -> Brooklyn first, Waterkloof under Nearby.
+
+Cost model impact: none.
+
+## 2026-10-04 — AUDIT-4OCT Batch 3: the remaining High bugs (AUD-004..014, AUD-032..049)
+
+David: *"do you have a batch 3 to perform now?"* Each finding confirmed in today's code first. No price, ruling or table
+layout changed. EXECUTED: `scripts/prove_audit_b3.py` (real bea_main.py, throwaway DB) and `scripts/prove_audit_b3_app.js`
+(shipped ms.js functions in Node); RG-0871.
+
+**Server**
+- AUD-004 (RG-0842): a photo with no advert needs a session; scans are billed to her account or the draft ('draft:<id>'), token-only uploads capped 40/IP/hour; the shared 'photo-upload' pot is gone.
+- AUD-005 (RG-0843): web comparables billed and logged per caller, 8 a day, a no-result item not searched again for 6 h. No price change.
+- AUD-006 (RG-0844): publish moves only draft / resting / faded; blocked, archived and paused refused; nothing goes live (publish or resume) while an advert is blocked (EULA 14.5).
+- AUD-007 (RG-0845): `_LEGAL_SIGNALS` ids corrected and built from estate_agents VERTICALS gate signals. PROBED: the five earned gate credentials live are all house/example accounts.
+- AUD-008 (RG-0846): the in-app Home Affairs check stores the confirmed name (users.id_name, existing column).
+- AUD-009 (RG-0847): the hard-coded 72-hour sign-in cut-off removed (SIGNIN-LINK-7D's 7 days and agency links' 14-30 now hold); used links remembered 31 days.
+- AUD-010 (RG-0848): comps queries read listing_status, live real adverts only, failures logged. PROBED: the query runs on the live schema (Property/Pretoria 17 real live adverts).
+- AUD-011 (RG-0849): vertical change -> draft; lapsed-gate agents not listed or reachable (house examples exempt — PROBED: the 3 live agents are house examples).
+- AUD-012 (RG-0850): non-Local-Market uploads filed with no LM signal (Edit sends its category); old misfiled uploads listed.
+- AUD-013 (RG-0851): invitations change nobody's plan; new accounts get the free seat (10, RUL-048); others are provisioned on acceptance (first sign-in); tier sync only for accepted members; 200 invites/agency/day.
+- AUD-014 (RG-0852): the gate decodes a JSON photo list and keeps the good links.
+- AUD-032 (RG-0853): five upload handlers are sync (threadpool) — no image/AI/storage work on the event loop.
+- AUD-033 (RG-0854): wishlist pushes after the match job commits; max 5 devices per buyer.
+- AUD-034 (RG-0855): agency import commits per advert.
+
+**App (ms.js)**
+- AUD-035 (RG-0856) hub drops closed requests · AUD-036 (RG-0857) formatZAR uses the shared parser · AUD-037 (RG-0858) Adventures chips mapped from the sellers' own types, empty chips hidden · AUD-038 (RG-0859) search counts by chip key; filter bar tolerant · AUD-039 (RG-0860) Service Type reads service_type · AUD-040 (RG-0861) batch publish handles the Terms 409 · AUD-041 (RG-0862) no AI call on Edit open; plan on tap, escaped · AUD-042 (RG-0863) Local Market form handles the Terms 409 · AUD-043 (RG-0864) Coach LM category normalised (server door too) · AUD-044 (RG-0865) new agency-bound drafts route (+route_policy.json) · AUD-045 (RG-0866) Agent Hub verticals + render guard · AUD-046 (RG-0867) batch price keeps thousands · AUD-047 (RG-0868) Edit uses the trust category · AUD-048 (RG-0869) report photos published (blobs) and shown · AUD-049 (RG-0870) Coach currency from the shared table.
+
+- Follow-up (same day): the two "blocked" refusals added by AUD-006 now say "listings", not "adverts" (LISTING-WORD-1, RG-0504); RG-0168 and RG-0336 read the whole function (FN-WINDOW-1) instead of a byte window the AUD-006/013 changes outgrew.
+
+**Ledger assertions that followed the code (behaviour unchanged, not weakened):** RG-0293 (the magic-link `src` read is now
+validated by `_mlWord`), RG-0331 (`class Listing` gained the `_PhotoSafe` mixin) and RG-0488 (FIND-HONOUR-1, another lane,
+widened Quick's no-keyword rule to groups OR property; the group half is unchanged). Full board after the deploy: no regressions.
+Note: the deploy also carried FIND-HONOUR-1 (418357b), which was waiting for this batch's files to be committed.
+
+## 2026-10-04 — RUL-202: a seller sees no buyer name until she accepts
+
+David, on the Batch 2 report: *"I cant remember that we agreed to give the prospective buyers first name to a seller ... 100% anonymous"*.
+PROBED on disk: no ruling allowed a name; the first name came from E2E-HMI-1 (24 Sep) and AUD-024 had only trimmed the full name to it.
+- bea_main.py `_intro_for_viewer`: a pending request reaches the seller with `buyer_name = ""` (was the first name).
+- n8n new-intro payloads (paid and Local Market): `buyer_name` is "A buyer".
+- ms.js live-intro card: a pending request always reads "A buyer".
+- Ledger RG-0827 tightened (demands no name, repo and live); rulings_check RUL-202; prove_audit_b2.py updated.
+
 ## 2026-10-04 — FIND-HONOUR-1: Quick's Find honours every answer, in every category (RG-0817, RUL-200)
 
 David, three screenshots: *"David put this up for sale, and now it is showing as a rental. Please fix it, but fix the

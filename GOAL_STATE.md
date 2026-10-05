@@ -5,6 +5,29 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 29 — Sun 4 Oct 2026, 20:56–21:25 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe in `_to_delete/goalrun29_write_probe`). Built in server
+  worktree `/root/w29` (removed at the end), shipped `claude/goal-run29` 046b996 via CLOUD-SHIP-1 (21:11Z SHIPPED, ms.js?v=935;
+  backend lands as `/var/www/marketsquare/main.py`, not bea_main.py). Run 28 already ran this morning; this is the evening run.
+- **Walk (Local Market with a photo, `docs/E2E_2026-10-04_run29.md`):** cold Home → Sell → Local Market → Food & Produce → jam-jars
+  photo → six steps → score 70 in ~2 min; stopped at Publish. No errors. **Break:** with her story box empty, the advert's
+  description would have been the photo read's paragraph, never shown to her — honey, bread loaves, a jug and flowers "as market
+  styling", ending "…and pricing are not visible." — under "Homemade orange marmalade". Also the read's R80 guess (confidence
+  0.28) sat in her price box unmarked. Both fixed and proven live (GI-0021).
+- **Number: 0** (6,748 listed · 2,614 emailed · 5 registered · 0 qualifying). Live 104. **By a stranger's hand: 0.** Only new
+  listing since run 28: #475 Property, live, David Jnr (davidconradie1234). No new user rows.
+- **Where people stop:** no strangers again. Human (bot=0) sessions since 08:00Z: all David Jnr's iPhone (Quick door ×3,
+  one full Quick publish 15:23–15:33Z = #475, one Quick walk to step 5 left open 15:39–17:59Z).
+- **Outreach:** one letter since run 28 (ts-collectibles@t-online.de, 3 Oct 22:10Z, opened). Not pulled further.
+- **Shipped (046b996):** GI-0021 AI-DESC-SHOWN-1 + AI-PRICE-HINT-1, RG-0876 LOCKED. Ledger new tree 2 !!!! (RG-0840, RG-0871 —
+  pre-existing, prove_audit_b2/b3.py on the throwaway DB); base 3 (+RG-0194).
+- **Found, not changed:** the cleaned AI text can still carry hedges ("subject to seller confirmation") — she now sees and edits it.
+  RG-0840 / RG-0871 fail on origin/main too (audit lane's proofs) — not this run's.
+- **REVIEW NOW:** GI-0020 only (fair-price cost; recommend (a) now, (b) when a stranger reaches the Collectors score card).
+- **QA data:** nothing published, nothing saved; walk funnel rows bot=2.
+- **Not reached:** what the Collector Shops letters did after the open.
+
 ## RUN 28 — Sun 4 Oct 2026, 07:32–08:10 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; this run's write probe is `_to_delete/goalrun28_write_probe`).
@@ -177,6 +200,11 @@ her retype what it had just worked out (a coin, 1947).
 **What is next.** The letters are the bottleneck, not the app: one a night to shops, and the one recent "human click" was a
 mail scanner. The one decision on your desk is the fair-price check's cost — it costs us about R1 a check and earns R36;
 my recommendation is to keep it as it is, and to give a new seller her first check free once strangers start arriving.
+
+**Evening (run 29).** Still nobody new; David Jnr published a property (#475). Tonight's walk caught something no checker
+would: a jam seller who added a photo and skipped the story would have published an advert describing bread, baskets and
+flowers, ending with the AI's note that "pricing is not visible" — text she never saw. The AI's draft now sits in her story
+box for her to read and change, its notes-to-self removed, and a weak price guess is shown as a hint instead of filled in.
 
 ## SUNDAY SUMMARY — written by run 22, Sunday 27 September 2026
 
