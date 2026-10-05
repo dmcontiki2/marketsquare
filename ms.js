@@ -20093,7 +20093,12 @@ const AI_ATTACHABLE = new Set(['collectables_advert','property_dossier','car_dos
 async function aiLoadMyReports(){
   const grid = document.getElementById('ai-grid'); if(!grid) return;
   let box = document.getElementById('ai-myreports');
-  if(!box){ box = document.createElement('div'); box.id = 'ai-myreports'; box.style.cssText = 'margin:0 0 14px;'; grid.parentNode.insertBefore(box, grid); }
+  /* REPORTS-BELOW-1 (5 Oct 2026, David: "the previous reports ... always show below the Feature selection options;
+     otherwise they get lost out of screen"). My reports sits under the feature cards and under the run panel that a
+     chosen card opens, so choosing a feature never pushes its own panel below a long list of old reports. */
+  if(!box){ box = document.createElement('div'); box.id = 'ai-myreports'; box.style.cssText = 'margin:18px 0 14px;'; }
+  { const _after = document.getElementById('ai-runpanel') || grid;
+    if(box.previousElementSibling !== _after) _after.parentNode.insertBefore(box, _after.nextSibling); }
   let rows = [];
   try{
     const r = await fetch('/ai/jobs', {credentials:'include'});
