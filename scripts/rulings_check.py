@@ -1302,6 +1302,12 @@ REFLECTIONS = {
    ("RULINGS.md", ["TRUSTSQUARE'S PAID SMS ACCOUNT IS FOR OUR OUTREACH ONLY"], []),
    ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
  ],
+ "RUL-207": [
+   ("RULINGS.md", ["NEVER HIDES A REAL ADVERT BEHIND AI EXAMPLES FOR ONE MISSED ANSWER", "AMENDED 5 Oct 2026 by RUL-207"], []),
+   ("quick.html", ["HOUSE-WIDE-1", "(i===0 && st.indexOf(2)>=0)", "FIND-CLOSE-1 (RUL-207(b))", "function qCloseWhat(", "T('Close matches')"], []),
+   ("genie/HARNESS.html", ["FIND-CLOSE-1 (RUL-207(b))"], []),
+   ("roles/quick_i18n.json", ['"Close matches"', '"Close match"'], []),
+ ],
  "RUL-206": [
    ("RULINGS.md", ["SMS OUTREACH MAY GO TO ANY PROSPECT WE HOLD A PHONE NUMBER FOR", "[AMENDED 5 Oct 2026 by RUL-206"], []),
    ("quick.html", ["QUICK-ERR-BEACON-1 (5 Oct", "_qErr('q_api_fail'", "qTrack('q_leave'"], []),

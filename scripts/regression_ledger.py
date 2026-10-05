@@ -36270,6 +36270,27 @@ def rg_hero_collage_2():
     return out or [(INFO, "every letter has its photo hero; the Email Templates page rebuilds nightly")]
 
 
+@entry("RG-0887", "FIND-CLOSE-1 + HOUSE-WIDE-1: Quick's Find shows a real advert that misses by one answer as a 'Close match' "
+       "before any AI example, and 'House' finds townhouses -- Dave jnr's own townhouse was hidden behind examples",
+       LOCKED, fixed_on="2026-10-05",
+       scope="quick.html = genie/HARNESS.html: FIND_TEST.prop_type accepts the townhouse family for 'House'; qFindHonour keeps "
+             "one-answer misses in out._close with qCloseWhat(); drawLookup paints up to 3 of them under 'Close matches' only "
+             "when no exact real advert exists, ribboned 'Close match - <what differs>'. PROBED 5 Oct before deploy on the live "
+             "data: House/Buying/Rietvalleirand -> listing 475 exact; Flat/Buying/Pretoria East -> 475 as Close match - Townhouse; "
+             "House/Renting/Pretoria East -> 475 as Close match - To sell. RUL-207.",
+       ref="Dave jnr via David, 5 Oct 2026; David: 'if he battled then a new guy will surely also not see the adverts?'")
+def rg_find_close():
+    out = []
+    for f in ("quick.html", "genie/HARNESS.html"):
+        t = repo_file(f)
+        if t is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        for n in ("(i===0 && st.indexOf(2)>=0)", "l._cm=1; l._cmWhat=qCloseWhat(", "out._close=close;", "(list&&list._close)", "T('Close match')"):
+            if n not in t:
+                out.append((FAIL, "%s lost %r -- a real advert can hide behind AI examples again" % (f, n)))
+    return out or [(INFO, "close matches show before examples; House finds townhouses")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
