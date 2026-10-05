@@ -5,7 +5,7 @@ SEND AS PLAIN TEXT, NOT AS AN HTML TEMPLATE. Deliberate: the recipient is a volu
 secretary, not a business buying visibility. A glossy branded mailer reads as a campaign
 and gets deleted. A plain note from a named person reads as a person and gets answered.
 
-Merge fields: {{first_name}} {{province_body}} {{unsubscribe_link}}
+Merge fields: {{first_name}} {{province_body}} #unsubscribe-is-personal-to-each-reader
 ({{province_body}} is NEW — the existing templates do not have it.)
 
 ANONYMITY NOTE (correction, David 4 Sep 2026): the first draft said a club "shares its own
@@ -66,7 +66,7 @@ trustsquare.co
 
 ---
 You are receiving this because {{province_body}}'s contact details are published on its
-own website. Unsubscribe -- don't email me again: {{unsubscribe_link}}
+own website. Unsubscribe -- don't email me again: #unsubscribe-is-personal-to-each-reader
 
 ═══════════════════════════════════════════════════════════════════════════════
 ASSET 2 — THE FORWARDABLE PARAGRAPH

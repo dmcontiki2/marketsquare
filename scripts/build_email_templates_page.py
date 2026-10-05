@@ -146,6 +146,44 @@ def as_sent(raw, special_on):
     return raw if special_on else SPECIAL_RE.sub("", raw)
 
 
+# PREVIEW-LINKS-1 (David, 5 Oct 2026: clicking the phone picture, "Open Quick ..." and "Open it in the full
+# TrustSquare app" on this page gave 404 Not Found). The sending copies carry {{quick_link}} / {{magic_link}} /
+# {{language_row}} placeholders that emailer.render() fills per reader; the mirror served them raw, so the browser
+# resolved "{{quick_link}}" as a relative path. The preview now fills every LINK placeholder with what a sample
+# reader in Pretoria, South Africa would get, so every button opens the real door. Text placeholders
+# ({{first_name}}, {{city_name}} ...) stay visible on purpose -- they show where each letter is personalised.
+_PV_SRC = "ops-preview"
+_PV_DOOR = (("services_", "services"), ("service_company", "services"), ("tutor", "tutors"), ("property", "property"),
+            ("agency_outreach", "property"), ("cars_", "cars"), ("collectors", "collectors"), ("adventures_", "adventures"),
+            ("tour_guide", "adventures"), ("travel_agency", "adventures"))
+_PV_LANGS = (("en", "English"), ("zu", "isiZulu"), ("xh", "isiXhosa"), ("af", "Afrikaans"), ("nso", "Sepedi"))
+
+
+def _pv_door(fn):
+    for pre, door in _PV_DOOR:
+        if fn.startswith(pre):
+            return door
+    return None
+
+
+def preview_links(fn, html):
+    door = _pv_door(fn)
+    app = "https://trustsquare.co/?src=" + _PV_SRC
+    q = ("https://trustsquare.co/q/%s?src=%s&amp;cc=ZA&amp;city=Pretoria" % (door, _PV_SRC)) if door else app
+    row = ""
+    if door:
+        row = ('<p style="font-family:sans-serif;font-size:13px;color:#666;margin:0 0 8px 0;">Open it in your language:</p>'
+               '<p style="margin:0 0 18px 0;">' + "".join(
+                   '<a href="%s%s" style="display:inline-block;margin:0 10px 8px 0;font-family:sans-serif;font-size:14px;'
+                   'color:#6a2a80;text-decoration:underline;">%s</a>' % (q, "" if c == "en" else "&amp;lang=" + c, n)
+                   for c, n in _PV_LANGS) + "</p>")
+    html = html.replace("{{quick_link}}", q).replace("{{magic_link}}", app).replace("{{language_row}}", row)
+    html = html.replace("{{unsubscribe_link}}", "#unsubscribe-is-personal-to-each-reader")
+    html = html.replace("{{optout_link}}", "#unsubscribe-is-personal-to-each-reader")
+    html = html.replace("{{example_page}}", "https://trustsquare.co/static/examples/athletics.html")
+    return html
+
+
 def send_set(files, policy):
     """[(filename, group, keys, note)] in display order."""
     out = []
@@ -251,7 +289,7 @@ def build(check_only=False):
     for fn, grp, keys, note in lane:
         sp = os.path.join(SRC, fn)
         raw = read(sp)
-        sent = as_sent(raw, special["on"])
+        sent = preview_links(fn, as_sent(raw, special["on"]))
         mp = os.path.join(MIRROR, fn)
         cur = read_bytes(mp) if os.path.exists(mp) else None
         want = sent.encode("utf-8")

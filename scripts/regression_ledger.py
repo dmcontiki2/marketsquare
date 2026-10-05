@@ -36070,6 +36070,29 @@ def rg_lang_home():
         return [(FAIL, "the live /quick/ does not carry the person-country language rule yet")]
     return [(INFO, "Quick's languages follow the person's country, not the searched country (live)")]
 
+@entry("RG-0880", "PREVIEW-LINKS-1: every button and link in the Ops Dashboard's Email Templates previews opens a real page "
+       "-- no href is left as a {{placeholder}} (David clicked 'Open Quick' and the phone picture and got 404 Not Found)",
+       LOCKED, fixed_on="2026-10-05",
+       scope="orchestration_v2/templates/*.html (the preview mirror written by scripts/build_email_templates_page.py "
+             "preview_links()): {{quick_link}} -> the category's Quick door for a sample reader in Pretoria, "
+             "{{magic_link}} -> the app's front door, {{language_row}} -> the ZA language links, unsubscribe -> an "
+             "inert anchor. The sending copies in CityLauncher are untouched (emailer.render fills them per reader). "
+             "PROBED 5 Oct 2026: all 37 distinct trustsquare.co links in the mirror answer 200.",
+       ref="David 5 Oct 2026 (screenshots of the Stays letter preview); scripts/build_email_templates_page.py")
+def rg_preview_links():
+    d = os.path.join(REPO, "orchestration_v2", "templates")
+    if not os.path.isdir(d):
+        return [(INFO, "NOT EVALUATED - preview mirror not here")]
+    bad = []
+    for fn in sorted(os.listdir(d)):
+        if fn.endswith(".html") and ".bak" not in fn:
+            t = io.open(os.path.join(d, fn), encoding="utf-8", errors="replace").read()
+            if re.search(r'href="\{\{', t) or "{{language_row}}" in t:
+                bad.append(fn)
+    if bad:
+        return [(FAIL, "preview letters with an unfilled link placeholder (404 on click): " + ", ".join(bad[:5]))]
+    return [(INFO, "every preview link is a real URL")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
