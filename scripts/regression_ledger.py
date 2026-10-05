@@ -36011,13 +36011,13 @@ def rg_lang_country():
 
 @entry("RG-0878", "LANG-OPEN-1 (RUL-204): Quick speaks the US, UK and Australian languages -- every one of Quick's words "
        "carries a draft in es zh tl vi cy pl ro pa ar yue, those countries offer them, and Arabic reads right-to-left",
-       OPEN,
+       LOCKED, fixed_on="2026-10-05",
        scope="roles/quick_i18n.json (15 columns, no empty cell for the ten new languages), roles/lang_countries.json "
              "(US/GB/AU offered), quick.html QI18N + QLANGS + the Arabic direction rule, genie/HARNESS.html identical; "
              "live /quick/ carries it. Also every qTr('...') literal in quick.html has an entry (7 had none in ANY "
              "language before 5 Oct). Scope is the three countries David switched on; NA/BW/MZ/KE/DE stay prepared.",
        ref="David 5 Oct 2026 ('lets make the languages active'); RUL-204; scripts/apply_lang_open_us_gb_au.py, "
-           "scripts/apply_quick_missing_words.py")
+           "scripts/apply_quick_missing_words.py. LOCKED 5 Oct 2026: PROBED live after deploy 2157f64 -- US es (auto from a Spanish phone), GB pl, AU zh and ar door rows and headlines in-language; ZA unchanged")
 def rg_lang_open():
     import json as _j
     qi = repo_file("roles/quick_i18n.json"); lc = repo_file("roles/lang_countries.json"); q = repo_file("quick.html")
