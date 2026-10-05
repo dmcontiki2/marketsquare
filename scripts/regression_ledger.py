@@ -36379,6 +36379,33 @@ def rg_city_handoff_1():
     return out or [(INFO, "Quick links carry her chosen country and city")]
 
 
+@entry("RG-0893", "ID-UPLOAD-LEGACY-1 (6 Oct 2026): the ID upload decides 'already verified' from the SAME credential the "
+       "Trust tab scores, never the legacy users.id_verified_at column; the page never leaves the ID button on 'Uploading...'",
+       LOCKED, fixed_on="2026-10-06",
+       scope="bea_main.py upload_user_id (already_verified via _GATE_ID_SIGNALS earned credentials); ms.js msUploadIdDoc "
+             "already_verified branch. CLASS: any handler that reads users.id_verified_at as 'verified' while the ladder scores "
+             "user_credentials -- two sources for one fact.",
+       ref="David 6 Oct 2026 00:05 SAST: Trust tab showed 'ID not verified / Upload ID'; the upload returned already_verified "
+           "(column stamped 27 May by the pre-C2 self-grant), the photo was discarded, nothing granted, button froze.")
+def rg_id_upload_legacy_1():
+    bm = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    if bm is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    h = bm.find('@app.post("/users/{email}/upload-id")')
+    body = bm[h:h + 7000] if h >= 0 else ""
+    if 'already_verified = bool(row and row["id_verified_at"])' in body:
+        out.append((FAIL, "upload-id reads 'already verified' off the legacy id_verified_at column again"))
+    if "_GATE_ID_SIGNALS" not in body:
+        out.append((FAIL, "upload-id no longer checks the scored ID credential"))
+    i = js.find("} else if(data.already_verified){")
+    seg = js[i:i + 700] if i >= 0 else ""
+    if "btn.textContent" not in seg:
+        out.append((FAIL, "ms.js already_verified branch leaves the ID button on 'Uploading...'"))
+    return out or [(INFO, "ID upload and Trust tab read one ID fact; the button always resolves")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
