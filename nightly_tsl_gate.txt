@@ -1,12 +1,12 @@
   ------------------------------------------------------------
-  TSL PRE-DEPLOY GATE   2026-10-05T22:35:11Z   mode=strict
+  TSL PRE-DEPLOY GATE   2026-10-05T22:55:10Z   mode=strict
   [CM] change-management docs
     - STATUS.md            [ok]
     - CHANGELOG.md         [ok]
     - CHANGE_REGISTER.md   [ok]
     - STATUS newest date : 2026-10-05 (1 days ago)
     - CHANGELOG newest    : 2026-10-06
-    - Ship pending        : marketsquare.html
+    - Ship pending        : none detected (working tree clean)
   [DB] live databases (read-only, msdeploy@178.104.73.239)
     - primary db        [ok, 10027008 bytes, integrity ok] (cached)
     - redis             [not readable - not gated]

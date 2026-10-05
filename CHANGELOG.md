@@ -1,3 +1,9 @@
+# 5 Oct 2026 -- Goal run 30 follow-up: one picture per kind in Quick's trail; a letter-link seller's app city is her listing's
+- TRAIL-ONE-PIC-1 (quick.html = genie/HARNESS.html): qTrail() replaces five copies of the trail builder and does not repeat a
+  picture (group + role wore the same photo side by side). RG-0891.
+- HOME-CITY-DRAFT-1 (ms.js msHomeFromDraft): when the Hub lands a Quick draft and she has never picked a city, the draft's city
+  and country become her app city (Home showed Pretoria for a Johannesburg seller). RG-0892.
+
 ## 2026-10-06 — ID-UPLOAD-LEGACY-1: ID upload no longer freezes on "Uploading…"
 
 David uploaded his ID and the button sat on "Uploading…" forever. The upload handler judged "already verified" from the legacy users.id_verified_at column (stamped 27 May by the pre-C2 self-grant), threw the photo away and granted nothing, while the Trust tab — which scores user_credentials — said "not verified, Upload ID". The handler now reads the same scored credential (_GATE_ID_SIGNALS earned), so an upload over a legacy stamp stores the document and grants the RUL-113 interim points; the page's already-verified branch now resolves the button and refreshes the trust list. Only one live account was in this state (David's). The first deploy request failed on a stale git lock (sandbox and host agent ran git in the same minute), not on the code. Ledger RG-0893.
