@@ -36007,7 +36007,43 @@ def rg_lang_country():
     live = _get("/quick/")
     if "LANG-COUNTRY-1:BEGIN" not in live:
         return [(FAIL, "the live /quick/ does not carry the per-country language table yet")]
-    return [(INFO, "languages follow the country: ZA five, every other country English only (live)")]
+    return [(INFO, "languages follow the country's offered list in roles/lang_countries.json (live; RUL-204 opened US/GB/AU)")]
+
+@entry("RG-0878", "LANG-OPEN-1 (RUL-204): Quick speaks the US, UK and Australian languages -- every one of Quick's words "
+       "carries a draft in es zh tl vi cy pl ro pa ar yue, those countries offer them, and Arabic reads right-to-left",
+       OPEN,
+       scope="roles/quick_i18n.json (15 columns, no empty cell for the ten new languages), roles/lang_countries.json "
+             "(US/GB/AU offered), quick.html QI18N + QLANGS + the Arabic direction rule, genie/HARNESS.html identical; "
+             "live /quick/ carries it. Also every qTr('...') literal in quick.html has an entry (7 had none in ANY "
+             "language before 5 Oct). Scope is the three countries David switched on; NA/BW/MZ/KE/DE stay prepared.",
+       ref="David 5 Oct 2026 ('lets make the languages active'); RUL-204; scripts/apply_lang_open_us_gb_au.py, "
+           "scripts/apply_quick_missing_words.py")
+def rg_lang_open():
+    import json as _j
+    qi = repo_file("roles/quick_i18n.json"); lc = repo_file("roles/lang_countries.json"); q = repo_file("quick.html")
+    if qi is None or lc is None or q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    qi = _j.loads(qi); lc = _j.loads(lc)
+    new = ["es", "zh", "tl", "vi", "cy", "pl", "ro", "pa", "ar", "yue"]
+    if any(l not in qi["langs"] for l in new):
+        return [(FAIL, "roles/quick_i18n.json lost a US/UK/AU language column")]
+    idx = [qi["langs"].index(l) for l in new]
+    for k, v in qi["w"].items():
+        if any(not str(v[i]).strip() for i in idx):
+            return [(FAIL, "quick_i18n.json: '%s' has an empty US/UK/AU translation" % k[:50])]
+    for cc in ("US", "GB", "AU"):
+        if not all(st == "offered" for c, st in lc["countries"][cc]["langs"]):
+            return [(FAIL, "lang_countries.json: %s no longer offers all its languages" % cc)]
+    lits = set(re.findall(r"qTr\('([^'\\]{2,120})'\)", q))
+    miss = sorted(x for x in lits if x not in qi["w"])
+    if miss:
+        return [(FAIL, "quick.html asks for %d word(s) with no translation entry, e.g. '%s'" % (len(miss), miss[0][:50]))]
+    if "html[lang=ar] #app *{unicode-bidi:plaintext}" not in q:
+        return [(FAIL, "quick.html: Arabic no longer reads right-to-left")]
+    live = _get("/quick/")
+    if "LANG-OPEN-1 (RUL-204" not in live or "Tiếng Việt" not in live:
+        return [(FAIL, "the live /quick/ does not carry the US/UK/AU languages yet")]
+    return [(INFO, "US/UK/AU languages live in Quick; every Quick word has a draft in all ten")]
 
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.

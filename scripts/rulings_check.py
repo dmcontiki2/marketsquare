@@ -1298,6 +1298,12 @@ REFLECTIONS = {
    ("quick.html", ["QUICK-OPEN-RATE-1", "var MINW=", "Call-out + per hour"], []),
    ("roles/quick_i18n.json", ["Your price, your call. Type what your work is worth."], []),
  ],
+ "RUL-204": [
+   ("RULINGS.md", ["THE US, THE UK AND AUSTRALIA GO LIVE IN THEIR OWN LANGUAGES NOW"], []),
+   ("roles/lang_countries.json", ['["es","offered"]', '["cy","offered"]', '["yue","offered"]', 'RUL-204'], ['["es","prepared"]', '["cy","prepared"]', '["yue","prepared"]']),
+   ("roles/quick_i18n.json", ['"es",', '"yue"', "Listed with us before? Sign in"], []),
+   ("quick.html", ["LANG-OPEN-1 (RUL-204", "unicode-bidi:plaintext"], []),
+ ],
  "RUL-165": [
    ("RULINGS.md", ["SOUTH AFRICA GOES LIVE FIRST"], []),
    ("roles/lang_countries.json", ['"prepared"', '["zu","offered"]'], ['["pt","offered"]', '["de","offered"]', '["sw","offered"]', '["tn","offered"]']),
