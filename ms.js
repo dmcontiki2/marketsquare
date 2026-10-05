@@ -21781,7 +21781,7 @@ function sfHomeS(){
   h+='<div class="sf-tiles">';
   /* QUICK-CARD-1 (David, 3 Oct 2026, GI-0003, amends RG-0478's 'small and unobtrusive'): a cleaner, gardener, nanny or
      driver saw seven guided categories and a small purple line. Her door is now the first, full-width card in Sell. */
-  h+='<a class="sf-tile sf-wide sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave()" style="display:block;text-decoration:none;color:inherit;">'+
+  h+='<a class="sf-tile sf-wide sf-quick-line" href="/quick/?from=app&src=sell-flow" onclick="return sfQuickLeave(this)" style="display:block;text-decoration:none;color:inherit;">'+
      '<div class="sf-bg" style="background:linear-gradient(140deg,#4c1d95,#7C3AED)">🧹</div>'+
      '<img class="sf-ph" src="/static/quick/role_home_cleaner.jpg" onerror="this.style.display=\'none\'">'+
      '<div class="sf-lab"><div class="sf-nm">Work for yourself?</div><div class="sf-ct">Cleaner, gardener, nanny, driver \u2014 listed in a minute with Quick</div></div></a>';
@@ -21805,7 +21805,21 @@ function sfHomeS(){
   h+='<div class="sf-foot"><button class="sf-btn gho" onclick="goTo(\'home\')">← Exit</button></div>';
   return h;
 }
-function sfQuickLeave(){   // QUICK-LEAVE-1
+/* CITY-HANDOFF-1 (Goal run 30, 5 Oct 2026): the place she chose in the app travels to Quick, so Quick does not ask
+   "Which city?" again (or open on another country from the phone's network). Only a city she picked or saved
+   (ms_user_city + ms_user_country); the app's default Pretoria is never passed on. Quick ignores a city it does not carry. */
+function msQuickHref(a){
+  try{
+    var city=localStorage.getItem('ms_user_city')||'', co=JSON.parse(localStorage.getItem('ms_user_country')||'null');
+    if(a && city && co && co.iso2 && !/[?&]city=/.test(a.getAttribute('href')||'')){
+      var h=a.getAttribute('href')||'/quick/?from=app';
+      a.setAttribute('href', h+(h.indexOf('?')<0?'?':'&')+'cc='+encodeURIComponent(co.iso2)+'&city='+encodeURIComponent(city));
+    }
+  }catch(_){}
+  return true;
+}
+function sfQuickLeave(a){   // QUICK-LEAVE-1
+  msQuickHref(a);
   if(!sfHasData()) return true;
   if(!confirm('Leave this listing and make a 5-tap Quick listing instead?\n\nYour photos and answers are kept \u2014 tap Sell when you come back to carry on.')) return false;
   sfDraftSave(); _sfSkipUnloadPrompt=true;

@@ -36317,6 +36317,68 @@ def rg_title_type():
     return out or [(INFO, "title type offered in TrustSquare, filtered only when asked, never asked in Quick")]
 
 
+@entry("RG-0889", "PIECE-WORK-DEFAULT-1 (Goal run 30, 5 Oct 2026): in Quick a hair braider, hairdresser, nail technician or pool "
+       "cleaner opens the price step on Per visit, a seamstress / tailor, car washer or carpet washer on Per job -- not Per day "
+       "with a minimum-wage floor; every other job unchanged",
+       LOCKED, fixed_on="2026-10-05",
+       scope="quick.html (= genie/HARNESS.html) setsFor(): PIECE_VISIT / PIECE_JOB role sets read from pickOf('what').r",
+       ref="docs/E2E_2026-10-05.md: a stranger hair braider in Soweto typed R150 -- the price she charges for a style -- and "
+           "Next stayed disabled under 'Lowest allowed: R241.84 / day -- the legal minimum wage'; Per visit was one tap away "
+           "but nothing said so. PIECE-RATE-1 (David 3 Oct) already says a visit or a job has no wage floor.")
+def rg_piece_work_default_1():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = q.find("function setsFor(s){")
+    if i < 0:
+        return [(FAIL, "setsFor() is gone from quick.html")]
+    pre = q[max(0, i - 300):i]
+    body = q[i:i + 1800]
+    out = []
+    for r in ("hair_braider:1", "hairdresser:1", "nail_technician:1", "pool_cleaner:1"):
+        if r not in pre:
+            out.append((FAIL, "%s no longer opens on Per visit" % r.split(":")[0]))
+    for r in ("seamstress_tailor:1", "car_washer:1", "carpet_washer:1"):
+        if r not in pre:
+            out.append((FAIL, "%s no longer opens on Per job" % r.split(":")[0]))
+    if "home_cleaner" in pre:
+        out.append((FAIL, "a home cleaner (paid by the day) was moved off Per day"))
+    if "if(_r && PIECE_VISIT[_r]) return {def:'visit'" not in body or "if(_r && PIECE_JOB[_r]) return {def:'job'" not in body:
+        out.append((FAIL, "setsFor() no longer reads the piece-work sets"))
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        out.append((FAIL, "genie/HARNESS.html differs from quick.html"))
+    return out or [(INFO, "piece workers open on Per visit / Per job; day workers unchanged")]
+
+
+@entry("RG-0890", "CITY-HANDOFF-1 (Goal run 30, 5 Oct 2026): the Quick links in Sell and the Sell sheet carry the country and "
+       "city she chose in the app (cc= / city=), so Quick does not ask again or open on another country; never the default",
+       LOCKED, fixed_on="2026-10-05",
+       scope="ms.js msQuickHref(a), sfQuickLeave(a) + the sell-flow Quick tile onclick; marketsquare.html .sell-quick-line onclick",
+       ref="docs/E2E_2026-10-05.md: the app read 'South Africa / Pretoria'; one tap later Quick asked 'Which city?' with New York first "
+           "(the phone's network, not her choice).")
+def rg_city_handoff_1():
+    js = repo_file("ms.js")
+    html = repo_file("marketsquare.html")
+    if js is None or html is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    i = js.find("function msQuickHref(a){")
+    if i < 0:
+        return [(FAIL, "msQuickHref() is gone")]
+    seg = js[i:i + 700]
+    for n in ("localStorage.getItem('ms_user_city')", "localStorage.getItem('ms_user_country')", "'cc='+encodeURIComponent(co.iso2)+'&city='"):
+        if n not in seg:
+            out.append((FAIL, "msQuickHref lost %r" % n))
+    if "Pretoria" in seg:
+        out.append((FAIL, "msQuickHref passes a default city"))
+    if 'onclick="return sfQuickLeave(this)"' not in js or "function sfQuickLeave(a){   // QUICK-LEAVE-1\n  msQuickHref(a);" not in js:
+        out.append((FAIL, "the Sell flow's Quick tile no longer hands the city over"))
+    if 'class="sell-quick-line" href="/quick/?from=app&amp;src=sell-sheet" onclick="return msQuickHref(this)"' not in html:
+        out.append((FAIL, "the Sell sheet's Quick line no longer hands the city over"))
+    return out or [(INFO, "Quick links carry her chosen country and city")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
