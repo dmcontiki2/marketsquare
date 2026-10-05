@@ -35930,7 +35930,7 @@ def rg_luna_first():
     return [(INFO, "first photo check on luna, terra on anything luna does not pass clean")]
 
 
-@entry("RG-0876", "LANG-COUNTRY-1 (RUL-162/165/151): Quick offers only the languages switched on for the visitor's "
+@entry("RG-0877", "LANG-COUNTRY-1 (RUL-162/165/151): Quick offers only the languages switched on for the visitor's "
        "country -- US, UK, Australia and every other non-ZA country see English only (no South African languages), "
        "ZA keeps its five; 'Languages I work in' is seeded from her country's approved list",
        OPEN,
