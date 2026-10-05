@@ -219,6 +219,28 @@ let _leafletMap = null, _markerLayer = null;  // Leaflet instances
 // Values: 'free' | 'starter' | 'premium'
 let buyerTier = 'free';
 
+// GEO-PAIR-1 (5 Oct 2026): the badge's two lines (country / city) must always be one place.
+function _msSaveCountry() {
+  try { if (activeCountry && activeCountry.iso2) localStorage.setItem('ms_user_country', JSON.stringify({ iso2: activeCountry.iso2, name: activeCountry.name })); } catch (_) {}
+}
+function _msCountryOfCity(city) {
+  try {
+    const _CN = { 'ZA':'South Africa', 'US':'United States', 'GB':'United Kingdom', 'AU':'Australia' };
+    for (const k in DEMO_COUNTRY_CITIES) {
+      if (DEMO_COUNTRY_CITIES[k].some(c => c.name === city)) return { iso2: k, name: _CN[k] || k };
+    }
+  } catch (_) {}
+  return null;
+}
+function _msRestoreCountryFor(city, useSaved) {
+  if (!city) return;
+  let saved = null;
+  if (useSaved) { try { saved = JSON.parse(localStorage.getItem('ms_user_country') || 'null'); } catch (_) {} }
+  const known = _msCountryOfCity(city);
+  // the saved pair wins unless the city is known to sit in a different country (a stale pair)
+  const pick = (saved && saved.iso2 && (!known || known.iso2 === saved.iso2)) ? saved : known;
+  if (pick && pick.iso2) { activeCountry = { iso2: pick.iso2, name: pick.name || pick.iso2 }; activeRegion = null; }
+}
 function updateBadgeLabel() {
   const badge = document.getElementById('home-city-badge');
   if (!badge) return;
@@ -1563,6 +1585,10 @@ async function _msInit(){
     const storedCity = localStorage.getItem('ms_user_city');
     if (storedCity) activeCity = { id: null, name: storedCity };
     if (window._msLinkCity) activeCity = { id: null, name: window._msLinkCity };   // CITY-FROM-LINK-1: this visit only
+    /* GEO-PAIR-1 (5 Oct 2026, David: "How is it possible to have South Africa and London together?"). Only the CITY was
+       remembered, so a returning London visitor booted with the default country (South Africa) over London. The country
+       now travels with the city: the saved pair when there is one, else the country the city belongs to. */
+    _msRestoreCountryFor(activeCity.name, !window._msLinkCity);
     const storedTier = localStorage.getItem('ms_buyer_tier');
     if (storedTier) buyerTier = storedTier;
   } catch(_){}
@@ -4679,6 +4705,7 @@ async function selectCity(id, name, lat, lng) {
      new city's name while the new list downloads -- and her choice is remembered for her next visit. */
   for (let i = LISTINGS.length - 1; i >= 0; i--) { if (LISTINGS[i].isLive) LISTINGS.splice(i, 1); }
   try{ if (name) localStorage.setItem('ms_user_city', name); }catch(_){}
+  _msSaveCountry();   // GEO-PAIR-1: the country is remembered with the city
   closeCitySelector();
   updateBadgeLabel();
   renderGrid();
@@ -4720,8 +4747,8 @@ async function _resolveActiveCity() {
   // On startup: resolve city id + region for the default 'Pretoria' name
   if (activeCity.id !== null) return;
   const [cities, regions] = await Promise.all([
-    _geoFetch('/geo/cities?country=ZA'),
-    _geoFetch('/geo/regions?country=ZA')
+    _geoFetch('/geo/cities?country=' + ((activeCountry && activeCountry.iso2) || 'ZA')),   // GEO-PAIR-1: not always ZA
+    _geoFetch('/geo/regions?country=' + ((activeCountry && activeCountry.iso2) || 'ZA'))
   ]);
   if (Array.isArray(cities)) {
     const match = cities.find(c => c.name === activeCity.name);
@@ -7392,6 +7419,7 @@ function submitOnboard(){
   // Store home city — used to restore activeCity on next page load
   const _homeCity = magicLink.active ? magicLink.area : activeCity.name;
   localStorage.setItem('ms_user_city', _homeCity);
+  _msSaveCountry();   // GEO-PAIR-1
   // Seed seller profile with onboard data and persist
   const profile = {
     ...SELLERS[0],
