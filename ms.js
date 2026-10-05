@@ -6030,6 +6030,20 @@ function catCfg(l){
 
 /* QUICK-DRAFT-LAND-1: bring the waiting advert to the front of the hub -- scroll to it, ring it,
    and say what the one remaining step is. Tries for ~10 s while the hub loads; silent if absent. */
+/* HOME-CITY-DRAFT-1 (Goal run 30 follow-up, 5 Oct 2026): a Quick seller who opens her letter's link lands in the Hub with
+   the app still on its default city (Pretoria) although her advert is in Johannesburg -- Home and Browse then showed
+   the wrong city. When she has never picked a city herself (no ms_user_city), the city of the listing she just made
+   becomes her city, with its country (GEO-PAIR-1). Her own pick always wins. */
+function msHomeFromDraft(id){
+  try{
+    if(localStorage.getItem('ms_user_city')) return;
+    var dl=(dashState.listings||[]).find(function(d){ return d.beaListingId===id; });
+    var city=String((dl && dl._raw && dl._raw.city) || '').trim();
+    if(!city || city.length>60 || (activeCity && activeCity.name===city)) return;
+    _msRestoreCountryFor(city, false);
+    selectCity(null, city, null, null);
+  }catch(e){}
+}
 function msLandDraft(){
   var id=0; try{ id=parseInt(sessionStorage.getItem('ts_land_draft')||'',10)||0; }catch(e){}
   if(!id) return;
@@ -6038,6 +6052,7 @@ function msLandDraft(){
     try{ btn=document.querySelector('[onclick="dashPublish('+id+')"]') || document.querySelector('[onclick="openEditListing('+id+')"]'); }catch(e){}
     if(btn){
       try{ sessionStorage.removeItem('ts_land_draft'); }catch(e){}
+      msHomeFromDraft(id);   // HOME-CITY-DRAFT-1
       var card=btn.closest('.mlcard')||btn.parentNode.parentNode;
       try{ card.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ card.scrollIntoView(); }
       card.style.transition='box-shadow .4s'; card.style.boxShadow='0 0 0 3px #7C3AED, 0 10px 30px rgba(124,58,237,.35)';
