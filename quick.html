@@ -3752,9 +3752,18 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     if(s.key!=='price') return false;
     var k=cat().key; return k==='services' || k==='homehelp' || k==='tutors';
   }
+  var PIECE_VISIT={hair_braider:1, hairdresser:1, nail_technician:1, pool_cleaner:1};
+  var PIECE_JOB={seamstress_tailor:1, car_washer:1, carpet_washer:1};
   function setsFor(s){
     var q=String(s.q||''), how=pickOf('how'), hl=how?String(how.label||''):'';
     if(cat().key==='tutors') return {def:'hour', opts:['hour','visit']};
+    /* PIECE-WORK-DEFAULT-1 (Goal run 30, 5 Oct 2026): a hair braider, hairdresser, nail technician, pool cleaner, seamstress,
+       car or carpet washer is paid for the piece of work, not the day. They opened on "Per day" with a minimum-wage floor
+       of R241.84 a day under the box -- a braider charging R150 for cornrows read that as "too low, not allowed".
+       Per visit / per job opens first; time-based charging stays one tap away (PIECE-RATE-1: no floor on a piece). */
+    var _w=pickOf('what'), _r=_w&&_w.r;
+    if(_r && PIECE_VISIT[_r]) return {def:'visit', opts:['visit','hour','day']};
+    if(_r && PIECE_JOB[_r]) return {def:'job', opts:['job','visit','hour']};
     if(s.key==='how' || how || /call-out|per job/i.test(q)){
       var d=/hour/i.test(hl)?'hour':(/job/i.test(hl)?'job':'callout');
       return {def:d, opts:['callout','hour','job','quote']};
