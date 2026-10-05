@@ -36232,6 +36232,44 @@ def rg_sms_status():
     return out or [(INFO, "SMS lane keeps message ids, reads delivery and credit; the wave is gated and tagged")]
 
 
+@entry("RG-0886", "HERO-COLLAGE-2 + EMAIL-PAGE-NIGHTLY-1: every outreach letter opens on a photo-rainbow hero (no emoji "
+       "heroes left), and the Ops Dashboard's Email Templates page is rebuilt every night from the letters the wave sends",
+       LOCKED, fixed_on="2026-10-05",
+       scope="CityLauncher/emailer/templates: collectors, collector shops, casual + technical services, service companies, "
+             "tutors (A and B), tutor institutions, stays, experiences and private property now carry email_hero_*.jpg "
+             "(six new heroes composed by scripts/compose_email_rainbow.py from each category's own showcase photos; "
+             "inline_images.py INLINE_MAP carries them for CID). build_email_templates_page.py takes EMAIL_PAGE_CL / "
+             "EMAIL_PAGE_OUT and CityLauncher/nightly_wave.sh runs it on the server into orchestrator/v2.",
+       ref="David 5 Oct 2026: 'i like the photo collage type of pictures ... do the same for the ones that don't have "
+           "these collages ... And then please keep the Orchestrator where all of these templates live updated in the Ops Dashboard'")
+def rg_hero_collage_2():
+    out = []
+    b = repo_file("scripts/build_email_templates_page.py")
+    if b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if 'os.environ.get("EMAIL_PAGE_CL")' not in b or 'os.environ.get("EMAIL_PAGE_OUT")' not in b:
+        out.append((FAIL, "build_email_templates_page.py lost its server overrides -- the nightly page rebuild cannot run"))
+    t = os.path.join(REPO, "..", "CityLauncher", "emailer", "templates")
+    if sibling_visible(t):
+        for fn in ("adventures_accommodation_outreach.html", "adventures_experiences_outreach.html", "collectors_dealer_outreach.html",
+                   "collectors_outreach.html", "property_outreach.html", "service_company_outreach.html",
+                   "services_technical_outreach.html", "services_casuals_outreach.html", "tutor_institution_outreach.html",
+                   "tutors_outreach.html", "tutors_outreach.b.html"):
+            try:
+                h = open(os.path.join(t, fn), encoding="utf-8").read()
+            except OSError:
+                out.append((FAIL, "%s is missing" % fn)); continue
+            if "static/email_hero_" not in h or 'class="hero-icon"' in h:
+                out.append((FAIL, "%s opens on an emoji again, not its photo hero (HERO-COLLAGE-2)" % fn))
+        nw = os.path.join(REPO, "..", "CityLauncher", "nightly_wave.sh")
+        try:
+            if "EMAIL-PAGE-NIGHTLY-1" not in open(nw, encoding="utf-8").read():
+                out.append((FAIL, "nightly_wave.sh no longer rebuilds the Email Templates page"))
+        except OSError:
+            pass
+    return out or [(INFO, "every letter has its photo hero; the Email Templates page rebuilds nightly")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

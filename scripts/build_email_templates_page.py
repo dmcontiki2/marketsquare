@@ -30,10 +30,15 @@ import os, re, sys, json, datetime as _dt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-CL = os.path.normpath(os.path.join(REPO, "..", "CityLauncher"))
+# EMAIL-PAGE-NIGHTLY-1 (5 Oct 2026, David: "please keep the Orchestrator where all of these templates live updated in
+# the Ops Dashboard"): the server rebuilds the page every night from the letters the wave actually sends --
+#   EMAIL_PAGE_CL=/var/www/citylauncher EMAIL_PAGE_OUT=/var/www/marketsquare/orchestrator/v2 python3 <this>
+# (CityLauncher/nightly_wave.sh). Unset, everything is exactly as before (David's PC / the repo).
+CL = os.path.normpath(os.environ.get("EMAIL_PAGE_CL") or os.path.join(REPO, "..", "CityLauncher"))
 SRC = os.path.join(CL, "emailer", "templates")
-MIRROR = os.path.join(REPO, "orchestration_v2", "templates")
-PAGE = os.path.join(REPO, "orchestration_v2", "email_templates.html")
+_OUT = os.environ.get("EMAIL_PAGE_OUT") or os.path.join(REPO, "orchestration_v2")
+MIRROR = os.path.join(_OUT, "templates")
+PAGE = os.path.join(_OUT, "email_templates.html")
 MANIFEST = os.path.join(REPO, "ops", "autodeploy", "deploy_manifest.txt")
 
 SPECIAL_RE = re.compile(r"<!--LAUNCH_SPECIAL_START-->.*?<!--LAUNCH_SPECIAL_END-->", re.S)
