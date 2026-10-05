@@ -36086,7 +36086,7 @@ def rg_preview_links():
     bad = []
     for fn in sorted(os.listdir(d)):
         if fn.endswith(".html") and ".bak" not in fn:
-            t = io.open(os.path.join(d, fn), encoding="utf-8", errors="replace").read()
+            t = open(os.path.join(d, fn), encoding="utf-8", errors="replace").read()
             if re.search(r'href="\{\{', t) or "{{language_row}}" in t:
                 bad.append(fn)
     if bad:
