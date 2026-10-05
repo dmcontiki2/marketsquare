@@ -1298,6 +1298,17 @@ REFLECTIONS = {
    ("quick.html", ["QUICK-OPEN-RATE-1", "var MINW=", "Call-out + per hour"], []),
    ("roles/quick_i18n.json", ["Your price, your call. Type what your work is worth."], []),
  ],
+ "RUL-192": [
+   ("RULINGS.md", ["TRUSTSQUARE'S PAID SMS ACCOUNT IS FOR OUR OUTREACH ONLY"], []),
+   ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
+ ],
+ "RUL-206": [
+   ("RULINGS.md", ["SMS OUTREACH MAY GO TO ANY PROSPECT WE HOLD A PHONE NUMBER FOR", "[AMENDED 5 Oct 2026 by RUL-206"], []),
+   ("quick.html", ["QUICK-ERR-BEACON-1 (5 Oct", "_qErr('q_api_fail'", "qTrack('q_leave'"], []),
+   ("genie/HARNESS.html", ["QUICK-ERR-BEACON-1 (5 Oct"], []),
+   ("sms_provider.py", ["SMS-STATUS-1", "def status(", 'SMS_PURPOSES = ("outreach", "setup-test")'], []),
+   ("orchestration_v2/cockpit.html", ["sms_funnel.html"], []),
+ ],
  "RUL-205": [
    ("RULINGS.md", ["THE APP SPEAKS THE LANGUAGES OF THE COUNTRY THE PERSON IS IN"], []),
    ("quick.html", ["window.QHOME_CC", "_LOFF[QHOME_CC]"], ["var _off=_LOFF[QCC]"]),

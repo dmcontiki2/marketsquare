@@ -36179,6 +36179,59 @@ def rg_price_basis_intl():
         return [(FAIL, "ms.js: a non-rand rate keeps its basis inside the amount again (doubled basis on adverts)")]
     return [(INFO, "non-rand rates show their basis once")]
 
+@entry("RG-0884", "QUICK-ERR-BEACON-1: Quick reports its own failures (script errors, failed server calls, the step she "
+       "left on), so 'tapped and it broke' is never read as 'tapped and lost interest'",
+       LOCKED, fixed_on="2026-10-05",
+       scope="quick.html + genie/HARNESS.html: q_error (window error + unhandled rejection), q_api_fail (our server, network "
+             "or 5xx), q_api_4xx (a POST we refused), q_leave (hidden/left, with the last step and error count); capped 5 "
+             "errors / 3 leaves a session; the funnel beacon itself is never wrapped; qTrack keeps _qLast. RUL-206(d). "
+             "Proven live by CityLauncher/sms_path_probe.py, which throws a deliberate error and requires its q_error row.",
+       ref="David 5 Oct 2026: 'not to again make the same mistake we did with the emails where the app didnt work and we "
+           "thought nobody was interested'")
+def rg_quick_err_beacon():
+    out = []
+    for f in ("quick.html", "genie/HARNESS.html"):
+        t = repo_file(f)
+        if t is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        need = ["QUICK-ERR-BEACON-1 (5 Oct", "_qErr('q_error'", "_qErr('q_api_fail'", "qTrack('q_leave'",
+                "url.indexOf('/onboard/step')<0", "_qLast=String(stepName"]
+        miss = [n for n in need if n not in t]
+        if miss:
+            out.append((FAIL, "%s: the failure beacon is gone or broken (%s) -- a broken path would read as no interest again" % (f, ", ".join(miss))))
+    return out or [(INFO, "Quick reports its own errors, failed calls and where she left")]
+
+
+@entry("RG-0885", "SMS-STATUS-1: our SMS lane can tell DELIVERED from 'nobody tapped' -- send() keeps the provider's message "
+       "id, status() asks what became of it, credits() reads the prepaid balance; outreach stays the only purpose",
+       LOCKED, fixed_on="2026-10-05",
+       scope="sms_provider.py: BulkSMS id kept in send()'s info ('id=...'), message_id(), status() -> delivered | failed | "
+             "pending | unknown, credits() from /v1/profile -- all read-only, none sends. SMS_PURPOSES stays "
+             "('outreach','setup-test') (RUL-192(b)). Found 5 Oct: CityLauncher/sms_wave.py asked for purpose 'sms-wave', "
+             "which this door refuses, so every text of the first wave would have been skipped -- fixed in SMS-WAVE-2.",
+       ref="RUL-206(c), 5 Oct 2026")
+def rg_sms_status():
+    t = repo_file("sms_provider.py")
+    if t is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for n in ("SMS-STATUS-1", "def message_id(", "def status(", "def credits(", 'info += " id=%s"',
+              'SMS_PURPOSES = ("outreach", "setup-test")'):
+        if n not in t:
+            out.append((FAIL, "sms_provider.py lost %r -- delivered texts can no longer be told from dead numbers" % n))
+    w = os.path.join(REPO, "..", "CityLauncher", "sms_wave.py")
+    if sibling_visible(w):
+        try:
+            wt = open(w, encoding="utf-8").read()
+        except OSError:
+            wt = ""
+        for n in ('"outreach")', "ensure_probe()", "RECONTACT_DAYS = 60", "SELECT email FROM suppression",
+                  "STOP_LINE", 'src = "%s-b%s-%s-%s"'):
+            if n not in wt:
+                out.append((FAIL, "CityLauncher/sms_wave.py lost %r (purpose, probe gate, 60-day floor, opt-outs, STOP, batch tag)" % n))
+    return out or [(INFO, "SMS lane keeps message ids, reads delivery and credit; the wave is gated and tagged")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

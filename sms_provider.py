@@ -198,6 +198,16 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
         else:
             return ("skipped", "unknown provider")
         info = "%s %s" % (prov, r.status_code)
+        # SMS-STATUS-1 (5 Oct 2026, RUL-206(c)): keep the provider's message id, so the batch funnel can ask later
+        # whether the text was DELIVERED -- a dead number must never be read as a person who did not tap.
+        if ok and prov == "bulksms":
+            try:
+                j = r.json()
+                m = j[0] if isinstance(j, list) and j else j
+                if isinstance(m, dict) and m.get("id"):
+                    info += " id=%s" % str(m.get("id"))[:40]
+            except Exception:
+                pass
         if ok:
             _log.info("sms sent (%s) to %s via %s", purpose, mask(e164), prov)
             return ("sent", info)
@@ -206,3 +216,50 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
     except Exception as exc:
         _log.warning("sms FAILED (%s) to %s: %s", purpose, mask(e164), exc)
         return ("failed", str(exc)[:120])
+
+
+def message_id(info: str) -> str:
+    """The provider message id that send() put into its info string, or ''."""
+    m = re.search(r"\bid=([A-Za-z0-9_\-]+)", info or "")
+    return m.group(1) if m else ""
+
+
+def status(msg_id: str) -> tuple:
+    """SMS-STATUS-1: ask the provider what became of one message. Returns (state, detail):
+    state in 'delivered' | 'failed' | 'pending' | 'unknown'. Reads only -- never sends, never costs."""
+    if not msg_id or provider() != "bulksms" or not ready():
+        return ("unknown", "no provider or id")
+    try:
+        import httpx
+        basic = base64.b64encode((os.environ.get("SMS_TOKEN") or "").strip().encode()).decode()
+        r = httpx.get("https://api.bulksms.com/v1/messages/%s" % msg_id,
+                      headers={"Authorization": "Basic " + basic}, timeout=15)
+        if r.status_code != 200:
+            return ("unknown", "bulksms %s" % r.status_code)
+        st = (r.json() or {}).get("status") or {}
+        typ = str(st.get("type") or "").upper()
+        sub = str(st.get("subtype") or "")
+        if typ == "DELIVERED":
+            return ("delivered", sub)
+        if typ in ("FAILED",):
+            return ("failed", sub)
+        if typ in ("ACCEPTED", "SCHEDULED", "SENT"):
+            return ("pending", typ.lower())
+        return ("unknown", typ.lower() or "no status")
+    except Exception as exc:
+        return ("unknown", str(exc)[:80])
+
+
+def credits() -> float:
+    """SMS-STATUS-1: the prepaid credit left on the account (BulkSMS /profile), or -1 when unknown. Reads only."""
+    if provider() != "bulksms" or not ready():
+        return -1.0
+    try:
+        import httpx
+        basic = base64.b64encode((os.environ.get("SMS_TOKEN") or "").strip().encode()).decode()
+        r = httpx.get("https://api.bulksms.com/v1/profile", headers={"Authorization": "Basic " + basic}, timeout=15)
+        if r.status_code != 200:
+            return -1.0
+        return float(((r.json() or {}).get("credits") or {}).get("balance") or 0)
+    except Exception:
+        return -1.0
