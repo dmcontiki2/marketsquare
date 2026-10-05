@@ -35930,6 +35930,46 @@ def rg_luna_first():
     return [(INFO, "first photo check on luna, terra on anything luna does not pass clean")]
 
 
+@entry("RG-0876", "LANG-COUNTRY-1 (RUL-162/165/151): Quick offers only the languages switched on for the visitor's "
+       "country -- US, UK, Australia and every other non-ZA country see English only (no South African languages), "
+       "ZA keeps its five; 'Languages I work in' is seeded from her country's approved list",
+       OPEN,
+       scope="quick.html + genie/HARNESS.html (kept identical): the LANG-COUNTRY-1 block inside applyPack, generated "
+             "from roles/lang_countries.json by scripts/apply_lang_country.py; door language row and top-bar button "
+             "hidden when one language. PROBED 5 Oct 2026 before the fix: ?cc=US/GB/AU all offered isiZulu, isiXhosa, "
+             "Afrikaans, Sepedi. Covers all nine pack countries, not only US/GB/AU.",
+       ref="David 5 Oct 2026 ('are the Quick app correctly listing in the US, UK and AUS in their language'); "
+           "scripts/apply_lang_country.py; RUL-162(c) / RUL-165(b) / RUL-151")
+def rg_lang_country():
+    import json as _j
+    q = repo_file("quick.html")
+    h = repo_file("genie/HARNESS.html")
+    lc = repo_file("roles/lang_countries.json")
+    if q is None or lc is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html is no longer identical to quick.html")]
+    m = re.search(r"var _LOFF=(\{.*?\});", q)
+    if not m:
+        return [(FAIL, "quick.html: the per-country language table (LANG-COUNTRY-1) is gone")]
+    off = _j.loads(m.group(1))
+    want = {}
+    for cc, row in _j.loads(lc)["countries"].items():
+        codes = [c for c, st in row["langs"] if st == "offered"]
+        if "en" not in codes:
+            codes.insert(0, "en")
+        want[cc] = codes
+    if off != want:
+        return [(FAIL, "quick.html's language table differs from roles/lang_countries.json -- re-run scripts/apply_lang_country.py")]
+    for sn, why in (("if(QLANGS.length>1) sc.insertAdjacentHTML('beforeend','<div class=\"langrow\"", "the door shows a language row with nothing to choose"),
+                    ("if(QLANGS.length<2){ if(w) w.style.display='none'; return; }", "the top-bar language button shows with nothing to choose")):
+        if sn not in q:
+            return [(FAIL, "quick.html: " + why)]
+    live = _get("/quick/")
+    if "LANG-COUNTRY-1:BEGIN" not in live:
+        return [(FAIL, "the live /quick/ does not carry the per-country language table yet")]
+    return [(INFO, "languages follow the country: ZA five, every other country English only (live)")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
