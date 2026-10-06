@@ -71,3 +71,9 @@
   his own F-011): DCB-001 fixed the sell flow, but the post-publish edit screen kept a single-file
   picker - the same friction re-surfaced one screen later. F-019: the gap was between two halves of
   the system that each looked complete - the server scorer required baths, Quick never asked it.
+
+- 2026-10-06: Maroushka, Quick property listing 526 (13 photos, 3 refused by the anonymity check, 10 accepted).
+  (1) "100 sq m unit was lost in transfer, 2400 sq erf size was also lost" — FIX: server create model never took
+  floor/erf (all lanes) → SIZE-CARRY-1, RG-0905. (2) "could not add three edited photos back ... no option or button"
+  — FIX: Edit's Add Photo tile hid at a hard 10 → EDIT-ADD-PHOTO-1, RG-0906. The 3 refusals themselves are the
+  anonymity gate working as designed (not a fault).

@@ -10386,6 +10386,10 @@ async function goHandoff(opts) {
         if (f.baths)        body.baths        = parseInt(f.baths)   || null;
         if (f.garages)      body.garages      = parseInt(f.garages) || null;
         if (f.listing_type) body.listing_type = f.listing_type;
+        // SIZE-CARRY-1 (6 Oct 2026, Maroushka, listing 526): floor and erf size were never sent.
+        if (f.floor_area)   body.floor_area   = parseInt(f.floor_area) || null;
+        if (f.erf_size)     body.erf_size     = parseInt(f.erf_size)   || null;
+        if (f.title_type)   body.title_type   = f.title_type;
         if (f.subject)      body.subject      = f.subject;
         if (f.level)        body.level        = f.level;
         if (f.service_type) body.service_type = f.service_type;
@@ -10425,6 +10429,9 @@ async function goHandoff(opts) {
         if (f.baths)       body.baths       = parseInt(f.baths) || null;
         if (f.garages)     body.garages     = parseInt(f.garages) || null;   // BEDS-PUBLISH-1
         if (f.prop_type)   body.prop_type   = f.prop_type;                   // BEDS-PUBLISH-1
+        if (f.floor_area)  body.floor_area  = parseInt(f.floor_area) || null;   // SIZE-CARRY-1
+        if (f.erf_size)    body.erf_size    = parseInt(f.erf_size)   || null;   // SIZE-CARRY-1
+        if (f.title_type)  body.title_type  = f.title_type;                     // SIZE-CARRY-1
         if (f.subject)     body.subject     = f.subject;
         if (f.level)       body.level       = f.level;
         if (f.service_type)body.service_type= f.service_type;
@@ -11719,12 +11726,14 @@ async function sbDoPublish(){
           seller_email:email,
           listing_status:'live',
           trust_score:sbCalcScore(),
-          beds:       f.beds       ? parseInt(f.beds)       : null,
-          baths:      f.baths      ? parseInt(f.baths)      : null,
-          garages:    f.garages    ? parseInt(f.garages)    : null,
-          floor_area: f.floor_area ? parseInt(f.floor_area) : null,
-          erf_size:   f.erf_size   ? parseInt(f.erf_size)   : null,
-          prop_type:  f.prop_type  || null,
+          /* SIZE-CARRY-1 (6 Oct 2026): this form names its fields bedrooms / bathrooms /
+             property_type / floor_size / stand_size, so the old keys were always empty. */
+          beds:       parseInt(f.beds||f.bedrooms)        || null,
+          baths:      parseInt(f.baths||f.bathrooms)      || null,
+          garages:    parseInt(f.garages)                 || null,
+          floor_area: parseInt(f.floor_area||f.floor_size) || null,
+          erf_size:   parseInt(f.erf_size||f.stand_size)  || null,
+          prop_type:  f.prop_type || f.property_type || null,
           listing_type: f.listing_type || null,
           ..._veh,   // CARS-SPEC-1: discrete vehicle columns + provenance blob (Cars only)
           structured_fields:JSON.stringify({...f, _gate:sbState.gate||''})
@@ -13006,7 +13015,10 @@ function elRenderPhotos(raw, photoWarning) {
       </div>
       ${hasPhotoIssue && i===0 ? `<div class="el-photo-ai-note">⚠️ ${photoWarning}</div>` : ''}
     </div>`).join('') +
-    (_elPhotoUrls.length < 10 ? `
+    /* EDIT-ADD-PHOTO-1 (6 Oct 2026, Maroushka, listing 526): the Add Photo tile still hid at a
+       hard 10 after PHOTO-CAP-2 raised the real cap to 24 for property, so a 10-photo advert had
+       no way to add the photos the anonymity check had turned away. */
+    (_elPhotoUrls.length < msPhotoCap(elCurrentCat) ? `
     <div class="el-photo-card" style="display:flex;align-items:center;justify-content:center;">
       <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:120px;height:90px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;color:var(--text-3);font-size:11px;gap:4px;">
         <span style="font-size:24px;">＋</span>Add Photo

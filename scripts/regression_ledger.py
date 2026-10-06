@@ -36673,6 +36673,42 @@ def rg_plate_detector_1():
         bad.append("migrations/067_plate_detector.py is gone (onnxruntime install)")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "plates are located by the local detector, not by LLM coordinates; both doors wired; model git-ignored")]
 
+@entry("RG-0905", "SIZE-CARRY-1 (6 Oct 2026): floor and erf size survive the FIRST save of a new advert, on every sell lane",
+       LOCKED, fixed_on="2026-10-06",
+       scope="bea_main.py Listing (create model) + create_listing write; ms.js sell-flow draft create AND patch; "
+             "Simple Builder publish (its form says floor_size/stand_size/bedrooms/bathrooms/property_type). All categories that carry sizes.",
+       ref="Maroushka 6 Oct 2026, listing 526: '100 sq m unit was lost in transfer, 2400 sq erf size was also lost'. "
+           "Root cause: the create model had no floor_area/erf_size, so the server dropped them on every lane; only Edit (PUT) kept them.")
+def rg_size_carry_1():
+    b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if None in (b, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = b.find("class Listing(_PhotoSafe, BaseModel):"); j = b.find("class ListingUpdate(", i)
+    model = b[i:j] if i >= 0 and j > i else ""
+    if "floor_area: Optional[int]" not in model or "erf_size: Optional[int]" not in model:
+        bad.append("the create model no longer accepts floor_area/erf_size")
+    if "SET floor_area = COALESCE(?, floor_area), erf_size = COALESCE(?, erf_size)" not in b:
+        bad.append("create_listing no longer writes the sizes")
+    if js.count("body.floor_area") < 2 or js.count("body.erf_size") < 2:
+        bad.append("the sell flow no longer sends sizes on draft create and patch")
+    if "parseInt(f.floor_area||f.floor_size)" not in js or "parseInt(f.erf_size||f.stand_size)" not in js:
+        bad.append("the Simple Builder reads size keys its own form does not use")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "sizes ride the create path on every sell lane")]
+
+@entry("RG-0906", "EDIT-ADD-PHOTO-1 (6 Oct 2026): the Edit screen's Add Photo tile obeys the real photo cap, not a hard 10",
+       LOCKED, fixed_on="2026-10-06",
+       scope="ms.js elRenderPhotos (tile) must use msPhotoCap like elAddPhoto does; every category",
+       ref="Maroushka 6 Oct 2026, listing 526: 3 of 13 photos were refused by the anonymity check, she fixed them, and "
+           "'there was no option or button to add the three photos'. PHOTO-CAP-2 raised elAddPhoto to 24 but left the tile at 10.")
+def rg_edit_add_photo_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "_elPhotoUrls.length < 10" in js or "_elPhotoUrls.length < msPhotoCap(elCurrentCat)" not in js:
+        return [(FAIL, "the Add Photo tile is capped by a hard number again")]
+    return [(INFO, "Add Photo tile follows msPhotoCap")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

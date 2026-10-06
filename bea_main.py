@@ -2737,6 +2737,10 @@ class Listing(_PhotoSafe, BaseModel):
     beds: Optional[int] = None
     baths: Optional[int] = None
     garages: Optional[int] = None
+    # SIZE-CARRY-1 (6 Oct 2026, Maroushka, listing 526): floor and erf size were not on the
+    # CREATE model at all, so every new advert lost them and she had to type them in again.
+    floor_area: Optional[int] = None
+    erf_size: Optional[int] = None
     # BEDS-PUBLISH-1 (23 Jul 2026, Maroushka feedback): listing_type existed only on
     # ListingUpdate, so the sell-flow CREATE path silently dropped For Sale/For Rent.
     listing_type: Optional[str] = None
@@ -4336,6 +4340,10 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.spec_confirmed, _country)
     )
     new_id = cursor.lastrowid
+    if listing.floor_area or listing.erf_size:   # SIZE-CARRY-1 (6 Oct 2026, Maroushka)
+        conn.execute("UPDATE listings SET floor_area = COALESCE(?, floor_area), erf_size = COALESCE(?, erf_size) WHERE id = ?",
+                     (int(listing.floor_area) if listing.floor_area else None,
+                      int(listing.erf_size) if listing.erf_size else None, new_id))
     if _norm_title_type(listing.title_type):   # TITLE-TYPE-1 (RUL-208)
         conn.execute("UPDATE listings SET title_type=? WHERE id=?", (_norm_title_type(listing.title_type), new_id))
     conn.execute("UPDATE listings SET price_num = ? WHERE id = ?", (_price_number(listing.price), new_id))   # PRICE-NUM-1
