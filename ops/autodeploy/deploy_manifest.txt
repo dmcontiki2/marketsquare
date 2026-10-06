@@ -36,6 +36,8 @@ ms.css                     | static/ms.css
 # data URI in each, because the brand PNGs ride the separate media lane and a /static/
 # reference would 404 on first deploy and lose the tile to a screenshot.
 quick.html                 | quick.html
+# LOGO-LIGHT-1 (6 Oct 2026, casuals audit F6): the app logo as a 17 KB text SVG (was a 183 KB PNG on every landing).
+static/brand/logo-white.svg | static/brand/logo-white.svg
 roles/quick_i18n.json      | roles/quick_i18n.json
 # I18N-AF-1 (20 Sep 2026, David read the live Afrikaans): the hand-written Afrikaans for the
 # main app, read by migration 045. Text, so it rides this lane and not the media lane.

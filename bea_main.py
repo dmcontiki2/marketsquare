@@ -4280,6 +4280,7 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
     listing.title, listing.description, _scrubbed = _private_text_scrub(
         listing.title, listing.description, listing.seller_email or "", "create",
         ", ".join(x for x in (listing.suburb, listing.city) if x))   # E2E-HMI-1 + ANON-NAMES-1 (the typed area is checked, not trusted)
+    _private_fields_scrub(listing, listing.seller_email or "", "create")   # FIELD-SCRUB-1 (AUD-117)
     listing.area, _an = _anon_names_area(listing.area, listing.suburb or "", listing.seller_email or "", "create")   # ANON-NAMES-1
     if not listing.suburb:
         raise HTTPException(status_code=400, detail="suburb is required")
@@ -4866,6 +4867,10 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     else:
         em = (sess or body.email or "").strip().lower()
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", em):
+            raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
+        if not sess and _is_key_identity(em):
+            # KEY-TYPED-1 (6 Oct 2026, AUD-131): a key address (no inbox) is minted by the server, never typed. Typed by a
+            # stranger it created a signed-in account nobody can reach -- the thing EMAIL-ANCHOR-1 / AUDIT-Q1 forbid.
             raise HTTPException(status_code=400, detail="Please type an email address we can reach you on.")
         if not sess:
             # QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): the abuse cap follows the typed address, not the
@@ -5857,6 +5862,7 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
     update.title, update.description, _scrubbed = _private_text_scrub(
         update.title, update.description, "", "edit #%s" % listing_id,
         update.suburb or "")   # E2E-HMI-1 + ANON-NAMES-1 (the typed area is checked, not trusted)
+    _private_fields_scrub(update, "", "edit #%s" % listing_id)   # FIELD-SCRUB-1 (AUD-117)
     if update.area:
         update.area, _an = _anon_names_area(update.area, update.suburb or "", "", "edit #%s" % listing_id)   # ANON-NAMES-1
     # AUDIT-AUTH-1 (23 Sep 2026): the editor is the proven session (RUL-135), not the typed ?email=.
@@ -13824,6 +13830,7 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
     listing.description = _plain_text(listing.description)
     listing.title, listing.description, _lm_scrubbed = _private_text_scrub(
         listing.title, listing.description, _lm_seller, "lm-create")
+    _private_fields_scrub(listing, _lm_seller, "lm-create")   # FIELD-SCRUB-1 (AUD-117)
     launch_redemption.check_listing_velocity(_lm_seller)
     conn = database.get_db()
     err = _lm_check_seller_can_publish(conn, listing.seller_email)
@@ -15510,6 +15517,7 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
 class EmployerConfirmReq(BaseModel):
     token: str
     worked_from: Optional[str] = None     # free text, e.g. "2019" - never published
+    relation: Optional[str] = None        # COWORKER-VOUCH-1: 'employer' (default) | 'coworker' - never published
 
 
 @app.get("/trust/employer-link")
@@ -15630,9 +15638,13 @@ def trust_employer_confirm(req: EmployerConfirmReq, ts_user: str = Cookie(defaul
         return JSONResponse(status_code=401, content={"detail": "Please sign in to TrustSquare first (it is free), then open this link again - a confirmation only counts from a signed-in person.", "code": "signin_required"})
     if _confirmer == (email or "").strip().lower():
         raise HTTPException(status_code=403,
-                            detail="This link is for someone you have worked for - you cannot confirm yourself.")
+                            detail="This link is for someone you have worked for or with - you cannot confirm yourself.")
     _who = hashlib.sha256(_confirmer.encode("utf-8")).hexdigest()[:12]
-    note = ("Confirmed by a previous employer via the seller's own link"
+    # COWORKER-VOUCH-1 (David, 6 Oct 2026: "anyone can unlock a worker who was identified as an employer or coworker"):
+    # the person she sent her own link to may have employed her or worked beside her -- either yes is the same
+    # third-party vouch (same signal, same points) and opens the RUL-115 gate. Only the private note says which.
+    _rel = "a co-worker" if str(req.relation or "").strip().lower() == "coworker" else "a previous employer"
+    note = ("Confirmed by " + _rel + " via the seller's own link"
             + (" - worked from " + str(req.worked_from)[:40] if req.worked_from else "")
             + ". The confirmer is never named or published.")
     conn = database.get_db()
@@ -23542,12 +23554,10 @@ def get_flags(ts_review: str = Cookie(default=None)):
             out["effective"]["lang_layer_tester"] = True
     except Exception:
         pass
-    # HELP-LINK-1 (29 Sep 2026, David: "I like it Claude, please link it."): the story guides at /help/ are
-    # linked from Quick for TESTERS only while they are drafts -- the public app is unchanged.
-    try:
-        out["effective"]["help_guides"] = bool(_is_tester_cookie(ts_review))
-    except Exception:
-        out["effective"]["help_guides"] = False
+    # HELP-LINK-1 (29 Sep 2026, David: "I like it Claude, please link it."): the story guides at /help/ were
+    # linked from Quick for TESTERS only while they were drafts.
+    # HELP-PUBLIC-1 (6 Oct 2026, David: "Please switch the how guides on for all"): Quick's How opens for everyone.
+    out["effective"]["help_guides"] = True
     return out
 
 
@@ -30530,19 +30540,28 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
     #   (b) the email fallback - 20s worst case - is moved OFF the request entirely.
     devices = _push_to_seller(conn, receiver, name, text, timeout=BUZZ_PUSH_TIMEOUT)
     channel = "push" if devices else ""
-    if not devices:
+    if not devices and _is_key_identity(receiver):
+        # BUZZ-NOINBOX-1 (6 Oct 2026, AUD-090): a key identity (phone code, private link) has no inbox, so with no push
+        # device there is nothing that can carry the buzz. The sender is told so ('none') instead of 'it went to
+        # their email' -- _send_html_email skips key identities, so that answer was never true.
+        channel = ""
+    elif not devices:
         # RUL-122's backup. Never SMS. Queued, not awaited: the sender is told it is
         # going by email and the request returns without waiting for a mail provider.
         channel = "email"
         _bz_html = ("<p style=\"font:16px/1.5 system-ui,sans-serif\"><b>" + _buzz_esc(name)
                     + "</b> buzzed you:</p><p style=\"font:20px/1.4 system-ui,sans-serif\">"
-                    + _buzz_esc(text) + "</p>")
-        # BUZZ-REPLY-1 (27 Sep 2026, Ripple E2E step 17): a reply to the buzz email reached support, not
-        # the person who buzzed. Both sides switched Buzz on for each other, so the reply goes to the sender
-        # (a key identity has no inbox -- then it stays with support).
+                    + _buzz_esc(text) + "</p>"
+                    + "<p style=\"font:14px/1.5 system-ui,sans-serif;color:#555\">Answer in TrustSquare: My Space "
+                    "&rarr; Buzz. A reply to this e-mail reaches TrustSquare, not " + _buzz_esc(name) + ".</p>")
+        # BUZZ-ANON-2 (6 Oct 2026, AUD-127, RUL-171(d)): BUZZ-REPLY-1 (27 Sep) put the SENDER's address in Reply-To,
+        # so the receiver saw it -- RUL-171(d) says no private information of either side is ever divulged. Reply-To
+        # stays TrustSquare's own; the answer goes back through Buzz, where both sides already talk by member ID.
         background_tasks.add_task(_send_html_email, receiver, "Buzz from " + name,
-                                  _bz_html, name + " buzzed you: " + text,
-                                  None if _is_key_identity(sender) else sender)
+                                  _bz_html, name + " buzzed you: " + text
+                                  + "\n\nAnswer in TrustSquare: My Space > Buzz. A reply to this e-mail reaches "
+                                  "TrustSquare, not " + name + ".",
+                                  None)
     conn.execute("""INSERT INTO buzz_log (pair_id, from_email, to_email, body, channel, devices)
                     VALUES (?, ?, ?, ?, ?, ?)""",
                  (row["id"], sender, receiver, text, channel or "none", devices))
@@ -31623,6 +31642,38 @@ def _private_text_scrub(title, desc, who="", where="", place=""):
         _t, _d, _nh = _anon_names_scrub(out[0], out[1], place, who, where)
         out = [_t, _d]; hits.extend(_nh)
     return out[0], out[1], sorted(set(hits))
+
+
+# FIELD-SCRUB-1 (6 Oct 2026, Quick casuals audit F1 / AUD-117): E2E-HMI-1 scrubbed only title and description, so
+# 'Mamelodi - call 082 555 1234' typed into the area, price or availability went live and buyers reached the seller
+# without an introduction. The same conservative regex (phones, e-mail, web addresses, handles, street addresses --
+# never prices, sizes or suburb names) now runs on every short free-text field a buyer sees. Regex only: the names
+# pass would eat suburb names, which are the point of these fields.
+_FIELD_SCRUB_KEYS = ("price", "area", "suburb", "availability", "subject", "level", "mode", "service_type",
+                     "variant", "colour", "condition", "body_type", "collectible_type", "era_year", "make", "model")
+
+
+def _private_fields_scrub(obj, who="", where=""):
+    """Scrub contact details out of the short free-text fields of a Listing / ListingUpdate in place.
+    Returns the hit labels. Never raises; an untouched field is left byte-for-byte as it was."""
+    hits = []
+    for k in _FIELD_SCRUB_KEYS:
+        try:
+            v = getattr(obj, k, None)
+        except Exception:
+            continue
+        if not isinstance(v, str) or not v.strip():
+            continue
+        clean, h = _anon_regex_clean(v)
+        if h:
+            hits.extend(h)
+            try:
+                setattr(obj, k, clean)
+            except Exception:
+                pass
+    if hits:
+        _log.info("FIELD-SCRUB-1 contact scrub (%s) for %s: %s", where, who, sorted(set(hits)))
+    return sorted(set(hits))
 
 
 def _plain_text(v):

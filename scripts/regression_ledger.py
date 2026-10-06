@@ -32199,8 +32199,10 @@ def rg_ripple_rerun_1():
     bad = []
     if "CONFIRM-SIGNIN-1" not in cf or "/auth/verify-code" not in cf or "signin_required" not in cf:
         bad.append("the reference page no longer signs a confirmer in on the page")
-    if "None if _is_key_identity(sender) else sender" not in bea or "reply_to or os.getenv(\"SUPPORT_REPLY_TO\"" not in bea:
-        bad.append("a Buzz email reply goes to support again (BUZZ-REPLY-1)")
+    # AMENDED 6 Oct 2026 (BUZZ-ANON-2, RUL-171(d)): the buzz e-mail no longer carries the sender's address in Reply-To;
+    # it tells the receiver to answer in TrustSquare (My Space > Buzz) instead. That is the dead end this row guards.
+    if "BUZZ-ANON-2" not in bea or "Answer in TrustSquare: My Space" not in bea or "None if _is_key_identity(sender) else sender" in bea:
+        bad.append("a Buzz e-mail again exposes the sender's address, or no longer says where to answer (BUZZ-ANON-2)")
     if "const recv = []" in js or "RECV-REAL-1" not in js or "_introAnswerPut(introId, accept)" not in js:
         bad.append("My Space received introductions are a placeholder or Accept is a toast again (RECV-REAL-1)")
     if "function _aiPrefill" not in js:
@@ -32733,8 +32735,9 @@ def rg_help_link_1():
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = []
     i = b.find('@app.get("/flags")'); seg = b[i:i + 2200] if i >= 0 else ""
-    if 'out["effective"]["help_guides"] = bool(_is_tester_cookie(ts_review))' not in seg:
-        bad.append("/flags no longer ties help_guides to the tester cookie -- the draft guides would reach the public, or nobody")
+    # AMENDED 6 Oct 2026 (HELP-PUBLIC-1, David: "Please switch the how guides on for all"): How is for everyone now.
+    if 'out["effective"]["help_guides"] = True' not in seg or "HELP-PUBLIC-1" not in seg:
+        bad.append("/flags no longer opens How for everyone (HELP-PUBLIC-1)")
     # HELP-SWAP-1 (29 Sep 2026, David's review): the floating pill became a "How" button in the top bar that swaps the
     # guide in place -- the tester-only rule this entry locks is unchanged; the needles follow the new code.
     for need in ("function qHelpButton(", "f.effective.help_guides) qHelpButton()", "bar.insertBefore(b",
@@ -32745,7 +32748,7 @@ def rg_help_link_1():
         bad.append("genie/HARNESS.html differs from quick.html")
     if bad:
         return [(FAIL, "; ".join(bad))]
-    return [(INFO, "testers see How it works in Quick; it opens the guide for the picked work in a new tab")]
+    return [(INFO, "everyone sees How in Quick (HELP-PUBLIC-1); it opens the guide for the picked work at her step")]
 
 
 @entry("RG-0548", "HELP-SWAP-1: Quick's 'How' sits in the top bar (covers nothing) and swaps the guide in place, opened at the "
@@ -36497,6 +36500,137 @@ def rg_trust_overview_sync_1():
     if "getElementById('ms-stat-trust')" not in js[i:i + 1200]:
         return [(FAIL, "msRenderTrust no longer updates the Overview trust tile -- the two numbers can disagree again")]
     return [(INFO, "Overview and Trust card are written by the same render")]
+
+
+@entry("RG-0896", "FIELD-SCRUB-1 (6 Oct 2026, AUD-117): a phone number, e-mail or street address typed into an advert's area, "
+       "price, availability or any other short text field is scrubbed before it goes live -- not only title and description",
+       LOCKED, fixed_on="2026-10-06",
+       scope="bea_main.py _private_fields_scrub, called by POST /listings, PUT /listings/{id} and the Local Market create",
+       ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_field_scrub_1():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "def _private_fields_scrub(" not in b or b.count("_private_fields_scrub(") < 4:
+        return [(FAIL, "the short-field contact scrub is gone or no longer called on create, edit and Local Market create")]
+    i = b.find("def _private_fields_scrub("); seg = b[i - 900:i]
+    for k in ('"price"', '"area"', '"suburb"', '"availability"'):
+        if k not in seg:
+            return [(FAIL, "the scrub no longer covers %s" % k)]
+    return [(INFO, "contact details are scrubbed from every short free-text field on create and edit")]
+
+
+@entry("RG-0897", "BUZZ-ANON-2 + BUZZ-NOINBOX-1 (6 Oct 2026, AUD-127 / AUD-090): a Buzz e-mail never carries the sender's "
+       "address (RUL-171(d)) and says where to answer; a buzz to an inbox-less key account with no push is reported as "
+       "not delivered, never as 'went to their email'",
+       LOCKED, fixed_on="2026-10-06",
+       scope="bea_main.py POST /buzz e-mail fallback; ms.js the Buzz 'Sent as' line",
+       ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_buzz_anon_2():
+    b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if None in (b, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "None if _is_key_identity(sender) else sender" in b:
+        bad.append("the buzz e-mail puts the sender's address in Reply-To again")
+    if "if not devices and _is_key_identity(receiver):" not in b:
+        bad.append("a buzz to an inbox-less key account is reported as e-mailed again")
+    if "BUZZ-NOINBOX-1 (AUD-090)" not in js:
+        bad.append("the sender is no longer told the buzz could not be carried")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "buzz e-mail is anonymous; an undeliverable buzz says so")]
+
+
+@entry("RG-0898", "SVC-FILTER-MATCH-1 (6 Oct 2026, AUD-173 class): TrustSquare's Services filters match Quick adverts by "
+       "meaning -- 'Weekdays' finds 'Mon, Wed, Fri', 'Domestic' finds 'Home cleaner', an area finds a multi-area advert",
+       LOCKED, fixed_on="2026-10-06",
+       scope="ms.js _svcTypeMatches / _svcAvailMatches / _svcAreaMatches in the Services branch of the grid filter",
+       ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_svc_filter_match_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "l.availability !== fv.availability" in js or "l.suburb !== fv.area" in js:
+        return [(FAIL, "the Services filter compares exact text again -- Quick adverts vanish behind a filter")]
+    for need in ("function _svcAvailMatches(", "function _svcAreaMatches(", "function _svcTypeMatches(",
+                 "!_svcAvailMatches(l.availability, fv.availability)"):
+        if need not in js:
+            return [(FAIL, "Services filter matcher missing: " + need)]
+    return [(INFO, "Services filters read Quick's words by meaning")]
+
+
+@entry("RG-0899", "GATE-WORDS-2 (6 Oct 2026, AUD-208): Quick's saved screen names the role's own gate first -- a licensed "
+       "trade or a car/security guard is told the licence is checked, never 'People can find it now' or that an employer unlocks it",
+       LOCKED, fixed_on="2026-10-06", scope="quick.html arrival screen (publishNow gate line)", ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_gate_words_2():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "GATE-WORDS-2" not in q or "_gr.gate==='licence'" not in q:
+        return [(FAIL, "the saved screen no longer checks the licence gate before the Casuals wording")]
+    return [(INFO, "licence-gated roles are told their licence is checked")]
+
+
+@entry("RG-0900", "LOGO-LIGHT-1 (6 Oct 2026, casuals audit F6 / L16): the app logo is a 17 KB SVG, not the 183 KB PNG that "
+       "every landing from Quick downloaded first",
+       LOCKED, fixed_on="2026-10-06",
+       scope="marketsquare.html (4 logo images), static/brand/logo-white.svg, ops/autodeploy/deploy_manifest.txt", ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_logo_light_1():
+    h = repo_file("marketsquare.html"); m = repo_file("ops/autodeploy/deploy_manifest.txt"); svg = repo_file("static/brand/logo-white.svg")
+    if None in (h, m):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "logo-white-400.png" in h:
+        bad.append("marketsquare.html loads the 183 KB logo PNG again")
+    if "static/brand/logo-white.svg" not in m:
+        bad.append("the light logo no longer rides the deploy manifest")
+    if svg is None or len(svg) > 40000:
+        bad.append("static/brand/logo-white.svg missing or heavy")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the landing loads a 17 KB logo")]
+
+
+@entry("RG-0901", "ROLE-FIND-STRICT-1 (6 Oct 2026, casuals audit): Quick's Find judges a Services advert that names its "
+       "trade on its title and trade -- an electrician's 'domestic work' no longer answers a Home cleaner search",
+       LOCKED, fixed_on="2026-10-06", scope="quick.html typeFilter", ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_role_find_strict_1():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "ROLE-FIND-STRICT-1" not in q:
+        bad.append("Find reads a tradesman's whole description again")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Find matches the trade")]
+
+
+@entry("RG-0902", "KEY-TYPED-1 (6 Oct 2026, AUD-131): a typed @key.trustsquare.co address is refused at Quick's save -- key "
+       "accounts are minted by the server, never typed by a stranger",
+       LOCKED, fixed_on="2026-10-06", scope="bea_main.py POST /listings/quick-publish e-mail branch", ref="David 6 Oct 2026 06:40 on the Quick casuals audit: 'please fix all of the faults'.")
+def rg_key_typed_1():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "KEY-TYPED-1" not in b or "if not sess and _is_key_identity(em):" not in b:
+        return [(FAIL, "a typed key address can make a signed-in inbox-less account again")]
+    return [(INFO, "typed key addresses are refused")]
+
+
+@entry("RG-0903", "COWORKER-VOUCH-1 (RUL-209, 6 Oct 2026): the person a worker sends her own link to may confirm her as an "
+       "employer OR a co-worker; either yes is the same vouch and opens the RUL-115 gate",
+       LOCKED, fixed_on="2026-10-06",
+       scope="confirm.html (two Yes buttons, relation sent); bea_main.py EmployerConfirmReq.relation + the private note; "
+             "ms.js Hub and reference wording 'worked for or with'",
+       ref="David 6 Oct 2026: 'anyone can unlock a worker who was identified as an employer or coworker'.")
+def rg_coworker_vouch_1():
+    c = repo_file("confirm.html"); b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if None in (c, b, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'id="yesco"' not in c or "relation: (window._tsRel" not in c:
+        bad.append("the confirm page lost the co-worker yes")
+    if "relation: Optional[str] = None" not in b or "COWORKER-VOUCH-1" not in b:
+        bad.append("the server no longer accepts a co-worker confirmation")
+    if "worked for or with" not in js:
+        bad.append("the worker is no longer told a co-worker can confirm her")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "an employer or a co-worker can vouch through her link")]
 
 
 def _server_vantage_wrap():

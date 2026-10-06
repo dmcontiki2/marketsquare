@@ -55,15 +55,18 @@
   <div id="load"><p>Opening the request…</p></div>
 
   <div id="ask" class="hide">
-    <h1><span id="who">Someone</span> has asked you to confirm that they worked for you.</h1>
+    <!-- COWORKER-VOUCH-1 (David, 6 Oct 2026: "anyone can unlock a worker who was identified as an employer or
+         coworker"): the person she sends her link to may have employed her OR worked beside her. -->
+    <h1><span id="who">Someone</span> has asked you to confirm that you know their work.</h1>
     <p>This costs you <b>nothing</b> and takes one tap. You are only saying that this person
-       did work for you, which is the one thing a stranger cannot say for them.</p>
+       worked for you, or worked with you, which is the one thing a stranger cannot say for them.</p>
     <label for="yrs">From roughly when? (optional)</label>
     <input id="yrs" class="yrs" type="text" inputmode="numeric" placeholder="e.g. 2019" maxlength="20">
     <button class="yes" id="yes">Yes, they worked for me</button>
+    <button class="yes" id="yesco">Yes, I worked with them</button>
     <button class="no" id="no">I would rather not</button>
     <p class="fine">Your name and address are never asked for, never stored and never shown.
-       Their listing will say only that someone they worked for confirmed them.</p>
+       Their listing will say only that someone who knows their work confirmed them.</p>
   </div>
 
   <!-- CONFIRM-SIGNIN-1 (27 Sep 2026, Ripple E2E step 14): a confirmation counts only from a signed-in
@@ -213,18 +216,19 @@
       .then(function(res){
         b.disabled = false; b.textContent = 'Confirm';
         if(!res.ok){ fine((res.j && res.j.detail) || 'That code did not work \u2014 send yourself a new one.'); return; }
-        sendYes(document.getElementById('yes'));
+        sendYes(window._tsBtn || document.getElementById('yes'));
       })
       .catch(function(){ b.disabled = false; b.textContent = 'Confirm'; fine('No connection just now.'); });
   };
   var sendYes = function(b){
     b.disabled = true; b.textContent = 'Recording…';
     fetch('/trust/employer-confirm', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({token: token, worked_from: (document.getElementById('yrs').value||'').trim()})})
+      body: JSON.stringify({token: token, worked_from: (document.getElementById('yrs').value||'').trim(),
+                            relation: (window._tsRel || 'employer')})})   /* COWORKER-VOUCH-1 */
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j, st:r.status}; }); })
       .then(function(res){
         if(!res.ok && res.st === 401 && res.j && res.j.code === 'signin_required'){
-          b.disabled = false; b.textContent = 'Yes, they worked for me'; show('signin'); return;
+          b.disabled = false; b.textContent = (b.id==='yesco' ? 'Yes, I worked with them' : 'Yes, they worked for me'); show('signin'); return;
         }
         if(!res.ok){
           document.getElementById('baderr').textContent = (res.j && res.j.detail) || 'That did not go through.';
@@ -236,7 +240,7 @@
         show('done');
         askName();
       })
-      .catch(function(){ b.disabled=false; b.textContent='Yes, they worked for me'; });
+      .catch(function(){ b.disabled=false; b.textContent=(b.id==='yesco' ? 'Yes, I worked with them' : 'Yes, they worked for me'); });
   };
   /* STORY-WALK-FIX-1: a first name, asked once, only when the account has none yet */
   var askName = function(){
@@ -259,7 +263,8 @@
         else { b.disabled = false; b.textContent = 'Save my first name'; document.getElementById('nmwhy').textContent = 'That did not save \u2014 please try again.'; }
       }).catch(function(){ b.disabled = false; b.textContent = 'Save my first name'; });
   };
-  document.getElementById('yes').onclick = function(){ sendYes(this); };
+  document.getElementById('yes').onclick = function(){ window._tsRel='employer'; window._tsBtn=this; sendYes(this); };
+  document.getElementById('yesco').onclick = function(){ window._tsRel='coworker'; window._tsBtn=this; sendYes(this); };   /* COWORKER-VOUCH-1 */
 })();
 </script>
 <script src="/static/ts_report.js?v=7" defer></script>

@@ -5469,11 +5469,10 @@ function renderGrid(){
       if(fv.maxRate && l.priceNum > parseInt(fv.maxRate)) return false;
       if(fv.serviceClass && fv.serviceClass!=='' && l.service_class !== fv.serviceClass) return false;
       if(fv.serviceType && fv.serviceType!==''){   // AUD-039: live adverts carry service_type (Quick sends the role label there)
-        const _st = String(l.service_type || l.serviceType || '').toLowerCase(), _want = String(fv.serviceType).toLowerCase();
-        if(!_st || (_st !== _want && _st.indexOf(_want) < 0 && _want.indexOf(_st) < 0)) return false;
+        if(!_svcTypeMatches(l, fv.serviceType)) return false;   // SVC-FILTER-MATCH-1
       }
-      if(fv.availability && fv.availability!=='' && l.availability !== fv.availability) return false;
-      if(fv.area && fv.area!=='' && l.suburb !== fv.area) return false;
+      if(fv.availability && fv.availability!=='' && !_svcAvailMatches(l.availability, fv.availability)) return false;   // SVC-FILTER-MATCH-1
+      if(fv.area && fv.area!=='' && !_svcAreaMatches(l, fv.area)) return false;   // SVC-FILTER-MATCH-1
     }
 
     if(l.cat==='Adventures'){
@@ -12030,7 +12029,7 @@ function msHiddenCasualNote(lid, raw){
   }
   return '<div class="ms-hidden-note" style="margin:8px 0;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:11px;padding:10px 12px;">'
     + '<div style="font-size:12.5px;font-weight:700;color:#92400e;">Only people you send your link to can see this listing</div>'
-    + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
+    + '<div style="font-size:12px;color:#78350f;margin:3px 0 8px;line-height:1.45;">Strangers see it once one person you have worked for or with confirms you (one tap for them), or once your ID is checked. This keeps you safe.</div>'
     + '<button class="mla-btn accent" style="width:100%;padding:9px;font-size:12.5px;" onclick="msEmployerLinkCard(this)">Get my link for someone I worked for</button></div>';
 }
 /* LICENCE-SHOWN-1 (RUL-198): a driver's advert is public; her card says what buyers see until her licence is checked. */
@@ -17011,7 +17010,8 @@ async function buzzRender(){
           + (j.delivered==='push' ? ('it buzzed ' + _lmEsc(p.other_name) + '\'s phone.')
             : j.delivered==='email' ? (_lmEsc(p.other_name) + ' has no push on this account, so it went to '
                 + 'their email.')
-            : 'nothing could carry it — check with them directly.')
+            : (_lmEsc(p.other_name) + ' cannot receive buzzes yet: no push on their phone and no e-mail on the account. '
+                + 'Ask them to switch on \u2018Let TrustSquare buzz this phone\u2019 in My Space \u2192 Buzz.'))   // BUZZ-NOINBOX-1 (AUD-090)
           + '</div>';
       }catch(e){
         said.innerHTML = '<div class="bz-said bad">' + _lmEsc(e.message) + '</div>';
@@ -17019,6 +17019,45 @@ async function buzzRender(){
       btn.disabled = false; btn.textContent = 'Buzz';
     };
   });
+}
+
+// ── SVC-FILTER-MATCH-1 (6 Oct 2026, Quick casuals audit F4 / AUD-173 class) ─────────────────────────────────────
+// The Services filter sheet offers broad words ('Weekdays', 'Domestic', 'Child Minding', one suburb) while Quick saves
+// what she said ('Mon, Wed, Fri', 'Home cleaner', 'Nanny', 'Mamelodi, Pretoria East'). Exact-text compares hid every
+// Quick advert the moment a buyer touched a filter. These match by meaning: a day she named answers its group, a role
+// answers its trade family, and an area matches any of the areas she listed.
+const _SVC_TYPE_WORDS = {
+  'electrical':['electric'], 'plumbing':['plumb','geyser','drain'], 'hvac':['hvac','air-con','air con','aircon','refrigerat'],
+  'solar':['solar','inverter'], 'it & tech':['it ','it/','network','computer','cctv','tech'], 'legal':['legal','attorney','lawyer'],
+  'financial':['financ','account','bookkeep','tax'], 'landscaping':['landscap','garden','paving','tree'],
+  'domestic':['cleaner','housekeep','domestic','laundry','ironing','cook','window','carpet'],
+  'gardening':['garden','tree','pool','lawn','grass'], 'dog walking':['dog','pet'],
+  'child minding':['nanny','au pair','crèche','creche','child','babysit'],
+  'general labour':['labour','labourer','moving','removal','loader','handyman','assistant','painter','builder','general']
+};
+function _svcTypeMatches(l, want){
+  const st = String(l.service_type || l.serviceType || '').toLowerCase(), w = String(want || '').toLowerCase();
+  if(!w) return true;
+  if(!st) return false;
+  if(st === w || st.indexOf(w) >= 0 || w.indexOf(st) >= 0) return true;
+  return (_SVC_TYPE_WORDS[w] || []).some(function(k){ return st.indexOf(k) >= 0; });
+}
+function _svcAvailMatches(avail, want){
+  const a = String(avail || '').toLowerCase(), w = String(want || '').toLowerCase();
+  if(!w || w === 'any') return true;
+  if(!a) return false;
+  if(a === w) return true;
+  const anyDay = /every ?day|7 days|flexib|negotiab|any ?day|daily/.test(a);
+  if(w.indexOf('weekday') === 0) return anyDay || /weekday|mon|tue|wed|thu|fri/.test(a);
+  if(w.indexOf('weekend') === 0) return anyDay || /weekend|sat|sun/.test(a);
+  if(w.indexOf('emergenc') === 0) return /emergenc|24 ?h|24\/7|after.?hours|call.?out/.test(a);
+  return a.indexOf(w) >= 0;
+}
+function _svcAreaMatches(l, want){
+  const w = String(want || '').toLowerCase().trim();
+  if(!w || w === 'any') return true;
+  const parts = [l.suburb, l.area].filter(Boolean).join(',').toLowerCase().split(/[,;\/]+/).map(function(x){ return x.trim(); });
+  return parts.some(function(x){ return x && (x === w || x.indexOf(w) >= 0 || w.indexOf(x) >= 0); });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -19827,7 +19866,7 @@ async function msAskAI(){
               var box = document.createElement('div');
               box.style.cssText = 'margin-top:11px;';
               box.innerHTML =
-                  '<div style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;">Send this to someone you have worked for. They tap Yes \u2014 that is all. Their name is never shown anywhere.</div>'
+                  '<div style="font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5;">Send this to someone you have worked for or with. They tap Yes \u2014 that is all. Their name is never shown anywhere.</div>'
                 + '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:9px;padding:9px 10px;font-size:11.5px;word-break:break-all;color:#374151;">' + j.url + '</div>'
                 + '<div style="display:flex;gap:7px;margin-top:8px;">'
                 +   '<a id="tn-emp-wa" href="https://wa.me/?text=' + encodeURIComponent(msg) + '" target="_blank" rel="noopener"'

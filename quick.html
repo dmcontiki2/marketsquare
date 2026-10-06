@@ -3452,11 +3452,16 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
        her, so the live line says when it shows. Each sentence is its own node, so the language layer translates both. */
     var gate='';
     try{
-      if(live && catOut(cat()).service_class==='Casuals'){
-        var _gw=pickOf('what'), _gr=(_gw && _gw.r) ? svcRole(_gw.r) : null;
-        gate=(_gr && _gr.gate==='police_clearance')
-          ? 'It shows in searches once your police clearance is verified in TrustSquare.'
-          : 'It shows in searches once an employer has confirmed you or your ID is verified in TrustSquare.';
+      /* GATE-WORDS-2 (6 Oct 2026, AUD-208): the role's own gate decides first, in both classes -- a licensed trade
+         (electrician, gas, driver, PSIRA guard) waits for its licence check, as the draft screen already said, and is
+         never told 'People can find it now' or that an employer unlocks it. Same sentences, already translated. */
+      var _gw=live ? pickOf('what') : null, _gr=(_gw && _gw.r) ? svcRole(_gw.r) : null;
+      if(live && _gr && _gr.gate==='licence'){
+        gate='It shows in searches once your licence is checked in TrustSquare.';
+      } else if(live && _gr && _gr.gate==='police_clearance'){
+        gate='It shows in searches once your police clearance is verified in TrustSquare.';
+      } else if(live && catOut(cat()).service_class==='Casuals'){
+        gate='It shows in searches once an employer has confirmed you or your ID is verified in TrustSquare.';
       }
     }catch(_){ gate=''; }
     var next = (live && gate) ? '<span>'+qTr(gate)+'</span> <span>'+qTr('Your name and number stay private until you accept an introduction.')+'</span>'
@@ -4067,7 +4072,12 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
                 'Tools':/\btools?\b|drill|\bsaws?\b|spanner|hammer|wrench|grinder|equipment|workshop/i};
   window.GROUP_RX=GROUP_RX;
   function groupRx(){ return (cat().key==='localmarket' || (window.svcIs && svcIs(cat()))) ? (GROUP_RX[roleLabel()]||null) : null; }   /* SVC-FIND-1 */
-  function typeFilter(list){ var g=groupRx(); if(g) return list.filter(function(l){ return g.test((l.title||'')+' '+(l.description||'')+' '+(l.service_type||'')); });
+  function typeFilter(list){ var g=groupRx(); if(g) return list.filter(function(l){
+      /* ROLE-FIND-STRICT-1 (6 Oct 2026, casuals audit): a Services advert that names its own trade (service_type) is
+         judged on its title and trade, not its whole text -- "domestic and light commercial work" in an electrician's
+         description made him a Home cleaner match. An advert without a trade is still read in full. */
+      if(window.svcIs && svcIs(cat()) && String(l.service_type||'').trim()) return g.test((l.title||'')+' '+(l.service_type||''));
+      return g.test((l.title||'')+' '+(l.description||'')+' '+(l.service_type||'')); });
     var w=roleLabel(), rx=TYPE_RX[w]; if(!rx || cat().key!=='adventures') return list;
     var want = w==='Game lodge' ? /accommodation/i : /experiences/i;
     /* TRIP-FIND-1 (25 Sep 2026 inspection, quick-04): a trip listed through Quick is filed as 'Adventures' -- it is

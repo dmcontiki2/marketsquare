@@ -1,0 +1,152 @@
+<title>Casuals Wave Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: Quick's own dark-rust ground; a numbered journey rail (the casual's real path) on top, then decisions | faults side by side, then supply numbers. */
+:root{
+  --bg:#17100e; --panel:#21170f; --line:#3a2a20; --fg:#f2e9e2; --muted:#b9a79a;
+  --rust:#c4532a; --green:#3fb37a; --amber:#e3a531; --red:#e2554a; --grey:#7d6f66; --blue:#5aa2d6;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--f-body);}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px 48px;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,5vw,48px);font-weight:800;line-height:1.05}
+h2{font-size:22px;font-weight:800}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.verdict{font-size:19px;max-width:70ch;border-left:5px solid var(--rust);padding:4px 0 4px 16px}
+.verdict b{color:var(--amber)}
+.legend{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.g{background:var(--green)} .a{background:var(--amber)} .r{background:var(--red)} .x{background:var(--grey)} .b{background:var(--blue)}
+/* journey */
+.rail{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;counter-reset:s}
+.st{position:relative;background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:10px;padding:10px 12px 12px;min-width:0}
+.st .n{font:500 12px var(--f-mono);color:var(--c)}
+.st h3{font-size:15px;margin:2px 0 4px}
+.st p{margin:0;font-size:13px;color:var(--muted)}
+.st.g{--c:var(--green);background:var(--panel)} .st.a{--c:var(--amber);background:var(--panel)} .st.r{--c:var(--red);background:var(--panel)} .st.x{--c:var(--grey);background:var(--panel)} .st.b{--c:var(--blue);background:var(--panel)}
+.side{display:flex;gap:6px;align-items:center;font:500 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.side span{padding:2px 8px;border-radius:4px;background:var(--line)}
+/* two columns */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:820px){.cols{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0;display:grid;gap:12px;align-content:start}
+.box.red{border-color:color-mix(in srgb,var(--red) 55%,var(--line))}
+.box.amb{border-color:color-mix(in srgb,var(--amber) 55%,var(--line))}
+.box h2{display:flex;align-items:center;gap:10px}
+.item{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding-top:12px;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0;padding-top:0}
+.tag{font:500 12px var(--f-mono);padding:3px 7px;border-radius:5px;white-space:nowrap;color:#17100e}
+.tag.r{background:var(--red)} .tag.a{background:var(--amber)} .tag.x{background:var(--grey)}
+.item p{margin:0}
+.cost{display:block;margin-top:4px;font-size:13px;color:var(--muted)}
+.ref{font:500 12px var(--f-mono);color:var(--muted)}
+/* supply */
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(0,230px) 1fr auto;gap:12px;align-items:center;font-size:14px}
+@media (max-width:560px){.bar{grid-template-columns:1fr auto}.bar .track{grid-column:1/-1;order:3}}
+.track{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.fill{height:100%;border-radius:7px;background:var(--c)}
+.num{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;min-width:5ch;text-align:right}
+.low{display:grid;gap:8px;margin:0;padding-left:18px;color:var(--muted)}
+.ask{background:color-mix(in srgb,var(--rust) 20%,var(--panel));border:1px solid var(--rust);border-radius:12px;padding:18px;display:grid;gap:8px}
+.ask p{margin:0;max-width:80ch}
+footer{font-size:13px;color:var(--muted);max-width:90ch}
+code{font-family:var(--f-mono);font-size:.9em}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:14px">
+    <div class="eyebrow">TrustSquare Quick · Services → Casuals · audit 6 Oct 2026, 06:00–06:40 SAST</div>
+    <h1>Casuals Wave Readiness</h1>
+    <p class="verdict">Quick lets a casual list herself end to end with no broken step. <b>The wave's outcome depends on two things that are not built into the flow: who unlocks her for strangers, and how many real casuals we can actually reach.</b></p>
+    <div class="legend">
+      <span class="chip"><span class="dot g"></span>Works, walked live today</span>
+      <span class="chip"><span class="dot b"></span>Works, walked in an earlier E2E run</span>
+      <span class="chip"><span class="dot a"></span>Fault to fix before the wave</span>
+      <span class="chip"><span class="dot r"></span>Decision only you can make</span>
+      <span class="chip"><span class="dot x"></span>Waiting on your Buzz test</span>
+    </div>
+  </header>
+
+  <section style="display:grid;gap:12px">
+    <h2>Her path, step by step</h2>
+    <div class="side"><span>Worker</span> Thandi, home cleaner, Mamelodi, Mon/Wed/Fri, R350/day</div>
+    <div class="rail">
+      <div class="st g"><div class="n">1</div><h3>Offer a service</h3><p>Door opens on Services with a work photo.</p></div>
+      <div class="st g"><div class="n">2</div><h3>Kind of work</h3><p>11 groups, one tap.</p></div>
+      <div class="st g"><div class="n">3</div><h3>Which one are you</h3><p>16 Home &amp; care roles shown.</p></div>
+      <div class="st g"><div class="n">4</div><h3>City</h3><p>Taken from her phone's network country.</p></div>
+      <div class="st a"><div class="n">5</div><h3>Areas</h3><p>Works, but Pretoria lists Sandton and Midrand.</p></div>
+      <div class="st g"><div class="n">6</div><h3>Days</h3><p>Tap days or Every day.</p></div>
+      <div class="st g"><div class="n">7</div><h3>Rate</h3><p>Typed; legal floor R241.84/day shown.</p></div>
+      <div class="st g"><div class="n">8</div><h3>Draft</h3><p>60% strong, example photo labelled, 5 languages.</p></div>
+      <div class="st r"><div class="n">9</div><h3>Save</h3><p>Google or e-mail only; no phone route.</p></div>
+      <div class="st g"><div class="n">10</div><h3>Saved</h3><p>"Send it to myself on WhatsApp" and the e-mail link.</p></div>
+      <div class="st b"><div class="n">11</div><h3>Terms + publish</h3><p>Walked 5 Oct (run 30) through to Go live.</p></div>
+      <div class="st r"><div class="n">12</div><h3>Seen by strangers</h3><p>Hidden until an employer confirms her or a person checks her ID.</p></div>
+    </div>
+    <div class="side" style="margin-top:8px"><span>Buyer</span> a family in Mamelodi looking for a cleaner this week</div>
+    <div class="rail">
+      <div class="st g"><div class="n">13</div><h3>Find a pro</h3><p>"Only examples so far", honestly labelled.</p></div>
+      <div class="st a"><div class="n">14</div><h3>Browse filters</h3><p>Availability and Area filters miss Quick adverts.</p></div>
+      <div class="st b"><div class="n">15</div><h3>Intro → accept</h3><p>Walked 2 Oct on the nanny story.</p></div>
+      <div class="st x"><div class="n">16</div><h3>Buzz</h3><p>Your test with Maroushka and Dave jnr.</p></div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div class="box red">
+      <h2><span class="dot r"></span>Your decisions</h2>
+      <div class="item"><span class="tag r">D1</span><p>Name who approves IDs and police clearances, and how fast, because every casual from the wave is invisible to strangers until that happens or a past employer confirms her.<span class="cost">Costs your time or a delegate's; changes no ruling (RUL-115/153 stay); still open in L28 and L32.</span></p></div>
+      <div class="item"><span class="tag r">D2</span><p>Decide whether phone-only casuals without a Google account may sign up by SMS code, because today they cannot save a listing at all.<span class="cost">About R0.20 per sign-up from the R350 BulkSMS credit; amends your 30 Sep ruling that our SMS is for outreach only (RUL-167 already allows phone codes); no schema change.</span></p></div>
+      <div class="item"><span class="tag r">D3</span><p>Decide whether to refill the casuals phone list before the wave, because it holds 47 numbers and about half are employers posting vacancies.<span class="cost">A scrape run of Gumtree's job-seeker ads; no money; no ruling changed.</span></p></div>
+      <div class="item"><span class="tag r">D4</span><p>Decide whether Quick's How guides go public for the wave, because the cleaner guide already covers 38 casual roles but only testers can see it.<span class="cost">Free; widens HELP-LINK-1 (29 Sep: testers only while drafts).</span></p></div>
+    </div>
+
+    <div class="box amb">
+      <h2><span class="dot a"></span>Faults to fix before sending</h2>
+      <div class="item"><span class="tag a">F1</span><p>A phone number typed into area, price or availability goes live unscrubbed, so buyers can skip the introduction. <span class="ref">AUD-117</span></p></div>
+      <div class="item"><span class="tag a">F2</span><p>A Buzz sent by e-mail puts the buzzer's real address in Reply-To, which breaks RUL-171(d) and will show in your Buzz test if either side has no push on. <span class="ref">AUD-127</span></p></div>
+      <div class="item"><span class="tag a">F3</span><p>A Buzz to a phone or link account without push is reported as e-mailed but nothing is sent, which bites the day SMS codes go on. <span class="ref">AUD-090</span></p></div>
+      <div class="item"><span class="tag a">F4</span><p>TrustSquare's Services filter matches exact words, so "Weekdays" never finds a Quick advert saved as "Mon, Wed, Fri". <span class="ref">AUD-173 class</span></p></div>
+      <div class="item"><span class="tag a">F5</span><p>Car guards and security guards are told an employer or ID unlocks them, while the server waits for their PSIRA card. <span class="ref">AUD-208</span></p></div>
+      <div class="item"><span class="tag a">F6</span><p>The hand-over into TrustSquare takes 6 s on fast 3G and 22 s on slow 3G, which is where cheap-data phones will drop off. <span class="ref">L16</span></p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>Who the wave can reach, and what a buyer will find</h2>
+    <div class="bars">
+      <div class="bar"><span>Real casual adverts live, any city</span><div class="track"><div class="fill" style="--c:var(--red);width:0%"></div></div><span class="num">0</span></div>
+      <div class="bar"><span>AI example casual adverts (Pretoria only)</span><div class="track"><div class="fill" style="--c:var(--grey);width:.3%"></div></div><span class="num">3</span></div>
+      <div class="bar"><span>Gumtree "casuals" phone numbers</span><div class="track"><div class="fill" style="--c:var(--amber);width:4.3%"></div></div><span class="num">47</span></div>
+      <div class="bar"><span>… of which look like employers or junk</span><div class="track"><div class="fill" style="--c:var(--red);width:2.1%"></div></div><span class="num">~23</span></div>
+      <div class="bar"><span>Gumtree "services" phone numbers (mostly trades)</span><div class="track"><div class="fill" style="--c:var(--green);width:82%"></div></div><span class="num">887</span></div>
+      <div class="bar"><span>All Gumtree numbers ready to text</span><div class="track"><div class="fill" style="--c:var(--blue);width:100%"></div></div><span class="num">1,080</span></div>
+      <div class="bar"><span>BulkSMS credits left</span><div class="track"><div class="fill" style="--c:var(--blue);width:93%"></div></div><span class="num">1,004</span></div>
+    </div>
+    <p style="margin:0;color:var(--muted);font-size:14px">At the 40-a-day SMS cap, the full 1,080 takes 27 days, and the credit runs out 76 texts short.</p>
+  </section>
+
+  <section class="box">
+    <h2><span class="dot x"></span>Small things</h2>
+    <ul class="low">
+      <li>Find a pro → Home cleaner shows an electrician among the AI examples.</li>
+      <li>Anyone can make an inbox-less account by typing an unused <code>@key.trustsquare.co</code> address (AUD-131).</li>
+      <li>No script errors on any Quick screen walked, in English or isiZulu.</li>
+    </ul>
+  </section>
+
+  <section class="ask">
+    <div class="eyebrow" style="color:var(--fg)">One yes from you</div>
+    <p><b>Fix F1–F5 now and ship them in one deploy once the other lanes are quiet?</b> It changes no ruling, no cost and no schema; F2 means replies to a Buzz e-mail go to support instead of the buzzer, which is what RUL-171(d) already requires.</p>
+  </section>
+
+  <footer>How this was checked: the live <code>trustsquare.co/quick/</code> walked on a 390&nbsp;px phone in headless Chrome, every write intercepted so nothing was created; the live listings API read for supply; the current code (release f8689aa, 6 Oct 05:45) read for each fault, all still present; the CityLauncher prospect store read for the phone pool; earlier E2E reports for steps 11 and 15.</footer>
+</div>
