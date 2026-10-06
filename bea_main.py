@@ -3136,6 +3136,13 @@ def health():
         body["db"] = _tsl_dbproof()
     except Exception:
         body["db"] = {"reason": "unavailable"}
+    try:   # PLATE-DETECTOR-1: is the local number-plate detector loaded?
+        import plate_detector as _pdm
+        _pdm.available(); _ps = _pdm.status()
+        body["plate_detector"] = {"ready": bool(_ps.get("ready")), "why": _ps.get("why") or "",
+                                  "calls": _ps.get("calls"), "avg_ms": _ps.get("avg_ms")}
+    except Exception as _pe:
+        body["plate_detector"] = {"ready": False, "why": "module missing: %r" % (_pe,)}
     return body
 
 
@@ -6479,6 +6486,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
         return img, "scan-off"
     _check_cost_ceiling(spend_who)   # C1 rail — 429 over the daily ceiling
     import base64 as _b64
+    img, _pre = _anon_plate_preblur(img, category)   # PLATE-DETECTOR-1 stage 0: plates blurred BEFORE the LLM looks
     probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
     pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
     scan, _it, _ot, _svd = _anon_photo_scan(
@@ -6520,6 +6528,12 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
         _hints = _SUBJECT_HINTS.get((category or "").strip().lower())
         if _hints and not any(hh in _subj for hh in _hints):
             _mismatch = "|subject-mismatch:" + _subj[:40]
+    # PLATE-DETECTOR-1 stage 2: a plate the LLM named is located by the detector, blurred, verified.
+    _scan0 = scan
+    img, scan = _anon_plate_takeover(img, scan, _ts_active_provider(), category or "", spend_who,
+                                     "/listings/photo#anon-verify", _pre)
+    _plate_done = bool(_pre) or (scan is not _scan0)
+    labels = ", ".join(sorted(set(scan.get("labels") or []))[:4])
     _retake = ("TrustSquare listings are anonymous — please retake the photo "
                "avoiding number plates, signage and contact details.")
     if scan["verdict"] == "reject":
@@ -6557,6 +6571,8 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
             raise HTTPException(status_code=422,
                 detail="Could not verifiably blur the identifying content. " + _retake)
         return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
+    if _plate_done:
+        return img, "redacted:number plate" + _mismatch
     return img, ("" if not _mismatch else _mismatch.lstrip("|"))
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
@@ -22246,6 +22262,161 @@ def _anon_blur_until_clean(img, scan, provider, category, spend_who, endpoint):
             return img, labels + ["last-resort blur"]
     return None, labels
 
+# ── PLATE-DETECTOR-1 (David, 6 Oct 2026) ──────────────────────────────────────
+# "to load a car and to have AI blur the numberplate, this should be automatic, not
+# blocking the photo or interfering with the lister ... the AI keeps on blotching a big
+# blob which looks very ugly ... I have used other agents myself with no problem."
+#
+# Root cause of the blob (and of the plate slips before it): a general vision LLM was
+# asked to NAME coordinates for the plate. It reads a photo well and measures it badly --
+# boxes land 5-10% of the frame off (listing 246: below the plate), so every layer since
+# (generous boxes, zoom-refine, verify-and-repaint rounds, the last-resort rung) painted
+# more blur on the same photo. The tools that do this easily use a small detector trained
+# for plates. plate_detector.py is that detector (RT-DETRv2, Apache-2.0, ONNX on this
+# box's CPU, zero per-photo cost); it returns the plate to the pixel in one pass.
+#
+# Division of labour from here on:
+#   detector  -> WHERE the plate is (pixel-accurate box), and the plate-shaped blur
+#   LLM       -> everything it is good at: signage, logos, the seller's own label,
+#                inappropriate content, category fit, and the final "is it clean" read
+#
+# Stage 0  _anon_plate_preblur   vehicle categories: find + blur every plate BEFORE the LLM
+#                                scan, so the scan normally comes back "clean" first time.
+# Stage 2  _anon_plate_takeover  the LLM still said "redact" and named a plate: swap its
+#                                guessed box for the detector's box, blur, drop the region,
+#                                and verify once. Anything that is NOT a plate (a signboard,
+#                                a logo) flows into the existing path exactly as before.
+# Fail-safe: no package / no model / any error -> both stages are no-ops and the gate
+# behaves exactly as it did on 5 Oct. RUL-033 (reject-only for the LLM lane) is untouched:
+# the detector lane is the "grounded boxes" that ruling was waiting for.
+_PLATE_VEHICLE_CATS = ("car", "vehicle", "bakkie", "bike", "motor", "boat", "trailer",
+                       "caravan", "truck", "scooter", "quad")
+_PLATE_CONF_VEHICLE = 0.40      # trusted on its own in a vehicle category (eval: real plates 0.44-0.90)
+_PLATE_CONF_OTHER = 0.30        # elsewhere only where the LLM ALSO saw a plate
+_PLATE_LABEL_RE = re.compile(r"plate|registration|licen[cs]e|dealer", re.I)
+
+
+def _plate_cat_is_vehicle(category):
+    c = str(category or "").strip().lower()
+    return any(k in c for k in _PLATE_VEHICLE_CATS)
+
+
+def _plate_detector():
+    """The local detector module, or None (fail-safe: the gate then runs as before)."""
+    try:
+        import plate_detector as _pdm
+        return _pdm if _pdm.available() else None
+    except Exception:
+        return None
+
+
+def _anon_plate_preblur(img, category):
+    """Stage 0. Vehicle categories only: detect every number plate with the local detector
+    and blur it plate-shaped BEFORE the LLM scan. Returns (img, boxes_blurred) -- boxes in
+    0-1000 coords, [] when nothing was found or the detector is unavailable."""
+    _pdm = _plate_detector()
+    if _pdm is None or not _plate_cat_is_vehicle(category):
+        return img, []
+    try:
+        dets = [d for d in _pdm.detect(img, conf=_PLATE_CONF_OTHER) if d[4] >= _PLATE_CONF_VEHICLE]
+        if not dets:
+            return img, []
+        boxes = [_pdm.frame_extend(img, d) for d in dets]
+        img, _n = _pdm.blur_boxes(img, boxes)
+        return img, (boxes if _n else [])
+    except Exception as _e:
+        _log.warning("plate preblur failed: %r", _e)
+        return img, []
+
+
+def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre_boxes=None):
+    """Stage 2. `scan` is an LLM scan with verdict 'redact'. For each region the LLM labelled
+    as a plate, use the DETECTOR's box instead of the LLM's guess: blur every detection that
+    sits in or near that region (the LLM's box can be a whole box-width off), and drop the
+    region. A plate region that only re-flags an already-blurred box widens that box by 20%
+    and is dropped too. If no region remains, re-scan ONCE to verify.
+    Returns (img, scan2): scan2['verdict']=='clean' means the photo is done; otherwise the
+    remaining regions flow into the existing path (reject-only / blur-until-clean) unchanged.
+    On any failure returns (img, scan) untouched -- fail-safe, never fail-open."""
+    _pdm = _plate_detector()
+    try:
+        if _pdm is None or not scan or scan.get("verdict") != "redact":
+            return img, scan
+        regions = list(scan.get("regions") or [])
+        if not regions:
+            return img, scan
+        W, H = img.size
+        dets = _pdm.detect(img, conf=_PLATE_CONF_OTHER)
+        vehicle = _plate_cat_is_vehicle(category)
+        pre = [tuple(float(v) for v in b[:4]) for b in (pre_boxes or [])]
+        keep = []; to_blur = []; handled = 0
+        for _reg in regions:
+            x0, y0, x1, y1 = (float(v) for v in _reg[:4]); lbl = str(_reg[4] if len(_reg) > 4 else "")
+            if not _PLATE_LABEL_RE.search(lbl):
+                keep.append(_reg); continue
+            bw = max(1.0, x1 - x0); bh = max(1.0, y1 - y0)
+            ex0, ey0, ex1, ey1 = x0 - bw, y0 - bh, x1 + bw, y1 + bh      # the LLM's box, doubled each way
+            matched = []
+            for d in dets:
+                cx = (d[0] + d[2]) / 2.0; cy = (d[1] + d[3]) / 2.0
+                if ex0 <= cx <= ex1 and ey0 <= cy <= ey1:
+                    matched.append(d)
+                elif vehicle and d[4] >= _PLATE_CONF_VEHICLE:
+                    matched.append(d)                                   # a plate is a plate in a car advert
+            if matched:
+                to_blur.extend(_pdm.frame_extend(img, d) for d in matched); handled += 1; continue
+            # no detection -- is the LLM re-flagging a patch we already blurred? widen it and move on
+            re_hit = [b for b in pre
+                      if not (b[2] < ex0 or b[0] > ex1 or b[3] < ey0 or b[1] > ey1)]
+            if re_hit:
+                for b in re_hit:
+                    gw = (b[2] - b[0]) * 0.20; gh = (b[3] - b[1]) * 0.20
+                    to_blur.append((max(0, b[0] - gw), max(0, b[1] - gh),
+                                    min(1000, b[2] + gw), min(1000, b[3] + gh)))
+                handled += 1; continue
+            keep.append(_reg)                                           # a plate we cannot locate: old path
+        if not handled:
+            return img, scan
+        # dedupe boxes then paint once
+        seen = set(); boxes = []
+        for b in to_blur:
+            k = tuple(int(round(v)) for v in b[:4])
+            if k not in seen:
+                seen.add(k); boxes.append(b)
+        img, _n = _pdm.blur_boxes(img, boxes)
+        labels = list(scan.get("labels") or [])
+        if "number plate" not in labels:
+            labels.append("number plate")
+        if keep:
+            scan2 = dict(scan); scan2["regions"] = keep; scan2["labels"] = labels
+            return img, scan2
+        # nothing else was flagged -> one verify read of the painted output
+        import base64 as _b64
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(spend_who, endpoint + "#plate-verify", "vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
+        if not v:
+            return img, scan                      # verify unavailable: fail closed through the old path
+        v = dict(v); v["labels"] = list(v.get("labels") or []) + [l for l in labels if l not in (v.get("labels") or [])]
+        if v.get("verdict") == "clean" and float(v.get("confidence") or 0) >= _ANON_PHOTO_CONF:
+            return img, v
+        return img, v                             # still flagged: the verifier's regions go down the old path
+    except Exception as _e:
+        _log.warning("plate takeover failed: %r", _e)
+        return img, scan
+
+
+# Warm the detector at start-up (one-time ~1-2 s model load) so the first seller upload of
+# the day does not pay it. Daemon thread; any failure just leaves the lazy load for later.
+try:
+    import threading as _plate_thr
+    _plate_thr.Thread(target=_plate_detector, name="plate-detector-warm", daemon=True).start()
+except Exception:
+    pass
+
 def _anon_photo_pass(photo_srcs, agent, provider, category=""):
     """Run the fail-closed photo pipeline for one advert. Returns
     (attached [(thumb_url, medium_url)], held count, notes [str])."""
@@ -22263,6 +22434,7 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
             _check_cost_ceiling(agent)   # C1 rail per paid call
         except Exception:
             held += 1; notes.append("held:ai-ceiling"); continue
+        img, _pre = _anon_plate_preblur(img, category)   # PLATE-DETECTOR-1 stage 0
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
         scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category, first=True, who=agent)   # LUNA-FIRST-1
@@ -22277,6 +22449,10 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
         # so an anonymous-but-unacceptable photo could be attached from an agency feed.
         # Same rule, both doors. Held rather than rejected: the import is a bulk operation
         # and one bad photo must not fail a whole agency's advert.
+        _scan0 = scan   # PLATE-DETECTOR-1 stage 2
+        img, scan = _anon_plate_takeover(img, scan, provider, category, agent, "/agencies/import#photo-verify", _pre)
+        if _pre or scan is not _scan0:
+            notes.append("redacted:number plate")
         if scan.get("flag") == "inappropriate":
             held += 1; notes.append("held:inappropriate"); continue
         if scan["verdict"] == "reject":

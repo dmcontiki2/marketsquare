@@ -36633,6 +36633,46 @@ def rg_coworker_vouch_1():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "an employer or a co-worker can vouch through her link")]
 
 
+
+@entry("RG-0904", "PLATE-DETECTOR-1 (6 Oct 2026): number plates are located by a local detector and blurred "
+       "plate-shaped BEFORE the LLM looks -- the LLM never again supplies plate coordinates",
+       LOCKED, fixed_on="2026-10-06",
+       scope="plate_detector.py (RT-DETRv2 plate detector, Apache-2.0, ONNX on the box, hash-pinned); bea_main.py "
+             "_anon_plate_preblur (stage 0) + _anon_plate_takeover (stage 2) wired into BOTH photo doors "
+             "(_seller_photo_anon_gate, _anon_photo_pass); /health plate_detector; migrations/067 (onnxruntime); "
+             "manifest ships plate_detector.py; the 171 MB model is git-ignored and rides media_push.bat",
+       ref="David 6 Oct 2026: 'to load a car and to have AI blur the numberplate, this should be automatic, not "
+           "blocking the photo or interfering with the lister ... keeps on blotching a big blob which looks very ugly'. "
+           "Root cause: a general vision LLM was asked to NAME coordinates; it reads well and measures badly (5-10% of "
+           "the frame off), so every mitigation since 11 Jul (generous boxes, zoom-refine, verify-and-repaint rounds, "
+           "the last-resort rung) painted MORE blur on the same photo. Eval (scripts/eval_plate_detector.py): 100% plate "
+           "recall on every TRUTH.json plate row incl. the tiny background plate, 0 false boxes on real clean photos, "
+           "~1 s/photo CPU, zero per-photo cost. Fail-safe: no package/model -> both stages are no-ops (5 Oct behaviour). "
+           "This asserts the INVARIANT: plate localisation never regresses to LLM coordinates.")
+def rg_plate_detector_1():
+    pdm = repo_file("plate_detector.py"); b = repo_file("bea_main.py"); man = repo_file("ops/autodeploy/deploy_manifest.txt")
+    gi = repo_file(".gitignore"); mig = repo_file("migrations/067_plate_detector.py")
+    if None in (pdm, b, man, gi):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'MODEL_SHA256 = "' not in pdm or "def detect(" not in pdm or "def blur_boxes(" not in pdm:
+        bad.append("plate_detector.py lost its hash pin, detect() or blur_boxes()")
+    if b.count("_anon_plate_preblur(img, category)") < 2:
+        bad.append("stage 0 (pre-blur) is no longer wired into both photo doors")
+    if b.count("_anon_plate_takeover(img, scan,") < 2:
+        bad.append("stage 2 (takeover) is no longer wired into both photo doors")
+    if "def _anon_plate_takeover(" not in b or "_PLATE_LABEL_RE.search(lbl)" not in b:
+        bad.append("the takeover no longer swaps the LLM's plate box for the detector's")
+    if '"plate_detector"' not in b:
+        bad.append("/health no longer reports the detector")
+    if not re.search(r"(?m)^\s*plate_detector\.py\s*\|", man):
+        bad.append("the manifest no longer ships plate_detector.py")
+    if "/models/*.onnx" not in gi:
+        bad.append(".gitignore no longer keeps the 171 MB model out of git")
+    if mig is None:
+        bad.append("migrations/067_plate_detector.py is gone (onnxruntime install)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "plates are located by the local detector, not by LLM coordinates; both doors wired; model git-ignored")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

@@ -115,6 +115,9 @@ tier_resolvers.py          | tier_resolvers.py
 value_benchmarks.py        | value_benchmarks.py
 feature_flags.py           | feature_flags.py
 ai_provider.py             | ai_provider.py
+# PLATE-DETECTOR-1 (6 Oct 2026): the local number-plate detector the photo gate runs BEFORE the LLM. The 171 MB
+# model (models/plate_detector.onnx) is a binary and rides the MEDIA lane (media_push.bat), never this manifest.
+plate_detector.py          | plate_detector.py
 # PHONE-KEY-1 (24 Sep 2026): the one SMS door (phone codes, key-seller nudges); fails dark without SMS_PROVIDER/SMS_TOKEN
 sms_provider.py            | sms_provider.py
 # STATUS-CARD-1 (24 Sep 2026): the WhatsApp Status card renderer (Pillow; qrcode when installed)

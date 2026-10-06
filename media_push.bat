@@ -70,6 +70,9 @@ if exist "%PROJECT%\TrustSquare_Agency_Playbook.pdf" %SYNC% -LocalDir "%PROJECT%
 echo  [6/7] n8n email templates (untracked HTML)...
 if exist "%PROJECT%\n8n\email_templates" %SYNC% -LocalDir "%PROJECT%\n8n\email_templates" -Filter *.html -RemoteDir %REMOTE%/email_templates -Server %SERVER%
 
+echo  [6b] Plate-detector model (PLATE-DETECTOR-1: models\plate_detector.onnx to /models, hash-gated)...
+if exist "%PROJECT%\models\plate_detector.onnx" %SYNC% -LocalDir "%PROJECT%\models" -Filter plate_detector.onnx -RemoteDir %REMOTE%/models -Server %SERVER%
+
 echo  [7/7] Permissions + CDN purge + video re-warm...
 ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/super %REMOTE%/static/videos %REMOTE%/static/legal-must-haves %REMOTE%/static/legal-must-haves/* 2>/dev/null; chmod 644 %REMOTE%/static/super/*.jpg %REMOTE%/static/videos/*.mp4 %REMOTE%/static/legal-must-haves/*/*.png %REMOTE%/static/phone_*.jpg 2>/dev/null; true"
 :: ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-10): the purge route is admin-only on the box too, so it sends the key

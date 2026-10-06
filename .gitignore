@@ -202,3 +202,8 @@ host_queue/QUIET_COMMIT_ATTEMPTS.txt
 host_queue/QUIET_COMMIT_REASON.txt
 # SYNC-ORIGIN-1: a stop note for the session that resolves it, not history
 SYNC_CONFLICT.txt*
+# PLATE-DETECTOR-1: the 171 MB plate-detector model is a binary - media lane only, never git
+/models/*.onnx
+/models/*.part*
+/models/*.p[0-9][0-9]
+eval_photos/_plate_eval/
