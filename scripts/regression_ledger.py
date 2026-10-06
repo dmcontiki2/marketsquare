@@ -36709,6 +36709,24 @@ def rg_edit_add_photo_1():
         return [(FAIL, "the Add Photo tile is capped by a hard number again")]
     return [(INFO, "Add Photo tile follows msPhotoCap")]
 
+@entry("RG-0907", "CODE-SURVIVE-1 (RUL-210, 6 Oct 2026): a sign-in code survives a deploy/restart, and a signed-in browser never lapses on a timer",
+       LOCKED, fixed_on="2026-10-06",
+       scope="bea_main.py _signin_codes is the on-disk _PersistCodes (private dir, 0600), tries saved; ts_user cookie 180 days and re-issued on visits",
+       ref="Maroushka 6 Oct 2026: her right code was refused twice because deploys at 17:27 and 18:00 wiped the in-memory codes. David: "
+           "'let the people go in and out after the first sign up'.")
+def rg_code_survive_1():
+    b = repo_file("bea_main.py")
+    if b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "_signin_codes = _PersistCodes(" not in b or "class _PersistCodes(dict):" not in b:
+        bad.append("pending sign-in codes are back in memory only (a deploy kills them)")
+    if "_signin_codes.save()" not in b:
+        bad.append("the wrong-guess budget is no longer saved")
+    if b.count('set_cookie("ts_user", new, max_age=180*24*3600') < 1:
+        bad.append("the signed-in cookie no longer renews itself on visits")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "codes survive restarts; sessions renew and never lapse on a timer")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

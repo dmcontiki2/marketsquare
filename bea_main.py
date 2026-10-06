@@ -20114,7 +20114,34 @@ def _send_login_email(to_email: str, link: str, code: str = "") -> str:
 _SIGNIN_CODE_MIN   = 20     # the typed code; the emailed link lives _SIGNIN_LINK_DAYS (single use either way)
 _SIGNIN_LINK_DAYS  = 7      # SIGNIN-LINK-7D (David, 3 Oct 2026): "a blocker for anyone ... waiting longer than the timer"
 _SIGNIN_CODE_TRIES = 6
-_signin_codes      = {}     # email -> {"code":str,"exp":epoch,"tries":int}
+class _PersistCodes(dict):
+    """CODE-SURVIVE-1 (6 Oct 2026, David + Maroushka): the pending sign-in codes lived only in memory, so EVERY
+    deploy or restart threw them away -- the code in her inbox was 'wrong or expired' minutes after it was sent
+    (probed: code sent 17:25, restart 17:27, her right code refused 17:41; sent again 17:58, restart 18:00).
+    Kept on disk now (private dir, 0600), so a code is good for its full 20 minutes whatever the server does."""
+    def __init__(self, path):
+        super().__init__(); self._path = path
+        try:
+            with open(path, encoding="utf-8") as _f:
+                super().update(json.load(_f) or {})
+        except Exception:
+            pass
+    def save(self):
+        try:
+            _tmp = self._path + ".tmp"
+            with open(os.open(_tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as _f:
+                json.dump(dict(self), _f)
+            os.replace(_tmp, self._path)
+        except Exception as _e:
+            logging.getLogger("bea").warning("CODE-SURVIVE-1: could not save pending codes: %s", _e)
+    def __setitem__(self, k, v):
+        super().__setitem__(k, v); self.save()
+    def pop(self, k, *d):
+        _had = k in self; r = super().pop(k, *d)
+        if _had: self.save()
+        return r
+_signin_codes = _PersistCodes(os.path.join(os.environ.get("MS_PRIVATE_DIR", "/var/lib/trustsquare-private"),
+                                           "signin_codes.json"))   # email -> {"code":str,"exp":epoch,"tries":int}
 
 def _signin_code_ok(email: str, code: str) -> bool:
     """Consume a sign-in code. Constant-time, single use, budgeted."""
@@ -20128,6 +20155,7 @@ def _signin_code_ok(email: str, code: str) -> bool:
     if not rec or rec["exp"] < now:
         return False
     rec["tries"] += 1
+    _signin_codes.save()   # CODE-SURVIVE-1: the guess budget survives a restart too
     if rec["tries"] > _SIGNIN_CODE_TRIES:
         _signin_codes.pop(email, None)
         return False
