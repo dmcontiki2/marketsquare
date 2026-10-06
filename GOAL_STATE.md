@@ -5,10 +5,11 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
-## RUN 31 — Tue 6 Oct 2026, 20:56–21:5x UTC (Opus 5.5)
+## RUN 31 — Tue 6 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; candidate ms.js copy in `_to_delete/goalrun31_ms.js`). Built in
-  server worktree `/root/w31` (removed at the end), shipped `claude/goal-run31` via CLOUD-SHIP-1 (see status.txt / below).
+  server worktree `/root/w31` (removed at the end), shipped `claude/goal-run31` a1d6a59 via CLOUD-SHIP-1 (21:21Z SHIPPED, ms.js?v=967). Live check from a fresh
+  browser: US network → nudge on Home, tap → "United States / New York"; `/?listing=499` shows no tip and no nudge, only the wristwatches photo.
 - **Walk (Collectors, from abroad, `docs/E2E_2026-10-06.md`):** en-GB phone, US network. Home → Sell → Collectors → two photos →
   six steps → score 78 → e-mail; stopped at Publish. ~2½ min, no errors. **Break:** the app's photo read called our own example
   picture a pocket watch — it was the cover of four "Vintage wristwatch · 1960s automatic" / "Omega Seamaster" example adverts
