@@ -36454,6 +36454,51 @@ def rg_id_upload_legacy_1():
     return out or [(INFO, "ID upload and Trust tab read one ID fact; the button always resolves")]
 
 
+@entry("RG-0894", "PROFILE-DO-1 (6 Oct 2026): the coach's 'Complete profile' step has a button -- a checklist of the four "
+       "scored parts (name, country, photo, one advert) with a button on each missing one; the words say what is scored",
+       LOCKED, fixed_on="2026-10-06",
+       scope="bea_main.py _profile_parts (the ONE rule; _compute_universal_track_status and the guidance step both read it), "
+             "the guidance step override (action/do/parts), _SIGNAL_HOWTO + _TRUST_SIGNALS wording; ms.js coach canDo.profile + "
+             "the act==='profile' checklist",
+       ref="David 6 Oct 2026: coach step 'Open My Dashboard and fill in your bio, suburb, and category description' with "
+           "'There is no button for this one in the app yet'. No My Dashboard and no bio/suburb field exist; the score checks "
+           "name+country+photo+listing. His missing part was the advert.")
+def rg_profile_do_1():
+    bm = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    if bm is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if "def _profile_parts(" not in bm:
+        out.append((FAIL, "_profile_parts is gone -- the profile rule lives in more than one place again"))
+    if "profile_complete = all(_profile_parts(conn, email).values())" not in bm:
+        out.append((FAIL, "the ladder no longer scores 'Complete profile' through _profile_parts"))
+    if 'universal.profile_complete":' in bm and "My Dashboard \u2192 fill in bio" in bm:
+        out.append((FAIL, "the stale 'My Dashboard -> bio, suburb' wording is back"))
+    if '_st["parts"] = _profile_parts(' not in bm:
+        out.append((FAIL, "the coach's profile step no longer carries its four parts"))
+    if "profile: 'Show me what is missing'" not in js or "if(act === 'profile'){" not in js:
+        out.append((FAIL, "the coach's profile step has no button again"))
+    return out or [(INFO, "the profile step has a checklist button and says what is scored")]
+
+
+@entry("RG-0895", "TRUST-OVERVIEW-SYNC-1 (6 Oct 2026): every Trust Score render also writes the Overview tile, so an in-page "
+       "score change (ID upload, experience, credential) never leaves the Overview on the old number",
+       LOCKED, fixed_on="2026-10-06",
+       scope="ms.js msRenderTrust writes #ms-stat-trust + the ms_trust_score cache",
+       ref="David 6 Oct 2026: Trust card read 70 after his ID upload while My Space Overview still read 55%.")
+def rg_trust_overview_sync_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function msRenderTrust(score){")
+    if i < 0:
+        return [(FAIL, "msRenderTrust is gone")]
+    if "getElementById('ms-stat-trust')" not in js[i:i + 1200]:
+        return [(FAIL, "msRenderTrust no longer updates the Overview trust tile -- the two numbers can disagree again")]
+    return [(INFO, "Overview and Trust card are written by the same render")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

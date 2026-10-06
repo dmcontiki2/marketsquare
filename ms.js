@@ -18765,6 +18765,13 @@ function openEulaModal() {
 function msRenderTrust(score){
   const sv = document.getElementById('ms-trust-score-val');
   if(sv) sv.textContent = score;
+  /* TRUST-OVERVIEW-SYNC-1 (6 Oct 2026, David: "my trust score is now 70 but on my overview it shows 55%").
+     The Overview tile was only written by msUpdateStats on page load, so every in-page score change (ID upload,
+     years of experience, credential claim) moved the Trust card and left the Overview on the old number.
+     Every score render now writes both, and the cache, from this one place. */
+  const _ovt = document.getElementById('ms-stat-trust');
+  if(_ovt && score !== undefined && score !== null && score !== '') _ovt.textContent = (parseInt(score)||0) + '%';
+  try { if(parseInt(score) > 0) localStorage.setItem('ms_trust_score', parseInt(score)); } catch(_){}
   const bar = document.getElementById('ms-trust-bar');
   if(bar) bar.style.width = score+'%';
   const barPct = document.getElementById('ms-trust-bar-pct');
@@ -19675,7 +19682,8 @@ async function msAskAI(){
       var canDo = { upload_id: 'Upload my ID now',
                     photo: 'Add my photo now',
                     experience: 'Tell us how long \u2014 takes 10 seconds',
-                    employer_link: 'Get my link to send them' };
+                    employer_link: 'Get my link to send them',
+                    profile: 'Show me what is missing' };   // PROFILE-DO-1
       var btn = canDo[s.do]
         ? '<button id="tn-do-btn" data-do="'+s.do+'" style="width:100%;margin-top:11px;padding:12px;border:0;border-radius:10px;background:#16A97C;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">'+canDo[s.do]+'</button>'
         : '<div style="margin-top:11px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;font-size:12px;color:#9a3412;line-height:1.5;">'
@@ -19710,6 +19718,47 @@ async function msAskAI(){
       var db = document.getElementById('tn-do-btn');
       if(db) db.onclick = function(){
         var act = db.dataset.do;
+        /* PROFILE-DO-1 (6 Oct 2026, David: "the Dashboard is missing, please add it and fix this").
+           'Complete profile' is four things the server scores -- name, country, photo, one advert.
+           The step arrives carrying which of the four are done; show them with a button on each
+           one still missing, each going to the screen that already does that job. */
+        if(act === 'profile'){
+          var st = (window._tnPlan || [])[window._tnStep|0] || {};
+          var pp = st.parts || {};
+          var rows = [
+            ['name',    'Your name',            'Add my name',     function(){ goTo('myspace'); setTimeout(function(){ msTab('me', document.querySelector(".ms-tab[onclick*=\"'me'\"]")); if(typeof msEditField==='function') msEditField('name'); }, 300); }],
+            ['country', 'Your country',         'Choose my country', function(){ goTo('browse'); }],
+            ['photo',   'A photo of you',       'Add my photo',    function(){ var pin=document.getElementById('ms-me-photo-inp'); if(pin) pin.click(); else showToast('Open My Space \u2192 Me, then tap your photo', 5000); }],
+            ['advert',  'At least one advert',  'Create my advert', function(){ if(typeof openSellNav==='function') openSellNav(); else goTo('sell-flow'); }]
+          ];
+          var host2 = db.parentNode; db.style.display = 'none';
+          var box2 = document.createElement('div'); box2.style.cssText = 'margin-top:11px;display:flex;flex-direction:column;gap:7px;';
+          var todo = 0;
+          rows.forEach(function(r){
+            var done = !!pp[r[0]];
+            if(!done) todo++;
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;border:1px solid '+(done?'#bbf7d0':'#fed7aa')+';background:'+(done?'#f0fdf4':'#fff7ed')+';';
+            row.innerHTML = '<span style="font-weight:800;color:'+(done?'#16A97C':'#c2410c')+';">'+(done?'\u2713':'\u2717')+'</span>'
+              + '<span style="flex:1;font-size:13px;color:#1f2937;">'+r[1]+'</span>';
+            if(!done){
+              var b = document.createElement('button');
+              b.textContent = r[2];
+              b.style.cssText = 'padding:8px 11px;border:0;border-radius:9px;background:#16A97C;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;';
+              b.onclick = r[3];
+              row.appendChild(b);
+            }
+            box2.appendChild(row);
+          });
+          if(!todo){
+            var ok = document.createElement('div');
+            ok.style.cssText = 'font-size:12.5px;color:#065f46;font-weight:700;';
+            ok.textContent = 'All four are done \u2014 the 5 points show on your next score refresh.';
+            box2.appendChild(ok);
+          }
+          host2.appendChild(box2);
+          return;
+        }
         if(act === 'upload_id'){
           var inp = document.getElementById('ms-id-upload-input');
           if(inp) inp.click(); else showToast('Open My Space first, then tap Upload ID', 5000);

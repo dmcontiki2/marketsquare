@@ -14496,7 +14496,7 @@ _TRUST_SIGNALS = {
     "universal.profile_complete": {
         "name": "Complete profile",
         "points": 5, "max": 5,
-        "how_to_earn": "Bio, suburb, listing, and category description all set.",
+        "how_to_earn": "Your name, country, a photo of you, and at least one advert.",   # PROFILE-DO-1: what is actually scored
         "evidence_required": False,  # system-calculated
     },
     # RUL-136 (David, 15 Sep 2026): three signals an ordinary person can actually earn.
@@ -14863,6 +14863,18 @@ def _category_key_for_user(conn, email: str) -> str:
     return cat or ""
 
 
+def _profile_parts(conn, email: str) -> dict:
+    """PROFILE-DO-1 (6 Oct 2026): THE rule for 'Complete profile', in one place. The ladder and
+    the coach's checklist both read this, so the list the seller is shown is exactly what is
+    scored: her name, her country, a photo of her, and at least one advert."""
+    u = conn.execute("SELECT name, country, photo_url FROM users WHERE email = ?", (email,)).fetchone()
+    has_listing = conn.execute("SELECT 1 FROM listings WHERE seller_email = ? LIMIT 1", (email,)).fetchone()
+    return {"name": bool(u and (u["name"] or "").strip()),
+            "country": bool(u and (u["country"] or "").strip()),
+            "photo": bool(u and (u["photo_url"] or "").strip()),
+            "advert": bool(has_listing)}
+
+
 def _compute_universal_track_status(conn, email: str) -> dict:
     """Return computed status for system-calculated signals (profile, referrals,
     introductions, tenure). These don't require an admin upload — BEA derives
@@ -14876,10 +14888,7 @@ def _compute_universal_track_status(conn, email: str) -> dict:
     has_listing = conn.execute(
         "SELECT 1 FROM listings WHERE seller_email = ? LIMIT 1", (email,)
     ).fetchone()
-    profile_complete = bool(
-        user_row and user_row["name"] and user_row["country"]
-        and user_row["photo_url"] and has_listing
-    )
+    profile_complete = all(_profile_parts(conn, email).values())   # PROFILE-DO-1: one rule
     out["universal.profile_complete"] = "earned" if profile_complete else "missing"
 
     # RUL-136: a photo of the person is its own signal now, not just a hidden precondition
@@ -16045,6 +16054,22 @@ async def trust_score_guidance(req: AIGuidanceRequest, background_tasks: Backgro
                 and "hired" not in str(_st.get("action") or "").lower()):
             _st["action"] = _signal_howto(_st["signal_id"], "")[1]
             _st["do"] = "wait"
+        # PROFILE-DO-1 (6 Oct 2026, David: "the Dashboard is missing, please add it"). There is
+        # no 'My Dashboard' and no bio/suburb field -- the model was repeating stale copy. The
+        # step now says what is scored and carries the four parts, so the button can show a
+        # checklist with a button per missing part.
+        if str(_st.get("signal_id") or "") == "universal.profile_complete":
+            _st["action"] = _signal_howto("universal.profile_complete", "")[0]
+            _st["why"] = "Buyers trust a seller they can see, place and look up."
+            _st["do"] = "profile"
+            try:
+                _pc = database.get_db()
+                try:
+                    _st["parts"] = _profile_parts(_pc, req.email)
+                finally:
+                    _pc.close()
+            except Exception:
+                _st["parts"] = None
     guidance["steps"]         = _steps
     guidance["ai_available"]  = True
     guidance["current_score"] = current_score
@@ -16076,8 +16101,8 @@ _SIGNAL_HOWTO = {
                                        "Five or more different clients who confirmed they hired you"),
     "universal.email_verified":       ("Verify your email address",
                                        "Automatically earned when you accept the TrustSquare Terms of Service"),
-    "universal.profile_complete":     ("Complete your seller profile",
-                                       "My Dashboard → fill in bio, suburb, and category description"),
+    "universal.profile_complete":     ("Complete your profile: your name, country, photo and one advert",
+                                       "Tap the button - it shows which of the four are still missing, each with its own button"),
     # Track record — all auto-tracked, no uploads needed
     "track_record.intro_1":           ("Complete your first introduction",
                                        "My Dashboard → Intros tab — accept a buyer's request and follow through. Tracked automatically."),

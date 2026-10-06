@@ -1,0 +1,5 @@
+## 2026-10-06 — PROFILE-DO-1 + TRUST-OVERVIEW-SYNC-1: the profile step gets a button; Overview follows the score
+
+PROFILE-DO-1: the AI coach's "Complete profile" step told David to "open My Dashboard and fill in your bio, suburb, and category description" and said there was no button. No My Dashboard and no bio/suburb field exist; the ladder actually scores name + country + a photo + at least one advert. The rule now lives in one helper (_profile_parts) read by both the ladder and the coach; the step carries the four parts, says what is scored, and its new button shows a checklist with a button on each missing part (Add my name / Choose my country / Add my photo / Create my advert). David's missing part was the advert. Ledger RG-0894.
+
+TRUST-OVERVIEW-SYNC-1: after the ID upload the Trust card read 70 while the My Space Overview tile still read 55%, because the tile was only written on page load. msRenderTrust now writes the tile and the cache too, so every in-page score change moves both. Ledger RG-0895.
