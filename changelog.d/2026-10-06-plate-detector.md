@@ -12,3 +12,5 @@ Fail-safe: no package / no model / any error → both stages are no-ops and the 
 Proof. `scripts/eval_plate_detector.py` against eval_photos/TRUTH.json: 100% plate recall on all 11 plate rows (incl. the tiny background plate and the two-plate frame), 0 false boxes on the real clean photos; the cartoon traps trip it, which is exactly why it is only trusted alone in vehicle categories. Ledger RG-0904. Migration 067 installs onnxruntime; the 171 MB model rides media_push.bat (section 6b), git-ignored.
 
 Known limit. A plate photographed at 25–40° gets a near-square patch (the detector box is axis-aligned); still only the plate area, not the car.
+
+Also closed: the LLM-lane painter's pixel-evidence capsule (15 Jul) could leave characters readable (offline: '345' of a straight plate on syn_06); that fallback is removed — only a model-reported angle shapes a capsule, otherwise the safe axis-aligned core. No live effect today (that lane is reject-only under RUL-033); it matters the day RUL-033 is lifted.

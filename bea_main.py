@@ -22002,8 +22002,10 @@ def _anon_photo_redact(img, regions):
         _ang = None
         if _model_deg is not None and 4.0 <= abs(_model_deg) <= 30.0:
             _ang = _math.radians(_model_deg)
-        elif _model_deg is None and geom:
-            _ang = geom[4]
+        # PLATE-DETECTOR-1 (6 Oct 2026): the pixel-evidence angle is no longer used. Offline on the eval set it
+        # produced a capsule that left '345' of a straight plate readable (syn_06) -- a guessed angle can LEAK,
+        # the axis-aligned core cannot. Plates now arrive from the local detector (plate_detector.blur_boxes);
+        # this painter keeps only the model-reported angle, and otherwise the safe axis-aligned core.
         if _ang is not None:
             _deg = abs(_math.degrees(_ang))
             if 4.0 <= _deg <= 30.0:
