@@ -387,3 +387,8 @@ Sun 10/04/2026  5:30:03.54  main mirrored to GitHub
 Mon 10/05/2026  5:30:02.27  committed 1 change(s)
 sync-origin [MarketSquare]: STOP -- 2 commit(s) on origin/main could not be taken in cleanly (docs/E2E_2026-10-04_run29.md); nothing pushed, nothing overwritten. See SYNC_CONFLICT.txt
 Mon 10/05/2026  5:30:04.13  SYNC STOP - see SYNC_CONFLICT.txt; main NOT mirrored 
+[main c11aa1a] Nightly checkpoint Tue 10/06/2026  5:30:01.99 (auto, no deploy)
+ 2 files changed, 141 insertions(+)
+Tue 10/06/2026  5:30:02.09  committed 2 change(s)
+sync-origin [MarketSquare]: in step with origin/main (this tree is 1 commit(s) ahead)
+Tue 10/06/2026  5:30:03.48  main mirrored to GitHub
