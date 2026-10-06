@@ -2051,6 +2051,13 @@ def _load_shards(n, max_age_s=5400):
 
 
 def main():
+    # LEDGER-UTF8-1 (6 Oct 2026): on David's PC the host lane prints to a cp1252 console, and one entry's text
+    # ('Stayed \u2713') crashed the whole board mid-print. Never let a character kill the verdict.
+    for _st in (sys.stdout, sys.stderr):
+        try:
+            _st.reconfigure(errors="replace")
+        except Exception:
+            pass
     _ensure_instrument_deps()
     _fp_before = _source_fingerprint()
     _shard = _argval("--shard")
