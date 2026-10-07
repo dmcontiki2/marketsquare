@@ -1,0 +1,1 @@
+- 7 Oct 2026 — PROMOTER-TRACK-1 (RUL-212) built: promoter links (/p/<CODE>), first-advert stamping, two-way Buzz complete-unit rule, Promoters card on the dashboard Comms page. Counts only, no money in the app. Verified by: local logic test on a temp DB (2 listers, 1 complete, 1 one-way); live check pending deploy.

@@ -36902,6 +36902,30 @@ def rg_geo_net_city_1():
     if "GEO-NET-CITY-1: the network's own position" not in js:
         bad.append("the app no longer uses the network position for her city")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "network position -> nearest city")]
+@entry("RG-0934", "PROMOTER-TRACK-1 (RUL-212, 7 Oct 2026): a promoter's own link stamps his new listers, a unit is complete only on a live advert plus two-way delivered Buzz with one referral, and no money appears anywhere",
+       LOCKED, fixed_on="2026-10-07",
+       scope="bea_main.py _promo_stamp (quick-publish + /listings), _promo_note_buzz (POST /buzz), GET /p/{code}, /admin/promoters; route_policy.json; dashboard.server.html Comms page Promoters card. All markets.",
+       ref="David 7 Oct 2026: Petrus recruits listers; 'it must not even be shown anywhere in the app' (payment), 'only count a listing as complete when the buzz comms work for the pair'.")
+def rg_promoter_track_1():
+    b = repo_file("bea_main.py"); d = repo_file("dashboard.server.html"); pol = repo_file("route_policy.json")
+    if None in (b, d, pol):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if b.count("_promo_stamp(request,") < 2:
+        bad.append("a publish path no longer stamps the promoter's lister")
+    if "_promo_note_buzz(sender, receiver, channel)" not in b:
+        bad.append("Buzz no longer records delivery for promoter units")
+    if "complete = live and bool(two)" not in b:
+        bad.append("the complete-unit rule changed")
+    for k in ('"GET /p/{code}"', '"GET /admin/promoters"', '"POST /admin/promoters"', '"POST /admin/promoters/{code}/active"'):
+        if k not in pol:
+            bad.append("route policy missing " + k)
+    sec = d.split("PROMOTER-TRACK-1", 1)[1].split("</script>", 1)[0] if "PROMOTER-TRACK-1" in d else ""
+    if not sec:
+        bad.append("dashboard Promoters card is gone")
+    elif any(w in sec for w in ("R25", "ZAR", "rand", "payout", "Payout", "owed")):
+        bad.append("money wording has crept into the Promoters card (RUL-212 forbids it)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "promoter link, stamp, two-way Buzz rule, counts-only card")]
 @entry("RG-0930", "PREWAVE-1 (7 Oct 2026): a waiting seller document reaches a person, adverts sit on their suburb, foreign "
        "adverts show their own currency, nobody reads another address's ID state, and the agency console counts introductions",
        LOCKED, fixed_on="2026-10-07",

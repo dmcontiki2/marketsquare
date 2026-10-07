@@ -4317,6 +4317,7 @@ def _norm_condition(v):
 def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: str = Depends(auth.require_api_key),
                    request: Request = None, response: Response = None):
     listing.title = _plain_text(listing.title)              # AUDIT-XSS-1
+    _promo_stamp(request, listing.seller_email)   # PROMOTER-TRACK-1 (no-op when called internally)
     listing.description = _plain_text(listing.description)
     listing.title, listing.description, _scrubbed = _private_text_scrub(
         listing.title, listing.description, listing.seller_email or "", "create",
@@ -4977,6 +4978,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             return {"id": int(_dup["id"]), "live": True, "duplicate": True, "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, int(_dup["id"]), 60),   # QUICK-HANDOFF-1
                     "detail": "This listing is already live — nothing new was made."}
+    _promo_stamp(request, em)   # PROMOTER-TRACK-1
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
     if not sess:
@@ -31030,6 +31032,7 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
                  (row["id"], sender, receiver, text, channel or "none", devices))
     conn.commit()
     bid = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+    _promo_note_buzz(sender, receiver, channel)   # PROMOTER-TRACK-1
     if bid % 500 == 0:            # roughly one send in five hundred pays for retention
         _buzz_prune(conn); conn.commit()
     conn.close()
@@ -33382,6 +33385,222 @@ try:
     app.include_router(_ripple2.build_router(globals()))
 except Exception as _rp2_ex:   # pragma: no cover
     print("[RIPPLE-2] not mounted: %r" % (_rp2_ex,), flush=True)
+
+
+# -- PROMOTER-TRACK-1 (David, 7 Oct 2026) --------------------------------------------------------------
+# A promoter (first: Petrus) shares his own link https://trustsquare.co/p/<CODE>. Anyone who opens it and
+# then publishes her FIRST advert is stamped as his lister. One unit is COMPLETE only when that lister has a
+# live advert AND Buzz has been delivered both ways between her and one referral (a different person).
+# David's ruling: COUNTS ONLY. No money, no rand, no fee appears anywhere in the app -- any payment is his
+# personal arrangement outside the company. The promoter code is reusable for any later promoter.
+_PROMO_CODE_RE = re.compile(r"^[A-Z0-9]{2,10}-[A-Z0-9]{4}$")
+_PROMO_ALPHA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def _promo_tables(conn):
+    conn.execute("CREATE TABLE IF NOT EXISTS promoters (code TEXT PRIMARY KEY, name TEXT NOT NULL, "
+                 "own_email TEXT, target INTEGER NOT NULL DEFAULT 100, active INTEGER NOT NULL DEFAULT 1, "
+                 "created_at TEXT NOT NULL)")
+    conn.execute("CREATE TABLE IF NOT EXISTS promoter_signups (email TEXT PRIMARY KEY, code TEXT NOT NULL, "
+                 "stamped_at TEXT NOT NULL)")
+    conn.execute("CREATE TABLE IF NOT EXISTS promoter_buzz (lister_email TEXT NOT NULL, other_email TEXT NOT NULL, "
+                 "direction TEXT NOT NULL, first_at TEXT NOT NULL, UNIQUE(lister_email, other_email, direction))")
+
+
+def _promo_has(conn, table):
+    return bool(conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone())
+
+
+def _promo_stamp(request, email):
+    """Best effort, never raises: called just before a person's advert is created. Stamps her to the promoter
+    whose link she opened, but only if this is her FIRST advert and she is not already stamped."""
+    try:
+        if request is None:
+            return
+        code = (request.cookies.get("ts_promo") or "").strip().upper()
+        em = (email or "").strip().lower()
+        if not _PROMO_CODE_RE.match(code) or "@" not in em:
+            return
+        conn = database.get_db()
+        try:
+            if not _promo_has(conn, "promoters"):
+                return
+            p = conn.execute("SELECT own_email FROM promoters WHERE code=? AND active=1", (code,)).fetchone()
+            if not p or (p["own_email"] or "").lower() == em:
+                return
+            if conn.execute("SELECT 1 FROM promoter_signups WHERE email=?", (em,)).fetchone():
+                return
+            if conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? LIMIT 1", (em,)).fetchone():
+                return          # not a new lister
+            conn.execute("INSERT OR IGNORE INTO promoter_signups (email, code, stamped_at) VALUES (?,?,?)",
+                         (em, code, datetime.now(timezone.utc).isoformat(timespec="seconds")))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("PROMOTER-TRACK-1 stamp skipped: %s", exc)
+
+
+def _promo_note_buzz(sender, receiver, channel):
+    """Best effort, never raises: after a Buzz is logged, remember the FIRST delivered Buzz in each direction
+    for any stamped lister, so the proof survives the buzz_log retention trim."""
+    try:
+        if channel not in ("push", "email"):
+            return
+        s, r = (sender or "").lower(), (receiver or "").lower()
+        conn = database.get_db()
+        try:
+            if not _promo_has(conn, "promoter_signups"):
+                return
+            now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            for lister, other, d in ((s, r, "out"), (r, s, "in")):
+                if conn.execute("SELECT 1 FROM promoter_signups WHERE email=?", (lister,)).fetchone():
+                    conn.execute("INSERT OR IGNORE INTO promoter_buzz (lister_email, other_email, direction, first_at) "
+                                 "VALUES (?,?,?,?)", (lister, other, d, now))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("PROMOTER-TRACK-1 buzz note skipped: %s", exc)
+
+
+def _promo_mask(em):
+    em = em or ""
+    if "@" not in em:
+        return em[:3] + "***"
+    u, d = em.split("@", 1)
+    return (u[:2] + "***@" + d) if u else ("***@" + d)
+
+
+def _promo_report(conn, p):
+    code = p["code"]
+    own = (p["own_email"] or "").lower()
+    signups = conn.execute("SELECT email, stamped_at FROM promoter_signups WHERE code=? ORDER BY stamped_at",
+                           (code,)).fetchall()
+    listers = {s["email"] for s in signups}
+    used_refs, rows = set(), []
+    cnt = {"listers": 0, "advert_live": 0, "referral": 0, "buzz_one_way": 0, "complete": 0}
+    for s in signups:
+        em = s["email"]
+        live = bool(conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? AND "
+                                 "IFNULL(listing_status,'live')='live' LIMIT 1", (em,)).fetchone())
+        # her connected people since she was stamped (not the promoter himself, not another of his listers)
+        others = []
+        if _promo_has(conn, "buzz_pairs"):
+            for b in conn.execute("SELECT a_email, b_email, closed_at FROM buzz_pairs WHERE (a_email=? OR b_email=?) "
+                                  "AND created_at >= ? ORDER BY id", (em, em, s["stamped_at"].replace("T", " ")[:19])):
+                o = b["b_email"] if b["a_email"] == em else b["a_email"]
+                if o and o != em and o != own and o not in listers and not b["closed_at"]:
+                    others.append(o)
+        dirs = {}
+        for o in others:
+            dd = {r["direction"] for r in conn.execute(
+                "SELECT direction FROM promoter_buzz WHERE lister_email=? AND other_email=?", (em, o))}
+            dirs[o] = dd
+        ref, state = None, "waiting"
+        two = [o for o in others if dirs[o] >= {"out", "in"} and o not in used_refs]
+        if two:
+            ref = two[0]
+        elif others:
+            ref = max(others, key=lambda o: len(dirs[o]))
+        buzz = sorted(dirs.get(ref, set())) if ref else []
+        complete = live and bool(two)
+        if complete:
+            used_refs.add(ref)
+            state = "complete"
+        elif ref and buzz:
+            state = "buzz one way"
+        elif ref:
+            state = "referral, no buzz yet"
+        elif live:
+            state = "advert live, no referral yet"
+        cnt["listers"] += 1
+        cnt["advert_live"] += int(live)
+        cnt["referral"] += int(bool(ref))
+        cnt["buzz_one_way"] += int(bool(ref) and len(buzz) == 1)
+        cnt["complete"] += int(complete)
+        rows.append({"lister": _promo_mask(em), "stamped_at": s["stamped_at"], "advert_live": live,
+                     "referral": _promo_mask(ref) if ref else None, "buzz": buzz, "state": state})
+    return {"code": code, "name": p["name"], "link": APP_URL + "/p/" + code, "target": p["target"],
+            "active": bool(p["active"]), "created_at": p["created_at"], "counts": cnt, "rows": rows}
+
+
+class _PromoIn(BaseModel):
+    name: str
+    own_email: Optional[str] = None
+    target: Optional[int] = 100
+
+
+class _PromoActiveIn(BaseModel):
+    active: bool
+
+
+@app.get("/p/{code}")
+def promoter_link_open(code: str):
+    """PROMOTER-TRACK-1: the promoter's own link. Remembers whose link it was, then opens Quick.
+    Carries no account and no money -- only the code."""
+    from fastapi.responses import RedirectResponse as _PRR
+    resp = _PRR(url="/quick/", status_code=302)
+    c = (code or "").strip().upper()
+    if _PROMO_CODE_RE.match(c):
+        resp.set_cookie("ts_promo", c, max_age=90 * 24 * 3600, httponly=True, secure=True, samesite="lax", path="/")
+    return resp
+
+
+@app.get("/admin/promoters")
+def admin_promoters(_admin=Depends(_require_admin)):
+    conn = database.get_db()
+    try:
+        if not _promo_has(conn, "promoters"):
+            return {"promoters": []}
+        ps = conn.execute("SELECT * FROM promoters ORDER BY created_at").fetchall()
+        return {"promoters": [_promo_report(conn, p) for p in ps],
+                "rule": "Complete = the lister's advert is live AND Buzz was delivered both ways with one referral."}
+    finally:
+        conn.close()
+
+
+@app.post("/admin/promoters")
+def admin_promoter_create(body: _PromoIn, _admin=Depends(_require_admin)):
+    import secrets as _ps
+    name = re.sub(r"[^\w' -]", "", body.name or "", flags=re.UNICODE).strip()[:40]
+    if not name:
+        raise HTTPException(status_code=400, detail="A promoter needs a name.")
+    stem = re.sub(r"[^A-Z0-9]", "", name.upper())[:10] or "PROMO"
+    if len(stem) < 2:
+        stem = (stem + "PR")[:2]
+    own = (body.own_email or "").strip().lower() or None
+    target = max(1, min(int(body.target or 100), 10000))
+    conn = database.get_db()
+    try:
+        _promo_tables(conn)
+        for _ in range(8):
+            code = stem + "-" + "".join(_ps.choice(_PROMO_ALPHA) for _ in range(4))
+            if not conn.execute("SELECT 1 FROM promoters WHERE code=?", (code,)).fetchone():
+                break
+        conn.execute("INSERT INTO promoters (code, name, own_email, target, active, created_at) VALUES (?,?,?,?,1,?)",
+                     (code, name, own, target, datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        conn.commit()
+        p = conn.execute("SELECT * FROM promoters WHERE code=?", (code,)).fetchone()
+        return _promo_report(conn, p)
+    finally:
+        conn.close()
+
+
+@app.post("/admin/promoters/{code}/active")
+def admin_promoter_active(code: str, body: _PromoActiveIn, _admin=Depends(_require_admin)):
+    c = (code or "").strip().upper()
+    conn = database.get_db()
+    try:
+        if not _promo_has(conn, "promoters"):
+            raise HTTPException(status_code=404, detail="No such promoter.")
+        cur = conn.execute("UPDATE promoters SET active=? WHERE code=?", (1 if body.active else 0, c))
+        conn.commit()
+        if cur.rowcount != 1:
+            raise HTTPException(status_code=404, detail="No such promoter.")
+        return {"code": c, "active": bool(body.active)}
+    finally:
+        conn.close()
 
 
 SEC_GATE_UNDECLARED = _sec_gate.install(

@@ -1307,6 +1307,11 @@ REFLECTIONS = {
    ("bea_main.py", ['("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")'], []),
    ("ms.js", ["async function msGeoAuto(", "async function msGeoFromGps(", "function msGeoBanner(", "msGeoAuto();   // GEO-AUTO-1", "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');", "LANG-AUTO-1 (RUL-211", "GEO-NET-CITY-1: the network's own position"], ["function msAbroadNudge("]),
  ],
+ "RUL-212": [
+   ("RULINGS.md", ["A PROMOTER BRINGS LISTERS ON HIS OWN LINK; THE APP COUNTS THEM AND NEVER SHOWS OR HANDLES MONEY FOR IT"], []),
+   ("bea_main.py", ["def _promo_stamp(", "def _promo_note_buzz(", '@app.get("/p/{code}")', '@app.get("/admin/promoters")', "complete = live and bool(two)"], []),
+   ("dashboard.server.html", ["PROMOTER-TRACK-1", "window.prLoad=function"], []),
+ ],
  "RUL-208": [
    ("RULINGS.md", ["SECTIONAL TITLE OR FULL TITLE IN TRUSTSQUARE; QUICK NEVER ASKS"], []),
    ("bea_main.py", ['("title_type",   "TEXT")', "def _norm_title_type(", '"condition", "title_type")'], []),

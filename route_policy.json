@@ -2280,6 +2280,22 @@
   {
    "key": "POST /admin/credentials/queue/alert",
    "level": "admin"
+  },
+  {
+   "key": "GET /p/{code}",
+   "level": "public"
+  },
+  {
+   "key": "GET /admin/promoters",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/promoters",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/promoters/{code}/active",
+   "level": "admin"
   }
  ]
 }
