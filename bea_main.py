@@ -33432,7 +33432,7 @@ def _promo_stamp(request, email):
                 return
             if conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? LIMIT 1", (em,)).fetchone():
                 return          # not a new lister
-            conn.execute("INSERT OR IGNORE INTO promoter_signups (email, code, stamped_at) VALUES (?,?,?)",
+            conn.execute("INSERT INTO promoter_signups (email, code, stamped_at) VALUES (?,?,?) ON CONFLICT(email) DO NOTHING",
                          (em, code, datetime.now(timezone.utc).isoformat(timespec="seconds")))
             conn.commit()
         finally:
@@ -33455,8 +33455,8 @@ def _promo_note_buzz(sender, receiver, channel):
             now = datetime.now(timezone.utc).isoformat(timespec="seconds")
             for lister, other, d in ((s, r, "out"), (r, s, "in")):
                 if conn.execute("SELECT 1 FROM promoter_signups WHERE email=?", (lister,)).fetchone():
-                    conn.execute("INSERT OR IGNORE INTO promoter_buzz (lister_email, other_email, direction, first_at) "
-                                 "VALUES (?,?,?,?)", (lister, other, d, now))
+                    conn.execute("INSERT INTO promoter_buzz (lister_email, other_email, direction, first_at) "
+                                 "VALUES (?,?,?,?) ON CONFLICT(lister_email, other_email, direction) DO NOTHING", (lister, other, d, now))
             conn.commit()
         finally:
             conn.close()
