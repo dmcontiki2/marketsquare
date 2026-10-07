@@ -24710,27 +24710,43 @@ function msOwnerBar(id){
       host.insertAdjacentHTML('beforebegin','<button type="button" id="pk-signin" onclick="msPasskeySignIn()" style="width:100%;box-sizing:border-box;margin:0 0 10px;background:#0f172a;color:#fff;border:none;border-radius:50px;padding:14px;font-family:\'Syne\',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in with Face ID or fingerprint</button>');
     });
   }
+  /* PASSKEY-ALWAYS-1 (David, 7 Oct 2026: "i prefer that method always"). The Face ID / fingerprint offer used to wait
+     on the Seller Hub and vanish for good after one "Not now", so most people never saw it and kept getting e-mailed
+     codes. Now it comes up on WHATEVER screen she is on as soon as she is signed in on this phone, and keeps coming
+     back -- at most once a day after "Not now" -- until this phone is set up. Phones only (PASSKEY-PHONE-1 stands).
+     Passkeys are made as synced keys (residentKey required), so a new phone on the same Apple / Google account signs
+     in with one touch as well, no code. */
+  function pkToday(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  var _pkBusy=false, _pkNo=false;   /* _pkNo: this phone or the server cannot do it -- stop asking for this visit */
   function hubOffer(){
-    try{ if(localStorage.getItem('ts_pk_here') || localStorage.getItem('ts_pk_offer')) return; }catch(_){ return; }
+    if(_pkNo) return;
+    try{ if(localStorage.getItem('ts_pk_here') || localStorage.getItem('ts_pk_offer')==='done'
+             || localStorage.getItem('ts_pk_snooze')===pkToday()) return; }catch(_){ return; }
     if(typeof _msIsSignedIn!=='function' || !_msIsSignedIn()) return;
+    if(_pkBusy || document.getElementById('pk-offer')) return;
+    var cur=document.querySelector('.screen.active'); if(cur && cur.id==='screen-signin') return;
+    _pkBusy=true;
     pkOn().then(function(on){
       if(!on) return null;
       var plat = (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable() : Promise.resolve(false));
       return plat.then(function(ok){ if(!ok) return null; return fetch(BEA_URL+'/auth/passkey/status',{credentials:'include'}).then(function(r){ return r.ok?r.json():null; }); });
     }).then(function(st){
-      if(!st || !st.on) return;
-      var scr=document.getElementById('screen-dashboard'); var list=document.getElementById('my-listings');
-      if(!scr || !scr.classList.contains('active') || !list || document.getElementById('pk-offer')) return;
-      list.insertAdjacentHTML('beforebegin','<div id="pk-offer" style="margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#eef2ff;border:1.5px solid #c7d2fe;color:#1e1b4b;font:500 13px Inter,system-ui,sans-serif;">'
+      _pkBusy=false;
+      if(!st || !st.on){ if(st===null || (st && !st.on)) _pkNo=true; return; }
+      if(document.getElementById('pk-offer')) return;
+      document.body.insertAdjacentHTML('beforeend','<div id="pk-offer" role="dialog" aria-label="Sign in with Face ID or fingerprint" style="position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:9500;max-width:460px;margin:0 auto;padding:14px 16px;border-radius:16px;background:#eef2ff;border:1.5px solid #c7d2fe;color:#1e1b4b;font:500 13px Inter,system-ui,sans-serif;box-shadow:0 10px 30px rgba(15,23,42,.25);">'
         +'<b style="display:block;font-size:14px;margin-bottom:3px;">Next time, sign in with Face ID or fingerprint</b>No email, no code. Your face or fingerprint stays on your phone.'
-        +'<div style="display:flex;gap:8px;margin-top:9px;"><button type="button" onclick="msPasskeyAdd(this)" style="flex:1;background:#4338ca;color:#fff;border:none;border-radius:999px;padding:9px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;">Set it up</button>'
-        +'<button type="button" onclick="try{localStorage.setItem(\'ts_pk_offer\',\'later\')}catch(e){};this.closest(\'#pk-offer\').remove()" style="background:transparent;border:1.5px solid #c7d2fe;border-radius:999px;padding:9px 14px;color:#1e1b4b;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;">Not now</button></div></div>');
-    }).catch(function(){});
+        +'<div style="display:flex;gap:8px;margin-top:10px;"><button type="button" onclick="msPasskeyAdd(this)" style="flex:1;background:#4338ca;color:#fff;border:none;border-radius:999px;padding:10px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;">Set it up</button>'
+        +'<button type="button" onclick="try{localStorage.setItem(\'ts_pk_snooze\',\''+pkToday()+'\')}catch(e){};this.closest(\'#pk-offer\').remove()" style="background:transparent;border:1.5px solid #c7d2fe;border-radius:999px;padding:10px 14px;color:#1e1b4b;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;">Not now</button></div></div>');
+    }).catch(function(){ _pkBusy=false; });
   }
+  window.msPasskeyOffer = hubOffer;
   var _goPk = window.goTo;
   if(typeof _goPk==='function'){
     window.goTo = function(name){ var r=_goPk.apply(this, arguments);
-      try{ if(name==='signin') setTimeout(signinButton, 50); if(name==='dashboard') setTimeout(hubOffer, 1200); }catch(e){}
+      try{ if(name==='signin') setTimeout(signinButton, 50); else setTimeout(hubOffer, 1200); }catch(e){}
       return r; };
   }
+  /* a sign-in that lands without a screen change (an e-mailed link, Google's return, a code) is caught here too */
+  try{ setTimeout(hubOffer, 2500); setInterval(function(){ if(!document.getElementById('pk-offer')) hubOffer(); }, 15000); }catch(e){}
 })();

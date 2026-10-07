@@ -36932,6 +36932,23 @@ def rg_prewave_1():
         bad.append("route_policy.json unreadable: %r" % ex)
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "queue alert + panel, suburb points, country currency, id-status bound, agency intro count")]
 
+@entry("RG-0931", "PASSKEY-ALWAYS-1: once she is signed in on a phone, the Face ID / fingerprint offer comes up on whatever "
+       "screen she is on and keeps coming back (at most once a day after 'Not now') until that phone is set up -- not only "
+       "on the Seller Hub, and never gone for good after one 'Not now'",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js PASSKEY-1 block: hubOffer() draws a fixed sheet on any screen; goTo() runs it on every screen but sign-in; "
+             "a timer catches sign-ins that land without a screen change; 'Not now' writes ts_pk_snooze = today. "
+             "PASSKEY-PHONE-1 (RG-0807) still gates it to phones.",
+       ref="David, 7 Oct 2026: 'i hope Maroushka wont again (or anyone else for that matter) have to first log in with a code "
+           "send to them?' then 'Please build that Claude, i prefer that method always.'")
+def rg_passkey_always_1():
+    bad = _fb28_need([("ms.js", [("PASSKEY-ALWAYS-1", "the always-offer block is gone"),
+                                 ("localStorage.getItem('ts_pk_snooze')===pkToday()", "'Not now' is no longer a one-day snooze"),
+                                 ("else setTimeout(hubOffer, 1200);", "the offer waits for the Seller Hub again"),
+                                 ("document.body.insertAdjacentHTML('beforeend','<div id=\"pk-offer\"", "the offer is no longer drawn on every screen")])])
+    return bad or [(INFO, "Face ID is offered after every sign-in on a phone until it is set up")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
