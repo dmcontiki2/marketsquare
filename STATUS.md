@@ -8,9 +8,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-06 - PLATE-DETECTOR-1 (6 Oct))
+## Last Completed (2026-10-07 - TEXT-ANON-1 (7 Oct))
 
-- **PLATE-DETECTOR-1 (6 Oct)** — number plates are now found by a local detector on the server (plate_detector.py, Apache-2.0 RT-DETRv2, ~1 s/photo, R0 per photo) and blurred plate-shaped before the LLM looks; the LLM no longer supplies plate coordinates (the blob's cause) and a car photo is no longer rejected for its plate. Both photo doors wired; eval 100% recall / 0 false boxes on real photos; RG-0904; migration 067; model via media_push.bat 6b.
+- **TEXT-ANON-1 (7 Oct)** — identifying text in photos (names, business names, streets, addresses, phones, websites) is now located by local OCR (R0, ~0.3 s) and blurred to the glyph in every photo door incl. profile photos; the LLM judges by index, suburbs/cities/prices stay. RG-0911; migration 068.
+- **AREA-ONLY-1 (7 Oct)** — public listing reads locate a listing to its suburb centroid (or a ~1 km cell), never the house; street_address never leaves. RG-0913.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +36,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **TEXT-ANON-1 (7 Oct)** — identifying text in photos (names, business names, streets, addresses, phones, websites) is now located by local OCR (R0, ~0.3 s) and blurred to the glyph in every photo door incl. profile photos; the LLM judges by index, suburbs/cities/prices stay. RG-0911; migration 068.
+- **AREA-ONLY-1 (7 Oct)** — public listing reads locate a listing to its suburb centroid (or a ~1 km cell), never the house; street_address never leaves. RG-0913.
 
 - **PLATE-DETECTOR-1 (6 Oct)** — number plates are now found by a local detector on the server (plate_detector.py, Apache-2.0 RT-DETRv2, ~1 s/photo, R0 per photo) and blurred plate-shaped before the LLM looks; the LLM no longer supplies plate coordinates (the blob's cause) and a car photo is no longer rejected for its plate. Both photo doors wired; eval 100% recall / 0 false boxes on real photos; RG-0904; migration 067; model via media_push.bat 6b.
 

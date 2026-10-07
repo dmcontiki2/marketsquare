@@ -2419,3 +2419,104 @@ warmed 11 tutor videos on the CF edge
  ============================================================
 Press any key to continue . . . 
 Wed 10/07/2026  2:01:36.80  drift: DEPLOY DRIFT: 47 files differ from live - LIVE IS AHEAD by 2 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: ms.js, orchestration_v2/email_templates.html, orchestration_v2/templates/intl/AU/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/AU/adventures_experiences_outreach.html, orchestration_v2/templates/intl/AU/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/AU/agency_outreach.html, orchestration_v2/templates/intl/AU/cars_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_outreach.html, orchestration_v2/templates/intl/AU/property_outreach.html, orchestration_v2/templates/intl/AU/service_company_outreach.html, orchestration_v2/templates/intl/AU/services_casuals_outreach.html, orchestration_v2/templates/intl/AU/services_technical_outreach.html, orchestration_v2/templates/intl/AU/sports_club_outreach.html, orchestration_v2/templates/intl/AU/tutor_institution_outreach.html, orchestration_v2/templates/intl/AU/tutors_outreach.b.html, orchestration_v2/templates/intl/AU/tutors_outreach.html, orchestration_v2/templates/intl/GB/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/GB/adventures_experiences_outreach.html, orchestration_v2/templates/intl/GB/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/GB/agency_outreach.html, orchestration_v2/templates/intl/GB/cars_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_outreach.html, orchestration_v2/templates/intl/GB/property_outreach.html, orchestration_v2/templates/intl/GB/service_company_outreach.html, orchestration_v2/templates/intl/GB/services_casuals_outreach.html, orchestration_v2/templates/intl/GB/services_technical_outreach.html, orchestration_v2/templates/intl/GB/sports_club_outreach.html, orchestration_v2/templates/intl/GB/tutor_institution_outreach.html, orchestration_v2/templates/intl/GB/tutors_outreach.b.html, orchestration_v2/templates/intl/GB/tutors_outreach.html, orchestration_v2/templates/intl/US/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/US/adventures_experiences_outreach.html, orchestration_v2/templates/intl/US/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/US/agency_outreach.html, orchestration_v2/templates/intl/US/cars_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_outreach.html, orchestration_v2/templates/intl/US/property_outreach.html, orchestration_v2/templates/intl/US/service_company_outreach.html, orchestration_v2/templates/intl/US/services_casuals_outreach.html, orchestration_v2/templates/intl/US/services_technical_outreach.html, orchestration_v2/templates/intl/US/sports_club_outreach.html, orchestration_v2/templates/intl/US/tutor_institution_outreach.html, orchestration_v2/templates/intl/US/tutors_outreach.b.html, orchestration_v2/templates/intl/US/tutors_outreach.html
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Wed 10/07/2026  2:01:36.89
+ ============================================================
+
+  [autobump] ms.js changed -> marketsquare.html ref ?v=523
+  [autobump] 1 reference(s) bumped
+harness-parity: quick.html == genie/HARNESS.html
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 61 honestly not-wired, 1 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 4, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+folded 1, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-07T00:01:41Z   mode=strict
+  Working tree: 19 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  290300 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 1 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: REVIEW   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 20692), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-10-07T00:01:43Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-10-06 (1 days ago)
+    - CHANGELOG newest    : 2026-10-06
+    - Ship pending        : marketsquare.html
+    - (note) CHANGE_REGISTER.md not modified this session
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 10137600 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'marketsquare.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_ship_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'scripts/static_versions.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'TSL_READY.flag', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+0205269 Release Wed 10/07/2026  2:01:46.09
+sync-origin [MarketSquare]: took in 2 commit(s) from origin/main by merge -> c4fed90
+ [5/6] Pushing to the mirror - backup ref main...
+To https://github.com/dmcontiki2/marketsquare.git
+   654f843..c4fed90  HEAD -> main
+ [5/6] Publishing the deploy ref - THIS is the deploy...
+
+  DEPLOY-GATE-ALL-1: publishing the deploy ref -- running the pre-deploy scan.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-07T00:01:53Z   mode=strict
+  Working tree: 1 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: ok   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  Pre-deploy scan: ok -- push allowed.
+To https://github.com/dmcontiki2/marketsquare.git
+   654f843..c4fed90  HEAD -> deploy
+
+  PUBLISHED. The server deploys it within ~2 minutes - with health check,
+  monotonic cache-buster, auto-rollback, then seed + migrations hook.
+
+ [6/6] Waiting ~3 minutes for the server to apply and settle...
+ERROR: Input redirection is not supported, exiting the process immediately.
+  [OK] /health answers ok 
+  DEPLOY DRIFT: 51 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_COUNTER.json, STATUS.md, orchestration_v2/email_templates.html, orchestration_v2/templates/collectors_dealer_outreach.html, orchestration_v2/templates/collectors_outreach.html, orchestration_v2/templates/intl/AU/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/AU/adventures_experiences_outreach.html, orchestration_v2/templates/intl/AU/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/AU/agency_outreach.html, orchestration_v2/templates/intl/AU/cars_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_outreach.html, orchestration_v2/templates/intl/AU/property_outreach.html, orchestration_v2/templates/intl/AU/service_company_outreach.html, orchestration_v2/templates/intl/AU/services_casuals_outreach.html, orchestration_v2/templates/intl/AU/services_technical_outreach.html, orchestration_v2/templates/intl/AU/sports_club_outreach.html, orchestration_v2/templates/intl/AU/tutor_institution_outreach.html, orchestration_v2/templates/intl/AU/tutors_outreach.b.html, orchestration_v2/templates/intl/AU/tutors_outreach.html, orchestration_v2/templates/intl/GB/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/GB/adventures_experiences_outreach.html, orchestration_v2/templates/intl/GB/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/GB/agency_outreach.html, orchestration_v2/templates/intl/GB/cars_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_outreach.html, orchestration_v2/templates/intl/GB/property_outreach.html, orchestration_v2/templates/intl/GB/service_company_outreach.html, orchestration_v2/templates/intl/GB/services_casuals_outreach.html, orchestration_v2/templates/intl/GB/services_technical_outreach.html, orchestration_v2/templates/intl/GB/sports_club_outreach.html, orchestration_v2/templates/intl/GB/tutor_institution_outreach.html, orchestration_v2/templates/intl/GB/tutors_outreach.b.html, orchestration_v2/templates/intl/GB/tutors_outreach.html, orchestration_v2/templates/intl/US/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/US/adventures_experiences_outreach.html, orchestration_v2/templates/intl/US/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/US/agency_outreach.html, orchestration_v2/templates/intl/US/cars_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_outreach.html, orchestration_v2/templates/intl/US/property_outreach.html, orchestration_v2/templates/intl/US/service_company_outreach.html, orchestration_v2/templates/intl/US/services_casuals_outreach.html, orchestration_v2/templates/intl/US/services_technical_outreach.html, orchestration_v2/templates/intl/US/sports_club_outreach.html, orchestration_v2/templates/intl/US/tutor_institution_outreach.html, orchestration_v2/templates/intl/US/tutors_outreach.b.html, orchestration_v2/templates/intl/US/tutors_outreach.html
+  [WAIT] Not clean yet - one more 2-minute server tick...
+ERROR: Input redirection is not supported, exiting the process immediately.
+DEPLOY DRIFT: 51 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_COUNTER.json, STATUS.md, orchestration_v2/email_templates.html, orchestration_v2/templates/collectors_dealer_outreach.html, orchestration_v2/templates/collectors_outreach.html, orchestration_v2/templates/intl/AU/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/AU/adventures_experiences_outreach.html, orchestration_v2/templates/intl/AU/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/AU/agency_outreach.html, orchestration_v2/templates/intl/AU/cars_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_outreach.html, orchestration_v2/templates/intl/AU/property_outreach.html, orchestration_v2/templates/intl/AU/service_company_outreach.html, orchestration_v2/templates/intl/AU/services_casuals_outreach.html, orchestration_v2/templates/intl/AU/services_technical_outreach.html, orchestration_v2/templates/intl/AU/sports_club_outreach.html, orchestration_v2/templates/intl/AU/tutor_institution_outreach.html, orchestration_v2/templates/intl/AU/tutors_outreach.b.html, orchestration_v2/templates/intl/AU/tutors_outreach.html, orchestration_v2/templates/intl/GB/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/GB/adventures_experiences_outreach.html, orchestration_v2/templates/intl/GB/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/GB/agency_outreach.html, orchestration_v2/templates/intl/GB/cars_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_outreach.html, orchestration_v2/templates/intl/GB/property_outreach.html, orchestration_v2/templates/intl/GB/service_company_outreach.html, orchestration_v2/templates/intl/GB/services_casuals_outreach.html, orchestration_v2/templates/intl/GB/services_technical_outreach.html, orchestration_v2/templates/intl/GB/sports_club_outreach.html, orchestration_v2/templates/intl/GB/tutor_institution_outreach.html, orchestration_v2/templates/intl/GB/tutors_outreach.b.html, orchestration_v2/templates/intl/GB/tutors_outreach.html, orchestration_v2/templates/intl/US/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/US/adventures_experiences_outreach.html, orchestration_v2/templates/intl/US/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/US/agency_outreach.html, orchestration_v2/templates/intl/US/cars_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_outreach.html, orchestration_v2/templates/intl/US/property_outreach.html, orchestration_v2/templates/intl/US/service_company_outreach.html, orchestration_v2/templates/intl/US/services_casuals_outreach.html, orchestration_v2/templates/intl/US/services_technical_outreach.html, orchestration_v2/templates/intl/US/sports_club_outreach.html, orchestration_v2/templates/intl/US/tutor_institution_outreach.html, orchestration_v2/templates/intl/US/tutors_outreach.b.html, orchestration_v2/templates/intl/US/tutors_outreach.html
+  If still ahead: watch  ssh root@178.104.73.239 "tail -20 /var/log/marketsquare-deploy.log"
+  [LOCK] released.
+
+ ============================================================
+  RELEASE COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Wed 10/07/2026  2:02:09.81  SHIPPED rc=0 â€” server runs migrations + smoke itself

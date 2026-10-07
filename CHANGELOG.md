@@ -1,3 +1,40 @@
+## 2026-10-07 — TEXT-ANON-1: identifying text in photos is found locally and blurred to the glyph, in every door
+
+David, 7 Oct: "this same photo blurring method must also be used for all photos uploaded everywhere to detect and remove anonymity violations — number plates, names, surnames, business names, street names, addresses, etc.; what we do allow is suburbs."
+
+The plate lesson applied to text. `text_anon.py` (RapidOCR = PaddleOCR PP-OCRv3 on onnxruntime, Apache-2.0, ~0.3 s per photo on the box, R0 per photo) finds every piece of text to the pixel. Rules blur the identifiers that need no judgement BEFORE the LLM looks: phone numbers, e-mail addresses, websites, plates written as text, long ID/registration numbers. The LLM gets the remaining strings as a numbered list and answers with the INDICES that identify a person, business or exact place (name, surname, agency, dealership, farm, producer, stall, street, house number, address); suburb, city, province, prices, generic signage words and a maker's badge on resold goods are allowed and said so. Those strings are blurred line by line. A region the LLM flags whose text the full-frame OCR missed (a small or curved label) gets ONE zoomed OCR pass on that region, returning exact glyph boxes — the LLM never supplies coordinates for text. One verify read closes it.
+
+Doors: the seller upload gate (`/listings/photo`, `/listings/{id}/photo/draft`, AdvertAgent publish), the agency import, and now the profile-photo door (`/users/{email}/photo`, never blocking). ID and trust-score document uploads are verification material, not published, and are deliberately untouched. `/health` carries `text_anon.ready`. Migration 068 installs the OCR. Ledger RG-0911.
+
+Proof (offline, scripts/eval_text_anon.py + the stubbed-LLM chain on eval_photos/text): estate board → agency, agent and phone blurred, SOLD kept; letterbox number + surname and the street sign blurred; a suburb sign and a price untouched; bakkie branding blurred with the Ford badge kept; stall label blurred with "Handmade in Mamelodi" kept. Live proof recorded in the session.
+
+Limits: a graphic logo with no readable text still goes down the old path (RUL-033: the seller is asked to replace the photo); handwritten or very small labels depend on the LLM naming the region first, after which the zoomed OCR usually finds them.
+
+AREA-ONLY-1 (same ruling, cards and feature reports): cards already print suburb/area only, but the public feed and detail payloads carried `listing_lat/lng`, which the property flow fills from the seller's STREET ADDRESS — an exact pin for anyone, with the detail map zooming to street level on it. Buyers now get the suburb centroid (or a ~1 km cell when no suburb is known); `street_address` never leaves; the seller's own view and staff keep the exact point (POI linking). Detail map opens at suburb zoom. Ledger RG-0913.
+
+## 2026-10-06 — WATCH-COVER-1 (Goal run 31): the wristwatch examples no longer lead with a pocket watch
+
+- Four live AI example adverts (#476 ZA "Vintage Omega Seamaster", #486 US / #499 GB / #512 AU "Vintage wristwatch ·
+  1960s automatic, serviced") opened on a gold pocket watch on a chain; the same picture was the wristwatch card in every
+  collectors letter (ZA + GB/US/AU, private and dealer). Found on the Goal walk: the app's own photo read titled it
+  "Vintage Gold-Tone Pocket Watch". Cover is now the boxed-wristwatches photo (sup_email2_watch_2.jpg) and the pocket watch
+  is dropped from those adverts; the seed scripts match, so a re-run cannot bring it back. RG-0908.
+
+## 2026-10-06 — CAT-HINT-HOME-1 (Goal run 31): the category tip no longer covers an advert
+
+- A visitor who opened an advert link cold (every example card in the letters opens one) had "💡 Long-press any category
+  to set it as your home screen" floating over the advert's contact button for about 4 seconds — a tip about tiles that
+  were not on screen. It now shows only when Home is the screen in front of her, and waits for that visit. RG-0909.
+
+## 2026-10-06 — ABROAD-NUDGE-1 (Goal run 31): a visitor from abroad is asked where she is
+
+- A collector opening TrustSquare from London (en-GB phone) or the US got "South Africa / Pretoria" on Home, rand prices,
+  the South African legal card, and a listing filed in Pretoria — while the collectors letters now point at London, New
+  York and Sydney adverts (EMAIL-EXAMPLES-INTL-1). Now, when she has never picked a city and her network (Cloudflare's
+  country, read and never stored) is the US, the UK or Australia, Home asks once: "You seem to be in the United Kingdom.
+  Show listings in London instead of Pretoria?" — **Show London** / **Stay in South Africa**. It never switches by
+  itself, never shows over an advert link or an invited seller's form, and her answer is remembered. RG-0910.
+
 ## 2026-10-06 — PLATE-DETECTOR-1: number plates found by a local detector, blurred plate-shaped, no more blob
 
 David, 6 Oct: "to load a car and to have AI blur the numberplate, this should be automatic, not blocking the photo or interfering with the lister — the AI keeps on blotching a big blob which looks very ugly. I have used other agents myself with no problem."
