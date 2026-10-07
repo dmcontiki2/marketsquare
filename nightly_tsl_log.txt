@@ -1263,3 +1263,4 @@ DEPLOY DRIFT: 5 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
  ============================================================
 Press any key to continue . . . 
 Wed 10/07/2026  4:55:50.63  SHIPPED rc=0 - server now runs migrations + health itself
+Wed 10/07/2026  5:45:08.52  SHIPPING - DEPLOY DRIFT: 4 files differ from live - LIVE IS AHEAD by 3 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: bea_main.py, marketsquare_admin.html, ms.js, route_policy.json | gate green, releasing unattended

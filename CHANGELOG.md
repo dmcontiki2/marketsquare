@@ -1,3 +1,26 @@
+## 2026-10-07 — LANG-AUTO-1 + GEO-NET-CITY-1 (RUL-211 amended): language and city follow her too
+
+- **Language:** with no language chosen in the menu, the app now speaks the phone's language when it offers it
+  (Afrikaans, isiZulu, isiXhosa, Sepedi, Spanish, German, Portuguese, …). An English-first phone stays English. Nothing
+  is stored, so the phone keeps deciding until she picks in the menu; her pick (English included) always wins. RG-0914.
+- **City from the network:** /quick/me now also passes the network's own position (Cloudflare's visitor location
+  headers, read per visit, never stored), and the app puts a visitor who blocks phone location in her nearest covered
+  city within 150 km instead of the country's main city. Works the moment "Add visitor location headers" is on in
+  Cloudflare (Rules → Settings → Managed Transforms); until then it falls back exactly as before. RG-0915.
+
+## 2026-10-07 — GEO-AUTO-1 (RUL-211): the app follows where she is
+
+- Every visitor started in South Africa / Pretoria whatever their location; the phone's location was only used for
+  distance badges and the network country only by Quick. David ruled (RUL-211): switch automatically, ask only for VPNs.
+- Until she picks a place herself: her phone's location (when allowed) puts her in the nearest covered city within
+  150 km, in any covered country — this beats a VPN; otherwise her network's country (Cloudflare, per visit, never
+  stored) and its main city (Pretoria, New York, London, Sydney, Nairobi, Windhoek). Home says once
+  "📍 Showing London, United Kingdom — from your internet connection. On a VPN or somewhere else?" with
+  **Change country** (opens the country list) and **✓ That's right**. A country we don't cover yet is named.
+- Her own pick always wins and is never overwritten; the detected place is kept separately (ms_auto_city /
+  ms_auto_country) and re-checked each visit, so a return visit opens where she was. Replaces ABROAD-NUDGE-1.
+  RG-0910 amended (superseded), RG-0912.
+
 ## 2026-10-07 — TEXT-ANON-1: identifying text in photos is found locally and blurred to the glyph, in every door
 
 David, 7 Oct: "this same photo blurring method must also be used for all photos uploaded everywhere to detect and remove anonymity violations — number plates, names, surnames, business names, street names, addresses, etc.; what we do allow is suburbs."
