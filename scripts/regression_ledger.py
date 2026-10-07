@@ -36866,6 +36866,38 @@ def rg_area_only_1():
         bad.append("the detail map zooms to street level again")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "buyers get the suburb centroid or a ~1 km cell, never the house")]
 
+@entry("RG-0914", "LANG-AUTO-1 (RUL-211, David 7 Oct 2026): with no language chosen, the app speaks the phone's language when it offers it; her own pick always wins",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js language layer start(): navigator.languages, first English-or-offered entry decides, nothing stored (KEY removed after the automatic setLang)",
+       ref="David 7 Oct 2026, RUL-211: the place must follow her 'for many reasons, including languages'; the app stayed English until the EN button.")
+def rg_lang_auto_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "LANG-AUTO-1 (RUL-211" not in js or "navigator.languages" not in js:
+        bad.append("the phone's language is no longer read")
+    if "setLang(_c); try{ localStorage.removeItem(KEY); }catch(e){}" not in js:
+        bad.append("an automatic language is stored as her own choice (the phone would stop deciding)")
+    if "if(_c==='en') break;" not in js:
+        bad.append("an English-first phone can be switched to another language")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "language follows the phone until she chooses")]
+
+@entry("RG-0915", "GEO-NET-CITY-1 (RUL-211, 7 Oct 2026): the network's own position (Cloudflare visitor location headers) places a visitor who blocks phone location in her nearest city",
+       LOCKED, fixed_on="2026-10-07",
+       scope="bea_main.py /quick/me geo carries lat/lng from cf-iplatitude/cf-iplongitude (read, never stored); ms.js msGeoAuto picks the nearest city <=150 km",
+       ref="7 Oct 2026: Cloudflare sent only the country, so a London visitor without phone location started in London only by luck of the main-city list.")
+def rg_geo_net_city_1():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if '("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")' not in b:
+        bad.append("/quick/me no longer passes the network position")
+    if "GEO-NET-CITY-1: the network's own position" not in js:
+        bad.append("the app no longer uses the network position for her city")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "network position -> nearest city")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

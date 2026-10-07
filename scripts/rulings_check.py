@@ -1303,8 +1303,9 @@ REFLECTIONS = {
    ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
  ],
  "RUL-211": [
-   ("RULINGS.md", ["THE APP FOLLOWS WHERE SHE IS -- AUTOMATICALLY -- AND ONLY HER OWN CHOICE OVERRIDES IT"], []),
-   ("ms.js", ["async function msGeoAuto(", "async function msGeoFromGps(", "function msGeoBanner(", "msGeoAuto();   // GEO-AUTO-1", "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');"], ["function msAbroadNudge("]),
+   ("RULINGS.md", ["THE APP FOLLOWS WHERE SHE IS -- AUTOMATICALLY -- AND ONLY HER OWN CHOICE OVERRIDES IT", "[AMENDED 7 Oct 2026, David"], []),
+   ("bea_main.py", ['("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")'], []),
+   ("ms.js", ["async function msGeoAuto(", "async function msGeoFromGps(", "function msGeoBanner(", "msGeoAuto();   // GEO-AUTO-1", "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');", "LANG-AUTO-1 (RUL-211", "GEO-NET-CITY-1: the network's own position"], ["function msAbroadNudge("]),
  ],
  "RUL-208": [
    ("RULINGS.md", ["SECTIONAL TITLE OR FULL TITLE IN TRUSTSQUARE; QUICK NEVER ASKS"], []),

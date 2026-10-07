@@ -7062,6 +7062,14 @@ def quick_me(request: Request, ts_user: str = Cookie(default=None)):
     # Cloudflare adds it). Read-only, never stored; Quick uses it only to pick which examples to show.
     _geo = {"country": (request.headers.get("cf-ipcountry") or "").upper()[:2] or None,
             "city": (request.headers.get("cf-ipcity") or "")[:60] or None}
+    # GEO-NET-CITY-1 (RUL-211, 7 Oct 2026): with Cloudflare's "visitor location headers" on, the network's own
+    # position too, so a visitor who blocks phone location still starts in her nearest city. Read, never stored.
+    for _k, _h in (("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")):
+        try:
+            _v = float(request.headers.get(_h) or "x")
+            _geo[_k] = _v if -180.0 <= _v <= 180.0 else None
+        except ValueError:
+            _geo[_k] = None
     out = {"geo": _geo, "signed_in": False, "key": auth.API_KEY if hasattr(auth, "API_KEY") else os.environ.get("MS_API_KEY", ""),
            "email": None, "name": None, "eula_accepted": False, "city": None, "listings": 0,
            # QUICK-TRUST-1 (25 Sep 2026 inspection, backend-09): the trust Quick shows is the app's own number --
