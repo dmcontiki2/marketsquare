@@ -20187,7 +20187,15 @@ async function msGeoAuto(){
   const cities = await _msGeoCities(cc);
   if (!cities.length || _msGeoSrcIsGps()) return;
   const gc = String((me.geo && me.geo.city) || '').toLowerCase();
-  const pick = cities.find(function(c){ return gc && c.name.toLowerCase() === gc; })
+  // GEO-NET-CITY-1: the network's own position (Cloudflare visitor location headers) -> her nearest city in that country
+  let near = null;
+  if (me.geo && me.geo.lat != null && me.geo.lng != null) {
+    let bk = 1e9;
+    cities.forEach(function(c){ if (c.lat == null || c.lng == null) return;
+      const km = _haversineKm(me.geo.lat, me.geo.lng, c.lat, c.lng); if (km < bk) { bk = km; near = c; } });
+    if (bk > 150) near = null;
+  }
+  const pick = near || cities.find(function(c){ return gc && c.name.toLowerCase() === gc; })
             || cities.find(function(c){ return c.name === _MS_GEO_MAIN[cc]; }) || cities[0];
   _msGeoApply(cc, co.name, pick, 'net');
 }
@@ -24464,6 +24472,24 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
        chose Sesotho before carries on in Sepedi -- mapped once and stored, so it never asks the server for 'st' again. */
     if(saved==='st'){ saved='nso'; store(KEY,'nso'); }
     if(saved && saved!=='en' && (LANGS.some(function(x){ return x[0]===saved; }) || /^(nso|ng|tn|pt|sw|de|tr|ru|ar|cy|pl|ro|pa|es|zh|tl|vi|yue)$/.test(saved))) setLang(saved);
+    /* LANG-AUTO-1 (RUL-211, David 7 Oct 2026): no choice of her own yet -> the app speaks her phone's language when it
+       offers it. Her first phone language that is English, or one we offer, decides; nothing is stored, so the phone
+       keeps deciding until she picks in the menu (that choice, English included, is stored and always wins). */
+    if(!saved){
+      var _pl=(navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language||'']);
+      for(var _i=0; _i<_pl.length; _i++){
+        var _t=String(_pl[_i]||'').toLowerCase(), _c=_t.split('-')[0];
+        if(!_c) continue;
+        if(_c==='en') break;
+        if(_c==='fil') _c='tl';
+        if(_c==='st') _c='nso';
+        if(_c==='zh' && /-(hk|mo)\b|yue/.test(_t)) _c='yue';
+        if(LANGS.some(function(x){ return x[0]===_c; }) || /^(zu|xh|af|nso|ng|tn|pt|sw|de|tr|ru|ar|cy|pl|ro|pa|es|zh|tl|vi|yue)$/.test(_c)){
+          setLang(_c); try{ localStorage.removeItem(KEY); }catch(e){}
+          break;
+        }
+      }
+    }
     document.addEventListener('click', function(){ if(document.getElementById('ts-langm')) pill(); });
     var tmr=null;
     rescan=function(){
