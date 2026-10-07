@@ -1,3 +1,66 @@
+## 2026-10-06 — PLATE-DETECTOR-1: number plates found by a local detector, blurred plate-shaped, no more blob
+
+David, 6 Oct: "to load a car and to have AI blur the numberplate, this should be automatic, not blocking the photo or interfering with the lister — the AI keeps on blotching a big blob which looks very ugly. I have used other agents myself with no problem."
+
+Root cause. The photo gate asked a general vision LLM to NAME coordinates for the plate (0–1000 scale). An LLM reads a photo well and measures it badly: its boxes land 5–10% of the frame off, sometimes below the plate (listing 246, 11 Jul). Because the boxes could not be trusted, every layer added since — generous boxes, zoom-refine, verify-and-repaint rounds, the last-resort rung — painted MORE blur on the same photo. That stacking was the blob. Since RUL-033 (19 Aug) the LLM lane has not blurred at all: a car photo with a plate was REJECTED with "not anonymous — replace it", which is the "blocking the lister" David describes. The tools that do this easily use a small detector trained for plates, not an LLM.
+
+What changed. `plate_detector.py`: RT-DETRv2 licence-plate detector (justjuu/rtdetr-v2-license-plate-detection, Apache-2.0 — the YOLO plate models on the Hub are AGPL-3.0, which closed source cannot carry), exported to ONNX, running on the Hetzner box's own CPU through onnxruntime (~1 s/photo, zero per-photo cost, nothing leaves the server, hash-pinned model). Two stages in BOTH photo doors (seller upload gate and agency import):
+- Stage 0 — vehicle categories: every plate is detected and blurred plate-shaped (plate + frame margin for the dealer strip, soft 2 px edge) BEFORE the LLM scan, so the scan normally comes back "clean" first time and the seller sees "we blurred the number plate".
+- Stage 2 — any category: when the LLM still names a plate, the detector's pixel-accurate box replaces the LLM's guess, is blurred, and ONE verify read confirms it. Anything that is not a plate (signage, logos, the seller's own label) flows into the existing path exactly as before; RUL-033 is untouched for that lane.
+Fail-safe: no package / no model / any error → both stages are no-ops and the gate behaves as it did on 5 Oct. `/health` now carries `plate_detector.ready`.
+
+Proof. `scripts/eval_plate_detector.py` against eval_photos/TRUTH.json: 100% plate recall on all 11 plate rows (incl. the tiny background plate and the two-plate frame), 0 false boxes on the real clean photos; the cartoon traps trip it, which is exactly why it is only trusted alone in vehicle categories. Ledger RG-0904. Migration 067 installs onnxruntime; the 171 MB model rides media_push.bat (section 6b), git-ignored.
+
+Known limit. A plate photographed at 25–40° gets a near-square patch (the detector box is axis-aligned); still only the plate area, not the car.
+
+Also closed: the LLM-lane painter's pixel-evidence capsule (15 Jul) could leave characters readable (offline: '345' of a straight plate on syn_06); that fallback is removed — only a model-reported angle shapes a capsule, otherwise the safe axis-aligned core. No live effect today (that lane is reject-only under RUL-033); it matters the day RUL-033 is lifted.
+
+## 2026-10-06 — Maroushka listing 526: sizes lost on save, no way to re-add refused photos
+
+- SIZE-CARRY-1 (RG-0905): the server's create model had no floor_area / erf_size, so EVERY new advert on every
+  lane lost both sizes on first save (only Edit kept them). Added to the model + written on create. The sell flow
+  now sends floor_area, erf_size and title_type on draft create and patch; the Simple Builder reads its own form's
+  keys (floor_size, stand_size, bedrooms, bathrooms, property_type) — it had been sending nulls for all five.
+- EDIT-ADD-PHOTO-1 (RG-0906): the Edit screen hid the "Add Photo" tile at a hard 10 photos; PHOTO-CAP-2 had raised
+  the real cap to 24 for property but missed the tile. Maroushka had 10 accepted + 3 refused by the anonymity
+  check, edited the 3, and had no button to add them back. Tile now follows msPhotoCap.
+- Evidence (probed, server log 6 Oct 17:25 UTC): 13 x POST /listings/526/photo/draft, 3 x 422 (anonymity gate,
+  working as designed), 10 x 200; PUT /listings/526 at 17:32 restored floor 100 / erf 2400.
+
+## 2026-10-06 — CODE-SURVIVE-1 (RUL-210): sign-in codes no longer die on every deploy
+
+- Pending sign-in codes lived in server memory; every deploy/restart wiped them, so a person typing the right code
+  was told "wrong or expired". Probed on Maroushka's account: code sent 17:25 → restart 17:27 → refused 17:41;
+  sent 17:58 → restart 18:00. Codes now persist in the private dir (0600) with their guess budget. RG-0907.
+- RUL-210 recorded: after the first sign-up a browser stays signed in (180-day cookie, renewed on every visit,
+  ends only on Sign out); a code is asked only to prove an email on a new phone/browser, and Google avoids even that.
+
+## 2026-10-06 — Casuals wave fixes: the Quick casuals audit closed (RUL-209)
+
+David ran the casuals audit at 06:00 (QUICK_CASUALS_AUDIT_2026-10-06.html) and at 06:40 said "please fix all of the faults" and answered its four decisions (RUL-209).
+
+FIELD-SCRUB-1 (AUD-117): a phone number, e-mail or street address typed into area, price, availability or any other short text field is now scrubbed on create, edit and Local Market create, with the same conservative regex E2E-HMI-1 runs on title and description (prices, sizes and suburb names untouched). Ledger RG-0896.
+
+BUZZ-ANON-2 + BUZZ-NOINBOX-1 (AUD-127, AUD-090): the Buzz e-mail no longer puts the sender's address in Reply-To (RUL-171(d)); it tells the receiver to answer in My Space > Buzz. A buzz to an inbox-less key account with no push is reported as not delivered, with what the other side must switch on, never as "went to their email". RG-0533 amended; RG-0897.
+
+SVC-FILTER-MATCH-1 (AUD-173 class): TrustSquare's Services filters match Quick adverts by meaning: Weekdays finds "Mon, Wed, Fri", Domestic finds "Home cleaner", Child Minding finds "Nanny", and an area matches any of a multi-area advert's areas. RG-0898.
+
+GATE-WORDS-2 (AUD-208): Quick's saved screen checks the role's own gate first, so car guards, security guards and licensed trades are told their licence is checked. RG-0899.
+
+LOGO-LIGHT-1 (F6 / L16): the app logo is a 17 KB SVG instead of the 183 KB PNG every landing from Quick downloaded first. RG-0900.
+
+ROLE-FIND-STRICT-1: Quick's Find judges a Services advert that names its trade on its title and trade, so an electrician whose description says "domestic work" no longer answers a Home cleaner search. RG-0901.
+
+KEY-TYPED-1 (AUD-131): a typed @key.trustsquare.co address is refused at Quick's save. RG-0902.
+
+COWORKER-VOUCH-1 (RUL-209(a)): the confirm page offers "Yes, they worked for me" and "Yes, I worked with them"; either is the same vouch and opens the RUL-115 gate. The worker's Hub and reference wording say "worked for or with". RG-0903.
+
+HELP-PUBLIC-1 (RUL-209(d)): Quick's How button opens the story guides for everyone. RG-0547 amended.
+
+Not changed: Pretoria's area tiles keep Midrand and Sandton (by design they carry their own Johannesburg city); SMS sign-in codes stay off (RUL-209(b)).
+
+Cost model impact: none.
+
 ## 2026-10-06 — PROFILE-DO-1 + TRUST-OVERVIEW-SYNC-1: the profile step gets a button; Overview follows the score
 
 PROFILE-DO-1: the AI coach's "Complete profile" step told David to "open My Dashboard and fill in your bio, suburb, and category description" and said there was no button. No My Dashboard and no bio/suburb field exist; the ladder actually scores name + country + a photo + at least one advert. The rule now lives in one helper (_profile_parts) read by both the ladder and the coach; the step carries the four parts, says what is scored, and its new button shows a checklist with a button on each missing part (Add my name / Choose my country / Add my photo / Create my advert). David's missing part was the advert. Ledger RG-0894.
