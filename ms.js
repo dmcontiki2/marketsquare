@@ -20325,6 +20325,15 @@ async function msEmptyCityNudge(){
     go.onclick = function(){ bar.remove(); try{ sessionStorage.setItem(key, '1'); }catch(_){} selectCity(tc.id == null ? null : tc.id, tc.name, tc.lat, tc.lng); };
     no.onclick = function(){ bar.remove(); try{ sessionStorage.setItem(key, '1'); }catch(_){} };
     bar.appendChild(t); bar.appendChild(go); bar.appendChild(no);
+    /* CITY-FIRST-SELLER-1 (Goal run 32, 7 Oct 2026): the empty-city bar spoke only to buyers. A Durban stranger who came to
+       sell was told to go to Pretoria; an empty city is also the best moment to be the first seller in it. */
+    if (typeof openSellNav === 'function') {
+      const sl = document.createElement('button'); sl.type = 'button'; sl.id = 'ms-cnudge-sell';
+      sl.textContent = 'Selling in ' + activeCity.name + '? Be the first \u2192';
+      sl.style.cssText = 'flex:1 1 100%;text-align:left;background:transparent;border:0;padding:2px 0 0;color:#065F46;font-weight:700;font-size:13px;text-decoration:underline;cursor:pointer;';
+      sl.onclick = function(){ bar.remove(); try{ sessionStorage.setItem(key, '1'); }catch(_){} openSellNav(); };
+      bar.appendChild(sl);
+    }
     const old = document.getElementById('ms-geo-bar');
     if (old && old.parentNode === cur) cur.insertBefore(bar, old.nextSibling);
     else { const hdr = cur.firstElementChild; if (hdr && hdr.nextSibling) cur.insertBefore(bar, hdr.nextSibling); else cur.insertBefore(bar, cur.firstChild); }
@@ -21299,6 +21308,13 @@ local_market: { label:'Local Market', typePickTitle:'What are you selling?',
    instruments:[['title','What is it?','text','e.g. Acoustic guitar'],['brand','Brand & model','text','e.g. Yamaha F310'],['year','Year','text','e.g. 2019'],['cond','Condition','select','Excellent|Good|Fair|Needs work']],
    antiques:[['title','What is it?','text','e.g. Silver pocket watch'],['era','Era / period','text','e.g. Victorian, c. 1890'],['origin','Origin / maker','text','e.g. Birmingham, J.W. Benson'],['prov','Provenance','text','e.g. Family estate, receipts held']],
    general:[['title','What is it?','text','e.g. Mountain bike'],['brand','Brand','text','e.g. Giant'],['cond','Condition','select','New|Like new|Good|Used'],['extras','Extras included','text','e.g. Helmet, pump']]},
+  lmWords:{   // LM-KIND-WORDS-1
+   food:{coach:"<b>This is your unfair advantage.</b> A jar of honey is R80; <i>your</i> honey from <i>your</i> hives has a queue. Tell it.",care:'e.g. Store below 25°C',why:'e.g. Hobby outgrew the house',qty:'e.g. 24 jars'},
+   handmade:{coach:"<b>This is your unfair advantage.</b> A shop basket is just a basket; one <i>you</i> made has a name behind it. Say who made it and how.",care:'e.g. Wipe with a damp cloth',why:'e.g. I make them to sell',qty:'e.g. 6 in stock'},
+   furniture:{coach:"<b>Honest beats perfect.</b> Say how old it is, where it stood and any marks \u2014 buyers trust the seller who tells them first.",care:'e.g. Smoke-free, pet-free home',why:'e.g. Moving to a smaller place',qty:'e.g. 1'},
+   instruments:{coach:"<b>Players buy from players.</b> What you played on it, how it was kept, what was serviced \u2014 say it.",care:'e.g. New strings last month',why:'e.g. Upgraded to a new one',qty:'e.g. 1'},
+   antiques:{coach:"<b>Provenance is the price.</b> Where it came from and who owned it is worth more than any adjective.",care:'e.g. Kept in a glass cabinet',why:'e.g. Settling a family estate',qty:'e.g. 1'},
+   general:{coach:"<b>Tell it straight.</b> Why you are selling and what condition it is really in \u2014 that is what gets a buyer to ask.",care:'e.g. Box and charger included',why:'e.g. Moving house',qty:'e.g. 1'}},
   lmFeats:{
    food:['Organic','No preservatives','Halaal','Kosher','Bulk orders','Weekly batches'],
    handmade:['Custom orders','Gift wrapping','Local materials','Repairs offered'],
@@ -21695,9 +21711,18 @@ function sfFlow(){
   if(c.sub && sfState.sub) return c.sub[sfState.sub];
   if(sfState.cat==='local_market'){
     var t = sfState.lmType || 'general', b = SF_CATS.local_market;
+    /* LM-KIND-WORDS-1 (Goal run 32, 7 Oct 2026): The Story and Selling Details spoke only to honey -- a basket weaver read
+       "A jar of honey is R80", "e.g. Store below 25°C" and "e.g. 24 jars". Each kind now gets its own coach line and examples. */
+    var w = (b.lmWords && b.lmWords[t]) || null, sB = b.sections[1], sC = b.sections[2];
+    if(w){
+      sB = {key:sB.key, title:sB.title, pts:sB.pts, coach:w.coach, rows:sB.rows.map(function(r){
+        return r[0]==='care' ? [r[0],r[1],r[2],w.care] : r[0]==='why' ? [r[0],r[1],r[2],w.why] : r; })};
+      sC = {key:sC.key, title:sC.title, pts:sC.pts, coach:sC.coach, rows:sC.rows.map(function(r){
+        return r[0]==='qty' ? [r[0],r[1],r[2],w.qty] : r; })};
+    }
     return {label:b.label, aiCap:b.aiCap, priceLabel:b.priceLabel, slots:b.lmSlots[t],
       sections:[{key:'A',title:b.sections[0].title,pts:20,coach:b.sections[0].coach,rows:b.lmRowsA[t]},
-                b.sections[1], b.sections[2]], feats:b.lmFeats[t]};
+                sB, sC], feats:b.lmFeats[t]};
   }
   if(sfIsCarHire()){   // CAR-HIRE-1
     return {label:c.label, aiCap:c.aiCap, priceLabel:'Hire rate per day', priceUnit:'/ day', slots:c.slots,
@@ -21735,7 +21760,7 @@ function sfResetListing(){
   sfState.dcb=null;   // DCB-001: a fresh listing starts with an empty photo set
   sfState.coachSid='sf'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);   // SF-COACH-ASK-1: one cap per listing session
   sfState.coachAsk={open:false,q:'',a:'',msg:'',used:0,remaining:null,busy:false,capped:false};
-  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price=''; sfState.priceHint=''; sfState.aiDescShown=0;   // AI-PRICE-HINT-1 / AI-DESC-SHOWN-1
+  sfState.A={}; sfState.B={}; sfState.C={}; sfState.features=[]; sfState.price=''; sfState.priceHint=''; sfState.priceAi=''; sfState.aiDescShown=0;   // AI-PRICE-HINT-1 / AI-DESC-SHOWN-1
   sfState.area=(typeof magicLink!=='undefined' && magicLink.active && magicLink.suburb) ? String(magicLink.suburb).slice(0,80) : '';   // INVITE-PLACE-1
   sfState._areaSeed=sfState.area;
   sfState.visionDraft=null; sfState.vehicle=null;
@@ -22774,7 +22799,7 @@ function sfApplyDraft(d){
      her price box as if it were her price -- it is shown as a hint in the box instead and she types her own. */
   var _pc=(typeof d.price_confidence==='number')?d.price_confidence:1;
   if(d.suggested_price && _pc<0.5){ sfState.priceHint=String(d.suggested_price); }
-  else if(d.suggested_price && !String(sfState.price).trim()) sfState.price=String(d.suggested_price);
+  else if(d.suggested_price && !String(sfState.price).trim()){ sfState.price=String(d.suggested_price); sfState.priceAi=String(d.suggested_price); }   // AI-PRICE-MARK-1
   if(cat==='Cars'){
     if(d.make && !A.make) A.make=String(d.make);
     if(d.model && !A.model) A.model=String(d.model);
@@ -22850,6 +22875,11 @@ function sfSkip(warnKey,next){
   if(w && w.style.display!=='block'){ w.style.display='block'; setTimeout(function(){sfGo(next);},1600); }
   else sfGo(next);
 }
+/* AREA-PH-CITY-1 (Goal run 32): the suburb example was always Elarduspark (Pretoria) -- a Durban seller saw a Pretoria suburb */
+function _sfAreaPh(){
+  var c=String(sfState.city||((typeof activeCity!=='undefined'&&activeCity&&activeCity.name)||'')).trim();
+  return (!c || /^pretoria$/i.test(c)) ? 'e.g. Elarduspark' : ('Your suburb in '+c);
+}
 function sfSpecS(secKey){
   var f=sfFlow();
   var idx = secKey==='A'?0:secKey==='B'?1:2;
@@ -22870,7 +22900,7 @@ function sfSpecS(secKey){
     }
     _pl=_pl+' ('+_sfCcySym()+')';   // RG-0006: symbol follows the seller's market
     var _phP=sfState.priceHint?('Photo guess '+_sfCcySym()+sfState.priceHint+' \u2014 your price'):'e.g. 500';   // AI-PRICE-HINT-1
-    rows=rows.concat([['__price',_pl,'number',_phP,'root'],['__area','Suburb / area','text','e.g. Elarduspark','root']]);
+    rows=rows.concat([['__price',_pl,'number',_phP,'root'],['__area','Suburb / area','text',_sfAreaPh(),'root']]);
   }
   rows.forEach(function(r){
     var id=r[0], lbl=r[1], typ=r[2], ph=r[3], root=(r[4]==='root');
@@ -22894,6 +22924,9 @@ function sfSpecS(secKey){
       // datalist suggestions (tap shows the list, typing filters it)
       var _dl=(root && id==='__area' && _sfSuburbs.length)?' list="sf-area-dl"':'';
       h+='<div class="sf-frow"><label>'+lbl+'</label><input type="text"'+_dl+' inputmode="'+(typ==='number'?'numeric':'text')+'" data-i18n-ph="1" placeholder="'+ph+'" value="'+String(val).replace(/"/g,'&quot;')+'" oninput="'+oninp+'"></div>';   // PH-PASS-1 (ts4-20)
+      /* AI-PRICE-MARK-1 (Goal run 32): a confident photo guess (R350 on a basket she sells for R180) filled her price box with no
+         word that it was ours -- now it says so until she changes it */
+      if(root && id==='__price' && sfState.priceAi && String(sfState.price)===sfState.priceAi) h+='<div class="sf-ai-price" style="font-size:12px;color:#f2b035;margin:-2px 0 8px;text-align:right;">\u270e Guessed from your photo \u2014 put your own price</div>';
       if(_dl) h+='<datalist id="sf-area-dl">'+_sfSuburbs.map(function(s){return '<option value="'+String(s).replace(/"/g,'&quot;')+'">';}).join('')+'</datalist>';
     }
   });

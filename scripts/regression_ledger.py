@@ -35143,6 +35143,47 @@ def rg_magic_hello_1():
     return [(INFO, "the invited seller is welcomed by name on step 1; the Home tip waits")]
 
 
+@entry("RG-0937", "LM-KIND-WORDS-1 + AREA-PH-CITY-1 + AI-PRICE-MARK-1 + CITY-FIRST-SELLER-1 (Goal run 32, 7 Oct 2026): Local Market's "
+       "Story and Selling Details speak to the kind she picked, the suburb example follows her city, a confident photo price guess "
+       "says it is ours, and the empty-city bar offers a seller the first listing in her city",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js SF_CATS.local_market.lmWords, sfFlow (local_market sections B/C), _sfAreaPh, sfSpecS (__area placeholder, "
+             "sf-ai-price note), sfApplyDraft (priceAi), msEmptyCityNudge (ms-cnudge-sell)",
+       ref="docs/E2E_2026-10-07.md: a Durban basket weaver (Handmade & Craft) read 'A jar of honey is R80', 'e.g. Store below 25\u00b0C', "
+           "'e.g. 24 jars' and the Pretoria suburb 'e.g. Elarduspark'; the photo read put R350 in her price box unmarked; Home told "
+           "her Durban was empty and offered only 'Show Pretoria'.")
+def rg_lm_kind_words_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("  lmWords:{")
+    if i < 0:
+        return [(FAIL, "Local Market has no per-kind words for The Story / Selling Details")]
+    seg = js[i:i + 2600]
+    for k in ("food:", "handmade:", "furniture:", "instruments:", "antiques:", "general:"):
+        if k not in seg:
+            return [(FAIL, "lmWords is missing " + k)]
+    h = seg[seg.find("handmade:"):seg.find("furniture:")]
+    if "honey" in h or "jars" in h or "25" in h:
+        return [(FAIL, "Handmade & Craft speaks about honey / jars again")]
+    f = js.find("function sfFlow(){")
+    if "b.lmWords && b.lmWords[t]" not in js[f:f + 2200]:
+        return [(FAIL, "sfFlow no longer applies the per-kind words")]
+    j = js.find("function sfSpecS(secKey){")
+    spec = js[j:j + 7000]
+    if "'Suburb / area','text',_sfAreaPh()" not in spec or "function _sfAreaPh(){" not in js:
+        return [(FAIL, "the suburb example is a fixed Pretoria suburb again")]
+    if "sf-ai-price" not in spec or "sfState.priceAi" not in spec:
+        return [(FAIL, "a confident photo price guess fills her price box with no word that it is ours")]
+    a = js.find("function sfApplyDraft(d){")
+    if "sfState.priceAi=String(d.suggested_price)" not in js[a:a + 1000]:
+        return [(FAIL, "sfApplyDraft no longer marks the photo's price guess")]
+    n = js.find("async function msEmptyCityNudge(){")
+    if n < 0 or "ms-cnudge-sell" not in js[n:n + 5200] or "openSellNav()" not in js[n:n + 5200]:
+        return [(FAIL, "the empty-city bar offers a seller no way to be the first in her city")]
+    return [(INFO, "Local Market words follow the kind; suburb example follows the city; AI price marked; empty city invites a seller")]
+
+
 @entry("RG-0876", "AI-DESC-SHOWN-1 + AI-PRICE-HINT-1 (Goal run 29, 4 Oct 2026): the photo read's description is shown to the seller "
        "in her first story box (cleaned of notes-to-self) before it can be published, and a low-confidence price guess is a hint, "
        "not her price",
