@@ -1603,11 +1603,14 @@ async function _msInit(){
   try {
     const storedCity = localStorage.getItem('ms_user_city');
     if (storedCity) activeCity = { id: null, name: storedCity };
+    /* GEO-AUTO-1 (RUL-211): no pick of her own -> the place we detected last visit, so a return visit opens there */
+    if (!storedCity) { try { const _ac = localStorage.getItem('ms_auto_city'), _ao = JSON.parse(localStorage.getItem('ms_auto_country') || 'null');
+      if (_ac && _ao && _ao.iso2) { activeCity = { id: null, name: _ac }; activeCountry = { iso2: _ao.iso2, name: _ao.name || _ao.iso2 }; activeRegion = null; } } catch (_) {} }
     if (window._msLinkCity) activeCity = { id: null, name: window._msLinkCity };   // CITY-FROM-LINK-1: this visit only
     /* GEO-PAIR-1 (5 Oct 2026, David: "How is it possible to have South Africa and London together?"). Only the CITY was
        remembered, so a returning London visitor booted with the default country (South Africa) over London. The country
        now travels with the city: the saved pair when there is one, else the country the city belongs to. */
-    _msRestoreCountryFor(activeCity.name, !window._msLinkCity);
+    if (storedCity || window._msLinkCity) _msRestoreCountryFor(activeCity.name, !window._msLinkCity);
     const storedTier = localStorage.getItem('ms_buyer_tier');
     if (storedTier) buyerTier = storedTier;
   } catch(_){}
@@ -1649,6 +1652,7 @@ async function _msInit(){
   loadLiveListings();
   // Detect buyer location for distance badges + map centering
   _detectLocation();
+  msGeoAuto();   // GEO-AUTO-1 (RUL-211): the country and city she is in, unless she chose her own
   /* LIST-REFRESH-1 (25 Sep 2026 inspection, ts1-15): the silent refresh re-downloaded every advert in the city every 30 s,
      even while she read one advert or had switched to another app. Now: every 3 minutes, only while the app is on
      screen AND showing a list (Home, Browse, Adventures, a category page) -- plus once when she comes back to the
@@ -2682,7 +2686,7 @@ function goTo(name){
   // Hide bottom nav on AA screens (they have their own navigation)
   const bnav = document.querySelector('.bnav');
   if(bnav) bnav.style.display = name.startsWith('aa-') ? 'none' : '';
-  if(name==='home'){ loadHomeWonders(); }
+  if(name==='home'){ loadHomeWonders(); try{ msGeoBanner(); }catch(_){} }
   if(name==='buzz'){ buzzRender(); }
   if(name==='browse'){ renderFilterBar(); renderGrid(); }
   if(name==='local-market') lmLoadGrid();
@@ -4800,6 +4804,7 @@ function _detectLocation(){
   if(!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(async pos=>{
     buyerLat=pos.coords.latitude; buyerLng=pos.coords.longitude;
+    try{ msGeoFromGps(buyerLat, buyerLng); }catch(_){}   // GEO-AUTO-1: the phone's own location beats the network's (VPNs)
     // Re-render cards with distance badges
     renderGrid();
     renderFeatured();
@@ -19992,7 +19997,6 @@ function catHomeInit() {
   if (!localStorage.getItem(CAT_HOME_HINT) && !localStorage.getItem(CAT_HOME_KEY)) {
     setTimeout(showCatHomeHint, 2000);
   }
-  setTimeout(msAbroadNudge, 2600);   // ABROAD-NUDGE-1
 
   // Mark star on cat tile if preference already set
   _updateCatStars();
@@ -20124,47 +20128,117 @@ function _catHomeStatsText(cat) {
   };
 })();
 
-/* ABROAD-NUDGE-1 (Goal run 31, 6 Oct 2026): a visitor from abroad was treated as South African everywhere -- Home
-   "South Africa / Pretoria", rand prices, the South African legal card, her listing filed in Pretoria -- although the
-   collectors letters now go to London, New York and Sydney with adverts there. When she has never picked a city and
-   Cloudflare puts her network in a country the app has cities for (not ZA), Home asks ONCE, on Home only:
-   "You seem to be in <country> -- show <city>?". One tap switches (and is remembered like any pick); "Stay" keeps
-   Pretoria and is remembered. Never switches by itself (VPNs, travellers). The country is read, never stored server-side. */
-var _MS_ABROAD_NAMES = { US:'the United States', GB:'the United Kingdom', AU:'Australia' };
-function msAbroadNudge(){
-  try{
-    if (localStorage.getItem('ms_user_city') || localStorage.getItem('ms_abroad_nudge')) return;
-    if (typeof magicLink!=='undefined' && magicLink.active) return;
-    var act = document.querySelector('.screen.active');
-    if (!act || act.id !== 'screen-home') return;
-  }catch(_){ return; }
-  fetch('/quick/me', {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(me){
-    var cc = me && me.geo && String(me.geo.country || '').toUpperCase();
-    if (!cc || cc === 'ZA' || !_MS_ABROAD_NAMES[cc] || typeof DEMO_COUNTRY_CITIES === 'undefined') return;
-    var cities = DEMO_COUNTRY_CITIES[cc] || []; if (!cities.length) return;
-    var gc = String((me.geo && me.geo.city) || '');
-    var pick = cities.find(function(c){ return c.name === gc; }) || cities[0];
-    if (activeCountry && activeCountry.iso2 === cc) return;
-    var act = document.querySelector('.screen.active');
-    if (!act || act.id !== 'screen-home' || document.getElementById('ms-abroad-nudge')) return;
-    var bar = document.createElement('div');
-    bar.id = 'ms-abroad-nudge';
-    bar.setAttribute('role', 'status');
+/* GEO-AUTO-1 (RUL-211, David 7 Oct 2026: "I would prefer it to switch automatically, still asking which country they
+   are from for the vpn users. Then it will only be wrong by the users selections."). Replaces ABROAD-NUDGE-1.
+   Everyone used to start in South Africa / Pretoria whatever their location. Now, until she picks a place herself
+   (ms_user_city), the app follows where she is:
+     1. her network's country (Cloudflare, read per visit by /quick/me, never stored server-side) -> that country and its
+        main city, when TrustSquare covers it (/geo/countries, not coming_soon);
+     2. her phone's location, when she allows it -> the nearest covered city within 150 km, in any covered country.
+        The phone beats the network, so a VPN does not move her.
+   The detected place is kept as ms_auto_city / ms_auto_country (never as her own pick), re-checked every visit.
+   Home says once what it chose and from what, with "Change country" for a VPN or a traveller; her pick then wins for good.
+   Not on a visit that opened on a link carrying a city (an advert, a letter) or an invited seller's form. */
+var _msGeo = { countries: null, cities: {}, src: '', uncovered: '' };
+var _MS_GEO_MAIN = { ZA:'Pretoria', US:'New York', GB:'London', AU:'Sydney', KE:'Nairobi', NA:'Windhoek' };
+function _msGeoOwnPick(){
+  try{ return !!localStorage.getItem('ms_user_city'); }catch(_){ return true; }
+}
+function _msGeoSkipVisit(){
+  return !!window._msLinkCity || (typeof magicLink!=='undefined' && magicLink && magicLink.active);
+}
+async function _msGeoCountries(){
+  if (_msGeo.countries) return _msGeo.countries;
+  try{ const r = await fetch('/geo/countries'); const d = await r.json(); _msGeo.countries = Array.isArray(d) ? d : []; }
+  catch(_){ _msGeo.countries = []; }
+  return _msGeo.countries;
+}
+async function _msGeoCities(iso2){
+  if (_msGeo.cities[iso2]) return _msGeo.cities[iso2];
+  try{ const r = await fetch('/geo/cities?country=' + encodeURIComponent(iso2)); const d = await r.json(); _msGeo.cities[iso2] = Array.isArray(d) ? d : []; }
+  catch(_){ _msGeo.cities[iso2] = []; }
+  return _msGeo.cities[iso2];
+}
+function _msGeoApply(iso2, cname, city, src){
+  if (_msGeoOwnPick() || _msGeoSkipVisit() || !city || !city.name) return;
+  _msGeo.src = src; _msGeo.uncovered = '';
+  try{ localStorage.setItem('ms_auto_city', city.name); localStorage.setItem('ms_auto_country', JSON.stringify({ iso2: iso2, name: cname })); }catch(_){}
+  if (!(activeCountry && activeCountry.iso2 === iso2 && activeCity && activeCity.name === city.name)) {
+    activeCountry = { iso2: iso2, name: cname }; activeRegion = null;
+    selectCity(city.id == null ? null : city.id, city.name, city.lat, city.lng);
+    // selectCity remembers a choice as HERS -- this one is ours; take it back off so detection keeps following her
+    try{ localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country'); }catch(_){}
+  }
+  msGeoBanner();
+}
+async function msGeoAuto(){
+  if (_msGeoOwnPick() || _msGeoSkipVisit()) return;
+  let me = null;
+  try{ const r = await fetch('/quick/me', { credentials: 'same-origin' }); me = r.ok ? await r.json() : null; }catch(_){}
+  if (_msGeoSrcIsGps()) return;   // the phone already answered while we waited
+  const cc = String((me && me.geo && me.geo.country) || '').toUpperCase();
+  if (!cc || cc === 'XX' || cc === 'T1') return;
+  const list = await _msGeoCountries();
+  const co = list.find(function(c){ return c.iso2 === cc; });
+  if (!co || co.coming_soon) {
+    _msGeo.uncovered = cc; _msGeo.src = 'net';
+    msGeoBanner(); return;
+  }
+  const cities = await _msGeoCities(cc);
+  if (!cities.length || _msGeoSrcIsGps()) return;
+  const gc = String((me.geo && me.geo.city) || '').toLowerCase();
+  const pick = cities.find(function(c){ return gc && c.name.toLowerCase() === gc; })
+            || cities.find(function(c){ return c.name === _MS_GEO_MAIN[cc]; }) || cities[0];
+  _msGeoApply(cc, co.name, pick, 'net');
+}
+function _msGeoSrcIsGps(){ return _msGeo.src === 'gps'; }
+async function msGeoFromGps(lat, lng){
+  if (_msGeoOwnPick() || _msGeoSkipVisit() || lat == null || lng == null) return;
+  const list = (await _msGeoCountries()).filter(function(c){ return !c.coming_soon; });
+  let best = null, bestKm = 1e9;
+  for (const co of list) {
+    const cities = await _msGeoCities(co.iso2);
+    for (const c of cities) {
+      if (c.lat == null || c.lng == null) continue;
+      const km = _haversineKm(lat, lng, c.lat, c.lng);
+      if (km < bestKm) { bestKm = km; best = { co: co, c: c }; }
+    }
+  }
+  if (!best || bestKm > 150) return;   // not near any city we cover: leave the network's answer
+  _msGeoApply(best.co.iso2, best.co.name, best.c, 'gps');
+}
+function _msGeoCountryName(cc){
+  try{ return new Intl.DisplayNames(['en'], { type: 'region' }).of(cc) || cc; }catch(_){ return cc; }
+}
+function msGeoBanner(){
+  const act = document.querySelector('.screen.active');
+  if (!act || act.id !== 'screen-home' || _msGeoOwnPick() || !_msGeo.src) return;
+  let key = '', msg = '';
+  if (_msGeo.uncovered) {
+    key = 'x:' + _msGeo.uncovered;
+    msg = 'TrustSquare isn’t in ' + _msGeoCountryName(_msGeo.uncovered) + ' yet — showing ' + activeCity.name + ', ' + activeCountry.name + '.';
+  } else {
+    key = activeCountry.iso2 + ':' + activeCity.name;
+    msg = '📍 Showing ' + activeCity.name + ', ' + activeCountry.name + ' — ' +
+          (_msGeo.src === 'gps' ? 'from your phone’s location.' : 'from your internet connection. On a VPN or somewhere else?');
+  }
+  try{ if (localStorage.getItem('ms_geo_ok') === key) return; }catch(_){}
+  let bar = document.getElementById('ms-geo-bar');
+  if (!bar) {
+    bar = document.createElement('div'); bar.id = 'ms-geo-bar'; bar.setAttribute('role', 'status');
     bar.style.cssText = 'margin:10px 16px 0;padding:12px 14px;border-radius:14px;background:#FFF7E0;border:1px solid #F2C14E;color:#1a1a2e;font-size:14px;line-height:1.4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
-    var t = document.createElement('div'); t.style.cssText = 'flex:1 1 100%;';
-    t.textContent = 'You seem to be in ' + _MS_ABROAD_NAMES[cc] + '. Show listings in ' + pick.name + ' instead of Pretoria?';
-    var yes = document.createElement('button'); yes.type = 'button'; yes.textContent = 'Show ' + pick.name;
-    yes.style.cssText = 'background:#1a1a2e;color:#fff;border:0;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;';
-    var no = document.createElement('button'); no.type = 'button'; no.textContent = 'Stay in South Africa';
-    no.style.cssText = 'background:transparent;color:#1a1a2e;border:1px solid #c9b27a;border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;';
-    function done(){ try{ localStorage.setItem('ms_abroad_nudge', cc); }catch(_){} bar.remove(); }
-    yes.onclick = function(){ done(); activeCountry = { iso2: cc, name: (cc==='GB'?'United Kingdom':cc==='US'?'United States':'Australia') }; activeRegion = null;
-                              selectCity(null, pick.name, pick.lat, pick.lng); };
-    no.onclick = done;
-    bar.appendChild(t); bar.appendChild(yes); bar.appendChild(no);
-    var hdr = act.firstElementChild;
+    const hdr = act.firstElementChild;
     if (hdr && hdr.nextSibling) act.insertBefore(bar, hdr.nextSibling); else act.insertBefore(bar, act.firstChild);
-  }).catch(function(){});
+  }
+  bar.innerHTML = '';
+  const t = document.createElement('div'); t.style.cssText = 'flex:1 1 100%;'; t.textContent = msg;
+  const ch = document.createElement('button'); ch.type = 'button'; ch.textContent = 'Change country';
+  ch.style.cssText = 'background:#1a1a2e;color:#fff;border:0;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;';
+  const ok = document.createElement('button'); ok.type = 'button'; ok.textContent = _msGeo.uncovered ? 'OK' : '✓ That’s right';
+  ok.style.cssText = 'background:transparent;color:#1a1a2e;border:1px solid #c9b27a;border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;';
+  ch.onclick = function(){ bar.remove(); openLocPanel('country'); document.getElementById('city-selector-bg').classList.add('open'); };
+  ok.onclick = function(){ try{ localStorage.setItem('ms_geo_ok', key); }catch(_){} bar.remove(); };
+  bar.appendChild(t); bar.appendChild(ch); bar.appendChild(ok);
 }
 
 function showCatHomeHint() {
