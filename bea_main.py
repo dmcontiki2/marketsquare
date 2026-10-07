@@ -5575,6 +5575,48 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
     return {"message": "Listing is now live", "listing_id": listing_id}
 
 
+def _sub_norm(n):
+    return re.sub(r"[^a-z0-9]", "", (n or "").lower())
+
+
+def _suburb_point_for_listing(listing_id: int, write: bool = True):
+    """SUBURB-POINT-1: the advert's point -- its own (geocoded, rounded) if it has one, else its suburb's centre, saved
+    to listing_lat/lng. Returns (lat, lng) or None. Never raises."""
+    try:
+        conn = database.get_db()
+        try:
+            r = conn.execute("SELECT listing_lat, listing_lng, suburb, geo_city_id, city FROM listings WHERE id=?",
+                             (listing_id,)).fetchone()
+            if not r:
+                return None
+            if r["listing_lat"] and r["listing_lng"]:
+                return (float(r["listing_lat"]), float(r["listing_lng"]))
+            sub = _sub_norm(r["suburb"])
+            if not sub:
+                return None
+            cid = r["geo_city_id"]
+            if not cid and r["city"]:
+                _c = conn.execute("SELECT id FROM geo_cities WHERE LOWER(name)=LOWER(?) LIMIT 1", (r["city"],)).fetchone()
+                cid = _c["id"] if _c else None
+            if not cid:
+                return None
+            hit = None
+            for g in conn.execute("SELECT name, lat, lng FROM geo_suburbs WHERE city_id=? AND lat IS NOT NULL", (cid,)).fetchall():
+                if _sub_norm(g["name"]) == sub:
+                    hit = g; break
+            if not hit:
+                return None
+            pt = (round(float(hit["lat"]), 4), round(float(hit["lng"]), 4))
+            if write:
+                conn.execute("UPDATE listings SET listing_lat=?, listing_lng=? WHERE id=? AND listing_lat IS NULL", (pt[0], pt[1], listing_id))
+                conn.commit()
+            return pt
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+
 def _publish_autolinks(listing_id: int):
     """PUBLISH-FAST-1: the post-publish enrichment, off the request path. Never raises."""
     # Auto-link nearby World Heritage wonders (only if none already linked)
@@ -5605,10 +5647,18 @@ def _publish_autolinks(listing_id: int):
                 finally:
                     _gc.close()
 
+        # SUBURB-POINT-1 (7 Oct 2026, F14 walk; David: "a global customer sees the advert as if she was in Pretoria"):
+        # 78 of 137 live adverts had no point at all, so every map, distance, "nearby places" and heritage link was
+        # measured from the CITY CENTRE -- a Moreleta Park house showed Damelin City Campus 0.49 km away. With no street
+        # address, the advert now takes its suburb's centre (area-level, as AREA-ONLY-1 requires), matching the
+        # suburb name loosely ("Moreleta Park" = "Moreletapark").
+        _sub_point = _suburb_point_for_listing(listing_id)
         city_row = database.get_db().execute(
             "SELECT lat, lng FROM geo_cities WHERE id = (SELECT geo_city_id FROM listings WHERE id = ?)",
             (listing_id,)
         ).fetchone()
+        if _sub_point:
+            city_row = {"lat": _sub_point[0], "lng": _sub_point[1]}
         cat_row = database.get_db().execute(
             "SELECT category FROM listings WHERE id = ?", (listing_id,)
         ).fetchone()
@@ -20088,6 +20138,11 @@ def _send_invite_email(to_email: str, link: str, agency_name: str = "") -> str:
         "device you want to work from:</p>"
         "<p><a href='" + link + "' style='display:inline-block;background:#C8873A;color:#fff;"
         "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Open my account &rarr;</a></p>"
+        # AGENT-INVITE-STEPS-1 (7 Oct 2026, F14 walk): the agent landed on Home with no idea where to go or what to upload
+        "<p style='margin:14px 0 6px'><b>Your first three steps</b></p>"
+        "<ol style='margin:0 0 12px 18px;padding:0'><li>Open <b>Sell &rarr; Seller Hub &rarr; Agent Hub</b> and complete your profile.</li>"
+        "<li>Upload the papers your trade needs (estate agents: <b>PPRA registration</b> and current <b>Fidelity Fund "
+        "Certificate</b>) &mdash; a person checks them before your profile goes live.</li><li>List your first property from <b>Sell</b>.</li></ol>"
         "<p style='color:#6b7280;font-size:13px'>The button works for 72 hours. After that (or on "
         "another device) just go to <a href='" + APP_URL + "' style='color:#0f3460'>trustsquare.co</a>, "
         "tap <b>Sign in</b>, and we&rsquo;ll email you a 6-digit code &mdash; no password needed, ever.</p>"
@@ -20095,7 +20150,7 @@ def _send_invite_email(to_email: str, link: str, agency_name: str = "") -> str:
         "&mdash; nothing goes live without you.</p>"
         "</div>"
     )
-    plain = ((who or "Your agency") + " set up your TrustSquare account.\n\nOpen it here (works for 72 hours):\n"
+    plain = ((who or "Your agency") + " set up your TrustSquare account.\n\nFirst steps: Sell > Seller Hub > Agent Hub; upload the papers your trade needs (estate agents: PPRA registration and FFC) -- a person checks them before your profile goes live; then list from Sell.\n\nOpen it here (works for 72 hours):\n"
              + link + "\n\nAny other time or device: go to " + APP_URL
              + ", tap Sign in, and we'll email you a 6-digit code.")
     return _send_html_email(to_email, subject, html, plain)
@@ -21036,7 +21091,10 @@ def _agency_agent_rollup(conn, email):
     # landed as drafts and the console showed 0/cap -- invisible. Drafts are counted too.
     drafts = conn.execute("SELECT COUNT(*) c FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft'", (email,)).fetchone()["c"]
     try:
-        intros_n = conn.execute("SELECT COUNT(*) c FROM intro_requests WHERE LOWER(seller_email)=?", (email,)).fetchone()["c"]
+        # AGENCY-INTROS-1 (7 Oct 2026, F14 walk): intro_requests has no seller_email column -- the query always failed and
+        # the console said "Intros to agents 0" after an accepted introduction. The seller is the listing's.
+        intros_n = conn.execute("SELECT COUNT(*) c FROM intro_requests i JOIN listings l ON l.id = i.listing_id "
+                                "WHERE LOWER(l.seller_email)=?", (email,)).fetchone()["c"]
     except Exception:
         intros_n = 0
     try:
@@ -21186,6 +21244,9 @@ def get_agency(agency_id: int, _key: str = Depends(auth.require_api_key)):
             r = _agency_agent_rollup(conn, m["agent_email"])
             r.update({"listing_cap": m["listing_cap"], "seat_paid": bool(m["seat_paid"]), "role": m["role"], "status": m["status"],
                       "agent_name": m["agent_name"], "city": m["city"], "country": m["country"]})   # AGENT-FILTER-1
+            # AGENCY-NAME-1 (7 Oct 2026, F14 walk): a new invitee has no users.name yet -- show the name the principal typed
+            if m["agent_name"] and (not r.get("name") or r["name"] == (m["agent_email"] or "").split("@")[0]):
+                r["name"] = m["agent_name"]
             used += r["listings_live"]; allowance += m["listing_cap"]
             drafts_total += r.get("listings_draft", 0)
             agents.append(r)
@@ -31140,6 +31201,143 @@ if os.getenv("INTRO_REMIND_ENABLED", "1") == "1":
                 print("INTRO-REMIND-1 error: %s" % _ie)
             _rt.sleep(3600)
     threading.Thread(target=_intro_reminder_hourly_loop, daemon=True).start()
+
+
+# ══ CRED-QUEUE-1 (7 Oct 2026, pre-wave sweep) ══════════════════════════════════════════════════════════════
+# David: "the most important criteria is to have a E2E possible listing for each category". Licensed trades (electrician,
+# gas, CCTV, drivers, PSIRA roles -- LICENCE-GATE-1) and clearance roles (nanny, caregiver) stay hidden from buyers until a
+# PERSON checks the document. The check existed (POST /trust-score/credential, GET /trust-score/credentials/pending) but
+# nothing told anyone a document was waiting and no screen showed the queue: 32 claims sat pending, the oldest since May.
+# A real electrician from the wave would have waited for ever. Now: every 30 minutes, any real person's newly waiting
+# document mails the ops address once (ai_spend_config.alert_email) with a link to the admin screen's "Documents to
+# check" panel, and the panel decides it in one tap. QA, key-identity and seeded @trustsquare.co accounts are not mailed.
+def _cred_queue_rows(conn, only_real: bool = True):
+    rows = conn.execute(
+        "SELECT id, email, signal_id, evidence_url, notes, submitted_at, updated_at, listing_category "
+        "FROM user_credentials WHERE status='pending' ORDER BY COALESCE(submitted_at, updated_at) ASC").fetchall()
+    out = []
+    for r in rows:
+        em = (r["email"] or "").lower()
+        seeded = em.endswith(("@trustsquare.co", "@example.com", "@example.org", ".test", ".invalid")) or "+qa-" in em
+        if only_real and seeded:
+            continue
+        d = dict(r); d["seeded"] = seeded
+        sig = dict(_TRUST_SIGNALS).get(r["signal_id"])
+        if not sig:
+            for _cs in _CATEGORY_SIGNALS.values():
+                if r["signal_id"] in _cs:
+                    sig = _cs[r["signal_id"]]; break
+        d["signal_name"] = (sig or {}).get("name", r["signal_id"])
+        d["gates_advert"] = r["signal_id"] in ("category.services_tech.coc", "category.services_cas.clearance") or \
+            r["signal_id"].endswith((".licence", ".psira", ".prdp", ".clearance"))
+        out.append(d)
+    return out
+
+
+def _cred_queue_alert_once() -> dict:
+    conn = database.get_db()
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS ops_alert_marks (k TEXT PRIMARY KEY, v TEXT)")
+        seen = set((conn.execute("SELECT v FROM ops_alert_marks WHERE k='cred_queue_ids'").fetchone() or [""])[0].split(",")) - {""}
+        rows = _cred_queue_rows(conn, only_real=True)
+        new = [r for r in rows if str(r["id"]) not in seen]
+        if not new:
+            return {"new": 0, "waiting": len(rows)}
+        to = (conn.execute("SELECT alert_email FROM ai_spend_config WHERE id=1").fetchone() or ["dmcontiki2@gmail.com"])[0]
+        items = "".join("<li><b>" + _ts_html.escape(r["signal_name"]) + "</b> &middot; " + _ts_html.escape(r["email"]) +
+                        (" &middot; <span style='color:#b91c1c'>advert hidden until checked</span>" if r["gates_advert"] else "") +
+                        "</li>" for r in new)
+        html = ("<div style='font-family:Inter,Arial,sans-serif;max-width:480px;margin:auto'>"
+                "<h2 style='color:#0c1a2e'>%d document%s waiting for your check</h2><ul>%s</ul>"
+                "<p>%d waiting in all. Open the admin screen, tab <b>Alerts</b> &rarr; <b>Documents to check</b>.</p>"
+                "<p><a href='%s/admin.html#credentials' style='display:inline-block;background:#C8873A;color:#fff;"
+                "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Check them &rarr;</a></p></div>"
+                ) % (len(new), "" if len(new) == 1 else "s", items, len(rows), APP_URL.rstrip("/"))
+        out = _send_system_email(to, "TrustSquare: %d document%s to check" % (len(new), "" if len(new) == 1 else "s"), html)
+        if out == "sent":
+            ids = ",".join(sorted(seen | {str(r["id"]) for r in new}, key=lambda x: int(x) if x.isdigit() else 0)[-500:])
+            conn.execute("INSERT INTO ops_alert_marks(k, v) VALUES('cred_queue_ids', ?) "
+                         "ON CONFLICT(k) DO UPDATE SET v=excluded.v", (ids,))
+            conn.commit()
+        return {"new": len(new), "waiting": len(rows), "mail": out}
+    finally:
+        conn.close()
+
+
+@app.get("/admin/credentials/queue")
+def admin_credentials_queue(all: int = 0, _admin=Depends(_require_admin_or_key)):
+    """CRED-QUEUE-1: the 'Documents to check' panel. all=1 includes seeded/QA accounts."""
+    conn = database.get_db()
+    try:
+        return {"rows": _cred_queue_rows(conn, only_real=not all)}
+    finally:
+        conn.close()
+
+
+@app.post("/admin/credentials/queue/alert")
+def admin_credentials_queue_alert(_admin=Depends(_require_admin_or_key)):
+    """CRED-QUEUE-1: run the 30-minute alert now."""
+    return _cred_queue_alert_once()
+
+
+def _suburb_point_backfill_once(limit: int = 200) -> dict:
+    """SUBURB-POINT-1: every door that publishes (Quick, the Coach, the sell flow, imports) -- not only PUT .../publish --
+    leaves adverts without a point. Fill those that have a known suburb; Property ones re-fetch their nearby places."""
+    conn = database.get_db()
+    try:
+        ids = [r["id"] for r in conn.execute(
+            "SELECT id FROM listings WHERE listing_lat IS NULL AND IFNULL(suburb,'')<>'' ORDER BY id DESC LIMIT ?", (limit,)).fetchall()]
+    finally:
+        conn.close()
+    filled = 0
+    for lid in ids:
+        pt = _suburb_point_for_listing(lid)
+        if not pt:
+            continue
+        filled += 1
+        try:
+            c2 = database.get_db()
+            try:
+                row = c2.execute("SELECT category FROM listings WHERE id=?", (lid,)).fetchone()
+                if row and (row["category"] or "").lower() == "property":
+                    c2.execute("UPDATE listings SET nearby_pois=NULL WHERE id=?", (lid,)); c2.commit()
+            finally:
+                c2.close()
+            if row and (row["category"] or "").lower() == "property":
+                auto_link_pois(lid, pt[0], pt[1])
+        except Exception:
+            pass
+    return {"checked": len(ids), "filled": filled}
+
+
+if os.getenv("SUBURB_POINT_BACKFILL", "1") == "1":
+    def _suburb_point_loop():
+        import time as _st
+        _st.sleep(300)
+        while True:
+            try:
+                _r = _suburb_point_backfill_once()
+                if _r.get("filled"):
+                    print("SUBURB-POINT-1: %s" % _r)
+            except Exception as _se:
+                print("SUBURB-POINT-1 error: %s" % _se)
+            _st.sleep(600)
+    threading.Thread(target=_suburb_point_loop, daemon=True).start()
+
+
+if os.getenv("CRED_QUEUE_ALERT_ENABLED", "1") == "1":
+    def _cred_queue_loop():
+        import time as _ct
+        _ct.sleep(240)
+        while True:
+            try:
+                _r = _cred_queue_alert_once()
+                if _r.get("new"):
+                    print("CRED-QUEUE-1: %s" % _r)
+            except Exception as _ce:
+                print("CRED-QUEUE-1 error: %s" % _ce)
+            _ct.sleep(1800)
+    threading.Thread(target=_cred_queue_loop, daemon=True).start()
 
 
 class _KeepLiveIn(BaseModel):

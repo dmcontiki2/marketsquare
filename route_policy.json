@@ -491,10 +491,17 @@
   },
   {
    "key": "GET /users/{email}/id-status",
-   "level": "public",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "path"
+    }
+   ],
    "hide": [
     "npr_verified_at"
-   ]
+   ],
+   "_why": "ID-STATUS-BIND-1 (7 Oct 2026): was public -- anyone could read any address's ID state and learn it has an account. Only the owner reads it now; buyers get the seller's tick from the advert (seller_id_checked), never by email."
   },
   {
    "key": "PUT /intros/{intro_id}/accept",
@@ -2265,6 +2272,14 @@
    "key": "GET /qa/ship-status",
    "level": "public",
    "note": "CLOUD-SHIP-1 (30 Sep 2026): guarded in the handler by the MS_QA_KEY header (404 without it); the last 20 lines of the server's cloud-branch ship job."
+  },
+  {
+   "key": "GET /admin/credentials/queue",
+   "level": "admin"
+  },
+  {
+   "key": "POST /admin/credentials/queue/alert",
+   "level": "admin"
   }
  ]
 }

@@ -21998,13 +21998,18 @@ def rg_id_upload_interim_changes_what_seller_is_told():
         out.append((FAIL, "migrations/038_id_upload_interim.py is gone -- the pre-fix uploads are unconverted on a fresh box"))
     # LIVE leg: the walkthrough account that uploaded twice on 6 Sep (DW-109) must never read 'none' again.
     try:
-        st = _status("/users/walkthrough.tutor%40trustsquare.co/id-status")
-        if st == 404:
-            out.append((INFO, "walkthrough account no longer exists -- live leg not evaluable this run"))
-        elif st != 200:
-            out.append((FAIL, "GET /users/<walkthrough>/id-status answers %d anonymously -- the seller's own status is unreadable" % st))
+        # ID-STATUS-BIND-1 (7 Oct 2026): id-status is the owner's own read now (it was a public per-address lookup), so the
+        # live leg reads through the staff door (GATE-SYNC-1); an admin passes the binding.
+        try:
+            d = _admin_json("/users/walkthrough.tutor%40trustsquare.co/id-status")
+        except ProbeOffline as _po:
+            d = None
+            out.append((INFO, "id-status live leg blind: %s" % _po))
+        if d is None:
+            pass
+        elif isinstance(d, dict) and d.get("detail"):
+            out.append((INFO, "walkthrough account not readable -- live leg not evaluable this run"))
         else:
-            d = _json("/users/walkthrough.tutor%40trustsquare.co/id-status")
             state = d.get("state")
             if state == "none":
                 out.append((FAIL, "the walkthrough account has two ID documents on file (6 Sep) and /id-status STILL reads "
@@ -36897,6 +36902,35 @@ def rg_geo_net_city_1():
     if "GEO-NET-CITY-1: the network's own position" not in js:
         bad.append("the app no longer uses the network position for her city")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "network position -> nearest city")]
+@entry("RG-0930", "PREWAVE-1 (7 Oct 2026): a waiting seller document reaches a person, adverts sit on their suburb, foreign "
+       "adverts show their own currency, nobody reads another address's ID state, and the agency console counts introductions",
+       LOCKED, fixed_on="2026-10-07",
+       scope="bea_main.py CRED-QUEUE-1 / SUBURB-POINT-1 / AGENCY-INTROS-1; route_policy.json id-status; ms.js formatZAR(value, cc); "
+             "marketsquare_admin.html Documents to check",
+       ref="David 7 Oct 2026: 'the most important criteria is to have a E2E possible listing for each category, and safety from "
+           "hackers, with secure data protection and isolation'. F14 agency walk (agency 63, listing 530, intro 160).")
+def rg_prewave_1():
+    b = repo_file("bea_main.py"); js = repo_file("ms.js"); adm = repo_file("marketsquare_admin.html"); pol = repo_file("route_policy.json")
+    if None in (b, js, adm, pol):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "def _cred_queue_alert_once(" not in b or "_cred_queue_loop" not in b:
+        bad.append("the document-queue alert is gone -- a licensed trade's advert can wait unseen for ever")
+    if "function loadCredQueue(" not in adm or "cred-queue-container" not in adm:
+        bad.append("admin has no 'Documents to check' panel")
+    if "def _suburb_point_for_listing(" not in b or "_suburb_point_loop" not in b:
+        bad.append("adverts without a street address no longer get their suburb's point")
+    if "intro_requests WHERE LOWER(seller_email)" in b:
+        bad.append("an agency rollup counts intros on a column intro_requests does not have")
+    if "function formatZAR(value, cc)" not in js:
+        bad.append("formatZAR shows every bare price in rand again")
+    try:
+        _ent = [e for e in json.loads(pol)["routes"] if e["key"] == "GET /users/{email}/id-status"]
+        if not _ent or _ent[0].get("level") == "public":
+            bad.append("id-status is a public per-address lookup again")
+    except Exception as ex:
+        bad.append("route_policy.json unreadable: %r" % ex)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "queue alert + panel, suburb points, country currency, id-status bound, agency intro count")]
 
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.

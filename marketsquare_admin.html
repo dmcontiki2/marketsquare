@@ -768,6 +768,7 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
     // (async function expressions are not hoisted — must wait for full parse)
     setTimeout(function(){
       if (typeof loadRegionsForStep1 === 'function') loadRegionsForStep1();
+      if (location.hash === '#credentials' && typeof goView === 'function') goView('alerts');   // CRED-QUEUE-1: the alert mail's link
     }, 50);
   }
 /* ADMIN-GATE-SRC:BEGIN -- generated from shared/admin_gate.js by scripts/sync_admin_gate.py. DO NOT EDIT BELOW; edit the source and re-run. (GATE-ONESOURCE-1) */
@@ -1703,6 +1704,10 @@ h1,h2,h3,.brand { font-family: 'Syne', sans-serif; }
   <div class="view-header">Alerts</div>
   <!-- LM-NOSHOW-1 (24 Sep 2026): the ops queue for Local Market no-show reports. The routes existed
        (uphold / dismiss) but no screen called them, so a report could never be judged. -->
+  <!-- CRED-QUEUE-1 (7 Oct 2026): documents sellers uploaded that a person must check. A licence or clearance that
+       gates an advert keeps that advert hidden until it is decided here. -->
+  <div class="view-sub" id="credentials">Documents to check</div>
+  <div id="cred-queue-container" style="padding:0 20px 8px;"><div style="font-size:13px;color:var(--text-3);padding:8px 0;">Loading documents…</div></div>
   <div class="view-sub">Local Market no-show reports awaiting a decision</div>
   <div id="lm-noshow-container" style="padding:0 20px 8px;"><div style="font-size:13px;color:var(--text-3);padding:8px 0;">Loading reports…</div></div>
   <div class="view-sub">Pending introductions awaiting seller response</div>
@@ -3153,8 +3158,48 @@ async function lmNoShowDecide(id, how) {
   loadLmNoShows();
 }
 
+// CRED-QUEUE-1 (7 Oct 2026): the seller-document queue. Approve = the credential is earned (points, and a gated advert
+// shows to buyers); Reject asks her to upload again (she is mailed either way by /trust-score/credential).
+async function loadCredQueue() {
+  const box = document.getElementById('cred-queue-container'); if (!box) return;
+  const showAll = !!window._credShowAll;
+  try {
+    const r = await fetch(BEA_URL + '/admin/credentials/queue' + (showAll ? '?all=1' : ''));
+    if (!r.ok) throw new Error('API ' + r.status);
+    const rows = (await r.json()).rows || [];
+    const esc = function(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+    const toggle = '<div style="font-size:12px;margin:0 0 8px;"><a href="#" onclick="window._credShowAll=!window._credShowAll;loadCredQueue();return false;" style="color:var(--text-3);">'
+      + (showAll ? 'Hide test and example accounts' : 'Show test and example accounts too') + '</a></div>';
+    if (!rows.length) { box.innerHTML = toggle + '<div style="font-size:13px;color:var(--text-3);padding:8px 0;">Nothing waiting.</div>'; return; }
+    box.innerHTML = toggle + rows.map(function(c){
+      const ev = c.evidence_url ? '<a href="' + esc(c.evidence_url) + '" target="_blank" rel="noopener" style="font-weight:700;">Open the document</a>' : '<span style="color:var(--text-3);">No file attached</span>';
+      return '<div style="border:1.5px solid ' + (c.gates_advert ? 'rgba(239,68,68,.45)' : 'rgba(200,135,58,.4)') + ';border-radius:12px;padding:12px 14px;margin:0 0 10px;">'
+        + '<div style="font-weight:700;font-size:14px;">' + esc(c.signal_name) + (c.gates_advert ? ' <span style="font-size:11px;color:#dc2626;">\u00b7 advert hidden until checked</span>' : '') + '</div>'
+        + '<div style="font-size:12px;color:var(--text-3);margin:2px 0 6px;">' + esc(c.email) + ' \u00b7 waiting since ' + esc(String(c.submitted_at || c.updated_at || '').slice(0,16)) + (c.seeded ? ' \u00b7 test/example account' : '') + '</div>'
+        + (c.notes ? '<div style="font-size:13px;margin:0 0 6px;">' + esc(c.notes) + '</div>' : '')
+        + '<div style="font-size:13px;margin:0 0 10px;">' + ev + '</div>'
+        + '<div style="display:flex;gap:8px;"><button onclick="credDecide(' + JSON.stringify(c.email).replace(/"/g,'&quot;') + ',' + JSON.stringify(c.signal_id).replace(/"/g,'&quot;') + ',\'earned\')" style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:50px;padding:9px;font-weight:700;cursor:pointer;">Approve</button>'
+        + '<button onclick="credDecide(' + JSON.stringify(c.email).replace(/"/g,'&quot;') + ',' + JSON.stringify(c.signal_id).replace(/"/g,'&quot;') + ',\'rejected\')" style="flex:1;background:none;border:1.5px solid var(--text-3);color:inherit;border-radius:50px;padding:9px;font-weight:700;cursor:pointer;">Ask for a new upload</button></div></div>';
+    }).join('');
+  } catch (e) { box.innerHTML = '<div style="font-size:13px;color:#ef4444;padding:8px 0;">Could not load documents: ' + e.message + '</div>'; }
+}
+async function credDecide(email, signal, status) {
+  let notes = null;
+  if (status === 'rejected') { notes = prompt('What should she fix? (sent to her in the email)', 'The document was not clear enough to read.'); if (notes === null) return; }
+  else if (!confirm('Approve this document? It counts toward her Trust Score' + ' and any advert it was holding back goes live to buyers.')) return;
+  try {
+    const r = await fetch(BEA_URL + '/trust-score/credential', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY},
+      body: JSON.stringify({email: email, signal_id: signal, status: status, notes: notes})});
+    const j = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(j.detail || ('API ' + r.status));
+    showToast(status === 'earned' ? 'Approved \u2014 she has been told' : 'Sent back \u2014 she has been told');
+  } catch (e) { showToast('Not saved: ' + e.message); }
+  loadCredQueue();
+}
+
 async function loadAlerts() {
   loadLmNoShows();
+  loadCredQueue();
   const c = document.getElementById('alerts-container');
   c.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-3);font-size:13px;">⏳ Checking intros...</div>';
   try {
