@@ -805,7 +805,7 @@ async function loadLiveDash() {
 }
 
 // ── CURRENCY FORMATTER ────────────────────────────────────
-function formatZAR(value) {
+function formatZAR(value, cc) {
   if (value === null || value === undefined || value === '') return null;
   const s = String(value);
   // Detect non-ZAR currency prefix — return raw value as-is
@@ -831,7 +831,10 @@ function formatZAR(value) {
   if (!n) return null;
   const parts = n.toFixed(2).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return 'R' + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
+  /* PRICE-CC-1 (7 Oct 2026, David: "a global customer sees the advert as if she was in Pretoria"): a bare amount ('18 990')
+     takes the symbol of the advert's own country -- a London seller's 450 was shown to everyone as R450. No country = rand. */
+  const _sym = (cc && typeof ADV_COUNTRY_CURRENCY !== 'undefined' && ADV_COUNTRY_CURRENCY[String(cc).toUpperCase()]) || 'R';
+  return _sym + parts[0] + (parts[1] === '00' ? '' : '.' + parts[1]);
 }
 
 function _priceIsCompound(p){ return /\d[^+\d]*\+\s*[^\d\s]{0,3}\s*\d/.test(String(p||'')); }   // PRICE-PLUS-1
@@ -857,7 +860,7 @@ function _priceLabel(l){
     const n=Number(String(l.price).replace(/[^0-9.]/g,''));
     if(!isNaN(n) && n>0) return cur+n.toLocaleString();
   }
-  var _base=formatZAR(l.price)||_lmEsc(l.price);   // SELLER-TEXT-ESC-1 (ts1-01): the raw fallback is escaped
+  var _base=formatZAR(l.price,l.country)||_lmEsc(l.price);   // SELLER-TEXT-ESC-1 (ts1-01): the raw fallback is escaped
   var _suf=(!l.per)?_priceBasisSuffix(l.price):'';   // l.per renders separately — no doubling
   return _suf?(_base+' <span class="per">'+_lmEsc(_suf)+'</span>'):_base;
 }
@@ -1779,7 +1782,7 @@ async function elOpenColReport(){
   try{ if(aiSel('collectables_advert')===false) return; }catch(_){ return; }
   const set = (k,v)=>{ const e=document.getElementById('ai-p-'+k); if(e && v) e.value=v; };
   set('items', item);
-  set('asking', price ? ((typeof formatZAR==='function' && formatZAR(price)) || price) : '');
+  set('asking', price ? ((typeof formatZAR==='function' && formatZAR(price,raw.country||(activeCountry&&activeCountry.iso2))) || price) : '');
 }
 async function carDossierOpen(id){
   const l = findListing(id); if(!l) return;
@@ -1790,7 +1793,7 @@ async function carDossierOpen(id){
     + ((l.mileage_km||l.mileage_km===0) ? ', ' + Number(l.mileage_km).toLocaleString('en-ZA') + ' km' : '');
   const set = (k,v)=>{ const e=document.getElementById('ai-p-'+k); if(e && v) e.value=v; };
   set('vehicle', veh.trim() || l.title || '');
-  set('price', (typeof formatZAR==='function' && formatZAR(l.price)) || l.price || '');
+  set('price', (typeof formatZAR==='function' && formatZAR(l.price,l.country)) || l.price || '');
 }
 
 // ── HMI-1 (18 Jul 2026): category summary tile grid — the WeBuyCars-style block for non-Cars
@@ -2323,7 +2326,11 @@ async function openAgencyConsole(aidOverride, forceNew){
   goTo('agency');
   const el=document.getElementById('agency-body'); if(!el) return;
   el.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-3);">Loading…</div>';
-  const email=localStorage.getItem('ms_aa_email')||'';
+  let email=localStorage.getItem('ms_aa_email')||'';
+  // AGENCY-SESSION-1 (7 Oct 2026, F14 walk): a principal who arrived signed in (her invite link) opened the console before
+  // the session had been copied into localStorage and was told "No agency is linked" until she reloaded. Ask the server.
+  if(!email){ try{ const _r=await fetch('/quick/me',{credentials:'same-origin'}); const _me=_r.ok?await _r.json():null;
+    if(_me&&_me.email){ email=_me.email; try{ localStorage.setItem('ms_aa_email',_me.email); }catch(_){} } }catch(_){} }
   const isSuper=localStorage.getItem('ms_superuser')==='1';
   // Demo/test overrides (7 Jul 2026): ?aid=N views a specific org; ?new=1 forces
   // the create screen — so the operator skin can demo a tour org while the same
@@ -4441,7 +4448,7 @@ function renderActiveFilterTags(){
   if(trustMin) tags.push('\u2605 Trust \u2265 '+trustMin);
 
   if(cat==='property'){
-    if(fs.minPrice||fs.maxPrice) tags.push(`💰 ${formatZAR(fs.minPrice)||'R0.00'} – ${fs.maxPrice?formatZAR(fs.maxPrice):'any'}`);
+    if(fs.minPrice||fs.maxPrice) tags.push(`💰 ${formatZAR(fs.minPrice,activeCountry&&activeCountry.iso2)||'R0.00'} – ${fs.maxPrice?formatZAR(fs.maxPrice,activeCountry&&activeCountry.iso2):'any'}`);
     if(fs.listingType) tags.push(fs.listingType==='rent' ? '🔑 To Rent' : '🏦 For Sale');   // RENT-WORDS-1 (langt-44)
     if(fs.type)        tags.push(`🏠 ${fs.type}`);
     if(fs.beds)        tags.push(`🛏 ${fs.beds} beds`);
@@ -4465,19 +4472,19 @@ function renderActiveFilterTags(){
     if(fs.area)         tags.push(`📍 ${fs.area}`);
   } else if(cat==='adventures'){
     if(fs.adventureType) tags.push(`🌿 ${fs.adventureType}`);
-    if(fs.maxPrice)      tags.push(`💰 Max ${formatZAR(fs.maxPrice)}`);
+    if(fs.maxPrice)      tags.push(`💰 Max ${formatZAR(fs.maxPrice,activeCountry&&activeCountry.iso2)}`);
     if(fs.duration)      tags.push(`⏱ ${fs.duration}`);
     if(fs.groupSize)     tags.push(`👥 ${fs.groupSize}`);
     if(fs.area)          tags.push(`📍 ${fs.area}`);
   } else if(cat==='collectors'){
     if(fs.collectibleType) tags.push(`🏺 ${fs.collectibleType}`);
-    if(fs.maxPrice)        tags.push(`💰 Max ${formatZAR(fs.maxPrice)}`);
+    if(fs.maxPrice)        tags.push(`💰 Max ${formatZAR(fs.maxPrice,activeCountry&&activeCountry.iso2)}`);
     if(fs.condition)       tags.push(`✨ ${fs.condition}`);
     if(fs.era)             tags.push(`📅 ${fs.era}`);
     if(fs.area)            tags.push(`📍 ${fs.area}`);
   } else if(cat==='cars'){
     if(fs.make)         tags.push(`🚗 ${fs.make}`);
-    if(fs.maxPrice)     tags.push(`💰 Max ${formatZAR(fs.maxPrice)}`);
+    if(fs.maxPrice)     tags.push(`💰 Max ${formatZAR(fs.maxPrice,activeCountry&&activeCountry.iso2)}`);
     if(fs.yearFrom)     tags.push(`📅 ${fs.yearFrom}`);
     if(fs.transmission) tags.push(`⚙️ ${fs.transmission}`);
     if(fs.mileage)      tags.push(`🛣 ${fs.mileage}`);
@@ -4942,7 +4949,7 @@ function renderMap(){
       `<div style="min-width:160px;">
         <strong>${_lmEsc(l.title)}</strong><br>
         <span style="font-size:12px;color:#666;">${cat.icon} ${l.cat} · ${_lmEsc(l.suburb||l.area)}${dist}</span><br>
-        <span style="font-size:13px;font-weight:600;">${l.price?((formatZAR(l.price)||_lmEsc(l.price))+((!l.per&&_priceBasisSuffix(l.price))?' '+_lmEsc(_priceBasisSuffix(l.price)):'')):'Negotiable'}</span><br>
+        <span style="font-size:13px;font-weight:600;">${l.price?((formatZAR(l.price,l.country)||_lmEsc(l.price))+((!l.per&&_priceBasisSuffix(l.price))?' '+_lmEsc(_priceBasisSuffix(l.price)):'')):'Negotiable'}</span><br>
         <a href="#" onclick="event.preventDefault();openDetail('${l.id}')" style="font-size:12px;color:var(--accent);">View listing →</a>
       </div>`
     );
@@ -5750,7 +5757,7 @@ function _msSavedFetch(onDone){
   return true;
 }
 function _msLmSavedCard(c){   // a saved Local Market item, drawn like its Local Market card (every seller value escaped)
-  const price = c.price ? (formatZAR(c.price) || _lmEsc(c.price)) : '<span class="neg">Negotiable</span>';
+  const price = c.price ? (formatZAR(c.price,c.country) || _lmEsc(c.price)) : '<span class="neg">Negotiable</span>';
   const img = c.thumb_url
     ? `<img src="${_lmEsc(c.thumb_url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
     : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
@@ -6275,7 +6282,7 @@ function openDetail(id){
           ${isAdv && advPriceDisplay
             ? `<div class="pamount">${advPriceDisplay}</div>${l.per?`<div class="pper">${_lmEsc(l.per)}</div>`:''}`
             : l.price
-              ? `<div class="pamount">${(formatZAR(l.price)||_lmEsc(l.price))}${(!l.per&&_priceBasisSuffix(l.price))?` <span style="font-size:.55em;font-weight:600;color:var(--text-3);">${_lmEsc(_priceBasisSuffix(l.price))}</span>`:''}</div>${l.per?`<div class="pper">${_lmEsc(l.per)}</div>`:''}`
+              ? `<div class="pamount">${(formatZAR(l.price,l.country)||_lmEsc(l.price))}${(!l.per&&_priceBasisSuffix(l.price))?` <span style="font-size:.55em;font-weight:600;color:var(--text-3);">${_lmEsc(_priceBasisSuffix(l.price))}</span>`:''}</div>${l.per?`<div class="pper">${_lmEsc(l.per)}</div>`:''}`
               : `<div class="pneg">Negotiable — discuss with seller</div>`}
         </div>
       </div>
@@ -17205,7 +17212,7 @@ function _wlRenderCards(cards, isShowcase) {
       : "wfFeedTap(" + (c.match_id || 0) + ", '" + c.listing_id + "')";
     const loc = meta.length ? meta[0] : '';
     const rawPrice = c.price && c.price !== 'POA' && c.price !== '0' ? c.price : '';
-    const formattedPrice = rawPrice ? (formatZAR(rawPrice) || _wlEsc(rawPrice)) : '';
+    const formattedPrice = rawPrice ? (formatZAR(rawPrice,c.country) || _wlEsc(rawPrice)) : '';
     const priceBottom = formattedPrice
       ? '<div style="font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;">' + formattedPrice + '</div>'
       : '<div style="font-size:11px;color:var(--text-3);">POA</div>';
@@ -17857,7 +17864,7 @@ async function lmLoadGrid() {
         grid.innerHTML = demoLM.map(l => {
           const t = trustTier(l.trust || 0);
           const loc = _lmEsc(l.suburb || activeCity.name || '');
-          const price = l.price ? (formatZAR(l.price) || _lmEsc(l.price)) : '<span class="neg">Negotiable</span>';   // PRICE-ESC-1 (25 Sep 2026 inspection, ts3-02)
+          const price = l.price ? (formatZAR(l.price,l.country) || _lmEsc(l.price)) : '<span class="neg">Negotiable</span>';   // PRICE-ESC-1 (25 Sep 2026 inspection, ts3-02)
           const imgHtml = ((l.photos&&l.photos[0])||l.photo)
             ? `<img src="${_lmEsc((l.photos&&l.photos[0])||l.photo)}" alt="${_lmEsc(l.title||'')}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
             : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
@@ -17895,7 +17902,7 @@ async function lmLoadGrid() {
       const trust = c.trust_score || 0;
       const t = tbadge(trust);
       const loc = _lmEsc(c.suburb || c.city || activeCity.name || '');
-      const price = c.price ? (formatZAR(c.price) || _lmEsc(c.price)) : '<span class="neg">Negotiable</span>';
+      const price = c.price ? (formatZAR(c.price,c.country) || _lmEsc(c.price)) : '<span class="neg">Negotiable</span>';
       const imgHtml = c.thumb_url
         ? `<img src="${_lmEsc(c.thumb_url)}" alt="${_lmEsc(c.title||'')}" loading="lazy" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="emoji-fallback" style="background:#1f2937;display:none;">🛍️</div>`
         : `<div class="emoji-fallback" style="background:#1f2937;">🛍️</div>`;
@@ -17979,7 +17986,7 @@ async function lmOpenDetail(listingId) {
         `</div>` +
       `</div>`;
     const priceHtml = c.price
-      ? `<div class="pamount">${formatZAR(c.price) || _lmEsc(c.price)}</div>`
+      ? `<div class="pamount">${formatZAR(c.price,c.country) || _lmEsc(c.price)}</div>`
       : `<div class="pneg">Negotiable — discuss with seller</div>`;
     el.innerHTML =
       heroHtml +
@@ -19275,7 +19282,11 @@ function msRenderIntroList(elId, items, dir){
          cut it to 'Nosiph…' / 'Lindiwe…'. The name block now keeps a sensible width (the row wraps the buttons under it)
          and a long name or title wraps instead of being cut. */
       +'<div style="flex:1 1 150px;min-width:0;"><div class="ms-intro-name" style="overflow-wrap:anywhere;">'+_lmEsc(ident)+'</div>'
-      +'<div class="ms-intro-meta">'+meta+'</div></div>'
+      +'<div class="ms-intro-meta">'+meta+'</div>'
+      /* INTRO-NEXT-1 (7 Oct 2026, F14 walk): after Accepted neither side was told what happens next -- contacts travel
+         by email only (anonymity), so say so where she is looking. */
+      +(i.status==='accepted' ? '<div class="ms-intro-meta" style="color:#0f766e;font-weight:600;">\u2709 Contact details were emailed to you both \u2014 check your inbox (and spam).</div>' : '')
+      +'</div>'
       +chip+hired+withdraw+answer+msIntroMsg(i, dir)+'</div>';
   }).join('');
 }
@@ -19387,7 +19398,7 @@ function msRenderWishlist(){
   el.innerHTML = items.slice(0,5).map(l => {
     const icon = l.cat==='Adventures'?'🌄':l.cat==='Property'?'🏠':l.cat==='Tutors'?'📚':l.cat==='Services'?'🔧':'🛍';
     const thumb = l.photo ? '<img src="'+_lmEsc(l.photo)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">' : icon;
-    const _pr = l.price ? (formatZAR(l.price) || _lmEsc(l.price)) : '';
+    const _pr = l.price ? (formatZAR(l.price,l.country) || _lmEsc(l.price)) : '';
     return '<div class="ms-hist-item" onclick="msOpenSaved(this.dataset.lid)" data-lid="'+_lmEsc(l.id)+'">'
       +'<div class="ms-hist-thumb">'+thumb+'</div>'
       +'<div style="flex:1;min-width:0;"><div class="ms-hist-title" data-notranslate="1" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_lmEsc(l.title||'–')+'</div>'
@@ -20441,7 +20452,7 @@ async function aiAttachPick(jobId){
       /* ATTACH-PICK-LABEL-1 (1 Oct 2026, F10 re-walk): two adverts with the same title (a draft and the live copy) read
          identically -- say which is which: its state and its price. */
       + '<span style="color:#6b7280;font-size:12px;"> \u00b7 ' + _lmEsc(({live:'Live',draft:'Draft',paused:'Paused'})[String(x.listing_status||'live').toLowerCase()] || 'Live')
-      + (x.price ? ' \u00b7 ' + _lmEsc((typeof formatZAR==='function' && formatZAR(x.price)) || x.price) : '') + '</span>'
+      + (x.price ? ' \u00b7 ' + _lmEsc((typeof formatZAR==='function' && formatZAR(x.price,x.country)) || x.price) : '') + '</span>'
       + (x.ai_report_job === jobId ? ' \u2014 attached' : '') + '</button>';
   }).join('');
 }
@@ -23256,7 +23267,7 @@ async function sfAgentIntro(ref){
 /* ── Agent Hub (screen-agent-suite): profile + seller leads, one template ── */
 var _asState={tab:'profile', template:null, profile:null, vertical:'property'};
 /* AUD-045 (4 Oct 2026 audit): every vertical the agency consoles onboard has an entry; an unknown one falls back. */
-var AS_VERT={property:{label:'Estate agent',certs:'PPRA (15 pts) · FFC (10 pts, <b>required to go live</b> — the legal minimum to trade) · NQF4/5/6+ (6/+6/+8) · professional body (5).'},cars:{label:'Car sales agent',certs:'MIRA dealer/trader registration (8 pts, <b>required to go live</b> — the professional minimum to trade) · independent inspection partner (5 pts). NATIS ownership, RWC and service history score per vehicle listing.'},travel:{label:'Tour agent',certs:'ASATA membership (10 pts, <b>required to go live</b> — the professional minimum to trade) · IATA accreditation (10 pts) · CIPC company registration (6 pts, must be submitted) · financial bonding / client payment guarantee (5 pts).'},collector:{label:'Collector dealer',certs:'SAPS Second-Hand Goods dealer registration (<b>required to go live</b>) · CIPC company registration · dealer association (SAADA / SAAND / NAADA) · grading partner (SANGS / NGC / PCGS).'},institution:{label:'Tutor',certs:'Safety clearances — SAPS police clearance, Child Protection Register and Sexual Offenders Register (<b>required to go live</b>) · SACE registration · SAQA-verified qualification.'},service_company:{label:'Technician',certs:'Trade licence — PIRB / DoEL installation electrician / class-statutory (<b>required to go live</b>) · CIPC company registration · public liability insurance · CIDB grading (construction).'},placement:{label:'Placement consultant',certs:'DEL private employment agency registration (<b>required to go live</b>) · CIPC company registration.'}};
+var AS_VERT={property:{label:'Estate agent',certs:'PPRA (15 pts, <b>upload needed to go live</b>) · FFC (10 pts, <b>checked by us before you go live</b> — the legal minimum to trade) · NQF4/5/6+ (6/+6/+8) · professional body (5).'},cars:{label:'Car sales agent',certs:'MIRA dealer/trader registration (8 pts, <b>required to go live</b> — the professional minimum to trade) · independent inspection partner (5 pts). NATIS ownership, RWC and service history score per vehicle listing.'},travel:{label:'Tour agent',certs:'ASATA membership (10 pts, <b>required to go live</b> — the professional minimum to trade) · IATA accreditation (10 pts) · CIPC company registration (6 pts, must be submitted) · financial bonding / client payment guarantee (5 pts).'},collector:{label:'Collector dealer',certs:'SAPS Second-Hand Goods dealer registration (<b>required to go live</b>) · CIPC company registration · dealer association (SAADA / SAAND / NAADA) · grading partner (SANGS / NGC / PCGS).'},institution:{label:'Tutor',certs:'Safety clearances — SAPS police clearance, Child Protection Register and Sexual Offenders Register (<b>required to go live</b>) · SACE registration · SAQA-verified qualification.'},service_company:{label:'Technician',certs:'Trade licence — PIRB / DoEL installation electrician / class-statutory (<b>required to go live</b>) · CIPC company registration · public liability insurance · CIDB grading (construction).'},placement:{label:'Placement consultant',certs:'DEL private employment agency registration (<b>required to go live</b>) · CIPC company registration.'}};
 function _asV(){ return AS_VERT[_asState.vertical] || {label:'Professional agent', certs:''}; }   // AUD-045
 function agentSuiteInit(){
   var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
@@ -23402,9 +23413,13 @@ async function asCredUpload(e, slot, signalId, label){
   var email = (_asState && _asState.email) || localStorage.getItem('ms_aa_email') || '';
   if(!email){ showToast('Sign in first'); e.target.value=''; return; }
   if(!ref){
-    if(st) st.textContent='';
-    showToast('Add the registration or certificate number first — we need it to verify against the register.');
-    e.target.value=''; return;
+    // CRED-KEEP-FILE-1 (7 Oct 2026, F14 walk): the chosen file used to be thrown away here, so she had to find it again.
+    // Keep it, point at the number box, and send it as soon as the number is typed.
+    if(st) st.textContent='File chosen — now type the number above and it sends by itself.';
+    showToast('Type the registration or certificate number — your file is kept and sends as soon as you do.');
+    if(refEl){ try{ refEl.focus(); }catch(_){}
+      var _inp=e.target; refEl.onchange=function(){ if(refEl.value.trim() && _inp.files && _inp.files[0]){ refEl.onchange=null; asCredUpload({target:_inp}, slot, signalId, label); } }; }
+    return;
   }
   if(st) st.textContent='Uploading…';
   try{
