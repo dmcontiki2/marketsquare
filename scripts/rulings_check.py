@@ -1307,6 +1307,10 @@ REFLECTIONS = {
    ("bea_main.py", ['("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")'], []),
    ("ms.js", ["async function msGeoAuto(", "async function msGeoFromGps(", "function msGeoBanner(", "msGeoAuto();   // GEO-AUTO-1", "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');", "LANG-AUTO-1 (RUL-211", "GEO-NET-CITY-1: the network's own position"], ["function msAbroadNudge("]),
  ],
+ "RUL-214": [
+   ("RULINGS.md", ["A CAR WASHER IS A CASUAL WHO CHARGES PER CAR AND PER KIND OF CLEAN"], []),
+   ("quick.html", ["var PRICE_MENU={car_washer:['Wash only','Wash & vacuum','Wash, vacuum, tyres & dashboard','Full valet (inside & out)']};", "car:   {t:'Per car'", "Prices per car: ", '{"k": "car_washer", "l": "Car washer", "c": "C", "g": "Home & care"'], []),
+ ],
  "RUL-212": [
    ("RULINGS.md", ["A PROMOTER BRINGS LISTERS ON HIS OWN LINK; THE APP COUNTS THEM AND NEVER SHOWS OR HANDLES MONEY FOR IT"], []),
    ("bea_main.py", ["def _promo_stamp(", "def _promo_note_buzz(", '@app.get("/p/{code}")', '@app.get("/admin/promoters")', "complete = live and bool(two)"], []),

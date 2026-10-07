@@ -36904,6 +36904,28 @@ def rg_geo_net_city_1():
     if "GEO-NET-CITY-1: the network's own position" in js or "_haversineKm(me.geo.lat" in js:
         bad.append("the app picks her city from the network position again (GEO-CITY-SAFE-1)")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "network position passed through, never used for the city")]
+@entry("RG-0936", "CARWASH-1 (RUL-214, 7 Oct 2026): a car washer prices per car and per package (wash only / wash & vacuum / wash, vacuum, tyres & dashboard / full valet), sits in Home & care, and his advert lists every package",
+       LOCKED, fixed_on="2026-10-07",
+       scope="quick.html price step (PRICE_MENU, basis 'car', menuVals, advert body wrapper) and QUICK-ROLES block; roles/role_registry.json; genie/HARNESS.html parity. All markets.",
+       ref="David 7 Oct 2026: 'They don't work per hour but rather per car and per type of cleaning and are also like cleaners area bound'.")
+def rg_carwash_1():
+    import json as _j, re as _re
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "var PRICE_MENU={car_washer:[" not in q:
+        bad.append("the car washer's package price list is gone")
+    if "car:   {t:'Per car'" not in q or "if(_r && PRICE_MENU[_r]) return {def:'car'" not in q:
+        bad.append("the car washer no longer opens on 'Per car'")
+    if "Prices per car: " not in q:
+        bad.append("the advert no longer lists his packages")
+    m = _re.search(r"var SVC_ROLES = (\[.*?\]);\n", q)
+    roles = {r["k"]: r for r in _j.loads(m.group(1))} if m else {}
+    r = roles.get("car_washer") or {}
+    if r.get("c") != "C" or r.get("g") != "Home & care" or r.get("gate"):
+        bad.append("car washer is not an ungated Casual in Home & care")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "per-car package prices, Home & care, packages in the advert")]
 @entry("RG-0934", "PROMOTER-TRACK-1 (RUL-212, 7 Oct 2026): a promoter's own link stamps his new listers, a unit is complete only on a live advert plus two-way delivered Buzz with one referral, and no money appears anywhere",
        LOCKED, fixed_on="2026-10-07",
        scope="bea_main.py _promo_stamp (quick-publish + /listings), _promo_note_buzz (POST /buzz), GET /p/{code}, /admin/promoters; route_policy.json; dashboard.server.html Comms page Promoters card. All markets.",

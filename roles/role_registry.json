@@ -3038,7 +3038,7 @@
     },
     {
      "key": "price",
-     "q": "What do you charge a day?",
+     "q": "What do you charge per car?",
      "kind": "chip"
     }
    ],
@@ -3055,7 +3055,8 @@
    ],
    "gate": null,
    "employer_kinds": [
-    "household"
+    "household",
+    "business"
    ],
    "role_picture": {
     "file": "roles/pictures/car_washer.png",
@@ -3065,7 +3066,13 @@
     "en": "Car washer available in {where}",
     "af": "Karwasser beskikbaar in {where}"
    },
-   "note": "Mobile washers come to homes and offices — a direct hire."
+   "note": "Mobile washers come to homes and offices — a direct hire. CARWASH-1 (David, 7 Oct 2026): priced per car and per kind of clean (wash only / wash & vacuum / wash, vacuum, tyres & dashboard / full valet), never per hour; area-bound like a cleaner; regulars rebook him through Buzz.",
+   "price_menu": [
+    "Wash only",
+    "Wash & vacuum",
+    "Wash, vacuum, tyres & dashboard",
+    "Full valet (inside & out)"
+   ]
   },
   {
    "key": "event_staff",

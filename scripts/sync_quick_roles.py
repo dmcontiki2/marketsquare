@@ -22,7 +22,8 @@ GROUP_LABEL = {
  "Security": "Security", "Mining & heavy industry": "Heavy industry & plant",
  "Motor & transport": "Driving & vehicles", "Building trades": "Building trades",
  "Systems & installation": "Installers & repairs"}
-MOVE = {"creche_assistant": "Home & care", "event_staff": "Food & hospitality"}  # display home
+MOVE = {"creche_assistant": "Home & care", "event_staff": "Food & hospitality",
+        "car_washer": "Home & care"}  # CARWASH-1: area-bound like a cleaner, next to the cleaners  # display home
 REP = {"Home & care": "home_cleaner", "Food & hospitality": "chef", "Shops & forecourt": "petrol_attendant",
  "Warehouse & delivery": "picker_packer", "General & site work": "builders_assistant",
  "Beauty, sewing & more": "hair_braider", "Security": "security_guard",
