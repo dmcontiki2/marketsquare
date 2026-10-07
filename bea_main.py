@@ -31218,7 +31218,7 @@ def _cred_queue_rows(conn, only_real: bool = True):
     out = []
     for r in rows:
         em = (r["email"] or "").lower()
-        seeded = em.endswith("@trustsquare.co") or "+qa-" in em
+        seeded = em.endswith(("@trustsquare.co", "@example.com", "@example.org", ".test", ".invalid")) or "+qa-" in em
         if only_real and seeded:
             continue
         d = dict(r); d["seeded"] = seeded
