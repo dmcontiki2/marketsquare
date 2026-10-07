@@ -118,6 +118,9 @@ ai_provider.py             | ai_provider.py
 # PLATE-DETECTOR-1 (6 Oct 2026): the local number-plate detector the photo gate runs BEFORE the LLM. The 171 MB
 # model (models/plate_detector.onnx) is a binary and rides the MEDIA lane (media_push.bat), never this manifest.
 plate_detector.py          | plate_detector.py
+# TEXT-ANON-1 (7 Oct 2026): local OCR (RapidOCR on onnxruntime) that locates every piece of text so identifying
+# text is blurred to the glyph; the LLM judges WHICH strings identify, by index. Models ship inside the pip wheel.
+text_anon.py               | text_anon.py
 # PHONE-KEY-1 (24 Sep 2026): the one SMS door (phone codes, key-seller nudges); fails dark without SMS_PROVIDER/SMS_TOKEN
 sms_provider.py            | sms_provider.py
 # STATUS-CARD-1 (24 Sep 2026): the WhatsApp Status card renderer (Pillow; qrcode when installed)

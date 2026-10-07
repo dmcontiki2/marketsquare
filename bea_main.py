@@ -3147,6 +3147,13 @@ def health():
                                   "calls": _ps.get("calls"), "avg_ms": _ps.get("avg_ms")}
     except Exception as _pe:
         body["plate_detector"] = {"ready": False, "why": "module missing: %r" % (_pe,)}
+    try:   # TEXT-ANON-1: is the local OCR loaded?
+        import text_anon as _tam
+        _tam.available(); _ts = _tam.status()
+        body["text_anon"] = {"ready": bool(_ts.get("ready")), "why": _ts.get("why") or "",
+                             "calls": _ts.get("calls"), "avg_ms": _ts.get("avg_ms")}
+    except Exception as _te:
+        body["text_anon"] = {"ready": False, "why": "module missing: %r" % (_te,)}
     return body
 
 
@@ -6495,11 +6502,14 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     _check_cost_ceiling(spend_who)   # C1 rail — 429 over the daily ceiling
     import base64 as _b64
     img, _pre = _anon_plate_preblur(img, category)   # PLATE-DETECTOR-1 stage 0: plates blurred BEFORE the LLM looks
+    _pre_plates = list(_pre)
+    img, _ocr_items, _pre_txt = _anon_text_prescan(img, category)   # TEXT-ANON-1 stage 0b: phones, websites, plates-as-text blurred
+    _pre = list(_pre) + list(_pre_txt)
     probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
     pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
     scan, _it, _ot, _svd = _anon_photo_scan(
         _b64.b64encode(pbuf.getvalue()).decode(),
-        _ts_active_provider(), category or "", first=True, who=spend_who)   # LUNA-FIRST-1 (RUL-203; Gemini dropped)
+        _ts_active_provider(), category or "", first=True, who=spend_who, ocr_items=_ocr_items)   # LUNA-FIRST-1 (RUL-203; Gemini dropped) + TEXT-ANON-1 list
     if _it is not None or _ot is not None:
         _log_ai_spend(spend_who, "/listings/photo#anon-scan", "vision", _it, _ot,
                       provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
@@ -6536,10 +6546,11 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
         _hints = _SUBJECT_HINTS.get((category or "").strip().lower())
         if _hints and not any(hh in _subj for hh in _hints):
             _mismatch = "|subject-mismatch:" + _subj[:40]
+    img, _txt_boxes = _anon_text_apply(img, scan, _ocr_items)   # TEXT-ANON-1 stage 1b: the strings the LLM named, blurred to the glyph
     # PLATE-DETECTOR-1 stage 2: a plate the LLM named is located by the detector, blurred, verified.
     _scan0 = scan
     img, scan = _anon_plate_takeover(img, scan, _ts_active_provider(), category or "", spend_who,
-                                     "/listings/photo#anon-verify", _pre)
+                                     "/listings/photo#anon-verify", _pre, _txt_boxes)
     _plate_done = bool(_pre) or (scan is not _scan0)
     labels = ", ".join(sorted(set(scan.get("labels") or []))[:4])
     _retake = ("TrustSquare listings are anonymous — please retake the photo "
@@ -6580,7 +6591,8 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
                 detail="Could not verifiably blur the identifying content. " + _retake)
         return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
     if _plate_done:
-        return img, "redacted:number plate" + _mismatch
+        _what = (["number plate"] if _pre_plates else []) + (["text"] if (_pre_txt or _txt_boxes) else [])
+        return img, "redacted:" + (", ".join(_what) or "identifying detail") + _mismatch
     return img, ("" if not _mismatch else _mismatch.lstrip("|"))
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
@@ -8159,6 +8171,7 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
     except Exception as exc:
         raise HTTPException(status_code=400, detail=_photo_decode_msg(raw)) from exc
 
+    img, _anote = _anon_profile_photo(img, email)   # TEXT-ANON-1: plates + identifying text blurred, never blocking
     # Square-crop to centre, then resize to 400×400
     w, h = img.size
     side = min(w, h)
@@ -21802,7 +21815,7 @@ def _anon_photo_fetch(src):
     except Exception:
         return None, "fetch-failed"
 
-def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task="reason"):
+def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task="reason", ocr_items=None):
     """LUNA-FIRST-1 (RUL-203): first=True -> luna reads it first; only a photo luna does not pass as clean goes to
     terra (this same function, the reason tier), whose answer is returned. The luna read is metered here."""
     if first and _task == "reason":
@@ -21812,7 +21825,7 @@ def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task
         except Exception:
             _first_on = False
         if _first_on:
-            _l, _lit, _lot, _lsv = _anon_photo_scan(jpeg_b64, "openai", category, False, who, "vision")
+            _l, _lit, _lot, _lsv = _anon_photo_scan(jpeg_b64, "openai", category, False, who, "vision", ocr_items)
             if _l and _l.get("verdict") == "clean" and float(_l.get("confidence") or 0) >= _ANON_PHOTO_CONF \
                     and _l.get("flag") != "inappropriate" and _l.get("fits") is not False:
                 return _l, _lit, _lot, _lsv          # caller meters it, as for any scan
@@ -21831,7 +21844,7 @@ def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task
             [{"role": "user", "content": [
                 {"type": "image", "source": {"type": "base64",
                  "media_type": "image/jpeg", "data": jpeg_b64}},
-                {"type": "text", "text": _anon_scan_prompt_for(category)}]}],
+                {"type": "text", "text": _anon_scan_prompt_for(category) + _anon_ocr_suffix(ocr_items)}]}],   # TEXT-ANON-1
             task=_task, max_tokens=1400, provider=provider,
             allow_fallback=(_task != "vision"))   # LUNA-FIRST-1: the luna read never falls to an untested lane; Sonnet for import scans (David, 7 Jul 2026); tokens 500->800->1400 11 Jul (verbose labels truncated JSON)
         if not res.ok:
@@ -21866,7 +21879,12 @@ def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task
         except Exception:
             conf = 0.0
         _flag = str(v.get("flag", "none")).lower().strip()
-        return ({"verdict": verdict, "regions": regs, "confidence": conf,
+        _tids = []   # TEXT-ANON-1: indices into the OCR list, never coordinates
+        try:
+            _tids = sorted({int(t) for t in (v.get("text_ids") or []) if 0 <= int(t) < 400})[:_TEXT_ANON_LIMIT]
+        except Exception:
+            _tids = []
+        return ({"verdict": verdict, "regions": regs, "confidence": conf, "text_ids": _tids,
                  "labels": [r[4] for r in regs if r[4]],
                  "subject": str(v.get("subject", ""))[:60],
                  "fits": (v.get("fits_category")
@@ -22367,64 +22385,81 @@ def _anon_plate_preblur(img, category):
         return img, []
 
 
-def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre_boxes=None):
-    """Stage 2. `scan` is an LLM scan with verdict 'redact'. For each region the LLM labelled
-    as a plate, use the DETECTOR's box instead of the LLM's guess: blur every detection that
-    sits in or near that region (the LLM's box can be a whole box-width off), and drop the
-    region. A plate region that only re-flags an already-blurred box widens that box by 20%
-    and is dropped too. If no region remains, re-scan ONCE to verify.
-    Returns (img, scan2): scan2['verdict']=='clean' means the photo is done; otherwise the
-    remaining regions flow into the existing path (reject-only / blur-until-clean) unchanged.
+def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre_boxes=None, fresh_boxes=None):
+    """Stage 2 (PLATE-DETECTOR-1, generalised by TEXT-ANON-1). `scan` is an LLM scan with verdict
+    'redact'. For each region the LLM flagged, find the exact pixels LOCALLY and never use the
+    LLM's box:
+      (a) a plate region  -> the plate detector's boxes in or near it (the LLM's box can be a whole
+                             box-width off); in a vehicle advert any strong detection counts;
+      (b) any region      -> one zoomed OCR pass on that region returns the exact glyph boxes of
+                             the text the LLM saw (small or curved labels the full-frame OCR missed);
+                             plainly harmless strings (prices, SOLD, a make badge) are left alone;
+      (c) a region that re-flags text blurred to the glyph from this scan's text_ids -> handled;
+          a region that re-flags a patch blurred BEFORE the scan (plate / rule) -> widened 20%.
+    Regions handled this way are dropped; if none remain, ONE verify read confirms the result.
+    Returns (img, scan2): scan2['verdict']=='clean' means done; otherwise the remaining regions
+    (for example a graphic logo with no text) flow into the existing path unchanged.
     On any failure returns (img, scan) untouched -- fail-safe, never fail-open."""
-    _pdm = _plate_detector()
+    _pdm = _plate_detector(); _ta = _text_anon()
     try:
-        if _pdm is None or not scan or scan.get("verdict") != "redact":
+        if not scan or scan.get("verdict") != "redact":
             return img, scan
         regions = list(scan.get("regions") or [])
-        if not regions:
+        if not regions or (_pdm is None and _ta is None):
             return img, scan
         W, H = img.size
-        dets = _pdm.detect(img, conf=_PLATE_CONF_OTHER)
+        dets = _pdm.detect(img, conf=_PLATE_CONF_OTHER) if _pdm else []
         vehicle = _plate_cat_is_vehicle(category)
         pre = [tuple(float(v) for v in b[:4]) for b in (pre_boxes or [])]
-        keep = []; to_blur = []; handled = 0
+        fresh = [tuple(float(v) for v in b[:4]) for b in (fresh_boxes or [])]
+        keep = []; to_blur = []; text_items = []; handled = 0; kinds = set()
         for _reg in regions:
             x0, y0, x1, y1 = (float(v) for v in _reg[:4]); lbl = str(_reg[4] if len(_reg) > 4 else "")
-            if not _PLATE_LABEL_RE.search(lbl):
-                keep.append(_reg); continue
             bw = max(1.0, x1 - x0); bh = max(1.0, y1 - y0)
             ex0, ey0, ex1, ey1 = x0 - bw, y0 - bh, x1 + bw, y1 + bh      # the LLM's box, doubled each way
-            matched = []
-            for d in dets:
-                cx = (d[0] + d[2]) / 2.0; cy = (d[1] + d[3]) / 2.0
-                if ex0 <= cx <= ex1 and ey0 <= cy <= ey1:
-                    matched.append(d)
-                elif vehicle and d[4] >= _PLATE_CONF_VEHICLE:
-                    matched.append(d)                                   # a plate is a plate in a car advert
-            if matched:
-                to_blur.extend(_pdm.frame_extend(img, d) for d in matched); handled += 1; continue
-            # no detection -- is the LLM re-flagging a patch we already blurred? widen it and move on
-            re_hit = [b for b in pre
-                      if not (b[2] < ex0 or b[0] > ex1 or b[3] < ey0 or b[1] > ey1)]
+            # (a) plate -> detector
+            if _pdm and _PLATE_LABEL_RE.search(lbl):
+                matched = []
+                for d in dets:
+                    cx = (d[0] + d[2]) / 2.0; cy = (d[1] + d[3]) / 2.0
+                    if (ex0 <= cx <= ex1 and ey0 <= cy <= ey1) or (vehicle and d[4] >= _PLATE_CONF_VEHICLE):
+                        matched.append(d)
+                if matched:
+                    to_blur.extend(_pdm.frame_extend(img, d) for d in matched); handled += 1; kinds.add("number plate"); continue
+            # (c1) the region is the text we just blurred to the glyph from text_ids -> handled as is
+            if any(not (b[2] < ex0 or b[0] > ex1 or b[3] < ey0 or b[1] > ey1) for b in fresh):
+                handled += 1; kinds.add("text"); continue
+            # (b) any region -> zoomed OCR for the exact glyph boxes
+            if _ta:
+                found = [it for it in _ta.ocr_region(img, (x0, y0, x1, y1)) if _ta.rule_class(it["text"]) != "allow"]
+                if found:
+                    text_items.extend(found); handled += 1; kinds.add("text"); continue
+            # (c2) re-flag of a patch blurred BEFORE the scan (plate / rule) -> widen it
+            re_hit = [b for b in pre if not (b[2] < ex0 or b[0] > ex1 or b[3] < ey0 or b[1] > ey1)]
             if re_hit:
                 for b in re_hit:
                     gw = (b[2] - b[0]) * 0.20; gh = (b[3] - b[1]) * 0.20
-                    to_blur.append((max(0, b[0] - gw), max(0, b[1] - gh),
-                                    min(1000, b[2] + gw), min(1000, b[3] + gh)))
+                    to_blur.append((max(0, b[0] - gw), max(0, b[1] - gh), min(1000, b[2] + gw), min(1000, b[3] + gh)))
                 handled += 1; continue
-            keep.append(_reg)                                           # a plate we cannot locate: old path
+            keep.append(_reg)                                           # cannot locate it locally: old path
         if not handled:
             return img, scan
-        # dedupe boxes then paint once
         seen = set(); boxes = []
         for b in to_blur:
             k = tuple(int(round(v)) for v in b[:4])
             if k not in seen:
                 seen.add(k); boxes.append(b)
-        img, _n = _pdm.blur_boxes(img, boxes)
+        if boxes:
+            if _pdm:
+                img, _n = _pdm.blur_boxes(img, boxes)
+            elif _ta:
+                img, _n = _ta.blur_items(img, [{"box": b, "quad": None} for b in boxes])
+        if text_items and _ta:
+            img, _n2 = _ta.blur_items(img, text_items)
         labels = list(scan.get("labels") or [])
-        if "number plate" not in labels:
-            labels.append("number plate")
+        for k in sorted(kinds):
+            if k not in labels:
+                labels.append(k)
         if keep:
             scan2 = dict(scan); scan2["regions"] = keep; scan2["labels"] = labels
             return img, scan2
@@ -22434,24 +22469,138 @@ def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
         v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category)
         if _it is not None or _ot is not None:
-            _log_ai_spend(spend_who, endpoint + "#plate-verify", "vision", _it, _ot,
+            _log_ai_spend(spend_who, endpoint + "#local-verify", "vision", _it, _ot,
                           provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
         if not v:
             return img, scan                      # verify unavailable: fail closed through the old path
         v = dict(v); v["labels"] = list(v.get("labels") or []) + [l for l in labels if l not in (v.get("labels") or [])]
-        if v.get("verdict") == "clean" and float(v.get("confidence") or 0) >= _ANON_PHOTO_CONF:
-            return img, v
-        return img, v                             # still flagged: the verifier's regions go down the old path
+        return img, v                             # clean -> done; still flagged -> the verifier's regions go down the old path
     except Exception as _e:
-        _log.warning("plate takeover failed: %r", _e)
+        _log.warning("local takeover failed: %r", _e)
         return img, scan
 
+# ── TEXT-ANON-1 (David, 7 Oct 2026) ─────────────────────────────────────────────
+# "this same photo blurring method must also be used for all photos uploaded everywhere to
+#  detect and remove anonymity violations -- number plates, names, surnames, business names,
+#  street names, addresses, etc.; what we do allow is suburbs."
+#
+# The plate lesson, applied to text: the LLM never supplies coordinates. text_anon.py (RapidOCR,
+# Apache-2.0, onnxruntime, ~0.3 s, R0 per photo) finds every piece of text to the pixel; rules blur
+# the identifiers that need no judgement (phones, e-mails, websites, plates written as text, long
+# numbers) BEFORE the LLM looks; the LLM gets the remaining strings as a numbered list and answers
+# with INDICES of the ones that identify a person, business or exact place (suburb, city, province
+# are allowed and said so). A region the LLM flags whose text the full-frame OCR missed (small or
+# curved label) gets ONE zoomed OCR pass on that region, which returns exact glyph boxes.
+# Both photo doors + the profile-photo door run it. Fail-safe: no package -> everything is a no-op.
+_TEXT_ANON_LIMIT = 40
+_ANON_OCR_SUFFIX = (
+    ' TEXT READ FROM THIS PHOTO BY OCR (index: "text"): %s. ALSO return "text_ids": a JSON list of the '
+    'indices whose text identifies a PERSON, a BUSINESS or an EXACT PLACE - a personal name or surname, a '
+    'business / agency / dealership / farm / producer / stall / school name, a street name, a house or '
+    'street number, a full address, or a number plate or phone number the OCR mis-read. NOT identifying '
+    '(leave out): suburb, city, province and country names; prices; generic words (SOLD, SALE, OPEN, STOP, '
+    'WELCOME); a mass-market manufacturer\'s mark on goods being resold (Ford, Samsung, Nikon). Judge by the '
+    'photo: "42" on a gate pillar or letterbox is a house number, "42" on a jersey is not. Text already '
+    'blurred is handled - never list it. An identifying item you can SEE that is not in the list still goes '
+    'in "regions" as before, and text you list in text_ids does NOT also need a region.')
+
+
+def _text_anon():
+    """The local OCR module, or None (fail-safe: the gate then runs without text localisation)."""
+    try:
+        import text_anon as _ta
+        return _ta if _ta.available() else None
+    except Exception:
+        return None
+
+
+def _anon_ocr_suffix(ocr_items):
+    try:
+        _ta = _text_anon()
+        if not ocr_items or _ta is None:
+            return ""
+        return _ANON_OCR_SUFFIX % _ta.prompt_list(ocr_items, _TEXT_ANON_LIMIT)
+    except Exception:
+        return ""
+
+
+def _anon_text_prescan(img, category):
+    """Stage 0b. OCR the photo; blur the identifiers that need no judgement; return
+    (img, items_for_the_llm, boxes_blurred). Items are renumbered 0..n for the prompt."""
+    _ta = _text_anon()
+    if _ta is None:
+        return img, [], []
+    try:
+        items = _ta.ocr(img)
+        if not items:
+            return img, [], []
+        now = [it for it in items if _ta.rule_class(it["text"]) == "id"]
+        ask = [it for it in items if _ta.rule_class(it["text"]) is None]
+        boxes = []
+        if now:
+            img, _n = _ta.blur_items(img, now)
+            if _n:
+                boxes = [tuple(it["box"]) for it in now]
+        for k, it in enumerate(ask):
+            it["i"] = k
+        return img, ask[:_TEXT_ANON_LIMIT], boxes
+    except Exception as _e:
+        _log.warning("text prescan failed: %r", _e)
+        return img, [], []
+
+
+def _anon_text_apply(img, scan, items):
+    """Stage 1b. Blur the OCR items the LLM named in text_ids. Returns (img, boxes_blurred)."""
+    _ta = _text_anon()
+    ids = (scan or {}).get("text_ids") or []
+    if _ta is None or not items or not ids:
+        return img, []
+    try:
+        pick = [it for it in items if it["i"] in ids]
+        if not pick:
+            return img, []
+        img, _n = _ta.blur_items(img, pick)
+        return img, ([tuple(it["box"]) for it in pick] if _n else [])
+    except Exception as _e:
+        _log.warning("text apply failed: %r", _e)
+        return img, []
+
+
+def _anon_profile_photo(img, who):
+    """TEXT-ANON-1 for the profile-photo door: the same local plate + text pass and the same LLM
+    judgement, but NEVER blocking - a profile photo is blurred where needed and stored. Returns
+    (img, note)."""
+    try:
+        img, _pre = _anon_plate_preblur(img, "cars")          # a plate in a profile photo is a plate
+        img, _ocr, _pre_txt = _anon_text_prescan(img, "profile photo")
+        _pre = list(_pre) + list(_pre_txt)
+        if not _ocr and not _pre:
+            return img, ""
+        import base64 as _b64
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                                 _ts_active_provider(), "profile photo", first=True, who=who,
+                                                 ocr_items=_ocr)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(who, "/users/photo#anon-scan", "vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
+        if scan:
+            img, _txt = _anon_text_apply(img, scan, _ocr)
+            img, _scan2 = _anon_plate_takeover(img, scan, _ts_active_provider(), "profile photo", who,
+                                               "/users/photo#anon-verify", _pre, _txt)
+            _pre = _pre + list(_txt)
+        return img, ("redacted:text" if _pre else "")
+    except Exception as _e:
+        _log.warning("profile photo anon failed: %r", _e)
+        return img, ""
 
 # Warm the detector at start-up (one-time ~1-2 s model load) so the first seller upload of
 # the day does not pay it. Daemon thread; any failure just leaves the lazy load for later.
 try:
     import threading as _plate_thr
     _plate_thr.Thread(target=_plate_detector, name="plate-detector-warm", daemon=True).start()
+    _plate_thr.Thread(target=_text_anon, name="text-anon-warm", daemon=True).start()   # TEXT-ANON-1
 except Exception:
     pass
 
@@ -22473,9 +22622,11 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
         except Exception:
             held += 1; notes.append("held:ai-ceiling"); continue
         img, _pre = _anon_plate_preblur(img, category)   # PLATE-DETECTOR-1 stage 0
+        img, _ocr_items, _pre_txt = _anon_text_prescan(img, category)   # TEXT-ANON-1 stage 0b
+        _pre = list(_pre) + list(_pre_txt)
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)   # 896->1344 11 Jul 2026: small background plates were illegible to the scanner
         pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
-        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category, first=True, who=agent)   # LUNA-FIRST-1
+        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), provider, category, first=True, who=agent, ocr_items=_ocr_items)   # LUNA-FIRST-1 + TEXT-ANON-1
         if _it is not None or _ot is not None:
             _log_ai_spend(agent, "/agencies/import#photo-scan", "vision", _it, _ot,
                           provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
@@ -22487,10 +22638,11 @@ def _anon_photo_pass(photo_srcs, agent, provider, category=""):
         # so an anonymous-but-unacceptable photo could be attached from an agency feed.
         # Same rule, both doors. Held rather than rejected: the import is a bulk operation
         # and one bad photo must not fail a whole agency's advert.
+        img, _txt_boxes = _anon_text_apply(img, scan, _ocr_items)   # TEXT-ANON-1 stage 1b
         _scan0 = scan   # PLATE-DETECTOR-1 stage 2
-        img, scan = _anon_plate_takeover(img, scan, provider, category, agent, "/agencies/import#photo-verify", _pre)
+        img, scan = _anon_plate_takeover(img, scan, provider, category, agent, "/agencies/import#photo-verify", _pre, _txt_boxes)
         if _pre or scan is not _scan0:
-            notes.append("redacted:number plate")
+            notes.append("redacted:" + ("text" if (_pre_txt or _txt_boxes) else "number plate"))
         if scan.get("flag") == "inappropriate":
             held += 1; notes.append("held:inappropriate"); continue
         if scan["verdict"] == "reject":

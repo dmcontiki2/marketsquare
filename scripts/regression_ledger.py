@@ -36791,6 +36791,46 @@ def rg_abroad_nudge_1():
             bad.append("it switches the city before she taps")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "abroad visitors are asked once, on Home, and only switched on a tap")]
 
+
+@entry("RG-0911", "TEXT-ANON-1 (7 Oct 2026): identifying TEXT in photos (names, business names, streets, addresses, "
+       "phones, websites) is located by local OCR and blurred to the glyph in every photo door; the LLM judges by index, "
+       "never by coordinates; suburbs stay",
+       LOCKED, fixed_on="2026-10-07",
+       scope="text_anon.py (RapidOCR on onnxruntime, Apache-2.0; rules for phones/e-mails/websites/plates-as-text/long "
+             "numbers); bea_main.py _anon_text_prescan (stage 0b) + _anon_text_apply (stage 1b) in the seller gate AND the "
+             "agency import; _anon_profile_photo on /users/{email}/photo; _anon_photo_scan carries ocr_items and returns "
+             "text_ids; the generalised _anon_plate_takeover locates any LLM-flagged region by zoomed OCR; /health text_anon; "
+             "migrations/068; manifest ships text_anon.py",
+       ref="David 7 Oct 2026: 'this same photo blurring method must also be used for all photos uploaded everywhere to detect "
+           "and remove anonymity violations - number plates, names, surnames, business names, street names, addresses, etc.; "
+           "what we do allow is suburbs.' Offline chain test (scripts/eval_text_anon.py + the stubbed-LLM chain): estate board "
+           "(agency, agent, phone blurred; SOLD kept), letterbox (number + surname) and street sign blurred, suburb sign and "
+           "price untouched, bakkie branding blurred with the make badge kept, stall label blurred with 'Handmade in Mamelodi' "
+           "kept. This asserts the INVARIANT: text localisation never regresses to LLM coordinates, and both doors stay wired.")
+def rg_text_anon_1():
+    ta = repo_file("text_anon.py"); b = repo_file("bea_main.py"); man = repo_file("ops/autodeploy/deploy_manifest.txt"); mig = repo_file("migrations/068_text_anon.py")
+    if None in (ta, b, man):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need in ("def ocr(", "def ocr_region(", "def rule_class(", "def blur_items("):
+        if need not in ta:
+            bad.append("text_anon.py lost " + need)
+    if b.count("_anon_text_prescan(img, category)") < 2:
+        bad.append("stage 0b (OCR + rule blur) is no longer wired into both photo doors")
+    if b.count("_anon_text_apply(img, scan, _ocr_items)") < 2:
+        bad.append("stage 1b (the LLM's text_ids blurred to the glyph) is no longer wired into both photo doors")
+    if "ocr_items=None" not in b or '"text_ids": _tids' not in b or "_anon_ocr_suffix(ocr_items)" not in b:
+        bad.append("the scan no longer carries the OCR list / returns text_ids")
+    if "_anon_profile_photo(img, email)" not in b:
+        bad.append("the profile-photo door lost its pass")
+    if "_ta.ocr_region(img, (x0, y0, x1, y1))" not in b:
+        bad.append("the takeover no longer locates LLM-flagged text by zoomed OCR")
+    if not re.search(r"(?m)^\s*text_anon\.py\s*\|", man):
+        bad.append("the manifest no longer ships text_anon.py")
+    if mig is None:
+        bad.append("migrations/068_text_anon.py is gone")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "identifying text is located locally and blurred to the glyph in every door; the LLM judges by index")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

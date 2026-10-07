@@ -207,3 +207,5 @@ SYNC_CONFLICT.txt*
 /models/*.part*
 /models/*.p[0-9][0-9]
 eval_photos/_plate_eval/
+/models/*.yaml
+eval_photos/_text_eval/
