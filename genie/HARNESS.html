@@ -1493,7 +1493,13 @@ function handoverPayload(){
     .forEach(function(f){
       var k=from[f]; if(!k) return;
       var pk=pickOf(k); if(!pk) return;
-      body[f]=(f==='beds'||f==='baths'||f==='vehicle_year') ? parseInt(pk.label,10)||null : pk.label;
+      /* YEAR-EXACT-1 (7 Oct 2026, Dave jnr via David: "the year changes its value between quick and trustsquare";
+         AUD-212). The year chips are RANGES ('2015-2019', '2020+', 'Older'); parseInt filed a 2018 car as 2015 and a
+         2023 car as 2020. Only an exact year she typed is stored as the car's year; a range stays in her advert's words
+         (qAdBody) and TrustSquare's Edit asks for the exact year. */
+      if(f==='vehicle_year'){ var _ys=String(pk.label||'').match(/\b(19|20)\d{2}\b/g);
+        body[f]=(_ys && _ys.length===1 && !/[\u2013\u2014\-+]|older|newer|before|after/i.test(pk.label)) ? parseInt(_ys[0],10) : null; return; }
+      body[f]=(f==='beds'||f==='baths') ? parseInt(pk.label,10)||null : pk.label;
     });
   /* FIND-HONOUR-1 (write side): one meaning, one stored word -- the platform's 'For Sale' / 'For Rent' (Edit's, Browse's
      and every import's words), never Quick's chip wording 'To sell' / 'To let' */

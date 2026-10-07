@@ -12438,6 +12438,7 @@ async function openEditListing(beaId) {
      reset between listings — opening a second listing showed (and could SAVE)
      the previous listing's photos. Reset per open; elRenderPhotos re-reads. */
   _elPhotoUrls = [];
+  _elPhotosLoaded = false;   // PHOTO-EMPTY-1: a new listing's photos are read once, below
   _elPhotoReplaceIdx = 0;
 
   let dl = dashState.listings.find(d => d.beaListingId === beaId);
@@ -12968,6 +12969,10 @@ let _elPhotoWarning = '';  // AI photo feedback text, set by editAISuggest
 
 // Module-level photo array for the listing being edited
 let _elPhotoUrls = [];
+/* PHOTO-EMPTY-1 (7 Oct 2026, Dave jnr: 'it deletes to one then all of them appear again'). An EMPTY list used to
+   mean 'not read yet', so removing the LAST photo made elRenderPhotos re-read the advert -- the old photo_urls
+   or the [photos:...] description prefix -- and every removed photo came back. Loaded is now its own flag. */
+let _elPhotosLoaded = false;
 
 function elRenderPhotos(raw, photoWarning) {
   const section  = document.getElementById('el-photos-section');
@@ -12977,7 +12982,8 @@ function elRenderPhotos(raw, photoWarning) {
   // Only re-read from raw on initial load (when _elPhotoUrls is empty).
   // After that, callers maintain _elPhotoUrls directly so we never
   // overwrite an in-progress local array with a stale BEA snapshot.
-  if (!_elPhotoUrls.length) {
+  if (!_elPhotosLoaded) {
+    _elPhotosLoaded = true;
     try {
       if (raw.photo_urls) {
         const parsed = typeof raw.photo_urls === 'string' ? JSON.parse(raw.photo_urls) : raw.photo_urls;
@@ -14027,6 +14033,8 @@ async function saveEditedListing(_termsJustAccepted) {
     payload.photo_urls  = JSON.stringify(_elPhotoUrls);
     payload.thumb_url   = _elPhotoUrls[0];
     payload.medium_url  = _elPhotoUrls[0];
+  } else if (_elPhotosLoaded) {
+    payload.photo_urls  = '[]';   // PHOTO-EMPTY-1: she removed every photo -- the server clears them too
   }
 
   try {

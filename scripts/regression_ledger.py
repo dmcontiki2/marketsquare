@@ -36949,6 +36949,37 @@ def rg_passkey_always_1():
     return bad or [(INFO, "Face ID is offered after every sign-in on a phone until it is set up")]
 
 
+@entry("RG-0932", "PHOTO-EMPTY-1 + PHOTO-CAP-3 (7 Oct 2026): removing the LAST photo in Edit leaves no photos -- the removed "
+       "ones never come back -- and saving it clears them on the server; an edit keeps up to 24 photos, as the app allows",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js _elPhotosLoaded (elRenderPhotos reads the advert once per open, not whenever the list is empty; "
+             "saveEditedListing sends photo_urls '[]'); bea_main.py PUT /listings clears thumb/medium on an empty list; "
+             "_safe_client_photo_list keeps 24",
+       ref="Dave jnr via David, 7 Oct 2026: 'he edits his photos but cant delete them all, it deletes to one then all of them "
+           "appear again'. Reproduced on live ms.js v=981: three photos, three removes -> 3,2,1,3; fixed copy -> 3,2,1,0.")
+def rg_photo_empty_1():
+    bad = _fb28_need([("ms.js", [("let _elPhotosLoaded = false;", "the loaded flag is gone"),
+                                 ("if (!_elPhotosLoaded) {", "an empty list again means 'read the advert again'"),
+                                 ("payload.photo_urls  = '[]';", "removing every photo is not saved")]),
+                      ("bea_main.py", [("PHOTO-EMPTY-1 (7 Oct 2026): every photo removed", "the server keeps the old cover"),
+                                       ("for x in arr[:24]) if u])", "an edit drops photos past 20 again")])])
+    return bad or [(INFO, "removed photos stay removed, down to none; 24 kept")]
+
+
+@entry("RG-0933", "YEAR-EXACT-1 (7 Oct 2026, AUD-212): a Quick year RANGE chip is never filed as an exact year -- only a typed "
+       "year is the car's year; the range stays in the advert's words and TrustSquare's Edit asks for the year",
+       LOCKED, fixed_on="2026-10-07",
+       scope="quick.html (= genie/HARNESS.html) the hand-over body; migrations/069_year_ranges.py clears the years filed wrongly",
+       ref="Dave jnr via David, 7 Oct 2026: 'the year that changes its value between quick and trustsquare'. Reproduced on live "
+           "/quick/: Sedan > Toyota > 2015-2019 sent vehicle_year 2015; fixed copy sends null with 'Year: 2015-2019' in the text.")
+def rg_year_exact_1():
+    bad = _fb28_need([("quick.html", [("YEAR-EXACT-1", "the year rule is gone"),
+                                      ("body[f]=(f==='beds'||f==='baths') ? parseInt(pk.label,10)||null : pk.label;",
+                                       "a year chip is parsed into a number again")]),
+                      ("migrations/069_year_ranges.py", [("vehicle_year = NULL", "the one-time correction is gone")])])
+    return bad or [(INFO, "only an exact year becomes the car's year")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

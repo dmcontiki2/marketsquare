@@ -2700,7 +2700,9 @@ def _safe_client_photo_list(v):
         return None
     if not isinstance(arr, list):
         return None
-    return json.dumps([u for u in (_safe_client_photo_url(x) for x in arr[:20]) if u])
+    # PHOTO-CAP-3 (7 Oct 2026): the app lets property, cars and stays carry 24 photos (PHOTO-CAP-2); this kept 20,
+    # so an edit of a 24-photo advert silently dropped the last four.
+    return json.dumps([u for u in (_safe_client_photo_url(x) for x in arr[:24]) if u])
 
 
 class _PhotoSafe:
@@ -6080,6 +6082,9 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
                 d.setdefault("medium_url", _new_urls[0])
             else:
                 d["description"] = _desc
+                # PHOTO-EMPTY-1 (7 Oct 2026): every photo removed -- the cover goes too, or the card kept the old picture
+                d["thumb_url"] = None
+                d["medium_url"] = None
 
     sets = ", ".join(f"{k} = ?" for k in d.keys())
     vals = list(d.values())
