@@ -36734,6 +36734,63 @@ def rg_code_survive_1():
         bad.append("the signed-in cookie no longer renews itself on visits")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "codes survive restarts; sessions renew and never lapse on a timer")]
 
+@entry("RG-0908", "WATCH-COVER-1 (Goal run 31, 6 Oct 2026): the wristwatch example adverts and their letter cards show wristwatches, not a pocket watch",
+       LOCKED, fixed_on="2026-10-06",
+       scope="scripts/create_email_examples_2.py + _intl.py photo lists and the collectors outreach templates (ZA + intl GB/US/AU) never use sup_email2_watch_1.jpg",
+       ref="Goal run 31 walk: the photo read named sup_email2_watch_1.jpg 'Vintage Gold-Tone Pocket Watch' -- it was the cover of four live "
+           "examples titled 'Vintage wristwatch, 1960s automatic' / 'Vintage Omega Seamaster' (#476 #486 #499 #512) and the card picture in every collectors letter.")
+def rg_watch_cover_1():
+    bad = []
+    for f in ("scripts/create_email_examples_2.py", "scripts/create_email_examples_intl.py",
+              "orchestration_v2/templates/collectors_outreach.html", "orchestration_v2/templates/collectors_dealer_outreach.html",
+              "orchestration_v2/templates/intl/GB/collectors_outreach.html", "orchestration_v2/templates/intl/US/collectors_outreach.html",
+              "orchestration_v2/templates/intl/AU/collectors_outreach.html"):
+        t = repo_file(f)
+        if t is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        if "watch_1.jpg" in t:
+            bad.append(f)
+    return [(FAIL, "the pocket-watch picture is back on a wristwatch example: " + ", ".join(bad))] if bad else [(INFO, "wristwatch examples show wristwatches")]
+
+@entry("RG-0909", "CAT-HINT-HOME-1 (Goal run 31, 6 Oct 2026): the long-press category tip shows only on Home, never over an advert a visitor arrived on",
+       LOCKED, fixed_on="2026-10-06",
+       scope="ms.js showCatHomeHint returns (without marking shown) unless .screen.active is #screen-home",
+       ref="Goal run 31: opening /?listing=499 cold, the tip 'Long-press any category to set it as your home screen' sat over the advert's contact button for 4 s.")
+def rg_cat_hint_home_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function showCatHomeHint()")
+    body = js[i:i+900] if i >= 0 else ""
+    if "screen-home" not in body or body.find("screen-home") > body.find("setItem(CAT_HOME_HINT"):
+        return [(FAIL, "the category tip can fire over any screen again (or is marked shown before the Home check)")]
+    return [(INFO, "category tip waits for Home")]
+
+@entry("RG-0910", "ABROAD-NUDGE-1 (Goal run 31, 6 Oct 2026): a visitor from abroad who never picked a city is asked once, on Home, whether to see her own country's city",
+       LOCKED, fixed_on="2026-10-06",
+       scope="ms.js msAbroadNudge: reads /quick/me geo.country, US/GB/AU only, never auto-switches, never over an advert or an invited form, remembered (ms_abroad_nudge)",
+       ref="Goal run 31 walk: an en-GB phone on a US network got South Africa / Pretoria, rand prices and the South African legal card on the "
+           "Collectors flow, while the collectors letters now point at London / New York / Sydney adverts.")
+def rg_abroad_nudge_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function msAbroadNudge(")
+    body = js[i:i+3200] if i >= 0 else ""
+    bad = []
+    if i < 0 or "setTimeout(msAbroadNudge" not in js:
+        bad.append("the abroad question is gone or never scheduled")
+    else:
+        if "ms_user_city" not in body.split("fetch(")[0]:
+            bad.append("it no longer steps aside for a visitor who picked her own city")
+        if "screen-home" not in body or "magicLink" not in body:
+            bad.append("it can fire off Home or over an invited seller's form")
+        if "ms_abroad_nudge" not in body:
+            bad.append("the answer is not remembered (she would be asked every visit)")
+        if body.split(".onclick")[0].count("selectCity(") > 0:
+            bad.append("it switches the city before she taps")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "abroad visitors are asked once, on Home, and only switched on a tap")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

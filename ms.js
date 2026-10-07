@@ -19992,6 +19992,7 @@ function catHomeInit() {
   if (!localStorage.getItem(CAT_HOME_HINT) && !localStorage.getItem(CAT_HOME_KEY)) {
     setTimeout(showCatHomeHint, 2000);
   }
+  setTimeout(msAbroadNudge, 2600);   // ABROAD-NUDGE-1
 
   // Mark star on cat tile if preference already set
   _updateCatStars();
@@ -20123,10 +20124,57 @@ function _catHomeStatsText(cat) {
   };
 })();
 
+/* ABROAD-NUDGE-1 (Goal run 31, 6 Oct 2026): a visitor from abroad was treated as South African everywhere -- Home
+   "South Africa / Pretoria", rand prices, the South African legal card, her listing filed in Pretoria -- although the
+   collectors letters now go to London, New York and Sydney with adverts there. When she has never picked a city and
+   Cloudflare puts her network in a country the app has cities for (not ZA), Home asks ONCE, on Home only:
+   "You seem to be in <country> -- show <city>?". One tap switches (and is remembered like any pick); "Stay" keeps
+   Pretoria and is remembered. Never switches by itself (VPNs, travellers). The country is read, never stored server-side. */
+var _MS_ABROAD_NAMES = { US:'the United States', GB:'the United Kingdom', AU:'Australia' };
+function msAbroadNudge(){
+  try{
+    if (localStorage.getItem('ms_user_city') || localStorage.getItem('ms_abroad_nudge')) return;
+    if (typeof magicLink!=='undefined' && magicLink.active) return;
+    var act = document.querySelector('.screen.active');
+    if (!act || act.id !== 'screen-home') return;
+  }catch(_){ return; }
+  fetch('/quick/me', {credentials:'same-origin'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(me){
+    var cc = me && me.geo && String(me.geo.country || '').toUpperCase();
+    if (!cc || cc === 'ZA' || !_MS_ABROAD_NAMES[cc] || typeof DEMO_COUNTRY_CITIES === 'undefined') return;
+    var cities = DEMO_COUNTRY_CITIES[cc] || []; if (!cities.length) return;
+    var gc = String((me.geo && me.geo.city) || '');
+    var pick = cities.find(function(c){ return c.name === gc; }) || cities[0];
+    if (activeCountry && activeCountry.iso2 === cc) return;
+    var act = document.querySelector('.screen.active');
+    if (!act || act.id !== 'screen-home' || document.getElementById('ms-abroad-nudge')) return;
+    var bar = document.createElement('div');
+    bar.id = 'ms-abroad-nudge';
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'margin:10px 16px 0;padding:12px 14px;border-radius:14px;background:#FFF7E0;border:1px solid #F2C14E;color:#1a1a2e;font-size:14px;line-height:1.4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
+    var t = document.createElement('div'); t.style.cssText = 'flex:1 1 100%;';
+    t.textContent = 'You seem to be in ' + _MS_ABROAD_NAMES[cc] + '. Show listings in ' + pick.name + ' instead of Pretoria?';
+    var yes = document.createElement('button'); yes.type = 'button'; yes.textContent = 'Show ' + pick.name;
+    yes.style.cssText = 'background:#1a1a2e;color:#fff;border:0;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;';
+    var no = document.createElement('button'); no.type = 'button'; no.textContent = 'Stay in South Africa';
+    no.style.cssText = 'background:transparent;color:#1a1a2e;border:1px solid #c9b27a;border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;';
+    function done(){ try{ localStorage.setItem('ms_abroad_nudge', cc); }catch(_){} bar.remove(); }
+    yes.onclick = function(){ done(); activeCountry = { iso2: cc, name: (cc==='GB'?'United Kingdom':cc==='US'?'United States':'Australia') }; activeRegion = null;
+                              selectCity(null, pick.name, pick.lat, pick.lng); };
+    no.onclick = done;
+    bar.appendChild(t); bar.appendChild(yes); bar.appendChild(no);
+    var hdr = act.firstElementChild;
+    if (hdr && hdr.nextSibling) act.insertBefore(bar, hdr.nextSibling); else act.insertBefore(bar, act.firstChild);
+  }).catch(function(){});
+}
+
 function showCatHomeHint() {
   if (localStorage.getItem(CAT_HOME_HINT)) return;
   // MAGIC-HELLO-1: an invited seller is on her listing form, not Home -- the tip waits for a visit to Home (not marked shown)
   if (typeof magicLink!=='undefined' && magicLink.active) return;
+  // CAT-HINT-HOME-1: a tip about category tiles is only shown over the tiles -- a visitor who arrived on an advert
+  // (a letter's example link, a shared advert) had it floating over the advert's contact button. Not marked shown.
+  const _hs = document.querySelector('.screen.active');
+  if (!_hs || _hs.id !== 'screen-home') return;
   try { localStorage.setItem(CAT_HOME_HINT, '1'); } catch(_) {}
   const hint = document.createElement('div');
   hint.className = 'cat-home-hint';

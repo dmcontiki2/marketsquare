@@ -5,6 +5,27 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 31 — Tue 6 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; candidate ms.js copy in `_to_delete/goalrun31_ms.js`). Built in
+  server worktree `/root/w31` (removed at the end), shipped `claude/goal-run31` a1d6a59 via CLOUD-SHIP-1 (21:21Z SHIPPED, ms.js?v=967). Live check from a fresh
+  browser: US network → nudge on Home, tap → "United States / New York"; `/?listing=499` shows no tip and no nudge, only the wristwatches photo.
+- **Walk (Collectors, from abroad, `docs/E2E_2026-10-06.md`):** en-GB phone, US network. Home → Sell → Collectors → two photos →
+  six steps → score 78 → e-mail; stopped at Publish. ~2½ min, no errors. **Break:** the app's photo read called our own example
+  picture a pocket watch — it was the cover of four "Vintage wristwatch · 1960s automatic" / "Omega Seamaster" example adverts
+  and the wristwatch card in every collectors letter (GI-0026, fixed live). **Friction:** abroad visitor treated as South African
+  throughout (GI-0028, built); category tip over an advert arrival (GI-0027, built).
+- **Number: 0.** Live 137 = 132 `*@trustsquare.co` + family 5 (Marietjie 3, David Jnr 1, Maroushka 1 — #526 Property, published
+  6 Oct 17:25Z). **By a stranger's hand: 0.** New users since run 30: two QA addresses only.
+- **Where people stop:** no strangers. Human sessions since run 30: David Jnr's iPhone (Quick, cars draft #525, 15:41Z), Maroushka's
+  Mac (Property publish #526), David's Windows PC (Cars draft #527, 17:52Z).
+- **Outreach:** no letter sent since 3 Oct 22:10Z (2,614 emailed total). Not this run's to restart; noted.
+- **Ledger:** new tree 7 !!!! (RG-0435, 0476, 0504, 0840, 0841, 0860, 0871), base /opt/marketsquare-src 3b28b69: the same 7 + RG-0194.
+  None are this run's; RG-0435/0476/0504/0841/0860 are new since run 30 — likely the CASUALS-WAVE-1 / audit lanes. Worth that lane's look.
+- **REVIEW NOW:** GI-0020 only (unchanged).
+- **QA data:** nothing published or saved (0 users / 0 listings for qa-goal31); walk funnel rows bot=2.
+- **Not reached:** outreach opens/clicks detail (no sends to read).
+
 ## RUN 30 — Mon 5 Oct 2026, 20:56–21:40 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe in `_to_delete/goalrun30_write_probe`). Built in server

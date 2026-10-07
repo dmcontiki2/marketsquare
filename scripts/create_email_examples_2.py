@@ -35,7 +35,7 @@ P = "/static/super/sup_email2_"
 # (template_id, category, title, price, price_num, suburb, photos, lat, lng, trust, extra-columns, blurb)
 ADVERTS = [
  (269, "Collectors", "Vintage Omega Seamaster · 1960s, serviced", "R 18 500", 18500.0, "Waterkloof",
-  [P + "watch_1.jpg", P + "watch_2.jpg"], -25.7790, 28.2430, 78,
+  [P + "watch_2.jpg"], -25.7790, 28.2430, 78,
   {"collectible_type": "Watches", "condition": "Excellent", "era_year": "1960s"},
   "An automatic Seamaster from the sixties, serviced last year, keeping good time on the wrist. "
   "Original dial, honest case wear, papers from the service."),
