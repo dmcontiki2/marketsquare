@@ -50,7 +50,7 @@ def _repos():
 GITDIR = os.path.join(REPO, ".git")
 ASIDE = os.path.join(GITDIR, "stale_locks")
 STALE_SECONDS = 15 * 60          # generous: host git is invisible from here
-BLOCKING = ("index.lock", "HEAD.lock", "packed-refs.lock")
+BLOCKING = ("index.lock", "HEAD.lock", "packed-refs.lock", "ORIG_HEAD.lock", "FETCH_HEAD.lock", "MERGE_HEAD.lock")   # GIT-LOCK-4 (7 Oct 2026): a sandbox merge leaves ORIG_HEAD.lock behind and every later merge/sync dies on it
 
 # GIT-LOCK-5 (16 Sep 2026, DW-123). REF LOCKS were the hole. On 14 Sep a Phase D commit
 # died with "cannot lock ref 'HEAD': Unable to create '.git/refs/heads/main.lock':
