@@ -36831,6 +36831,29 @@ def rg_text_anon_1():
         bad.append("migrations/068_text_anon.py is gone")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "identifying text is located locally and blurred to the glyph in every door; the LLM judges by index")]
 
+
+@entry("RG-0913", "AREA-ONLY-1 (7 Oct 2026): a public read locates a listing to its SUBURB (centroid, else a ~1 km cell), "
+       "never to the house -- street_address never leaves, listing_lat/lng are area-level for buyers",
+       LOCKED, fixed_on="2026-10-07",
+       scope="bea_main.py _area_only_coords applied in get_listings (every row) and get_listing (non-owner, non-staff); "
+             "ms.js showListingAreaMap zoom 13",
+       ref="David 7 Oct 2026: 'when we provide Feature reports we have to indicate on cards the general area where B&Bs etc. "
+           "are available as intros, but still have to comply with anonymity.' Found while checking: the public feed and detail "
+           "carried listing_lat/lng, which _geocode_address fills from the seller's street address for property -- an exact pin "
+           "for anyone, and the detail map zoomed to street level on it. Cards already print suburb/area only.")
+def rg_area_only_1():
+    b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if None in (b, js):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "def _area_only_coords(" not in b:
+        bad.append("_area_only_coords is gone")
+    if b.count("_area_only_coords(_d)") < 2:
+        bad.append("the feed or the detail route no longer coarsens coordinates for buyers")
+    if "_leafletMap.setView([lat,lng],14)" in js:
+        bad.append("the detail map zooms to street level again")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "buyers get the suburb centroid or a ~1 km cell, never the house")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

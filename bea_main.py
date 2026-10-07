@@ -3944,6 +3944,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         if (_d.get("category") or "").lower() == "property":
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
+        _area_only_coords(_d)      # AREA-ONLY-1: the feed locates a listing to its suburb, never to the house
         # LANG-LAYER-1: the public list carries a second language only once she has approved it;
         # the back-translation and the English search layer are working data, never shown.
         _d.pop("extra_back", None); _d.pop("search_en", None)
@@ -4022,6 +4023,26 @@ def _buyer_reach_tier(conn, email: str) -> str:
         except Exception:
             return "free"
     return "free"
+
+def _area_only_coords(d):
+    """AREA-ONLY-1 (TEXT-ANON-1 companion, David 7 Oct 2026: cards show 'the general area where B&Bs etc. are
+    available ... but still comply with anonymity'). A public read never carries a listing's exact point: the
+    suburb centroid replaces listing_lat/lng when the suburb is known; otherwise the point is snapped to a
+    0.01-degree cell (~1 km). The seller's own view and staff keep the exact values (POI linking needs them)."""
+    try:
+        d.pop("street_address", None)
+        if d.get("listing_lat") is None and d.get("listing_lng") is None:
+            return d
+        if d.get("suburb_lat") is not None and d.get("suburb_lng") is not None:
+            d["listing_lat"], d["listing_lng"] = d["suburb_lat"], d["suburb_lng"]
+        else:
+            d["listing_lat"] = round(float(d["listing_lat"]), 2) if d.get("listing_lat") is not None else None
+            d["listing_lng"] = round(float(d["listing_lng"]), 2) if d.get("listing_lng") is not None else None
+        d["location_precision"] = "area"
+    except Exception:
+        pass
+    return d
+
 
 _ZOOM_PRIVATE_COLS = ("street_address", "listing_lat", "listing_lng", "seller_email", "attested_email",
                       "seller_phone", "phone", "contact_email", "contact_phone")
@@ -5799,6 +5820,8 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
     if not _me or _me != (_d.get("seller_email") or "").strip().lower():
         for _k in ("seller_email", "attested_email"):
             _d.pop(_k, None)
+        if not _staff_caller(x_admin_key, x_admin_token):
+            _area_only_coords(_d)   # AREA-ONLY-1: a buyer sees the suburb, never the house
     return _d
 
 @app.get("/sellers/summary/{listing_id}")

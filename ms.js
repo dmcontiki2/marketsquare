@@ -4836,7 +4836,7 @@ function showListingAreaMap(id){
     try{
       if(_leafletMap){
         _leafletMap.invalidateSize();
-        if(lat!=null&&lng!=null) _leafletMap.setView([lat,lng],14);
+        if(lat!=null&&lng!=null) _leafletMap.setView([lat,lng],13);   // AREA-ONLY-1: the suburb, not the street
       }
     }catch(e){}
   },120); }).catch(function(){});
