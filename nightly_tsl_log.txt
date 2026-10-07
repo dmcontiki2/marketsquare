@@ -1451,3 +1451,4 @@ DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
  ============================================================
 Press any key to continue . . . 
 Wed 10/07/2026 15:35:45.06  SHIPPED rc=0 - server now runs migrations + health itself
+Wed 10/07/2026 20:15:17.99  SHIPPING - DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, ms.js, route_policy.json | gate green, releasing unattended

@@ -6220,6 +6220,24 @@ def geo_get_regions(country: str = "ZA"):
     conn.close()
     return [dict(r) for r in rows]
 
+@app.get("/geo/city-counts")
+def geo_city_counts(country: str = "ZA"):
+    """GEO-CITY-SAFE-1 (David, 7 Oct 2026): how many REAL adverts each city of a country has -- live, shown to strangers,
+    never an AI example -- so a visitor whose city shows nothing is offered the city that has something, instead of an
+    empty screen she reads as 'broken'. Counts only; nothing about any seller. Reads tolerate staleness."""
+    cc = re.sub(r"[^A-Za-z]", "", country or "ZA")[:2].upper() or "ZA"
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT l.city AS city, COUNT(*) AS n FROM listings l "
+            "WHERE UPPER(COALESCE(NULLIF(l.country,''),'ZA')) = ? AND COALESCE(l.city,'') <> '' "
+            "AND %s AND %s AND NOT %s GROUP BY l.city ORDER BY n DESC LIMIT 40"
+            % (_buyer_live_sql("l."), _stranger_visible_sql("l."), _example_sql("l.")), (cc,)).fetchall()
+    finally:
+        conn.close()
+    return [{"city": r["city"], "n": int(r["n"])} for r in rows]
+
+
 @app.get("/geo/cities")
 def geo_get_cities(region_id: Optional[int] = None, country: Optional[str] = None,
                    q: Optional[str] = None):

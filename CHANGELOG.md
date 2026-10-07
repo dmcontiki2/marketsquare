@@ -1,3 +1,32 @@
+## 2026-10-07 — PROMOTER-TRACK-1: promoter links and complete-unit counts (RUL-212)
+
+- New: a promoter's own link `trustsquare.co/p/<CODE>` (made from the dashboard's Comms page). It remembers the code in a cookie and opens Quick.
+- A person who then publishes her FIRST advert (Quick one-tap publish or the main app) is stamped as that promoter's lister. Existing listers and the promoter himself are never stamped.
+- Buzz now records the first delivered Buzz in each direction for stamped listers (survives the Buzz log trim).
+- A unit is complete only when her advert is live AND Buzz was delivered both ways with one referral (not the promoter, not another of his listers, each referral used once).
+- Dashboard → Comms → Promoters: make a link, copy it, pause/resume, see the funnel (listers, advert live, brought someone in, Buzz one way, complete) and each lister's state. Counts only — no money shown anywhere (RUL-212).
+- Schema: three new tables (promoters, promoter_signups, promoter_buzz); nothing existing changed. Routes declared in route_policy.json. Ledger RG-0934.
+
+## 2026-10-07 — PREWAVE-2: David's four answers (D17, L33, testers, database copies)
+
+- **MANDATE-RECOMMENDED-1 (D17):** an agent's signed mandate is labelled "recommended", not "required per listing"; no publish gate.
+- **NO-DATA-NO-CHARGE-1 (L33, AdvertAgent service):** a paid report that cannot identify its subject or find verified data
+  answers `NO_VERIFIED_DATA` (or says so in the known phrases) and the run is released, not charged. AdvertAgent 450c9f8.
+- **TESTER-REAL-GATES-1:** Maroushka, Dave jnr and Maurice are no longer superusers -- they meet every gate a stranger meets;
+  their paid AI access stays open for ever (RUL-189) through a tester_grant record. Only dmcontiki2@ stays superuser.
+- **DBCOPY-RETENTION-1 (server, not in git):** 619 old database copies beside the live database removed (4.3 GB); a daily
+  job keeps 7 daily + 4 weekly (`/etc/cron.daily/ms-dbcopy-retention`).
+
+## 2026-10-07 — PHOTO-EMPTY-1 + YEAR-EXACT-1: removed photos stay removed; a Quick year range is never filed as a year
+
+Dave jnr via David, 7 Oct: "he edits his photos but cant delete them all, it deletes to one then all of them appear again" and "on quick selecting a year, then porting to trustsquare doesn't transfer correctly".
+
+PHOTO-EMPTY-1. Why it came back: the 19 Aug fix (PHOTO-ORDER-1) stopped the edit screen from re-reading the advert while she worked on her photos, but it used an EMPTY photo list to mean "not read yet". Removing the last photo emptied the list, so the screen read the advert again (the old photo list or the [photos:...] prefix in the description) and every removed photo came back. Reproduced on the live page: 3 photos, three removes -> 3, 2, 1, 3. Now "read once" is its own flag; removing every photo leaves none, Save sends an empty list, and the server clears the cover too. PHOTO-CAP-3: the server kept only 20 photos per edit while the app allows 24 for property, cars and stays; it now keeps 24. Ledger RG-0932.
+
+YEAR-EXACT-1 (AUD-212, found in the 4 Oct audit). Quick's year chips are ranges (2020+, 2015-2019, 2010-2014, Older) and the hand-over turned the range into its first year, so a 2018 car read 2015 in TrustSquare. Reproduced on live /quick/: Sedan > Toyota > 2015-2019 sent vehicle_year 2015. Now only an exact year she typed becomes the car's year; a range stays in her advert's words ("Year: 2015-2019") and TrustSquare's Edit asks for the exact year. Migration 069 clears the year on Quick cars already filed wrongly (dry by default, backup before --apply). Ledger RG-0933.
+
+Cost model impact: none.
+
 ## 2026-10-07 — PREWAVE-1: pre-wave sweep (E2E per category, security, isolation)
 
 David, 7 Oct 2026: "We must first fix as many of these as possible before sending it out, and the most important

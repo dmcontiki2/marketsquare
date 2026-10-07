@@ -36899,9 +36899,11 @@ def rg_geo_net_city_1():
     bad = []
     if '("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")' not in b:
         bad.append("/quick/me no longer passes the network position")
-    if "GEO-NET-CITY-1: the network's own position" not in js:
-        bad.append("the app no longer uses the network position for her city")
-    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "network position -> nearest city")]
+    # AMENDED 7 Oct 2026 evening (GEO-CITY-SAFE-1, RUL-213): the network position put Pretoria homes in Johannesburg
+    # (Maroushka); the network now decides the COUNTRY only. The pass-through on /quick/me stays; the app must NOT use it.
+    if "GEO-NET-CITY-1: the network's own position" in js or "_haversineKm(me.geo.lat" in js:
+        bad.append("the app picks her city from the network position again (GEO-CITY-SAFE-1)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "network position passed through, never used for the city")]
 @entry("RG-0934", "PROMOTER-TRACK-1 (RUL-212, 7 Oct 2026): a promoter's own link stamps his new listers, a unit is complete only on a live advert plus two-way delivered Buzz with one referral, and no money appears anywhere",
        LOCKED, fixed_on="2026-10-07",
        scope="bea_main.py _promo_stamp (quick-publish + /listings), _promo_note_buzz (POST /buzz), GET /p/{code}, /admin/promoters; route_policy.json; dashboard.server.html Comms page Promoters card. All markets.",
@@ -37002,6 +37004,32 @@ def rg_year_exact_1():
                                        "a year chip is parsed into a number again")]),
                       ("migrations/069_year_ranges.py", [("vehicle_year = NULL", "the one-time correction is gone")])])
     return bad or [(INFO, "only an exact year becomes the car's year")]
+
+
+@entry("RG-0935", "GEO-CITY-SAFE-1 (RUL-213, 7 Oct 2026): the network decides the country only; the city is her pick, her "
+       "phone's location, the city of her own adverts, or the country's main city -- and a Home whose city has no real "
+       "adverts offers the city that has them in one tap",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js msGeoAuto + _msGeoSellerCity + msEmptyCityNudge (wraps renderCatCounts); bea_main.py GET /geo/city-counts "
+             "(public, counts only, real live stranger-visible adverts); route_policy.json",
+       ref="David 7 Oct 2026: Maroushka was set to Johannesburg (not by her), saw zero listings and thought it broken; "
+           "'how can we keep the tracker without confusing the user or force her to change it?' -> 'Please do Claude.'")
+def rg_geo_city_safe_1():
+    b, js, pol = repo_file("bea_main.py"), repo_file("ms.js"), repo_file("route_policy.json")
+    if None in (b, js, pol):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for need, why in (("async function _msGeoSellerCity(", "her own adverts no longer place her"),
+                      ("_msGeoApply(own.cc, oco.name, oc, 'ads')", "her adverts' city is not applied"),
+                      ("async function msEmptyCityNudge(", "an empty city is a dead end again"),
+                      ("/geo/city-counts?country=", "the nudge no longer reads the city counts")):
+        if need not in js:
+            bad.append(why)
+    if '@app.get("/geo/city-counts")' not in b or "NOT %s GROUP BY l.city" not in b:
+        bad.append("/geo/city-counts is gone or counts AI examples")
+    if '"GET /geo/city-counts"' not in pol:
+        bad.append("/geo/city-counts is not declared in route_policy.json")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "country from the network, city from her; empty city offers the full one")]
 
 
 def _server_vantage_wrap():

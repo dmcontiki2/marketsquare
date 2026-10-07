@@ -20203,20 +20203,40 @@ async function msGeoAuto(){
     _msGeo.uncovered = cc; _msGeo.src = 'net';
     msGeoBanner(); return;
   }
+  /* GEO-CITY-SAFE-1 (David, 7 Oct 2026, after Maroushka in Pretoria was moved to Johannesburg and saw none of her own
+     adverts): the network is trusted for the COUNTRY only. South African providers route most homes through
+     Johannesburg, so the network's city put Pretoria people in Johannesburg, VPN or not. The city now comes from, in
+     order: her own pick (never touched here), her phone's location (msGeoFromGps, accurate), the city of her OWN adverts
+     when she is a seller, and otherwise her country's main city. */
+  const own = await _msGeoSellerCity();
+  if (_msGeoSrcIsGps() || _msGeoOwnPick()) return;
+  if (own) {
+    const oco = list.find(function(c){ return c.iso2 === own.cc && !c.coming_soon; });
+    if (oco) {
+      const ocs = await _msGeoCities(own.cc);
+      const oc = ocs.find(function(c){ return c.name.toLowerCase() === own.city.toLowerCase(); });
+      if (oc && !_msGeoSrcIsGps()) { _msGeoApply(own.cc, oco.name, oc, 'ads'); return; }
+    }
+  }
   const cities = await _msGeoCities(cc);
   if (!cities.length || _msGeoSrcIsGps()) return;
-  const gc = String((me.geo && me.geo.city) || '').toLowerCase();
-  // GEO-NET-CITY-1: the network's own position (Cloudflare visitor location headers) -> her nearest city in that country
-  let near = null;
-  if (me.geo && me.geo.lat != null && me.geo.lng != null) {
-    let bk = 1e9;
-    cities.forEach(function(c){ if (c.lat == null || c.lng == null) return;
-      const km = _haversineKm(me.geo.lat, me.geo.lng, c.lat, c.lng); if (km < bk) { bk = km; near = c; } });
-    if (bk > 150) near = null;
-  }
-  const pick = near || cities.find(function(c){ return gc && c.name.toLowerCase() === gc; })
-            || cities.find(function(c){ return c.name === _MS_GEO_MAIN[cc]; }) || cities[0];
+  const pick = cities.find(function(c){ return c.name === _MS_GEO_MAIN[cc]; }) || cities[0];
   _msGeoApply(cc, co.name, pick, 'net');
+}
+/* GEO-CITY-SAFE-1: the city most of her own adverts are in -- {city, cc} or null (not signed in, or no adverts) */
+async function _msGeoSellerCity(){
+  if (typeof _msIsSignedIn !== 'function' || !_msIsSignedIn()) return null;
+  try{
+    const r = await fetch(BEA_URL + '/listings/mine', { credentials: 'include' });
+    if (!r.ok) return null;
+    const d = await r.json(); const arr = Array.isArray(d) ? d : ((d && (d.listings || d.items)) || []);
+    const n = {}; let best = null;
+    arr.forEach(function(l){ if (!l || !l.city) return;
+      const k = String(l.city).trim() + '|' + String(l.country || 'ZA').toUpperCase();
+      n[k] = (n[k] || 0) + 1; if (!best || n[k] > n[best]) best = k; });
+    if (!best) return null;
+    const pr = best.split('|'); return { city: pr[0], cc: pr[1] };
+  }catch(_){ return null; }
 }
 function _msGeoSrcIsGps(){ return _msGeo.src === 'gps'; }
 async function msGeoFromGps(lat, lng){
@@ -20247,7 +20267,9 @@ function msGeoBanner(){
   } else {
     key = activeCountry.iso2 + ':' + activeCity.name;
     msg = '📍 Showing ' + activeCity.name + ', ' + activeCountry.name + ' — ' +
-          (_msGeo.src === 'gps' ? 'from your phone’s location.' : 'from your internet connection. On a VPN or somewhere else?');
+          (_msGeo.src === 'gps' ? 'from your phone’s location.'
+           : _msGeo.src === 'ads' ? 'where your own listings are.'
+           : 'your country from your internet connection. Somewhere else?');   // GEO-CITY-SAFE-1
   }
   try{ if (localStorage.getItem('ms_geo_ok') === key) return; }catch(_){}
   let bar = document.getElementById('ms-geo-bar');
@@ -20267,6 +20289,55 @@ function msGeoBanner(){
   ok.onclick = function(){ try{ localStorage.setItem('ms_geo_ok', key); }catch(_){} bar.remove(); };
   bar.appendChild(t); bar.appendChild(ch); bar.appendChild(ok);
 }
+
+/* GEO-CITY-SAFE-1 (David, 7 Oct 2026): an empty city is never a dead end. When the city on Home has no real adverts
+   but another city in the same country does, Home says so and switches in one tap -- Maroushka saw zero listings
+   under a wrong city and read it as "broken". Once per city per visit; nothing shown when the city has adverts. */
+var _msCityCounts = {};
+async function msEmptyCityNudge(){
+  try{
+    const act = document.querySelector('.screen.active');
+    if (!act || act.id !== 'screen-home' || !activeCity || !activeCity.name || !activeCountry || !activeCountry.iso2) return;
+    const key = 'ms_cnudge:' + activeCountry.iso2 + ':' + activeCity.name;
+    try{ if (sessionStorage.getItem(key)) return; }catch(_){}
+    const cc = activeCountry.iso2;
+    if (!_msCityCounts[cc]) {
+      const r = await fetch('/geo/city-counts?country=' + encodeURIComponent(cc));
+      _msCityCounts[cc] = r.ok ? await r.json() : [];
+    }
+    const rows = Array.isArray(_msCityCounts[cc]) ? _msCityCounts[cc] : [];
+    const here = rows.find(function(x){ return String(x.city).toLowerCase() === String(activeCity.name).toLowerCase(); });
+    if (here && here.n > 0) return;
+    const best = rows.filter(function(x){ return x.n > 0 && String(x.city).toLowerCase() !== String(activeCity.name).toLowerCase(); })[0];
+    if (!best) return;
+    const cities = await _msGeoCities(cc);
+    const tc = cities.find(function(c){ return c.name.toLowerCase() === String(best.city).toLowerCase(); });
+    if (!tc || document.getElementById('ms-cnudge')) return;
+    const cur = document.querySelector('.screen.active'); if (!cur || cur.id !== 'screen-home') return;
+    const bar = document.createElement('div'); bar.id = 'ms-cnudge'; bar.setAttribute('role', 'status');
+    bar.style.cssText = 'margin:10px 16px 0;padding:12px 14px;border-radius:14px;background:#ECFDF5;border:1px solid #6EE7B7;color:#064E3B;font-size:14px;line-height:1.4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
+    const t = document.createElement('div'); t.style.cssText = 'flex:1 1 100%;';
+    t.textContent = 'Nothing listed in ' + activeCity.name + ' yet — ' + tc.name + ' has ' + best.n + ' listing' + (best.n === 1 ? '' : 's') + '.';
+    const go = document.createElement('button'); go.type = 'button'; go.textContent = 'Show ' + tc.name;
+    go.style.cssText = 'background:#065F46;color:#fff;border:0;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;';
+    const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Stay in ' + activeCity.name;
+    no.style.cssText = 'background:transparent;color:#064E3B;border:1px solid #6EE7B7;border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;';
+    go.onclick = function(){ bar.remove(); try{ sessionStorage.setItem(key, '1'); }catch(_){} selectCity(tc.id == null ? null : tc.id, tc.name, tc.lat, tc.lng); };
+    no.onclick = function(){ bar.remove(); try{ sessionStorage.setItem(key, '1'); }catch(_){} };
+    bar.appendChild(t); bar.appendChild(go); bar.appendChild(no);
+    const old = document.getElementById('ms-geo-bar');
+    if (old && old.parentNode === cur) cur.insertBefore(bar, old.nextSibling);
+    else { const hdr = cur.firstElementChild; if (hdr && hdr.nextSibling) cur.insertBefore(bar, hdr.nextSibling); else cur.insertBefore(bar, cur.firstChild); }
+  }catch(_){}
+}
+(function(){
+  const _rccN = window.renderCatCounts;
+  if (typeof _rccN === 'function') {
+    window.renderCatCounts = function(){ const r = _rccN.apply(this, arguments);
+      try{ const b = document.getElementById('ms-cnudge'); if (b) b.remove(); setTimeout(msEmptyCityNudge, 900); }catch(_){}
+      return r; };
+  }
+})();
 
 function showCatHomeHint() {
   if (localStorage.getItem(CAT_HOME_HINT)) return;

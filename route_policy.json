@@ -206,6 +206,10 @@
    "level": "public"
   },
   {
+   "key": "GET /geo/city-counts",
+   "level": "public"
+  },
+  {
    "key": "GET /geo/suburbs",
    "level": "public"
   },

@@ -11,25 +11,25 @@ h2{font-size:16px;margin:26px 0 8px}table{width:100%;border-collapse:collapse;ba
 td,th{padding:8px 10px;border-bottom:1px solid #e6e3da;text-align:left;vertical-align:top}th{background:#ecebe5;font-size:13px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.bad{color:var(--bad);font-weight:600}
 </style></head><body><div class="w">
-<h1>Promoter tracking — "Petrus" contract</h1><p class="s">One qualifying unit = R25. Counted only when all three links in the chain exist on the server.</p>
+<h1>Promoter tracking — "Petrus" contract</h1><p class="s">One complete unit = 1 lister + 1 referral + Buzz working both ways. Counts only — no money anywhere in the app (RUL-212). BUILT and live 7 Oct 2026.</p>
 <div class="row">
-<div class="box pro"><b>Promoter</b>Petrus gets a personal promoter code → his own Quick invite link / QR</div><div class="ar">→</div>
-<div class="box lis"><b>1 · Lister</b>Signs up via Petrus's link → <i>referred_by = Petrus</i> stamped on account; advert published</div><div class="ar">→</div>
-<div class="box ref"><b>2 · Referral</b>That lister passes Quick on → her invite is accepted by a new person (second generation)</div><div class="ar">→</div>
-<div class="box buz"><b>3 · Buzz</b>First Buzz between the lister and her referral is sent and delivered</div><div class="ar">→</div>
-<div class="box dash"><b>Dashboard</b>Unit flips to <i>Qualified · R25</i> under Petrus's name</div>
+<div class="box pro"><b>Promoter</b>Petrus’s own link trustsquare.co/p/PETRUS-ESE9 opens Quick</div><div class="ar">→</div>
+<div class="box lis"><b>1 · Lister</b>Opens his link, publishes her FIRST advert → stamped as his lister</div><div class="ar">→</div>
+<div class="box ref"><b>2 · Referral</b>She connects with one other person on Buzz</div><div class="ar">→</div>
+<div class="box buz"><b>3 · Buzz</b>Buzz delivered both ways between them</div><div class="ar">→</div>
+<div class="box dash"><b>Dashboard</b>Dashboard → Comms → Promoters: unit shows <i>complete</i></div>
 </div>
 <h2>What exists today vs. what is missing</h2>
 <table><tr><th>Piece</th><th>Status in code</th></tr>
-<tr><td><span class="dot" style="background:var(--ref)"></span>Quick invite links (quick_invites, single use, open→accepted)</td><td>Exists (migration 053)</td></tr>
-<tr><td><span class="dot" style="background:var(--pro)"></span>Promoter code + name on the invite</td><td class="bad">Missing — invites only hold a first name / e-mail</td></tr>
-<tr><td><span class="dot" style="background:var(--lis)"></span>referred_by on the new user + link to her first listing</td><td class="bad">Missing — no referred_by / inviter_id column (already flagged in the ledger)</td></tr>
-<tr><td><span class="dot" style="background:var(--buz)"></span>First-Buzz event between lister and her referral</td><td class="bad">Missing as a countable event</td></tr>
-<tr><td><span class="dot" style="background:var(--dash)"></span>Promoter tile in your admin dashboard (count, qualified, pending, R owed)</td><td class="bad">Missing</td></tr></table>
+<tr><td><span class="dot" style="background:var(--ref)"></span>Quick invite links (quick_invites, single use, open→accepted)</td><td>Exists</td></tr>
+<tr><td><span class="dot" style="background:var(--pro)"></span>Promoter code + name on the invite</td><td style="color:#1f8a4c;font-weight:600">Built 7 Oct</td></tr>
+<tr><td><span class="dot" style="background:var(--lis)"></span>referred_by on the new user + link to her first listing</td><td style="color:#1f8a4c;font-weight:600">Built 7 Oct</td></tr>
+<tr><td><span class="dot" style="background:var(--buz)"></span>First-Buzz event between lister and her referral</td><td style="color:#1f8a4c;font-weight:600">Built 7 Oct</td></tr>
+<tr><td><span class="dot" style="background:var(--dash)"></span>Promoter tile in your admin dashboard (count, qualified, pending, R owed)</td><td style="color:#1f8a4c;font-weight:600">Built 7 Oct</td></tr></table>
 <h2>Counting rules (anti-gaming)</h2>
 <table><tr><th>Rule</th><th>Why</th></tr>
-<tr><td>Unit counts only when lister, referral and Buzz all exist and the advert is live 7 days</td><td>Stops sign-up-and-delete padding</td></tr>
-<tr><td>One e-mail = one account; lister and referral must be different e-mails and devices</td><td>Stops Petrus listing himself 100 times</td></tr>
-<tr><td>Contract has an ID, cap (100 units) and end date you set; same code reusable for the next promoter</td><td>Once-off, repeatable on your terms</td></tr>
-<tr><td>Payout only from the dashboard's "Qualified" number, paid by you manually</td><td>No automatic money flow in the app</td></tr></table>
+<tr><td>Unit counts only when her advert is live and Buzz worked both ways</td><td>Proves two real, connected people</td></tr>
+<tr><td>Existing listers, Petrus himself and his other listers never count as a referral; each referral counts once</td><td>Stops Petrus listing himself 100 times</td></tr>
+<tr><td>Target 100 per promoter; pause/resume from the dashboard; reusable for the next promoter</td><td>Once-off, repeatable on your terms</td></tr>
+<tr><td>Any payment is David’s personal arrangement</td><td>Company rule unchanged: no payments</td></tr></table>
 </div></body></html>
