@@ -1198,11 +1198,11 @@ def run_migrations(conn):
         conn.execute("ALTER TABLE users ADD COLUMN is_superuser INTEGER NOT NULL DEFAULT 0")
 
     # ── Seed superuser flag for core team ───────────────────────
+    # TESTER-REAL-GATES-1 (David 7 Oct 2026): the family testers (Maroushka, Dave jnr, Maurice) were superusers and skipped
+    # every publish gate and trust filter, so their tests could not show what a stranger hits. They are ordinary accounts
+    # now; RUL-189 (paid AI open to testers for ever) is kept by their tester_grant record (_ai_is_tester).
     SUPERUSER_EMAILS = [
         "dmcontiki2@gmail.com",
-        "miconradie1@gmail.com",
-        "davidconradie1234@gmail.com",
-        "conradiedm@gmail.com",  # Maurice — relinked from mauriceconradie@yahoo.com (22 Jul 2026)
     ]
     for su_email in SUPERUSER_EMAILS:
         conn.execute(

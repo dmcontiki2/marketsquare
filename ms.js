@@ -13259,7 +13259,7 @@ const EL_DOC_LABELS = {
    the mandate, which authorises one specific property (5b, evidence-true). */
 const EL_CRED_SIGNALS = {
   Property: [
-    ['category.property.mandate', 'Signed mandate for THIS property (+8) — required per listing'],
+    ['category.property.mandate', 'Signed mandate for THIS property (+8) — recommended']   // MANDATE-RECOMMENDED-1 (David 7 Oct 2026, D17),
     ['category.property.ffc',     'Fidelity Fund Certificate (FFC) (+10) — yours, renewed annually'],
     ['category.property.ppra',    'PPRA / EAAB registration (+15) — yours'],
     ['category.property.body',    'Professional body membership (+5)'],
