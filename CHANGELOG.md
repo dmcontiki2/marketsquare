@@ -1,3 +1,37 @@
+## 2026-10-07 — PREWAVE-1: pre-wave sweep (E2E per category, security, isolation)
+
+David, 7 Oct 2026: "We must first fix as many of these as possible before sending it out, and the most important
+criteria is to have a E2E possible listing for each category, and safety from hackers, with secure data protection
+and isolation."
+
+- **CRED-QUEUE-1** — licensed trades and clearance roles stay hidden until a person checks the document, but nothing told
+  anyone a document was waiting and no screen showed the queue (32 pending, oldest May). Now a real person's new upload
+  mails the ops address within 30 min (`ai_spend_config.alert_email`), and admin → Alerts → **Documents to check**
+  approves or sends back in one tap (she is mailed either way). `GET /admin/credentials/queue`, `POST .../queue/alert` (admin).
+- **SUBURB-POINT-1** — 78 of 137 live adverts had no point, so maps, distances, "nearby places" and heritage links were
+  measured from the city centre (a Moreleta Park house showed Damelin City Campus 0.49 km). Adverts without a street
+  address now take their suburb's centre (loose name match: "Moreleta Park" = "Moreletapark"); a 10-minute backfill
+  covers every publishing door; Property re-fetches its nearby places.
+- **PRICE-CC-1** — a bare amount ("18 990") on a London or Sydney advert was shown as rand; it now takes the symbol of the
+  advert's own country (formatZAR(value, cc)).
+- **ID-STATUS-BIND-1** — `GET /users/{email}/id-status` was public: anyone could learn whether any address has an account
+  and its ID state. Now the owner's own read (route_policy `user` + bind); buyers get the tick from the advert.
+- **F14 agency walk fixes** (docs: /root/f14_walk/REPORT.md, agency 63, listing 530 paused, intro 160):
+  AGENCY-INTROS-1 (console's intro count was always 0 — wrong column), AGENCY-NAME-1 (invitee shows the typed name),
+  AGENCY-SESSION-1 (console no longer says "No agency is linked" before the session is copied), CRED-KEEP-FILE-1
+  (the chosen certificate file is kept until the number is typed), Agent Hub text says PPRA upload + FFC check are
+  both needed (matches the server), AGENT-INVITE-STEPS-1 (invite mail names the first three steps), INTRO-NEXT-1
+  (an accepted intro says contacts were emailed to both).
+- **PERM-POLICY-1** (server config, not in git): `Permissions-Policy` header added to `/etc/nginx/snippets/security_headers.conf`.
+
+## 2026-10-07 — PASSKEY-ALWAYS-1: Face ID / fingerprint offered after every sign-in until it is set up
+
+David, 7 Oct: "i hope Maroushka wont again (or anyone else for that matter) have to first log in with a code send to them?" and "Please build that Claude, i prefer that method always."
+
+The Face ID / fingerprint offer (PASSKEY-1, 3 Oct) waited on the Seller Hub and disappeared for good after one "Not now", so most people never saw it and kept getting e-mailed codes on each new device. Now, as soon as she is signed in on a phone, the offer comes up as a sheet on whatever screen she is on; "Not now" hides it until the next day; it stops once this phone is set up. A timer catches sign-ins that land without a screen change (an e-mailed link, Google's return). Phones only (PASSKEY-PHONE-1, RG-0807, unchanged). The passkeys are synced keys, so a new phone on the same Apple or Google account signs in with one touch too. Ledger RG-0931.
+
+Cost model impact: none.
+
 ## 2026-10-07 — LANG-AUTO-1 + GEO-NET-CITY-1 (RUL-211 amended): language and city follow her too
 
 - **Language:** with no language chosen in the menu, the app now speaks the phone's language when it offers it
