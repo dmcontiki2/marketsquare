@@ -36766,31 +36766,43 @@ def rg_cat_hint_home_1():
         return [(FAIL, "the category tip can fire over any screen again (or is marked shown before the Home check)")]
     return [(INFO, "category tip waits for Home")]
 
-@entry("RG-0910", "ABROAD-NUDGE-1 (Goal run 31, 6 Oct 2026): a visitor from abroad who never picked a city is asked once, on Home, whether to see her own country's city",
-       LOCKED, fixed_on="2026-10-06",
-       scope="ms.js msAbroadNudge: reads /quick/me geo.country, US/GB/AU only, never auto-switches, never over an advert or an invited form, remembered (ms_abroad_nudge)",
-       ref="Goal run 31 walk: an en-GB phone on a US network got South Africa / Pretoria, rand prices and the South African legal card on the "
-           "Collectors flow, while the collectors letters now point at London / New York / Sydney adverts.")
+@entry("RG-0910", "ABROAD-NUDGE-1 (Goal run 31, 6 Oct 2026) -- SUPERSEDED 7 Oct by GEO-AUTO-1 (RUL-211): the ask-first nudge is gone, the app switches by itself",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js carries no msAbroadNudge (two location questions would fight); RG-0912 holds the replacement",
+       ref="David 7 Oct 2026: 'I would prefer it to switch automatically, still asking which country they are from for the vpn users.'")
 def rg_abroad_nudge_1():
     js = repo_file("ms.js")
     if js is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    i = js.find("function msAbroadNudge(")
-    body = js[i:i+3200] if i >= 0 else ""
-    bad = []
-    if i < 0 or "setTimeout(msAbroadNudge" not in js:
-        bad.append("the abroad question is gone or never scheduled")
-    else:
-        if "ms_user_city" not in body.split("fetch(")[0]:
-            bad.append("it no longer steps aside for a visitor who picked her own city")
-        if "screen-home" not in body or "magicLink" not in body:
-            bad.append("it can fire off Home or over an invited seller's form")
-        if "ms_abroad_nudge" not in body:
-            bad.append("the answer is not remembered (she would be asked every visit)")
-        if body.split(".onclick")[0].count("selectCity(") > 0:
-            bad.append("it switches the city before she taps")
-    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "abroad visitors are asked once, on Home, and only switched on a tap")]
+    if "function msAbroadNudge(" in js or "setTimeout(msAbroadNudge" in js:
+        return [(FAIL, "the old ask-first abroad nudge is back next to GEO-AUTO-1")]
+    return [(INFO, "superseded by GEO-AUTO-1")]
 
+@entry("RG-0912", "GEO-AUTO-1 (RUL-211, David 7 Oct 2026): country and city follow where she is -- phone location, else network country -- until she picks her own",
+       LOCKED, fixed_on="2026-10-07",
+       scope="ms.js msGeoAuto (network, /quick/me geo + /geo/countries), msGeoFromGps (nearest covered city <=150 km), msGeoBanner (Change country), "
+             "ms_auto_city/ms_auto_country kept apart from ms_user_city; boot restores the auto pair",
+       ref="Goal run 31: an en-GB phone on a US network got South Africa / Pretoria, rand prices and the SA legal card. David asked why, then ruled RUL-211.")
+def rg_geo_auto_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    need = {"async function msGeoAuto(": "network detection is gone",
+            "async function msGeoFromGps(": "the phone's location no longer places her (a VPN would move her)",
+            "msGeoAuto();   // GEO-AUTO-1": "detection is never started",
+            "try{ msGeoFromGps(buyerLat, buyerLng); }catch(_){}": "the phone's fix is no longer handed to GEO-AUTO-1",
+            "if(name==='home'){ loadHomeWonders(); try{ msGeoBanner(); }catch(_){} }": "Home no longer says what it chose",
+            "openLocPanel('country')": "the banner lost its Change country door",
+            "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');": "an automatic choice is saved as HER pick (detection would stop for good)",
+            "const _ac = localStorage.getItem('ms_auto_city')": "a return visit no longer opens where she was detected"}
+    for k, why in need.items():
+        if k not in js:
+            bad.append(why)
+    i = js.find("function _msGeoApply(")
+    if i < 0 or "_msGeoOwnPick()" not in js[i:i+200]:
+        bad.append("an automatic switch can override her own pick")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "place follows the phone, then the network, never over her own pick")]
 
 @entry("RG-0911", "TEXT-ANON-1 (7 Oct 2026): identifying TEXT in photos (names, business names, streets, addresses, "
        "phones, websites) is located by local OCR and blurred to the glyph in every photo door; the LLM judges by index, "
