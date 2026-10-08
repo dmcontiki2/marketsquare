@@ -5,6 +5,37 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 32 — Wed 7 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; write probe in `_to_delete/goalrun32_write_probe`, candidate ms.js copy in
+  `_to_delete/goalrun32_ms.js`). Built in server worktree `/root/w32` (removed at the end), shipped `claude/goal-run32` 83e277a via
+  CLOUD-SHIP-1 (21:22Z SHIPPED). **The page's script is `/static/ms.js?v=NNN`, not `/ms.js`** — a bare `https://trustsquare.co/ms.js`
+  is a 404 JSON body, and an HTML page Cloudflare still had cached pointed at the previous v=, which made the first live check look
+  like a failed deploy. Check the `src=` the page actually carries (v=988 here).
+- **Walk (Local Market · Handmade & Craft, from a Durban phone, `docs/E2E_2026-10-07.md`):** cold Home → Sell → Local Market →
+  Handmade & Craft → basket photo → six steps → score 70 in ~3 min; stopped at Publish. No errors. **Break:** from step 3 on, the
+  flow speaks only to Food & Produce — a basket weaver was coached "A jar of honey is R80", asked for "e.g. Store below 25°C" and
+  "e.g. 24 jars" (GI-0030, fixed live). **Friction:** the suburb example was always the Pretoria one (fixed); the photo read's R350
+  landed in her price box unmarked because AI-PRICE-HINT-1 only marks guesses under 0.5 confidence (fixed); Home's empty-city bar
+  answered an empty Durban with "Show Pretoria" only — nothing for someone who came to sell (fixed).
+- **Number: 0.** Live 138 = 132 `*@trustsquare.co` + family 6 (Marietjie 3, Maroushka 2 — she listed again, #531 Property 18:14Z —
+  David Jnr 1). **By a stranger's hand: 0.** New user rows since run 31: six `dmcontiki2+qa-…` addresses, all the F14 agency lane's.
+- **Where people stop:** no strangers. Human (bot=0) sessions since run 31: David Jnr's iPhone (Quick to step 3, 15:27Z, left),
+  Maroushka's Mac (one dwell 18:03Z, then a full Property publish 18:04–18:14Z = #531), one iPhone dwell. Drafts left open:
+  #528 Property, #529 Cars, #532 Services — all `qa-codesurvive@`, another lane's.
+- **Outreach:** fourth day with no letter (last 3 Oct 22:10Z). The laptop's `CityLauncher/data/prospects.db` is itself stale — its
+  newest send is 26 Sep, 2,553 emailed, no event rows since 27 Sep — so the 2,614 figure in earlier runs cannot be reproduced from it.
+  Not this run's lane; worth that lane's eyes. The server's demand lane keeps logging `cat=Collectors city=1 -> 0 available prospects`
+  (6 Collectors prospects have a city, against Services 329 / Tutors 283 / Property 274).
+- **Shipped (83e277a):** GI-0030 LM-KIND-WORDS-1 + AREA-PH-CITY-1 + AI-PRICE-MARK-1 + CITY-FIRST-SELLER-1 (RG-0937 LOCKED). Live proof
+  in the GI row. Ledger new tree 11 !!!!, base `/opt/marketsquare-src` 5e57ad0 12 (the same 11 + RG-0194) — none are this run's.
+- **Worth another lane's look:** RG-0889 (run 30's PIECE-WORK-DEFAULT-1) has come back — hair braider, hairdresser and nail technician
+  no longer open Quick's price step on Per visit. It fails on `origin/main` too, so something in `quick.html` since 5 Oct undid it.
+  RG-0504 also fails with three `advert` strings back in ms.js.
+- **REVIEW NOW:** GI-0020 only (unchanged).
+- **QA data:** nothing published, no account created, no listing saved; walk rows bot=2.
+- **Not reached:** outreach opens/clicks (no sends to read, and the local prospects DB is stale).
+
 ## RUN 31 — Tue 6 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; candidate ms.js copy in `_to_delete/goalrun31_ms.js`). Built in
