@@ -628,9 +628,72 @@ async function loadLiveListings(retryCount) {
       renderCatCounts();
       renderHomeStats();
     }
+    msGenericExLoad(seq);   // GENERIC-EX-1: after the real adverts are on screen, never before
   } catch(e) {
     console.warn('loadLiveListings failed:', e);
   }
+}
+
+/* GENERIC-EX-1 (David, 8 Oct 2026, after the car-washer cards: "these should all be global generic, in terms of visible
+   globally in the local country prices, languages, etc. ... but it should not increase the users on phone app size").
+   Every casual work role nobody real (and no stored example) offers in this city gets ONE AI example: the role's own
+   picture, its name in her language, a rate in her country's currency from its legal minimum wage. The server makes them
+   on request for the city she is looking at (GET /examples/roles) -- nothing is built into the app, the list is about
+   15 KB once per city and language, and a picture loads only when its card is on screen. They are AI examples like every
+   other (RUL-040): marked, listed after real adverts (RUL-194), hidden by the same switch, never counted on a tile, and
+   never take an introduction -- a tap opens a small sheet that says so and offers 'I do this work - list me free'. */
+const _msGxCache = new Map();
+async function msGenericExLoad(seq){
+  try{
+    if (!BEA_ENABLED || isOffline()) return;
+    const cc = String((activeCountry && activeCountry.iso2) || 'ZA').toUpperCase(), city = activeCity.name || '';
+    let lang = 'en'; try{ lang = String(localStorage.getItem('ts_lang') || 'en').toLowerCase() || 'en'; }catch(_){}
+    const key = cc + '|' + city + '|' + lang;
+    let rows = _msGxCache.get(key);
+    if (!rows) {
+      const r = await fetch(BEA_URL + '/examples/roles?country=' + encodeURIComponent(cc) + '&city=' + encodeURIComponent(city)
+                            + '&lang=' + encodeURIComponent(lang)).catch(function(){ return null; });
+      rows = (r && r.ok) ? await r.json().catch(function(){ return null; }) : null;
+      if (!Array.isArray(rows)) return;
+      _msGxCache.set(key, rows);
+    }
+    if (seq !== _msListSeq) return;   // LIST-SWAP-1: another city owns the list now
+    for (let i = LISTINGS.length - 1; i >= 0; i--) if (LISTINGS[i].generic) LISTINGS.splice(i, 1);
+    const here = LISTINGS.filter(function(l){ return l.cat === 'Services' && !String(l.id).startsWith('ph_')
+      && (!l.isLive || !l.city || l.city === city); });
+    const esc = function(t){ return String(t).replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); };
+    let added = 0;
+    rows.forEach(function(row){
+      const en = String(row.service_type || '');
+      if (!en || here.some(function(l){ return _svcTypeMatches(l, en) || new RegExp('\\b' + esc(en), 'i').test(String(l.title || '')); })) return;
+      const m = _msMapBeaListing(row);
+      m.id = 'gx_' + row.role_key; m.beaListingId = null; m.generic = true; m.role_key = row.role_key;
+      m.demo_example = true; m.is_demo = 1; m.area = city || m.area; m.suburb = city || m.suburb;
+      LISTINGS.push(m); added++;
+    });
+    if (added) { try { renderGrid(); } catch(e){} }
+  }catch(e){ console.warn('GENERIC-EX-1:', e); }
+}
+function msGenericExSheet(l){
+  const lm = function(t){ return (typeof _lmEsc === 'function') ? _lmEsc(t) : String(t == null ? '' : t); };
+  let ov = document.getElementById('gx-sheet');
+  if (ov) ov.remove();
+  ov = document.createElement('div'); ov.id = 'gx-sheet';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(10,16,30,.55);display:flex;align-items:flex-end;justify-content:center;';
+  const city = activeCity.name || '', cc = String((activeCountry && activeCountry.iso2) || 'ZA').toUpperCase();
+  const href = '/quick/?role=' + encodeURIComponent(l.role_key || '') + '&cc=' + encodeURIComponent(cc) + '&city=' + encodeURIComponent(city) + '&src=gx';
+  ov.innerHTML = '<div style="background:var(--surface,#fff);color:var(--text,#111);width:100%;max-width:480px;border-radius:18px 18px 0 0;overflow:hidden;box-shadow:0 -6px 24px rgba(0,0,0,.25);">'
+    + '<div style="position:relative;height:190px;background:#e5e7eb;"><img src="' + lm(l.photo || '') + '" alt="" style="width:100%;height:100%;object-fit:cover;">'
+    + '<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font:800 10px/1.2 Syne,sans-serif;padding:4px 10px;border-radius:0 0 10px 0;">AI EXAMPLE GENERATED LISTING</div></div>'
+    + '<div style="padding:16px 18px 20px;">'
+    + '<div data-notranslate="1" style="font:800 19px/1.25 Syne,sans-serif;">' + lm(l.title) + '</div>'
+    + '<div style="margin:4px 0 10px;font-size:13px;color:var(--text-3,#6b7280);">📍 ' + lm(city) + ' · <b style="color:var(--text,#111)">' + lm(l.price || '') + '</b></div>'
+    + '<p style="margin:0 0 14px;font-size:14px;line-height:1.45;">This is an AI example of how a listing for this work looks. Nobody offers it in ' + lm(city) + ' on TrustSquare yet, so no introduction can be made. The rate shown starts from the legal minimum wage here.</p>'
+    + '<a href="' + lm(href) + '" style="display:block;text-align:center;background:var(--accent,#1d4ed8);color:#fff;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;margin-bottom:8px;">I do this work — list me free</a>'
+    + '<button type="button" id="gx-close" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border,#e5e7eb);background:transparent;color:inherit;font-weight:700;">Close</button>'
+    + '</div></div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov || (e.target && e.target.id === 'gx-close')) ov.remove(); });
+  document.body.appendChild(ov);
 }
 
 // ── LIVE DASHBOARD LOADER ─────────────────────────────────
@@ -4913,6 +4976,7 @@ function renderMap(){
     if(String(l.id).startsWith('ph_')) return false;
     if(l.paused) return false;
     if(!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: the map follows the switch
+    if(l.generic) return false;   // GENERIC-EX-1: an example made for the whole city has no place on the map
     if(activeFilter!=='All'&&normCat(l.cat)!==activeFilter) return false;
     if(DEMO_MODE && String(l.id).startsWith('demo_')) {
       const lCity = l.city || l.area || '';
@@ -4976,6 +5040,7 @@ function renderHomeStats() {
   const _aCity = activeCity ? (activeCity.name || '') : '';
   const live = LISTINGS.filter(l => {
     if (l.id.startsWith('ph_')) return false;
+    if (l.generic) return false;   // GENERIC-EX-1: never counted as a listing
     if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     // Respect the selected city — demo listings + live BEA listings are per-city,
     // so an empty city (e.g. New York in demo) must read 0, not another city's total.
@@ -5023,6 +5088,7 @@ function renderCatCounts() {
     if (l.id.startsWith('ph_')) return false;
     if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
     if (!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: hidden examples are not counted
+    if (l.generic) return false;   // GENERIC-EX-1: a made-on-request example never adds to a tile's number
     if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     // TODO: REMOVE BEFORE LAUNCH — mirror DEMO_DISPLAY_MODE filter
@@ -5074,6 +5140,7 @@ function renderCatCounts() {
       // toward another city's tiles (this caused New York/Houston to show phantom 1s).
       if (String(l.id).startsWith('ph_')) return;
       if (l.paused) return;   // DEMO-7: a paused demo listing must not inflate a tile count
+      if (l.generic) return;   // GENERIC-EX-1
       if (!DEMO_MODE && String(l.id).startsWith('demo_')) return;
       const _cat0 = normCat(l.cat);
       if (!isBorderlessCat(_cat0)) {            // BORDERLESS-COUNT-1, fallback branch
@@ -5617,7 +5684,7 @@ function cardHtml(l){
   return`<div class="lcard${l.paused?' paused':''}" onclick="${l.paused?'':` openDetail('${l.id}')`}">
     <div class="ibox${_isCollectors?' collectors-thumb':''}" style="background:${catCfg(l).bg}">
       ${imgHtml}
-      ${l.super_example?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED LISTING</div>':''}
+      ${(l.super_example||l.generic)?'<div style="position:absolute;top:0;left:0;background:#e63946;color:#fff;font-size:8.5px;font-weight:800;padding:3px 9px;border-radius:0 0 10px 0;z-index:6;letter-spacing:.02em;line-height:1.2;max-width:calc(100% - 8px);font-family:Syne,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25);">AI EXAMPLE GENERATED LISTING</div>':''}
       ${(String(l.id).startsWith('demo_')||String(l.id).startsWith('ph_'))?'<div class="demo-card-badge"></div>':''}
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ On hold for a buyer</div>':''}
@@ -5634,7 +5701,7 @@ function cardHtml(l){
       <div class="cloc">📍 ${_lmEsc(l.area)}${_distLabel(l)}</div>
       <div class="cbot">
         <div class="cprice">${l.price?`${_priceLabel(l)}${l.per?`<span class="per"> ${_lmEsc(l.per)}</span>`:''}`:'<span class="neg">Negotiable</span>'}</div>
-        ${tbadge(l.trust)}${fspark(l)}
+        ${l.generic?"":tbadge(l.trust)}${fspark(l)}
       </div>
       ${l.sellerIdx!=null?`<div class="seller-cv-badge" onclick="event.stopPropagation();openSellerCV(${l.sellerIdx},'${l.id}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> View seller profile</div>`:''}
     </div>
@@ -6121,6 +6188,7 @@ function msLangView(l){
 })();
 
 function openDetail(id){
+  try{ const _gx = findListing(id); if (_gx && _gx.generic) { msGenericExSheet(_gx); return; } }catch(_){}   // GENERIC-EX-1
   /* LM-DEEPLINK-1 (25 Sep 2026 inspection, ts1-03): a Local Market advert opened from a link (Quick's Find, a Status
      share) opens on its own page -- the ordinary page asked the buyer for 1T, and Local Market is free for buyers. */
   try{

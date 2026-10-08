@@ -4269,6 +4269,15 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       suburb:sub, city:city, thumb_url:PH[p], price:''}; });
   }
   window.qLocalExamples=qLocalExamples;
+  /* GENERIC-EX-1: the server's example for this role, in her country's currency -- her words for the role (the label
+     she tapped, already in her language; the rate's unit is translated with the card), her area, never tappable */
+  function qGenericEx(list, where){
+    var gx=(list && list._gx)||[], w=pickOf('what'); if(!gx.length) return null;
+    var sub=where ? String((where.areas&&where.areas[0])||where.label).split(',')[0] : '';
+    return gx.slice(0,1).map(function(x){ return {_local:1, _gx:1, demo_example:1, title:(w&&w.label)||x.title, suburb:sub,
+      city:x.city, country:x.country, thumb_url:x.thumb_url, price:x.price}; });
+  }
+  window.qGenericEx=qGenericEx;
   /* FIND-AREAS-LIVE-1 (David 4 Oct 2026, looking for Maroushka's live flats: "it appears as a single unit (Brooklyn) but
      also in all suburbs, while there was no option for Brooklyn"). Beside the fixed areas, the area question offers the
      suburbs where a live advert that fits her answers so far actually is -- so a real advert can always be reached. */
@@ -4327,7 +4336,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
          switched them off. One switch for both apps: the key ts_show_examples, starting ON (TrustSquare's msShowExamples). */
       var exOn=(function(){ try{ return localStorage.getItem('ts_show_examples')!=='0'; }catch(e){ return true; } })();
       var _all=(list||[]), _exAll=_all.filter(isEx);
-      if(!_all.length && !failed) _exAll=qLocalExamples(c, where, city);   /* FIND-HONOUR-1: the generated photos fill an empty shelf, marked */
+      if(!_all.length && !failed) _exAll=qGenericEx(list, where) || qLocalExamples(c, where, city);   /* FIND-HONOUR-1: the generated photos fill an empty shelf, marked */
       var _exact=_all.filter(function(l){ return !isEx(l); }), _cl=_exact.length ? [] : ((list&&list._close)||[]).slice(0,3);   /* FIND-CLOSE-1 */
       var five=_exact.concat(_cl).concat(exOn?_exAll:[]).slice(0,5);
       var nHid=exOn?0:_exAll.length;
@@ -4402,8 +4411,18 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     var qt=(grp || cat().key==='property') ? '' : ((cat().key==='adventures' && TYPE_Q[what]) || qterm(what));
     var url='/listings?city='+encodeURIComponent(city)+'&category='+encodeURIComponent(co.category)+'&page_size=200'
            +(qt?'&q='+encodeURIComponent(qt):'');
-    Promise.all([fetch(url,{credentials:'include'}).then(function(r){ return r.ok?r.json():Promise.reject(r.status); }), qAnchors(city)])
-      .then(function(rs){ var j=rs[0]; paint(qFindHonour(typeFilter(Array.isArray(j)?j:(j&&(j.listings||j.items))||[]), rs[1]), false); })
+    /* GENERIC-EX-1 (David, 8 Oct 2026: "global generic ... in the local country prices, languages ... it should not increase
+       the phone app size"). For a work role, the server makes ONE AI example for her country and city on request -- the
+       role's own picture, a rate in her currency from her country's legal minimum, written the way a worker's own rate
+       is. Nothing is stored in the door; it is asked for only when this search runs and is used only if no real advert
+       and no stored example fits. */
+    var _gw=pickOf('what'), _gxP=(window.svcIs && svcIs(c) && _gw && _gw.r)
+      ? fetch('/examples/roles?country='+encodeURIComponent(window.QCC||'ZA')+'&city='+encodeURIComponent(city)+'&role='+encodeURIComponent(_gw.r)+'&lang=en')
+          .then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
+      : Promise.resolve([]);
+    Promise.all([fetch(url,{credentials:'include'}).then(function(r){ return r.ok?r.json():Promise.reject(r.status); }), qAnchors(city), _gxP])
+      .then(function(rs){ var j=rs[0], fit=qFindHonour(typeFilter(Array.isArray(j)?j:(j&&(j.listings||j.items))||[]), rs[1]);
+        fit._gx=Array.isArray(rs[2])?rs[2]:[]; paint(fit, false); })
       .catch(function(){ paint([], true); });
   };
 

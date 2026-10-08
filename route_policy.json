@@ -210,6 +210,10 @@
    "level": "public"
   },
   {
+   "key": "GET /examples/roles",
+   "level": "public"
+  },
+  {
    "key": "GET /geo/suburbs",
    "level": "public"
   },

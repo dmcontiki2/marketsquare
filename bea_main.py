@@ -6220,6 +6220,90 @@ def geo_get_regions(country: str = "ZA"):
     conn.close()
     return [dict(r) for r in rows]
 
+# ── GENERIC-EX-1 (David, 8 Oct 2026) ────────────────────────────────────────────────────────────────────────────────
+# "These should all be global generic, visible globally in the local country prices, languages ... but it should not
+# increase the user's phone app size." One AI example per casual work role, made ON REQUEST for the city and country
+# being looked at -- never stored as adverts, never shipped inside the app. Prices start from that country's legal
+# minimum (the same table Quick uses, QUICK-OPEN-RATE-1 -- RG asserts they match), in its currency; the role's name in
+# the asked language (roles/quick_i18n.json, else the registry, else English); the role's own picture
+# (/static/quick/role_<key>.jpg, already on the server and loaded only when shown). Marked AI examples (RUL-040),
+# listed after real adverts (RUL-194), and only for roles nobody real lists there yet (the apps decide that).
+_GX_MINW = {"ZA": ("R", 30.23), "NA": ("N$", 15.00), "BW": ("P", 7.69), "MZ": ("MT ", 34.03), "KE": ("KSh ", 80.15),
+            "GB": ("£", 12.71), "DE": ("€", 13.90), "AU": ("A$", 26.44), "US": ("$", 7.25)}
+_GX_CACHE = {"roles": None, "i18n": None}
+
+
+def _gx_nice(v):
+    """Round an example price up to a number a person would write (5s under 100, 10s under 1000, 50s above)."""
+    step = 5 if v < 100 else (10 if v < 1000 else 50)
+    return int(-(-v // step) * step)
+
+
+def _gx_roles():
+    if _GX_CACHE["roles"] is None:
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"), encoding="utf-8") as fh:
+                _GX_CACHE["roles"] = [r for r in json.load(fh).get("roles", [])
+                                      if r.get("status") == "in" and r.get("service_class") == "Casuals"]
+        except Exception as exc:
+            _log.warning("GENERIC-EX-1: role registry unreadable: %s", exc); _GX_CACHE["roles"] = []
+    return _GX_CACHE["roles"]
+
+
+def _gx_label(role, lang):
+    en = (role.get("label") or {}).get("en") or role.get("key", "").replace("_", " ").capitalize()
+    lang = (lang or "en").lower()[:3]
+    if lang == "en":
+        return en
+    if _GX_CACHE["i18n"] is None:
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "quick_i18n.json"), encoding="utf-8") as fh:
+                _GX_CACHE["i18n"] = json.load(fh)
+        except Exception:
+            _GX_CACHE["i18n"] = {}
+    d = _GX_CACHE["i18n"] or {}
+    langs = d.get("langs") or []
+    row = (d.get("w") or {}).get(en)
+    if isinstance(row, list) and lang in langs and langs.index(lang) < len(row) and row[langs.index(lang)]:
+        return row[langs.index(lang)]
+    return (role.get("label") or {}).get(lang) or en
+
+
+@app.get("/examples/roles")
+def examples_roles(country: str = "ZA", city: str = "", lang: str = "en", role: str = ""):
+    """GENERIC-EX-1: AI example cards for casual work roles, made for this country and city on request (nothing stored)."""
+    cc = re.sub(r"[^A-Za-z]", "", country or "ZA")[:2].upper() or "ZA"
+    if cc == "UK":
+        cc = "GB"
+    cur, hourly = _GX_MINW.get(cc, _GX_MINW["ZA"])
+    city = _plain_text(str(city or ""))[:60].strip()
+    want = re.sub(r"[^a-z0-9_]", "", (role or "").lower())[:60]
+    out = []
+    for r in _gx_roles():
+        k = r.get("key") or ""
+        if want and k != want:
+            continue
+        pq = " ".join(q.get("q", "") for q in (r.get("questions") or []) if q.get("key") == "price").lower()
+        # written the way Quick writes a worker's own rate (money() + basis unit: "R320 / day", "From R65 / car")
+        if "per car" in pq:
+            price = "From %s%s / car" % (cur, "{:,}".format(_gx_nice(hourly * 2.0)).replace(",", " "))
+        else:
+            price = "%s%s / day" % (cur, "{:,}".format(_gx_nice(hourly * 8 * 1.3)).replace(",", " "))
+        label = _gx_label(r, lang)
+        pic = "/static/quick/role_%s.jpg" % k
+        out.append({
+            "id": "gx_" + k, "generic": True, "role_key": k, "title": label, "category": "Services",
+            "service_class": "Casuals", "service_type": (r.get("label") or {}).get("en") or label,
+            "city": city or None, "suburb": None, "area": None, "country": cc, "price": price,
+            "availability": "Mon, Tue, Wed, Thu, Fri",
+            "description": "[photos:%s]\n%s%s." % (pic, label, (" — " + city) if city else ""),
+            "thumb_url": pic, "medium_url": pic, "photo_urls": json.dumps([pic]), "trust_score": None,
+            "is_demo": 1, "demo_example": True, "super_example": 0, "listing_status": "live",
+        })
+    return out
+
+
+
 @app.get("/geo/city-counts")
 def geo_city_counts(country: str = "ZA"):
     """GEO-CITY-SAFE-1 (David, 7 Oct 2026): how many REAL adverts each city of a country has -- live, shown to strangers,
