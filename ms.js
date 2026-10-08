@@ -4735,6 +4735,7 @@ async function selectCity(id, name, lat, lng) {
      new city's name while the new list downloads -- and her choice is remembered for her next visit. */
   for (let i = LISTINGS.length - 1; i >= 0; i--) { if (LISTINGS[i].isLive) LISTINGS.splice(i, 1); }
   try{ if (name) localStorage.setItem('ms_user_city', name); }catch(_){}
+  try{ if (typeof _msGeo !== 'undefined' && !_msGeo._applying) _msGeo.pickedThisVisit = true; }catch(_){}   // SELLER-HOME-1
   _msSaveCountry();   // GEO-PAIR-1: the country is remembered with the city
   closeCitySelector();
   updateBadgeLabel();
@@ -20178,20 +20179,36 @@ async function _msGeoCities(iso2){
   catch(_){ _msGeo.cities[iso2] = []; }
   return _msGeo.cities[iso2];
 }
-function _msGeoApply(iso2, cname, city, src){
-  if (_msGeoOwnPick() || _msGeoSkipVisit() || !city || !city.name) return;
+function _msGeoApply(iso2, cname, city, src, force){
+  if ((!force && _msGeoOwnPick()) || _msGeoSkipVisit() || !city || !city.name) return;
   _msGeo.src = src; _msGeo.uncovered = '';
   try{ localStorage.setItem('ms_auto_city', city.name); localStorage.setItem('ms_auto_country', JSON.stringify({ iso2: iso2, name: cname })); }catch(_){}
   if (!(activeCountry && activeCountry.iso2 === iso2 && activeCity && activeCity.name === city.name)) {
     activeCountry = { iso2: iso2, name: cname }; activeRegion = null;
-    selectCity(city.id == null ? null : city.id, city.name, city.lat, city.lng);
+    _msGeo._applying = true;
+    try{ selectCity(city.id == null ? null : city.id, city.name, city.lat, city.lng); } finally { _msGeo._applying = false; }
     // selectCity remembers a choice as HERS -- this one is ours; take it back off so detection keeps following her
     try{ localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country'); }catch(_){}
   }
   msGeoBanner();
 }
 async function msGeoAuto(){
-  if (_msGeoOwnPick() || _msGeoSkipVisit()) return;
+  if (_msGeoSkipVisit()) return;
+  /* SELLER-HOME-1 (David, 8 Oct 2026: "the city could on opening default to the users city where he operates locally,
+     this would be where he lists ... This would prevent him opening the app and finding his listings to seem lost").
+     A seller opens the app on the city most of her own adverts are in -- EVERY time, ahead of her phone's location and
+     of a city she browsed to on an earlier visit. A city she picks during a visit holds for that visit. Buyers (no
+     adverts) keep GEO-CITY-SAFE-1's order. */
+  const own = await _msGeoSellerCity();
+  if (own) {
+    const oco = (await _msGeoCountries()).find(function(c){ return c.iso2 === own.cc && !c.coming_soon; });
+    if (oco) {
+      const ocs = await _msGeoCities(own.cc);
+      const oc = ocs.find(function(c){ return c.name.toLowerCase() === own.city.toLowerCase(); });
+      if (oc && !_msGeo.pickedThisVisit) { _msGeo.home = true; _msGeoApply(own.cc, oco.name, oc, 'ads', true); return; }
+    }
+  }
+  if (_msGeoOwnPick()) return;
   let me = null;
   try{ const r = await fetch('/quick/me', { credentials: 'same-origin' }); me = r.ok ? await r.json() : null; }catch(_){}
   if (_msGeoSrcIsGps()) return;   // the phone already answered while we waited
@@ -20208,16 +20225,7 @@ async function msGeoAuto(){
      Johannesburg, so the network's city put Pretoria people in Johannesburg, VPN or not. The city now comes from, in
      order: her own pick (never touched here), her phone's location (msGeoFromGps, accurate), the city of her OWN adverts
      when she is a seller, and otherwise her country's main city. */
-  const own = await _msGeoSellerCity();
   if (_msGeoSrcIsGps() || _msGeoOwnPick()) return;
-  if (own) {
-    const oco = list.find(function(c){ return c.iso2 === own.cc && !c.coming_soon; });
-    if (oco) {
-      const ocs = await _msGeoCities(own.cc);
-      const oc = ocs.find(function(c){ return c.name.toLowerCase() === own.city.toLowerCase(); });
-      if (oc && !_msGeoSrcIsGps()) { _msGeoApply(own.cc, oco.name, oc, 'ads'); return; }
-    }
-  }
   const cities = await _msGeoCities(cc);
   if (!cities.length || _msGeoSrcIsGps()) return;
   const pick = cities.find(function(c){ return c.name === _MS_GEO_MAIN[cc]; }) || cities[0];
@@ -20240,7 +20248,7 @@ async function _msGeoSellerCity(){
 }
 function _msGeoSrcIsGps(){ return _msGeo.src === 'gps'; }
 async function msGeoFromGps(lat, lng){
-  if (_msGeoOwnPick() || _msGeoSkipVisit() || lat == null || lng == null) return;
+  if (_msGeo.home || _msGeoOwnPick() || _msGeoSkipVisit() || lat == null || lng == null) return;   // SELLER-HOME-1: her adverts' city wins
   const list = (await _msGeoCountries()).filter(function(c){ return !c.coming_soon; });
   let best = null, bestKm = 1e9;
   for (const co of list) {

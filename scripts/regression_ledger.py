@@ -37083,7 +37083,7 @@ def rg_geo_city_safe_1():
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = []
     for need, why in (("async function _msGeoSellerCity(", "her own adverts no longer place her"),
-                      ("_msGeoApply(own.cc, oco.name, oc, 'ads')", "her adverts' city is not applied"),
+                      ("_msGeoApply(own.cc, oco.name, oc, 'ads', true)", "her adverts' city is not applied (SELLER-HOME-1 form)"),
                       ("async function msEmptyCityNudge(", "an empty city is a dead end again"),
                       ("/geo/city-counts?country=", "the nudge no longer reads the city counts")):
         if need not in js:
@@ -37093,6 +37093,23 @@ def rg_geo_city_safe_1():
     if '"GET /geo/city-counts"' not in pol:
         bad.append("/geo/city-counts is not declared in route_policy.json")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "country from the network, city from her; empty city offers the full one")]
+
+
+@entry("RG-0938", "SELLER-HOME-1 (RUL-215, 8 Oct 2026): a seller opens the app on the city most of her own adverts are in, every "
+       "time -- ahead of her phone's location and of a city she browsed to before; a city she picks during a visit holds for "
+       "that visit",
+       LOCKED, fixed_on="2026-10-08",
+       scope="ms.js msGeoAuto (seller-home block first, _msGeoApply force), msGeoFromGps (_msGeo.home), selectCity "
+             "(pickedThisVisit, _applying)",
+       ref="David 8 Oct 2026: 'the city could on opening default to the users city where he operates locally, this would be "
+           "where he lists ... This what happened with Maroushka'. Rendered check: seller with Pretoria adverts and an old "
+           "Cape Town pick opened on Pretoria; picking Cape Town held for the visit; the next opening was Pretoria again.")
+def rg_seller_home_1():
+    bad = _fb28_need([("ms.js", [("SELLER-HOME-1 (David, 8 Oct 2026", "the seller-home rule is gone"),
+                                 ("_msGeo.home = true; _msGeoApply(own.cc, oco.name, oc, 'ads', true)", "her adverts' city no longer wins on opening"),
+                                 ("if (_msGeo.home || _msGeoOwnPick()", "the phone's location can move a seller off her adverts' city"),
+                                 ("_msGeo.pickedThisVisit = true", "a city she picks during a visit can be overridden")])])
+    return bad or [(INFO, "a seller opens on her own adverts' city")]
 
 
 def _server_vantage_wrap():
