@@ -37245,6 +37245,24 @@ def rg_minify_1():
         out.append((INFO, "live half NOT EVALUATED: %s" % str(exc)[:120]))
     return out or [(INFO, "ms.js ships as a checksum-made small copy for the page; the plain URL stays readable")]
 
+
+@entry("RG-0944", "PHOTO-FIRST-1 (8 Oct 2026, audit F6): an advert's first photo is fetched first and alone (high priority); "
+       "the rest of the gallery and its thumbs start when it has arrived, on a swipe, or after 8 s; Nearby Wonders pictures "
+       "load only when she scrolls near them",
+       LOCKED, fixed_on="2026-10-08", scope="ms.js openDetail stripSlides / adv-thumbs / loadDetailWonders; msPhotoFirstDone, msNearImgs",
+       ref="Measured Fast 3G phone, Quick hand-over /?listing=264: advert at 6.2 s, first photo at 17.3 s (six 120-244 KB "
+           "photos and the Wonders pictures shared the line); with the change the first photo shows 1.8 s after the advert.")
+def rg_photo_first_1():
+    bad = _fb28_need([("ms.js", [
+        ("fetchpriority=\"high\" onload=\"msPhotoFirstDone('${id}')\"", "the first photo no longer goes first"),
+        (": `data-pf-src=\"${_lmEsc(pd.url)}\"`", "the other gallery photos download alongside the first again"),
+        ("(ti===0 ? 'src' : 'data-pf-src')", "the thumbs download alongside the first photo again"),
+        ("onscroll=\"msPhotoFirstDone('${id}');", "a swipe no longer brings the rest of the gallery"),
+        ("setTimeout(function(){ try{ msPhotoFirstDone(l.id); }catch(e){} }, 8000);", "the gallery can wait forever on a stuck first photo"),
+        ('<img class="wonder-card-img" data-near-src="${w.photo}"', "Wonders pictures download before she scrolls near them again"),
+        ("msNearImgs(list);", "the Wonders pictures are never asked for")])])
+    return bad or [(INFO, "the advert's first photo comes first; the rest follow it; far pictures wait for her")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

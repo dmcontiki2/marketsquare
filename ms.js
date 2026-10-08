@@ -1202,6 +1202,42 @@ function msSessionAlive(){
    out: no hub, no introductions, her draft out of reach. Once per page load the server is asked who is signed in and,
    if someone is, that email and name are taken. Never runs over an email the app already has, nor on a ?signin= link
    (that link signs her in itself). Resolves true when it adopted a sign-in. */
+/* IDENTITY-GUARD-1 (David, 8 Oct 2026): the signed-in session is the ONLY truth for who this phone is.
+   His Chrome showed "David Conradie · dmcontiki2@gmail.com" with 0T while the session belonged to a QA test account:
+   a sign-in as somebody else had replaced ms_aa_email but left ms_user_email, name, photo and the superuser flag behind,
+   so the screen mixed two people (and the Paystack receipt email would have gone to the old one). Any shared phone or
+   family tablet could do the same. At start-up we ask the server who is signed in; if anything saved here names
+   someone else, every per-person key is cleared and set from the session. Signed-out phones are left alone. */
+var MS_PERSON_KEYS = ['ms_aa_email','ms_user_email','ms_aa_name','ms_seller_profile','ms_seller_photo','ms_seller_photo_url',
+  'ms_user_photo','ms_user_name','ms_trust_score','ms_intros_sent','ms_superuser','ms_joined_date'];
+function msIdentityGuard(){
+  try{ if (!BEA_ENABLED || (typeof DEMO_MODE !== 'undefined' && DEMO_MODE)) return Promise.resolve(false); }catch(_){ return Promise.resolve(false); }
+  return fetch(BEA_URL + '/quick/me', {credentials: 'include'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || d.signed_in !== true || !d.email) return false;
+      var who = String(d.email).trim().toLowerCase(), stale = false;
+      ['ms_aa_email','ms_user_email'].forEach(function(k){
+        var v = ''; try{ v = String(localStorage.getItem(k) || '').trim().toLowerCase(); }catch(_){}
+        if (v && v !== who) stale = true; });
+      if (!stale) return false;
+      MS_PERSON_KEYS.forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+      try{ sessionStorage.removeItem('aa_email'); }catch(_){}
+      try{
+        localStorage.setItem('ms_aa_email', who); localStorage.setItem('ms_user_email', who);
+        localStorage.setItem('ms_aa_name', String(d.name || msShownEmail(who)));
+        if (d.name) localStorage.setItem('ms_user_name', String(d.name));
+      }catch(_){}
+      try{ if(typeof SELLER_PHOTOS!=='undefined') SELLER_PHOTOS[0]=null; if(typeof SELLERS!=='undefined' && SELLERS) SELLERS[0]={}; }catch(_){}
+      try{ tuppence = 0; }catch(_){}
+      try{ if (typeof updateHeaderAuthBtn === 'function') updateHeaderAuthBtn(); }catch(_){}
+      try{ msSyncBalance(); }catch(_){}
+      try{ if (typeof msInit === 'function') msInit(); }catch(_){}
+      return true;
+    })
+    .catch(function(){ return false; });
+}
+
 var _msAdoptP = null;
 function msAdoptSession(){
   if (_msAdoptP) return _msAdoptP;
@@ -1644,6 +1680,7 @@ async function _msInit(){
   // If BEA balance > local balance, use BEA value.
   // Remove or gate behind a DEV_MODE flag before public launch.
   msSyncBalance();   // BALANCE-SYNC-1 (25 Sep 2026 inspection, ts1-18): the same fetch, now also run after a link sign-in
+  msIdentityGuard();   // IDENTITY-GUARD-1: one person per phone -- the session's
 
   // ── RESTORE PROFILE PHOTO from BEA if localStorage is empty ─
   // Runs in background so it never slows page load.
@@ -2290,9 +2327,7 @@ function headerAuthClick(){
 }
 function signOut(){
   try{ fetch('/auth/logout', {method:'POST', credentials:'same-origin'}); }catch(e){}   // SESSION-END-1: the server session ends too
-  ['ms_aa_email','ms_aa_name','ms_seller_profile','ms_seller_photo','ms_seller_photo_url',
-   'ms_user_photo','ms_user_name','ms_trust_score','ms_intros_sent','ms_superuser','ms_joined_date']
-    .forEach(function(k){ localStorage.removeItem(k); });
+  MS_PERSON_KEYS.forEach(function(k){ localStorage.removeItem(k); });   // IDENTITY-GUARD-1: incl. ms_user_email
   try{ sessionStorage.removeItem('aa_email'); }catch(e){}
   if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
   showToast('Signed out.');
@@ -6188,6 +6223,22 @@ function msLangView(l){
   }catch(e){}
 })();
 
+/* PHOTO-FIRST-1 (8 Oct 2026, audit F6 after MINIFY-1). Measured on the Quick hand-over (/?listing=264, Fast 3G, phone):
+   the advert showed at 6.2 s but its first photo only at 17.3 s -- the six gallery photos (120-244 KB each, the thumbs
+   are the same files) and the Nearby Wonders pictures 2 000 px down all downloaded at once and shared the line.
+   Now the first photo goes alone and first; the rest of the gallery follows when it has arrived (or she swipes, or 8 s
+   pass), and a picture far down the page waits until she scrolls near it. Nothing is dropped, only ordered. */
+function msPhotoFirstDone(id){
+  try { document.querySelectorAll('[data-pf-src]').forEach(function(im){ im.src = im.getAttribute('data-pf-src'); im.removeAttribute('data-pf-src'); }); } catch(e){}
+}
+let _msNearIO = null;
+function msNearImgs(root){
+  const ims = (root || document).querySelectorAll('img[data-near-src]');
+  const go = function(im){ if (im.hasAttribute('data-near-src')) { im.src = im.getAttribute('data-near-src'); im.removeAttribute('data-near-src'); } };
+  if (!('IntersectionObserver' in window)) { ims.forEach(go); return; }
+  if (!_msNearIO) _msNearIO = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { _msNearIO.unobserve(e.target); go(e.target); } }); }, {rootMargin: '300px 300px'});
+  ims.forEach(function(im){ _msNearIO.observe(im); });
+}
 function openDetail(id){
   try{ const _gx = findListing(id); if (_gx && _gx.generic) { msGenericExSheet(_gx); return; } }catch(_){}   // GENERIC-EX-1
   /* LM-DEEPLINK-1 (25 Sep 2026 inspection, ts1-03): a Local Market advert opened from a link (Quick's Find, a Status
@@ -6242,6 +6293,7 @@ function openDetail(id){
   if(!_rerender) msTrackView(l);
   const _lv = msLangView(l);   /* LANG-LAYER-1: which words of the advert this reader sees */
   window._msLastDetail = l.id;
+  setTimeout(function(){ try{ msPhotoFirstDone(l.id); }catch(e){} }, 8000);   // PHOTO-FIRST-1: the rest of the gallery never waits longer
   const active=document.querySelector('.screen.active');
   // WISH-INPLACE-1 (25 Sep 2026 inspection, ts1-09): an advert opened FROM an advert ('Stay nearby') keeps the screen
   // she came from -- 'detail' here made the new page's back arrow point at itself.
@@ -6263,8 +6315,11 @@ function openDetail(id){
         const cap = pd.caption||'';
         // SELLER-TEXT-ESC-1 (25 Sep 2026 inspection, ts1-01 + ts2-03): photo address, title and caption are escaped
         const capHtml = cap ? `<div style="position:absolute;bottom:8px;right:8px;background:rgba(10,10,20,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:600;color:#fff;pointer-events:none;line-height:1.45;max-width:72%;text-align:right;letter-spacing:.15px;box-shadow:0 2px 8px rgba(0,0,0,.35);font-family:'Inter',sans-serif;">${_lmEsc(cap)}</div>` : '';
+        /* PHOTO-FIRST-1 (8 Oct 2026, audit F6): the first photo is fetched first and alone; the others (and the thumbs,
+           which are the same files) start when it has arrived, she swipes, or 8 s pass -- on a slow phone the six photos
+           used to share the line and the first showed only at 17 s. */
         return `<div class="photo-strip-slide" style="cursor:zoom-in;position:relative;" onclick="openLightboxById('${id}',${pi})">
-          <img src="${_lmEsc(pd.url)}" alt="${_lmEsc(l.title)}" loading="lazy" style="pointer-events:none;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <img ${pi===0 ? `src="${_lmEsc(pd.url)}" fetchpriority="high" onload="msPhotoFirstDone('${id}')"` : `data-pf-src="${_lmEsc(pd.url)}"`} alt="${_lmEsc(l.title)}" style="pointer-events:none;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';msPhotoFirstDone('${id}')">
           <div class="emoji-fallback" style="display:none;background:${catCfg(l).bg};pointer-events:none;">${catCfg(l).icon}</div>
           ${capHtml}
         </div>`;
@@ -6296,12 +6351,12 @@ function openDetail(id){
   const _isCollectorsCat = (l.cat||'').toLowerCase()==='collectors';
   const heroHtml = `
     <div class="photo-strip-wrap${_isCollectorsCat?' collectors-strip':''}" id="pstrip-wrap-${id}">
-      <div class="photo-strip" id="pstrip-${id}" onscroll="updateStripDots('${id}',${photos.length}); if(typeof syncAdvThumbs==='function') syncAdvThumbs('${id}', Math.round(this.scrollLeft/this.offsetWidth))">
+      <div class="photo-strip" id="pstrip-${id}" onscroll="msPhotoFirstDone('${id}');updateStripDots('${id}',${photos.length}); if(typeof syncAdvThumbs==='function') syncAdvThumbs('${id}', Math.round(this.scrollLeft/this.offsetWidth))">
         ${stripSlides}
       </div>
       ${dotsHtml}
       ${photos.length>1?`<button class="strip-arrow strip-arrow-left" aria-label="Previous photo" onclick="stripNav('${id}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" aria-label="Next photo" onclick="stripNav('${id}',1)">&#8250;</button>`:''}
-      ${photos.length > 1 ? '<div class="adv-thumbs" id="adv-thumbs-'+id+'">' + photos.map(function(u,ti){ return '<div class="adv-thumb'+(ti===0?' active':'')+'" id="adv-thumb-'+id+'-'+ti+'" onclick="advThumbClick(\'' + id + '\',' + ti + ')"><img src="' + _lmEsc(u) + '" alt="" loading="lazy"></div>'; }).join('') + '</div>' : ''}
+      ${photos.length > 1 ? '<div class="adv-thumbs" id="adv-thumbs-'+id+'">' + photos.map(function(u,ti){ return '<div class="adv-thumb'+(ti===0?' active':'')+'" id="adv-thumb-'+id+'-'+ti+'" onclick="advThumbClick(\'' + id + '\',' + ti + ')"><img ' + (ti===0 ? 'src' : 'data-pf-src') + '="' + _lmEsc(u) + '" alt=""></div>'; }).join('') + '</div>' : ''}
       <div class="dnav">
         ${_toQuick
           ? `<button class="dib" onclick="msBackToQuick()" style="width:auto;padding:0 13px;border-radius:50px;font:700 13px/1 Syne,system-ui,sans-serif;color:var(--text);">&lsaquo; Back to Quick</button>`
@@ -7520,8 +7575,7 @@ function submitOnboard(){
       lead:'One check before this phone switches to that account.'}, function(){
         host.innerHTML=''; host.removeAttribute('data-mcp');
         // a clean switch: nothing of the previous account stays on this phone (as signOut does)
-        ['ms_aa_name','ms_seller_profile','ms_seller_photo','ms_seller_photo_url','ms_user_photo','ms_user_name',
-         'ms_trust_score','ms_intros_sent','ms_superuser','ms_joined_date'].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+        MS_PERSON_KEYS.filter(function(k){ return k!=='ms_aa_email'; }).forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });   // IDENTITY-GUARD-1
         try{ if(typeof SELLER_PHOTOS!=='undefined') SELLER_PHOTOS[0]=null; if(typeof SELLERS!=='undefined' && SELLERS) SELLERS[0]={}; }catch(_){}
         submitOnboard();
       });
@@ -19638,7 +19692,7 @@ async function loadDetailWonders(listing) {
       const w = _wpAllWonders.find(x=>x.id===wId);
       if(!w) return '';
       return `<div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
-        <img class="wonder-card-img" src="${w.photo}" alt="${w.name}" loading="lazy" referrerpolicy="origin-when-cross-origin">
+        <img class="wonder-card-img" data-near-src="${w.photo}" alt="${w.name}" referrerpolicy="origin-when-cross-origin">
         <div class="wonder-card-body">
           <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
           <div class="wonder-card-name">${w.name}</div>
@@ -19646,7 +19700,7 @@ async function loadDetailWonders(listing) {
         </div>
       </div>`;
     }).join('');
-    if(cards) { list.innerHTML = cards; strip.style.display = ''; requestAnimationFrame(()=>ensureScrollArrows(list)); }
+    if(cards) { list.innerHTML = cards; strip.style.display = ''; msNearImgs(list); requestAnimationFrame(()=>ensureScrollArrows(list)); }
     return;
   }
   try {
@@ -19657,7 +19711,7 @@ async function loadDetailWonders(listing) {
     const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
     list.innerHTML = wonders.map(w=>`
       <div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
-        <img class="wonder-card-img" src="${w.photo}" loading="lazy" referrerpolicy="origin-when-cross-origin" onerror="this.src=''">
+        <img class="wonder-card-img" data-near-src="${w.photo}" referrerpolicy="origin-when-cross-origin" onerror="this.removeAttribute('src')">
         <div class="wonder-card-body">
           <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
           <div class="wonder-card-name">${w.name}</div>
@@ -19665,6 +19719,7 @@ async function loadDetailWonders(listing) {
         </div>
       </div>`).join('');
     strip.style.display = 'block';
+    msNearImgs(list);   // PHOTO-FIRST-1
     requestAnimationFrame(()=>ensureScrollArrows(list));
   } catch(e) { console.warn('loadDetailWonders failed', e); }
 }
