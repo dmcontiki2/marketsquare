@@ -37112,6 +37112,17 @@ def rg_seller_home_1():
     return bad or [(INFO, "a seller opens on her own adverts' city")]
 
 
+@entry("RG-0939", "EX-PHOTO-ROLE-1 (8 Oct 2026): a work role's example shelf in Quick's Find shows only that role's own picture -- "
+       "never a car washer card on a bedroom or lounge photo borrowed from the category",
+       LOCKED, fixed_on="2026-10-08", scope="quick.html (= genie/HARNESS.html) qLocalExamples",
+       ref="David 8 Oct 2026: 'three carwash adverts, all three says carwash, only ones photo is a car the other two looks like "
+           "properties'. Live before: role_car_washer.jpg, room_bed.jpg, room_lounge.jpg; fixed copy: one card, role_car_washer.jpg.")
+def rg_ex_photo_role_1():
+    bad = _fb28_need([("quick.html", [("EX-PHOTO-ROLE-1", "the role-photo rule is gone"),
+                                      ("_roleOnly ? [] : (c.hero||[])", "a role's examples borrow the category's photos again")])])
+    return bad or [(INFO, "a role's examples wear only its own picture")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

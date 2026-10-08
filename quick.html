@@ -4254,7 +4254,12 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
      built only from her answers (the kind she asked for, to buy or to rent, her area) -- never tappable as a real advert */
   function qLocalExamples(c, where, city){
     var w=pickOf('what'), d=pickOf('deal'), seen={}, pool=[];
-    [(w&&w.photo)].concat(c._adp||[], c.hero||[]).forEach(function(p){ if(p && PH[p] && !seen[p]){ seen[p]=1; pool.push(p); } });
+    /* EX-PHOTO-ROLE-1 (David, 8 Oct 2026: "three carwash adverts ... only one's photo is a car, the other two look like
+       properties with the wrong carwash words"). A work role has ONE picture of its own; the category's other photos
+       (Home & care's rooms) belong to other roles, so a role's example shelf shows only its own picture -- one honest
+       card, never a car washer on a bedroom. Kinds without a role picture keep the category's photos as before. */
+    var _roleOnly = !!(w && w.photo && /^role_|^svc_/.test(String(w.photo)) && window.svcIs && svcIs(c));
+    [(w&&w.photo)].concat(_roleOnly ? [] : (c._adp||[]), _roleOnly ? [] : (c.hero||[])).forEach(function(p){ if(p && PH[p] && !seen[p]){ seen[p]=1; pool.push(p); } });
     var di=d ? fIdx('deal', d.label) : -1;
     var title=(w ? w.label : c.name)+(di===0 ? ' \u2014 '+T('To sell') : (di===1 ? ' \u2014 '+T('To let') : ''));
     var sub=where ? String((where.areas&&where.areas[0])||where.label).split(',')[0] : '';
