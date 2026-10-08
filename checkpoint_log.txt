@@ -397,3 +397,78 @@ Tue 10/06/2026  5:30:03.48  main mirrored to GitHub
 Wed 10/07/2026  5:30:03.84  committed 1 change(s)
 sync-origin [MarketSquare]: took in 1 commit(s) from origin/main by merge -> 99a7425
 Wed 10/07/2026  5:30:06.34  main mirrored to GitHub
+[main ae30889] Nightly checkpoint Thu 10/08/2026  5:30:04.37 (auto, no deploy)
+ 75 files changed, 42846 insertions(+), 58 deletions(-)
+ create mode 100644 _incoming/rg/role_guide_screens.py
+ create mode 100644 _incoming/roleguides.tgz
+ create mode 100644 changelog.d/2026-10-08-role-guides.md
+ create mode 100644 scripts/build_role_guides.py
+ create mode 100644 scripts/role_guide_screens.py
+ create mode 100644 stories/air_con_refrigeration_technician.json
+ create mode 100644 stories/appliance_repair.json
+ create mode 100644 stories/au_pair.json
+ create mode 100644 stories/auto_electrician.json
+ create mode 100644 stories/bartender.json
+ create mode 100644 stories/boilermaker.json
+ create mode 100644 stories/borehole_pump_technician.json
+ create mode 100644 stories/bricklayer.json
+ create mode 100644 stories/builders_assistant.json
+ create mode 100644 stories/car_washer.json
+ create mode 100644 stories/caregiver.json
+ create mode 100644 stories/carpenter.json
+ create mode 100644 stories/carpet_washer.json
+ create mode 100644 stories/cashier.json
+ create mode 100644 stories/caterer.json
+ create mode 100644 stories/cctv_alarm_installer.json
+ create mode 100644 stories/chef.json
+ create mode 100644 stories/code_10_code_14_driver.json
+ create mode 100644 stories/cook.json
+ create mode 100644 stories/creche_assistant.json
+ create mode 100644 stories/diesel_mechanic.json
+ create mode 100644 stories/driver.json
+ create mode 100644 stories/event_staff.json
+ create mode 100644 stories/farm_worker.json
+ create mode 100644 stories/forklift_operator.json
+ create mode 100644 stories/garden_waste_removal.json
+ create mode 100644 stories/gardener.json
+ create mode 100644 stories/gas_installer.json
+ create mode 100644 stories/gate_garage_door_technician.json
+ create mode 100644 stories/general_worker.json
+ create mode 100644 stories/griller_braai.json
+ create mode 100644 stories/hair_braider.json
+ create mode 100644 stories/hairdresser.json
+ create mode 100644 stories/handyman.json
+ create mode 100644 stories/hotel_porter.json
+ create mode 100644 stories/housekeeper.json
+ create mode 100644 stories/kitchen_assistant.json
+ create mode 100644 stories/locksmith.json
+ create mode 100644 stories/lodge_staff.json
+ create mode 100644 stories/merchandiser.json
+ create mode 100644 stories/motor_mechanic.json
+ create mode 100644 stories/nail_technician.json
+ create mode 100644 stories/office_cleaner.json
+ create mode 100644 stories/painter.json
+ create mode 100644 stories/paver.json
+ create mode 100644 stories/pet_sitter_dog_walker.json
+ create mode 100644 stories/petrol_attendant.json
+ create mode 100644 stories/picker_packer.json
+ create mode 100644 stories/plant_operator_tlb_excavator.json
+ create mode 100644 stories/plasterer.json
+ create mode 100644 stories/pool_cleaner.json
+ create mode 100644 stories/removals_helper.json
+ create mode 100644 stories/roofer.json
+ create mode 100644 stories/room_attendant.json
+ create mode 100644 stories/seamstress_tailor.json
+ create mode 100644 stories/sewing_machinist.json
+ create mode 100644 stories/shelf_packer.json
+ create mode 100644 stories/shop_assistant.json
+ create mode 100644 stories/solar_pv_installer.json
+ create mode 100644 stories/taxi_shuttle_driver.json
+ create mode 100644 stories/tiler.json
+ create mode 100644 stories/tree_cutter.json
+ create mode 100644 stories/waiter.json
+ create mode 100644 stories/welder.json
+ create mode 100644 stories/window_cleaner.json
+Thu 10/08/2026  5:30:04.54  committed 75 change(s)
+sync-origin [MarketSquare]: in step with origin/main (this tree is 1 commit(s) ahead)
+Thu 10/08/2026  5:30:06.20  main mirrored to GitHub

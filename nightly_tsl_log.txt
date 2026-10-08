@@ -1553,3 +1553,19 @@ DEPLOY DRIFT: 6 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
  ============================================================
 Press any key to continue . . . 
 Wed 10/07/2026 20:15:52.28  SHIPPED rc=0 - server now runs migrations + health itself
+Thu 10/08/2026  5:45:07.86  IN SYNC - DEPLOY DRIFT: 69 file(s) local-ahead of live - run /ship: CHANGELOG.md, ms.js, stories/air_con_refrigeration_technician.json, stories/appliance_repair.json, stories/au_pair.json, stories/auto_electrician.json, stories/bartender.json, stories/boilermaker.json, stories/borehole_pump_technician.json, stories/bricklayer.json, stories/builders_assistant.json, stories/car_washer.json, stories/caregiver.json, stories/carpenter.json, stories/carpet_washer.json, stories/cashier.json, stories/caterer.json, stories/cctv_alarm_installer.json, stories/chef.json, stories/code_10_code_14_driver.json, stories/cook.json, stories/creche_assistant.json, stories/diesel_mechanic.json, stories/driver.json, stories/event_staff.json, stories/farm_worker.json, stories/forklift_operator.json, stories/gallery.json, stories/garden_waste_removal.json, stories/gardener.json, stories/gas_installer.json, stories/gate_garage_door_technician.json, stories/general_worker.json, stories/griller_braai.json, stories/hair_braider.json, stories/hairdresser.json, stories/handyman.json, stories/hotel_porter.json, stories/housekeeper.json, stories/index.html, stories/kitchen_assistant.json, stories/locksmith.json, stories/lodge_staff.json, stories/merchandiser.json, stories/motor_mechanic.json, stories/nail_technician.json, stories/office_cleaner.json, stories/painter.json, stories/paver.json, stories/pet_sitter_dog_walker.json, stories/petrol_attendant.json, stories/picker_packer.json, stories/plant_operator_tlb_excavator.json, stories/plasterer.json, stories/pool_cleaner.json, stories/removals_helper.json, stories/roofer.json, stories/room_attendant.json, stories/seamstress_tailor.json, stories/sewing_machinist.json, stories/shelf_packer.json, stories/shop_assistant.json, stories/solar_pv_installer.json, stories/taxi_shuttle_driver.json, stories/tiler.json, stories/tree_cutter.json, stories/waiter.json, stories/welder.json, stories/window_cleaner.json
+Thu 10/08/2026  5:55:12.25  SHIPPING - DEPLOY DRIFT: 2 file(s) local-ahead of live - run /ship: CHANGELOG.md, ms.js | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Thu 10/08/2026  5:55:12.31
+ ============================================================
+
+  [autobump] ms.js changed -> marketsquare.html ref ?v=528
+  [autobump] 1 reference(s) bumped
+harness-parity: quick.html == genie/HARNESS.html
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 61 honestly not-wired, 1 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.

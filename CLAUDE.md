@@ -19,6 +19,10 @@ re-establish how approvals, Chrome, or the video pipeline were set up. The few l
   David prove it from chat history. A checker that disagrees with David suspects itself first.
 - **Chrome:** drive via the Claude-in-Chrome MCP; click by **element-reference (`find`→ref)**, not
   fixed coordinates; verify state after every submit.
+- **Test accounts never sign in to David's own Chrome (IDENTITY-GUARD-1, 8 Oct 2026):** a QA lane signs its
+  `dmcontiki2+qa-...` accounts in only in its own clean browser (Playwright/headless Chromium, or the built-in browser
+  pane) — never in David's Chrome. On 6 Oct a QA sign-in there left his Chrome acting as the test account (0T) while
+  the header still showed him. If a lane ever has to use his Chrome, it signs that account OUT before it ends.
 
 See `APPROVAL_CONTEXT.md` for the approvals contract in full (adopt its posture on boot),
 `WAYS_OF_WORKING.md` for the full agreement, `LEGAL_ACKNOWLEDGEMENT.md` for David's standing

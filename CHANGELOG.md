@@ -1,3 +1,82 @@
+## 2026-10-08 — SELLER-HOME-1 (RUL-215): a seller opens the app where she lists
+
+David, 8 Oct: "the city could on opening default to the users city where he operates locally, this would be where he lists? This would prevent him opening the app and finding his listings to seem lost ... This what happened with Maroushka."
+
+A signed-in seller's app now opens, every time, on the city most of her own adverts are in -- ahead of her phone's location and of a city she browsed to on an earlier visit (an old pick no longer strands her elsewhere). A city she picks during a visit holds for that visit; the next opening is her own city again. Home's banner says "where your own listings are". Buyers keep RUL-213's order (pick, phone, country's main city). Rendered check on a phone-sized browser: seller with Pretoria adverts and an old Cape Town pick opened on Pretoria; Cape Town picked mid-visit held; reload opened on Pretoria. Ledger RG-0938; RG-0935 needle follows the new call.
+
+Cost model impact: none.
+
+## 2026-10-08 — ROLE-GUIDES-1: every work role gets its own How guide (RG-0942)
+
+- David: a car washer tapping How saw the home cleaner's guide. 65 roles borrowed a walked guide (home cleaner 38, plumber 17, electrician 7, nanny 3).
+- Each now has stories/<role>.json, built by scripts/build_role_guides.py from its parent's walked story: its own name in the title and label, step 2 "Pick [[its group]], then [[its job]]", its own price step (per car with the four packages for a car washer; per visit for hair braider, hairdresser, nail technician, pool cleaner; per job for seamstress and carpet washer), a caregiver's "who you care for", and its own live Quick screens (job tile, areas, days or qualification, price, its listing card) captured by scripts/role_guide_screens.py.
+- Steps after saving (Seller Hub, publish, Buzz, a customer's view) keep the parent's walked screens. Changed steps in isiZulu, isiXhosa and Sepedi show in English until a first-language reader supplies them (RUL-165).
+- The /help/ gallery still lists only the walked guides; Quick's How opens the role's own one.
+
+## 2026-10-08 — PHOTO-FIRST-1: an advert's first photo arrives first
+
+David, 8 Oct: yes to the next step on the 6 Oct audit's F6 after MINIFY-1.
+
+Measured on the Quick hand-over (/?listing=264) on a phone over Fast 3G: the advert showed at 6.2 s but its first photo only at 17.3 s, because all six gallery photos (120-244 KB each; the thumbs are the same files) and the Nearby Wonders pictures 2 000 px down the page downloaded at the same time and shared the line. (The page's "loaded" moment was never held up by pictures -- ms.js was the gate there -- so this is about when she sees the photo, not that number.) Now the first photo is fetched first and alone, at high priority; the rest of the gallery and its thumbs start the moment it has arrived, when she swipes, or after 8 s at most; a Wonders picture waits until she scrolls near it. Nothing is dropped, only ordered: the first photo now shows 1.8 s after the advert instead of 11 s. Ledger RG-0944.
+
+Cost model impact: none.
+
+## 2026-10-08 — MINIFY-1: the app script loads about 30% smaller
+
+David, 8 Oct: "Please proceed" on the 6 Oct audit's F6 (the first load; ms.js was 530 KB over the wire, the largest single item).
+
+Every deploy now also writes static/ms.min.js: ms.js with its comments and whitespace removed -- no renaming, no rewriting of the code -- about 367 KB over the wire. It is made on the server from the file just placed (before the cache-buster bump and CDN purge), by esbuild 0.24.0 vendored in ops/minify and checked against its SHA-256 before it runs; if anything fails it is a plain copy of ms.js, never a stale file, and a rollback remakes it from the restored ms.js. The page asks for /static/ms.js?v=N&m=1 and a one-line nginx rule (migration 071, tested with nginx -t and a byte-for-byte origin check, restored on any failure) answers that request with the small copy. The plain URL stays the readable file, so the drift checks, the FEA tamper sensor and the ledger's live checks still compare exactly the repo's bytes. Before shipping, the minified file ran in a phone-sized browser against the live site with the same results as the readable one. Ledger RG-0941 (also compares the live small copy with the minified live file).
+
+Cost model impact: none.
+
+## 2026-10-08 — GX-TILE-COUNT-1: Home tiles count the role examples (RUL-216 amended)
+
+- David: "Services is showing qty of 6 listings with examples on, but we now have 51 example adverts ... please fix this for global as well".
+- The Home category tiles now count the server-made role examples (GENERIC-EX-1) while the AI-examples switch is on, for whichever country and city is open; switch off and they drop out as before. The tiles recount the moment the role examples arrive.
+- Still true: role examples are not counted in the home "live listings" stat, stay off the map and never take an introduction. Ledger RG-0940 updated.
+
+## 2026-10-08 — GENERIC-EX-1 (RUL-216): every casual work role has a local AI example, made on the server
+
+David, 8 Oct: "these should all be global generic, in terms of visible globally in the local country prices, languages, etc.? ... but it should not increase the users on phone app size".
+
+The new public GET /examples/roles makes one AI example per casual work role (47) for the country and city being looked at: the role's own picture, its name in the asked language (Quick's checked word list, else the role registry, else English), and a rate in that country's currency starting from its legal minimum wage -- the same table as Quick's rate floor (ZA R320 / day, a car wash from R65 / car; KE KSh 840 / day; UK £140 / day; US $80 / day). Nothing is stored as an advert and nothing is added to either app: TrustSquare fetches about 15 KB once per city and language, Quick asks only for the role being searched, and each picture loads only when its card is on screen.
+
+Quick's Find uses it when nothing real and no stored example fits a role (one card, her area, her currency). TrustSquare adds it to Services for each role nobody real (and no stored example) offers in that city: marked as an AI example, after real adverts, hidden by the same switch, never counted on a tile or as a listing, kept off the map. A tap opens a sheet that says there is nobody behind it yet and offers "I do this work -- list me free", straight into Quick's sell flow for that role. Ledger RG-0940 (also asserts the server's wage table equals Quick's).
+
+Cost model impact: none.
+
+## 2026-10-08 — EX-PHOTO-ROLE-1: a role's example cards wear only its own picture
+
+David, 8 Oct: Quick's Find for a car washer showed three AI example cards, all titled Car washer, two of them on a bedroom and a lounge photo. The example shelf (FIND-HONOUR-1, shown only when nothing real or demo fits) padded the role's one picture with the category's photos -- Home & care's rooms. A work role now shows only its own picture: one honest card. Kinds without a role picture keep the category's photos. Ledger RG-0939.
+
+Cost model impact: none.
+
+### Local Market speaks to the kind she picked (Goal run 32)
+
+A Durban basket weaver walking Handmade & Craft was coached about honey ("A jar of honey is R80"), told to store her
+work below 25°C and to count it in jars, and given a Pretoria suburb as the example of where she lives.
+
+- **LM-KIND-WORDS-1** — The Story coach line and the Care / Why-selling / Quantity examples now follow the kind she
+  chose (food, handmade, furniture, instruments, antiques, general), the way the photo slots, detail rows and features
+  already did.
+- **AREA-PH-CITY-1** — the "Suburb / area" example reads "Your suburb in <her city>" outside Pretoria.
+- **AI-PRICE-MARK-1** — a confident photo price guess that fills her price box now says "✎ Guessed from your photo —
+  put your own price" until she changes it. (A low-confidence guess was already a placeholder, AI-PRICE-HINT-1.)
+- **CITY-FIRST-SELLER-1** — Home's empty-city bar offered only "Show <other city>". It now also offers
+  "Selling in <her city>? Be the first →", straight into Sell.
+
+RG-0937.
+
+## 2026-10-08 — IDENTITY-GUARD-1: one person per phone — the signed-in session decides who the app shows
+
+David, 8 Oct: his wallet showed 0 Tuppence although his account holds 362T. His Chrome was signed in as the QA account dmcontiki2+qa-codesurvive (created 6 Oct by another lane), while the header still showed "David Conradie · dmcontiki2@gmail.com".
+
+Cause: signing in as someone else replaced ms_aa_email but left ms_user_email (and, on some paths, name, photo and the superuser flag) behind; sign-out and the account switch never cleared ms_user_email. The app then mixed two people — the wallet read one, the header showed the other, and the Paystack receipt email (ms_user_email) would have gone to the previous person. Any shared phone or family tablet could hit the same.
+
+Now: at start-up msIdentityGuard() asks /quick/me who is signed in; if any saved identity names someone else, every per-person key (MS_PERSON_KEYS) is cleared and set from the session, then the balance and My Space re-render. Sign-out and the account switch use the same key list, so ms_user_email is cleared too. Signed-out phones are untouched. CLAUDE.md: QA test accounts never sign in to David's own Chrome.
+
+Cost model impact: none.
+
 ## 2026-10-07 — GEO-CITY-SAFE-1 (RUL-213): the network picks the country, never the city; an empty city points to the full one
 
 David, 7 Oct: Maroushka (Pretoria) found herself set to Johannesburg, saw zero listings and thought the app was broken; "how can we keep the tracker without confusing the user or force her to change it?" then "Please do Claude."
