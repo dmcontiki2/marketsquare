@@ -37126,7 +37126,7 @@ def rg_ex_photo_role_1():
 
 @entry("RG-0940", "GENERIC-EX-1 (RUL-216, 8 Oct 2026): every casual work role has an AI example in both apps, made on the "
        "server for the country and city being looked at -- that country's currency and minimum-wage floor, the role's name "
-       "in her language, its own picture -- never built into the app, never counted on a tile, never taking an introduction",
+       "in her language, its own picture -- never built into the app, counted on its Home tile only while examples are shown (amended 8 Oct), never taking an introduction",
        LOCKED, fixed_on="2026-10-08",
        scope="bea_main.py /examples/roles; route_policy.json; quick.html (= genie/HARNESS.html) drawLookup; ms.js msGenericExLoad",
        ref="David 8 Oct 2026: 'these should all be global generic, in terms of visible globally in the local country prices, "
@@ -37140,8 +37140,8 @@ def rg_generic_ex_1():
                         ("/examples/roles?country=", "Quick no longer asks for the role example")]),
         ("ms.js", [("msGenericExLoad(seq);", "TrustSquare no longer loads the role examples"),
                    ("if (_gx && _gx.generic) { msGenericExSheet(_gx); return; }", "a role example opens as a real advert again"),
-                   ("if (l.generic) return false;   // GENERIC-EX-1: a made-on-request example never adds to a tile",
-                    "role examples are counted on the home tiles again"),
+                   ("try { renderCatCounts(); } catch(e){} }   // GX-TILE-COUNT-1: the tile follows",
+                    "the Home tiles no longer count the role examples the category page shows (RUL-216 amended 8 Oct)"),
                    ("if (l.generic) return false;   // GENERIC-EX-1: never counted as a listing", "role examples are counted as listings"),
                    ('${l.generic?"":tbadge(l.trust)}', "a role example wears a made-up trust score again")]),
     ])

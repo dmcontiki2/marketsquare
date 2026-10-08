@@ -671,7 +671,7 @@ async function msGenericExLoad(seq){
       m.demo_example = true; m.is_demo = 1; m.area = city || m.area; m.suburb = city || m.suburb;
       LISTINGS.push(m); added++;
     });
-    if (added) { try { renderGrid(); } catch(e){} }
+    if (added) { try { renderGrid(); } catch(e){} try { renderCatCounts(); } catch(e){} }   // GX-TILE-COUNT-1: the tile follows
   }catch(e){ console.warn('GENERIC-EX-1:', e); }
 }
 function msGenericExSheet(l){
@@ -5088,7 +5088,9 @@ function renderCatCounts() {
     if (l.id.startsWith('ph_')) return false;
     if (l.paused) return false;   // DEMO-7: a paused demo listing must not inflate a tile count
     if (!msShowExamples() && msIsExample(l)) return false;   // EXAMPLES-LAST-1: hidden examples are not counted
-    if (l.generic) return false;   // GENERIC-EX-1: a made-on-request example never adds to a tile's number
+    // GX-TILE-COUNT-1 (RUL-216 amended, David 8 Oct 2026): a role example IS counted on its Home tile while the AI-examples
+    // switch is on -- the tile must say what the category page shows ('Services 6 listings' over 51 examples). Hidden examples
+    // still drop out above (msShowExamples).
     if (!DEMO_MODE && String(l.id).startsWith('demo_')) return false;
     if (activeSuburb && l.suburb !== activeSuburb.name) return false;
     // TODO: REMOVE BEFORE LAUNCH — mirror DEMO_DISPLAY_MODE filter
@@ -5140,7 +5142,6 @@ function renderCatCounts() {
       // toward another city's tiles (this caused New York/Houston to show phantom 1s).
       if (String(l.id).startsWith('ph_')) return;
       if (l.paused) return;   // DEMO-7: a paused demo listing must not inflate a tile count
-      if (l.generic) return;   // GENERIC-EX-1
       if (!DEMO_MODE && String(l.id).startsWith('demo_')) return;
       const _cat0 = normCat(l.cat);
       if (!isBorderlessCat(_cat0)) {            // BORDERLESS-COUNT-1, fallback branch
