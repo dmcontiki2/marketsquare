@@ -5,6 +5,38 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 33 — Thu 8 Oct 2026, 20:56–21:40 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe in `_to_delete/goalrun33_write_probe`, candidate ms.js in
+  `_to_delete/goalrun33_ms.js`). Built in server worktree `/root/w33` (removed at the end), shipped `claude/goal-run33` 0b8f248 via
+  CLOUD-SHIP-1 (21:28Z SHIPPED, server page `ms.js?v=1000&m=1`). Cloudflare kept handing out the v=999 page for a while — check with
+  `/?fresh=…`. **SSH to `trustsquare.co` times out — use `178.104.73.239`.** Port 22 dropped for ~5 min mid-run (refused, then
+  timeouts) and came back by itself; the device VM cannot reach `api.hetzner.cloud`, so the self-heal beacon fails from there.
+- **Walk (casual / services, Johannesburg hair braider, `docs/E2E_2026-10-08.md`):** cold Home → Sell → Work for yourself? → Quick →
+  Beauty → Hair braider → Soweto, Rosebank → Fri–Sun → R150 **Per visit** (PIECE-WORK-DEFAULT-1 holds live) → Save → letter in 35 s
+  → link → Hub → Publish my listing → terms; stopped at Go live. **Break:** Home said "Showing Johannesburg — from your phone's
+  location" and one tap later Quick asked "Which city?" (New York first on the sandbox's US network): CITY-HANDOFF-1 passes only a
+  city she picked, and since GEO-AUTO-1 nearly nobody picks. **Friction:** "Nothing listed in Johannesburg yet" above "Services 47
+  listings" (tiles count AI examples since GX-TILE-COUNT-1). Both fixed and proven live (GI-0031).
+- **Number: 0.** Live 140 = 132 `*@trustsquare.co` + family 8 (David Jnr 3 — new #534 Property 15:03Z — Marietjie 3, Maroushka 2).
+  **By a stranger's hand: 0.** New users since run 32: this run's QA address only. Draft #533 (Services, dmcontiki2@ — David's own,
+  08:30Z) left alone.
+- **Where people stop:** no strangers. Human (bot=0) sessions since run 32: all family — iPhone 18_7 (David / David Jnr; four Quick
+  walks to `q_draft` and one publish = #534), Maroushka's Mac (#531 publish, 7 Oct).
+- **Outreach:** not re-pulled; `outreach_ledger` on the server is empty, so it is not where the sends are recorded. Last known send
+  3 Oct (runs 28–32).
+- **Shipped (0b8f248):** GI-0031 QUICK-AUTO-HANDOFF-1 + NUDGE-REAL-WORD-1, RG-0946 LOCKED. Also the RG-0889 check was a **false red**
+  (it looked 300 chars above setsFor(); later comments pushed the sets out of view — the live braider opens on Per visit); widened.
+  RG-0890's check follows the new msQuickHref. Ledger new tree 11 !!!! (RG-0120, 0435, 0476, 0501, 0504, 0817, 0840, 0841, 0860,
+  0871, 0875), base 0d2cfe2 13 (the same + RG-0194, RG-0889) — none this run's.
+- **Live proof (21:35Z, fresh profile, Johannesburg phone):** bar "No real listings in Johannesburg yet — the listings below are AI
+  examples. Pretoria has 8 real listings."; Quick link `…&cc=ZA&city=Johannesburg`; after Hair braider Quick opens on "Where can you
+  work? Sandton, Rosebank, Soweto…". No location on a US network: `cc=US`, "Which city?" (unchanged, correct).
+- **Seen, not changed:** the Hub card shows a ⚙️ tile, not the example photo Quick showed her; two language controls on Home.
+- **REVIEW NOW:** GI-0020 only (unchanged).
+- **QA data:** draft #535 deleted by its own session (200); user row qa-goal33@ left. Nothing published.
+- **Not reached:** outreach opens/clicks (no record found on the server).
+
 ## RUN 32 — Wed 7 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; write probe in `_to_delete/goalrun32_write_probe`, candidate ms.js copy in
