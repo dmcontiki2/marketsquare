@@ -21,7 +21,7 @@ WHAT THIS MIGRATION DOES (idempotent; refuses rather than guesses, like 031):
      byte. Anything else -> restore, reload, exit 1.
 Reverse: delete the three MINIFY-1 lines from the site file, nginx -t, nginx -s reload (the backup path is printed).
 """
-import glob, hashlib, os, re, shutil, subprocess, sys
+import glob, hashlib, os, re, shutil, subprocess, sys, time
 from datetime import datetime, timezone
 
 APPLY = "--apply" in sys.argv
@@ -90,17 +90,33 @@ def sha(path):
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def fetch(url_path):
-    """Ask the origin itself (no CDN): https with the site's name if it listens on 443, else plain http."""
+def fetch(url_path, tries=5):
+    """Ask the origin itself (no CDN), a few times, spaced: the box rate-limits bursts (the 8 Oct first run saw the
+    second of two back-to-back requests refused, while the rule itself already worked)."""
+    import time
+    for n in range(tries):
+        got = _fetch_once(url_path)
+        if got:
+            return got
+        time.sleep(2)
+    return None
+
+
+def _fetch_once(url_path):
+    """https with the site's name if the box listens on 443, else plain http."""
     for args in (["--resolve", "trustsquare.co:443:127.0.0.1", "-k", "https://trustsquare.co" + url_path],
                  ["-H", "Host: trustsquare.co", "http://127.0.0.1" + url_path]):
         env = {k: v for k, v in os.environ.items() if "proxy" not in k.lower()}   # the box itself, never a proxy
         r = subprocess.run(["curl", "--noproxy", "*", "-s", "-m", "15", "-H", "Accept-Encoding: identity", "-o", "-",
                             "-w", "\n%{http_code}"] + args, capture_output=True, env=env)
         body, _, code = r.stdout.rpartition(b"\n")
+        SEEN.append("%s %s rc=%s code=%s %dB" % (url_path, args[-1].split("//")[0], r.returncode, code.strip().decode("ascii", "replace"), len(body)))
         if r.returncode == 0 and code.strip() == b"200" and len(body) > 1000:
             return hashlib.sha256(body).hexdigest()
     return None
+
+
+SEEN = []   # every origin answer, printed when a check fails (the 8 Oct first run failed without saying why)
 
 
 def nginx(*a):
@@ -153,15 +169,27 @@ def main():
         ok, msg = nginx("-s", "reload")
         if not ok:
             raise RuntimeError("reload failed: " + msg)
-        import time; time.sleep(2)
+        time.sleep(2)
         if plan:
-            got_min, got_js = fetch("/static/ms.js?v=0&m=1"), fetch("/static/ms.js?v=0")
-            if got_min != sha(mn) or got_js != sha(js):
-                raise RuntimeError("origin check failed: ?m=1 %s ms.min.js, plain %s ms.js"
-                                   % ("matches" if got_min == sha(mn) else "does NOT match", "matches" if got_js == sha(js) else "does NOT match"))
-            say("origin check: ?m=1 serves ms.min.js, the plain URL serves ms.js -- both byte for byte")
+            # the rule acts only on ?m=1: that answer must be ms.min.js byte for byte, or the rule comes out. The plain URL
+            # is not touched by the rule; it is checked too, but an answer we cannot GET (refused, timed out) is reported,
+            # not treated as a fault -- a DIFFERENT body on the plain URL is a fault and also takes the rule out.
+            got_js = fetch("/static/ms.js?v=0")
+            time.sleep(2)
+            got_min = fetch("/static/ms.js?v=0&m=1")
+            if got_min != sha(mn):
+                raise RuntimeError("origin check failed: ?m=1 %s" % ("could not be fetched" if got_min is None else "is NOT ms.min.js"))
+            if got_js is not None and got_js != sha(js):
+                raise RuntimeError("origin check failed: the plain URL no longer serves ms.js")
+            if got_js is None:
+                for line in SEEN[-12:]:
+                    say("  origin answered: " + line)
+            say("origin check: ?m=1 serves ms.min.js byte for byte; plain URL %s"
+                % ("serves ms.js byte for byte" if got_js else "could not be fetched from the box (not touched by the rule)"))
     except Exception as ex:
         say("RESTORING (%s)" % ex)
+        for line in SEEN[-12:]:
+            say("  origin answered: " + line)
         for bak, site in baks:
             shutil.copy2(bak, site)
         nginx("-s", "reload")
