@@ -37161,6 +37161,67 @@ def rg_generic_ex_1():
         bad = (bad or []) + [(FAIL, "could not compare the wage tables: %s" % exc)]
     return bad or [(INFO, "role examples come from the server, in the local currency and language, and never count as adverts")]
 
+
+@entry("RG-0941", "MINIFY-1 (8 Oct 2026, audit F6): the app page loads /static/ms.js?v=N&m=1, which nginx answers with "
+       "static/ms.min.js -- ms.js without comments or whitespace, made by every deploy from the placed file with the "
+       "vendored, checksum-checked esbuild (a plain copy if that fails, never a stale file). The plain URL stays the "
+       "readable file, so drift checks, the FEA sensor and live ledger checks still see the repo's bytes",
+       LOCKED, fixed_on="2026-10-08",
+       scope="ops/minify/make_min.sh + esbuild-linux-x64.gz/.sha256; ops/autodeploy/server_deploy.sh; migrations/071_minify_nginx.py; marketsquare.html",
+       ref="David 8 Oct 2026 'Please proceed' on: ms.js 530 KB compressed is the first-load critical path (6 Oct audit F6); "
+           "the minified copy is 367 KB and the rendered app behaved identically in a phone-sized browser before shipping.")
+def rg_minify_1():
+    bad = _fb28_need([
+        ("ops/minify/make_min.sh", [("--minify-whitespace --legal-comments=none --charset=utf8", "the copy is no longer whitespace-only (or no longer made)"),
+                                    ('[ "$(sha256sum "$BIN" | awk \'{print $1}\')" = "$SHA" ]', "the minifier runs without its checksum check"),
+                                    ('[ "$mode" = "min" ] || cp -f "$f" "$tmp"', "a failed minify no longer falls back to a fresh copy")]),
+        ("ops/autodeploy/server_deploy.sh", [('bash "$MS_SRC/ops/minify/make_min.sh" "$MS_LIVE" "$MS_SRC"', "the deploy no longer makes ms.min.js"),
+                                             ("the page's copy follows the restored ms.js", "a rollback leaves ms.min.js on the refused release")]),
+        ("migrations/071_minify_nginx.py", [('rewrite ^/static/ms\\\\.js$ /static/ms.min.js last;', "the nginx rule is gone")]),
+        ("marketsquare.html", [('src="/static/ms.js?v=', "the page no longer loads ms.js"), ("&m=1\"></script>", "the page asks for the readable file again")]),
+    ])
+    if bad:
+        return bad
+    if " --minify " in (repo_file("ops/minify/make_min.sh") or "") + " ":
+        return [(FAIL, "make_min uses full --minify (renames identifiers) -- MINIFY-1 is whitespace-only")]
+    out = []
+    try:
+        import gzip, hashlib
+        gz = os.path.join(REPO, "ops", "minify", "esbuild-linux-x64.gz")
+        want = (repo_file("ops/minify/esbuild-linux-x64.sha256") or "").split()[0:1]
+        if not os.path.exists(gz) or not want:
+            return [(FAIL, "the vendored minifier or its checksum is missing -- the page gets a plain copy")]
+        binary = gzip.open(gz).read()
+        if hashlib.sha256(binary).hexdigest() != want[0]:
+            return [(FAIL, "the vendored minifier does not match its checksum -- the server will refuse to run it")]
+    except Exception as exc:
+        return [(INFO, "NOT EVALUATED - could not read the minifier here: %s" % exc)]
+    # live half: the copy the page gets must be exactly the minified readable file (tamper / staleness), when this box can run it
+    try:
+        import platform, re as _re, subprocess, tempfile
+        idx = _get("/")
+        mv = _re.search(r"ms\.js\?v=(\d+)", idx or "")
+        if not mv or "&m=1" not in idx[mv.end():mv.end() + 6]:
+            return [(FAIL, "the live page does not ask for the small copy (?v=N&m=1)")]
+        if not (sys.platform.startswith("linux") and platform.machine() in ("x86_64", "AMD64")):
+            return [(INFO, "repo half OK; live comparison NOT EVALUATED here (needs linux x86_64 to run the vendored minifier)")]
+        readable = urllib.request.urlopen(urllib.request.Request(BASE + "/static/ms.js?v=" + mv.group(1), headers=UA), timeout=TIMEOUT).read()
+        small = urllib.request.urlopen(urllib.request.Request(BASE + "/static/ms.js?v=" + mv.group(1) + "&m=1", headers=UA), timeout=TIMEOUT).read()
+        with tempfile.TemporaryDirectory() as td:
+            bp, sp = os.path.join(td, "esbuild"), os.path.join(td, "ms.js")
+            open(bp, "wb").write(binary); os.chmod(bp, 0o700); open(sp, "wb").write(readable)
+            r = subprocess.run([bp, sp, "--minify-whitespace", "--legal-comments=none", "--charset=utf8", "--log-level=error"],
+                               capture_output=True, timeout=120)
+        if small == readable:
+            out.append((INFO, "the page gets a plain copy right now (the minifier did not run on the last deploy) -- correct code, just not smaller"))
+        elif r.returncode != 0 or r.stdout != small:
+            return [(FAIL, "the live small copy is NOT the minified live ms.js (%dB vs %dB expected) -- stale or altered" % (len(small), len(r.stdout)))]
+        else:
+            out.append((INFO, "live: the page's copy is exactly the minified ms.js (%d -> %d bytes)" % (len(readable), len(small))))
+    except Exception as exc:
+        out.append((INFO, "live half NOT EVALUATED: %s" % str(exc)[:120]))
+    return out or [(INFO, "ms.js ships as a checksum-made small copy for the page; the plain URL stays readable")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

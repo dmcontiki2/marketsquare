@@ -218,6 +218,14 @@ for i in "${!SRCS[@]}"; do
 done
 log "placed $placed file(s); skipped $skipped missing source(s)."
 
+# MINIFY-1 (8 Oct 2026): the page's copy of ms.js without comments and whitespace, made from the file just placed and
+# BEFORE the cache-buster bump and CDN purge, so a new ?v= never meets an old copy. ops/minify/make_min.sh explains;
+# on any failure it writes a plain copy of ms.js, never a stale file.
+if [ -f "$MS_SRC/ops/minify/make_min.sh" ]; then
+    bash "$MS_SRC/ops/minify/make_min.sh" "$MS_LIVE" "$MS_SRC" >>"$MS_LOG" 2>&1 \
+        || { cp -f "$MS_LIVE/static/ms.js" "$MS_LIVE/static/ms.min.js" 2>>"$MS_LOG"; warn "make_min failed -- ms.min.js is a plain copy"; }
+fi
+
 # ── Bump the cache-buster ?v=N on the served index.html (monotonic) ──────────
 # Browsers cache each ?v= URL as immutable, so a deploy only reaches users when
 # the number changes. We read the number ALREADY LIVE and increment it, so it is
@@ -339,6 +347,11 @@ for dest in "${DESTS[@]}"; do
         cp -a "$BACKUP_DIR/$dest" "$MS_LIVE/$dest" 2>>"$MS_LOG" || rb_ok=0
     fi
 done
+# MINIFY-1: the page's copy follows the restored ms.js (made before the clone is reset; a plain copy if that fails)
+if [ -f "$MS_LIVE/static/ms.min.js" ]; then
+    { [ -f "$MS_SRC/ops/minify/make_min.sh" ] && bash "$MS_SRC/ops/minify/make_min.sh" "$MS_LIVE" "$MS_SRC" >>"$MS_LOG" 2>&1; } \
+        || cp -f "$MS_LIVE/static/ms.js" "$MS_LIVE/static/ms.min.js" 2>>"$MS_LOG" || rb_ok=0
+fi
 # put the source clone back to the previously-deployed commit (if we knew it)
 if [ -n "$LAST_SHA" ]; then
     git -C "$MS_SRC" reset --hard "$LAST_SHA" >>"$MS_LOG" 2>&1 || rb_ok=0
