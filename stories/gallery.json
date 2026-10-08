@@ -50,6 +50,331 @@
    "quick": false
   },
   {
+   "type": "air_con_refrigeration_technician",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Air-con & refrigeration technician",
+    "af": "Lugversorging- en verkoelingstegnikus",
+    "zu": "Uchwepheshe wama-aircon nezifriji",
+    "xh": "Ingcali yee-aircon neefriji",
+    "nso": "Setsebi sa di-aircon le difriji"
+   },
+   "title": {
+    "en": "Air-con & refrigeration technician: from listing to the customers who can find you",
+    "af": "Lugversorging- en verkoelingstegnikus: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Uchwepheshe wama-aircon nezifriji: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Ingcali yee-aircon neefriji: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Setsebi sa di-aircon le difriji: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
+   "type": "appliance_repair",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Appliance repair",
+    "af": "Toestelherstelwerk",
+    "zu": "Umlungisi wezinto zikagesi",
+    "xh": "Umlungisi wezixhobo zombane",
+    "nso": "Tokišo ya didirišwa tša ka ntlong"
+   },
+   "title": {
+    "en": "Appliance repair: from listing to your first customer",
+    "af": "Toestelherstelwerk: van advertensie tot jou eerste kliënt",
+    "zu": "Umlungisi wezinto zikagesi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungisi wezixhobo zombane: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Tokišo ya didirišwa tša ka ntlong: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "au_pair",
+   "status": "draft",
+   "flow": "F2",
+   "label": {
+    "en": "Au pair",
+    "af": "Au pair",
+    "zu": "I-au pair",
+    "xh": "I-au pair",
+    "nso": "Au pair"
+   },
+   "title": {
+    "en": "Au pair: from listing to the families who can find you",
+    "af": "Au pair: van advertensie tot die gesinne wat jou kan vind",
+    "zu": "I-au pair: kusukela esikhangisweni kuya emindenini engakuthola",
+    "xh": "I-au pair: ukusuka kwintengiso ukuya kwiintsapho ezinokukufumana",
+    "nso": "Au pair: go tloga papatšong go ya go malapa ao a ka go hwetšago"
+   },
+   "walked_on": "2026-10-02",
+   "steps": 22,
+   "cover": "f2_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "nanny"
+  },
+  {
+   "type": "auto_electrician",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Auto electrician",
+    "af": "Motorelektrisiën",
+    "zu": "Uchwepheshe kagesi wezimoto",
+    "xh": "Ingcali yombane weemoto",
+    "nso": "Rāmohlagase wa dikoloi"
+   },
+   "title": {
+    "en": "Auto electrician: from listing to your first customer",
+    "af": "Motorelektrisiën: van advertensie tot jou eerste kliënt",
+    "zu": "Uchwepheshe kagesi wezimoto: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Ingcali yombane weemoto: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Rāmohlagase wa dikoloi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "bartender",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Bartender",
+    "af": "Kroegman",
+    "zu": "Umphakeli wotshwala",
+    "xh": "Umphakeli wotywala",
+    "nso": "Motšhollela wa dino"
+   },
+   "title": {
+    "en": "Bartender: from listing to your first customer",
+    "af": "Kroegman: van advertensie tot jou eerste kliënt",
+    "zu": "Umphakeli wotshwala: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umphakeli wotywala: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Motšhollela wa dino: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "boilermaker",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Boilermaker",
+    "af": "Ketelmaker",
+    "zu": "Umenzi wamabhoyila",
+    "xh": "Umenzi weebhoyila",
+    "nso": "Modiri wa dipoela"
+   },
+   "title": {
+    "en": "Boilermaker: from listing to your first customer",
+    "af": "Ketelmaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umenzi wamabhoyila: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umenzi weebhoyila: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Modiri wa dipoela: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "borehole_pump_technician",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Borehole & pump technician",
+    "af": "Boorgat- en pomptegnikus",
+    "zu": "Uchwepheshe wamaphampu amanzi",
+    "xh": "Ingcali yeempompo zamanzi",
+    "nso": "Setsebi sa sediba sa ka fase le pompo"
+   },
+   "title": {
+    "en": "Borehole & pump technician: from listing to your first customer",
+    "af": "Boorgat- en pomptegnikus: van advertensie tot jou eerste kliënt",
+    "zu": "Uchwepheshe wamaphampu amanzi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Ingcali yeempompo zamanzi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Setsebi sa sediba sa ka fase le pompo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "bricklayer",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Bricklayer",
+    "af": "Messelaar",
+    "zu": "Umakhi wezitini",
+    "xh": "Umakhi wezitena",
+    "nso": "Moagi wa ditena"
+   },
+   "title": {
+    "en": "Bricklayer: from listing to your first customer",
+    "af": "Messelaar: van advertensie tot jou eerste kliënt",
+    "zu": "Umakhi wezitini: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umakhi wezitena: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moagi wa ditena: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "builders_assistant",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Builder's assistant",
+    "af": "Bouersassistent",
+    "zu": "Umsizi womakhi",
+    "xh": "Umncedisi womakhi",
+    "nso": "Mothuši wa moagi"
+   },
+   "title": {
+    "en": "Builder's assistant: from listing to your first customer",
+    "af": "Bouersassistent: van advertensie tot jou eerste kliënt",
+    "zu": "Umsizi womakhi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umncedisi womakhi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mothuši wa moagi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "car_washer",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Car washer",
+    "af": "Karwasser",
+    "zu": "Umgezi wezimoto",
+    "xh": "Umhlambi weemoto",
+    "nso": "Mohlatswi wa dikoloi"
+   },
+   "title": {
+    "en": "Car washer: from listing to your first customer",
+    "af": "Karwasser: van advertensie tot jou eerste kliënt",
+    "zu": "Umgezi wezimoto: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umhlambi weemoto: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlatswi wa dikoloi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "caregiver",
+   "status": "draft",
+   "flow": "F2",
+   "label": {
+    "en": "Caregiver",
+    "af": "Versorger",
+    "zu": "Umnakekeli",
+    "xh": "Umkhathaleli",
+    "nso": "Mohlokomedi"
+   },
+   "title": {
+    "en": "Caregiver: from listing to the families who can find you",
+    "af": "Versorger: van advertensie tot die gesinne wat jou kan vind",
+    "zu": "Umnakekeli: kusukela esikhangisweni kuya emindenini engakuthola",
+    "xh": "Umkhathaleli: ukusuka kwintengiso ukuya kwiintsapho ezinokukufumana",
+    "nso": "Mohlokomedi: go tloga papatšong go ya go malapa ao a ka go hwetšago"
+   },
+   "walked_on": "2026-10-02",
+   "steps": 22,
+   "cover": "f2_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "nanny"
+  },
+  {
+   "type": "carpenter",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Carpenter",
+    "af": "Timmerman",
+    "zu": "Umbazi",
+    "xh": "Umchweli",
+    "nso": "Mmetli"
+   },
+   "title": {
+    "en": "Carpenter: from listing to your first customer",
+    "af": "Timmerman: van advertensie tot jou eerste kliënt",
+    "zu": "Umbazi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umchweli: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mmetli: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "carpet_washer",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Carpet washer",
+    "af": "Matskoonmaker",
+    "zu": "Umgezi wokhaphethi",
+    "xh": "Umhlambi weekhaphethi",
+    "nso": "Mohlatswi wa dikhapete"
+   },
+   "title": {
+    "en": "Carpet washer: from listing to your first customer",
+    "af": "Matskoonmaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umgezi wokhaphethi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umhlambi weekhaphethi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlatswi wa dikhapete: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
    "type": "cars_bakkie",
    "status": "draft",
    "flow": "F8",
@@ -101,6 +426,131 @@
    "quick": false
   },
   {
+   "type": "cashier",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Cashier",
+    "af": "Kassier",
+    "zu": "Umthathi wemali",
+    "xh": "Umamkeli-mali",
+    "nso": "Mmoloki wa tšhelete"
+   },
+   "title": {
+    "en": "Cashier: from listing to your first customer",
+    "af": "Kassier: van advertensie tot jou eerste kliënt",
+    "zu": "Umthathi wemali: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umamkeli-mali: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mmoloki wa tšhelete: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "caterer",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Caterer",
+    "af": "Spysenier",
+    "zu": "Umphakeli wokudla",
+    "xh": "Umlungiseleli wokutya",
+    "nso": "Mofepi wa menyanya"
+   },
+   "title": {
+    "en": "Caterer: from listing to your first customer",
+    "af": "Spysenier: van advertensie tot jou eerste kliënt",
+    "zu": "Umphakeli wokudla: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungiseleli wokutya: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mofepi wa menyanya: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "cctv_alarm_installer",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "CCTV / alarm installer",
+    "af": "Kringtelevisie- en alarminstalleerder",
+    "zu": "Umfaki we-CCTV nama-alamu",
+    "xh": "Umfakeli we-CCTV nee-alarm",
+    "nso": "Mohlomi wa CCTV / dialarama"
+   },
+   "title": {
+    "en": "CCTV / alarm installer: from listing to the customers who can find you",
+    "af": "Kringtelevisie- en alarminstalleerder: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Umfaki we-CCTV nama-alamu: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umfakeli we-CCTV nee-alarm: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Mohlomi wa CCTV / dialarama: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
+   "type": "chef",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Chef",
+    "af": "Sjef",
+    "zu": "Ushefu",
+    "xh": "Umpheki oyingcali",
+    "nso": "Shefo"
+   },
+   "title": {
+    "en": "Chef: from listing to your first customer",
+    "af": "Sjef: van advertensie tot jou eerste kliënt",
+    "zu": "Ushefu: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umpheki oyingcali: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Shefo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "code_10_code_14_driver",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Code 10 / Code 14 driver",
+    "af": "Kode 10 / Kode 14-bestuurder",
+    "zu": "Umshayeli weKhodi 10 / 14",
+    "xh": "Umqhubi weKhowudi 10 / 14",
+    "nso": "Mootledi wa Khoutu 10 / 14"
+   },
+   "title": {
+    "en": "Code 10 / Code 14 driver: from listing to the customers who can find you",
+    "af": "Kode 10 / Kode 14-bestuurder: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Umshayeli weKhodi 10 / 14: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umqhubi weKhowudi 10 / 14: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Mootledi wa Khoutu 10 / 14: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
    "type": "collectors_coins",
    "status": "draft",
    "flow": "F10",
@@ -126,6 +576,106 @@
    "serves": [
     "collectors_*"
    ]
+  },
+  {
+   "type": "cook",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Cook",
+    "af": "Kok",
+    "zu": "Umpheki",
+    "xh": "Umpheki",
+    "nso": "Moapei"
+   },
+   "title": {
+    "en": "Cook: from listing to your first customer",
+    "af": "Kok: van advertensie tot jou eerste kliënt",
+    "zu": "Umpheki: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umpheki: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moapei: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "creche_assistant",
+   "status": "draft",
+   "flow": "F2",
+   "label": {
+    "en": "Crèche assistant",
+    "af": "Crèche-assistent",
+    "zu": "Umsizi wasenkulisa",
+    "xh": "Umncedisi wasenkulisa",
+    "nso": "Mothuši wa kreše"
+   },
+   "title": {
+    "en": "Crèche assistant: from listing to the families who can find you",
+    "af": "Crèche-assistent: van advertensie tot die gesinne wat jou kan vind",
+    "zu": "Umsizi wasenkulisa: kusukela esikhangisweni kuya emindenini engakuthola",
+    "xh": "Umncedisi wasenkulisa: ukusuka kwintengiso ukuya kwiintsapho ezinokukufumana",
+    "nso": "Mothuši wa kreše: go tloga papatšong go ya go malapa ao a ka go hwetšago"
+   },
+   "walked_on": "2026-10-02",
+   "steps": 22,
+   "cover": "f2_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "nanny"
+  },
+  {
+   "type": "diesel_mechanic",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Diesel mechanic",
+    "af": "Dieselwerktuigkundige",
+    "zu": "Umakhenikha wedizili",
+    "xh": "Umkhandi weenjini zedizili",
+    "nso": "Mokhenike wa disele"
+   },
+   "title": {
+    "en": "Diesel mechanic: from listing to your first customer",
+    "af": "Dieselwerktuigkundige: van advertensie tot jou eerste kliënt",
+    "zu": "Umakhenikha wedizili: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umkhandi weenjini zedizili: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mokhenike wa disele: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "driver",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Driver",
+    "af": "Bestuurder",
+    "zu": "Umshayeli",
+    "xh": "Umqhubi",
+    "nso": "Mootledi"
+   },
+   "title": {
+    "en": "Driver: from listing to your first customer",
+    "af": "Bestuurder: van advertensie tot jou eerste kliënt",
+    "zu": "Umshayeli: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umqhubi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mootledi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
   },
   {
    "type": "electrician",
@@ -159,6 +709,306 @@
     "code_10_code_14_driver",
     "taxi_shuttle_driver"
    ]
+  },
+  {
+   "type": "event_staff",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Event staff",
+    "af": "Funksiepersoneel",
+    "zu": "Abasebenzi bemicimbi",
+    "xh": "Abasebenzi bemisitho",
+    "nso": "Bašomi ba meletlo"
+   },
+   "title": {
+    "en": "Event staff: from listing to your first customer",
+    "af": "Funksiepersoneel: van advertensie tot jou eerste kliënt",
+    "zu": "Abasebenzi bemicimbi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Abasebenzi bemisitho: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Bašomi ba meletlo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "farm_worker",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Farm worker",
+    "af": "Plaaswerker",
+    "zu": "Isisebenzi sasepulazini",
+    "xh": "Umsebenzi wasefama",
+    "nso": "Mošomi wa polaseng"
+   },
+   "title": {
+    "en": "Farm worker: from listing to your first customer",
+    "af": "Plaaswerker: van advertensie tot jou eerste kliënt",
+    "zu": "Isisebenzi sasepulazini: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umsebenzi wasefama: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mošomi wa polaseng: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "forklift_operator",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Forklift operator",
+    "af": "Vurkhyseroperateur",
+    "zu": "Umshayeli we-forklift",
+    "xh": "Umqhubi we-forklift",
+    "nso": "Mootledi wa forklift"
+   },
+   "title": {
+    "en": "Forklift operator: from listing to your first customer",
+    "af": "Vurkhyseroperateur: van advertensie tot jou eerste kliënt",
+    "zu": "Umshayeli we-forklift: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umqhubi we-forklift: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mootledi wa forklift: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "garden_waste_removal",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Garden waste removal",
+    "af": "Tuinvullisverwydering",
+    "zu": "Ukususwa kwemfucuza yengadi",
+    "xh": "Ukususwa kwenkunkuma yegadi",
+    "nso": "Go tloša ditlakala tša serapa"
+   },
+   "title": {
+    "en": "Garden waste removal: from listing to your first customer",
+    "af": "Tuinvullisverwydering: van advertensie tot jou eerste kliënt",
+    "zu": "Ukususwa kwemfucuza yengadi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Ukususwa kwenkunkuma yegadi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Go tloša ditlakala tša serapa: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "gardener",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Gardener",
+    "af": "Tuinier",
+    "zu": "Umlimi wengadi",
+    "xh": "Umlimi wegadi",
+    "nso": "Molemi wa serapa"
+   },
+   "title": {
+    "en": "Gardener: from listing to your first customer",
+    "af": "Tuinier: van advertensie tot jou eerste kliënt",
+    "zu": "Umlimi wengadi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlimi wegadi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Molemi wa serapa: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "gas_installer",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Gas installer",
+    "af": "Gasinstalleerder",
+    "zu": "Umfaki wegesi",
+    "xh": "Umfakeli werhasi",
+    "nso": "Mohlomi wa gase"
+   },
+   "title": {
+    "en": "Gas installer: from listing to the customers who can find you",
+    "af": "Gasinstalleerder: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Umfaki wegesi: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umfakeli werhasi: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Mohlomi wa gase: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
+   "type": "gate_garage_door_technician",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Gate & garage-door technician",
+    "af": "Hek- en motorhuisdeurtegnikus",
+    "zu": "Uchwepheshe wamagede neminyango yegaraji",
+    "xh": "Ingcali yamasango neengcango zegaraji",
+    "nso": "Setsebi sa dikgoro le mejako ya karatšhe"
+   },
+   "title": {
+    "en": "Gate & garage-door technician: from listing to the customers who can find you",
+    "af": "Hek- en motorhuisdeurtegnikus: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Uchwepheshe wamagede neminyango yegaraji: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Ingcali yamasango neengcango zegaraji: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Setsebi sa dikgoro le mejako ya karatšhe: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
+   "type": "general_worker",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "General worker",
+    "af": "Algemene werker",
+    "zu": "Isisebenzi esijwayelekile",
+    "xh": "Umsebenzi jikelele",
+    "nso": "Mošomi wa kakaretšo"
+   },
+   "title": {
+    "en": "General worker: from listing to your first customer",
+    "af": "Algemene werker: van advertensie tot jou eerste kliënt",
+    "zu": "Isisebenzi esijwayelekile: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umsebenzi jikelele: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mošomi wa kakaretšo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "griller_braai",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Griller / braai",
+    "af": "Braaier",
+    "zu": "Umosi wenyama / braai",
+    "xh": "Umoji wenyama / braai",
+    "nso": "Mohadiki wa nama / braai"
+   },
+   "title": {
+    "en": "Griller / braai: from listing to your first customer",
+    "af": "Braaier: van advertensie tot jou eerste kliënt",
+    "zu": "Umosi wenyama / braai: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umoji wenyama / braai: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohadiki wa nama / braai: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "hair_braider",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Hair braider",
+    "af": "Haarvlegter",
+    "zu": "Umaluki wezinwele",
+    "xh": "Umluki weenwele",
+    "nso": "Moloki wa moriri"
+   },
+   "title": {
+    "en": "Hair braider: from listing to your first customer",
+    "af": "Haarvlegter: van advertensie tot jou eerste kliënt",
+    "zu": "Umaluki wezinwele: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umluki weenwele: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moloki wa moriri: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "hairdresser",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Hairdresser",
+    "af": "Haarkapper",
+    "zu": "Umlungisi wezinwele",
+    "xh": "Umlungisi weenwele",
+    "nso": "Mokgabiši wa moriri"
+   },
+   "title": {
+    "en": "Hairdresser: from listing to your first customer",
+    "af": "Haarkapper: van advertensie tot jou eerste kliënt",
+    "zu": "Umlungisi wezinwele: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungisi weenwele: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mokgabiši wa moriri: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "handyman",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Handyman",
+    "af": "Handwerksman",
+    "zu": "Umlungisi wezinto",
+    "xh": "Umlungisi wezinto",
+    "nso": "Molokiši wa dilo"
+   },
+   "title": {
+    "en": "Handyman: from listing to your first customer",
+    "af": "Handwerksman: van advertensie tot jou eerste kliënt",
+    "zu": "Umlungisi wezinto: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungisi wezinto: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Molokiši wa dilo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
   },
   {
    "type": "home_cleaner",
@@ -225,6 +1075,81 @@
    ]
   },
   {
+   "type": "hotel_porter",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Hotel porter",
+    "af": "Hotelportier",
+    "zu": "Umthwali wemithwalo ehhotela",
+    "xh": "Umthwali wemithwalo ehotele",
+    "nso": "Mojari wa dithoto hoteleng"
+   },
+   "title": {
+    "en": "Hotel porter: from listing to your first customer",
+    "af": "Hotelportier: van advertensie tot jou eerste kliënt",
+    "zu": "Umthwali wemithwalo ehhotela: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umthwali wemithwalo ehotele: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mojari wa dithoto hoteleng: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "housekeeper",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Housekeeper",
+    "af": "Huishoudster",
+    "zu": "Umgcini wendlu",
+    "xh": "Umgcini wendlu",
+    "nso": "Mohlokomedi wa ntlo"
+   },
+   "title": {
+    "en": "Housekeeper: from listing to your first customer",
+    "af": "Huishoudster: van advertensie tot jou eerste kliënt",
+    "zu": "Umgcini wendlu: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umgcini wendlu: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlokomedi wa ntlo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "kitchen_assistant",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Kitchen assistant",
+    "af": "Kombuisassistent",
+    "zu": "Umsizi wasekhishini",
+    "xh": "Umncedisi wasekhitshini",
+    "nso": "Mothuši wa ka khitšhing"
+   },
+   "title": {
+    "en": "Kitchen assistant: from listing to your first customer",
+    "af": "Kombuisassistent: van advertensie tot jou eerste kliënt",
+    "zu": "Umsizi wasekhishini: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umncedisi wasekhitshini: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mothuši wa ka khitšhing: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
    "type": "localmarket_food_preserves",
    "status": "draft",
    "flow": "F11",
@@ -250,6 +1175,131 @@
    "serves": [
     "localmarket_*"
    ]
+  },
+  {
+   "type": "locksmith",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Locksmith",
+    "af": "Slotmaker",
+    "zu": "Umenzi wokhiye",
+    "xh": "Umenzi wezitshixo",
+    "nso": "Moagi wa dinotlelo"
+   },
+   "title": {
+    "en": "Locksmith: from listing to the customers who can find you",
+    "af": "Slotmaker: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Umenzi wokhiye: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umenzi wezitshixo: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Moagi wa dinotlelo: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
+   "type": "lodge_staff",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Lodge staff",
+    "af": "Lodge-personeel",
+    "zu": "Abasebenzi be-lodge",
+    "xh": "Abasebenzi be-lodge",
+    "nso": "Bašomi ba lodge"
+   },
+   "title": {
+    "en": "Lodge staff: from listing to your first customer",
+    "af": "Lodge-personeel: van advertensie tot jou eerste kliënt",
+    "zu": "Abasebenzi be-lodge: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Abasebenzi be-lodge: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Bašomi ba lodge: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "merchandiser",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Merchandiser",
+    "af": "Uitstaller",
+    "zu": "Umhleli wezimpahla",
+    "xh": "Umlungiseleli weempahla",
+    "nso": "Mobeakanyi wa thoto"
+   },
+   "title": {
+    "en": "Merchandiser: from listing to your first customer",
+    "af": "Uitstaller: van advertensie tot jou eerste kliënt",
+    "zu": "Umhleli wezimpahla: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungiseleli weempahla: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mobeakanyi wa thoto: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "motor_mechanic",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Motor mechanic",
+    "af": "Motorwerktuigkundige",
+    "zu": "Umakhenikha wezimoto",
+    "xh": "Umkhandi weemoto",
+    "nso": "Mokhenike wa dikoloi"
+   },
+   "title": {
+    "en": "Motor mechanic: from listing to your first customer",
+    "af": "Motorwerktuigkundige: van advertensie tot jou eerste kliënt",
+    "zu": "Umakhenikha wezimoto: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umkhandi weemoto: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mokhenike wa dikoloi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "nail_technician",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Nail technician",
+    "af": "Naelterapeut",
+    "zu": "Uchwepheshe wezinzipho",
+    "xh": "Ingcali yeenzipho",
+    "nso": "Setsebi sa dinala"
+   },
+   "title": {
+    "en": "Nail technician: from listing to your first customer",
+    "af": "Naelterapeut: van advertensie tot jou eerste kliënt",
+    "zu": "Uchwepheshe wezinzipho: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Ingcali yeenzipho: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Setsebi sa dinala: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
   },
   {
    "type": "nanny",
@@ -279,6 +1329,206 @@
     "au_pair",
     "creche_assistant"
    ]
+  },
+  {
+   "type": "office_cleaner",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Office cleaner",
+    "af": "Kantoorskoonmaker",
+    "zu": "Umhlanzi wamahhovisi",
+    "xh": "Umcoci weeofisi",
+    "nso": "Mohlwekiši wa diofisi"
+   },
+   "title": {
+    "en": "Office cleaner: from listing to your first customer",
+    "af": "Kantoorskoonmaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umhlanzi wamahhovisi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umcoci weeofisi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlwekiši wa diofisi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "painter",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Painter",
+    "af": "Verwer",
+    "zu": "Umpendi",
+    "xh": "Umpeyinti",
+    "nso": "Mopenti"
+   },
+   "title": {
+    "en": "Painter: from listing to your first customer",
+    "af": "Verwer: van advertensie tot jou eerste kliënt",
+    "zu": "Umpendi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umpeyinti: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mopenti: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "paver",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Paver",
+    "af": "Plaveier",
+    "zu": "Umbeki wamaphevu",
+    "xh": "Umbeki wee-paving",
+    "nso": "Mobei wa diphefi"
+   },
+   "title": {
+    "en": "Paver: from listing to your first customer",
+    "af": "Plaveier: van advertensie tot jou eerste kliënt",
+    "zu": "Umbeki wamaphevu: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umbeki wee-paving: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mobei wa diphefi: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "pet_sitter_dog_walker",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Pet sitter / dog walker",
+    "af": "Troeteldieroppasser / hondestapper",
+    "zu": "Umgcini wezilwane / umhambisi wezinja",
+    "xh": "Umgcini wezilwanyana / umhambisi wezinja",
+    "nso": "Mohlokomedi wa diphoofolo / mosepediši wa dimpša"
+   },
+   "title": {
+    "en": "Pet sitter / dog walker: from listing to your first customer",
+    "af": "Troeteldieroppasser / hondestapper: van advertensie tot jou eerste kliënt",
+    "zu": "Umgcini wezilwane / umhambisi wezinja: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umgcini wezilwanyana / umhambisi wezinja: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlokomedi wa diphoofolo / mosepediši wa dimpša: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "petrol_attendant",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Petrol attendant",
+    "af": "Petroljoggie",
+    "zu": "Umsebenzi wasegaraji",
+    "xh": "Umsebenzi wasegaraji",
+    "nso": "Mošomi wa karatšhe ya peterole"
+   },
+   "title": {
+    "en": "Petrol attendant: from listing to your first customer",
+    "af": "Petroljoggie: van advertensie tot jou eerste kliënt",
+    "zu": "Umsebenzi wasegaraji: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umsebenzi wasegaraji: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mošomi wa karatšhe ya peterole: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "picker_packer",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Picker / packer",
+    "af": "Uitsoeker / pakker",
+    "zu": "Umkhethi nompakishi",
+    "xh": "Umkhethi nompakishi",
+    "nso": "Mokgethi / mopakiši"
+   },
+   "title": {
+    "en": "Picker / packer: from listing to your first customer",
+    "af": "Uitsoeker / pakker: van advertensie tot jou eerste kliënt",
+    "zu": "Umkhethi nompakishi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umkhethi nompakishi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mokgethi / mopakiši: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "plant_operator_tlb_excavator",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Plant operator (TLB / excavator)",
+    "af": "Masjienoperateur (TLB / graaf)",
+    "zu": "Umshayeli we-TLB",
+    "xh": "Umqhubi we-TLB",
+    "nso": "Mootledi wa metšhene (TLB / motšhene wa go epa)"
+   },
+   "title": {
+    "en": "Plant operator (TLB / excavator): from listing to your first customer",
+    "af": "Masjienoperateur (TLB / graaf): van advertensie tot jou eerste kliënt",
+    "zu": "Umshayeli we-TLB: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umqhubi we-TLB: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mootledi wa metšhene (TLB / motšhene wa go epa): go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "plasterer",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Plasterer",
+    "af": "Pleisteraar",
+    "zu": "Umsimenti wezindonga",
+    "xh": "Umtyabeki",
+    "nso": "Mophaditši"
+   },
+   "title": {
+    "en": "Plasterer: from listing to your first customer",
+    "af": "Pleisteraar: van advertensie tot jou eerste kliënt",
+    "zu": "Umsimenti wezindonga: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umtyabeki: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mophaditši: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
   },
   {
    "type": "plumber",
@@ -322,6 +1572,31 @@
     "borehole_pump_technician",
     "appliance_repair"
    ]
+  },
+  {
+   "type": "pool_cleaner",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Pool cleaner",
+    "af": "Swembadskoonmaker",
+    "zu": "Umhlanzi wamachibi okubhukuda",
+    "xh": "Umcoci wamadama okuqubha",
+    "nso": "Mohlwekiši wa bodiba bja go rutha"
+   },
+   "title": {
+    "en": "Pool cleaner: from listing to your first customer",
+    "af": "Swembadskoonmaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umhlanzi wamachibi okubhukuda: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umcoci wamadama okuqubha: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlwekiši wa bodiba bja go rutha: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
   },
   {
    "type": "property_flat",
@@ -380,6 +1655,281 @@
    "deal": "sale"
   },
   {
+   "type": "removals_helper",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Removals helper",
+    "af": "Verhuishelper",
+    "zu": "Umsizi wokuthutha",
+    "xh": "Umncedisi wokufudusa",
+    "nso": "Mothuši wa go huduga"
+   },
+   "title": {
+    "en": "Removals helper: from listing to your first customer",
+    "af": "Verhuishelper: van advertensie tot jou eerste kliënt",
+    "zu": "Umsizi wokuthutha: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umncedisi wokufudusa: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mothuši wa go huduga: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "roofer",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Roofer",
+    "af": "Dakwerker",
+    "zu": "Umakhi wophahla",
+    "xh": "Umakhi wophahla",
+    "nso": "Moagi wa marulelo"
+   },
+   "title": {
+    "en": "Roofer: from listing to your first customer",
+    "af": "Dakwerker: van advertensie tot jou eerste kliënt",
+    "zu": "Umakhi wophahla: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umakhi wophahla: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moagi wa marulelo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "room_attendant",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Room attendant",
+    "af": "Kamerbediende",
+    "zu": "Umhlanzi wamakamelo",
+    "xh": "Umcoci wamagumbi",
+    "nso": "Mohlwekiši wa diphapoši"
+   },
+   "title": {
+    "en": "Room attendant: from listing to your first customer",
+    "af": "Kamerbediende: van advertensie tot jou eerste kliënt",
+    "zu": "Umhlanzi wamakamelo: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umcoci wamagumbi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlwekiši wa diphapoši: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "seamstress_tailor",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Seamstress / tailor",
+    "af": "Naaldwerkster / kleremaker",
+    "zu": "Umthungi",
+    "xh": "Umthungi",
+    "nso": "Moroki / Thela"
+   },
+   "title": {
+    "en": "Seamstress / tailor: from listing to your first customer",
+    "af": "Naaldwerkster / kleremaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umthungi: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umthungi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moroki / Thela: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "sewing_machinist",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Sewing machinist",
+    "af": "Naaimasjienwerker",
+    "zu": "Umthungi ngomshini",
+    "xh": "Umthungi ngomatshini",
+    "nso": "Moroki ka motšhene"
+   },
+   "title": {
+    "en": "Sewing machinist: from listing to your first customer",
+    "af": "Naaimasjienwerker: van advertensie tot jou eerste kliënt",
+    "zu": "Umthungi ngomshini: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umthungi ngomatshini: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moroki ka motšhene: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "shelf_packer",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Shelf packer",
+    "af": "Rakpakker",
+    "zu": "Umhleli wamashalofu",
+    "xh": "Umlungiseleli weeshelufa",
+    "nso": "Mopakiši wa dishelefo"
+   },
+   "title": {
+    "en": "Shelf packer: from listing to your first customer",
+    "af": "Rakpakker: van advertensie tot jou eerste kliënt",
+    "zu": "Umhleli wamashalofu: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umlungiseleli weeshelufa: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mopakiši wa dishelefo: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "shop_assistant",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Shop assistant",
+    "af": "Winkelassistent",
+    "zu": "Umsizi wasesitolo",
+    "xh": "Umncedisi wevenkile",
+    "nso": "Mothuši wa lebenkeleng"
+   },
+   "title": {
+    "en": "Shop assistant: from listing to your first customer",
+    "af": "Winkelassistent: van advertensie tot jou eerste kliënt",
+    "zu": "Umsizi wasesitolo: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umncedisi wevenkile: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mothuši wa lebenkeleng: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "solar_pv_installer",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Solar PV installer",
+    "af": "Sonkraginstalleerder",
+    "zu": "Umfaki wamaphaneli elanga",
+    "xh": "Umfakeli weepaneli zelanga",
+    "nso": "Mohlomi wa diphanele tša letšatši"
+   },
+   "title": {
+    "en": "Solar PV installer: from listing to your first customer",
+    "af": "Sonkraginstalleerder: van advertensie tot jou eerste kliënt",
+    "zu": "Umfaki wamaphaneli elanga: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umfakeli weepaneli zelanga: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlomi wa diphanele tša letšatši: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "taxi_shuttle_driver",
+   "status": "draft",
+   "flow": "F4",
+   "label": {
+    "en": "Taxi / shuttle driver",
+    "af": "Taxi- / pendelbestuurder",
+    "zu": "Umshayeli wetekisi",
+    "xh": "Umqhubi weteksi",
+    "nso": "Mootledi wa thekisi / khombi"
+   },
+   "title": {
+    "en": "Taxi / shuttle driver: from listing to the customers who can find you",
+    "af": "Taxi- / pendelbestuurder: van advertensie tot die kliënte wat jou kan vind",
+    "zu": "Umshayeli wetekisi: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+    "xh": "Umqhubi weteksi: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+    "nso": "Mootledi wa thekisi / khombi: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 17,
+   "cover": "f4_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "electrician"
+  },
+  {
+   "type": "tiler",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Tiler",
+    "af": "Teëlêer",
+    "zu": "Umbeki wamathayela",
+    "xh": "Umbeki weethayile",
+    "nso": "Mobei wa dithaele"
+   },
+   "title": {
+    "en": "Tiler: from listing to your first customer",
+    "af": "Teëlêer: van advertensie tot jou eerste kliënt",
+    "zu": "Umbeki wamathayela: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umbeki weethayile: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mobei wa dithaele: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "tree_cutter",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Tree cutter",
+    "af": "Boomafkapper",
+    "zu": "Umgawuli wezihlahla",
+    "xh": "Umgawuli wemithi",
+    "nso": "Moremi wa dihlare"
+   },
+   "title": {
+    "en": "Tree cutter: from listing to your first customer",
+    "af": "Boomafkapper: van advertensie tot jou eerste kliënt",
+    "zu": "Umgawuli wezihlahla: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umgawuli wemithi: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moremi wa dihlare: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
    "type": "tutors_maths",
    "status": "draft",
    "flow": "F5",
@@ -405,6 +1955,81 @@
    "serves": [
     "tutors_*"
    ]
+  },
+  {
+   "type": "waiter",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Waiter",
+    "af": "Kelner",
+    "zu": "Uweta",
+    "xh": "Uweyitala",
+    "nso": "Moweitara"
+   },
+   "title": {
+    "en": "Waiter: from listing to your first customer",
+    "af": "Kelner: van advertensie tot jou eerste kliënt",
+    "zu": "Uweta: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Uweyitala: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Moweitara: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
+  },
+  {
+   "type": "welder",
+   "status": "draft",
+   "flow": "F3",
+   "label": {
+    "en": "Welder",
+    "af": "Sweiser",
+    "zu": "Uwelda",
+    "xh": "Uwelda",
+    "nso": "Mowelda"
+   },
+   "title": {
+    "en": "Welder: from listing to your first customer",
+    "af": "Sweiser: van advertensie tot jou eerste kliënt",
+    "zu": "Uwelda: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Uwelda: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mowelda: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f3_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "plumber"
+  },
+  {
+   "type": "window_cleaner",
+   "status": "draft",
+   "flow": "F1",
+   "label": {
+    "en": "Window cleaner",
+    "af": "Vensterskoonmaker",
+    "zu": "Umhlanzi wamafasitela",
+    "xh": "Umcoci weefestile",
+    "nso": "Mohlwekiši wa mafasetere"
+   },
+   "title": {
+    "en": "Window cleaner: from listing to your first customer",
+    "af": "Vensterskoonmaker: van advertensie tot jou eerste kliënt",
+    "zu": "Umhlanzi wamafasitela: kusukela esikhangisweni kuya ekhasimendeni lakho lokuqala",
+    "xh": "Umcoci weefestile: ukusuka kwintengiso ukuya kumthengi wakho wokuqala",
+    "nso": "Mohlwekiši wa mafasetere: go tloga papatšong go ya go moreki wa gago wa mathomo"
+   },
+   "walked_on": "2026-09-29",
+   "steps": 17,
+   "cover": "h2_01_start",
+   "door": "services",
+   "quick": true,
+   "derived_from": "home_cleaner"
   }
  ]
 }

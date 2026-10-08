@@ -131,7 +131,7 @@ window.addEventListener('resize', () => fitPh($('q')));
 $('q').oninput = render;
 document.querySelectorAll('.lang [data-l]').forEach(b => b.onclick = () => { lang = b.dataset.l; try { localStorage.setItem('ts_help_lang', lang); } catch (e) {} render(); });
 render();
-fetch('/help/data/index.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : {stories: []}).then(d => { IDX = d; render(); }).catch(() => render());
+fetch('/help/data/index.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : {stories: []}).then(d => { IDX = d; IDX.stories = (d.stories || []).filter(s => !s.derived_from); render(); })   /* ROLE-GUIDES-1: a role's own copy of a walked guide opens from Quick's How, the gallery lists the walked ones */.catch(() => render());
 </script>
 <script src="/static/ts_report.js?v=7" defer></script>   <!-- RG-0377: testers can report a fault from every page -->
 </body>

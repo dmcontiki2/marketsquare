@@ -123,7 +123,7 @@ def gallery(stories):
                               # guide was walked in Quick at all (a guide walked in TrustSquare's Sell has no Quick card),
                               # and the types / deal it serves
                               "door": door_of(t), "quick": any(s.get("quick") for s in steps)},
-                             **{k: d[k] for k in ("serves", "deal") if d.get(k)})
+                             **{k: d[k] for k in ("serves", "deal", "derived_from") if d.get(k)})   # ROLE-GUIDES-1
                         for t, d, steps in stories]}
 
 

@@ -36967,6 +36967,29 @@ def rg_carwash_1():
     if r.get("c") != "C" or r.get("g") != "Home & care" or r.get("gate"):
         bad.append("car washer is not an ungated Casual in Home & care")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "per-car package prices, Home & care, packages in the advert")]
+@entry("RG-0942", "ROLE-GUIDES-1 (David, 8 Oct 2026): every work role Quick offers that borrowed another job's How guide has its own -- its name, its group, its way of charging and its own Quick screens",
+       LOCKED, fixed_on="2026-10-08",
+       scope="stories/<role>.json (derived_from) for every role a walked guide serves (home_cleaner, plumber, electrician, nanny); stories/img/<role>/r_*.jpg; scripts/build_role_guides.py; scripts/role_guide_screens.py. All markets.",
+       ref="David 8 Oct 2026: 'when i select car washer worker and then the HOW, it then shows me the home cleaner card flow ... please check them and update to be relevant to the selections'.")
+def rg_role_guides_1():
+    import json as _j, os as _o
+    bad = []
+    for parent in ("home_cleaner", "plumber", "electrician", "nanny"):
+        pj = repo_file("stories/%s.json" % parent)
+        if pj is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        for role in _j.loads(pj).get("serves", []):
+            rj = repo_file("stories/%s.json" % role)
+            if rj is None:
+                bad.append("%s has no guide of its own (How opens the %s guide)" % (role, parent)); continue
+            d = _j.loads(rj)
+            st2 = [x for x in d.get("steps", []) if x.get("n") == 2]
+            if d.get("derived_from") and (not st2 or "]], then [[" not in st2[0]["en"][0] or st2[0]["img"] != "r_what"):
+                bad.append("%s guide's step 2 does not show her own job" % role)
+    cw = repo_file("stories/car_washer.json")
+    if cw and "Set your price per car" not in cw:
+        bad.append("the car washer's guide no longer explains per-car packages")
+    return [(FAIL, "; ".join(bad[:6]))] if bad else [(INFO, "every borrowing role has its own guide, screens and price step")]
 @entry("RG-0934", "PROMOTER-TRACK-1 (RUL-212, 7 Oct 2026): a promoter's own link stamps his new listers, a unit is complete only on a live advert plus two-way delivered Buzz with one referral, and no money appears anywhere",
        LOCKED, fixed_on="2026-10-07",
        scope="bea_main.py _promo_stamp (quick-publish + /listings), _promo_note_buzz (POST /buzz), GET /p/{code}, /admin/promoters; route_policy.json; dashboard.server.html Comms page Promoters card. All markets.",

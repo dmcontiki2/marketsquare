@@ -1,0 +1,693 @@
+{
+ "type": "gas_installer",
+ "status": "draft",
+ "flow": "F4",
+ "serves": [],
+ "label": {
+  "en": "Gas installer",
+  "af": "Gasinstalleerder",
+  "zu": "Umfaki wegesi",
+  "xh": "Umfakeli werhasi",
+  "nso": "Mohlomi wa gase"
+ },
+ "title": {
+  "en": "Gas installer: from listing to the customers who can find you",
+  "af": "Gasinstalleerder: van advertensie tot die kliënte wat jou kan vind",
+  "zu": "Umfaki wegesi: kusukela esikhangisweni kuya kumakhasimende angakuthola",
+  "xh": "Umfakeli werhasi: ukusuka kwintengiso ukuya kubathengi abanokukufumana",
+  "nso": "Mohlomi wa gase: go tloga papatšong go ya go bareki bao ba ka go hwetšago"
+ },
+ "gate_note": {
+  "en": "Coming up at step 11: until our team has checked your licence, only people you send your link to can see your listing.",
+  "af": "By stap 11: totdat ons span jou lisensie nagegaan het, kan net mense aan wie jy jou skakel stuur jou advertensie sien.",
+  "zu": "Kuyeza esinyathelweni 11: kuze kube yilapho ithimba lethu selihlolile ilayisensi yakho, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.",
+  "xh": "Kwinyathelo le-11: de iqela lethu lihlole ilayisenisi yakho, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
+  "nso": "Kgatong ya 11: go fihlela sehlopha sa rena se hlahlobile laesense ya gago, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Tshepo",
+  "regular": "Lerato",
+  "customer": "Dineo"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "Your licence",
+   "af": "Jou lisensie",
+   "zu": "Ilayisensi yakho",
+   "xh": "Ilayisenisi yakho",
+   "nso": "Laesense ya gago"
+  },
+  {
+   "id": "c4",
+   "en": "Your regulars",
+   "af": "Jou vaste kliënte",
+   "zu": "Amakhasimende akho ajwayelekile",
+   "xh": "Abathengi bakho abaqhelekileyo",
+   "nso": "Bareki ba gago ba ka mehla"
+  },
+  {
+   "id": "c5",
+   "en": "A new customer",
+   "af": "'n Nuwe kliënt",
+   "zu": "Ikhasimende elisha",
+   "xh": "Umthengi omtsha",
+   "nso": "Moreki yo moswa"
+  },
+  {
+   "id": "c6",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_01_door",
+   "pass": true,
+   "quick": [
+    "door"
+   ],
+   "en": [
+    "Open Quick, tap [[Offer a service]]",
+    "Quick opens on the services door. One tap starts your listing."
+   ],
+   "af": [
+    "Maak Quick oop, tik [[Offer a service]]",
+    "Quick maak oop by die dienste-deur. Een tik begin jou advertensie."
+   ],
+   "zu": [
+    "Vula i-Quick, thepha [[Offer a service]]",
+    "I-Quick ivula emnyango wezinsizakalo. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, cofa [[Offer a service]]",
+    "I-Quick ivula kucango leenkonzo. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, kgotla [[Offer a service]]",
+    "Quick e bula lebating la ditirelo. Go kgotla gatee go thoma papatšo ya gago."
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "r_what",
+   "pass": true,
+   "quick": [
+    "group",
+    "what"
+   ],
+   "en": [
+    "Pick [[Building trades]], then [[Gas installer]]",
+    "Choose the kind of work, then your trade. The law asks for a licence for this work, so Quick tells you what our team checks."
+   ],
+   "af": [
+    "Kies [[Building trades]], dan [[Gas installer]]",
+    "Kies die soort werk, dan jou ambag. Die wet vra 'n lisensie vir hierdie werk, so Quick sê vir jou wat ons span nagaan."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "r_qual",
+   "pass": true,
+   "quick": [
+    "qual"
+   ],
+   "en": [
+    "Say what qualification you have",
+    "[[Trade-tested]], [[Certificate]] or [[Experience only]]. Customers see it on your listing."
+   ],
+   "af": [
+    "Sê watter kwalifikasie jy het",
+    "[[Trade-tested]], [[Certificate]] of [[Experience only]]. Kliënte sien dit op jou advertensie."
+   ],
+   "zu": [
+    "Sho ukuthi unayiphi imfundo",
+    "[[Trade-tested]], [[Certificate]] noma [[Experience only]]. Amakhasimende ayibona esikhangisweni sakho."
+   ],
+   "xh": [
+    "Yitsho ukuba unasiphi isiqinisekiso",
+    "[[Trade-tested]], [[Certificate]] okanye [[Experience only]]. Abathengi bayayibona kwintengiso yakho."
+   ],
+   "nso": [
+    "Bolela gore o na le thuto efe",
+    "[[Trade-tested]], [[Certificate]] goba [[Experience only]]. Bareki ba e bona papatšong ya gago."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "r_where",
+   "pass": true,
+   "quick": [
+    "where"
+   ],
+   "en": [
+    "Tick every area you work in",
+    "You can tick more than one, and a customer searching any of them finds you. Type your area if it is not listed."
+   ],
+   "af": [
+    "Merk elke area waar jy werk",
+    "Jy kan meer as een merk, en 'n kliënt wat in enige van hulle soek, vind jou. Tik jou area in as dit nie gelys is nie."
+   ],
+   "zu": [
+    "Maka zonke izindawo osebenza kuzo",
+    "Ungamaka ezingaphezu kweyodwa, futhi ikhasimende elisesha kunoma iyiphi yazo liyakuthola. Bhala indawo yakho uma ingekho ohlwini."
+   ],
+   "xh": [
+    "Phawula yonke imimandla osebenza kuyo",
+    "Ungaphawula engaphezu komnye, kwaye umthengi okhangela kuyo nayiphi na uyakufumana. Bhala indawo yakho ukuba ayikho kuluhlu."
+   ],
+   "nso": [
+    "Swaya mafelo ka moka ao o šomago go ona",
+    "O ka swaya a fetago le tee, gomme moreki yo a nyakago go le ge e le lefe la ona o a go hwetša. Ngwala lefelo la gago ge le se lenaneong."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "r_how",
+   "pass": true,
+   "quick": [
+    "how"
+   ],
+   "en": [
+    "Set your call-out fee and your hourly rate",
+    "Tap [[Call-out + per hour]], type your call-out fee, then your rate per hour. Tap [[Plus parts and materials]] if the customer pays for parts."
+   ],
+   "af": [
+    "Stel jou uitroepfooi en jou uurtarief",
+    "Tik [[Call-out + per hour]], tik jou uitroepfooi in, dan jou tarief per uur. Tik [[Plus parts and materials]] as die kliënt vir onderdele betaal."
+   ],
+   "zu": [
+    "Beka imali yokubizwa kanye nemali yehora",
+    "Thepha [[Call-out + per hour]], bhala imali yokubizwa, bese kuba imali yakho ngehora. Thepha [[Plus parts and materials]] uma ikhasimende likhokhela izingxenye."
+   ],
+   "xh": [
+    "Misela intlawulo yokubizwa kunye nexabiso leyure",
+    "Cofa [[Call-out + per hour]], bhala intlawulo yokubizwa, emva koko ixabiso lakho ngeyure. Cofa [[Plus parts and materials]] ukuba umthengi uhlawulela iindawo."
+   ],
+   "nso": [
+    "Bea tefo ya go bitšwa le tefo ya iri",
+    "Kgotla [[Call-out + per hour]], ngwala tefo ya go bitšwa, ke moka tefo ya gago ka iri. Kgotla [[Plus parts and materials]] ge moreki a lefela ditlabelo."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "r_draft",
+   "pass": true,
+   "quick": [
+    "draft"
+   ],
+   "en": [
+    "Note the licence line, then save",
+    "Above [[Save my listing]] Quick tells you: your listing shows in searches once your licence is verified. Tick your languages and save."
+   ],
+   "af": [
+    "Let op die lisensie-reël en stoor dan",
+    "Bo [[Save my listing]] sê Quick vir jou: jou advertensie verskyn in soektogte sodra jou lisensie geverifieer is. Merk jou tale en stoor."
+   ],
+   "zu": [
+    "Qaphela umugqa welayisensi, bese ulondoloza",
+    "Ngaphezu kwe-[[Save my listing]] i-Quick ikutshela: isikhangiso sakho sivela ekuseshweni uma ilayisensi yakho isiqinisekisiwe. Maka izilimi zakho bese ulondoloza."
+   ],
+   "xh": [
+    "Qaphela umgca welayisenisi, uze ugcine",
+    "Ngaphezu kwe-[[Save my listing]] i-Quick ikuxelela: intengiso yakho ivela ekukhangeleni xa ilayisenisi yakho iqinisekisiwe. Phawula iilwimi zakho uze ugcine."
+   ],
+   "nso": [
+    "Ela hloko mothalo wa laesense, ke moka o boloke",
+    "Godimo ga [[Save my listing]] Quick e go botša: papatšo ya gago e tšwelela dinyakišišong ge laesense ya gago e netefaditšwe. Swaya maleme a gago gomme o boloke."
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_07_saved",
+   "pass": true,
+   "quick": [
+    "saved"
+   ],
+   "en": [
+    "Saved: now sign the terms and publish",
+    "Tap [[Sign the terms and publish]], or open the email we sent you. Nobody can see your listing yet."
+   ],
+   "af": [
+    "Gestoor: teken nou die bepalings en publiseer",
+    "Tik [[Sign the terms and publish]], of maak die e-pos oop wat ons gestuur het. Niemand kan jou advertensie nog sien nie."
+   ],
+   "zu": [
+    "Kulondoloziwe: manje sayina imigomo bese ushicilela",
+    "Thepha [[Sign the terms and publish]], noma uvule i-imeyili esikuthumelele yona. Akekho umuntu ongabona isikhangiso sakho okwamanje."
+   ],
+   "xh": [
+    "Kugciniwe: ngoku sayina imimiselo uze upapashe",
+    "Cofa [[Sign the terms and publish]], okanye uvule i-imeyile esikuthumelele yona. Akukho mntu unokubona intengiso yakho okwangoku."
+   ],
+   "nso": [
+    "E bolokilwe: bjale saena melawana gomme o phatlalatše",
+    "Kgotla [[Sign the terms and publish]], goba o bule imeile ye re go rometšego yona. Ga go yo a ka bonago papatšo ya gago ga bjale."
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_09_photos",
+   "pass": true,
+   "en": [
+    "Add your photo and photos of your work",
+    "In TrustSquare tap [[Edit]], then [[Add Photo]]. Add your tools and jobs you have finished, like a DB board you wired. No faces, signs or phone numbers."
+   ],
+   "af": [
+    "Voeg jou foto en foto's van jou werk by",
+    "Tik in TrustSquare [[Edit]], dan [[Add Photo]]. Voeg jou gereedskap by en werk wat jy klaar gemaak het, soos 'n verdeelbord wat jy bedraad het. Geen gesigte, borde of telefoonnommers nie."
+   ],
+   "zu": [
+    "Engeza isithombe sakho nezithombe zomsebenzi wakho",
+    "Ku-TrustSquare thepha [[Edit]], bese [[Add Photo]]. Engeza amathuluzi akho nemisebenzi oyiqedile, njenge-DB board oyixhumile. Akukho buso, izimpawu noma izinombolo zocingo."
+   ],
+   "xh": [
+    "Yongeza ifoto yakho neefoto zomsebenzi wakho",
+    "Kwi-TrustSquare cofa [[Edit]], emva koko [[Add Photo]]. Yongeza izixhobo zakho nemisebenzi oyigqibileyo, njenge-DB board oyifakileyo. Akukho buso, miqondiso okanye iinombolo zefowuni."
+   ],
+   "nso": [
+    "Tsenya seswantšho sa gago le diswantšho tša mošomo wa gago",
+    "Go TrustSquare kgotla [[Edit]], ke moka [[Add Photo]]. Tsenya didirišwa tša gago le mešomo yeo o e feditšego, bjalo ka DB board yeo o e tsentšego. Ga go difahlego, maswao goba dinomoro tša mogala."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_10_terms",
+   "pass": true,
+   "en": [
+    "Accept the seller terms once",
+    "Read them, tick both boxes at the end and tap [[I accept]]."
+   ],
+   "af": [
+    "Aanvaar die verkopersbepalings een keer",
+    "Lees hulle, merk albei blokkies aan die einde en tik [[I accept]]."
+   ],
+   "zu": [
+    "Yamukela imigomo yabathengisi kanye",
+    "Yifunde, maka omabili amabhokisi ekugcineni bese uthepha [[I accept]]."
+   ],
+   "xh": [
+    "Yamkela imimiselo yabathengisi kanye",
+    "Yifunde, phawula zombini iibhokisi ekugqibeleni uze ucofe [[I accept]]."
+   ],
+   "nso": [
+    "Amogela melawana ya barekiši gatee",
+    "E bale, swaya mapokisi a mabedi mafelelong gomme o kgotle [[I accept]]."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_12_published",
+   "pass": true,
+   "en": [
+    "Publish: only people you send your link to see it yet",
+    "Tap [[Publish]]. Your card says the law needs a licence for this work, and customers see your listing once our team has checked yours."
+   ],
+   "af": [
+    "Publiseer: net mense aan wie jy jou skakel stuur, sien dit nog",
+    "Tik [[Publish]]. Jou kaart sê die wet vra 'n lisensie vir hierdie werk, en kliënte sien jou advertensie sodra ons span joune nagegaan het."
+   ],
+   "zu": [
+    "Shicilela: ngabantu kuphela obathumelela isixhumanisi sakho abasibonayo okwamanje",
+    "Thepha [[Publish]]. Ikhadi lakho lithi umthetho ufuna ilayisensi yalo msebenzi, futhi amakhasimende abona isikhangiso sakho uma ithimba lethu selihlolile eyakho."
+   ],
+   "xh": [
+    "Papasha: ngabantu kuphela obathumelela ikhonkco lakho abayibonayo okwangoku",
+    "Cofa [[Publish]]. Ikhadi lakho lithi umthetho ufuna ilayisenisi yalo msebenzi, kwaye abathengi babona intengiso yakho xa iqela lethu lihlole eyakho."
+   ],
+   "nso": [
+    "Phatlalatša: ke batho feela bao o ba romelago kgokagano ya gago bao ba e bonago ga bjale",
+    "Kgotla [[Publish]]. Karata ya gago e re molao o nyaka laesense ya mošomo wo, gomme bareki ba bona papatšo ya gago ge sehlopha sa rena se hlahlobile ya gago."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_15_upload_licence",
+   "pass": true,
+   "en": [
+    "Tap [[Upload my licence]]",
+    "Edit opens with [[Licence to practise]] chosen. Choose a photo of your DoEL registration (or your SAQCC, PSIRA or PrDP card)."
+   ],
+   "af": [
+    "Tik [[Upload my licence]]",
+    "Edit maak oop met [[Licence to practise]] gekies. Kies 'n foto van jou DoEL-registrasie (of jou SAQCC-, PSIRA- of PrDP-kaart)."
+   ],
+   "zu": [
+    "Thepha [[Upload my licence]]",
+    "I-Edit ivuleka kukhethwe [[Licence to practise]]. Khetha isithombe sokubhaliswa kwakho kwe-DoEL (noma ikhadi lakho le-SAQCC, PSIRA noma PrDP)."
+   ],
+   "xh": [
+    "Cofa [[Upload my licence]]",
+    "I-Edit ivuleka kukhethwe [[Licence to practise]]. Khetha ifoto yobhaliso lwakho lwe-DoEL (okanye ikhadi lakho le-SAQCC, PSIRA okanye PrDP)."
+   ],
+   "nso": [
+    "Kgotla [[Upload my licence]]",
+    "Edit e bulega go kgethilwe [[Licence to practise]]. Kgetha seswantšho sa ngwadišo ya gago ya DoEL (goba karata ya gago ya SAQCC, PSIRA goba PrDP)."
+   ],
+   "gate": true
+  },
+  {
+   "n": 12,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_16_licence_sent",
+   "pass": true,
+   "en": [
+    "It goes to our team",
+    "Tap [[Upload Document]]. A person checks it. Nothing is added to your score, and strangers do not see you, before then."
+   ],
+   "af": [
+    "Dit gaan na ons span",
+    "Tik [[Upload Document]]. 'n Mens gaan dit na. Niks word by jou telling gevoeg nie, en vreemdelinge sien jou nie, voor dan."
+   ],
+   "zu": [
+    "Iya ethimbeni lethu",
+    "Thepha [[Upload Document]]. Umuntu uyayihlola. Akukho okwengezwa emaphuzwini akho, futhi abantu ongabazi abakuboni, ngaphambi kwalokho."
+   ],
+   "xh": [
+    "Iya kwiqela lethu",
+    "Cofa [[Upload Document]]. Umntu uyayihlola. Akukho nto yongezwa kumanqaku akho, kwaye abantu ongabaziyo abakuboni, ngaphambi koko."
+   ],
+   "nso": [
+    "E ya go sehlopha sa rena",
+    "Kgotla [[Upload Document]]. Motho o a e hlahloba. Ga go selo se se okeletšwago dintlheng tša gago, gomme batho bao o sa ba tsebego ga ba go bone, pele ga moo."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_17_hub_waiting",
+   "pass": true,
+   "en": [
+    "Your card shows it is waiting",
+    "[[Seller Hub]] says your licence is with our team. Your regulars can still reach you through your link."
+   ],
+   "af": [
+    "Jou kaart wys dit wag",
+    "[[Seller Hub]] sê jou lisensie is by ons span. Jou vaste kliënte kan jou steeds deur jou skakel bereik."
+   ],
+   "zu": [
+    "Ikhadi lakho likhombisa ukuthi kulindwe",
+    "I-[[Seller Hub]] ithi ilayisensi yakho isethimbeni lethu. Amakhasimende akho ajwayelekile asengakufinyelela ngesixhumanisi sakho."
+   ],
+   "xh": [
+    "Ikhadi lakho libonisa ukuba kulindiwe",
+    "I-[[Seller Hub]] ithi ilayisenisi yakho ikwiqela lethu. Abathengi bakho abaqhelekileyo basenokukufikelela ngekhonkco lakho."
+   ],
+   "nso": [
+    "Karata ya gago e bontšha gore go a letelwa",
+    "[[Seller Hub]] e re laesense ya gago e go sehlopha sa rena. Bareki ba gago ba ka mehla ba sa kgona go go fihlelela ka kgokagano ya gago."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_21_opened",
+   "pass": false,
+   "en": [
+    "Our team checks it: customers can find you",
+    "Once a person has checked your licence, your listing shows in searches and customers see the licence on your profile."
+   ],
+   "af": [
+    "Ons span gaan dit na: kliënte kan jou vind",
+    "Sodra 'n mens jou lisensie nagegaan het, verskyn jou advertensie in soektogte en sien kliënte die lisensie op jou profiel."
+   ],
+   "zu": [
+    "Ithimba lethu liyayihlola: amakhasimende angakuthola",
+    "Uma umuntu eseyihlolile ilayisensi yakho, isikhangiso sakho sivela ekuseshweni futhi amakhasimende ayibona ilayisensi kuphrofayela yakho."
+   ],
+   "xh": [
+    "Iqela lethu liyayihlola: abathengi banokukufumana",
+    "Xa umntu eyihlolile ilayisenisi yakho, intengiso yakho ivela ekukhangeleni kwaye abathengi bayibona ilayisenisi kwiprofayile yakho."
+   ],
+   "nso": [
+    "Sehlopha sa rena se a e hlahloba: bareki ba ka go hwetša",
+    "Ge motho a hlahlobile laesense ya gago, papatšo ya gago e tšwelela dinyakišišong gomme bareki ba bona laesense profaeleng ya gago."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_18_buzz_link",
+   "pass": true,
+   "quick": [
+    "buzz"
+   ],
+   "en": [
+    "Send your Buzz link to your regular customers",
+    "In [[My Space]], open [[Buzz]] and tap [[Get my link]]. One link for all of them: [[Send on WhatsApp]] or [[Copy]]."
+   ],
+   "af": [
+    "Stuur jou Buzz-skakel aan jou vaste kliënte",
+    "Maak in [[My Space]] [[Buzz]] oop en tik [[Get my link]]. Een skakel vir almal: [[Send on WhatsApp]] of [[Copy]]."
+   ],
+   "zu": [
+    "Thumela isixhumanisi sakho se-Buzz kumakhasimende akho ajwayelekile",
+    "Ku-[[My Space]], vula i-[[Buzz]] bese uthepha [[Get my link]]. Isixhumanisi esisodwa sabo bonke: [[Send on WhatsApp]] noma [[Copy]]."
+   ],
+   "xh": [
+    "Thumela ikhonkco lakho le-Buzz kubathengi bakho abaqhelekileyo",
+    "Kwi-[[My Space]], vula i-[[Buzz]] uze ucofe [[Get my link]]. Ikhonkco elinye labo bonke: [[Send on WhatsApp]] okanye [[Copy]]."
+   ],
+   "nso": [
+    "Romela kgokagano ya gago ya Buzz go bareki ba gago ba ka mehla",
+    "Go [[My Space]], bula [[Buzz]] gomme o kgotle [[Get my link]]. Kgokagano e tee ya bohle: [[Send on WhatsApp]] goba [[Copy]]."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c4",
+   "who": "regular",
+   "cost": "free",
+   "img": "f4_19_join",
+   "pass": true,
+   "en": [
+    "A regular customer joins",
+    "She opens your link, ticks the Buzz terms and taps [[Continue]]. Now you can buzz each other."
+   ],
+   "af": [
+    "'n Vaste kliënt sluit aan",
+    "Sy maak jou skakel oop, merk die Buzz-bepalings en tik [[Continue]]. Nou kan julle mekaar buzz."
+   ],
+   "zu": [
+    "Ikhasimende elijwayelekile liyajoyina",
+    "Uvula isixhumanisi sakho, amake imigomo ye-Buzz bese ethepha [[Continue]]. Manje ningathumelelana nge-Buzz."
+   ],
+   "xh": [
+    "Umthengi oqhelekileyo uyajoyina",
+    "Uvula ikhonkco lakho, aphawule imimiselo ye-Buzz aze acofe [[Continue]]. Ngoku ningathumelelana nge-Buzz."
+   ],
+   "nso": [
+    "Moreki wa ka mehla o a tsena",
+    "O bula kgokagano ya gago, a swaye melawana ya Buzz gomme a kgotle [[Continue]]. Bjale le ka romelana ka Buzz."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c4",
+   "who": "regular",
+   "cost": "free",
+   "img": "f4_20_buzz_sent",
+   "pass": true,
+   "en": [
+    "She buzzes you a job",
+    "One line, straight to your phone: \"The DB board trips when the geyser comes on. Can you come Thursday?\" If your phone has no push, it comes by email."
+   ],
+   "af": [
+    "Sy buzz vir jou 'n werk",
+    "Een reël, reguit na jou foon: \"Die verdeelbord klink uit as die geiser aanskakel. Kan jy Donderdag kom?\" As jou foon nie kennisgewings kry nie, kom dit per e-pos."
+   ],
+   "zu": [
+    "Ukuthumelela umsebenzi nge-Buzz",
+    "Umugqa owodwa, uqonde ocingweni lwakho: \"I-DB board iyacima uma i-geyser ivuleka. Ungafika ngoLwesine?\" Uma ucingo lwakho lungenazo izaziso, kufika nge-imeyili."
+   ],
+   "xh": [
+    "Ukuthumelela umsebenzi nge-Buzz",
+    "Umgca omnye, ngqo kwifowuni yakho: \"I-DB board iyacima xa i-geyser ivuleka. Ungeza ngoLwesine?\" Ukuba ifowuni yakho ayinazo izaziso, iza nge-imeyile."
+   ],
+   "nso": [
+    "O go romela mošomo ka Buzz",
+    "Mothalo o tee, thwii mogaleng wa gago: \"DB board e a tima ge geyser e bulega. O ka tla ka Labone?\" Ge mogala wa gago o se na ditsebišo, e tla ka imeile."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c5",
+   "who": "customer",
+   "cost": "free",
+   "img": "f4_22_detail",
+   "pass": false,
+   "en": [
+    "A new customer finds you and sees your licence",
+    "She finds you by trade and area. On your profile she sees your checked licence before she asks."
+   ],
+   "af": [
+    "'n Nuwe kliënt vind jou en sien jou lisensie",
+    "Sy vind jou volgens ambag en area. Op jou profiel sien sy jou nagegane lisensie voordat sy vra."
+   ],
+   "zu": [
+    "Ikhasimende elisha likuthola futhi libona ilayisensi yakho",
+    "Ukuthola ngobuciko nendawo. Kuphrofayela yakho ubona ilayisensi yakho ehloliwe ngaphambi kokuba acele."
+   ],
+   "xh": [
+    "Umthengi omtsha ukufumana kwaye abone ilayisenisi yakho",
+    "Ukufumana ngobugcisa nommandla. Kwiprofayile yakho ubona ilayisenisi yakho ehloliweyo phambi kokuba acele."
+   ],
+   "nso": [
+    "Moreki yo moswa o go hwetša gomme a bona laesense ya gago",
+    "O go hwetša ka bokgoni le lefelo. Profaeleng ya gago o bona laesense ya gago ye e hlahlobilwego pele a kgopela."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c5",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f4_23_ask",
+   "pass": false,
+   "en": [
+    "She asks for an introduction",
+    "She writes a short message and taps [[Join queue]]. 1 Tuppence is held from her, and spent only if you accept. Asking twice holds nothing more."
+   ],
+   "af": [
+    "Sy vra vir 'n bekendstelling",
+    "Sy skryf 'n kort boodskap en tik [[Join queue]]. 1 Tuppence word van haar gehou, en net gebruik as jy aanvaar. As sy twee keer vra, word niks meer gehou nie."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Ubhala umlayezo omfushane bese ethepha [[Join queue]]. I-Tuppence engu-1 iyabanjwa kuye, isetshenziswe kuphela uma wamukela. Ukucela kabili akubambi lutho olunye."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ubhala umyalezo omfutshane aze acofe [[Join queue]]. I-Tuppence e-1 iyabanjwa kuye, isetyenziswe kuphela ukuba uyamkela. Ukucela kabini akubambi nto yimbi."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O ngwala molaetša o mokopana gomme a kgotla [[Join queue]]. Tuppence e 1 e swarwa go yena, gomme e šomišwa feela ge o amogela. Go kgopela gabedi ga go swere selo se sengwe."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_24_accept",
+   "pass": false,
+   "en": [
+    "You accept",
+    "Tap [[Accept]]. It costs you nothing. You both get an email: reply to it to talk. Your email address stays private."
+   ],
+   "af": [
+    "Jy aanvaar",
+    "Tik [[Accept]]. Dit kos jou niks. Julle kry albei 'n e-pos: antwoord daarop om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Uyamukela",
+    "Thepha [[Accept]]. Akukubizi lutho. Nobabili nithola i-imeyili: phendula kuyo ukuze nikhulume. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Uyamkela",
+    "Cofa [[Accept]]. Akukuxabisi nto. Nobabini nifumana i-imeyile: phendula kuyo ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "O a amogela",
+    "Kgotla [[Accept]]. Ga go go biditše selo. Le hwetša imeile ka bobedi: e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 21,
+   "ch": "c6",
+   "who": "you",
+   "cost": "free",
+   "img": "f4_07_saved",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "Tap [[Pass Quick on to someone]] and share it with a friend who works like you."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriend wat werk soos jy."
+   ],
+   "zu": [
+    "Dlulisela i-Quick",
+    "Thepha [[Pass Quick on to someone]] bese uyabelana ngayo nomngane osebenza njengawe."
+   ],
+   "xh": [
+    "Dlulisela i-Quick",
+    "Cofa [[Pass Quick on to someone]] uze wabelane ngayo nomhlobo osebenza njengawe."
+   ],
+   "nso": [
+    "Fetišetša Quick pele",
+    "Kgotla [[Pass Quick on to someone]] gomme o e abelane le mogwera yo a šomago bjalo ka wena."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ },
+ "derived_from": "electrician"
+}
