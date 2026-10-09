@@ -37513,6 +37513,47 @@ def rg_search_ex_1():
         ("'coach','coaches','coaching','instructor'", "'coach' no longer points the search at Tutors (the Trainers door)")])])
     return bad or [(INFO, "a search finds the role and sport examples by name")]
 
+
+@entry("RG-0952", "COL-KIND-WORDS-1 + AI-DESC-CLEAN-2 + FUNNEL-GOOGLEOTHER-1 (Goal run 34, 9 Oct 2026): Collectors' item and "
+       "grading examples follow the kind she picked; the photo read's sentences about what the photo shows or cannot be read "
+       "never reach her story box or the advert; Google's GoogleOther fetcher is not counted as a person",
+       LOCKED, fixed_on="2026-10-09",
+       scope="ms.js SF_CATS.Collectors.colWords, sfFlow (Collectors sections A/C), sfUpd (icat re-render), sfCleanAiDesc; "
+             "bea_main.py _OB_MACHINE_UA",
+       ref="docs/E2E_2026-10-09.md: a Johannesburg trading-card seller read 'e.g. 1892 ZAR Kruger 2\u00bd Shillings', "
+           "'e.g. 1892, Victorian', 'e.g. Pretoria Mint'; her Provenance box was pre-filled with 'No maker, set name, year, "
+           "signatures, or authentication markings are legible in the photo.'; three GoogleOther runs of Quick on 9 Oct were bot=0.")
+def rg_col_kind_words_1():
+    js = repo_file("ms.js")
+    py = repo_file("bea_main.py")
+    if js is None or py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("  colWords:{")
+    if i < 0:
+        return [(FAIL, "Collectors has no per-kind examples; every kind reads the coin examples")]
+    seg = js[i:i + 3000]
+    for k in ("'Coins':", "'Trading cards':", "'Stamps':", "'Art':", "'Militaria':", "'Wine':", "'Books':", "'Toys':",
+              "'Watches':", "'Other':"):
+        if k not in seg:
+            return [(FAIL, "colWords is missing " + k)]
+    tc = seg[seg.find("'Trading cards':"):seg.find("'Stamps':")]
+    if "Kruger" in tc or "Mint'" in tc or "1892" in tc:
+        return [(FAIL, "Trading cards speak about coins again")]
+    f = js.find("function sfFlow(){")
+    if "c.colWords[String((sfState.A&&sfState.A.icat)||'')]" not in js[f:f + 3600]:
+        return [(FAIL, "sfFlow no longer applies the Collectors per-kind examples")]
+    u = js.find("function sfUpd(scope,id,v){")
+    if "id==='icat' && sfState.cat==='Collectors'" not in js[u:u + 400]:
+        return [(FAIL, "changing the kind no longer refreshes the examples")]
+    c = js.find("function sfCleanAiDesc(t){")
+    cl = js[c:c + 900]
+    if "legible|illegible|readable|discernible" not in cl or "(photo|photograph|image|picture)" not in cl:
+        return [(FAIL, "sfCleanAiDesc lets 'not legible in the photo' sentences into the advert again")]
+    if "'googleother'" not in py:
+        return [(FAIL, "GoogleOther is counted as a person in the onboarding funnel again")]
+    return [(INFO, "Collectors examples follow the kind; photo-talk sentences dropped; GoogleOther flagged as a machine")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
@@ -37550,6 +37591,32 @@ def _server_vantage_wrap():
                 except Exception:
                     return False
             wrap(e, served)
+        elif e["id"] in ("RG-0949", "RG-0950"):
+            # LEDGER-VANTAGE-TRAINERS-1 (Goal run 34b, David 9 Oct 2026: "fix the ledger false reds"): the trainer pictures
+            # (roles/pictures/*.png, assets/quick_ph/role_*.jpg) are gitignored, so a server checkout never has them and
+            # both entries read !!!! there while every picture is served live. Only when EVERY failing part is a missing
+            # picture file AND every trainer role's photo answers 200 image/* at its live URL does it read NOT EVALUATED --
+            # judged in full on the PC's run, like the other PC-only files. Any other failure stays red.
+            def trainer_served(m):
+                import re as _re, json as _j
+                pic = _re.compile(r"^(REGRESSION: )?(missing roles/pictures/[a-z0-9_]+\.png|missing assets/quick_ph/role_[a-z0-9_]+\.jpg|[a-z0-9_]+ has no picture)$")
+                parts = [x.strip() for x in m.split(";") if x.strip()]
+                if not parts or not all(pic.match(x) for x in parts):
+                    return False
+                try:
+                    reg = _j.loads(repo_file("roles/role_registry.json") or "{}")
+                    keys = [r["key"] for r in reg.get("roles", []) if r.get("service_class") == "Trainers" and r.get("status") == "in"]
+                    if not keys:
+                        return False
+                    for k in keys:
+                        rq = _ur.Request(BASE + "/static/quick/role_%s.jpg?v=photo1" % k, method="HEAD", headers=UA)
+                        with _ur.urlopen(rq, timeout=15) as rs:
+                            if rs.status != 200 or not rs.headers.get("Content-Type", "").startswith("image/"):
+                                return False
+                    return True
+                except Exception:
+                    return False
+            wrap(e, trainer_served)
 
 
 _server_vantage_wrap()

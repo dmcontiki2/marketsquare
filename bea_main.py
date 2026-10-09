@@ -19091,7 +19091,10 @@ _OB_MACHINE_UA = ('google-safety', 'proofpoint', 'mimecast', 'barracuda', 'safel
                   'headlesschrome', 'phantomjs', 'python-requests', 'python-urllib', 'curl/',
                   'wget/', 'go-http-client', 'java/', 'bot', 'crawler', 'spider', 'virustotal',
                   'appengine-google', 'okhttp', 'axios', 'lighthouse', 'preview', 'scanner',
-                  'regressionledger')
+                  'regressionledger',
+                  # FUNNEL-GOOGLEOTHER-1 (Goal run 34): Google's 'GoogleOther' fetcher ran Quick three times on 9 Oct
+                  # and was counted as a person (no 'bot' in its name); link-preview fetchers likewise.
+                  'googleother', 'google-inspectiontool', 'facebookexternalhit')
 
 
 def _ob_is_bot(ua: str) -> bool:

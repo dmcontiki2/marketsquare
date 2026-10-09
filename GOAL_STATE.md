@@ -5,6 +5,47 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 34b — Fri 9 Oct 2026, 21:45–22:10 UTC (David live: "fix the waiting items" — ledger false reds, probe file, outreach record)
+
+- **Ledger:** LEDGER-VANTAGE-TRAINERS-1. On the server, RG-0949 and RG-0950 now read NOT EVALUATED when every failure is a
+  missing gitignored picture **and** all trainer photos answer 200 image/* live. Server ledger: **0 !!!!** (was 3; RG-0154
+  fixed in run 34).
+- **Outreach record found:** it is `/var/www/citylauncher/data/prospects.db` (plus `orchestration.db`) **on the server**, not
+  `marketsquare.db` or the laptop's stale copy. Runs 31–34 looked in the wrong place.
+  Totals: 2,614 emailed · 141 bounced · 61 opens and 7 clicks since 1 Oct · click_register human_click 11 (last 30 Sep),
+  human_open 36 (last 5 Oct). Logs: `/var/www/citylauncher/logs/launchday_*.log`.
+- **Why there have been no letters since 3 Oct:** the wave has 0 sendable (only 344 Maine addresses are left, held unreachable),
+  while 434 new, never-contacted addresses sit in orchestration.db with no path across. Put to David as **GI-0034 (REVIEW NOW)**.
+- `/var/log/citylauncher_scraper.log` is a dead log (last written 26 May); its "no column named phone" errors are history,
+  not a fault. The live engine is `citylauncher-scraper.service` (journalctl).
+- Probe file `_to_delete/goalrun34_write_probe` deleted (David allowed deletion).
+
+## RUN 34 — Fri 9 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; a stray `.goalrun_wtest` probe file sits in the laptop repo root).
+  Built in server worktree `/root/w34` (removed at the end), shipped `claude/goal-run34` 8274749 via CLOUD-SHIP-1 (21:24Z SHIPPED,
+  page `ms.js?v=1009&m=1`). Plain `/` from Cloudflare still handed out v=1008 for a few minutes — check with `/?fresh=…`.
+- **Walk (Collectors / goods, a Johannesburg trading-card seller, `docs/E2E_2026-10-09.md`):** cold Home → Sell → Collectors →
+  photo (read in ~20 s, score 64) → six steps → score 70 in ~3 min; stopped at Publish. No errors. **Break:** the photo read
+  pre-filled Provenance & history with "…No maker, set name, year, signatures, or authentication markings are legible in the
+  photo." under "buyers will read it as written" — AI-DESC-SHOWN-1's cleaner missed "legible … in the photo". **Friction:** every
+  Collectors example was a coin (name "1892 ZAR Kruger 2½ Shillings", year "1892, Victorian", maker "Pretoria Mint") for a card
+  seller. Both fixed and proven live (GI-0033).
+- **Number: 0.** Live 141 = 132 `*@trustsquare.co` + family 9 (David Jnr 3, Marietjie 3, Maroushka 2, David 1 — new #537
+  Collectors, Pretoria, dmcontiki2@, 15:52Z). **By a stranger's hand: 0.** No new user rows since 7 Oct.
+- **Where people stop:** no strangers. The only bot=0 sessions on 9 Oct were **GoogleOther** (Google's fetcher, Nexus 5X UA)
+  running Quick three times and hitting `q_api_fail` / `q_error` — counted as people because its name has no "bot". Now flagged
+  (FUNNEL-GOOGLEOTHER-1); its 15 rows since 25 Sep re-flagged bot=1 (ids in `/root/goal34_googleother_ids_were_bot0.txt`).
+- **Shipped (8274749):** GI-0033 COL-KIND-WORDS-1 + AI-DESC-CLEAN-2 + FUNNEL-GOOGLEOTHER-1, RG-0952 LOCKED. **Live proof (21:27Z,
+  fresh phone, v=1009):** Trading cards → "e.g. 2003 rugby card set, 24 cards", "e.g. 2003, first series", "e.g. Panini, Topps",
+  grading "e.g. PSA 9, BGS 9.5"; switched to Stamps → "e.g. 1926 Union ½d pair…", "e.g. Government Printer", her typed year kept;
+  Provenance held only buyer-facing sentences. Cleaner on the walk's exact text drops the "legible in the photo" sentence.
+- **Ledger:** new tree 3 !!!!, base `/opt/marketsquare-src` the same 3 — RG-0154 (counter behind; refreshed 221 → 222 in this
+  commit), RG-0949/RG-0950 (trainer pictures are gitignored, absent from server checkouts; served live 200 — vantage, not a fault).
+- **REVIEW NOW:** empty.
+- **QA data:** none created (no save, no account).
+- **Not reached:** outreach sends/opens (no record on the server: `outreach_ledger` and `prospects.db` empty).
+
 ## RUN 33b — Fri 9 Oct 2026, 00:15–00:50 UTC (Opus 5.5, David live: "fix the regression issues; GI-0020 go with a; housekeeping as suggested; let a new lister add her photo by tapping the example")
 
 - **Shipped (f8516bd, CLOUD-SHIP-1 00:39Z):** GI-0032 QUICK-OWN-PHOTO-1 + HUB-ADD-PHOTO-1 + LANG-ONE-HOME-1, RG-0947 LOCKED.
