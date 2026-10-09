@@ -37497,7 +37497,7 @@ def rg_photo_first_1():
     return bad or [(INFO, "the advert's first photo comes first; the rest follow it; far pictures wait for her")]
 
 
-@entry("RG-0952", "SEARCH-EX-1 (David, 10 Oct 2026): TrustSquare's search finds the AI examples the server makes per work role and "
+@entry("RG-0953", "SEARCH-EX-1 (David, 10 Oct 2026): TrustSquare's search finds the AI examples the server makes per work role and "
        "sport (GENERIC-EX-1 / TRAINERS-EX-1) -- 'badminton' shows the Badminton coach example -- matched in the app on the "
        "same words, since the server's search only knows stored adverts; such a hit stops the search from widening to a "
        "whole category",
