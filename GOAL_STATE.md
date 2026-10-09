@@ -5,6 +5,21 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 34b — Fri 9 Oct 2026, 21:45–22:10 UTC (David live: "fix the waiting items" — ledger false reds, probe file, outreach record)
+
+- **Ledger:** LEDGER-VANTAGE-TRAINERS-1. On the server, RG-0949 and RG-0950 now read NOT EVALUATED when every failure is a
+  missing gitignored picture **and** all trainer photos answer 200 image/* live. Server ledger: **0 !!!!** (was 3; RG-0154
+  fixed in run 34).
+- **Outreach record found:** it is `/var/www/citylauncher/data/prospects.db` (plus `orchestration.db`) **on the server**, not
+  `marketsquare.db` or the laptop's stale copy. Runs 31–34 looked in the wrong place.
+  Totals: 2,614 emailed · 141 bounced · 61 opens and 7 clicks since 1 Oct · click_register human_click 11 (last 30 Sep),
+  human_open 36 (last 5 Oct). Logs: `/var/www/citylauncher/logs/launchday_*.log`.
+- **Why there have been no letters since 3 Oct:** the wave has 0 sendable (only 344 Maine addresses are left, held unreachable),
+  while 434 new, never-contacted addresses sit in orchestration.db with no path across. Put to David as **GI-0034 (REVIEW NOW)**.
+- `/var/log/citylauncher_scraper.log` is a dead log (last written 26 May); its "no column named phone" errors are history,
+  not a fault. The live engine is `citylauncher-scraper.service` (journalctl).
+- Probe file `_to_delete/goalrun34_write_probe` deleted (David allowed deletion).
+
 ## RUN 34 — Fri 9 Oct 2026, 20:56–21:35 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; a stray `.goalrun_wtest` probe file sits in the laptop repo root).

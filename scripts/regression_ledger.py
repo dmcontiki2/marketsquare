@@ -37573,6 +37573,32 @@ def _server_vantage_wrap():
                 except Exception:
                     return False
             wrap(e, served)
+        elif e["id"] in ("RG-0949", "RG-0950"):
+            # LEDGER-VANTAGE-TRAINERS-1 (Goal run 34b, David 9 Oct 2026: "fix the ledger false reds"): the trainer pictures
+            # (roles/pictures/*.png, assets/quick_ph/role_*.jpg) are gitignored, so a server checkout never has them and
+            # both entries read !!!! there while every picture is served live. Only when EVERY failing part is a missing
+            # picture file AND every trainer role's photo answers 200 image/* at its live URL does it read NOT EVALUATED --
+            # judged in full on the PC's run, like the other PC-only files. Any other failure stays red.
+            def trainer_served(m):
+                import re as _re, json as _j
+                pic = _re.compile(r"^(REGRESSION: )?(missing roles/pictures/[a-z0-9_]+\.png|missing assets/quick_ph/role_[a-z0-9_]+\.jpg|[a-z0-9_]+ has no picture)$")
+                parts = [x.strip() for x in m.split(";") if x.strip()]
+                if not parts or not all(pic.match(x) for x in parts):
+                    return False
+                try:
+                    reg = _j.loads(repo_file("roles/role_registry.json") or "{}")
+                    keys = [r["key"] for r in reg.get("roles", []) if r.get("service_class") == "Trainers" and r.get("status") == "in"]
+                    if not keys:
+                        return False
+                    for k in keys:
+                        rq = _ur.Request(BASE + "/static/quick/role_%s.jpg?v=photo1" % k, method="HEAD", headers=UA)
+                        with _ur.urlopen(rq, timeout=15) as rs:
+                            if rs.status != 200 or not rs.headers.get("Content-Type", "").startswith("image/"):
+                                return False
+                    return True
+                except Exception:
+                    return False
+            wrap(e, trainer_served)
 
 
 _server_vantage_wrap()

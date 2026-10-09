@@ -5,9 +5,28 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 9 Oct 2026 (run 34).*
+*Open actions only — updated 9 Oct 2026 (run 34b).*
 
-*Nothing waiting on you.*
+### GI-0034 — 434 new addresses are stranded; the nightly letter has sent nothing since 3 Oct
+- **What I found:** the nightly wave runs every night at 22:10Z and logs "0 sendable · 0/40 cities" — the only addresses left
+  are 344 in Maine, held as unreachable. The last letter went out 3 Oct. Meanwhile the scrape engine keeps working: since
+  12 Sep it has found **665 contacts, 434 never written to and not suppressed** (380 without info@/admin@/government
+  addresses) — US 109, Portugal 67, UK 61, South Africa 58, Namibia 46, New Zealand 41, Australia 37, Argentina 37.
+  They sit in `citylauncher/data/orchestration.db` with status `scraped`. The wave reads only `prospects.db`, and nothing
+  moves them across: the last move was a hand-run script in July, and orchestration rows carry an `approved` step
+  (55 approved, all June).
+- **Why it is yours:** moving them into the send list means letters go out in your name to people never written to.
+- **What it costs:** nothing in money. The existing guards still apply: the 250/day cap, RECONTACT-1 / RUL-106, suppression,
+  armed cities and geo-reachability.
+- **What I would do:** write the move as a dry run first, run the wave's own guards over the 434 and tell you the real number
+  that would send and where, then move only those, approved, into `prospects.db`. Countries TrustSquare does not serve stay out.
+- **Recommend:** yes — approve the dry run now and the move after you see its number. Without it, outreach stays at zero.
+
+### Closed in run 34b
+- **Ledger false reds (RG-0949 / RG-0950):** fixed — LEDGER-VANTAGE-TRAINERS-1. On a server checkout they now read
+  NOT EVALUATED only when every failure is a missing gitignored picture **and** all 47 trainer photos load live.
+  Server ledger: 0 !!!!.
+- **Stray probe file:** removed from `_to_delete`.
 
 ### Closed since the last list
 - **GI-0020 fair-price cost:** you chose **(a)** on 9 Oct — 1T, any plan, inside the $0.50 per person and $10 platform
@@ -25,6 +44,7 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 | id | date | change | evidence | expected effect / how we'd know | size | status |
 |----|------|--------|----------|---------------------------------|------|--------|
+| GI-0034 | 9 Oct | Move the scrape engine's new contacts (orchestration.db `scraped`) into the send list through the wave's own guards — dry run first | wave log 3–8 Oct: "0 sendable · 0/40 cities · 344 held unreachable: Maine"; orchestration.db: 665 scraped since 12 Sep, 434 never written to and not suppressed; the last move was a July one-off | letters resume; `prospects.emailed_at` advances; open/click rows on new waves | several | **REVIEW NOW** |
 | GI-0033 | 9 Oct | **COL-KIND-WORDS-1 + AI-DESC-CLEAN-2 + FUNNEL-GOOGLEOTHER-1** (RG-0952): Collectors' name / year / maker / grading examples follow the kind she picked (10 kinds) and refresh when she changes it; the photo read's draft drops sentences about the photo itself (legible / readable / "in the photo"); GoogleOther, Google-InspectionTool and facebookexternalhit are machines in the funnel (15 old rows re-flagged, ids kept on the server) | run 34 walk (`docs/E2E_2026-10-09.md`), a Johannesburg trading-card seller: "e.g. 1892 ZAR Kruger 2½ Shillings", "e.g. 1892, Victorian", "e.g. Pretoria Mint"; Provenance pre-filled "…No maker, set name, year, signatures, or authentication markings are legible in the photo." under "buyers will read it as written". Funnel: the only bot=0 Quick sessions on 9 Oct were GoogleOther | no photo-talk in new Collectors descriptions (grep live for "in the photo"); Collectors drafts outside Coins reach the score card; bot=0 sessions are people | small | **SHIPPED** 9 Oct 21:24Z, 8274749, ms.js?v=1009 — live from a fresh Johannesburg phone: Trading cards → "e.g. 2003 rugby card set, 24 cards" / "e.g. Panini, Topps" / "e.g. PSA 9, BGS 9.5"; Stamps → "e.g. 1926 Union ½d pair…" with her typed year kept; Provenance buyer-facing only. RG-0952 LOCKED |
 | GI-0032 | 9 Oct | **QUICK-OWN-PHOTO-1 + HUB-ADD-PHOTO-1 + LANG-ONE-HOME-1** (RG-0947): in Quick the draft card's example picture carries "📷 Tap to add your own photo" — the phone's camera or gallery opens, her photo replaces the example at once, the strength ring moves (60 → 70 for one photo), and after Save it is attached to the draft (draft token from `quick_publish`, never for another person's account) or, when she published in one tap, to the live listing. A Hub card with no photo offers "📷 Add photo" into Edit instead of a category icon. Home shows one language button (the header globe). | David, 9 Oct (screenshot of the draft card): *"Why can't a new lister add her photo here by clicking on the photo … It will look good and be an incentive to go on?"* Run 33: Hub card showed ⚙️ for a hair braider; Home had two language buttons | Quick drafts saved with a photo (`q_own_photo`, `q_own_photo_ok` funnel steps); drafts' `thumb_url` set at save; more drafts reaching Publish | several | **SHIPPED** 9 Oct 00:39Z, f8516bd — live: real save on a fresh phone, photo picked on the card, ring 60→70, arrival "✓ Your photo is on your listing.", draft #536 thumb_url on R2, Hub card shows it; Home one language button. RG-0947 LOCKED |
 | GI-0031 | 8 Oct | **QUICK-AUTO-HANDOFF-1 + NUDGE-REAL-WORD-1** (RG-0946): when she never picked a city, the Quick links in Sell and the Sell sheet carry the country the app chose for her (GEO-AUTO-1) and, when it came from her phone or her own adverts, the city; a network guess (the country's main city) is never passed as hers. Home's empty-city bar says "No real listings in <city> yet — the listings below are AI examples. <other> has N real listings." | run 33 walk (`docs/E2E_2026-10-08.md`), a Johannesburg hair braider: Home said "Showing Johannesburg — from your phone's location", and one tap on "Work for yourself?" later Quick asked "Which city?" with New York first; the Quick link carried nothing because CITY-HANDOFF-1 passes only a city she picked, and since GEO-AUTO-1 nearly nobody picks. The bar "Nothing listed in Johannesburg yet" sat above "Services 47 listings" (GX-TILE-COUNT-1 counts examples) | fewer `q_step` city screens after an app arrival; Quick drafts filed in the city Home showed | small | **SHIPPED** 8 Oct, 0b8f248, ms.js?v=1000 — candidate over the live page: Johannesburg phone → Quick link `cc=ZA&city=Johannesburg` and Quick opens on "Where can you work? Sandton, Rosebank, Soweto…"; Durban phone → Umhlanga, Berea…; no location on a US network → `cc=US` only, "Which city?" (unchanged); own pick Cape Town → Sea Point… (unchanged); bar text as above. Live 21:35Z (fresh profile, Johannesburg phone): Quick link cc=ZA&city=Johannesburg, Quick opens on Where can you work?; bar reads No real listings…. RG-0946 LOCKED |
