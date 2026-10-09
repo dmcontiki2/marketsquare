@@ -37496,6 +37496,23 @@ def rg_photo_first_1():
         ("msNearImgs(list);", "the Wonders pictures are never asked for")])])
     return bad or [(INFO, "the advert's first photo comes first; the rest follow it; far pictures wait for her")]
 
+
+@entry("RG-0952", "SEARCH-EX-1 (David, 10 Oct 2026): TrustSquare's search finds the AI examples the server makes per work role and "
+       "sport (GENERIC-EX-1 / TRAINERS-EX-1) -- 'badminton' shows the Badminton coach example -- matched in the app on the "
+       "same words, since the server's search only knows stored adverts; such a hit stops the search from widening to a "
+       "whole category",
+       LOCKED, fixed_on="2026-10-10", scope="ms.js msRunSearch / msSearchExamples; msParseQuery CATMAP Tutors",
+       ref="David 10 Oct 2026: 'Why doesn't the filter find the Badminton coach if I search it ... even though there is a demo card?' "
+           "Live before: 'badminton' and 'badminton coach' -> 0 cards; after: 1 card, Badminton coach.")
+def rg_search_ex_1():
+    bad = _fb28_need([("ms.js", [
+        ("const gxHits = msSearchExamples(parsed);", "the search no longer looks at the role and sport examples"),
+        ("if ((!rows || !rows.length) && !gxHits.length && parsed.terms.length &&", "an example hit no longer stops the widening to a whole category"),
+        (".concat(gxHits.map(l => String(l.id))));", "matched examples are dropped from the results again"),
+        ("function msSearchExamples(parsed){", "the example matcher is gone"),
+        ("'coach','coaches','coaching','instructor'", "'coach' no longer points the search at Tutors (the Trainers door)")])])
+    return bad or [(INFO, "a search finds the role and sport examples by name")]
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

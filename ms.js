@@ -5360,7 +5360,7 @@ function msParseQuery(raw){
     Property: ['apartment','apartments','flat','flats','house','houses','home','cottage','townhouse','penthouse','land','plot','farm','room','rooms','bachelor'],
     Cars: ['car','cars','bakkie','suv','sedan','hatchback','vehicle','truck','motorbike'],
     Collectors: ['card','cards','mtg','pokemon','coin','coins','stamp','stamps','collectible','collectibles','antique','antiques','vinyl','comic','comics'],
-    Tutors: ['tutor','tutors','teacher','lessons','tuition','matric'],
+    Tutors: ['tutor','tutors','teacher','lessons','tuition','matric','coach','coaches','coaching','instructor'],   // SEARCH-EX-1: the Trainers door (RUL-217) lives in Tutors
     Services: ['plumber','electrician','builder','painter','mechanic','photographer','catering','cleaner','repair','geyser'],
     Adventures: ['safari','getaway','hike','hiking','tour','lodge','camping','adventure']
   };
@@ -5440,6 +5440,26 @@ function msEnterSearch(el){
   if (el && el.blur) el.blur();   // dismiss the mobile keyboard
   msRunSearch(true);
 }
+/* SEARCH-EX-1 (David, 10 Oct 2026: "Why doesn't the filter find the Badminton coach if I search it ... even though there
+   is a demo card?"). The search asks the server, and the server only knows stored adverts -- the AI examples it makes on
+   request for each work role and sport (GENERIC-EX-1 / TRAINERS-EX-1) live only in the app, so a search never matched
+   one. They are matched here, on the same words: every word must be in the example's name, its English role name, its
+   sport or its city line. They have no price, so a price limit leaves them out. They stay examples (marked, after real adverts). */
+function msSearchExamples(parsed){
+  if (!parsed || !parsed.terms || !parsed.terms.length || parsed.price_min != null || parsed.price_max != null) return [];
+  const words = parsed.terms.map(w => String(w).toLowerCase());
+  return LISTINGS.filter(function(l){
+    if (!l.generic) return false;   // no category test: 'car washer' pins Cars from the word 'car', yet the example is a Services role
+    const hay = [l.title, l.service_type, l.serviceType, l.subject, String(l.role_key || '').replace(/_/g, ' '), l.desc]
+      .filter(Boolean).join(' ').toLowerCase();
+    // a short word must be a whole word ('car' is not 'carpet'); a longer one may start a word ('swim' finds 'swimming')
+    return words.every(function(w){
+      const e = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const alt = [e].concat(w.length > 3 && /s$/.test(w) ? [e.slice(0, -1)] : [], w.length > 4 && /es$/.test(w) ? [e.slice(0, -2)] : []);   // coaches -> coach
+      return new RegExp('(^|[^\\p{L}\\p{N}])(' + alt.join('|') + ')' + (w.length <= 3 ? '($|[^\\p{L}\\p{N}])' : ''), 'iu').test(hay);
+    });
+  });
+}
 function msClearSearch(){
   const el = document.getElementById('ms-search-input');
   if (el) el.value = '';
@@ -5481,8 +5501,9 @@ async function msRunSearch(explicit){
     { const _rc = document.getElementById('results-count'); if (_rc) _rc.textContent = 'Searching…'; }   // SEARCH-SEQ-1
     let rows = await apiGet(base + (parsed.terms.length ? '&q=' + encodeURIComponent(parsed.terms.join(' ')) : ''));
     if (_stale()) return;
+    const gxHits = msSearchExamples(parsed);   // SEARCH-EX-1
     // Relax ONCE: if the words killed it but a structured dial exists, trust the dial.
-    if ((!rows || !rows.length) && parsed.terms.length &&
+    if ((!rows || !rows.length) && !gxHits.length && parsed.terms.length &&
         (parsed.category || parsed.price_min != null || parsed.price_max != null || parsed.listingType)){
       rows = await apiGet(base);   // drops the words, KEEPS category + price — never leaks other categories
       if (_stale()) return;
@@ -5490,7 +5511,7 @@ async function msRunSearch(explicit){
     // LAST resort (SEARCH-AI-1): a sentence-shaped total miss goes to the cheap AI
     // interpreter. Server-gated — when dark it answers {enabled:false} and this
     // whole branch is a no-op; the deterministic parser remains the full story.
-    if ((!rows || !rows.length) && _msSearchQ.split(/\s+/).length >= 3){
+    if ((!rows || !rows.length) && !gxHits.length && _msSearchQ.split(/\s+/).length >= 3){
       try {
         const ai = await (await fetch(BEA_URL + '/search/interpret', { method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -5525,8 +5546,8 @@ async function msRunSearch(explicit){
         }
       } catch(e) {}
     }
-    _msSearchIds = new Set((rows || []).map(r => 'bea_' + r.id));
-    msRouteToMatches(rows, parsed.category, !!explicit);
+    _msSearchIds = new Set((rows || []).map(r => 'bea_' + r.id).concat(gxHits.map(l => String(l.id))));
+    msRouteToMatches((rows || []).concat(gxHits.map(l => ({ category: l.cat }))), parsed.category, !!explicit);
   }
   // Free-text search is a strong intent signal — feed the wishlist radar like LM does.
   // The SERVER match count rides along: 0 = a true miss in this city (demand signal).
