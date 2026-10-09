@@ -1302,6 +1302,20 @@ REFLECTIONS = {
    ("RULINGS.md", ["TRUSTSQUARE'S PAID SMS ACCOUNT IS FOR OUR OUTREACH ONLY"], []),
    ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
  ],
+ "RUL-217": [
+   # Trainers are a door inside Tutors, built the way Casuals were built inside Services -- global from day one
+   # (David 8 Oct 2026; built by the scheduled run of 10 Oct 2026: TRAINERS-DOOR-1 / TRAINERS-EX-1, RG-0947 / RG-0948).
+   ("RULINGS.md", ["TRAINERS ARE A DOOR INSIDE TUTORS"], []),
+   ("ROLE_SLATE_REVIEW.md", ["# TUTORS — TRAINERS"], []),
+   ("roles/role_registry.json", ['"service_class": "Trainers"', '"trust_key": "Tutors-Trainers"', '"wage_floor": false'], []),
+   ("quick.html", ["TRAINERS-DOOR-1 (RUL-217", "return {category:'Tutors', service_class:'Trainers'}",
+                   "session:{t:'Per session',        u:' / session',  x:0}"], []),
+   ("genie/HARNESS.html", ["TRAINERS-DOOR-1 (RUL-217"], []),
+   ("bea_main.py", ['@app.get("/examples/trainers")', "_TRN_SESSION_RATE = {", '"Tutors-Trainers": "Tutors"',
+                    '_GATE_CATEGORIES = ("services", "housekeeping", "homehelp", "tutors")'], []),
+   ("ms.js", ["TRAINERS-EX-1 (RUL-217"], []),
+   ("stories/soccer_coach.json", ['"derived_from": "tutors_maths"'], []),
+ ],
  "RUL-211": [
    ("RULINGS.md", ["THE APP FOLLOWS WHERE SHE IS -- AUTOMATICALLY -- AND ONLY HER OWN CHOICE OVERRIDES IT", "[AMENDED 7 Oct 2026, David"], []),
    ("bea_main.py", ['("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")'], []),

@@ -671,6 +671,33 @@ async function msGenericExLoad(seq){
       m.demo_example = true; m.is_demo = 1; m.area = city || m.area; m.suburb = city || m.suburb;
       LISTINGS.push(m); added++;
     });
+    // TRAINERS-EX-1 (RUL-217, David 8 Oct 2026: "the same for tutors, but for a branch of tutors namely Trainers ... To also
+    // make it Global"): one AI example per trainer role nobody real (and no stored example) offers in this city, in Tutors.
+    try {
+      const tkey = 'T|' + key;
+      let trows = _msGxCache.get(tkey);
+      if (!trows) {
+        const r2 = await fetch(BEA_URL + '/examples/trainers?country=' + encodeURIComponent(cc) + '&city=' + encodeURIComponent(city)
+                               + '&lang=' + encodeURIComponent(lang)).catch(function(){ return null; });
+        trows = (r2 && r2.ok) ? await r2.json().catch(function(){ return null; }) : null;
+        if (Array.isArray(trows)) _msGxCache.set(tkey, trows); else trows = [];
+      }
+      if (seq === _msListSeq && trows.length) {
+        const tHere = LISTINGS.filter(function(l){ return l.cat === 'Tutors' && !l.generic && !String(l.id).startsWith('ph_')
+          && (!l.isLive || !l.city || l.city === city); });
+        trows.forEach(function(row){
+          const en = String(row.service_type || '');
+          if (!en || LISTINGS.some(function(l){ return l.id === 'gx_' + row.role_key; })) return;
+          if (tHere.some(function(l){ const t = String(l.subject || '') + ' ' + String(l.service_type || l.serviceType || '') + ' ' + String(l.title || '');
+            return new RegExp('\\b' + esc(en), 'i').test(t); })) return;
+          const m = _msMapBeaListing(row);
+          m.id = 'gx_' + row.role_key; m.beaListingId = null; m.generic = true; m.trainer = true; m.role_key = row.role_key;
+          m.typical_rate = row.typical_rate || null; m.typical_rate_source = row.typical_rate_source || null;
+          m.demo_example = true; m.is_demo = 1; m.area = city || m.area; m.suburb = city || m.suburb;
+          LISTINGS.push(m); added++;
+        });
+      }
+    } catch(e) { console.warn('TRAINERS-EX-1:', e); }
     if (added) { try { renderGrid(); } catch(e){} try { renderCatCounts(); } catch(e){} }   // GX-TILE-COUNT-1: the tile follows
   }catch(e){ console.warn('GENERIC-EX-1:', e); }
 }
@@ -689,7 +716,8 @@ function msGenericExSheet(l){
     + '<div data-notranslate="1" style="font:800 19px/1.25 Syne,sans-serif;">' + lm(l.title) + '</div>'
     + '<div style="margin:4px 0 10px;font-size:13px;color:var(--text-3,#6b7280);">📍 ' + lm(city) + ' · <b style="color:var(--text,#111)">' + lm(l.price || '') + '</b></div>'
     + '<p style="margin:0 0 14px;font-size:14px;line-height:1.45;">This is an AI example of how a listing for this work looks. Nobody offers it in ' + lm(city) + ' on TrustSquare yet, so no introduction can be made. Whoever lists this work sets their own rate.</p>'
-    + '<a href="' + lm(href) + '" style="display:block;text-align:center;background:var(--accent,#1d4ed8);color:#fff;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;margin-bottom:8px;">I do this work — list me free</a>'
+    + ((l.trainer && l.typical_rate) ? '<p style="margin:-6px 0 14px;font-size:13px;color:var(--text-3,#6b7280);">A session here typically costs about ' + lm(l.typical_rate.replace(' / session', '')) + ' (our estimate).</p>' : '')   // TRAINERS-EX-1
+    + '<a href="' + lm(href) + '" style="display:block;text-align:center;background:var(--accent,#1d4ed8);color:#fff;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;margin-bottom:8px;">' + (l.trainer ? 'I train people in this — list me free' : 'I do this work — list me free') + '</a>'
     + '<button type="button" id="gx-close" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border,#e5e7eb);background:transparent;color:inherit;font-weight:700;">Close</button>'
     + '</div></div>';
   ov.addEventListener('click', function(e){ if (e.target === ov || (e.target && e.target.id === 'gx-close')) ov.remove(); });
@@ -12198,7 +12226,9 @@ function msClearanceUpload(lid, kind){
     if(sel || ++n > 40){
       clearInterval(t);
       if(!sel) return;
-      sel.value = _lic ? 'category.services_tech.coc' : 'category.services_cas.clearance';
+      const _tut = !_lic && ![].some.call(sel.options || [], function(o){ return o.value === 'category.services_cas.clearance'; })
+        && [].some.call(sel.options || [], function(o){ return o.value === 'category.tutors.clearance'; });   // TRAINERS-GATE-1: a trainer's advert is a Tutors advert
+      sel.value = _lic ? 'category.services_tech.coc' : (_tut ? 'category.tutors.clearance' : 'category.services_cas.clearance');
       const ty = document.getElementById('el-dh-type'); if(ty){ ty.value = 'other'; if(typeof elUpdateDocHint === 'function') elUpdateDocHint('other'); }
       const lb = document.getElementById('el-dh-label'); if(lb && !lb.value) lb.value = _lic ? 'Licence to practise' : 'Police clearance';
       sel.scrollIntoView({block:'center'});

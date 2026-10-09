@@ -3495,7 +3495,7 @@ def _reset_vehicle_confirmations(existing, d):
 # Crèche assistant, and Au pair (RUL-172) -- it is a VERIFIED police clearance that opens public visibility.
 # She always sees her own advert; staff see everything; demo, exemplar and showcase adverts are not real people
 # and stay visible. ONE predicate serves every read that lists or shows adverts to strangers.
-_GATE_CATEGORIES = ("services", "housekeeping", "homehelp")
+_GATE_CATEGORIES = ("services", "housekeeping", "homehelp", "tutors")   # TRAINERS-DOOR-1 (RUL-217(d)): trainer clearance roles
 _GATE_VOUCH_SIGNALS = ("universal.employer_confirmed", "universal.employer_confirmed_2")
 _GATE_ID_SIGNALS = ("universal.id_verified", "category.lm.id_ai_verified")
 _GATE_CLEARANCE_SIGNALS = ("category.services_cas.clearance", "category.tutors.clearance")
@@ -5735,8 +5735,9 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
     # advert -- for the police-clearance roles neither does. Her card names her real gate and where her clearance is.
     _clr_roles = _gate_role_names()[1]
     try:
-        _clr = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id = ?",
-                            (email, "category.services_cas.clearance")).fetchone()
+        _clr = conn.execute("SELECT status FROM user_credentials WHERE LOWER(email) = LOWER(?) AND signal_id IN (?, ?) "
+                            "ORDER BY CASE status WHEN 'earned' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END LIMIT 1",   # TRAINERS-GATE-1
+                            (email, "category.services_cas.clearance", "category.tutors.clearance")).fetchone()
         _clr = _clr["status"] if _clr else None
     except Exception:
         _clr = None
@@ -6313,6 +6314,71 @@ def examples_roles(country: str = "ZA", city: str = "", lang: str = "en", role: 
         })
     return out
 
+
+
+# ── TRAINERS-EX-1 (RUL-217, David 8 Oct 2026) ───────────────────────────────────────────────────────────────────────
+# "I would like to do the same for tutors, but for a branch of tutors namely Trainers ... To also make it Global." One AI
+# example per trainer role, made ON REQUEST for the country, city and language being looked at -- the GENERIC-EX-1 pattern
+# (RUL-216) for the Trainers door inside Tutors. Marked (RUL-040), last (RUL-194), hidden by the same switch, counted on the
+# Home tile while the switch is on (GX-TILE-COUNT-1), kept off the map, never takes an introduction. The card names no
+# figure ('Your session rate', GX-RATE-WORDS-1); the tap sheet may show what a session typically costs locally, from
+# _TRN_SESSION_RATE below -- a NEW table, deliberately not the wage table (RUL-217(c): coaching is priced per session,
+# per month or per package, and has no minimum-wage floor).
+# _TRN_SESSION_RATE: a typical one-hour private session with a qualified coach, local currency. CLAUDE'S ESTIMATE from
+# general market knowledge, 10 Oct 2026 -- not a survey; re-check yearly (as the wage table is). Countries Quick sells in.
+_TRN_SESSION_RATE = {
+    "ZA": ("R", 300), "NA": ("N$", 250), "BW": ("P", 200), "MZ": ("MT ", 1500), "KE": ("KSh ", 2000),
+    "GB": ("£", 40), "DE": ("€", 45), "AU": ("A$", 80), "US": ("$", 70),
+}
+_TRN_SESSION_RATE_ASOF = "Claude estimate, 10 Oct 2026 (re-check yearly)"
+_TRN_CACHE = {"roles": None}
+
+
+def _trn_roles():
+    if _TRN_CACHE["roles"] is None:
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"), encoding="utf-8") as fh:
+                _TRN_CACHE["roles"] = [r for r in json.load(fh).get("roles", [])
+                                       if r.get("status") == "in" and r.get("service_class") == "Trainers"]
+        except Exception as exc:
+            _log.warning("TRAINERS-EX-1: role registry unreadable: %s", exc); _TRN_CACHE["roles"] = []
+    return _TRN_CACHE["roles"]
+
+
+def _trn_money(sym, n):
+    return sym + "{:,}".format(int(n)).replace(",", " ")
+
+
+@app.get("/examples/trainers")
+def examples_trainers(country: str = "ZA", city: str = "", lang: str = "en", role: str = ""):
+    """TRAINERS-EX-1 (RUL-217): AI example cards for the trainer roles, made for this country and city on request (nothing stored)."""
+    cc = re.sub(r"[^A-Za-z]", "", country or "ZA")[:2].upper() or "ZA"
+    if cc == "UK":
+        cc = "GB"
+    city = _plain_text(str(city or ""))[:60].strip()
+    want = re.sub(r"[^a-z0-9_]", "", (role or "").lower())[:60]
+    en_rate = "Your session rate"
+    price = _gx_word(en_rate, lang) or en_rate
+    rate = _TRN_SESSION_RATE.get(cc)
+    typical = (_trn_money(rate[0], rate[1]) + " / session") if rate else None
+    out = []
+    for r in _trn_roles():
+        k = r.get("key") or ""
+        if want and k != want:
+            continue
+        label = _gx_label(r, lang)
+        en = (r.get("label") or {}).get("en") or label
+        pic = "/static/quick/role_%s.jpg" % k
+        out.append({
+            "id": "gx_" + k, "generic": True, "trainer": True, "role_key": k, "title": label, "category": "Tutors",
+            "service_class": "Trainers", "service_type": en, "subject": en,
+            "city": city or None, "suburb": None, "area": None, "country": cc, "price": price,
+            "typical_rate": typical, "typical_rate_source": _TRN_SESSION_RATE_ASOF if rate else None,
+            "description": "[photos:%s]\n%s%s." % (pic, label, (" — " + city) if city else ""),
+            "thumb_url": pic, "medium_url": pic, "photo_urls": json.dumps([pic]), "trust_score": None,
+            "is_demo": 1, "demo_example": True, "super_example": 0, "listing_status": "live",
+        })
+    return out
 
 
 @app.get("/geo/city-counts")
@@ -14879,7 +14945,7 @@ _CATEGORY_SIGNALS = {
         "category.tutors.cert_diploma":    {"name": "Certificate or Diploma (NQF5–6)", "points": 6, "how_to_earn": "Upload certificate."},
         "category.tutors.bachelor":        {"name": "Bachelor's Degree (NQF7)", "points": 10, "how_to_earn": "Upload certificate (replaces diploma points).", "replaces": "category.tutors.cert_diploma"},
         "category.tutors.honours":         {"name": "Honours / Postgraduate (NQF8+)", "points": 14, "how_to_earn": "Upload certificate (replaces bachelor's points).", "replaces": "category.tutors.bachelor"},
-        "category.tutors.specialisation":  {"name": "Subject specialisation certificate", "points": 5, "how_to_earn": "Upload cert or transcript specific to your subject. Examples: Maths/Science → Olympiad cert, IEB transcript; Music → UNISA/ABRSM grade cert; Languages → CELTA/TESOL; Coding → AWS/Google/Microsoft cert; Accounting → SAIPA/CIMA; Sport → ASA/SAFA coaching badge."},
+        "category.tutors.specialisation":  {"name": "Subject specialisation certificate", "points": 5, "how_to_earn": "Upload cert or transcript specific to your subject. Examples: Maths/Science → Olympiad cert, IEB transcript; Music → UNISA/ABRSM grade cert; Languages → CELTA/TESOL; Coding → AWS/Google/Microsoft cert; Accounting → SAIPA/CIMA; Sport (TRAINERS-DOOR-1, RUL-217) → your sport's coaching badge from its national federation or the international body, e.g. Soccer → SAFA / CAF / UEFA coaching licence; Rugby → World Rugby coaching level; Cricket → national board coaching level; Swimming → swimming federation coach / learn-to-swim certificate; Tennis, squash, padel, badminton, table tennis → federation coach level (ITF for tennis); Golf → PGA professional; Athletics and running → World Athletics / national federation coach level; Gymnastics and acrobatics → federation coach level; Martial arts (judo, karate, taekwondo, jiu-jitsu, boxing, wrestling) → instructor certificate and dan or coach grade from your federation; Fitness, aerobics, functional fitness → registered personal-trainer or group-fitness certificate; Yoga → 200-hour teacher training; Pilates → mat or reformer instructor certificate; Water sports → diving, surfing, sailing or paddling instructor certificate; Horse riding → riding-instructor qualification; Climbing, skiing, snowboarding → instructor certificate; Chess → FIDE trainer title (claimed, not uploaded)."},
         "category.tutors.exp_2_5":         {"name": "Teaching experience 2–5 years", "points": 5, "how_to_earn": "Upload CV with verifiable teaching dates — reviewed by TrustSquare."},
         "category.tutors.exp_5plus":       {"name": "Teaching experience 5+ years", "points": 6, "how_to_earn": "Upload CV.", "additional_to": "category.tutors.exp_2_5"},
         "category.tutors.safeguarding":    {"name": "Safeguarding / child protection cert", "points": 3, "how_to_earn": "Upload safeguarding or child protection certificate. Examples: NSPCC (UK), Mandatory Reporter (AU/US), child protection training SA."},
@@ -15324,7 +15390,7 @@ def _sum_earned_with_replaces(items: list, signals_dict: dict) -> int:
 _TRUST_CAT_NORM = {
     "LocalMarket": "local_market", "Local Market": "local_market", "local_market": "local_market",
     "Property": "Property", "Property_agent": "Property", "Property_private": "Property_private",
-    "Tutors": "Tutors",
+    "Tutors": "Tutors", "Tutors-Trainers": "Tutors",   # TRAINERS-DOOR-1 (RUL-217): the Trainers door scores on the Tutors set
     "Services": "Services-Technical",          # default subclass when none is given
     "Services-Technical": "Services-Technical", "Services-Casuals": "Services-Casuals",
     "Adventures": "Adventures-Experiences",
@@ -15356,7 +15422,7 @@ def _norm_cat_key(category, service_class=None) -> str:
 _CATALOGUE_PUBLIC_KEYS = {
     "property": "Property_private", "property_private": "Property_private", "property_agent": "Property",
     "localmarket": "local_market", "local_market": "local_market", "local market": "local_market",
-    "collectors": "Collectors", "cars": "Cars_private", "tutors": "Tutors",
+    "collectors": "Collectors", "cars": "Cars_private", "tutors": "Tutors", "tutors-trainers": "Tutors", "trainers": "Tutors",
     "services": "Services-Technical", "services-technical": "Services-Technical", "services-casuals": "Services-Casuals",
     "homehelp": "Services-Casuals", "housekeeping": "Services-Casuals",
     "adventures": "Adventures-Experiences", "adventures-experiences": "Adventures-Experiences",
@@ -15622,7 +15688,7 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
         # Map frontend category param back to DB category values
         _cat_listing_map = {
             "LocalMarket": "local_market", "local_market": "local_market",
-            "Property": "Property", "Tutors": "Tutors",
+            "Property": "Property", "Tutors": "Tutors", "Tutors-Trainers": "Tutors",
             "Services-Technical": "Services", "Services": "Services",
             "Services-Casuals": "Services",
             "Adventures-Experiences": "Adventures",
@@ -16809,7 +16875,7 @@ def list_seller_documents(
         "LocalMarket": "category.lm.",
         "local_market": "category.lm.",
         "Property": "category.property.",
-        "Tutors": "category.tutors.",
+        "Tutors": "category.tutors.", "Tutors-Trainers": "category.tutors.",
         "Services-Technical": "category.services_tech.",
         "Services-Casuals": "category.services_cas.",
         # CLEARANCE-CHECK-1 (F2 walk): Edit sends "Services" for every service advert -- a nanny's police clearance

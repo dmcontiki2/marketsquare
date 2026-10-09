@@ -266,6 +266,117 @@ STEP_OVERRIDES.update({"au_pair": {"what": AGES},
  "pet_sitter_dog_walker": {"what": {"key": "pets", "q": "Which pets do you look after?", "kind": "tile", "multi": True,
    "tiles": [{"t": "Dogs"}, {"t": "Cats"}, {"t": "Birds"}, {"t": "Other pets"}]}}})
 
+# ---- TRAINERS-DOOR-1 (RUL-217, David 8 Oct 2026): "the same for tutors, but for a branch of tutors namely Trainers ...
+# all of the sports types one can get a trainer for ... the same flows, Hows etc ... To also make it Global". A door inside
+# Tutors, built the way Casuals were built inside Services: adverts write category Tutors, service_class Trainers (Trust
+# Score key Tutors-Trainers -> the Tutors evidence set). Prices are per session / per month / per package: no wage floor. ----
+TRAINER_STEPS = [
+    {"key": "where", "q": "Where do you train people?", "kind": "tile", "free": True},
+    {"key": "price", "q": "What do you charge?", "kind": "chip",
+     "tiles": [{"t": "Per session"}, {"t": "Per month"}, {"t": "Per package"}], "floor": None, "ruling": "RUL-217(c)"},
+]
+TRAINER_SIGNALS = ["category.tutors.clearance", "category.tutors.specialisation", "category.tutors.safeguarding",
+                   "category.tutors.cert_diploma", "category.tutors.exp_2_5", "category.tutors.exp_5plus"]
+TRAINER_DOOR = {"category": "Tutors", "service_class": "Trainers", "trust_key": "Tutors-Trainers",
+                "entry_tile": "Sport & fitness", "picker_steps": ["what=Sport & fitness", "group", "role"],
+                "taps_to_draft": 5, "price_units": ["session", "month", "package"], "wage_floor": False,
+                "ruling": "RUL-217"}
+TRAINER_ALIASES = {
+ "personal_trainer": ["Gym trainer", "Fitness trainer", "Bodybuilding coach"],
+ "functional_fitness_coach": ["CrossFit coach", "Bootcamp instructor"], "dance_fitness_instructor": ["Dance instructor"],
+ "kickboxing_coach": ["Muay Thai coach"], "mma_coach": ["Mixed martial arts coach"], "jiu_jitsu_instructor": ["BJJ coach"],
+ "soccer_coach": ["Football coach"], "hockey_coach": ["Field hockey coach", "Ice hockey coach"],
+ "baseball_coach": ["Softball coach"], "swimming_coach": ["Swimming teacher", "Learn-to-swim instructor"],
+ "diving_instructor": ["Scuba instructor", "Freediving instructor"],
+ "rowing_canoeing_coach": ["Rowing coach", "Canoeing coach", "Kayaking coach"],
+ "running_athletics_coach": ["Running coach", "Athletics coach", "Track coach"],
+ "horse_riding_instructor": ["Riding instructor", "Equestrian coach"],
+ "climbing_instructor": ["Rock climbing instructor", "Bouldering coach"],
+ "skating_coach": ["Ice skating coach", "Roller skating coach", "Skateboarding coach"],
+ "ski_snowboard_instructor": ["Ski instructor", "Snowboard instructor"],
+}
+PIC.update({
+ "personal_trainer": "a gym floor with a rack of dumbbells, a weight bench and a kettlebell in morning light",
+ "aerobics_instructor": "a bright aerobics studio with step platforms, a mirror wall and a speaker on the floor",
+ "dance_fitness_instructor": "an empty dance studio with a wooden sprung floor, a ballet barre and a sound system",
+ "yoga_instructor": "rolled-out yoga mats with blocks and a strap in a calm sunlit studio with plants",
+ "pilates_instructor": "a Pilates reformer machine with a Pilates ring and a mat in a light studio",
+ "functional_fitness_coach": "a functional training box with kettlebells, a rowing machine, battle ropes and plyo boxes",
+ "strength_conditioning_coach": "a loaded barbell on a lifting platform with bumper plates, chalk and a stopwatch",
+ "boxing_coach": "a boxing ring corner with a pair of red gloves and pads hanging on the ropes",
+ "kickboxing_coach": "a heavy kick bag, shin guards and gloves on a gym mat",
+ "wrestling_coach": "a wrestling mat with its circle markings in an empty school gym",
+ "judo_instructor": "a neatly folded white judogi with a belt on a tatami mat",
+ "karate_instructor": "a folded white karate gi with a black belt on a polished dojo floor",
+ "taekwondo_instructor": "a taekwondo dobok, a head guard and a kicking paddle on a blue mat",
+ "jiu_jitsu_instructor": "a folded jiu-jitsu gi with a brown belt on a grappling mat",
+ "mma_coach": "an empty MMA cage with fingerless gloves on the canvas",
+ "fencing_coach": "a fencing mask and two foils crossed on a fencing piste",
+ "soccer_coach": "a soccer ball and training cones on a green pitch in front of a goal",
+ "rugby_coach": "a rugby ball on a kicking tee on a grass field with the posts behind",
+ "cricket_coach": "a cricket bat, ball and stumps on a green practice net pitch",
+ "hockey_coach": "a field hockey stick and ball on an artificial turf pitch",
+ "netball_coach": "a netball resting under a netball hoop on an outdoor court",
+ "basketball_coach": "a basketball on a polished indoor court under the hoop",
+ "volleyball_coach": "a volleyball by the net on a beach volleyball court",
+ "baseball_coach": "a baseball glove, ball and bat on a diamond infield",
+ "american_football_coach": "an American football on a turf field at the yard line",
+ "tennis_coach": "a tennis racket and a basket of yellow balls on a hard court by the net",
+ "squash_coach": "a squash racket and ball on the wooden floor of a squash court",
+ "padel_coach": "a padel racket and ball on a blue padel court with glass walls",
+ "badminton_coach": "a badminton racket and shuttlecock on an indoor court by the net",
+ "table_tennis_coach": "a table tennis bat and ball on a blue table with the net",
+ "golf_coach": "a golf ball on a tee with a driver on a driving-range mat at sunrise",
+ "archery_coach": "a recurve bow and arrows in front of a target on an outdoor archery range",
+ "swimming_coach": "an outdoor swimming pool with lane ropes, a kickboard and goggles on the edge",
+ "diving_instructor": "scuba tanks, a mask and fins on a boat deck over clear blue water",
+ "surfing_coach": "a surfboard on the sand at the water's edge with rolling waves",
+ "rowing_canoeing_coach": "a canoe with paddles at the edge of a calm dam at dawn",
+ "sailing_instructor": "a small sailing dinghy with its sail up at a jetty on a lake",
+ "running_athletics_coach": "an athletics track with lane lines, starting blocks and running shoes",
+ "cycling_coach": "a road bicycle and a helmet on a quiet tarred road at sunrise",
+ "triathlon_coach": "a triathlon transition rack with a bike, running shoes, goggles and a swim cap",
+ "horse_riding_instructor": "a saddled horse's tack: a saddle, bridle and riding helmet on a stable fence by an arena",
+ "climbing_instructor": "a coiled climbing rope, harness and chalk bag at the foot of a rock face",
+ "skating_coach": "a pair of ice skates on the edge of a smooth ice rink",
+ "ski_snowboard_instructor": "skis, poles and a snowboard in fresh snow on a mountain slope",
+ "gymnastics_coach": "a balance beam and gymnastics mats in a bright gym hall",
+ "acrobatics_coach": "an acrobatics hall with a tumbling track, crash mats and aerial silks hanging",
+ "chess_coach": "a wooden chess board mid-game with a chess clock on a table",
+})
+AF.update({
+ "personal_trainer": "Persoonlike afrigter", "aerobics_instructor": "Aërobiese instrukteur",
+ "dance_fitness_instructor": "Dansfiksheid-instrukteur", "yoga_instructor": "Joga-instrukteur",
+ "pilates_instructor": "Pilates-instrukteur", "functional_fitness_coach": "Funksionele fiksheidsafrigter",
+ "strength_conditioning_coach": "Krag- en kondisioneringsafrigter", "boxing_coach": "Boksafrigter",
+ "kickboxing_coach": "Skopboksafrigter", "wrestling_coach": "Stoei-afrigter", "judo_instructor": "Judo-instrukteur",
+ "karate_instructor": "Karate-instrukteur", "taekwondo_instructor": "Taekwondo-instrukteur",
+ "jiu_jitsu_instructor": "Jiu-jitsu-instrukteur", "mma_coach": "MMA-afrigter", "fencing_coach": "Skermafrigter",
+ "soccer_coach": "Sokkerafrigter", "rugby_coach": "Rugbyafrigter", "cricket_coach": "Krieketafrigter",
+ "hockey_coach": "Hokkie-afrigter", "netball_coach": "Netbalafrigter", "basketball_coach": "Basketbalafrigter",
+ "volleyball_coach": "Vlugbalafrigter", "baseball_coach": "Bofbalafrigter",
+ "american_football_coach": "Amerikaanse voetbalafrigter", "tennis_coach": "Tennisafrigter",
+ "squash_coach": "Muurbalafrigter", "padel_coach": "Padel-afrigter", "badminton_coach": "Pluimbalafrigter",
+ "table_tennis_coach": "Tafeltennisafrigter", "golf_coach": "Gholfafrigter", "archery_coach": "Boogskietafrigter",
+ "swimming_coach": "Swemafrigter", "diving_instructor": "Duikinstrukteur", "surfing_coach": "Branderplankafrigter",
+ "rowing_canoeing_coach": "Roei- en kano-afrigter", "sailing_instructor": "Seilinstrukteur",
+ "running_athletics_coach": "Hardloop- en atletiekafrigter", "cycling_coach": "Fietsryafrigter",
+ "triathlon_coach": "Driekamp-afrigter", "horse_riding_instructor": "Perdry-instrukteur",
+ "climbing_instructor": "Klim-instrukteur", "skating_coach": "Skaats-afrigter",
+ "ski_snowboard_instructor": "Ski- en sneeuplankinstrukteur", "gymnastics_coach": "Gimnastiekafrigter",
+ "acrobatics_coach": "Akrobatiekafrigter", "chess_coach": "Skaakafrigter",
+})
+# RUL-217(d): trainer types that commonly coach children carry the RUL-153 police-clearance gate
+TRAINER_CLEAR = {"wrestling_coach", "judo_instructor", "karate_instructor", "taekwondo_instructor", "soccer_coach",
+ "rugby_coach", "cricket_coach", "hockey_coach", "netball_coach", "basketball_coach", "volleyball_coach", "baseball_coach",
+ "american_football_coach", "tennis_coach", "squash_coach", "badminton_coach", "table_tennis_coach", "golf_coach",
+ "swimming_coach", "surfing_coach", "running_athletics_coach", "horse_riding_instructor", "climbing_instructor",
+ "skating_coach", "ski_snowboard_instructor", "gymnastics_coach", "acrobatics_coach", "chess_coach"}
+for _k in TRAINER_CLEAR: GATES[_k] = dict(CLEAR, ruling="RUL-217(d) / RUL-153")
+TRAINER_PICTURE_STYLE = PICTURE_STYLE.replace("a South African setting", "a neutral setting that reads anywhere in the world")
+
+ROLE_PATCH = json.loads('{"car_washer": {"note": "Mobile washers come to homes and offices — a direct hire. CARWASH-1 (David, 7 Oct 2026): priced per car and per kind of clean (wash only / wash & vacuum / wash, vacuum, tyres & dashboard / full valet), never per hour; area-bound like a cleaner; regulars rebook him through Buzz.", "questions": [{"key": "where", "q": "Where can you work?", "kind": "tile", "free": true}, {"key": "days", "q": "Which days are you open?", "kind": "week"}, {"key": "price", "q": "What do you charge per car?", "kind": "chip"}], "price_menu": ["Wash only", "Wash & vacuum", "Wash, vacuum, tyres & dashboard", "Full valet (inside & out)"], "employer_kinds": ["household", "business"]}}')
+
 def main():
     t = io.open(SLATE, encoding="utf-8").read()
     body = t.split("## RULED")[0]
@@ -273,6 +384,8 @@ def main():
     for line in body.split("\n"):
         if line.startswith("# SERVICES"):
             cls = "Casuals" if "CASUALS" in line else "Technical"
+        elif line.startswith("# TUTORS"):        # TRAINERS-DOOR-1 (RUL-217)
+            cls = "Trainers"
         elif line.startswith("### "):
             group = line[4:].strip()
         elif cls and line.startswith("| ") and not line.startswith("| Role"):
@@ -290,23 +403,36 @@ def main():
                 elif key in MERGED: row["merged_into"] = MERGED[key]
                 row["note"] = notes
                 roles.append(row); continue
-            steps = [dict(s) for s in (CASUALS_STEPS if cls == "Casuals" else TECH_STEPS)]
-            row["questions"] = steps
-            row["finish_questions"] = list(STEP_OVERRIDES.get(key, {}).values())
-            row["enrol_link"] = "/q/services?role=%s" % key  # employer invite skips taps 1-2 (RUL-159)
-            row["signals"] = ["category.services_%s.%s" % ("cas" if cls == "Casuals" else "tech", s)
-                              for s in (CAS_SIGNALS if cls == "Casuals" else TECH_SIGNALS)]
+            if cls == "Trainers":    # TRAINERS-DOOR-1 (RUL-217)
+                row["category"] = "Tutors"; row["door"] = "tutors"
+                row["questions"] = [dict(s) for s in TRAINER_STEPS]
+                row["finish_questions"] = []
+                row["enrol_link"] = "/q/tutors?role=%s" % key
+                row["signals"] = list(TRAINER_SIGNALS) + (["category.tutors.fide_ft", "category.tutors.fide_fi"]
+                                                          if key == "chess_coach" else [])
+                if key in TRAINER_ALIASES: row["aliases"] = list(TRAINER_ALIASES[key])
+            else:
+              steps = [dict(s) for s in (CASUALS_STEPS if cls == "Casuals" else TECH_STEPS)]
+              row["questions"] = steps
+              row["finish_questions"] = list(STEP_OVERRIDES.get(key, {}).values())
+              row["enrol_link"] = "/q/services?role=%s" % key  # employer invite skips taps 1-2 (RUL-159)
+              row["signals"] = ["category.services_%s.%s" % ("cas" if cls == "Casuals" else "tech", s)
+                                for s in (CAS_SIGNALS if cls == "Casuals" else TECH_SIGNALS)]
             row["gate"] = GATES.get(key)
             if key in SHOWN:   # LICENCE-SHOWN-1: shown to buyers as checked or not, never a gate
                 row["licence_shown"] = {"licences": SHOWN[key], "label": "Driving licence", "ruling": "RUL-198"}
             row["employer_kinds"] = EK.get(key, ["household"] if cls == "Casuals" else [])
             if key not in PIC: sys.exit("NO ROLE PICTURE SUBJECT for %s (RUL-157)" % key)
             row["role_picture"] = {"file": "roles/pictures/%s.png" % key,
-                                   "prompt": PICTURE_STYLE.format(subject=PIC[key])}
+                                   "prompt": (TRAINER_PICTURE_STYLE if cls == "Trainers" else PICTURE_STYLE).format(subject=PIC[key])}
             row["draft_title"] = {"en": "%s available in {where}" % label,
                                   "af": ("%s beskikbaar in {where}" % AF[key]) if AF.get(key) else None}
             row["note"] = notes
             roles.append(row)
+    # CARWASH-1 (David, 7 Oct 2026) was written straight into role_registry.json, so a re-run dropped it. Carried here
+    # now (found by the RUL-217 build, 10 Oct 2026) -- the builder stays the one writer.
+    for r in roles:
+        if r["key"] in ROLE_PATCH: r.update(json.loads(json.dumps(ROLE_PATCH[r["key"]])))
     # aliases: every OUT row merged into a live row becomes a search synonym on it
     by = {r["key"]: r for r in roles}
     for r in roles:
@@ -317,10 +443,11 @@ def main():
     keys = [r["key"] for r in roles]
     assert len(keys) == len(set(keys)), "duplicate role key"
     out = {"_generated_by": "scripts/build_role_registry.py from ROLE_SLATE_REVIEW.md -- never hand-edit",
-           "_rulings": ["RUL-150", "RUL-153", "RUL-154", "RUL-155", "RUL-156", "RUL-157", "RUL-172"],
+           "_rulings": ["RUL-150", "RUL-153", "RUL-154", "RUL-155", "RUL-156", "RUL-157", "RUL-172", "RUL-217"],
            "_invariant": "Enrolment creates an account and a sign-in link, never a listing (RUL-150).",
            "door": {"category": "services", "picker_steps": PICKER_STEPS, "taps_to_draft": 5,
                     "ruling": "RUL-159"},
+           "trainers_door": TRAINER_DOOR,
            "counts": {s: sum(1 for r in roles if r["status"] == s) for s in ("in", "later", "out")},
            "roles": roles}
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(out, ensure_ascii=False, indent=1) + "\n")

@@ -1,0 +1,549 @@
+{
+ "type": "boxing_coach",
+ "status": "draft",
+ "flow": "F5",
+ "serves": [],
+ "label": {
+  "en": "Boxing coach",
+  "af": "Boksafrigter",
+  "zu": "Umqeqeshi wesibhakela",
+  "xh": "Umqeqeshi wamanqindi",
+  "nso": "Mohlahli wa matswele"
+ },
+ "title": {
+  "en": "Boxing coach: from listing to the people who find you",
+  "af": "Boksafrigter: van advertensie tot die mense wat jou vind",
+  "zu": "Umqeqeshi wesibhakela: kusukela esikhangisweni kuya kubazali abakutholayo",
+  "xh": "Umqeqeshi wamanqindi: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+  "nso": "Mohlahli wa matswele: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+ },
+ "walked_on": "2026-09-30",
+ "people": {
+  "you": "Zanele",
+  "regular": "Thembeka",
+  "customer": "Nosipho"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "List in Quick",
+   "af": "Lys in Quick",
+   "zu": "Faka ku-Quick",
+   "xh": "Faka kwi-Quick",
+   "nso": "Tsenya go Quick"
+  },
+  {
+   "id": "c2",
+   "en": "Publish",
+   "af": "Publiseer",
+   "zu": "Shicilela",
+   "xh": "Papasha",
+   "nso": "Phatlalatša"
+  },
+  {
+   "id": "c3",
+   "en": "Your regular students",
+   "af": "Jou vaste leerders",
+   "zu": "Abafundi bakho abajwayelekile",
+   "xh": "Abafundi bakho abaqhelekileyo",
+   "nso": "Baithuti ba gago ba ka mehla"
+  },
+  {
+   "id": "c4",
+   "en": "A new parent",
+   "af": "'n Nuwe ouer",
+   "zu": "Umzali omusha",
+   "xh": "Umzali omtsha",
+   "nso": "Motswadi yo moswa"
+  },
+  {
+   "id": "c5",
+   "en": "Pass it on",
+   "af": "Gee dit aan",
+   "zu": "Kudlulisele",
+   "xh": "Yidlulisele",
+   "nso": "E fetišetše pele"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_01_door",
+   "pass": true,
+   "quick": [
+    "door"
+   ],
+   "en": [
+    "Open Quick, go to [[Tutors]] and tap [[Offer tutoring]]",
+    "Swipe the doors until you see Tutors. One tap starts your listing."
+   ],
+   "af": [
+    "Maak Quick oop, gaan na [[Tutors]] en tik [[Offer tutoring]]",
+    "Swiep deur die deure tot jy Tutors sien. Een tik begin jou advertensie."
+   ],
+   "zu": [
+    "Vula i-Quick, iya ku-[[Tutors]] bese uthepha [[Offer tutoring]]",
+    "Swayipha iminyango uze ubone i-Tutors. Ukuthepha kanye kuqala isikhangiso sakho."
+   ],
+   "xh": [
+    "Vula i-Quick, yiya kwi-[[Tutors]] uze ucofe [[Offer tutoring]]",
+    "Tyibilikisa iingcango ude ubone i-Tutors. Ukucofa kanye kuqalisa intengiso yakho."
+   ],
+   "nso": [
+    "Bula Quick, eya go [[Tutors]] gomme o kgotle [[Offer tutoring]]",
+    "Šuthiša mabati go fihlela o bona Tutors. Go kgotla gatee go thoma papatšo ya gago."
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_02_what",
+   "pass": true,
+   "quick": [
+    "what"
+   ],
+   "en": [
+    "Tap [[Sport & fitness]], then your sport",
+    "Pick [[Combat sports]], then [[Boxing coach]]. Coach something else? Tap [[Another option]] and type it."
+   ],
+   "af": [
+    "Tik [[Sport & fitness]], dan jou sport",
+    "Kies [[Combat sports]], dan [[Boxing coach]]. Rig jy iets anders af? Tik [[Another option]] en tik dit in."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_05_price",
+   "pass": true,
+   "quick": [
+    "price"
+   ],
+   "en": [
+    "Set your price per session",
+    "Quick opens on [[Per session]]: type what one session costs. [[Per month]] and [[Per package]] are one tap away. Coaching is priced for the session, so there is no minimum-wage floor."
+   ],
+   "af": [
+    "Stel jou prys per sessie",
+    "Quick begin by [[Per session]]: tik wat een sessie kos. [[Per month]] en [[Per package]] is een tik weg. Afrigting word per sessie geprys, so daar is geen minimumloon-vloer nie."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_06_where",
+   "pass": true,
+   "quick": [
+    "where"
+   ],
+   "en": [
+    "Tick the areas where you train people",
+    "You can tick more than one; anyone searching any of them finds you."
+   ],
+   "af": [
+    "Merk die gebiede waar jy mense afrig",
+    "Jy kan meer as een merk; enigiemand wat in enige van hulle soek, vind jou."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_07_draft",
+   "pass": true,
+   "quick": [
+    "draft"
+   ],
+   "en": [
+    "Check your listing, then save",
+    "Your sport, your price and your areas are on it. Add your first name and email and tap [[Save my listing]]."
+   ],
+   "af": [
+    "Kyk na jou advertensie en stoor dit",
+    "Jou sport, jou prys en jou gebiede is daarop. Voeg jou voornaam en e-pos by en tik [[Save my listing]]."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_08_saved",
+   "pass": true,
+   "quick": [
+    "saved"
+   ],
+   "en": [
+    "Saved: now sign the terms and publish",
+    "Tap [[Sign the terms and publish]], or open the email we sent you. Nobody can see your listing yet."
+   ],
+   "af": [
+    "Gestoor: teken nou die bepalings en publiseer",
+    "Tik [[Sign the terms and publish]], of maak die e-pos oop wat ons gestuur het. Niemand kan jou advertensie nog sien nie."
+   ],
+   "zu": [
+    "Kulondoloziwe: manje sayina imigomo bese ushicilela",
+    "Thepha [[Sign the terms and publish]], noma uvule i-imeyili esikuthumelele yona. Akekho umuntu ongabona isikhangiso sakho okwamanje."
+   ],
+   "xh": [
+    "Kugciniwe: ngoku sayina imimiselo uze upapashe",
+    "Cofa [[Sign the terms and publish]], okanye uvule i-imeyile esikuthumelele yona. Akukho mntu unokubona intengiso yakho okwangoku."
+   ],
+   "nso": [
+    "E bolokilwe: bjale saena melawana gomme o phatlalatše",
+    "Kgotla [[Sign the terms and publish]], goba o bule imeile ye re go rometšego yona. Ga go yo a ka bonago papatšo ya gago ga bjale."
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_09_photos",
+   "pass": true,
+   "en": [
+    "Add photos of where you train people",
+    "In TrustSquare tap [[Edit]], then [[Add Photo]]: the field, court, pool or gym and your equipment, no children's faces. Then tap [[Save Changes]] to keep them."
+   ],
+   "af": [
+    "Voeg foto's by van waar jy mense afrig",
+    "Tik in TrustSquare [[Edit]], dan [[Add Photo]]: die veld, baan, swembad of gimnasium en jou toerusting, geen kinders se gesigte nie. Tik dan [[Save Changes]] om hulle te hou."
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_10_terms",
+   "pass": true,
+   "en": [
+    "Accept the seller terms once",
+    "Read them, tick both boxes at the end and tap [[I accept]]."
+   ],
+   "af": [
+    "Aanvaar die verkopersbepalings een keer",
+    "Lees hulle, merk albei blokkies aan die einde en tik [[I accept]]."
+   ],
+   "zu": [
+    "Yamukela imigomo yabathengisi kanye",
+    "Yifunde, maka omabili amabhokisi ekugcineni bese uthepha [[I accept]]."
+   ],
+   "xh": [
+    "Yamkela imimiselo yabathengisi kanye",
+    "Yifunde, phawula zombini iibhokisi ekugqibeleni uze ucofe [[I accept]]."
+   ],
+   "nso": [
+    "Amogela melawana ya barekiši gatee",
+    "E bale, swaya mapokisi a mabedi mafelelong gomme o kgotle [[I accept]]."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_12_published",
+   "pass": true,
+   "en": [
+    "Publish: parents can find you at once",
+    "Tap [[Publish]]. Your card shows [[Live]]."
+   ],
+   "af": [
+    "Publiseer: ouers kan jou dadelik vind",
+    "Tik [[Publish]]. Jou kaart wys [[Live]]."
+   ],
+   "zu": [
+    "Shicilela: abazali bangakuthola ngokushesha",
+    "Thepha [[Publish]]. Ikhadi lakho likhombisa [[Live]]."
+   ],
+   "xh": [
+    "Papasha: abazali banokukufumana kwangoko",
+    "Cofa [[Publish]]. Ikhadi lakho libonisa [[Live]]."
+   ],
+   "nso": [
+    "Phatlalatša: batswadi ba ka go hwetša gona bjale",
+    "Kgotla [[Publish]]. Karata ya gago e bontšha [[Live]]."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_13_buzz_link",
+   "pass": true,
+   "quick": [
+    "buzz"
+   ],
+   "en": [
+    "Send your Buzz link to the people you already train",
+    "In [[My Space]], open [[Buzz]] and tap [[Get my link]]. One link for all of them: [[Send on WhatsApp]] or [[Copy]]."
+   ],
+   "af": [
+    "Stuur jou Buzz-skakel aan die mense wat jy reeds afrig",
+    "Maak [[Buzz]] in [[My Space]] oop en tik [[Get my link]]. Een skakel vir almal: [[Send on WhatsApp]] of [[Copy]]."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c3",
+   "who": "regular",
+   "cost": "free",
+   "img": "f5_14_join",
+   "pass": true,
+   "en": [
+    "A regular student's parent joins",
+    "She opens your link, ticks the Buzz terms and taps [[Continue]]. Now you can buzz each other."
+   ],
+   "af": [
+    "Die ouer van 'n vaste leerder sluit aan",
+    "Sy maak jou skakel oop, merk die Buzz-bepalings en tik [[Continue]]. Nou kan julle mekaar buzz."
+   ],
+   "zu": [
+    "Umzali womfundi ojwayelekile uyajoyina",
+    "Uvula isixhumanisi sakho, amake imigomo ye-Buzz bese ethepha [[Continue]]. Manje ningathumelelana nge-Buzz."
+   ],
+   "xh": [
+    "Umzali womfundi oqhelekileyo uyajoyina",
+    "Uvula ikhonkco lakho, aphawule imimiselo ye-Buzz aze acofe [[Continue]]. Ngoku ningathumelelana nge-Buzz."
+   ],
+   "nso": [
+    "Motswadi wa moithuti wa ka mehla o a tsena",
+    "O bula kgokagano ya gago, a swaye melawana ya Buzz gomme a kgotle [[Continue]]. Bjale le ka romelana ka Buzz."
+   ]
+  },
+  {
+   "n": 12,
+   "ch": "c3",
+   "who": "regular",
+   "cost": "free",
+   "img": "f5_15_buzz_sent",
+   "pass": true,
+   "en": [
+    "She buzzes you about a lesson",
+    "One line, straight to your phone: \"Can we move Thursday's lesson to 5pm?\" If your phone has no push, it comes by email."
+   ],
+   "af": [
+    "Sy buzz vir jou oor 'n les",
+    "Een reël, reguit na jou foon: \"Kan ons Donderdag se les na 17:00 skuif?\" As jou foon nie kennisgewings kry nie, kom dit per e-pos."
+   ],
+   "zu": [
+    "Ukuthumelela nge-Buzz mayelana nesifundo",
+    "Umugqa owodwa, uqonde ocingweni lwakho: \"Singasusa isifundo sangoLwesine siye ku-5 ntambama?\" Uma ucingo lwakho lungenazo izaziso, kufika nge-imeyili."
+   ],
+   "xh": [
+    "Ukuthumelela nge-Buzz malunga nesifundo",
+    "Umgca omnye, ngqo kwifowuni yakho: \"Singasifudusela isifundo sangoLwesine ku-5 emva kwemini?\" Ukuba ifowuni yakho ayinazo izaziso, iza nge-imeyile."
+   ],
+   "nso": [
+    "O go romela Buzz ka ga thuto",
+    "Mothalo o tee, thwii mogaleng wa gago: \"Re ka šuthišetša thuto ya Labone go 5 mathapama?\" Ge mogala wa gago o se na ditsebišo, e tla ka imeile."
+   ]
+  },
+  {
+   "n": 13,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f5_16_find_what",
+   "pass": true,
+   "en": [
+    "Someone new taps [[Find a tutor]], then [[Sport & fitness]]",
+    "Then [[Combat sports]] and [[Boxing coach]]: only coaches of that sport are shown."
+   ],
+   "af": [
+    "Iemand nuut tik [[Find a tutor]], dan [[Sport & fitness]]",
+    "Dan [[Combat sports]] en [[Boxing coach]]: net afrigters van daardie sport word gewys."
+   ]
+  },
+  {
+   "n": 14,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f5_19_results",
+   "pass": true,
+   "en": [
+    "Then her area: she finds you",
+    "Your listing shows with your rate and trust score, next to examples of what a listing looks like."
+   ],
+   "af": [
+    "Dan haar area: sy vind jou",
+    "Jou advertensie verskyn met jou tarief en vertrouetelling, langs voorbeelde van hoe 'n advertensie lyk."
+   ],
+   "zu": [
+    "Bese kuba indawo yakhe: uyakuthola",
+    "Isikhangiso sakho sivela nemali yakho namaphuzu okwethenjwa, eduze nezibonelo zokuthi isikhangiso sibukeka kanjani."
+   ],
+   "xh": [
+    "Emva koko ummandla wakhe: uyakufumana",
+    "Intengiso yakho ivela nexabiso lakho namanqaku okuthenjwa, ecaleni kwemizekelo yokuba intengiso ijongeka njani."
+   ],
+   "nso": [
+    "Ke moka lefelo la gagwe: o a go hwetša",
+    "Papatšo ya gago e tšwelela le tefo ya gago le dintlha tša go botwa, kgauswi le mehlala ya ka mo papatšo e lebelelwago ka gona."
+   ]
+  },
+  {
+   "n": 15,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f5_20_detail",
+   "pass": true,
+   "en": [
+    "She sees your sport, your price and your trust score",
+    "Your photos are at the top, your price under them. Your name and number stay hidden."
+   ],
+   "af": [
+    "Sy sien jou sport, jou prys en jou vertrouetelling",
+    "Jou foto's is bo, jou prys daaronder. Jou naam en nommer bly versteek."
+   ]
+  },
+  {
+   "n": 16,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "1T",
+   "img": "f5_21_ask",
+   "pass": true,
+   "en": [
+    "She asks for an introduction",
+    "She writes a short message and taps [[Join queue]]. 1 Tuppence is held from her, and spent only if you accept. Asking twice holds nothing more."
+   ],
+   "af": [
+    "Sy vra vir 'n bekendstelling",
+    "Sy skryf 'n kort boodskap en tik [[Join queue]]. 1 Tuppence word van haar gehou, en net gebruik as jy aanvaar. As sy twee keer vra, word niks meer gehou nie."
+   ],
+   "zu": [
+    "Ucela ukwethulwa",
+    "Ubhala umlayezo omfushane bese ethepha [[Join queue]]. I-Tuppence engu-1 iyabanjwa kuye, isetshenziswe kuphela uma wamukela. Ukucela kabili akubambi lutho olunye."
+   ],
+   "xh": [
+    "Ucela ukwaziswa",
+    "Ubhala umyalezo omfutshane aze acofe [[Join queue]]. I-Tuppence e-1 iyabanjwa kuye, isetyenziswe kuphela ukuba uyamkela. Ukucela kabini akubambi nto yimbi."
+   ],
+   "nso": [
+    "O kgopela go tsebišwa",
+    "O ngwala molaetša o mokopana gomme a kgotla [[Join queue]]. Tuppence e 1 e swarwa go yena, gomme e šomišwa feela ge o amogela. Go kgopela gabedi ga go swere selo se sengwe."
+   ]
+  },
+  {
+   "n": 17,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_24_request",
+   "pass": true,
+   "en": [
+    "You see her request",
+    "Open [[Seller Hub]]. Her message is on your listing's card."
+   ],
+   "af": [
+    "Jy sien haar versoek",
+    "Maak [[Seller Hub]] oop. Haar boodskap is op jou advertensie se kaart."
+   ],
+   "zu": [
+    "Ubona isicelo sakhe",
+    "Vula i-[[Seller Hub]]. Umlayezo wakhe usekhadini lesikhangiso sakho."
+   ],
+   "xh": [
+    "Ubona isicelo sakhe",
+    "Vula i-[[Seller Hub]]. Umyalezo wakhe usekhadini lentengiso yakho."
+   ],
+   "nso": [
+    "O bona kgopelo ya gagwe",
+    "Bula [[Seller Hub]]. Molaetša wa gagwe o karateng ya papatšo ya gago."
+   ]
+  },
+  {
+   "n": 18,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_25_accept",
+   "pass": true,
+   "en": [
+    "You accept",
+    "Tap [[Accept]]. It costs you nothing. You both get an email: reply to it to talk. Your email address stays private."
+   ],
+   "af": [
+    "Jy aanvaar",
+    "Tik [[Accept]]. Dit kos jou niks. Julle kry albei 'n e-pos: antwoord daarop om te praat. Jou e-posadres bly privaat."
+   ],
+   "zu": [
+    "Uyamukela",
+    "Thepha [[Accept]]. Akukubizi lutho. Nobabili nithola i-imeyili: phendula kuyo ukuze nikhulume. Ikheli lakho le-imeyili lihlala liyimfihlo."
+   ],
+   "xh": [
+    "Uyamkela",
+    "Cofa [[Accept]]. Akukuxabisi nto. Nobabini nifumana i-imeyile: phendula kuyo ukuze nithethe. Idilesi yakho ye-imeyile ihlala iyimfihlo."
+   ],
+   "nso": [
+    "O a amogela",
+    "Kgotla [[Accept]]. Ga go go biditše selo. Le hwetša imeile ka bobedi: e arabe gore le boledišane. Aterese ya gago ya imeile e dula e le sephiri."
+   ]
+  },
+  {
+   "n": 19,
+   "ch": "c4",
+   "who": "customer",
+   "cost": "free",
+   "img": "f5_26_buyer_intros",
+   "pass": true,
+   "en": [
+    "She is introduced",
+    "In her [[My Space]], [[Intros]] shows [[Accepted]] and her 1 Tuppence is spent. After the first lesson she can tap [[I hired them]]."
+   ],
+   "af": [
+    "Sy is voorgestel",
+    "In haar [[My Space]] wys [[Intros]] [[Accepted]] en haar 1 Tuppence is gebruik. Ná die eerste les kan sy [[I hired them]] tik."
+   ],
+   "zu": [
+    "Useyethuliwe",
+    "Ku-[[My Space]] yakhe, [[Intros]] ikhombisa [[Accepted]] futhi i-Tuppence yakhe engu-1 isisetshenzisiwe. Ngemva komsebenzi angathepha [[I hired them]]."
+   ],
+   "xh": [
+    "Sele eziswe",
+    "Kwi-[[My Space]] yakhe, [[Intros]] ibonisa [[Accepted]] kwaye i-Tuppence yakhe e-1 isetyenzisiwe. Emva komsebenzi angacofa [[I hired them]]."
+   ],
+   "nso": [
+    "O tsebišitšwe",
+    "Go [[My Space]] ya gagwe, [[Intros]] e bontšha [[Accepted]] gomme Tuppence ya gagwe e 1 e šomišitšwe. Ka morago ga mošomo a ka kgotla [[I hired them]]."
+   ]
+  },
+  {
+   "n": 20,
+   "ch": "c5",
+   "who": "you",
+   "cost": "free",
+   "img": "f5_08_saved",
+   "pass": true,
+   "en": [
+    "Pass Quick on",
+    "Tap [[Pass Quick on to someone]] and share it with a friend who coaches too."
+   ],
+   "af": [
+    "Gee Quick aan",
+    "Tik [[Pass Quick on to someone]] en deel dit met 'n vriend wat ook afrig."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ },
+ "derived_from": "tutors_maths"
+}

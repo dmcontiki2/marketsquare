@@ -207,6 +207,99 @@ survives. The reasoning behind the slate is `QUICK_LISTING_SPEC.md` Part II (ss1
 
 ---
 
+# TUTORS — TRAINERS
+
+*RUL-217 (David, 8 Oct 2026): a door inside Tutors, built the way Casuals were built inside Services. Adverts write `category: Tutors`, `service_class: Trainers` (Trust Score key Tutors-Trainers). Prices are per session / per month / per package — no minimum-wage floor (RUL-197 class). Rows added 10 Oct 2026 by the scheduled build; every row is IN by the ruling.*
+
+### Fitness & gym
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Personal trainer | D | IN | David: "Gym". One-on-one gym and fitness training; also found as gym trainer, fitness trainer. |
+| Aerobics instructor | D | IN | David: "Aerobics". Group classes. |
+| Dance fitness instructor |  | IN | Dance-based fitness classes (no brand names — SO-1). |
+| Yoga instructor |  | IN | Classes and private sessions. |
+| Pilates instructor |  | IN | Mat and studio Pilates. |
+| Functional fitness coach |  | IN | CrossFit-style training; label avoids the trade mark (SO-1), "CrossFit" kept as a search alias. |
+| Strength & conditioning coach |  | IN | Athletes and teams. |
+
+### Combat sports
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Boxing coach |  | IN |  |
+| Kickboxing coach |  | IN | Muay Thai found here too. |
+| Wrestling coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Wrestling". |
+| Judo instructor | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Judo". |
+| Karate instructor | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Karate". |
+| Taekwondo instructor |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Jiu-jitsu instructor |  | IN |  |
+| MMA coach |  | IN | Mixed martial arts. |
+| Fencing coach |  | IN |  |
+
+### Team sports
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Soccer coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Soccer". Also found as football coach. |
+| Rugby coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Rugby". |
+| Cricket coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Cricket". |
+| Hockey coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Field and ice hockey. |
+| Netball coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Basketball coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Volleyball coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Baseball coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Softball found here too. |
+| American football coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+
+### Racket & target sports
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Tennis coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Squash coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Padel coach |  | IN |  |
+| Badminton coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Table tennis coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Golf coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Golf". |
+| Archery coach |  | IN |  |
+
+### Water sports
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Swimming coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Swimming". Learn-to-swim teachers too. |
+| Diving instructor |  | IN | Scuba and free diving. |
+| Surfing coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Rowing & canoeing coach |  | IN | Rowing, canoeing and kayaking. |
+| Sailing instructor |  | IN |  |
+
+### Running, cycling & outdoor
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Running & athletics coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Running". Track, road and trail. |
+| Cycling coach |  | IN |  |
+| Triathlon coach |  | IN |  |
+| Horse riding instructor |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Climbing instructor |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Rock climbing and bouldering. |
+| Skating coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Ice, roller and skateboard. |
+| Ski & snowboard instructor |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+
+### Gymnastics & acrobatics
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Gymnastics coach |  | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children.  |
+| Acrobatics coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Acrobatics". |
+
+### Mind sports
+
+| Role | D | Decision | Notes |
+|---|:--:|:--:|---|
+| Chess coach | D | IN | **Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: "Chess". FIDE trainer titles already earn points through the claim lane (FIDE-CLAIM-1). |
+
+---
+
 ## RULED — ONE ROLE PICTURE AS THE FIRST PHOTO (RUL-157, David, 19 Sep 2026)
 *Raised and ruled by David in sitting 1.* David: *"for each job type, casual and technical, we should have the quick lister show a single job type picture which we will draw up as a photo on Higgsfield later, and then I want to change the design to always show these photos as the first photo allowing the Services (only) category users to add their own photos after that ... a consistent photo when searched for all service types, but then ranked according to the RS which will be based on the TS and the LS ... this is not bad because we are working anonymous"* — and then: *"these roles are not a person but rather a very good photo of the type of work, it should be clearly identifiable as that type of work based on what the user sees."*
 

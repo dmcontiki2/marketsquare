@@ -2,6 +2,31 @@
  "generated_by": "scripts/build_help.py",
  "stories": [
   {
+   "type": "acrobatics_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Acrobatics coach",
+    "af": "Akrobatiekafrigter",
+    "zu": "Umqeqeshi we-acrobatics",
+    "xh": "Umqeqeshi we-acrobatics",
+    "nso": "Mohlahli wa acrobatics"
+   },
+   "title": {
+    "en": "Acrobatics coach: from listing to the people who find you",
+    "af": "Akrobatiekafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-acrobatics: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-acrobatics: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa acrobatics: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "adventures_guest_house",
    "status": "draft",
    "flow": "F12",
@@ -50,6 +75,31 @@
    "quick": false
   },
   {
+   "type": "aerobics_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Aerobics instructor",
+    "af": "Aërobiese instrukteur",
+    "zu": "Umqeqeshi we-aerobics",
+    "xh": "Umqeqeshi we-aerobics",
+    "nso": "Mohlahli wa aerobics"
+   },
+   "title": {
+    "en": "Aerobics instructor: from listing to the people who find you",
+    "af": "Aërobiese instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-aerobics: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-aerobics: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa aerobics: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "air_con_refrigeration_technician",
    "status": "draft",
    "flow": "F4",
@@ -75,6 +125,31 @@
    "derived_from": "electrician"
   },
   {
+   "type": "american_football_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "American football coach",
+    "af": "Amerikaanse voetbalafrigter",
+    "zu": "Umqeqeshi webhola laseMelika",
+    "xh": "Umqeqeshi webhola yaseMelika",
+    "nso": "Mohlahli wa kgwele ya Amerika"
+   },
+   "title": {
+    "en": "American football coach: from listing to the people who find you",
+    "af": "Amerikaanse voetbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi webhola laseMelika: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi webhola yaseMelika: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa kgwele ya Amerika: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "appliance_repair",
    "status": "draft",
    "flow": "F3",
@@ -98,6 +173,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "plumber"
+  },
+  {
+   "type": "archery_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Archery coach",
+    "af": "Boogskietafrigter",
+    "zu": "Umqeqeshi wokucibisheka ngomnsalo",
+    "xh": "Umqeqeshi wokudubula ngesaphetha",
+    "nso": "Mohlahli wa go thunya ka bora"
+   },
+   "title": {
+    "en": "Archery coach: from listing to the people who find you",
+    "af": "Boogskietafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokucibisheka ngomnsalo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokudubula ngesaphetha: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go thunya ka bora: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "au_pair",
@@ -150,6 +250,31 @@
    "derived_from": "plumber"
   },
   {
+   "type": "badminton_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Badminton coach",
+    "af": "Pluimbalafrigter",
+    "zu": "Umqeqeshi we-badminton",
+    "xh": "Umqeqeshi we-badminton",
+    "nso": "Mohlahli wa badminton"
+   },
+   "title": {
+    "en": "Badminton coach: from listing to the people who find you",
+    "af": "Pluimbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-badminton: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-badminton: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa badminton: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "bartender",
    "status": "draft",
    "flow": "F1",
@@ -173,6 +298,56 @@
    "door": "services",
    "quick": true,
    "derived_from": "home_cleaner"
+  },
+  {
+   "type": "baseball_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Baseball coach",
+    "af": "Bofbalafrigter",
+    "zu": "Umqeqeshi we-baseball",
+    "xh": "Umqeqeshi we-baseball",
+    "nso": "Mohlahli wa baseball"
+   },
+   "title": {
+    "en": "Baseball coach: from listing to the people who find you",
+    "af": "Bofbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-baseball: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-baseball: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa baseball: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "basketball_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Basketball coach",
+    "af": "Basketbalafrigter",
+    "zu": "Umqeqeshi we-basketball",
+    "xh": "Umqeqeshi webhola yomnyazi",
+    "nso": "Mohlahli wa basketball"
+   },
+   "title": {
+    "en": "Basketball coach: from listing to the people who find you",
+    "af": "Basketbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-basketball: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi webhola yomnyazi: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa basketball: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "boilermaker",
@@ -223,6 +398,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "plumber"
+  },
+  {
+   "type": "boxing_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Boxing coach",
+    "af": "Boksafrigter",
+    "zu": "Umqeqeshi wesibhakela",
+    "xh": "Umqeqeshi wamanqindi",
+    "nso": "Mohlahli wa matswele"
+   },
+   "title": {
+    "en": "Boxing coach: from listing to the people who find you",
+    "af": "Boksafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wesibhakela: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wamanqindi: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa matswele: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "bricklayer",
@@ -526,6 +726,56 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "chess_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Chess coach",
+    "af": "Skaakafrigter",
+    "zu": "Umqeqeshi we-chess",
+    "xh": "Umqeqeshi we-chess",
+    "nso": "Mohlahli wa chess"
+   },
+   "title": {
+    "en": "Chess coach: from listing to the people who find you",
+    "af": "Skaakafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-chess: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-chess: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa chess: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "climbing_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Climbing instructor",
+    "af": "Klim-instrukteur",
+    "zu": "Umqeqeshi wokuqwala",
+    "xh": "Umqeqeshi wokunyuka",
+    "nso": "Mohlahli wa go namela"
+   },
+   "title": {
+    "en": "Climbing instructor: from listing to the people who find you",
+    "af": "Klim-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokuqwala: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokunyuka: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go namela: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "code_10_code_14_driver",
    "status": "draft",
    "flow": "F4",
@@ -628,6 +878,81 @@
    "derived_from": "nanny"
   },
   {
+   "type": "cricket_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Cricket coach",
+    "af": "Krieketafrigter",
+    "zu": "Umqeqeshi wekhilikithi",
+    "xh": "Umqeqeshi weqakamba",
+    "nso": "Mohlahli wa krikete"
+   },
+   "title": {
+    "en": "Cricket coach: from listing to the people who find you",
+    "af": "Krieketafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wekhilikithi: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi weqakamba: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa krikete: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "cycling_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Cycling coach",
+    "af": "Fietsryafrigter",
+    "zu": "Umqeqeshi wokugibela ibhayisikili",
+    "xh": "Umqeqeshi wokukhwela ibhayisekile",
+    "nso": "Mohlahli wa go nametša paesekela"
+   },
+   "title": {
+    "en": "Cycling coach: from listing to the people who find you",
+    "af": "Fietsryafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokugibela ibhayisikili: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokukhwela ibhayisekile: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go nametša paesekela: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "dance_fitness_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Dance fitness instructor",
+    "af": "Dansfiksheid-instrukteur",
+    "zu": "Umqeqeshi womdanso wokuqina",
+    "xh": "Umqeqeshi womdaniso wokomelela",
+    "nso": "Mohlahli wa go bina go itšhidulla"
+   },
+   "title": {
+    "en": "Dance fitness instructor: from listing to the people who find you",
+    "af": "Dansfiksheid-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi womdanso wokuqina: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi womdaniso wokomelela: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go bina go itšhidulla: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "diesel_mechanic",
    "status": "draft",
    "flow": "F3",
@@ -651,6 +976,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "plumber"
+  },
+  {
+   "type": "diving_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Diving instructor",
+    "af": "Duikinstrukteur",
+    "zu": "Umqeqeshi wokutshuza",
+    "xh": "Umqeqeshi wokuntywila",
+    "nso": "Mohlahli wa go ina"
+   },
+   "title": {
+    "en": "Diving instructor: from listing to the people who find you",
+    "af": "Duikinstrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokutshuza: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokuntywila: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go ina: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "driver",
@@ -761,6 +1111,31 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "fencing_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Fencing coach",
+    "af": "Skermafrigter",
+    "zu": "Umqeqeshi wokubiyela ngenkemba",
+    "xh": "Umqeqeshi wokulwa ngekrele",
+    "nso": "Mohlahli wa go lwa ka tšhoša"
+   },
+   "title": {
+    "en": "Fencing coach: from listing to the people who find you",
+    "af": "Skermafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokubiyela ngenkemba: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokulwa ngekrele: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go lwa ka tšhoša: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "forklift_operator",
    "status": "draft",
    "flow": "F3",
@@ -784,6 +1159,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "plumber"
+  },
+  {
+   "type": "functional_fitness_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Functional fitness coach",
+    "af": "Funksionele fiksheidsafrigter",
+    "zu": "Umqeqeshi wokuqina komzimba",
+    "xh": "Umqeqeshi wokomelela komzimba",
+    "nso": "Mohlahli wa go itšhidulla ga mmele"
+   },
+   "title": {
+    "en": "Functional fitness coach: from listing to the people who find you",
+    "af": "Funksionele fiksheidsafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokuqina komzimba: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokomelela komzimba: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go itšhidulla ga mmele: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "garden_waste_removal",
@@ -911,6 +1311,31 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "golf_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Golf coach",
+    "af": "Gholfafrigter",
+    "zu": "Umqeqeshi wegalufu",
+    "xh": "Umqeqeshi wegalufa",
+    "nso": "Mohlahli wa kolofo"
+   },
+   "title": {
+    "en": "Golf coach: from listing to the people who find you",
+    "af": "Gholfafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wegalufu: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wegalufa: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa kolofo: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "griller_braai",
    "status": "draft",
    "flow": "F1",
@@ -934,6 +1359,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "home_cleaner"
+  },
+  {
+   "type": "gymnastics_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Gymnastics coach",
+    "af": "Gimnastiekafrigter",
+    "zu": "Umqeqeshi wezokuzivocavoca",
+    "xh": "Umqeqeshi we-gymnastics",
+    "nso": "Mohlahli wa gymnastics"
+   },
+   "title": {
+    "en": "Gymnastics coach: from listing to the people who find you",
+    "af": "Gimnastiekafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wezokuzivocavoca: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-gymnastics: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa gymnastics: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "hair_braider",
@@ -1011,6 +1461,31 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "hockey_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Hockey coach",
+    "af": "Hokkie-afrigter",
+    "zu": "Umqeqeshi wehokhi",
+    "xh": "Umqeqeshi wehoki",
+    "nso": "Mohlahli wa hockey"
+   },
+   "title": {
+    "en": "Hockey coach: from listing to the people who find you",
+    "af": "Hokkie-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wehokhi: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wehoki: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa hockey: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "home_cleaner",
    "status": "draft",
    "flow": "F1",
@@ -1075,6 +1550,31 @@
    ]
   },
   {
+   "type": "horse_riding_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Horse riding instructor",
+    "af": "Perdry-instrukteur",
+    "zu": "Umqeqeshi wokugibela amahhashi",
+    "xh": "Umqeqeshi wokukhwela amahashe",
+    "nso": "Mohlahli wa go nametša dipere"
+   },
+   "title": {
+    "en": "Horse riding instructor: from listing to the people who find you",
+    "af": "Perdry-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokugibela amahhashi: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokukhwela amahashe: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go nametša dipere: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "hotel_porter",
    "status": "draft",
    "flow": "F1",
@@ -1123,6 +1623,106 @@
    "door": "services",
    "quick": true,
    "derived_from": "home_cleaner"
+  },
+  {
+   "type": "jiu_jitsu_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Jiu-jitsu instructor",
+    "af": "Jiu-jitsu-instrukteur",
+    "zu": "Umqeqeshi we-jiu-jitsu",
+    "xh": "Umqeqeshi we-jiu-jitsu",
+    "nso": "Mohlahli wa jiu-jitsu"
+   },
+   "title": {
+    "en": "Jiu-jitsu instructor: from listing to the people who find you",
+    "af": "Jiu-jitsu-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-jiu-jitsu: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-jiu-jitsu: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa jiu-jitsu: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "judo_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Judo instructor",
+    "af": "Judo-instrukteur",
+    "zu": "Umqeqeshi we-judo",
+    "xh": "Umqeqeshi we-judo",
+    "nso": "Mohlahli wa judo"
+   },
+   "title": {
+    "en": "Judo instructor: from listing to the people who find you",
+    "af": "Judo-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-judo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-judo: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa judo: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "karate_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Karate instructor",
+    "af": "Karate-instrukteur",
+    "zu": "Umqeqeshi we-karate",
+    "xh": "Umqeqeshi we-karate",
+    "nso": "Mohlahli wa karate"
+   },
+   "title": {
+    "en": "Karate instructor: from listing to the people who find you",
+    "af": "Karate-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-karate: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-karate: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa karate: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "kickboxing_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Kickboxing coach",
+    "af": "Skopboksafrigter",
+    "zu": "Umqeqeshi we-kickboxing",
+    "xh": "Umqeqeshi we-kickboxing",
+    "nso": "Mohlahli wa kickboxing"
+   },
+   "title": {
+    "en": "Kickboxing coach: from listing to the people who find you",
+    "af": "Skopboksafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-kickboxing: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-kickboxing: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa kickboxing: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "kitchen_assistant",
@@ -1252,6 +1852,31 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "mma_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "MMA coach",
+    "af": "MMA-afrigter",
+    "zu": "Umqeqeshi we-MMA",
+    "xh": "Umqeqeshi we-MMA",
+    "nso": "Mohlahli wa MMA"
+   },
+   "title": {
+    "en": "MMA coach: from listing to the people who find you",
+    "af": "MMA-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-MMA: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-MMA: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa MMA: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "motor_mechanic",
    "status": "draft",
    "flow": "F3",
@@ -1331,6 +1956,31 @@
    ]
   },
   {
+   "type": "netball_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Netball coach",
+    "af": "Netbalafrigter",
+    "zu": "Umqeqeshi we-netball",
+    "xh": "Umqeqeshi womnyazi",
+    "nso": "Mohlahli wa netball"
+   },
+   "title": {
+    "en": "Netball coach: from listing to the people who find you",
+    "af": "Netbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-netball: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi womnyazi: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa netball: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "office_cleaner",
    "status": "draft",
    "flow": "F1",
@@ -1354,6 +2004,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "home_cleaner"
+  },
+  {
+   "type": "padel_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Padel coach",
+    "af": "Padel-afrigter",
+    "zu": "Umqeqeshi we-padel",
+    "xh": "Umqeqeshi we-padel",
+    "nso": "Mohlahli wa padel"
+   },
+   "title": {
+    "en": "Padel coach: from listing to the people who find you",
+    "af": "Padel-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-padel: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-padel: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa padel: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "painter",
@@ -1404,6 +2079,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "plumber"
+  },
+  {
+   "type": "personal_trainer",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Personal trainer",
+    "af": "Persoonlike afrigter",
+    "zu": "Umqeqeshi womuntu siqu",
+    "xh": "Umqeqeshi womntu ngamnye",
+    "nso": "Mohlahli wa motho ka noši"
+   },
+   "title": {
+    "en": "Personal trainer: from listing to the people who find you",
+    "af": "Persoonlike afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi womuntu siqu: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi womntu ngamnye: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa motho ka noši: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "pet_sitter_dog_walker",
@@ -1479,6 +2179,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "home_cleaner"
+  },
+  {
+   "type": "pilates_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Pilates instructor",
+    "af": "Pilates-instrukteur",
+    "zu": "Umqeqeshi we-Pilates",
+    "xh": "Umqeqeshi we-Pilates",
+    "nso": "Mohlahli wa Pilates"
+   },
+   "title": {
+    "en": "Pilates instructor: from listing to the people who find you",
+    "af": "Pilates-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-Pilates: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-Pilates: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa Pilates: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "plant_operator_tlb_excavator",
@@ -1730,6 +2455,106 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "rowing_canoeing_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Rowing & canoeing coach",
+    "af": "Roei- en kano-afrigter",
+    "zu": "Umqeqeshi wokugwedla nesikebhe",
+    "xh": "Umqeqeshi wokubheqa nephenyane",
+    "nso": "Mohlahli wa go hlahla sekepe"
+   },
+   "title": {
+    "en": "Rowing & canoeing coach: from listing to the people who find you",
+    "af": "Roei- en kano-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokugwedla nesikebhe: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokubheqa nephenyane: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go hlahla sekepe: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "rugby_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Rugby coach",
+    "af": "Rugbyafrigter",
+    "zu": "Umqeqeshi werugby",
+    "xh": "Umqeqeshi werugby",
+    "nso": "Mohlahli wa rugby"
+   },
+   "title": {
+    "en": "Rugby coach: from listing to the people who find you",
+    "af": "Rugbyafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi werugby: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi werugby: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa rugby: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "running_athletics_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Running & athletics coach",
+    "af": "Hardloop- en atletiekafrigter",
+    "zu": "Umqeqeshi wokugijima nezemidlalo",
+    "xh": "Umqeqeshi wokubaleka neembaleki",
+    "nso": "Mohlahli wa go kitima le dipapadi"
+   },
+   "title": {
+    "en": "Running & athletics coach: from listing to the people who find you",
+    "af": "Hardloop- en atletiekafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokugijima nezemidlalo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokubaleka neembaleki: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go kitima le dipapadi: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "sailing_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Sailing instructor",
+    "af": "Seilinstrukteur",
+    "zu": "Umqeqeshi wokuhamba ngomkhumbi oneseyili",
+    "xh": "Umqeqeshi wokuhamba ngesikhephe",
+    "nso": "Mohlahli wa sekepe sa seila"
+   },
+   "title": {
+    "en": "Sailing instructor: from listing to the people who find you",
+    "af": "Seilinstrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokuhamba ngomkhumbi oneseyili: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokuhamba ngesikhephe: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa sekepe sa seila: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "seamstress_tailor",
    "status": "draft",
    "flow": "F1",
@@ -1830,6 +2655,81 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "skating_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Skating coach",
+    "af": "Skaats-afrigter",
+    "zu": "Umqeqeshi wokushibilika",
+    "xh": "Umqeqeshi wokutyibilika",
+    "nso": "Mohlahli wa go thelela"
+   },
+   "title": {
+    "en": "Skating coach: from listing to the people who find you",
+    "af": "Skaats-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokushibilika: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokutyibilika: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go thelela: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "ski_snowboard_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Ski & snowboard instructor",
+    "af": "Ski- en sneeuplankinstrukteur",
+    "zu": "Umqeqeshi wokushushuluza eqhweni",
+    "xh": "Umqeqeshi wokutyibilika ekhephini",
+    "nso": "Mohlahli wa go thelela lehlweng"
+   },
+   "title": {
+    "en": "Ski & snowboard instructor: from listing to the people who find you",
+    "af": "Ski- en sneeuplankinstrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokushushuluza eqhweni: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokutyibilika ekhephini: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go thelela lehlweng: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "soccer_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Soccer coach",
+    "af": "Sokkerafrigter",
+    "zu": "Umqeqeshi webhola lezinyawo",
+    "xh": "Umqeqeshi webhola ekhatywayo",
+    "nso": "Mohlahli wa kgwele ya maoto"
+   },
+   "title": {
+    "en": "Soccer coach: from listing to the people who find you",
+    "af": "Sokkerafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi webhola lezinyawo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi webhola ekhatywayo: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa kgwele ya maoto: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "solar_pv_installer",
    "status": "draft",
    "flow": "F3",
@@ -1855,6 +2755,156 @@
    "derived_from": "plumber"
   },
   {
+   "type": "squash_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Squash coach",
+    "af": "Muurbalafrigter",
+    "zu": "Umqeqeshi we-squash",
+    "xh": "Umqeqeshi we-squash",
+    "nso": "Mohlahli wa squash"
+   },
+   "title": {
+    "en": "Squash coach: from listing to the people who find you",
+    "af": "Muurbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-squash: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-squash: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa squash: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "strength_conditioning_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Strength & conditioning coach",
+    "af": "Krag- en kondisioneringsafrigter",
+    "zu": "Umqeqeshi wamandla nokuqina",
+    "xh": "Umqeqeshi wamandla nokomelela",
+    "nso": "Mohlahli wa maatla le go itokišetša"
+   },
+   "title": {
+    "en": "Strength & conditioning coach: from listing to the people who find you",
+    "af": "Krag- en kondisioneringsafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wamandla nokuqina: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wamandla nokomelela: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa maatla le go itokišetša: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "surfing_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Surfing coach",
+    "af": "Branderplankafrigter",
+    "zu": "Umqeqeshi we-surfing",
+    "xh": "Umqeqeshi we-surfing",
+    "nso": "Mohlahli wa surfing"
+   },
+   "title": {
+    "en": "Surfing coach: from listing to the people who find you",
+    "af": "Branderplankafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-surfing: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-surfing: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa surfing: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "swimming_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Swimming coach",
+    "af": "Swemafrigter",
+    "zu": "Umqeqeshi wokubhukuda",
+    "xh": "Umqeqeshi wokuqubha",
+    "nso": "Mohlahli wa go rutha"
+   },
+   "title": {
+    "en": "Swimming coach: from listing to the people who find you",
+    "af": "Swemafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wokubhukuda: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wokuqubha: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go rutha: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "table_tennis_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Table tennis coach",
+    "af": "Tafeltennisafrigter",
+    "zu": "Umqeqeshi wethenisi yetafula",
+    "xh": "Umqeqeshi wentenetya yetafile",
+    "nso": "Mohlahli wa thenese ya tafola"
+   },
+   "title": {
+    "en": "Table tennis coach: from listing to the people who find you",
+    "af": "Tafeltennisafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wethenisi yetafula: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wentenetya yetafile: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa thenese ya tafola: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "taekwondo_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Taekwondo instructor",
+    "af": "Taekwondo-instrukteur",
+    "zu": "Umqeqeshi we-taekwondo",
+    "xh": "Umqeqeshi we-taekwondo",
+    "nso": "Mohlahli wa taekwondo"
+   },
+   "title": {
+    "en": "Taekwondo instructor: from listing to the people who find you",
+    "af": "Taekwondo-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-taekwondo: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-taekwondo: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa taekwondo: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "taxi_shuttle_driver",
    "status": "draft",
    "flow": "F4",
@@ -1878,6 +2928,31 @@
    "door": "services",
    "quick": true,
    "derived_from": "electrician"
+  },
+  {
+   "type": "tennis_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Tennis coach",
+    "af": "Tennisafrigter",
+    "zu": "Umqeqeshi wethenisi",
+    "xh": "Umqeqeshi wentenetya",
+    "nso": "Mohlahli wa thenese"
+   },
+   "title": {
+    "en": "Tennis coach: from listing to the people who find you",
+    "af": "Tennisafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi wethenisi: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi wentenetya: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa thenese: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "tiler",
@@ -1930,6 +3005,31 @@
    "derived_from": "home_cleaner"
   },
   {
+   "type": "triathlon_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Triathlon coach",
+    "af": "Driekamp-afrigter",
+    "zu": "Umqeqeshi we-triathlon",
+    "xh": "Umqeqeshi we-triathlon",
+    "nso": "Mohlahli wa triathlon"
+   },
+   "title": {
+    "en": "Triathlon coach: from listing to the people who find you",
+    "af": "Driekamp-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-triathlon: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-triathlon: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa triathlon: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
    "type": "tutors_maths",
    "status": "draft",
    "flow": "F5",
@@ -1955,6 +3055,31 @@
    "serves": [
     "tutors_*"
    ]
+  },
+  {
+   "type": "volleyball_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Volleyball coach",
+    "af": "Vlugbalafrigter",
+    "zu": "Umqeqeshi we-volleyball",
+    "xh": "Umqeqeshi we-volleyball",
+    "nso": "Mohlahli wa volleyball"
+   },
+   "title": {
+    "en": "Volleyball coach: from listing to the people who find you",
+    "af": "Vlugbalafrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-volleyball: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-volleyball: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa volleyball: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   },
   {
    "type": "waiter",
@@ -2030,6 +3155,56 @@
    "door": "services",
    "quick": true,
    "derived_from": "home_cleaner"
+  },
+  {
+   "type": "wrestling_coach",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Wrestling coach",
+    "af": "Stoei-afrigter",
+    "zu": "Umqeqeshi we-wrestling",
+    "xh": "Umqeqeshi we-wrestling",
+    "nso": "Mohlahli wa go katana"
+   },
+   "title": {
+    "en": "Wrestling coach: from listing to the people who find you",
+    "af": "Stoei-afrigter: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-wrestling: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-wrestling: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa go katana: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 21,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
+  },
+  {
+   "type": "yoga_instructor",
+   "status": "draft",
+   "flow": "F5",
+   "label": {
+    "en": "Yoga instructor",
+    "af": "Joga-instrukteur",
+    "zu": "Umqeqeshi we-yoga",
+    "xh": "Umqeqeshi we-yoga",
+    "nso": "Mohlahli wa yoga"
+   },
+   "title": {
+    "en": "Yoga instructor: from listing to the people who find you",
+    "af": "Joga-instrukteur: van advertensie tot die mense wat jou vind",
+    "zu": "Umqeqeshi we-yoga: kusukela esikhangisweni kuya kubazali abakutholayo",
+    "xh": "Umqeqeshi we-yoga: ukusuka kwintengiso ukuya kubazali abakufumanayo",
+    "nso": "Mohlahli wa yoga: go tloga papatšong go ya go batswadi bao ba go hwetšago"
+   },
+   "walked_on": "2026-09-30",
+   "steps": 20,
+   "cover": "f5_01_door",
+   "door": "services",
+   "quick": true,
+   "derived_from": "tutors_maths"
   }
  ]
 }

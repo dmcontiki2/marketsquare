@@ -214,6 +214,11 @@
    "level": "public"
   },
   {
+   "key": "GET /examples/trainers",
+   "level": "public",
+   "note": "TRAINERS-EX-1 (RUL-217, 10 Oct 2026): AI example cards for the trainer roles, made on request; read-only, nothing about any person (the GET /examples/roles pattern)."
+  },
+  {
    "key": "GET /geo/suburbs",
    "level": "public"
   },

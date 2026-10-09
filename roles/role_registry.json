@@ -7,7 +7,8 @@
   "RUL-155",
   "RUL-156",
   "RUL-157",
-  "RUL-172"
+  "RUL-172",
+  "RUL-217"
  ],
  "_invariant": "Enrolment creates an account and a sign-in link, never a listing (RUL-150).",
  "door": {
@@ -30,8 +31,27 @@
   "taps_to_draft": 5,
   "ruling": "RUL-159"
  },
+ "trainers_door": {
+  "category": "Tutors",
+  "service_class": "Trainers",
+  "trust_key": "Tutors-Trainers",
+  "entry_tile": "Sport & fitness",
+  "picker_steps": [
+   "what=Sport & fitness",
+   "group",
+   "role"
+  ],
+  "taps_to_draft": 5,
+  "price_units": [
+   "session",
+   "month",
+   "package"
+  ],
+  "wage_floor": false,
+  "ruling": "RUL-217"
+ },
  "counts": {
-  "in": 73,
+  "in": 120,
   "later": 16,
   "out": 19
  },
@@ -6567,6 +6587,3119 @@
     "af": "Kleinenjinherstelwerk beskikbaar in {where}"
    },
    "note": "Low, seasonal volume."
+  },
+  {
+   "key": "personal_trainer",
+   "label": {
+    "en": "Personal trainer",
+    "af": "Persoonlike afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=personal_trainer",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Gym trainer",
+    "Fitness trainer",
+    "Bodybuilding coach"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/personal_trainer.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a gym floor with a rack of dumbbells, a weight bench and a kettlebell in morning light. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Personal trainer available in {where}",
+    "af": "Persoonlike afrigter beskikbaar in {where}"
+   },
+   "note": "David: \"Gym\". One-on-one gym and fitness training; also found as gym trainer, fitness trainer."
+  },
+  {
+   "key": "aerobics_instructor",
+   "label": {
+    "en": "Aerobics instructor",
+    "af": "Aërobiese instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=aerobics_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/aerobics_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a bright aerobics studio with step platforms, a mirror wall and a speaker on the floor. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Aerobics instructor available in {where}",
+    "af": "Aërobiese instrukteur beskikbaar in {where}"
+   },
+   "note": "David: \"Aerobics\". Group classes."
+  },
+  {
+   "key": "dance_fitness_instructor",
+   "label": {
+    "en": "Dance fitness instructor",
+    "af": "Dansfiksheid-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=dance_fitness_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Dance instructor"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/dance_fitness_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: an empty dance studio with a wooden sprung floor, a ballet barre and a sound system. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Dance fitness instructor available in {where}",
+    "af": "Dansfiksheid-instrukteur beskikbaar in {where}"
+   },
+   "note": "Dance-based fitness classes (no brand names — SO-1)."
+  },
+  {
+   "key": "yoga_instructor",
+   "label": {
+    "en": "Yoga instructor",
+    "af": "Joga-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=yoga_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/yoga_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: rolled-out yoga mats with blocks and a strap in a calm sunlit studio with plants. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Yoga instructor available in {where}",
+    "af": "Joga-instrukteur beskikbaar in {where}"
+   },
+   "note": "Classes and private sessions."
+  },
+  {
+   "key": "pilates_instructor",
+   "label": {
+    "en": "Pilates instructor",
+    "af": "Pilates-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=pilates_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/pilates_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a Pilates reformer machine with a Pilates ring and a mat in a light studio. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Pilates instructor available in {where}",
+    "af": "Pilates-instrukteur beskikbaar in {where}"
+   },
+   "note": "Mat and studio Pilates."
+  },
+  {
+   "key": "functional_fitness_coach",
+   "label": {
+    "en": "Functional fitness coach",
+    "af": "Funksionele fiksheidsafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=functional_fitness_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "CrossFit coach",
+    "Bootcamp instructor"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/functional_fitness_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a functional training box with kettlebells, a rowing machine, battle ropes and plyo boxes. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Functional fitness coach available in {where}",
+    "af": "Funksionele fiksheidsafrigter beskikbaar in {where}"
+   },
+   "note": "CrossFit-style training; label avoids the trade mark (SO-1), \"CrossFit\" kept as a search alias."
+  },
+  {
+   "key": "strength_conditioning_coach",
+   "label": {
+    "en": "Strength & conditioning coach",
+    "af": "Krag- en kondisioneringsafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Fitness & gym",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=strength_conditioning_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/strength_conditioning_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a loaded barbell on a lifting platform with bumper plates, chalk and a stopwatch. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Strength & conditioning coach available in {where}",
+    "af": "Krag- en kondisioneringsafrigter beskikbaar in {where}"
+   },
+   "note": "Athletes and teams."
+  },
+  {
+   "key": "boxing_coach",
+   "label": {
+    "en": "Boxing coach",
+    "af": "Boksafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=boxing_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/boxing_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a boxing ring corner with a pair of red gloves and pads hanging on the ropes. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Boxing coach available in {where}",
+    "af": "Boksafrigter beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "kickboxing_coach",
+   "label": {
+    "en": "Kickboxing coach",
+    "af": "Skopboksafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=kickboxing_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Muay Thai coach"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/kickboxing_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a heavy kick bag, shin guards and gloves on a gym mat. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Kickboxing coach available in {where}",
+    "af": "Skopboksafrigter beskikbaar in {where}"
+   },
+   "note": "Muay Thai found here too."
+  },
+  {
+   "key": "wrestling_coach",
+   "label": {
+    "en": "Wrestling coach",
+    "af": "Stoei-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=wrestling_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/wrestling_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a wrestling mat with its circle markings in an empty school gym. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Wrestling coach available in {where}",
+    "af": "Stoei-afrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Wrestling\"."
+  },
+  {
+   "key": "judo_instructor",
+   "label": {
+    "en": "Judo instructor",
+    "af": "Judo-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=judo_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/judo_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a neatly folded white judogi with a belt on a tatami mat. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Judo instructor available in {where}",
+    "af": "Judo-instrukteur beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Judo\"."
+  },
+  {
+   "key": "karate_instructor",
+   "label": {
+    "en": "Karate instructor",
+    "af": "Karate-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=karate_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/karate_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a folded white karate gi with a black belt on a polished dojo floor. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Karate instructor available in {where}",
+    "af": "Karate-instrukteur beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Karate\"."
+  },
+  {
+   "key": "taekwondo_instructor",
+   "label": {
+    "en": "Taekwondo instructor",
+    "af": "Taekwondo-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=taekwondo_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/taekwondo_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a taekwondo dobok, a head guard and a kicking paddle on a blue mat. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Taekwondo instructor available in {where}",
+    "af": "Taekwondo-instrukteur beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "jiu_jitsu_instructor",
+   "label": {
+    "en": "Jiu-jitsu instructor",
+    "af": "Jiu-jitsu-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=jiu_jitsu_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "BJJ coach"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/jiu_jitsu_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a folded jiu-jitsu gi with a brown belt on a grappling mat. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Jiu-jitsu instructor available in {where}",
+    "af": "Jiu-jitsu-instrukteur beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "mma_coach",
+   "label": {
+    "en": "MMA coach",
+    "af": "MMA-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=mma_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Mixed martial arts coach"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/mma_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: an empty MMA cage with fingerless gloves on the canvas. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "MMA coach available in {where}",
+    "af": "MMA-afrigter beskikbaar in {where}"
+   },
+   "note": "Mixed martial arts."
+  },
+  {
+   "key": "fencing_coach",
+   "label": {
+    "en": "Fencing coach",
+    "af": "Skermafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Combat sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=fencing_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/fencing_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a fencing mask and two foils crossed on a fencing piste. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Fencing coach available in {where}",
+    "af": "Skermafrigter beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "soccer_coach",
+   "label": {
+    "en": "Soccer coach",
+    "af": "Sokkerafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=soccer_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Football coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/soccer_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a soccer ball and training cones on a green pitch in front of a goal. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Soccer coach available in {where}",
+    "af": "Sokkerafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Soccer\". Also found as football coach."
+  },
+  {
+   "key": "rugby_coach",
+   "label": {
+    "en": "Rugby coach",
+    "af": "Rugbyafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=rugby_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/rugby_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a rugby ball on a kicking tee on a grass field with the posts behind. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Rugby coach available in {where}",
+    "af": "Rugbyafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Rugby\"."
+  },
+  {
+   "key": "cricket_coach",
+   "label": {
+    "en": "Cricket coach",
+    "af": "Krieketafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=cricket_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/cricket_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a cricket bat, ball and stumps on a green practice net pitch. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Cricket coach available in {where}",
+    "af": "Krieketafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Cricket\"."
+  },
+  {
+   "key": "hockey_coach",
+   "label": {
+    "en": "Hockey coach",
+    "af": "Hokkie-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=hockey_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Field hockey coach",
+    "Ice hockey coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/hockey_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a field hockey stick and ball on an artificial turf pitch. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Hockey coach available in {where}",
+    "af": "Hokkie-afrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Field and ice hockey."
+  },
+  {
+   "key": "netball_coach",
+   "label": {
+    "en": "Netball coach",
+    "af": "Netbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=netball_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/netball_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a netball resting under a netball hoop on an outdoor court. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Netball coach available in {where}",
+    "af": "Netbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "basketball_coach",
+   "label": {
+    "en": "Basketball coach",
+    "af": "Basketbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=basketball_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/basketball_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a basketball on a polished indoor court under the hoop. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Basketball coach available in {where}",
+    "af": "Basketbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "volleyball_coach",
+   "label": {
+    "en": "Volleyball coach",
+    "af": "Vlugbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=volleyball_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/volleyball_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a volleyball by the net on a beach volleyball court. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Volleyball coach available in {where}",
+    "af": "Vlugbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "baseball_coach",
+   "label": {
+    "en": "Baseball coach",
+    "af": "Bofbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=baseball_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Softball coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/baseball_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a baseball glove, ball and bat on a diamond infield. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Baseball coach available in {where}",
+    "af": "Bofbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Softball found here too."
+  },
+  {
+   "key": "american_football_coach",
+   "label": {
+    "en": "American football coach",
+    "af": "Amerikaanse voetbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Team sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=american_football_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/american_football_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: an American football on a turf field at the yard line. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "American football coach available in {where}",
+    "af": "Amerikaanse voetbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "tennis_coach",
+   "label": {
+    "en": "Tennis coach",
+    "af": "Tennisafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=tennis_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/tennis_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a tennis racket and a basket of yellow balls on a hard court by the net. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Tennis coach available in {where}",
+    "af": "Tennisafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "squash_coach",
+   "label": {
+    "en": "Squash coach",
+    "af": "Muurbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=squash_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/squash_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a squash racket and ball on the wooden floor of a squash court. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Squash coach available in {where}",
+    "af": "Muurbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "padel_coach",
+   "label": {
+    "en": "Padel coach",
+    "af": "Padel-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=padel_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/padel_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a padel racket and ball on a blue padel court with glass walls. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Padel coach available in {where}",
+    "af": "Padel-afrigter beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "badminton_coach",
+   "label": {
+    "en": "Badminton coach",
+    "af": "Pluimbalafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=badminton_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/badminton_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a badminton racket and shuttlecock on an indoor court by the net. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Badminton coach available in {where}",
+    "af": "Pluimbalafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "table_tennis_coach",
+   "label": {
+    "en": "Table tennis coach",
+    "af": "Tafeltennisafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=table_tennis_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/table_tennis_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a table tennis bat and ball on a blue table with the net. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Table tennis coach available in {where}",
+    "af": "Tafeltennisafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "golf_coach",
+   "label": {
+    "en": "Golf coach",
+    "af": "Gholfafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=golf_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/golf_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a golf ball on a tee with a driver on a driving-range mat at sunrise. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Golf coach available in {where}",
+    "af": "Gholfafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Golf\"."
+  },
+  {
+   "key": "archery_coach",
+   "label": {
+    "en": "Archery coach",
+    "af": "Boogskietafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Racket & target sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=archery_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/archery_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a recurve bow and arrows in front of a target on an outdoor archery range. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Archery coach available in {where}",
+    "af": "Boogskietafrigter beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "swimming_coach",
+   "label": {
+    "en": "Swimming coach",
+    "af": "Swemafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Water sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=swimming_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Swimming teacher",
+    "Learn-to-swim instructor"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/swimming_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: an outdoor swimming pool with lane ropes, a kickboard and goggles on the edge. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Swimming coach available in {where}",
+    "af": "Swemafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Swimming\". Learn-to-swim teachers too."
+  },
+  {
+   "key": "diving_instructor",
+   "label": {
+    "en": "Diving instructor",
+    "af": "Duikinstrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Water sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=diving_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Scuba instructor",
+    "Freediving instructor"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/diving_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: scuba tanks, a mask and fins on a boat deck over clear blue water. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Diving instructor available in {where}",
+    "af": "Duikinstrukteur beskikbaar in {where}"
+   },
+   "note": "Scuba and free diving."
+  },
+  {
+   "key": "surfing_coach",
+   "label": {
+    "en": "Surfing coach",
+    "af": "Branderplankafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Water sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=surfing_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/surfing_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a surfboard on the sand at the water's edge with rolling waves. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Surfing coach available in {where}",
+    "af": "Branderplankafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "rowing_canoeing_coach",
+   "label": {
+    "en": "Rowing & canoeing coach",
+    "af": "Roei- en kano-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Water sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=rowing_canoeing_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Rowing coach",
+    "Canoeing coach",
+    "Kayaking coach"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/rowing_canoeing_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a canoe with paddles at the edge of a calm dam at dawn. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Rowing & canoeing coach available in {where}",
+    "af": "Roei- en kano-afrigter beskikbaar in {where}"
+   },
+   "note": "Rowing, canoeing and kayaking."
+  },
+  {
+   "key": "sailing_instructor",
+   "label": {
+    "en": "Sailing instructor",
+    "af": "Seilinstrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Water sports",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=sailing_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/sailing_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a small sailing dinghy with its sail up at a jetty on a lake. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Sailing instructor available in {where}",
+    "af": "Seilinstrukteur beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "running_athletics_coach",
+   "label": {
+    "en": "Running & athletics coach",
+    "af": "Hardloop- en atletiekafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=running_athletics_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Running coach",
+    "Athletics coach",
+    "Track coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/running_athletics_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: an athletics track with lane lines, starting blocks and running shoes. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Running & athletics coach available in {where}",
+    "af": "Hardloop- en atletiekafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Running\". Track, road and trail."
+  },
+  {
+   "key": "cycling_coach",
+   "label": {
+    "en": "Cycling coach",
+    "af": "Fietsryafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=cycling_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/cycling_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a road bicycle and a helmet on a quiet tarred road at sunrise. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Cycling coach available in {where}",
+    "af": "Fietsryafrigter beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "triathlon_coach",
+   "label": {
+    "en": "Triathlon coach",
+    "af": "Driekamp-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=triathlon_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": null,
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/triathlon_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a triathlon transition rack with a bike, running shoes, goggles and a swim cap. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Triathlon coach available in {where}",
+    "af": "Driekamp-afrigter beskikbaar in {where}"
+   },
+   "note": ""
+  },
+  {
+   "key": "horse_riding_instructor",
+   "label": {
+    "en": "Horse riding instructor",
+    "af": "Perdry-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=horse_riding_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Riding instructor",
+    "Equestrian coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/horse_riding_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a saddled horse's tack: a saddle, bridle and riding helmet on a stable fence by an arena. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Horse riding instructor available in {where}",
+    "af": "Perdry-instrukteur beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "climbing_instructor",
+   "label": {
+    "en": "Climbing instructor",
+    "af": "Klim-instrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=climbing_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Rock climbing instructor",
+    "Bouldering coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/climbing_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a coiled climbing rope, harness and chalk bag at the foot of a rock face. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Climbing instructor available in {where}",
+    "af": "Klim-instrukteur beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Rock climbing and bouldering."
+  },
+  {
+   "key": "skating_coach",
+   "label": {
+    "en": "Skating coach",
+    "af": "Skaats-afrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=skating_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Ice skating coach",
+    "Roller skating coach",
+    "Skateboarding coach"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/skating_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a pair of ice skates on the edge of a smooth ice rink. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Skating coach available in {where}",
+    "af": "Skaats-afrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. Ice, roller and skateboard."
+  },
+  {
+   "key": "ski_snowboard_instructor",
+   "label": {
+    "en": "Ski & snowboard instructor",
+    "af": "Ski- en sneeuplankinstrukteur",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Running, cycling & outdoor",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=ski_snowboard_instructor",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "aliases": [
+    "Ski instructor",
+    "Snowboard instructor"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/ski_snowboard_instructor.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: skis, poles and a snowboard in fresh snow on a mountain slope. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Ski & snowboard instructor available in {where}",
+    "af": "Ski- en sneeuplankinstrukteur beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "gymnastics_coach",
+   "label": {
+    "en": "Gymnastics coach",
+    "af": "Gimnastiekafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Gymnastics & acrobatics",
+   "status": "in",
+   "on_davids_list": false,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=gymnastics_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/gymnastics_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a balance beam and gymnastics mats in a bright gym hall. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Gymnastics coach available in {where}",
+    "af": "Gimnastiekafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children."
+  },
+  {
+   "key": "acrobatics_coach",
+   "label": {
+    "en": "Acrobatics coach",
+    "af": "Akrobatiekafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Gymnastics & acrobatics",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=acrobatics_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/acrobatics_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: an acrobatics hall with a tumbling track, crash mats and aerial silks hanging. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Acrobatics coach available in {where}",
+    "af": "Akrobatiekafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Acrobatics\"."
+  },
+  {
+   "key": "chess_coach",
+   "label": {
+    "en": "Chess coach",
+    "af": "Skaakafrigter",
+    "zu": null,
+    "st": null,
+    "xh": null
+   },
+   "service_class": "Trainers",
+   "group": "Mind sports",
+   "status": "in",
+   "on_davids_list": true,
+   "category": "Tutors",
+   "door": "tutors",
+   "questions": [
+    {
+     "key": "where",
+     "q": "Where do you train people?",
+     "kind": "tile",
+     "free": true
+    },
+    {
+     "key": "price",
+     "q": "What do you charge?",
+     "kind": "chip",
+     "tiles": [
+      {
+       "t": "Per session"
+      },
+      {
+       "t": "Per month"
+      },
+      {
+       "t": "Per package"
+      }
+     ],
+     "floor": null,
+     "ruling": "RUL-217(c)"
+    }
+   ],
+   "finish_questions": [],
+   "enrol_link": "/q/tutors?role=chess_coach",
+   "signals": [
+    "category.tutors.clearance",
+    "category.tutors.specialisation",
+    "category.tutors.safeguarding",
+    "category.tutors.cert_diploma",
+    "category.tutors.exp_2_5",
+    "category.tutors.exp_5plus",
+    "category.tutors.fide_ft",
+    "category.tutors.fide_fi"
+   ],
+   "gate": {
+    "type": "police_clearance",
+    "ruling": "RUL-217(d) / RUL-153"
+   },
+   "employer_kinds": [],
+   "role_picture": {
+    "file": "roles/pictures/chess_coach.png",
+    "prompt": "Photorealistic photograph, natural daylight, a neutral setting that reads anywhere in the world. Subject: a wooden chess board mid-game with a chess clock on a table. The picture must make the job instantly recognisable from the work alone. ABSOLUTELY NO people, no faces, no hands, no body parts, no silhouettes. No text, no letters, no logos, no brand names, no watermarks. Square 1:1, clean uncluttered composition, subject centred, gentle depth of field, warm and dignified mood."
+   },
+   "draft_title": {
+    "en": "Chess coach available in {where}",
+    "af": "Skaakafrigter beskikbaar in {where}"
+   },
+   "note": "**Police clearance gates public visibility (RUL-217(d) / RUL-153)** — commonly coaches children. David: \"Chess\". FIDE trainer titles already earn points through the claim lane (FIDE-CLAIM-1)."
   }
  ]
 }
