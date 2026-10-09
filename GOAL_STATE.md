@@ -5,6 +5,26 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 33b — Fri 9 Oct 2026, 00:15–00:50 UTC (Opus 5.5, David live: "fix the regression issues; GI-0020 go with a; housekeeping as suggested; let a new lister add her photo by tapping the example")
+
+- **Shipped (f8516bd, CLOUD-SHIP-1 00:39Z):** GI-0032 QUICK-OWN-PHOTO-1 + HUB-ADD-PHOTO-1 + LANG-ONE-HOME-1, RG-0947 LOCKED.
+  **Live proof (00:41Z, fresh phone, real save):** draft card shows "EXAMPLE PHOTO" + "📷 Tap to add your own photo"; a camera pick
+  replaced the picture, ring 60 → 70; Save → arrival card shows her photo and "✓ Your photo is on your listing."; draft #536's
+  `thumb_url` / `photo_urls` / `[photos:]` carry the R2 upload; the letter's link opened the Hub with her photo on the card. Home: one
+  language button (the header globe opens the menu under the header; the floating pill stays on other screens).
+- **Ledger clean:** 0 !!!! on the new tree (was 11 on origin/main). Real fixes: RG-0501 (CARWASH-1's seven phrases had only
+  Afrikaans — now all 15 Quick languages), RG-0504 ("At least one advert" / "Create my advert" → listing; server sends `listing` and
+  still `advert` for cached pages). Stale checks brought up to date after confirming the behaviour live: RG-0120 (PHOTO-EMPTY-1 line),
+  RG-0435 (QLANGS spacing), RG-0476 (celebrate grew), RG-0817 (GENERIC-EX-1), RG-0841 (FIND-CLOSE-1 / RUL-207(b)), RG-0860
+  (_svcTypeMatches), RG-0875 (TEXT-ANON-1 param). RG-0840/0871: the proofs need python-multipart — now run under
+  `/var/www/marketsquare/venv/bin/python`, where they pass. RG-0194 was the relay checkout `/opt/marketsquare-src` holding 105
+  Windows scripts with LF on disk (git saw them clean); re-checked-out → CRLF. **Something rewrote them after the 02:01 release —
+  watch for it.** RG-0154: SESSION_COUNTER refreshed (220 → 221).
+- **GI-0020:** APPROVED (a) — runs as it is; REVIEW NOW is empty.
+- **QA data:** drafts #535 and #536 deleted by their own sessions; user rows `qa-goal33@` and `qa-goal33b@` deleted (before-rows in
+  `/root/qa_goal33*_user_before_delete_20261009.json`; their ai_spend_log rows kept).
+- **Note for walkers:** another lane's restart at 00:31Z gave one 502 to the ledger's live probe; the site answered 200 after.
+
 ## RUN 33 — Thu 8 Oct 2026, 20:56–21:40 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe in `_to_delete/goalrun33_write_probe`, candidate ms.js in
