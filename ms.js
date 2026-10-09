@@ -688,7 +688,7 @@ function msGenericExSheet(l){
     + '<div style="padding:16px 18px 20px;">'
     + '<div data-notranslate="1" style="font:800 19px/1.25 Syne,sans-serif;">' + lm(l.title) + '</div>'
     + '<div style="margin:4px 0 10px;font-size:13px;color:var(--text-3,#6b7280);">📍 ' + lm(city) + ' · <b style="color:var(--text,#111)">' + lm(l.price || '') + '</b></div>'
-    + '<p style="margin:0 0 14px;font-size:14px;line-height:1.45;">This is an AI example of how a listing for this work looks. Nobody offers it in ' + lm(city) + ' on TrustSquare yet, so no introduction can be made. The rate shown starts from the legal minimum wage here.</p>'
+    + '<p style="margin:0 0 14px;font-size:14px;line-height:1.45;">This is an AI example of how a listing for this work looks. Nobody offers it in ' + lm(city) + ' on TrustSquare yet, so no introduction can be made. Whoever lists this work sets their own rate.</p>'
     + '<a href="' + lm(href) + '" style="display:block;text-align:center;background:var(--accent,#1d4ed8);color:#fff;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;margin-bottom:8px;">I do this work — list me free</a>'
     + '<button type="button" id="gx-close" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border,#e5e7eb);background:transparent;color:inherit;font-weight:700;">Close</button>'
     + '</div></div>';
@@ -24990,6 +24990,9 @@ function msOwnerBar(id){
     }).then(function(st){
       _pkBusy=false;
       if(!st || !st.on){ if(st===null || (st && !st.on)) _pkNo=true; return; }
+      /* PASSKEY-KNOWN-1 (Dave jnr, 8 Oct 2026): asked to set up Face ID again although his iPhone passkey was registered
+         4 Oct -- this offer only read the phone's own flag. The server knows; trust it and remember it here. */
+      if(st.count>0){ try{ localStorage.setItem('ts_pk_here','1'); }catch(_){} _pkNo=true; return; }
       if(document.getElementById('pk-offer')) return;
       document.body.insertAdjacentHTML('beforeend','<div id="pk-offer" role="dialog" aria-label="Sign in with Face ID or fingerprint" style="position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:9500;max-width:460px;margin:0 auto;padding:14px 16px;border-radius:16px;background:#eef2ff;border:1.5px solid #c7d2fe;color:#1e1b4b;font:500 13px Inter,system-ui,sans-serif;box-shadow:0 10px 30px rgba(15,23,42,.25);">'
         +'<b style="display:block;font-size:14px;margin-bottom:3px;">Next time, sign in with Face ID or fingerprint</b>No email, no code. Your face or fingerprint stays on your phone.'

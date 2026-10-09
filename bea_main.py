@@ -6228,15 +6228,11 @@ def geo_get_regions(country: str = "ZA"):
 # the asked language (roles/quick_i18n.json, else the registry, else English); the role's own picture
 # (/static/quick/role_<key>.jpg, already on the server and loaded only when shown). Marked AI examples (RUL-040),
 # listed after real adverts (RUL-194), and only for roles nobody real lists there yet (the apps decide that).
-_GX_MINW = {"ZA": ("R", 30.23), "NA": ("N$", 15.00), "BW": ("P", 7.69), "MZ": ("MT ", 34.03), "KE": ("KSh ", 80.15),
-            "GB": ("£", 12.71), "DE": ("€", 13.90), "AU": ("A$", 26.44), "US": ("$", 7.25)}
+# GX-RATE-WORDS-1 (David, 9 Oct 2026: "the R320/day in these examples would be a deterrent rather than an incentive - can
+# we rather make it 'Your daily rate'?"): the card names no figure. It says "Your daily rate" (a car wash: "Your price
+# for each car" -- no "per" or "/", which TrustSquare's price formatter would cut), in the asked language when Quick's
+# checked word list has it. The worker sets the figure; Quick still refuses one below the legal minimum when she lists.
 _GX_CACHE = {"roles": None, "i18n": None}
-
-
-def _gx_nice(v):
-    """Round an example price up to a number a person would write (5s under 100, 10s under 1000, 50s above)."""
-    step = 5 if v < 100 else (10 if v < 1000 else 50)
-    return int(-(-v // step) * step)
 
 
 def _gx_roles():
@@ -6248,6 +6244,25 @@ def _gx_roles():
         except Exception as exc:
             _log.warning("GENERIC-EX-1: role registry unreadable: %s", exc); _GX_CACHE["roles"] = []
     return _GX_CACHE["roles"]
+
+
+def _gx_word(en, lang):
+    """A phrase in the asked language from Quick's checked word list (roles/quick_i18n.json), else None."""
+    lang = (lang or "en").lower()[:3]
+    if lang == "en":
+        return None
+    if _GX_CACHE["i18n"] is None:
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "quick_i18n.json"), encoding="utf-8") as fh:
+                _GX_CACHE["i18n"] = json.load(fh)
+        except Exception:
+            _GX_CACHE["i18n"] = {}
+    d = _GX_CACHE["i18n"] or {}
+    langs = d.get("langs") or []
+    row = (d.get("w") or {}).get(en)
+    if isinstance(row, list) and lang in langs and langs.index(lang) < len(row) and row[langs.index(lang)]:
+        return row[langs.index(lang)]
+    return None
 
 
 def _gx_label(role, lang):
@@ -6275,7 +6290,6 @@ def examples_roles(country: str = "ZA", city: str = "", lang: str = "en", role: 
     cc = re.sub(r"[^A-Za-z]", "", country or "ZA")[:2].upper() or "ZA"
     if cc == "UK":
         cc = "GB"
-    cur, hourly = _GX_MINW.get(cc, _GX_MINW["ZA"])
     city = _plain_text(str(city or ""))[:60].strip()
     want = re.sub(r"[^a-z0-9_]", "", (role or "").lower())[:60]
     out = []
@@ -6284,11 +6298,8 @@ def examples_roles(country: str = "ZA", city: str = "", lang: str = "en", role: 
         if want and k != want:
             continue
         pq = " ".join(q.get("q", "") for q in (r.get("questions") or []) if q.get("key") == "price").lower()
-        # written the way Quick writes a worker's own rate (money() + basis unit: "R320 / day", "From R65 / car")
-        if "per car" in pq:
-            price = "From %s%s / car" % (cur, "{:,}".format(_gx_nice(hourly * 2.0)).replace(",", " "))
-        else:
-            price = "%s%s / day" % (cur, "{:,}".format(_gx_nice(hourly * 8 * 1.3)).replace(",", " "))
+        en_rate = "Your price for each car" if "per car" in pq else "Your daily rate"   # GX-RATE-WORDS-1
+        price = _gx_word(en_rate, lang) or en_rate
         label = _gx_label(r, lang)
         pic = "/static/quick/role_%s.jpg" % k
         out.append({
@@ -6733,7 +6744,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     _scan0 = scan
     img, scan = _anon_plate_takeover(img, scan, _ts_active_provider(), category or "", spend_who,
                                      "/listings/photo#anon-verify", _pre, _txt_boxes)
-    _plate_done = bool(_pre) or (scan is not _scan0)
+    _plate_done = bool(_pre) or (scan is not _scan0 and not scan.get("_unchanged"))
     labels = ", ".join(sorted(set(scan.get("labels") or []))[:4])
     _retake = ("TrustSquare listings are anonymous — please retake the photo "
                "avoiding number plates, signage and contact details.")
@@ -22551,6 +22562,31 @@ _PLATE_VEHICLE_CATS = ("car", "vehicle", "bakkie", "bike", "motor", "boat", "tra
 _PLATE_CONF_VEHICLE = 0.40      # trusted on its own in a vehicle category (eval: real plates 0.44-0.90)
 _PLATE_CONF_OTHER = 0.30        # elsewhere only where the LLM ALSO saw a plate
 _PLATE_LABEL_RE = re.compile(r"plate|registration|licen[cs]e|dealer", re.I)
+# PHANTOM-PLATE-1 (David / Dave jnr, 8 Oct 2026): property photos with a car in shot were rejected
+# "not anonymous ... plate" although no plate was visible -- the LLM boxes a plate on every car it
+# sees, and outside the vehicle categories the detector could only CONFIRM it, never overrule it.
+# A car is not an anonymity problem; only a readable plate is. A plate/car region where the local
+# detector finds nothing and the zoomed OCR reads nothing is dismissed. A car region naming a
+# logo, brand, wrap or company name is NOT dismissed (a text-less operator logo still needs the old path).
+_PHANTOM_LABEL_RE = re.compile(r"plate|registration|licen[cs]e|\bcar\b|\bcars\b|vehicle|bakkie|\bsuv\b|truck", re.I)
+_PHANTOM_KEEP_RE = re.compile(r"logo|brand|wrap|sign|company|business|operator|name|livery|decal|sticker|phone|web", re.I)
+
+def _phantom_plate_region(reg, dets):
+    """True when `reg` is a plate/car region with no plate detection in or near it (the LLM's box
+    doubled each way). Only meaningful when the detector is loaded -- callers check that."""
+    try:
+        x0, y0, x1, y1 = (float(v) for v in reg[:4]); lbl = str(reg[4] if len(reg) > 4 else "")
+        if not _PHANTOM_LABEL_RE.search(lbl) or (_PHANTOM_KEEP_RE.search(lbl) and not _PLATE_LABEL_RE.search(lbl)):
+            return False
+        bw = max(1.0, x1 - x0); bh = max(1.0, y1 - y0)
+        ex0, ey0, ex1, ey1 = x0 - bw, y0 - bh, x1 + bw, y1 + bh
+        for d in dets or []:
+            cx = (d[0] + d[2]) / 2.0; cy = (d[1] + d[3]) / 2.0
+            if ex0 <= cx <= ex1 and ey0 <= cy <= ey1:
+                return False
+        return True
+    except Exception:
+        return False
 
 
 def _plate_cat_is_vehicle(category):
@@ -22613,7 +22649,7 @@ def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre
         vehicle = _plate_cat_is_vehicle(category)
         pre = [tuple(float(v) for v in b[:4]) for b in (pre_boxes or [])]
         fresh = [tuple(float(v) for v in b[:4]) for b in (fresh_boxes or [])]
-        keep = []; to_blur = []; text_items = []; handled = 0; kinds = set()
+        keep = []; to_blur = []; text_items = []; handled = 0; kinds = set(); dismissed = 0
         for _reg in regions:
             x0, y0, x1, y1 = (float(v) for v in _reg[:4]); lbl = str(_reg[4] if len(_reg) > 4 else "")
             bw = max(1.0, x1 - x0); bh = max(1.0, y1 - y0)
@@ -22642,6 +22678,9 @@ def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre
                     gw = (b[2] - b[0]) * 0.20; gh = (b[3] - b[1]) * 0.20
                     to_blur.append((max(0, b[0] - gw), max(0, b[1] - gh), min(1000, b[2] + gw), min(1000, b[3] + gh)))
                 handled += 1; continue
+            # PHANTOM-PLATE-1: a plate/car the detector cannot find and OCR cannot read -> no plate in shot
+            if _pdm and _phantom_plate_region(_reg, dets):
+                handled += 1; dismissed += 1; continue
             keep.append(_reg)                                           # cannot locate it locally: old path
         if not handled:
             return img, scan
@@ -22664,6 +22703,11 @@ def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre
         if keep:
             scan2 = dict(scan); scan2["regions"] = keep; scan2["labels"] = labels
             return img, scan2
+        if dismissed == handled:                  # PHANTOM-PLATE-1: nothing was real, nothing was painted
+            scan2 = dict(scan); scan2["verdict"] = "clean"; scan2["regions"] = []; scan2["labels"] = []
+            scan2["confidence"] = max(float(scan.get("confidence") or 0), _ANON_PHOTO_CONF); scan2["_unchanged"] = True
+            _log.info("PHANTOM-PLATE-1: %d plate/car region(s) dismissed -- detector + OCR found no plate", dismissed)
+            return img, scan2
         # nothing else was flagged -> one verify read of the painted output
         import base64 as _b64
         probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
@@ -22675,6 +22719,14 @@ def _anon_plate_takeover(img, scan, provider, category, spend_who, endpoint, pre
         if not v:
             return img, scan                      # verify unavailable: fail closed through the old path
         v = dict(v); v["labels"] = list(v.get("labels") or []) + [l for l in labels if l not in (v.get("labels") or [])]
+        if _pdm and v.get("verdict") == "redact" and v.get("regions"):   # PHANTOM-PLATE-1 on the verify read too
+            _vd = _pdm.detect(img, conf=_PLATE_CONF_OTHER)
+            _vk = [r for r in v["regions"] if not _phantom_plate_region(r, _vd)]
+            if not _vk:
+                v["verdict"] = "clean"; v["regions"] = []
+                v["confidence"] = max(float(v.get("confidence") or 0), _ANON_PHOTO_CONF)
+            else:
+                v["regions"] = _vk
         return img, v                             # clean -> done; still flagged -> the verifier's regions go down the old path
     except Exception as _e:
         _log.warning("local takeover failed: %r", _e)
