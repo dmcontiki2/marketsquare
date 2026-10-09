@@ -2655,3 +2655,46 @@ DEPLOY DRIFT: 51 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_
  ============================================================
 Press any key to continue . . . 
 Thu 10/08/2026  2:02:04.54  SHIPPED rc=0 — server runs migrations + smoke itself
+============================================================
+Fri 10/09/2026  2:00:01.76  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Fri 10/09/2026  2:00:01.87
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 390 files already current - upload skipped.
+ [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
+   [OK] SYNC email_strip: all 24 files already current - upload skipped.
+ [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
+   [OK] SYNC quick_ph: all 298 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 10 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [6b] Plate-detector model (PLATE-DETECTOR-1: models\plate_detector.onnx to /models, hash-gated)...
+   [OK] SYNC models: all 1 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Fri 10/09/2026  2:01:37.75  drift: DEPLOY DRIFT: 49 files differ from live - LIVE IS AHEAD by 2 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: ms.js, orchestration_v2/email_templates.html, orchestration_v2/templates/collectors_dealer_outreach.html, orchestration_v2/templates/collectors_outreach.html, orchestration_v2/templates/intl/AU/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/AU/adventures_experiences_outreach.html, orchestration_v2/templates/intl/AU/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/AU/agency_outreach.html, orchestration_v2/templates/intl/AU/cars_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_dealer_outreach.html, orchestration_v2/templates/intl/AU/collectors_outreach.html, orchestration_v2/templates/intl/AU/property_outreach.html, orchestration_v2/templates/intl/AU/service_company_outreach.html, orchestration_v2/templates/intl/AU/services_casuals_outreach.html, orchestration_v2/templates/intl/AU/services_technical_outreach.html, orchestration_v2/templates/intl/AU/sports_club_outreach.html, orchestration_v2/templates/intl/AU/tutor_institution_outreach.html, orchestration_v2/templates/intl/AU/tutors_outreach.b.html, orchestration_v2/templates/intl/AU/tutors_outreach.html, orchestration_v2/templates/intl/GB/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/GB/adventures_experiences_outreach.html, orchestration_v2/templates/intl/GB/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/GB/agency_outreach.html, orchestration_v2/templates/intl/GB/cars_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_dealer_outreach.html, orchestration_v2/templates/intl/GB/collectors_outreach.html, orchestration_v2/templates/intl/GB/property_outreach.html, orchestration_v2/templates/intl/GB/service_company_outreach.html, orchestration_v2/templates/intl/GB/services_casuals_outreach.html, orchestration_v2/templates/intl/GB/services_technical_outreach.html, orchestration_v2/templates/intl/GB/sports_club_outreach.html, orchestration_v2/templates/intl/GB/tutor_institution_outreach.html, orchestration_v2/templates/intl/GB/tutors_outreach.b.html, orchestration_v2/templates/intl/GB/tutors_outreach.html, orchestration_v2/templates/intl/US/adventures_accommodation_outreach.html, orchestration_v2/templates/intl/US/adventures_experiences_outreach.html, orchestration_v2/templates/intl/US/adventures_outfitter_outreach.html, orchestration_v2/templates/intl/US/agency_outreach.html, orchestration_v2/templates/intl/US/cars_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_dealer_outreach.html, orchestration_v2/templates/intl/US/collectors_outreach.html, orchestration_v2/templates/intl/US/property_outreach.html, orchestration_v2/templates/intl/US/service_company_outreach.html, orchestration_v2/templates/intl/US/services_casuals_outreach.html, orchestration_v2/templates/intl/US/services_technical_outreach.html, orchestration_v2/templates/intl/US/sports_club_outreach.html, orchestration_v2/templates/intl/US/tutor_institution_outreach.html, orchestration_v2/templates/intl/US/tutors_outreach.b.html, orchestration_v2/templates/intl/US/tutors_outreach.html
