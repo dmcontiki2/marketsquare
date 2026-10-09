@@ -11,4 +11,4 @@
 - [x] ms.js: trainer examples in Tutors + sheet 'I train people in this — list me free' + typical rate (apply_trainers_ms.py)
 - [x] stories: 47 trainer How guides (build_trainer_guides.py), gallery + manifest (build_help.py), screens pushed to /help/img
 - [x] role pictures (47 jpg) uploaded to /static/quick (media lane equivalent; nightly media_push will see them unchanged)
-- [x] ledger RG-0947 (PASS in repo) / RG-0948 (live half after deploy); rulings_check RUL-217
+- [x] ledger RG-0949 (PASS in repo; renumbered from RG-0947, which Goal run 33b shipped first) / RG-0948 (live half after deploy); rulings_check RUL-217

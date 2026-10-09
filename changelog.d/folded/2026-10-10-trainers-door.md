@@ -12,6 +12,6 @@ David, 8 Oct 2026: "I would like to do the same for tutors, but for a branch of 
 - **How:** 47 story guides (stories/<sport>.json) derived from the walked Tutors guide by scripts/build_trainer_guides.py — sport-specific step 2, price and photo steps; the clearance sports add the walked "Upload my police clearance" step. Gallery and deploy manifest rebuilt (build_help.py); screens placed on the server.
 - **Pictures:** roles/pictures/<sport>.png are INTERIM illustrations (Noto emoji objects on the group colour; no people, no text). The photo-real set is `python3 scripts/gen_role_pictures.py --go` over the trainer rows (≈US$3) — a spend, so David's call.
 - Found on the way: CARWASH-1's car-washer row had been hand-edited into role_registry.json, so any rebuild dropped it; the builder now carries it (ROLE_PATCH).
-- Ledger RG-0947 (door, registry, languages, guides, gate) and RG-0948 (examples endpoint, live); rulings_check RUL-217.
+- Ledger RG-0949 (door, registry, languages, guides, gate) and RG-0948 (examples endpoint, live); rulings_check RUL-217.
 
 Cost model impact: none (pictures interim, no new paid calls). Schema: none.

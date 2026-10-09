@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-07 - carwash 1)
+## Last Completed (2026-10-10 - trainers door)
 
-- 7 Oct 2026 — CARWASH-1 (RUL-214) built: car washer in Home & care, per-car package prices in Quick, packages listed in the advert. Verified by: JS syntax check + ledger entries RG-0936 / RG roles checks pass; live walk pending deploy.
+- 10 Oct 2026 — TRAINERS-DOOR-1 (RUL-217) built by the scheduled run: Trainers door inside Tutors (47 sports, 8 groups, 15 languages, per-session/month/package pricing with no wage floor, 28 clearance-gated sports, AI example per sport via GET /examples/trainers, 47 How guides). Open: photo-real pictures (paid run, David's call — interim illustrations live). Verified by: headless Quick walk (Tutors/Trainers/Soccer coach/R250 / session, 0 JS errors), RG-0949 pass in repo; live verification in the run report.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 10 Oct 2026 — TRAINERS-DOOR-1 (RUL-217) built by the scheduled run: Trainers door inside Tutors (47 sports, 8 groups, 15 languages, per-session/month/package pricing with no wage floor, 28 clearance-gated sports, AI example per sport via GET /examples/trainers, 47 How guides). Open: photo-real pictures (paid run, David's call — interim illustrations live). Verified by: headless Quick walk (Tutors/Trainers/Soccer coach/R250 / session, 0 JS errors), RG-0949 pass in repo; live verification in the run report.
 
 - 7 Oct 2026 — CARWASH-1 (RUL-214) built: car washer in Home & care, per-car package prices in Quick, packages listed in the advert. Verified by: JS syntax check + ledger entries RG-0936 / RG roles checks pass; live walk pending deploy.
 

@@ -1,3 +1,63 @@
+## 2026-10-10 — TRAINERS-DOOR-1 + TRAINERS-EX-1 (RUL-217): Trainers are a door inside Tutors, built like Casuals inside Services — global from day one
+
+David, 8 Oct 2026: "I would like to do the same for tutors, but for a branch of tutors namely Trainers ... Gym, Acrobatics, Aerobics, Wrestling, Chess, Rugby, Soccer, Cricket, Judo, Karate, Running, Golf, Swimming, and all of the sports types one can get a trainer for ... the same flows, Hows etc ... To also make it Global" / "i agree for it to sit inside Tutors the same as we did for Services". Built by the scheduled run of Sat 10 Oct 2026, 01:30 SAST.
+
+- **A door, not a category.** A trainer's advert is written `category: Tutors`, `service_class: Trainers`; the Trust Score key `Tutors-Trainers` resolves to the Tutors evidence set everywhere a key is normalised (_TRUST_CAT_NORM, the catalogue keys, the listing and prefix maps).
+- **47 trainer roles in 8 groups** (Fitness & gym, Combat sports, Team sports, Racket & target sports, Water sports, Running/cycling & outdoor, Gymnastics & acrobatics, Mind sports) — ROLE_SLATE_REVIEW.md `# TUTORS — TRAINERS` → scripts/build_role_registry.py → roles/role_registry.json (`trainers_door`). "CrossFit" is a search alias of *Functional fitness coach* (the label avoids the trade mark, SO-1).
+- **Police clearance (RUL-217(d) / RUL-153):** the 28 sports commonly coached to children carry the clearance gate. The stranger gate now covers Tutors (`_GATE_CATEGORIES`); a trainer's card and Quick's draft/live lines say it shows once the clearance is checked; "Upload my police clearance" picks the Tutors clearance credential (TRAINERS-GATE-1).
+- **Quick (quick.html = genie/HARNESS.html):** a *Sport & fitness* tile on the Tutors door's first step, then group → sport (its picture) → price → where: 5 taps to a draft (RUL-117); Find: group → sport → where. The seventh typed card is on every step. Prices are typed **per session / per month / per package** with **no minimum-wage floor** (RUL-197 class). `/quick/?role=<sport>` opens on the price step.
+- **Names in all 15 Quick languages** — 47 sports, 8 groups and 10 phrases (scripts/apply_trainers_i18n.py; Claude's drafts for the reviewers, RUL-160).
+- **AI example per sport (TRAINERS-EX-1):** GET /examples/trainers makes one card per sport for the country, city and language being looked at — the sport's picture and name, "Your session rate" on the card (GX-RATE-WORDS-1), and on the tap sheet the typical local session price from a NEW per-country table `_TRN_SESSION_RATE` (not the wage table; Claude's estimate, dated, re-check yearly). Marked, last, hidden by the switch, counted on the Home tile while it is on, off the map, never an introduction; the sheet offers "I train people in this — list me free" into Quick's sell flow. Declared public in route_policy.json.
+- **Trust Score:** category.tutors.specialisation now names the coaching badge per sport (SAFA/CAF/UEFA licence, World Rugby level, federation coach levels, PGA, dan grades, personal-trainer certificate, 200-hour yoga, FIDE trainer title …).
+- **How:** 47 story guides (stories/<sport>.json) derived from the walked Tutors guide by scripts/build_trainer_guides.py — sport-specific step 2, price and photo steps; the clearance sports add the walked "Upload my police clearance" step. Gallery and deploy manifest rebuilt (build_help.py); screens placed on the server.
+- **Pictures:** roles/pictures/<sport>.png are INTERIM illustrations (Noto emoji objects on the group colour; no people, no text). The photo-real set is `python3 scripts/gen_role_pictures.py --go` over the trainer rows (≈US$3) — a spend, so David's call.
+- Found on the way: CARWASH-1's car-washer row had been hand-edited into role_registry.json, so any rebuild dropped it; the builder now carries it (ROLE_PATCH).
+- Ledger RG-0949 (door, registry, languages, guides, gate) and RG-0948 (examples endpoint, live); rulings_check RUL-217.
+
+Cost model impact: none (pictures interim, no new paid calls). Schema: none.
+
+## 2026-10-09 — GX-RATE-WORDS-1 (RUL-216 amended): the role examples say "Your daily rate", not a figure
+
+David, 9 Oct: "the R320/day in these examples would be a deterrent rather than an incentive - can we rather make it 'Your daily rate'?"
+
+The AI example for each casual work role (GENERIC-EX-1) no longer shows a rate worked out from the minimum wage. In TrustSquare's Services and in Quick's Find it says "Your daily rate" -- a car wash "Your price for each car" (no "per" or "/", which TrustSquare's price formatter would cut) -- in the viewer's language: both phrases are in Quick's word list in all 15 of its languages (drafts for the reviewers, like the rest of the list), and the server sends the role name and the phrase in the asked language. The tap sheet now says "Whoever lists this work sets their own rate." Quick's minimum-wage check when a worker lists her own rate is unchanged. Checked in a phone-sized browser: Services cards read "Your daily rate", the car-wash card and sheet "Your price for each car", Quick's car-washer example reads "Jou prys vir elke kar" in Afrikaans. Ledger RG-0940 amended (the wage-table comparison is retired with the figures).
+
+Cost model impact: none.
+
+### Dave jnr's test: car photos and the repeated Face ID offer (fixback, 9 Oct 2026)
+
+Dave jnr's property listing #534 lost 2 of 14 photos with "not anonymous ... plate" although the car in shot showed no
+plate, and the app asked him to set up Face ID although his iPhone passkey had been on file since 4 Oct.
+
+- **PHANTOM-PLATE-1** (bea_main.py `_anon_plate_takeover`) — the AI scanner boxes a plate on every car it sees; outside the
+  vehicle categories the local plate detector could only confirm that, never overrule it. Now a plate/car region where the
+  detector finds no plate and the zoomed OCR reads no text is dismissed; if that was all, the photo is accepted unchanged
+  with no second AI read (it would repeat the same false plate) and is not reported to the seller as "redacted". The same
+  check applies to a verify read. Real plates are still found and blurred; a car region naming a logo/brand/company still
+  goes the old way. Detector unavailable → no dismissal (fail-closed as before).
+- **PASSKEY-KNOWN-1** (ms.js `hubOffer`) — the Face ID offer read only the phone's own `ts_pk_here` flag, so signing in by
+  e-mailed code on a browser without it brought the offer back. `/auth/passkey/status` already returns `count`; when the
+  account has a passkey the offer is skipped and the flag is set. Refines PASSKEY-ALWAYS-1 (7 Oct).
+
+**Shipped 9 Oct 2026 00:19 UTC** (main.py + static/ms.js; server rollback copies `*.ship-20261009-0019`). Live checks: BEA
+active, /health 200, plate detector ready, site 200 in 0.3 s, smoke_test.py all pass, ms.js served with PASSKEY-KNOWN-1.
+Live gate run (category property) on listing-246 eval photos: both no-plate side profiles ACCEPTED; the frontal photo with
+a plate ACCEPTED with the plate blurred.
+
+### Quick knows the city the app already found (Goal run 33)
+
+A Johannesburg hair braider's Home said "Showing Johannesburg — from your phone's location"; one tap on "Work for
+yourself?" later Quick asked "Which city?" again (and, on a foreign network, offered that country's cities).
+
+- **QUICK-AUTO-HANDOFF-1** — when she has not picked a city herself, the Quick links in Sell and the Sell sheet carry the
+  country the app chose for her, and the city too when it came from her phone or her own adverts. A network guess (only
+  the country's main city) is never passed as hers. Her own pick still wins (CITY-HANDOFF-1).
+- **NUDGE-REAL-WORD-1** — the empty-city bar said "Nothing listed in Johannesburg yet" right above tiles reading
+  "Services 47 listings" (they count AI examples). It now reads "No real listings in Johannesburg yet — the listings below
+  are AI examples. Pretoria has 8 real listings."
+
+RG-0946.
+
 ## 2026-10-08 — SELLER-HOME-1 (RUL-215): a seller opens the app where she lists
 
 David, 8 Oct: "the city could on opening default to the users city where he operates locally, this would be where he lists? This would prevent him opening the app and finding his listings to seem lost ... This what happened with Maroushka."

@@ -1304,7 +1304,7 @@ REFLECTIONS = {
  ],
  "RUL-217": [
    # Trainers are a door inside Tutors, built the way Casuals were built inside Services -- global from day one
-   # (David 8 Oct 2026; built by the scheduled run of 10 Oct 2026: TRAINERS-DOOR-1 / TRAINERS-EX-1, RG-0947 / RG-0948).
+   # (David 8 Oct 2026; built by the scheduled run of 10 Oct 2026: TRAINERS-DOOR-1 / TRAINERS-EX-1, RG-0949 / RG-0948).
    ("RULINGS.md", ["TRAINERS ARE A DOOR INSIDE TUTORS"], []),
    ("ROLE_SLATE_REVIEW.md", ["# TUTORS — TRAINERS"], []),
    ("roles/role_registry.json", ['"service_class": "Trainers"', '"trust_key": "Tutors-Trainers"', '"wage_floor": false'], []),

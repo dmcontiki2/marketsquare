@@ -6714,7 +6714,7 @@ def rg_photo_order():
     if ms is not None:
         for token, what in (("function elMakeCover", "the Make-cover control"),
                             ("function elMovePhoto", "the move control"),
-                            ("_elPhotoUrls = [];\n  _elPhotoReplaceIdx = 0;", "the per-open reset (cross-listing photo bleed)"),
+                            ("_elPhotoUrls = [];\n  _elPhotosLoaded = false;   // PHOTO-EMPTY-1: a new listing's photos are read once, below\n  _elPhotoReplaceIdx = 0;", "the per-open reset (cross-listing photo bleed)"),   # run 33b: PHOTO-EMPTY-1 sits between the two
                             ("[photos:([^\\]]+)\\]", "the edit-screen prefix fallback (seller sees ALL photos)")):
             if token not in ms:
                 out.append((FAIL, "ms.js lost %s" % what))
@@ -27532,7 +27532,7 @@ def rg_quick_next_1():
     except ProbeOffline:
         raise
     for good in ("QUICK-NEXT-1", "ONE-TAP-PUBLISH-1", "['nso','Sepedi']", "ARRIVAL-1"):
-        if good not in page:
+        if good not in page.replace("['nso', 'Sepedi']", "['nso','Sepedi']"):   # run 33b: QLANGS now has a space after the comma
             out.append((FAIL, "LIVE /quick/ is missing %s" % good))
     return out
 
@@ -29422,7 +29422,7 @@ def rg_arrive_exit():
     q = repo_file("quick.html")
     bad = []
     if q is not None:
-        body = q[q.find("function celebrate("):q.find("function celebrate(")+6000]
+        body = q[q.find("function celebrate("):q.find("function celebrate(")+9000]   # run 33b: celebrate() grew
         for tok, what in (("ar-again", "'List something else'"), ("ar-x", "the close button"), ("drawDoor()", "the fresh start")):
             if tok not in body:
                 bad.append("arrival screen lost " + what)
@@ -35143,7 +35143,49 @@ def rg_magic_hello_1():
     return [(INFO, "the invited seller is welcomed by name on step 1; the Home tip waits")]
 
 
-@entry("RG-0947", "TRAINERS-DOOR-1 (RUL-217, 10 Oct 2026): Trainers are a door inside Tutors -- every trainer role is in the "
+@entry("RG-0947", "QUICK-OWN-PHOTO-1 + HUB-ADD-PHOTO-1 + LANG-ONE-HOME-1 (Goal run 33b, David 9 Oct 2026): in Quick the draft "
+       "card's example picture is a button to her camera -- her photo replaces it, scores, and follows the save; a Hub card "
+       "with no photo offers 'Add photo'; Home shows one language button",
+       LOCKED, fixed_on="2026-10-09",
+       scope="quick.html (= genie/HARNESS.html) QUICK-OWN-PHOTO-1 module (drawDraft/lsOf/drawDoor wrappers, qOwnPhotoAfterSave "
+             "called after celebrate in publishNow, ONE-SCORER-1 preview counts her photo); bea_main.py quick_publish returns "
+             "draft_token (and sets ts_draft) except for another person's account; ms.js renderDashCard (HUB-ADD-PHOTO-1), "
+             "pill() CSS (LANG-ONE-HOME-1)",
+       ref="David, 9 Oct 2026, with a screenshot of the draft card: 'Why can't a new lister add her photo here by clicking on the "
+           "photo to then go to her phone's camera ... It will look good and be an incentive to go on?' Run 33 walk: Hub card "
+           "showed a gear for a hair braider; Home had the header globe and a floating 'English' pill.")
+def rg_quick_own_photo_1():
+    q = repo_file("quick.html"); b = repo_file("bea_main.py"); js = repo_file("ms.js")
+    if q is None or b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = q.find("QUICK-OWN-PHOTO-1 (David, 9 Oct 2026")
+    if i < 0:
+        return [(FAIL, "Quick's draft card no longer lets her add her own photo")]
+    m = q[i:i + 9000]
+    for sn, why in (("inp.setAttribute('capture','environment')", "the picture no longer opens the phone's camera"),
+                    ("lsOf=function(pk, photos){ return _ls(pk, Math.max(photos||0, window.QPHOTO ? 1 : 0)); };", "her photo no longer counts in her score"),
+                    ("drawDoor=function(){ window.QPHOTO=null;", "a fresh start keeps the last person's photo"),
+                    ("'/listings/'+encodeURIComponent(j.id)+'/photo/draft?email='", "a saved draft no longer receives her photo"),
+                    ("if(!p || !p.blob || !j || !j.id || j.verify) return;", "a photo could be sent to someone else's account's draft")):
+        if sn not in m:
+            return [(FAIL, "quick.html: " + why)]
+    if "try{ window.qOwnPhotoAfterSave && qOwnPhotoAfterSave(res.j, em); }catch(_){}" not in q:
+        return [(FAIL, "quick.html: the save no longer sends her photo")]
+    if "if(window.QPHOTO) b.description='[photos:own]" not in q:
+        return [(FAIL, "quick.html: the strength ring ignores her photo (ONE-SCORER-1 preview)")]
+    if b.count('"draft_token": _qdt') != 4 or "if not existing_account and _qdt and response is not None:" not in b:
+        return [(FAIL, "bea_main.py: quick_publish no longer hands the draft token to the phone that made the draft (or hands it for another person's account)")]
+    h = repo_file("genie/HARNESS.html")
+    if h is not None and h != q:
+        return [(FAIL, "genie/HARNESS.html differs from quick.html")]
+    if "HUB-ADD-PHOTO-1" not in js or 'aria-label="Add a photo"' not in js:
+        return [(FAIL, "ms.js: a Hub card with no photo shows a category icon again instead of 'Add photo'")]
+    if "body:has(#screen-home.active):has(#ts-langh) #ts-lang .pill{display:none}" not in js:
+        return [(FAIL, "ms.js: Home shows two language buttons again")]
+    return [(INFO, "Quick's example picture opens her camera; her photo scores and follows the save; Hub offers Add photo; one language button on Home")]
+
+
+@entry("RG-0949", "TRAINERS-DOOR-1 (RUL-217, 10 Oct 2026): Trainers are a door inside Tutors -- every trainer role is in the "
        "registry with its picture, its name in all 15 of Quick's languages and its How guide; Quick's Tutors door opens "
        "Sport & fitness -> group -> sport -> price -> where and writes Tutors / Trainers; prices are per session / month / "
        "package with no wage floor; the sports that commonly coach children carry the police-clearance gate",
@@ -35513,9 +35555,10 @@ def rg_find_honour():
     if bad:
         return [(FAIL, "quick.html Find answers dropped: " + "; ".join(bad[:6]))]
     code = re.sub(r"/\*.*?\*/", "", q, flags=re.S)
-    for sn, why in (("paint(qFindHonour(typeFilter(", "the results are no longer tested against her answers"),
+    for sn, why in (("fit=qFindHonour(typeFilter(", "the results are no longer tested against her answers"),
+                    ("paint(fit, false)", "the tested results are no longer what she is shown"),
                     ("qAnchors(city)", "the area reach is no longer loaded"),
-                    ("_exAll=qLocalExamples(c, where, city)", "an empty shelf is no longer filled with marked examples"),
+                    ("_exAll=qGenericEx(list, where) || qLocalExamples(c, where, city)", "an empty shelf is no longer filled with marked examples"),   # run 33b: GENERIC-EX-1 first
                     ("flow=function(){\n    var f=_flLive();", "live suburbs are no longer offered as areas"),
                     ("? 'For Rent' : (/sell|sale/i.test(body.listing_type) ? 'For Sale'", "Quick stores its chip wording as listing_type again")):
         if sn not in code:
@@ -35734,12 +35777,21 @@ def rg_aud054_b2():
     _bad = _aud_b2_check([('ms.js', 'function sfAgentCardHtml(a,top){\n  a=_agentSafe(a);', 'the seller agent card paints the profile raw again'), ('estate_agents.py', 'for _f in ("headline", "bio", "city", "suburbs", "specialties", "languages"):', 'agent profile text is stored with markup again')], [])
     return _bad or [(INFO, "an agent's suburbs, city and experience are plain text when saved and when served, and painted escaped on every agent ca")]
 
+def _app_python():
+    """run 33b: the audit proofs import bea_main, which needs the app's packages (python-multipart is only in the
+    service's venv on the server). Use that interpreter when it is there; elsewhere the one running the ledger."""
+    for c in ("/var/www/marketsquare/venv/bin/python", "/var/www/marketsquare/venv/bin/python3"):
+        if os.path.exists(c):
+            return c
+    return sys.executable
+
+
 @entry("RG-0840", "AUDIT-4OCT Batch 2 EXECUTED: every money, privacy and security fix of Batch 2 holds against the real bea_main.py on a throwaway database (scripts/prove_audit_b2.py)",
        LOCKED, fixed_on="2026-10-04",
        scope="scripts/prove_audit_b2.py imports bea_main with a temp SQLite file and exercises AUD-015..031 (restore once, lapse, orphan intros, canonical wallet, seat refusal, unspent-only sweep, webhook fallback, Zoom scrub, first-name read, Squire scrub, photo paths, signal refusal, AI plain text, support mailbox caps, agent text). ~8 s; needs fastapi, boto3, PyJWT, pillow (missing = NOT EVALUATED).",
        ref="AUDIT-4OCT Batch 2, 4 Oct 2026. LOCKED after deploy 6c57385: proof passes, live ms.js v=923 carries the escapes, live Zoom has no street; rendered in David's Chrome (agent cards, price card, agency console and phone mask painted escaped, nothing ran).")
 def rg_aud_b2_executed():
-    ok, blind, det = _harness([sys.executable, os.path.join(REPO, "scripts", "prove_audit_b2.py")], timeout=120, cwd=REPO)
+    ok, blind, det = _harness([_app_python(), os.path.join(REPO, "scripts", "prove_audit_b2.py")], timeout=120, cwd=REPO)
     if blind:
         return [(INFO, det)]
     if not ok:
@@ -35772,8 +35824,9 @@ def rg_find_bands():
     if q is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     code = re.sub(r"/\*.*?\*/", "", q, flags=re.S)
-    for sn, why in (("if(tests[i][2]==='area'){ band=1; continue; } return; }", "an area miss drops the advert again (RUL-118 lost) or a gate miss no longer drops it"),
-                    ("l._band=band; out.push(l);", "adverts no longer carry their band"),
+    for sn, why in (("if(tests[i][2]==='area'){ band=1; continue; } nm++; miss=tests[i]; }", "an area miss drops the advert again (RUL-118 lost) or a gate miss no longer counts"),
+                    ("if(!nm){ out.push(l); return; }", "a gate miss no longer keeps the advert out of her results (FIND-CLOSE-1 keeps it aside)"),
+                    ("l._band=band; l._cm=0;", "adverts no longer carry their band"),
                     ("(a._band-b._band) || ((0.5*ls(b)+0.5*ts(b))-(0.5*ls(a)+0.5*ts(a)))", "bands are no longer ordered local-first, RS inside"),
                     ("E(l._band ? T('Nearby') : placeName)", "the bands are no longer labelled"),
                     ("n0 ? T('Yes')+' — '+n0+' '+T('on TrustSquare') : T('Yes — '+n1+' near you')", "'Yes' counts adverts outside her area again")):
@@ -35788,7 +35841,7 @@ def rg_find_bands():
     if h is not None and h != q:
         return [(FAIL, "genie/HARNESS.html differs from quick.html")]
     live = _get("/quick/")
-    if "l._band=band; out.push(l);" not in live:
+    if "l._band=band; l._cm=0;" not in live:
         return [(FAIL, "the live /quick/ does not fill local-first yet (not deployed yet?)")]
     return [(INFO, "Quick's Find fills her area first, then the city under 'Nearby'; pictures from the server -- live")]
 
@@ -35942,7 +35995,7 @@ def rg_aud038_b3():
        scope='ms.js Services filter',
        ref="AUDIT_2026-10-04_findings.json AUD-039; confirmed in today's code 4 Oct 2026; EXECUTED by scripts/prove_audit_b3.py / prove_audit_b3_app.js (RG-0871). LOCKED 4 Oct 2026 after deploy 2c6aa6e + the rendered check in David's Chrome.")
 def rg_aud039_b3():
-    _bad = _aud_b2_check([('ms.js', "const _st = String(l.service_type || l.serviceType || '').toLowerCase()", 'the Service Type filter reads a field live adverts lack again')], [])
+    _bad = _aud_b2_check([('ms.js', "const st = String(l.service_type || l.serviceType || '').toLowerCase()", 'the Service Type filter reads a field live adverts lack again')], [])
     return _bad or [(INFO, 'the Service Type filter reads service_type (either spelling), case-insensitively')]
 
 @entry('RG-0861', "AUD-040 (4 Oct 2026 audit, High App): batch publish treats 409 'accept the Terms' as saved drafts: opens the Terms once, publishes the saved drafts, never re-posts them",
@@ -36030,7 +36083,7 @@ def rg_aud049_b3():
        scope="prove_audit_b3.py: AUD-004/005/006/007/009/010/011/013/014/032/033/034; prove_audit_b3_app.js: AUD-036/037/046/047/049. ~10 s; missing fastapi/boto3/PyJWT/pillow or node = NOT EVALUATED.",
        ref="AUDIT-4OCT Batch 3, 4 Oct 2026. LOCKED after deploy 2c6aa6e (QA Bot gate pass): proofs pass; live ms.js v=926; rendered in David's Chrome (Adventures Safari chip shows its adverts, agency drafts view shows the agent's own drafts, Agent Hub renders every vertical, card prices read the first amount).")
 def rg_aud_b3_executed():
-    ok, blind, det = _harness([sys.executable, os.path.join(REPO, "scripts", "prove_audit_b3.py")], timeout=120, cwd=REPO)
+    ok, blind, det = _harness([_app_python(), os.path.join(REPO, "scripts", "prove_audit_b3.py")], timeout=120, cwd=REPO)
     if blind:
         return [(INFO, det)]
     if not ok:
@@ -36146,12 +36199,12 @@ def rg_luna_first():
     if b is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     code = "\n".join(l for l in b.splitlines() if not l.lstrip().startswith("#"))
-    for sn, why in (('def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task="reason"):', "the first-check lane is gone"),
-                    ('_anon_photo_scan(jpeg_b64, "openai", category, False, who, "vision")', "the first check no longer reads with luna"),
+    for sn, why in (('def _anon_photo_scan(jpeg_b64, provider, category="", first=False, who="", _task="reason"', "the first-check lane is gone"),
+                    ('_anon_photo_scan(jpeg_b64, "openai", category, False, who, "vision"', "the first check no longer reads with luna"),
                     ('and _l.get("flag") != "inappropriate" and _l.get("fits") is not False:', "luna can pass a flagged or wrong-subject photo on its own"),
                     ('allow_fallback=(_task != "vision"))', "a luna failure can fall back to an untested lane"),
-                    ('_ts_active_provider(), category or "", first=True, who=spend_who)', "the seller gate no longer uses the first check"),
-                    ('provider, category, first=True, who=agent)', "agency imports no longer use the first check")):
+                    ('_ts_active_provider(), category or "", first=True, who=spend_who', "the seller gate no longer uses the first check"),
+                    ('provider, category, first=True, who=agent', "agency imports no longer use the first check")):
         if sn not in code:
             return [(FAIL, "bea_main.py: " + why)]
     return [(INFO, "first photo check on luna, terra on anything luna does not pass clean")]

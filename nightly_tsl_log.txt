@@ -1655,3 +1655,69 @@ DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
  ============================================================
 Press any key to continue . . . 
 Thu 10/08/2026  5:55:41.95  SHIPPED rc=0 - server now runs migrations + health itself
+Fri 10/09/2026  3:35:14.53  SHIPPING - DEPLOY DRIFT: 55 files differ from live - LIVE IS AHEAD by 2 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: SESSION_COUNTER.json, bea_main.py, ms.js, quick.html, roles/quick_i18n.json, roles/role_registry.json, route_policy.json, stories/acrobatics_coach.json, stories/aerobics_instructor.json, stories/american_football_coach.json, stories/archery_coach.json, stories/badminton_coach.json, stories/baseball_coach.json, stories/basketball_coach.json, stories/boxing_coach.json, stories/chess_coach.json, stories/climbing_instructor.json, stories/cricket_coach.json, stories/cycling_coach.json, stories/dance_fitness_instructor.json, stories/diving_instructor.json, stories/fencing_coach.json, stories/functional_fitness_coach.json, stories/gallery.json, stories/golf_coach.json, stories/gymnastics_coach.json, stories/hockey_coach.json, stories/horse_riding_instructor.json, stories/jiu_jitsu_instructor.json, stories/judo_instructor.json, stories/karate_instructor.json, stories/kickboxing_coach.json, stories/mma_coach.json, stories/netball_coach.json, stories/padel_coach.json, stories/personal_trainer.json, stories/pilates_instructor.json, stories/rowing_canoeing_coach.json, stories/rugby_coach.json, stories/running_athletics_coach.json, stories/sailing_instructor.json, stories/skating_coach.json, stories/ski_snowboard_instructor.json, stories/soccer_coach.json, stories/squash_coach.json, stories/strength_conditioning_coach.json, stories/surfing_coach.json, stories/swimming_coach.json, stories/table_tennis_coach.json, stories/taekwondo_instructor.json, stories/tennis_coach.json, stories/triathlon_coach.json, stories/volleyball_coach.json, stories/wrestling_coach.json, stories/yoga_instructor.json | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Fri 10/09/2026  3:35:14.59
+ ============================================================
+
+  [autobump] ms.js changed -> marketsquare.html ref ?v=529
+  [autobump] 1 reference(s) bumped
+harness-parity: quick.html == genie/HARNESS.html
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 61 honestly not-wired, 1 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+folded 4, skipped 0 (already present) · verify OK
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+folded 1, skipped 0 (already present) - verify OK
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-09T01:35:17Z   mode=strict
+  Working tree: 21 file(s) uncommitted; 1 deploy target(s) changed.
+    - marketsquare.html                  290455 B      0 min ago  [modified, RECENT(<25m)]
+  >> HEADS-UP: 1 target(s) changed in the last 25 min - could be another session:
+     marketsquare.html
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  Harness parity (quick.html == genie/HARNESS.html): ok
+  Verdict: REVIEW   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+  [LOCK] acquired by LAPTOP-S0AC8CVC (pid 19564), TTL 30 min.
+  ------------------------------------------------------------
+  TSL PRE-DEPLOY GATE   2026-10-09T01:35:19Z   mode=strict
+  [CM] change-management docs
+    - STATUS.md            [ok]
+    - CHANGELOG.md         [ok]
+    - CHANGE_REGISTER.md   [ok]
+    - STATUS newest date : 2026-10-04 (5 days ago)
+    - CHANGELOG newest    : 2026-10-10
+    - Ship pending        : marketsquare.html
+    - (note) CHANGE_REGISTER.md not modified this session
+  [DB] live databases (read-only, msdeploy@178.104.73.239)
+    - primary db        [ok, 10883072 bytes, integrity ok] (cached)
+    - redis             [not readable - not gated]
+    -- proved over HTTPS /health (no credentials needed)
+  Verdict: CM=ok  DB=ok  ->  ok   (logged -> tsl_audit.log)
+  ------------------------------------------------------------
+warning: in the working copy of 'SESSION_COUNTER.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'marketsquare.html', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_ship_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_gate.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'nightly_tsl_log.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'scripts/static_versions.json', CRLF will be replaced by LF the next time Git touches it
+ [4/6] Committed the working tree.
+83e5172 Release Fri 10/09/2026  3:35:20.98
+sync-origin [MarketSquare]: STOP -- 2 commit(s) on origin/main could not be taken in cleanly (SESSION_COUNTER.json, genie/HARNESS.html, quick.html, roles/quick_i18n.json, scripts/regression_ledger.py); nothing pushed, nothing overwritten. See SYNC_CONFLICT.txt
+ STOP: GitHub has commits this laptop could not take in cleanly - NOTHING was released,
+       nothing was overwritten. See SYNC_CONFLICT.txt. (SYNC-ORIGIN-1)
+  [LOCK] released.
+Press any key to continue . . . 
+Fri 10/09/2026  3:35:24.43  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
