@@ -37177,8 +37177,8 @@ def rg_ex_photo_role_1():
 
 
 @entry("RG-0940", "GENERIC-EX-1 (RUL-216, 8 Oct 2026): every casual work role has an AI example in both apps, made on the "
-       "server for the country and city being looked at -- that country's currency and minimum-wage floor, the role's name "
-       "in her language, its own picture -- never built into the app, counted on its Home tile only while examples are shown (amended 8 Oct), never taking an introduction",
+       "server for the country and city being looked at -- the role's name in her language, its own picture, and "
+       "'Your daily rate' in place of a figure (amended 9 Oct, GX-RATE-WORDS-1) -- never built into the app, counted on its Home tile only while examples are shown (amended 8 Oct), never taking an introduction",
        LOCKED, fixed_on="2026-10-08",
        scope="bea_main.py /examples/roles; route_policy.json; quick.html (= genie/HARNESS.html) drawLookup; ms.js msGenericExLoad",
        ref="David 8 Oct 2026: 'these should all be global generic, in terms of visible globally in the local country prices, "
@@ -37186,7 +37186,8 @@ def rg_ex_photo_role_1():
 def rg_generic_ex_1():
     bad = _fb28_need([
         ("bea_main.py", [('@app.get("/examples/roles")', "the examples endpoint is gone"),
-                         ("_GX_MINW", "the example price floor table is gone")]),
+                         ('en_rate = "Your price for each car" if "per car" in pq else "Your daily rate"',
+                          "the examples show a figure again (David 9 Oct: a figure deters; 'Your daily rate')")]),
         ("route_policy.json", [('"GET /examples/roles"', "the examples endpoint is not declared (SEC-GATE-1)")]),
         ("quick.html", [("qGenericEx(list, where) || qLocalExamples", "Quick no longer uses the server's role example"),
                         ("/examples/roles?country=", "Quick no longer asks for the role example")]),
@@ -37197,21 +37198,9 @@ def rg_generic_ex_1():
                    ("if (l.generic) return false;   // GENERIC-EX-1: never counted as a listing", "role examples are counted as listings"),
                    ('${l.generic?"":tbadge(l.trust)}', "a role example wears a made-up trust score again")]),
     ])
-    # the server's price floor must be Quick's own minimum-wage table (QUICK-OPEN-RATE-1), number for number
-    try:
-        import re as _re
-        q, b = repo_file("quick.html"), repo_file("bea_main.py")
-        if q is None or b is None:
-            return bad or [(INFO, "NOT EVALUATED - repo not readable from here")]
-        qm = {m.group(1): float(m.group(2)) for m in _re.finditer(r"\b([A-Z]{2}):\{s:'[^']*',\s*h:([\d.]+)", q)}
-        bm = {m.group(1): float(m.group(2)) for m in _re.finditer(r'"([A-Z]{2})": \("[^"]*", ([\d.]+)\)', b.split("_GX_MINW = {", 1)[1].split("}", 1)[0])}
-        if "UK" in qm:
-            qm["GB"] = qm.pop("UK")
-        if not qm or qm != bm:
-            bad = (bad or []) + [(FAIL, "the examples' wage floor differs from Quick's: quick %s / server %s" % (qm, bm))]
-    except Exception as exc:
-        bad = (bad or []) + [(FAIL, "could not compare the wage tables: %s" % exc)]
-    return bad or [(INFO, "role examples come from the server, in the local currency and language, and never count as adverts")]
+    if not bad and "\"Your daily rate\"" not in (repo_file("quick.html") or ""):
+        bad = [(FAIL, "quick.html's word list has no 'Your daily rate' -- run scripts/sync_quick_roles.py")]
+    return bad or [(INFO, "role examples come from the server in her language, say 'Your daily rate', and never count as adverts")]
 
 
 @entry("RG-0941", "MINIFY-1 (8 Oct 2026, audit F6): the app page loads /static/ms.js?v=N&m=1, which nginx answers with "
