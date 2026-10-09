@@ -35143,6 +35143,35 @@ def rg_magic_hello_1():
     return [(INFO, "the invited seller is welcomed by name on step 1; the Home tip waits")]
 
 
+@entry("RG-0946", "QUICK-AUTO-HANDOFF-1 + NUDGE-REAL-WORD-1 (Goal run 33, 8 Oct 2026): the place the app chose for her "
+       "(GEO-AUTO-1) travels to Quick -- country always, city only from her phone or her own adverts -- and the empty-city bar "
+       "says 'No real listings' while the tiles under it count AI examples",
+       LOCKED, fixed_on="2026-10-08",
+       scope="ms.js msQuickHref (ms_auto_city / ms_auto_country, _msGeo.src gps|ads), msEmptyCityNudge (bar wording)",
+       ref="docs/E2E_2026-10-08.md: Home said 'Showing Johannesburg, South Africa -- from your phone's location'; one tap on "
+           "'Work for yourself?' later Quick asked 'Which city?' with New York first (the network's country). The bar said "
+           "'Nothing listed in Johannesburg yet' above 'Services 47 listings'.")
+def rg_quick_auto_handoff_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("function msQuickHref(a){")
+    if i < 0:
+        return [(FAIL, "msQuickHref is gone -- nothing hands the app's city to Quick")]
+    f = js[i:i + 1400]
+    if "ms_auto_country" not in f or "ms_auto_city" not in f:
+        return [(FAIL, "Quick links ignore the place GEO-AUTO-1 chose -- she is asked 'Which city?' again")]
+    if "src==='gps'||src==='ads'" not in f:
+        return [(FAIL, "the auto city is passed whatever its source -- a network guess (main city) would be handed on as hers")]
+    if "/[?&](city|cc)=/" not in f:
+        return [(FAIL, "a second tap would append cc= / city= twice")]
+    n = js.find("async function msEmptyCityNudge(){")
+    seg = js[n:n + 5600]
+    if "'Nothing listed in '" in seg or "'No real listings in '" not in seg:
+        return [(FAIL, "the empty-city bar no longer says the listings it counts are real ones")]
+    return [(INFO, "Quick gets the app's auto country (and phone/advert city); empty-city bar says 'real listings'")]
+
+
 @entry("RG-0937", "LM-KIND-WORDS-1 + AREA-PH-CITY-1 + AI-PRICE-MARK-1 + CITY-FIRST-SELLER-1 (Goal run 32, 7 Oct 2026): Local Market's "
        "Story and Selling Details speak to the kind she picked, the suburb example follows her city, a confident photo price guess "
        "says it is ours, and the empty-city bar offers a seller the first listing in her city",
@@ -36388,7 +36417,7 @@ def rg_piece_work_default_1():
     i = q.find("function setsFor(s){")
     if i < 0:
         return [(FAIL, "setsFor() is gone from quick.html")]
-    pre = q[max(0, i - 300):i]
+    pre = q[max(0, i - 1500):i]   # run 33: the sets sit further above setsFor() since later lanes added comments (live: braider still opens on Per visit)
     body = q[i:i + 1800]
     out = []
     for r in ("hair_braider:1", "hairdresser:1", "nail_technician:1", "pool_cleaner:1"):
@@ -36422,8 +36451,8 @@ def rg_city_handoff_1():
     i = js.find("function msQuickHref(a){")
     if i < 0:
         return [(FAIL, "msQuickHref() is gone")]
-    seg = js[i:i + 700]
-    for n in ("localStorage.getItem('ms_user_city')", "localStorage.getItem('ms_user_country')", "'cc='+encodeURIComponent(co.iso2)+'&city='"):
+    seg = js[i:i + 1400]   # QUICK-AUTO-HANDOFF-1 (RG-0946, run 33): city is now optional -- the auto country can travel alone
+    for n in ("localStorage.getItem('ms_user_city')", "localStorage.getItem('ms_user_country')", "'cc='+encodeURIComponent(co.iso2)+(city?'&city='"):
         if n not in seg:
             out.append((FAIL, "msQuickHref lost %r" % n))
     if "Pretoria" in seg:

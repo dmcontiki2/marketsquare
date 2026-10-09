@@ -20449,7 +20449,9 @@ async function msEmptyCityNudge(){
     const bar = document.createElement('div'); bar.id = 'ms-cnudge'; bar.setAttribute('role', 'status');
     bar.style.cssText = 'margin:10px 16px 0;padding:12px 14px;border-radius:14px;background:#ECFDF5;border:1px solid #6EE7B7;color:#064E3B;font-size:14px;line-height:1.4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
     const t = document.createElement('div'); t.style.cssText = 'flex:1 1 100%;';
-    t.textContent = 'Nothing listed in ' + activeCity.name + ' yet — ' + tc.name + ' has ' + best.n + ' listing' + (best.n === 1 ? '' : 's') + '.';
+    /* NUDGE-REAL-WORD-1 (Goal run 33, 8 Oct 2026): with AI examples on, the tiles under this bar count examples (RUL-216
+       amended, GX-TILE-COUNT-1) -- "Nothing listed in Johannesburg yet" sat right above "Services 47 listings". Say which kind. */
+    t.textContent = 'No real listings in ' + activeCity.name + ' yet' + (msShowExamples() ? ' — the listings below are AI examples' : '') + '. ' + tc.name + ' has ' + best.n + ' real listing' + (best.n === 1 ? '' : 's') + '.';
     const go = document.createElement('button'); go.type = 'button'; go.textContent = 'Show ' + tc.name;
     go.style.cssText = 'background:#065F46;color:#fff;border:0;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;';
     const no = document.createElement('button'); no.type = 'button'; no.textContent = 'Stay in ' + activeCity.name;
@@ -22350,12 +22352,23 @@ function sfHomeS(){
 /* CITY-HANDOFF-1 (Goal run 30, 5 Oct 2026): the place she chose in the app travels to Quick, so Quick does not ask
    "Which city?" again (or open on another country from the phone's network). Only a city she picked or saved
    (ms_user_city + ms_user_country); the app's default Pretoria is never passed on. Quick ignores a city it does not carry. */
+/* QUICK-AUTO-HANDOFF-1 (Goal run 33, 8 Oct 2026): since GEO-AUTO-1 (RUL-211) most people never pick a city -- the app
+   picks for them -- so CITY-HANDOFF-1 passed nothing and Quick asked "Which city?" again, one tap after Home had said
+   "Showing Johannesburg -- from your phone's location" (and, on a VPN or a foreign network, offered that network's
+   country's cities). Now, when she has no pick of her own, the place the app chose travels too: the country always,
+   the city only when it came from her phone (gps) or her own adverts (ads) -- a network guess is only that country's
+   main city, so it is never passed as hers. */
 function msQuickHref(a){
   try{
     var city=localStorage.getItem('ms_user_city')||'', co=JSON.parse(localStorage.getItem('ms_user_country')||'null');
-    if(a && city && co && co.iso2 && !/[?&]city=/.test(a.getAttribute('href')||'')){
-      var h=a.getAttribute('href')||'/quick/?from=app';
-      a.setAttribute('href', h+(h.indexOf('?')<0?'?':'&')+'cc='+encodeURIComponent(co.iso2)+'&city='+encodeURIComponent(city));
+    if(!city){
+      var ao=JSON.parse(localStorage.getItem('ms_auto_country')||'null'), src=(typeof _msGeo!=='undefined' && _msGeo) ? _msGeo.src : '';
+      if(ao && ao.iso2){ co=ao; city=(src==='gps'||src==='ads') ? (localStorage.getItem('ms_auto_city')||'') : ''; }
+    }
+    var h0=(a && a.getAttribute('href'))||'';
+    if(a && co && co.iso2 && !/[?&](city|cc)=/.test(h0)){
+      var h=h0||'/quick/?from=app';
+      a.setAttribute('href', h+(h.indexOf('?')<0?'?':'&')+'cc='+encodeURIComponent(co.iso2)+(city?'&city='+encodeURIComponent(city):''));
     }
   }catch(_){}
   return true;
