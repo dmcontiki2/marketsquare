@@ -35185,6 +35185,33 @@ def rg_quick_own_photo_1():
     return [(INFO, "Quick's example picture opens her camera; her photo scores and follows the save; Hub offers Add photo; one language button on Home")]
 
 
+@entry("RG-0951", "QUICK-PILL-1 (David, 10 Oct 2026): an invitation card the server made for a work role or a sport says "
+       "'To Quick Listing' where a demo example says 'Demo example', and that pill opens Quick's sell flow for that role in her "
+       "country and city; its words are checked in Afrikaans, isiZulu, isiXhosa and Sepedi",
+       LOCKED, fixed_on="2026-10-10",
+       scope="ms.js _demoBadge / msGxQuickHref, DICTV 9; roles/app_i18n_{af,zu,xh,nso}.json; migrations/072_i18n_quick_pill.py. "
+             "Every generic card (GENERIC-EX-1 casual roles and TRAINERS-EX-1 sports), all markets.",
+       ref="David 10 Oct 2026: 'these latest ones are actually listing prompt cards examples and not listings ... change the yellow "
+           "Demo example at the bottom right to to Quick Listing'.")
+def rg_quick_pill_1():
+    import json as _j, re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for sn in ("function msGxQuickHref(l){", "if (l && l.generic && l.role_key)", ">To Quick Listing</a>", "'/quick/?role=' + encodeURIComponent"):
+        if sn not in js: bad.append("ms.js lost %r" % sn[:40])
+    m = _re.search(r"var DICTV='(\d+)'", js)
+    if not m or int(m.group(1)) < 9: bad.append("DICTV below 9 -- browsers keep their old word list")
+    for lg in ("af", "zu", "xh", "nso"):
+        t = _j.loads(repo_file("roles/app_i18n_%s.json" % lg) or "{}").get("t") or {}
+        if not t.get("To Quick Listing"): bad.append("no %s words for 'To Quick Listing'" % lg)
+    if not os.path.exists(os.path.join(REPO, "migrations", "072_i18n_quick_pill.py")): bad.append("migration 072 missing")
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "invitation cards say 'To Quick Listing' and open Quick for their role")]
+
+
 @entry("RG-0950", "TRAINER-PHOTOS-1 (RUL-218, 10 Oct 2026): every trainer role's picture is a generated photo of the coaching "
        "itself (coach + the people being coached, nobody recognisable), not the interim illustration, and it is served at a new "
        "URL (?v=photo1) so no CDN or phone keeps the old picture",

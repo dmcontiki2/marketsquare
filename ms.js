@@ -1978,7 +1978,17 @@ function isFounders(l){
 }
 /* DEMO-INACTIVE-1 (RUL-187, David 27 Sep 2026): a demo example stays visible, is marked, and never takes an introduction. */
 const DEMO_EXAMPLE_MSG = 'This is a demo example that shows how TrustSquare works. There is no real product or service behind it, so no introduction can be made. Nothing was charged.';
+/* QUICK-PILL-1 (David, 10 Oct 2026): "change the yellow 'Demo example' at the bottom right to 'to Quick Listing'" -- a card
+   the server made for a work role or a sport (GENERIC-EX-1 / TRAINERS-EX-1) is an invitation to list, not a listing: its
+   pill goes straight into Quick's sell flow for that role, in her country and city. The red ribbon stays as it is. */
+function msGxQuickHref(l){
+  const city = (typeof activeCity !== 'undefined' && activeCity && activeCity.name) || '';
+  const cc = String((typeof activeCountry !== 'undefined' && activeCountry && activeCountry.iso2) || 'ZA').toUpperCase();
+  return '/quick/?role=' + encodeURIComponent((l && l.role_key) || '') + '&cc=' + encodeURIComponent(cc) + '&city=' + encodeURIComponent(city) + '&src=gx';
+}
 function _demoBadge(l){
+  if (l && l.generic && l.role_key)
+    return '<a class="demo-ex-badge gx-quick-pill" href="' + msGxQuickHref(l) + '" onclick="event.stopPropagation()" style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:10px;font-weight:800;vertical-align:middle;cursor:pointer;text-decoration:none;">To Quick Listing</a>';
   return (l && l.demo_example)
     ? '<span class="demo-ex-badge" onclick="event.stopPropagation();showToast(DEMO_EXAMPLE_MSG, 7000)" style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:10px;font-weight:800;vertical-align:middle;cursor:pointer;">Demo example</span>'
     : '';
@@ -24553,7 +24563,7 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
      old machine words kept being painted from it and no server fix could ever reach them.
      The stamp goes in the key: raise it whenever the checked words change, and every browser
      drops what it has and refetches once. Old copies are swept out on load. */
-  var DICTV='8';   /* HOME-EX-SWITCH-1 (3 Oct 2026): the switch reads 'KI-voorbeelde aan/af' in checked Afrikaans (it said 'AI-voorbeelde af' beside 'KI-voorbeelde aan'). */ /* was 7:    /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
+  var DICTV='9';   /* QUICK-PILL-1 (10 Oct 2026): 'To Quick Listing' in four languages */   /* HOME-EX-SWITCH-1 (3 Oct 2026): the switch reads 'KI-voorbeelde aan/af' in checked Afrikaans (it said 'AI-voorbeelde af' beside 'KI-voorbeelde aan'). */ /* was 7:    /* I18N-APP-WORD-1 (2 Oct 2026, David: 'rather use app for Afrikaans as well'): machine words that said 'toep' are replaced by checked ones, so every browser drops its saved copy once; I18N-LISTING-1 (26 Sep 2026): one word 'listing' + the banking form; I18N-AF-4 (26 Sep 2026): carry-over words for the reworded English; I18N-AF-3 (26 Sep 2026, 25 Sep inspection): Afrikaans corrections + the reworded English; I18N-AF-2 was DICTV 3 */
   var KEY='ts_lang', CACHE='ts_i18n'+DICTV+'_', MAXLEN=400, CHUNK=60;   /* 400: the longest card blurbs are ~340 */
   try{ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i);
        if(_k && _k.indexOf('ts_i18n')===0 && _k.indexOf(CACHE)!==0) localStorage.removeItem(_k); }
