@@ -21418,7 +21418,20 @@ Collectors: { label:'Collectors', aiCap:'names and addresses on certificates and
    {key:'C',title:'Grading & Extras',pts:10,coach:'<b>Grades and original packaging</b> move serious collectors.',rows:[
     ['grade','Grading (if any)','text','e.g. PSA 9, NGC MS64'],['box','Original packaging','select','Yes|No'],
     ['docs','Documentation','select','Yes|No']]}],
-  feats:['Certificate included','Original box','Insured shipping','Trade considered','More from this collection','Appraisal available']},
+  feats:['Certificate included','Original box','Insured shipping','Trade considered','More from this collection','Appraisal available'],
+  /* COL-KIND-WORDS-1 (Goal run 34, 9 Oct 2026): a trading-card seller read 'e.g. 1892 ZAR Kruger 2\u00bd Shillings',
+     'e.g. 1892, Victorian' and 'e.g. Pretoria Mint' -- every example spoke to coins. Each kind now gets its own. */
+  colWords:{
+   'Coins':{name:'e.g. 1892 ZAR Kruger 2\u00bd Shillings',era:'e.g. 1892, Victorian',maker:'e.g. Pretoria Mint',grade:'e.g. NGC MS64, PCGS AU55'},
+   'Trading cards':{name:'e.g. 2003 rugby card set, 24 cards',era:'e.g. 2003, first series',maker:'e.g. Panini, Topps',grade:'e.g. PSA 9, BGS 9.5'},
+   'Stamps':{name:'e.g. 1926 Union \u00bdd pair, London printing',era:'e.g. 1926, Union period',maker:'e.g. Government Printer',grade:'e.g. Mint never hinged, with certificate'},
+   'Art':{name:'e.g. Karoo landscape, oil on canvas',era:'e.g. 1970s',maker:"e.g. The artist's name, as signed",grade:'e.g. Valued by an appraiser in 2024'},
+   'Militaria':{name:'e.g. Africa Star medal with ribbon',era:'e.g. 1939\u20131945',maker:'e.g. Royal Mint',grade:'e.g. Named to the recipient'},
+   'Wine':{name:'e.g. Cabernet Sauvignon, 750 ml',era:'e.g. 1998 vintage',maker:'e.g. The estate or cellar',grade:'e.g. Cellared at 14\u00b0C since bought'},
+   'Books':{name:'e.g. First edition, signed by the author',era:'e.g. 1952',maker:'e.g. Author and publisher',grade:'e.g. Fine, in its dust jacket'},
+   'Toys':{name:'e.g. Die-cast Land Rover in its box',era:'e.g. 1960s',maker:'e.g. Dinky, Corgi, Matchbox',grade:'e.g. Boxed and never played with'},
+   'Watches':{name:'e.g. Automatic wristwatch, steel case',era:'e.g. 1965',maker:'e.g. Brand and calibre, as on the dial',grade:'e.g. Serviced in 2023, papers held'},
+   'Other':{name:'e.g. What it is, in a few words',era:'e.g. 1960s',maker:'e.g. Who made it',grade:'e.g. Any grade or valuation'}}},
 Adventures: { label:'Adventures',
   subPick:{title:'What are you offering?',subs:[
     ['experiences','🧗','Experiences','Hikes, tours, water, wildlife — things people do'],
@@ -21903,6 +21916,15 @@ function sfFlow(){
     return {label:b.label, aiCap:b.aiCap, priceLabel:b.priceLabel, slots:b.lmSlots[t],
       sections:[{key:'A',title:b.sections[0].title,pts:20,coach:b.sections[0].coach,rows:b.lmRowsA[t]},
                 sB, sC], feats:b.lmFeats[t]};
+  }
+  if(sfState.cat==='Collectors' && c.colWords){   // COL-KIND-WORDS-1
+    var cw=c.colWords[String((sfState.A&&sfState.A.icat)||'')];
+    if(cw){
+      var _cwRows=function(sec){ return {key:sec.key, title:sec.title, pts:sec.pts, coach:sec.coach,
+        rows:sec.rows.map(function(r){ return cw[r[0]] ? [r[0],r[1],r[2],cw[r[0]]] : r; })}; };
+      return {label:c.label, aiCap:c.aiCap, priceLabel:c.priceLabel, slots:c.slots,
+        sections:[_cwRows(c.sections[0]), c.sections[1], _cwRows(c.sections[2])], feats:c.feats};
+    }
   }
   if(sfIsCarHire()){   // CAR-HIRE-1
     return {label:c.label, aiCap:c.aiCap, priceLabel:'Hire rate per day', priceUnit:'/ day', slots:c.slots,
@@ -23058,7 +23080,7 @@ function sfAiDescRow(){ var f=sfFlow(); if(!f) return ''; for(var i=0;i<f.sectio
 function sfCleanAiDesc(t){
   t=String(t||'').trim(); if(!t) return '';
   var parts=t.match(/[^.!?]+[.!?]*(\s+|$)/g)||[t];
-  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration)/i;
+  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34)
   return parts.filter(function(x){ return !bad.test(x); }).join('').trim();
 }
 function sfSkip(warnKey,next){
@@ -23128,6 +23150,7 @@ function sfSpecS(secKey){
 }
 function sfUpd(scope,id,v){
   if(scope==='__root__') sfState[id]=v; else sfState[scope][id]=v;
+  if(id==='icat' && sfState.cat==='Collectors'){ sfDraftSaveSoon(); sfRender(); return; }   // COL-KIND-WORDS-1: examples follow the kind
   if(id==='ltype' && (sfState.cat==='Property' || sfState.cat==='Cars')){
     /* CAR-HIRE-1: the photo's price guess is a SALE value -- it must not stay in the box as a rate per day */
     var _sg=String((sfState.visionDraft&&sfState.visionDraft.suggested_price)||'');
