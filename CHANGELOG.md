@@ -1,3 +1,87 @@
+## 2026-10-10 — TRAINER-PHOTOS-1 (RUL-218): every trainer role now opens on a real-looking photo of the coaching itself
+
+David, 10 Oct 2026: "i still have $15 for Higgsfield photos; can you please replace all of the trainer/coaches artificial pictures to real photos as we have for services, but to be relevant to the trainer/coach activity - chess coach with chess set and clock, judo with judo looking trainer and child in right gear etc."
+
+- 47 new photos (Higgsfield, the same lane as the Services role pictures): each shows a coaching session in that sport -- the coach with the client, class or child, in the sport's proper kit and place (judo instructor and child in judogi on a tatami, chess coach at a board with a clock, swimming coach on the pool deck, ...).
+- Rules kept: nobody recognisable (from behind, side-on, at a distance), no text, logos or brands; a child appears only in the sports commonly coached to children, fully in kit, in an ordinary supervised moment. This amends RUL-157 for the Trainers door only -- Services pictures stay "the work, never a person".
+- The prompts live in scripts/trainer_photo_prompts.py (read by build_role_registry.py). One prompt ("leotard") was refused by the image service and was reworded to gym shorts and a t-shirt.
+- The photos are served at a new address (?v=photo1) in Quick and in the AI examples, because the CDN and phones keep a picture for a year.
+- Spend: about US$3 of David's US$15 Higgsfield balance (48 pictures, one refused). Interim illustrations kept in roles/pictures/_interim_trainers/.
+- Ledger RG-0950; rulings_check RUL-218.
+
+Cost model impact: none recurring.
+
+## 2026-10-10 — SEARCH-EX-1: search finds the role and sport examples
+
+David, 10 Oct: "Why doesn't the filter find the Badminton coach if I search it in the trustsquare filter search, even though there is a demo card?"
+
+Cause: TrustSquare's search asks the server, and the server's search only knows stored adverts. The AI examples for each work role and sport (GENERIC-EX-1, TRAINERS-EX-1) are made by the server on request and live only in the app, so a search never matched one -- "badminton" showed nothing. Now the app also matches those examples on the same words (every word must be in the example's name, its English role name, its sport or its city line; a short word must be a whole word, so "car" never finds "carpet"; "coaches" finds "coach"), adds them to the results as examples (marked, after real adverts), and a hit stops the search from widening to the whole category. "coach", "coaching" and "instructor" now point a search at Tutors, where the Trainers door is. Checked in a phone-sized browser, Pretoria: badminton, "badminton coach", "Badminton coach Pretoria", "car washer", "swim", "tennis coaches" each show the right example; "apartment" and "maths tutor" unchanged. Ledger RG-0953.
+
+Cost model impact: none.
+
+## 2026-10-10 — QUICK-PILL-1: the invitation cards' yellow pill says "To Quick Listing" and opens Quick
+
+David, 10 Oct 2026: "these latest ones are actually listing prompt cards examples and not listings - and i like this because it routes the prospect to the quick app ... change the yellow 'Demo example' at the bottom right to 'to Quick Listing'".
+
+- On every card the server makes for a work role or a sport (GENERIC-EX-1, TRAINERS-EX-1), the yellow "Demo example" pill now reads **To Quick Listing**; one tap opens Quick's sell flow for that role in the viewer's country and city (the same link as the sheet's "list me free"). The red ribbon is unchanged, as David asked. Stored demo adverts keep "Demo example".
+- Words checked in Afrikaans (Na Quick-advertensie), isiZulu, isiXhosa and Sepedi (Claude drafts, RUL-160); migration 072 puts them in the server cache, DICTV 9 refreshes browsers.
+- Ledger RG-0951.
+
+Cost model impact: none.
+
+### Her own photo, straight from the draft card (Goal run 33b)
+
+David, 9 Oct 2026: "Why can't a new lister add her photo here by clicking on the photo … It will look good and be an
+incentive to go on?"
+
+- **QUICK-OWN-PHOTO-1** — on Quick's "Here is your listing", the example picture carries "📷 Tap to add your own photo".
+  The phone's camera or gallery opens; her photo takes the example's place at once, the strength ring counts it, and
+  after Save it is attached to her draft (or to the listing, when she published in one tap). The server hands the draft's
+  photo token only to the phone that made the draft — never for an address that belongs to somebody else's account.
+- **HUB-ADD-PHOTO-1** — a Seller Hub card with no photo shows "📷 Add photo" (into Edit) instead of the category icon.
+- **LANG-ONE-HOME-1** — Home shows one language button, the header globe; it opens the same menu under the header.
+
+### The regression ledger is clean again
+
+Eleven checks were failing on `origin/main`. Nine were checks that had fallen behind deliberate changes (FIND-CLOSE-1,
+GENERIC-EX-1, PHOTO-EMPTY-1, TEXT-ANON-1, a longer arrival screen, a respaced language list) and were brought up to date
+after confirming the behaviour they guard still holds, live. Two were real:
+
+- **RG-0501** — CARWASH-1's seven car-wash phrases had only Afrikaans; they now read in isiZulu, isiXhosa, Sepedi and
+  Sesotho (and the other ten Quick languages).
+- **RG-0504** — the profile checklist said "At least one advert" / "Create my advert"; it says listing now (the server
+  sends the part as `listing`, and still as `advert` for a page cached before today).
+
+The audit proofs (RG-0840, RG-0871) now run under the app's own Python, where they pass. RG-0194: the relay checkout's
+Windows scripts had LF endings on disk; restored to CRLF.
+
+RG-0947.
+
+### The server's ledger no longer shows trainer photos as missing (Goal run 34b)
+
+- **LEDGER-VANTAGE-TRAINERS-1** — RG-0949 and RG-0950 failed on every server checkout because the trainer pictures are
+  gitignored and are not stored there, although all 47 load live. On the server they now read NOT EVALUATED, but only when
+  every failure is a missing picture file **and** every trainer photo answers 200 image/* at its live URL. Any other
+  failure stays red. They are still judged in full on David's PC.
+
+Cost model impact: none. Schema: none.
+
+### Collectors speak to the kind she sells; the photo read stops talking about the photo (Goal run 34)
+
+Found walking Collectors as a Johannesburg trading-card seller (docs/E2E_2026-10-09.md).
+
+- **COL-KIND-WORDS-1** — Collectors' Item name, Year / era, Maker and Grading examples follow the kind she picked (coins,
+  trading cards, stamps, art, militaria, wine, books, toys, watches, other). A card seller no longer reads
+  "e.g. 1892 ZAR Kruger 2½ Shillings" and "e.g. Pretoria Mint". Changing the kind refreshes them; what she typed stays.
+- **AI-DESC-CLEAN-2** — the photo read's draft in her first story box drops sentences about the photo itself ("…are legible
+  in the photo", "in the image") as well as the "not visible" ones. Her Provenance box had read "No maker, set name, year,
+  signatures, or authentication markings are legible in the photo." — which would have gone live on the advert.
+- **FUNNEL-GOOGLEOTHER-1** — Google's "GoogleOther" fetcher (and Google-InspectionTool, facebookexternalhit) is flagged as a
+  machine in the onboarding funnel. It ran Quick three times on 9 Oct and was counted as a person; its 15 earlier rows
+  (4 sessions since 25 Sep) were re-flagged (ids kept in /root/goal34_googleother_ids_were_bot0.txt on the server).
+
+Ledger RG-0952. Cost model impact: none. Schema: none.
+
 ## 2026-10-10 — TRAINERS-DOOR-1 + TRAINERS-EX-1 (RUL-217): Trainers are a door inside Tutors, built like Casuals inside Services — global from day one
 
 David, 8 Oct 2026: "I would like to do the same for tutors, but for a branch of tutors namely Trainers ... Gym, Acrobatics, Aerobics, Wrestling, Chess, Rugby, Soccer, Cricket, Judo, Karate, Running, Golf, Swimming, and all of the sports types one can get a trainer for ... the same flows, Hows etc ... To also make it Global" / "i agree for it to sit inside Tutors the same as we did for Services". Built by the scheduled run of Sat 10 Oct 2026, 01:30 SAST.

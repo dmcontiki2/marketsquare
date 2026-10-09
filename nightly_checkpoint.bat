@@ -25,5 +25,6 @@ where python >nul 2>&1 || set "PYEXE=py"
 if errorlevel 1 ( echo %date% %time%  SYNC STOP - see SYNC_CONFLICT.txt; main NOT mirrored>>"%LOG%" & exit /b 0 )
 :: ...and mirror the laptop's own commits to GitHub main, so cloud sessions start from what the laptop holds.
 :: main only -- never deploy: this is a mirror, not a release. The pre-push hook refuses any overwrite.
-git push -q origin HEAD:main >>"%LOG%" 2>&1 && echo %date% %time%  main mirrored to GitHub>>"%LOG%"
+REM IP-HOLD-1 (9 Oct 2026): while IP_HOLD.flag exists the local commit still happens but nothing is pushed to the PUBLIC GitHub repo (unfiled patent matter).
+if exist "IP_HOLD.flag" ( echo %date% %time%  IP HOLD: commit kept local, push skipped>>"%LOG%" ) else ( git push -q origin HEAD:main >>"%LOG%" 2>&1 && echo %date% %time%  main mirrored to GitHub>>"%LOG%" )
 exit /b 0
