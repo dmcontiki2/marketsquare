@@ -6374,7 +6374,7 @@ def examples_trainers(country: str = "ZA", city: str = "", lang: str = "en", rol
             continue
         label = _gx_label(r, lang)
         en = (r.get("label") or {}).get("en") or label
-        pic = "/static/quick/role_%s.jpg" % k
+        pic = "/static/quick/role_%s.jpg?v=photo1" % k   # TRAINER-PHOTOS-1: the photo set replaced the illustrations
         out.append({
             "id": "gx_" + k, "generic": True, "trainer": True, "role_key": k, "title": label, "category": "Tutors",
             "service_class": "Trainers", "service_type": en, "subject": en,

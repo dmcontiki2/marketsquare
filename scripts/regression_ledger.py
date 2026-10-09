@@ -35185,6 +35185,38 @@ def rg_quick_own_photo_1():
     return [(INFO, "Quick's example picture opens her camera; her photo scores and follows the save; Hub offers Add photo; one language button on Home")]
 
 
+@entry("RG-0950", "TRAINER-PHOTOS-1 (RUL-218, 10 Oct 2026): every trainer role's picture is a generated photo of the coaching "
+       "itself (coach + the people being coached, nobody recognisable), not the interim illustration, and it is served at a new "
+       "URL (?v=photo1) so no CDN or phone keeps the old picture",
+       LOCKED, fixed_on="2026-10-10",
+       scope="scripts/trainer_photo_prompts.py -> roles/role_registry.json role_picture.prompt -> roles/pictures/<trainer>.png "
+             "(gen_role_pictures.py) -> assets/quick_ph/role_<trainer>.jpg -> /static/quick; quick.html + bea_main.py ?v=photo1.",
+       ref="David 10 Oct 2026: 'replace all of the trainer/coaches artificial pictures to real photos ... chess coach with chess "
+           "set and clock, judo with judo looking trainer and child in right gear etc.'")
+def rg_trainer_photos_1():
+    import json as _j
+    reg_t = repo_file("roles/role_registry.json")
+    if reg_t is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    trn = [r for r in _j.loads(reg_t).get("roles", []) if r.get("service_class") == "Trainers" and r.get("status") == "in"]
+    for r in trn:
+        if "NO recognisable faces" not in (r.get("role_picture") or {}).get("prompt", ""):
+            bad.append("%s prompt is not the anonymous coaching-photo prompt" % r["key"])
+        f = os.path.join(REPO, "roles", "pictures", r["key"] + ".png")
+        old = os.path.join(REPO, "roles", "pictures", "_interim_trainers", r["key"] + ".png")
+        if not os.path.exists(f):
+            bad.append("%s has no picture" % r["key"])
+        elif os.path.exists(old) and open(f, "rb").read() == open(old, "rb").read():
+            bad.append("%s still carries the interim illustration" % r["key"])
+    for f, sn in (("quick.html", "+'role_'+r.k+'.jpg?v=photo1'"), ("bea_main.py", 'pic = "/static/quick/role_%s.jpg?v=photo1" % k')):
+        if sn not in (repo_file(f) or ""):
+            bad.append("%s no longer asks for the new photo URL" % f)
+    if bad:
+        return [(FAIL, "; ".join(bad[:6]))]
+    return [(INFO, "%d trainer photos, anonymous coaching scenes, served at ?v=photo1" % len(trn))]
+
+
 @entry("RG-0949", "TRAINERS-DOOR-1 (RUL-217, 10 Oct 2026): Trainers are a door inside Tutors -- every trainer role is in the "
        "registry with its picture, its name in all 15 of Quick's languages and its How guide; Quick's Tutors door opens "
        "Sport & fitness -> group -> sport -> price -> where and writes Tutors / Trainers; prices are per session / month / "

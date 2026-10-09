@@ -12,3 +12,8 @@
 - [x] stories: 47 trainer How guides (build_trainer_guides.py), gallery + manifest (build_help.py), screens pushed to /help/img
 - [x] role pictures (47 jpg) uploaded to /static/quick (media lane equivalent; nightly media_push will see them unchanged)
 - [x] ledger RG-0949 (PASS in repo; renumbered from RG-0947, which Goal run 33b shipped first) / RG-0948 (live half after deploy); rulings_check RUL-217
+- [x] merged origin/main (Goal run 33b) by hand -- merge commit 5749e92; deployed via request_deploy relay (live ~01:40 UTC 9 Oct / 03:40 SAST 10 Oct)
+- [x] LIVE: /examples/trainers answers (af: Sokkerafrigter / Jou sessietarief / R300); role pictures 200; Chrome: Quick Tutors door shows Sport & fitness -> groups -> sports with pictures -> Per session/month/package (no floor), How = swimming_coach guide (200); TrustSquare: 47 trainer examples, Tutors tile 52, sheet 'I train people in this — list me free' + typical rate
+- [x] ledger AFTER: 5 regressions, all pre-existing (RG-0154, 0234, 0344, 0840, 0871); RG-0948 + RG-0949 pass live
+- [ ] NOT DONE: photo-real pictures (paid run ~US$3, David's call); own Quick screens for the trainer How guides (role_guide_screens.py) -- guides use the walked Tutors screens
+DONE

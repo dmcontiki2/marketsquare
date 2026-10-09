@@ -1,0 +1,1 @@
+- 10 Oct 2026 — TRAINER-PHOTOS-1 (RUL-218): the 47 trainer roles open on generated coaching photos (Higgsfield, ~US$3 of David's US$15). Verified by: contact sheet reviewed, RG-0950 pass in repo; live check in the run report.

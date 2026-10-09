@@ -5408,7 +5408,7 @@ drawDoor();
   for(i=0;i<CATS.length;i++) if(CATS[i].key==='tutors') TI=i;
   if(TI<0) return;
   var T=CATS[TI];
-  TRN_ROLES.forEach(function(r){ PH['role_'+r.k]=PH_BASE+'role_'+r.k+'.jpg'; });
+  TRN_ROLES.forEach(function(r){ PH['role_'+r.k]=PH_BASE+'role_'+r.k+'.jpg?v=photo1'; });   /* TRAINER-PHOTOS-1: new photos, new URL (the CDN and phones keep a picture a year) */
   function trnRole(k){ for(var i=0;i<TRN_ROLES.length;i++) if(TRN_ROLES[i].k===k) return TRN_ROLES[i]; return null; }
   function pickIn(k){ for(var i=picks.length-1;i>=0;i--) if(picks[i].key===k) return picks[i]; return null; }
   function trnOn(){ try{ return cat().key==='tutors' && !!pickIn('tdoor'); }catch(e){ return false; } }

@@ -1302,6 +1302,14 @@ REFLECTIONS = {
    ("RULINGS.md", ["TRUSTSQUARE'S PAID SMS ACCOUNT IS FOR OUR OUTREACH ONLY"], []),
    ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
  ],
+ "RUL-218": [
+   # A trainer's picture is a real-looking photo of the coaching itself, nobody recognisable (10 Oct; amends RUL-157 for Trainers).
+   ("RULINGS.md", ["A TRAINER'S PICTURE IS A REAL-LOOKING PHOTO OF THE COACHING ITSELF"], []),
+   ("scripts/trainer_photo_prompts.py", ["NO recognisable faces", "fully dressed in the sport's proper kit", '"chess_coach": "a chess coach'], []),
+   ("scripts/build_role_registry.py", ["import trainer_photo_prompts as TP"], []),
+   ("quick.html", ["+'role_'+r.k+'.jpg?v=photo1'"], []),
+   ("bea_main.py", ['pic = "/static/quick/role_%s.jpg?v=photo1" % k'], []),
+ ],
  "RUL-217": [
    # Trainers are a door inside Tutors, built the way Casuals were built inside Services -- global from day one
    # (David 8 Oct 2026; built by the scheduled run of 10 Oct 2026: TRAINERS-DOOR-1 / TRAINERS-EX-1, RG-0949 / RG-0948).

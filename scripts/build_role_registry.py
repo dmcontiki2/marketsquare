@@ -12,6 +12,8 @@ RUL-155/156 (licence gate), RUL-157 (one picture of the WORK, never a person),
 s13 naming (role name only, no collective noun).
 """
 import io, json, os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import trainer_photo_prompts as TP   # TRAINER-PHOTOS-1 (David 10 Oct 2026): coach + people being coached
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -424,7 +426,8 @@ def main():
             row["employer_kinds"] = EK.get(key, ["household"] if cls == "Casuals" else [])
             if key not in PIC: sys.exit("NO ROLE PICTURE SUBJECT for %s (RUL-157)" % key)
             row["role_picture"] = {"file": "roles/pictures/%s.png" % key,
-                                   "prompt": (TRAINER_PICTURE_STYLE if cls == "Trainers" else PICTURE_STYLE).format(subject=PIC[key])}
+                                   "prompt": (TP.STYLE.format(subject=TP.SUBJECT[key]) if cls == "Trainers"   # TRAINER-PHOTOS-1
+                                              else PICTURE_STYLE.format(subject=PIC[key]))}
             row["draft_title"] = {"en": "%s available in {where}" % label,
                                   "af": ("%s beskikbaar in {where}" % AF[key]) if AF.get(key) else None}
             row["note"] = notes
