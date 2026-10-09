@@ -12235,9 +12235,14 @@ async function _msRefreshBalance(){
 }
 function renderDashCard(dl){
   const pendingIntros = dl.intros.filter(i=>i.status==='pending');
+  /* HUB-ADD-PHOTO-1 (Goal run 33b, David 9 Oct 2026): a listing with no photo showed its category's icon (a gear for a hair
+     braider who had just looked at a braid photo in Quick). The empty square is now the way to add one: "Add photo"
+     opens the listing's edit screen, where photos go. */
   const thumbHtml = dl.photo
     ? `<img src="${dl.photo}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
-    : CATS[dl.cat].icon;
+    : (dl.beaListingId && (dl.listing_status || '') !== 'archived'
+        ? `<button type="button" onclick="openEditListing(${Number(dl.beaListingId)})" aria-label="Add a photo" style="width:100%;height:100%;border:0;background:transparent;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:700 11px/1.1 inherit;"><span style="font-size:22px;">📷</span>Add photo</button>`
+        : CATS[dl.cat].icon);
   const _ls = (dl.listing_status || (dl.status==='draft'?'draft':(dl.status==='paused'?'paused':'live')));
   let statusBadge = (_ls==='live' && pendingIntros.length>0)
     ? `<span class="ml-status st-queue">👥 ${pendingIntros.length} request${pendingIntros.length>1?'s':''} waiting</span>`
@@ -19925,11 +19930,12 @@ async function msAskAI(){
         if(act === 'profile'){
           var st = (window._tnPlan || [])[window._tnStep|0] || {};
           var pp = st.parts || {};
+          if(pp.listing === undefined && pp.advert !== undefined) pp.listing = pp.advert;   /* LISTING-WORD-1: the server names the part 'listing' now; an older reply still works */
           var rows = [
             ['name',    'Your name',            'Add my name',     function(){ goTo('myspace'); setTimeout(function(){ msTab('me', document.querySelector(".ms-tab[onclick*=\"'me'\"]")); if(typeof msEditField==='function') msEditField('name'); }, 300); }],
             ['country', 'Your country',         'Choose my country', function(){ goTo('browse'); }],
             ['photo',   'A photo of you',       'Add my photo',    function(){ var pin=document.getElementById('ms-me-photo-inp'); if(pin) pin.click(); else showToast('Open My Space \u2192 Me, then tap your photo', 5000); }],
-            ['advert',  'At least one advert',  'Create my advert', function(){ if(typeof openSellNav==='function') openSellNav(); else goTo('sell-flow'); }]
+            ['listing', 'At least one listing', 'Create my listing', function(){ if(typeof openSellNav==='function') openSellNav(); else goTo('sell-flow'); }]
           ];
           var host2 = db.parentNode; db.style.display = 'none';
           var box2 = document.createElement('div'); box2.style.cssText = 'margin-top:11px;display:flex;flex-direction:column;gap:7px;';
@@ -24710,7 +24716,13 @@ async function msUnverifiedGate(sellerEmail, category, listingId){
        +'border-radius:12px;padding:6px;min-width:168px;box-shadow:0 10px 28px rgba(0,0,0,.45)}'
        +'#ts-lang .menu b{display:block;padding:8px 10px;border-radius:8px;color:#e2e8f0;font-weight:600;cursor:pointer}'
        +'#ts-lang .menu b.on{background:#f2b035;color:#0f172a}'
-       +'#ts-lang .menu i{display:block;padding:6px 10px 4px;color:#94a3b8;font-style:normal;font-weight:400;font-size:11px}';
+       +'#ts-lang .menu i{display:block;padding:6px 10px 4px;color:#94a3b8;font-style:normal;font-weight:400;font-size:11px}'
+       /* LANG-ONE-HOME-1 (Goal run 33b, David 9 Oct 2026): Home showed two language buttons -- the header's globe and this
+          pill over the Collectors tile. On Home, with the globe there, the pill is not drawn; the globe opens the same
+          menu, which drops down under the header instead of rising from the bottom corner. */
+       +'body:has(#screen-home.active):has(#ts-langh) #ts-lang{top:calc(env(safe-area-inset-top,0px) + 62px);right:12px;left:auto;bottom:auto}'
+       +'body:has(#screen-home.active):has(#ts-langh) #ts-lang .pill{display:none}'
+       +'body:has(#screen-home.active):has(#ts-langh) #ts-lang .menu{top:0;bottom:auto;left:auto;right:0}';
       document.head.appendChild(st);
     }
     syncLangs();

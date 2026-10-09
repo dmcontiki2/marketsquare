@@ -4981,9 +4981,15 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     _promo_stamp(request, em)   # PROMOTER-TRACK-1
     created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
+    # QUICK-OWN-PHOTO-1 (David, 9 Oct 2026): the photo she took on the draft card follows the save. The draft's own token
+    # (the same one POST /listings hands its composer, SEC-GATE-1) goes back to the phone that made it -- never when the
+    # address belongs to somebody else's account (AUDIT-Q1 below), so nobody adds pictures to another person's draft.
+    _qdt = created.get("draft_token") if isinstance(created, dict) else None
     if not sess:
         # QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): only a signed-out save that created an advert counts.
         hits.append(now_t); _QP_IP_LOG[ip] = hits
+    if not existing_account and _qdt and response is not None:
+        response.set_cookie("ts_draft", _qdt, max_age=7 * 86400, httponly=True, secure=True, samesite="lax", path="/")
     if existing_account:
         _log.info("ONE-TAP-PUBLISH-1: %s already has an account and is not signed in -- draft %s + sign-in letter", em, lid)
         return {"id": lid, "live": False, "verify": True,
@@ -5007,21 +5013,21 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             # never signed in by a typed address (AUDIT-Q1: that needs the inbox to prove it).
             _establish_user_session(em, response)
             # the one time the secret travels: back to her, to send to herself on WhatsApp
-            return {"id": lid, "live": False, "need": "eula", "identity": "link",
+            return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "link",
                     "key_url": APP_URL + "/k/" + key_secret + "?draft=" + str(lid),
                     "detail": "Your listing is saved. The private link below is your key to it — send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
         if _is_key_identity(em):
             # a key-account session (phone code, employer slip or WhatsApp link): hand back a sign-in hop so the app
             # opens on her draft. SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07): 'phone' only when a number is on file.
-            return {"id": lid, "live": False, "need": "eula", "identity": _qp_identity_kind(em),
+            return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, lid, 60),
                     "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
         if sess:
             # QUICK-HANDOFF-1: already proven (signed in here, e.g. with Google) -- straight to the terms, no letter to wait for
-            return {"id": lid, "live": False, "need": "eula", "identity": "email",
+            return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "email",
                     "open_url": _mint_signin_url(em, lid, 60),
                     "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
-        return {"id": lid, "live": False, "need": "eula", "identity": "email",
+        return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "email",
                 "detail": "Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
     _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
     try:
@@ -15111,13 +15117,14 @@ def _category_key_for_user(conn, email: str) -> str:
 def _profile_parts(conn, email: str) -> dict:
     """PROFILE-DO-1 (6 Oct 2026): THE rule for 'Complete profile', in one place. The ladder and
     the coach's checklist both read this, so the list the seller is shown is exactly what is
-    scored: her name, her country, a photo of her, and at least one advert."""
+    scored: her name, her country, a photo of her, and at least one listing."""
     u = conn.execute("SELECT name, country, photo_url FROM users WHERE email = ?", (email,)).fetchone()
     has_listing = conn.execute("SELECT 1 FROM listings WHERE seller_email = ? LIMIT 1", (email,)).fetchone()
     return {"name": bool(u and (u["name"] or "").strip()),
             "country": bool(u and (u["country"] or "").strip()),
             "photo": bool(u and (u["photo_url"] or "").strip()),
-            "advert": bool(has_listing)}
+            "listing": bool(has_listing),
+            "advert": bool(has_listing)}   # LISTING-WORD-1: kept for an app page cached before 9 Oct 2026
 
 
 def _compute_universal_track_status(conn, email: str) -> dict:
