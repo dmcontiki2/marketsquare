@@ -631,5 +631,334 @@
   "made": "2026-09-25T21:00:46",
   "prompt_sha": "98d538038236",
   "approved": false
+ },
+ "judo_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:16:17",
+  "prompt_sha": "9918e1cb41ff",
+  "approved": false
+ },
+ "yoga_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:17:58",
+  "prompt_sha": "b59eb6514380",
+  "approved": false
+ },
+ "functional_fitness_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:18:21",
+  "prompt_sha": "df50be8778b7",
+  "approved": false
+ },
+ "pilates_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:18:22",
+  "prompt_sha": "86c0690d583b",
+  "approved": false
+ },
+ "dance_fitness_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:18:24",
+  "prompt_sha": "31e5bc27ce53",
+  "approved": false
+ },
+ "personal_trainer": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:18:32",
+  "prompt_sha": "601bfca66a63",
+  "approved": false
+ },
+ "aerobics_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:18:37",
+  "prompt_sha": "badb156b17e6",
+  "approved": false
+ },
+ "wrestling_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:20:39",
+  "prompt_sha": "a93e92e4afa3",
+  "approved": false
+ },
+ "boxing_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:21:41",
+  "prompt_sha": "166ccfd285c0",
+  "approved": false
+ },
+ "karate_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:21:41",
+  "prompt_sha": "75f78635af39",
+  "approved": false
+ },
+ "taekwondo_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:21:41",
+  "prompt_sha": "08f43361e03b",
+  "approved": false
+ },
+ "kickboxing_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:21:42",
+  "prompt_sha": "71a6f938f651",
+  "approved": false
+ },
+ "strength_conditioning_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:21:55",
+  "prompt_sha": "bff7148fa6ae",
+  "approved": false
+ },
+ "soccer_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:23:54",
+  "prompt_sha": "e3be73128b1c",
+  "approved": false
+ },
+ "american_football_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:06",
+  "prompt_sha": "21eb7c897142",
+  "approved": false
+ },
+ "jiu_jitsu_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:08",
+  "prompt_sha": "acb38df832d5",
+  "approved": false
+ },
+ "volleyball_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:10",
+  "prompt_sha": "06b7b7b05a42",
+  "approved": false
+ },
+ "mma_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:12",
+  "prompt_sha": "ca859cfba0cd",
+  "approved": false
+ },
+ "tennis_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:16",
+  "prompt_sha": "eb86f22e18f9",
+  "approved": false
+ },
+ "rugby_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:19",
+  "prompt_sha": "fb7c01e96c5a",
+  "approved": false
+ },
+ "netball_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:19",
+  "prompt_sha": "6961bfcbdf7a",
+  "approved": false
+ },
+ "cricket_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:21",
+  "prompt_sha": "97386c077972",
+  "approved": false
+ },
+ "hockey_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:23",
+  "prompt_sha": "09788f98b6e4",
+  "approved": false
+ },
+ "squash_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:30",
+  "prompt_sha": "f562da7167a2",
+  "approved": false
+ },
+ "basketball_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:34",
+  "prompt_sha": "1566645f21f1",
+  "approved": false
+ },
+ "baseball_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:34",
+  "prompt_sha": "a17c25074c01",
+  "approved": false
+ },
+ "fencing_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:24:37",
+  "prompt_sha": "6b7007b0cea6",
+  "approved": false
+ },
+ "running_athletics_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:17",
+  "prompt_sha": "a25a3b5b9974",
+  "approved": false
+ },
+ "badminton_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:19",
+  "prompt_sha": "9598c2982d34",
+  "approved": false
+ },
+ "rowing_canoeing_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:23",
+  "prompt_sha": "a69940157964",
+  "approved": false
+ },
+ "cycling_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:23",
+  "prompt_sha": "4e0e8caefd69",
+  "approved": false
+ },
+ "swimming_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:32",
+  "prompt_sha": "f24bb96ba74a",
+  "approved": false
+ },
+ "horse_riding_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:32",
+  "prompt_sha": "c610c493fea7",
+  "approved": false
+ },
+ "golf_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:36",
+  "prompt_sha": "866b43c40c73",
+  "approved": false
+ },
+ "table_tennis_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:39",
+  "prompt_sha": "eb5f177df18f",
+  "approved": false
+ },
+ "sailing_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:42",
+  "prompt_sha": "4b4051bb45de",
+  "approved": false
+ },
+ "archery_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:46",
+  "prompt_sha": "158e0ac15d00",
+  "approved": false
+ },
+ "triathlon_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:57",
+  "prompt_sha": "aeb2ac0a2f03",
+  "approved": false
+ },
+ "padel_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:26:59",
+  "prompt_sha": "dce08239be48",
+  "approved": false
+ },
+ "surfing_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:27:10",
+  "prompt_sha": "a08b0fa4a425",
+  "approved": false
+ },
+ "acrobatics_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:28:49",
+  "prompt_sha": "a390e6d6defd",
+  "approved": false
+ },
+ "skating_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:29:09",
+  "prompt_sha": "4337a5f00c56",
+  "approved": false
+ },
+ "chess_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:29:10",
+  "prompt_sha": "602c84b5d402",
+  "approved": false
+ },
+ "ski_snowboard_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:29:11",
+  "prompt_sha": "cd77327b1b9c",
+  "approved": false
+ },
+ "diving_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:29:25",
+  "prompt_sha": "bc730d73a5e5",
+  "approved": false
+ },
+ "climbing_instructor": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:29:31",
+  "prompt_sha": "360a267fdb2b",
+  "approved": false
+ },
+ "gymnastics_coach": {
+  "provider": "higgsfield",
+  "model": "xai/grok-imagine-image-2.0",
+  "made": "2026-10-09T02:32:57",
+  "prompt_sha": "8de37ae4ea10",
+  "approved": false
  }
 }
