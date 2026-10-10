@@ -87,24 +87,24 @@
    "img": "qf02_ready",
    "pass": true,
    "en": [
-    "Tap [[Put it on my home screen]]",
-    "Your icon is ready: “Quick Find · Cards”."
+    "Find it at the top of Quick",
+    "Your icon is ready: “Quick Find · Cards”. It now sits at the top of Quick's first screen — tap it there. A home-screen icon of its own is optional."
    ],
    "af": [
-    "Tik [[Put it on my home screen]]",
-    "Jou ikoon is gereed: “Quick Find · Cards”."
+    "Kry dit bo-aan Quick",
+    "Jou ikoon is gereed: “Quick Find · Cards”. Dit sit nou bo-aan Quick se eerste skerm — tik dit daar. 'n Eie tuisskerm-ikoon is opsioneel."
    ],
    "zu": [
-    "Thepha [[Put it on my home screen]]",
-    "Uphawu lwakho selulungile: “Quick Find · Cards”."
+    "Luthole phezulu ku-Quick",
+    "Uphawu lwakho selulungile: “Quick Find · Cards”. Manje lusesiqongweni sesikrini sokuqala se-Quick — luthephe lapho. Uphawu lwalo esikrinini sasekhaya luyazikhethela."
    ],
    "xh": [
-    "Cofa [[Put it on my home screen]]",
-    "Uphawu lwakho lulungile: “Quick Find · Cards”."
+    "Lufumane phezulu kwi-Quick",
+    "Uphawu lwakho lulungile: “Quick Find · Cards”. Ngoku lukwincopho yesikrini sokuqala se-Quick — lucofe apho. Uphawu lwalo kwisikrini sasekhaya lukhethwa nguwe."
    ],
    "nso": [
-    "Kgotla [[Put it on my home screen]]",
-    "Seswantšhetšo sa gago se loketše: “Quick Find · Cards”."
+    "Se hwetše godimo ga Quick",
+    "Seswantšhetšo sa gago se loketše: “Quick Find · Cards”. Bjale se godimo ga sekirini sa mathomo sa Quick — se kgotle moo. Seswantšhetšo sa sona sekirining sa gae ke boikgethelo."
    ]
   },
   {
@@ -228,5 +228,5 @@
   "xh": "draft",
   "nso": "draft"
  },
- "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_find_icon/ (pushed with build_help.py --push-images at deploy)."
+ "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_find_icon/ (pushed with build_help.py --push-images at deploy). QUICK-FAST-2 (RUL-221, 10 Oct 2026): step 2 now says the icon lives at the top of Quick; the home-screen icon is optional."
 }

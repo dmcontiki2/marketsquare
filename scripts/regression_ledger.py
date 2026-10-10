@@ -37779,6 +37779,63 @@ def rg_quick_fast_1_switch():
     return [(INFO, "switch ships OFF and hides every entry point; nine routes declared, presets owned")]
 
 
+@entry("RG-0968", "QUICK-FAST-2 (RUL-221, option D): Quick's own manifest is served live at /quick-icon/app.webmanifest -- the "
+       "static file with the SAME id (an installed Quick stays the same app) plus, for a signed-in trader with the switch on, "
+       "her quick icons as press-and-hold shortcuts (max 4); it always answers, and quick.html links it with credentials",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py _qf_quick_app_manifest + quick_icon_manifest token=='app'; quick.html <link rel=manifest>",
+       ref="David 10 Oct 2026, 19:05 SAST: 'I agree to D' (ICON_CLUTTER_OPTIONS.html). A manifest is fetched without cookies "
+           "unless the link says crossorigin=use-credentials, so without it every trader would get the bare Quick manifest.")
+def rg_quick_fast_2_manifest():
+    py, q = repo_file("bea_main.py"), repo_file("quick.html")
+    if py is None or q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    mf = _qf_fn(py, "quick_icon_manifest")
+    if 'if token == "app":' not in mf or "return _qf_quick_app_manifest(ts_user)" not in mf:
+        return [(FAIL, "bea_main.py: /quick-icon/app.webmanifest no longer serves Quick's own manifest")]
+    if mf.find('if token == "app":') > mf.find("r = _qf_public_row(token)"):
+        return [(FAIL, "bea_main.py: Quick's manifest sits behind the fast-lane switch check -- it must always answer")]
+    am = _qf_fn(py, "_qf_quick_app_manifest")
+    for sn, why in (('"static", "brand", "quick.webmanifest"', "it no longer starts from the static Quick manifest (same id)"),
+                    ("if ts_user and _qf_on():", "the shortcuts no longer honour the switch / sign-in"),
+                    ('m["shortcuts"] = [', "her quick icons no longer ride on the Quick icon as shortcuts"),
+                    ("LIMIT 4", "more than four shortcuts can be listed"),
+                    ('media_type="application/manifest+json"', "it is no longer served as a manifest")):
+        if sn not in am and sn not in py:
+            return [(FAIL, "bea_main.py: " + why)]
+    if '<link rel="manifest" href="/quick-icon/app.webmanifest" crossorigin="use-credentials">' not in q:
+        return [(FAIL, "quick.html no longer links Quick's live manifest with credentials")]
+    return [(INFO, "Quick's manifest is live, same id, her quick icons as shortcuts when signed in and on")]
+
+
+@entry("RG-0969", "QUICK-FAST-2 (RUL-221, option D): her quick icons live in Quick -- the door shows them as a strip "
+       "(blue sell, purple find, one tap opens the fast screen) only with the switch on and her signed in; the ready card "
+       "says it now sits at the top of Quick and offers the home-screen icon as an optional second step; the generic "
+       "'Add Quick to your home screen' offer is no longer removed",
+       LOCKED, fixed_on="2026-10-10",
+       scope="quick.html QUICK-FAST-1 module: addStrip/stripHtml/myPresets + drawDoor wrap; madeCard; qSeamArrived",
+       ref="David 10 Oct 2026: 'Are we not starting to clutter the users phone real estate?' -> option D chosen. "
+           "Default phone: two icons (TrustSquare + Quick); a separate preset icon only when she asks for it.")
+def rg_quick_fast_2_strip():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _qf_block(q, "QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "</script>")
+    for sn, why in (("function addStrip(){", "the door has no strip of her quick icons"),
+                    ("drawDoor=function(){ _ddoor.apply(this, arguments); addStrip(); };", "the strip is not added when the door draws"),
+                    ("if(!on || !QF.signed) return;", "the strip shows with the switch off or signed out"),
+                    ("'.qf-chip.find{border-color:#8B5CF6}", "find and sell are no longer told apart by colour"),
+                    ("T('It now sits at the top of Quick, ready to tap.')", "the ready card no longer says where her icon lives"),
+                    ("T('Also put it on my home screen')", "the home-screen icon is no longer offered as the optional step"),
+                    ("_myP=null; track('q_fast_preset_made'", "a new quick icon does not appear on the door until a reload"),
+                    ("if(standalone() || !p || !QF.install) return '';", "the home-screen card nags on every open instead of only when she asked")):
+        if sn not in m:
+            return [(FAIL, "quick.html: " + why)]
+    if "gi.parentNode.removeChild(gi)" in m:
+        return [(FAIL, "quick.html removes the generic 'Add Quick to your home screen' offer again")]
+    return [(INFO, "quick icons on Quick's door; home-screen icon optional")]
+
+
 @entry("RG-0953", "SEARCH-EX-1 (David, 10 Oct 2026): TrustSquare's search finds the AI examples the server makes per work role and "
        "sport (GENERIC-EX-1 / TRAINERS-EX-1) -- 'badminton' shows the Badminton coach example -- matched in the app on the "
        "same words, since the server's search only knows stored adverts; such a hit stops the search from widening to a "

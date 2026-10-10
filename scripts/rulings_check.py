@@ -1302,6 +1302,16 @@ REFLECTIONS = {
    ("RULINGS.md", ["TRUSTSQUARE'S PAID SMS ACCOUNT IS FOR OUR OUTREACH ONLY"], []),
    ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
  ],
+ "RUL-221": [
+   # Quick icons live in Quick -- option D (David 10 Oct 2026; QUICK-FAST-2, amends RUL-220's one-icon-per-preset default).
+   ("RULINGS.md", ["QUICK ICONS LIVE IN QUICK -- TWO HOME-SCREEN ICONS BY DEFAULT", "[AMENDED 10 Oct 2026 by RUL-221:"], []),
+   ("bea_main.py", ["def _qf_quick_app_manifest(ts_user):", 'if token == "app":'], []),
+   ("quick.html", ["QUICK-FAST-2 (RUL-221, David 10 Oct 2026, option D)", "T('Also put it on my home screen')",
+                   '<link rel="manifest" href="/quick-icon/app.webmanifest" crossorigin="use-credentials">'], ["gi.parentNode.removeChild(gi)"]),
+   ("genie/HARNESS.html", ["QUICK-FAST-2 (RUL-221, David 10 Oct 2026, option D)"], []),
+   ("QUICK_LISTING_SPEC.md", ["Amended 10 Oct 2026 — RUL-221 (option D, QUICK-FAST-2)"], []),
+   ("CHANGE_REGISTER.md", ["RUL-221"], []),
+ ],
  "RUL-220": [
    # Quick fast lane -- a repeat trader's own quick icons, the third standard flow (David 9 Oct 2026; QUICK-FAST-1, CC-006).
    ("RULINGS.md", ["QUICK FAST LANE: A REPEAT TRADER'S OWN QUICK ICONS"], []),

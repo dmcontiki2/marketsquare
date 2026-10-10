@@ -95,24 +95,24 @@
    "img": "qs02_ready",
    "pass": true,
    "en": [
-    "Tap [[Put it on my home screen]]",
-    "Your icon is ready: “Quick Sell · Cards”."
+    "Find it at the top of Quick",
+    "Your icon is ready: “Quick Sell · Cards”. It now sits at the top of Quick's first screen — tap it there."
    ],
    "af": [
-    "Tik [[Put it on my home screen]]",
-    "Jou ikoon is gereed: “Quick Sell · Cards”."
+    "Kry dit bo-aan Quick",
+    "Jou ikoon is gereed: “Quick Sell · Cards”. Dit sit nou bo-aan Quick se eerste skerm — tik dit daar."
    ],
    "zu": [
-    "Thepha [[Put it on my home screen]]",
-    "Uphawu lwakho selulungile: “Quick Sell · Cards”."
+    "Luthole phezulu ku-Quick",
+    "Uphawu lwakho selulungile: “Quick Sell · Cards”. Manje lusesiqongweni sesikrini sokuqala se-Quick — luthephe lapho."
    ],
    "xh": [
-    "Cofa [[Put it on my home screen]]",
-    "Uphawu lwakho lulungile: “Quick Sell · Cards”."
+    "Lufumane phezulu kwi-Quick",
+    "Uphawu lwakho lulungile: “Quick Sell · Cards”. Ngoku lukwincopho yesikrini sokuqala se-Quick — lucofe apho."
    ],
    "nso": [
-    "Kgotla [[Put it on my home screen]]",
-    "Seswantšhetšo sa gago se loketše: “Quick Sell · Cards”."
+    "Se hwetše godimo ga Quick",
+    "Seswantšhetšo sa gago se loketše: “Quick Sell · Cards”. Bjale se godimo ga sekirini sa mathomo sa Quick — se kgotle moo."
    ],
    "quick": [
     "saved"
@@ -126,24 +126,24 @@
    "img": "qs03_install",
    "pass": true,
    "en": [
-    "Tap [[Add to home screen]]",
-    "On an iPhone: tap Share, then “Add to Home Screen”."
+    "Optional: tap [[Also put it on my home screen]]",
+    "For the one you use every day. Then tap [[Add to home screen]]; on an iPhone: tap Share, then “Add to Home Screen”."
    ],
    "af": [
-    "Tik [[Add to home screen]]",
-    "Op 'n iPhone: tik Deel, dan “Add to Home Screen”."
+    "Opsioneel: tik [[Also put it on my home screen]]",
+    "Vir die een wat jy elke dag gebruik. Tik dan [[Add to home screen]]; op 'n iPhone: tik Deel, dan “Add to Home Screen”."
    ],
    "zu": [
-    "Thepha [[Add to home screen]]",
-    "Ku-iPhone: thepha u-Share, bese uthi “Add to Home Screen”."
+    "Uma uthanda: thepha [[Also put it on my home screen]]",
+    "Kulolo olusebenzisa nsuku zonke. Bese uthepha [[Add to home screen]]; ku-iPhone: thepha u-Share, bese uthi “Add to Home Screen”."
    ],
    "xh": [
-    "Cofa [[Add to home screen]]",
-    "Kwi-iPhone: cofa u-Share, emva koko “Add to Home Screen”."
+    "Ukuba uyathanda: cofa [[Also put it on my home screen]]",
+    "Kolo ulusebenzisa yonke imihla. Emva koko cofa [[Add to home screen]]; kwi-iPhone: cofa u-Share, emva koko “Add to Home Screen”."
    ],
    "nso": [
-    "Kgotla [[Add to home screen]]",
-    "Go iPhone: kgotla Share, ke moka “Add to Home Screen”."
+    "Ge o rata: kgotla [[Also put it on my home screen]]",
+    "Bakeng sa seo o se šomišago letšatši le lengwe le le lengwe. Ke moka kgotla [[Add to home screen]]; go iPhone: kgotla Share, ke moka “Add to Home Screen”."
    ]
   },
   {
@@ -382,5 +382,5 @@
   "xh": "draft",
   "nso": "draft"
  },
- "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_sell_icon/ (pushed with build_help.py --push-images at deploy)."
+ "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_sell_icon/ (pushed with build_help.py --push-images at deploy). QUICK-FAST-2 (RUL-221, 10 Oct 2026): step 2 now says the icon lives at the top of Quick; the home-screen icon is optional."
 }

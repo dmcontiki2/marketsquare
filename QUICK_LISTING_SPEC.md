@@ -677,3 +677,6 @@ OFF hides every entry point (the tick, the icons, My quick icons) and the routes
 Listing view's fourth page, *Quick icons — the fast lane*, shows both flows, the gate's landings and the live numbers.
 
 **Cost.** None recurring. **Schema.** One table, `quick_presets` (migrations/080_quick_presets.py).
+
+**Amended 10 Oct 2026 — RUL-221 (option D, QUICK-FAST-2): her quick icons live in Quick.** A phone carries two icons by default (TrustSquare + Quick). Her quick icons sit at the top of Quick's first screen as a strip (blue = sell, purple = find); one tap opens the same fast screen. On Android, pressing and holding the Quick icon lists up to four of them — Quick's own manifest is served live at `/quick-icon/app.webmanifest` (same id as `static/brand/quick.webmanifest`) with her presets as shortcuts, linked with `crossorigin="use-credentials"` so the browser sends her cookie. On iPhone the strip is the way in. A preset's own home-screen icon is optional: the ready card says *"It now sits at the top of Quick, ready to tap."* and offers *"Also put it on my home screen"*. Quick's own *Add Quick to your home screen* offer is no longer removed. Everything else in this section stands. Ledger RG-0968, RG-0969.
+

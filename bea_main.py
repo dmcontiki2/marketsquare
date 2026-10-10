@@ -34331,14 +34331,54 @@ def _qf_public_row(token):
         conn.close()
 
 
+_QF_APP_MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "brand", "quick.webmanifest")
+
+
+def _qf_quick_app_manifest(ts_user):
+    """QUICK-FAST-2 (RUL-221, David 10 Oct 2026, option D): Quick's OWN manifest, served live, so a signed-in trader's
+    quick icons ride on the one Quick home-screen icon as press-and-hold shortcuts (Android) instead of each needing
+    its own icon. It is the static static/brand/quick.webmanifest with the same id ("/quick.html"), so an installed
+    Quick stays the same app; switch off, signed out or no presets = that file unchanged. Always answers -- it is
+    Quick's manifest, not a fast-lane route."""
+    from fastapi.responses import JSONResponse as _JR
+    try:
+        with open(_QF_APP_MANIFEST, encoding="utf-8") as fh:
+            m = json.load(fh)
+    except Exception:
+        m = {"id": "/quick.html", "name": "TrustSquare Quick", "short_name": "Quick", "start_url": "/quick/",
+             "scope": "/quick/", "display": "standalone", "orientation": "portrait",
+             "background_color": "#04070a", "theme_color": "#7C3AED", "icons": []}
+    em = None
+    try:
+        if ts_user and _qf_on():
+            em = _session_email(ts_user)
+    except Exception:
+        em = None
+    if em:
+        conn = database.get_db()
+        try:
+            _qf_ensure(conn)
+            rows = conn.execute("SELECT * FROM quick_presets WHERE LOWER(email)=LOWER(?) AND active=1 "
+                                "ORDER BY uses DESC, id DESC LIMIT 4", (em,)).fetchall()
+        finally:
+            conn.close()
+        if rows:
+            m["shortcuts"] = [{"name": _qf_row_out(s)["name"], "short_name": s["label"][:12], "url": _qf_row_out(s)["start_url"],
+                               "icons": [{"src": "/quick-icon/%s.png?s=192" % s["token"], "sizes": "192x192", "type": "image/png"}]}
+                              for s in rows]
+    return _JR(m, media_type="application/manifest+json", headers={"Cache-Control": "private, no-store"})
+
+
 @app.get("/quick-icon/{token}.webmanifest")
-def quick_icon_manifest(token: str):
+def quick_icon_manifest(token: str, ts_user: str = Cookie(default=None)):
     """One web-app manifest per preset (RUL-220(g)): its own id, name 'Quick Sell · Cards' and start_url, so each
     preset installs as its own icon. A sell preset declares a share_target, so the photo can come straight from the
     gallery's Share sheet (the service worker receives it). The owner's other presets ride along as shortcuts --
     the fallback should a phone refuse a second icon from the same site. Public by design: the token is unguessable
     and the manifest carries only the label."""
     from fastapi.responses import JSONResponse as _JR
+    if token == "app":                      # QUICK-FAST-2 (RUL-221): Quick's own manifest (tokens are 6+ chars, never "app")
+        return _qf_quick_app_manifest(ts_user)
     r = _qf_public_row(token)
     if not r:
         raise HTTPException(status_code=404, detail="This quick icon was switched off.")
