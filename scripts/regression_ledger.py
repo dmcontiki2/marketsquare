@@ -35173,7 +35173,11 @@ def rg_quick_own_photo_1():
         return [(FAIL, "quick.html: the save no longer sends her photo")]
     if "if(window.QPHOTO) b.description='[photos:own]" not in q:
         return [(FAIL, "quick.html: the strength ring ignores her photo (ONE-SCORER-1 preview)")]
-    if b.count('"draft_token": _qdt') != 4 or "if not existing_account and _qdt and response is not None:" not in b:
+    # QUICK-FAST-1 (10 Oct 2026): five hand-backs, not four -- the fast lane's held draft returns its token to its own
+    # signed-in owner (the RUL-220(b) gate has proven the session; that path is never reached for another person's account).
+    _qp = b[b.find("\ndef quick_publish("):b.find('\n@app.get("/k/{secret}")')]
+    _ea = _qp[_qp.find("if existing_account:"):_qp.find("if not signed_member:")]
+    if b.count('"draft_token": _qdt') != 5 or '"draft_token"' in _ea or "if not existing_account and _qdt and response is not None:" not in b:
         return [(FAIL, "bea_main.py: quick_publish no longer hands the draft token to the phone that made the draft (or hands it for another person's account)")]
     h = repo_file("genie/HARNESS.html")
     if h is not None and h != q:
@@ -37495,6 +37499,261 @@ def rg_photo_first_1():
         ('<img class="wonder-card-img" data-near-src="${w.photo}"', "Wonders pictures download before she scrolls near them again"),
         ("msNearImgs(list);", "the Wonders pictures are never asked for")])])
     return bad or [(INFO, "the advert's first photo comes first; the rest follow it; far pictures wait for her")]
+
+
+def _qf_block(text, start, end):
+    """QUICK-FAST-1: the slice of a file between two markers ('' when either is missing)."""
+    if text is None:
+        return None
+    i = text.find(start)
+    if i < 0:
+        return ""
+    j = text.find(end, i + len(start))
+    return text[i:j if j > i else len(text)]
+
+
+def _qf_fn(py, name):
+    """The body of one top-level Python def in bea_main.py, comments stripped (a fix's explanation quotes the bug)."""
+    i = py.find("\ndef " + name + "(")
+    if i < 0:
+        i = py.find("\nasync def " + name + "(")
+    if i < 0:
+        return ""
+    j = py.find("\n@app.", i + 5)
+    k = py.find("\ndef ", i + 5)
+    ends = [x for x in (j, k) if x > 0]
+    body = py[i:min(ends) if ends else len(py)]
+    return "\n".join(l.split("  #")[0] if "  #" in l else l for l in body.splitlines() if not l.strip().startswith("#"))
+
+
+@entry("RG-0960", "QUICK-FAST-1 (RUL-220(a)(e), DoD 1): a fast publish rides the ONE publish path -- quick-publish checks the "
+       "gate before anything is made, HOLDS the advert as a draft, her real photo goes onto that draft, and only the standard "
+       "PUT /listings/{id}/publish makes it live; the fast-lane code never writes a listing live itself",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py quick_publish (_fast gate before create_listing; hold returns before publish_listing) + the QUICK-FAST-1 "
+             "block (no listing_status='live' write); quick.html QUICK-FAST-1 publish(): quick-publish hold -> /photo/draft -> PUT publish",
+       ref="QUICK_FASTLANE_BRIEF.md DoD 1; CC-006. Verified 10 Oct 2026 in the local harness: QA seller published 'Savannah, 4th Edition' "
+           "in one screen, live with her photo in the TrustSquare gallery (Visuals/fastlane d1_20..d1_30).")
+def rg_quick_fast_1_path():
+    py, q = repo_file("bea_main.py"), repo_file("quick.html")
+    if py is None or q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    qp = _qf_fn(py, "quick_publish")
+    g, c, h, p = (qp.find("_fast = _qf_publish_gate(sess, int(body.preset_id))"), qp.find('created = create_listing(listing, background_tasks, "quick-door")'),
+                  qp.find('return {"id": lid, "live": False, "hold": True'), qp.find("publish_listing(lid, em)"))
+    if g < 0 or c < 0 or g > c:
+        return [(FAIL, "quick-publish no longer checks the fast-lane gate BEFORE the advert is made")]
+    if h < 0 or p < 0 or h > p:
+        return [(FAIL, "a held fast publish is no longer returned as a draft before the one-tap publish")]
+    hb = qp[qp.find("if _fast is not None:"):h]
+    if not hb or re.search(r"listing_status|UPDATE\s+listings|publish_listing\(", hb, re.I):
+        return [(FAIL, "the held fast publish changes the advert's status itself before her photo is on")]
+    blk = _qf_block(py, "# ══ QUICK-FAST-1 (RUL-220", "# ══ end QUICK-FAST-1 ══")
+    code = "\n".join(l for l in blk.splitlines() if not l.strip().startswith("#"))
+    if re.search(r"SET\s+listing_status\s*=\s*'live'", code, re.I) or "publish_listing(" in code:
+        return [(FAIL, "the fast-lane block writes a listing live itself -- a second publish path (RUL-220(a))")]
+    m = _qf_block(q, "function publish(btn){", "/* ---------------- screen 3: live")
+    a, b, d = (m.find("api('/listings/quick-publish'"), m.find("'/photo/draft?email='"), m.find("'/publish?email='"))
+    if "hold:true" not in m or min(a, b, d) < 0 or not (a < b < d):
+        return [(FAIL, "quick.html's fast publish no longer goes quick-publish (hold) -> her photo onto the draft -> the standard publish")]
+    if "if(!ok){ f.innerHTML='<div class=\"qf-why\">'+E(T('Add a photo to publish" not in q:
+        return [(FAIL, "the fast sell screen shows Publish without a real photo (RUL-220(e))")]
+    return [(INFO, "one publish path: gate first, draft held, real photo on, standard publish")]
+
+
+@entry("RG-0961", "QUICK-FAST-1 (RUL-220, DoD 2): the Quick Find icon reads one search line on the server (commas without AI; "
+       "the price limit from its words; a card name through the Scryfall pipeline), every specific term must be in the "
+       "listing, and the matches come from the ordinary public /listings search -- real listings only, the price limit hard",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py quick_presets_find_parse / _qf_parse_plain / _qf_card_known; quick.html runFind()",
+       ref="QUICK_FASTLANE_BRIEF.md DoD 2. Verified 10 Oct 2026: 'MtG, Savannah, Dual land, 4th Edition, under R2300' returned exactly "
+           "Savannah 4th Edition R2 100 and R2 250 (not Revised, not Badlands, not the R2 900 one) -- Visuals/fastlane d2_21.")
+def rg_quick_fast_1_find():
+    py, q = repo_file("bea_main.py"), repo_file("quick.html")
+    if py is None or q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    fp = _qf_fn(py, "quick_presets_find_parse")
+    if not fp:
+        return [(FAIL, "the find-line route is gone")]
+    if 't["must"] = not t["generic"]' not in fp:
+        return [(FAIL, "a specific term she typed is no longer required in the listing")]
+    if "await _qf_card_known(" not in fp or "resolve_scryfall_id(name, \"cards\")" not in _qf_fn(py, "_qf_card_known"):
+        return [(FAIL, "card names are no longer checked with the existing Scryfall pipeline")]
+    if "not re.search(r\"[,;]\", q) and len(parts) > 3 and a < _QF_AI_DAY_MAX" not in fp:
+        return [(FAIL, "the free AI lane is no longer limited to lines without commas under the per-icon cap (RUL-164)")]
+    rf = _qf_block(q, "function runFind(){", "function paintMatches(")
+    for sn, why in (("'/listings?city='", "the matches no longer come from the public listings search"),
+                    ("if(l.demo_example || +l.super_example || +l.is_demo) return false;", "AI examples can appear as fast-find matches"),
+                    ("if(P.max_price && !(pr<=P.max_price)) return false;", "the price limit is no longer a hard filter"),
+                    ("must.every(function(t){ return hit(h,t); })", "a match no longer needs every specific term")):
+        if sn not in rf:
+            return [(FAIL, "quick.html: " + why)]
+    return [(INFO, "one line, parsed on the server; real matches only; price limit hard")]
+
+
+@entry("RG-0962", "QUICK-FAST-1 (RUL-220(b)(c), DoD 3): the fast-publish gate runs on every fast publish on the server -- current "
+       "EULA, listed before, a free slot (the same default as publish_listing) -- and each failure lands her in the normal "
+       "draft step with its one line; a full Free plan is offered upgrade or 'choose a listing to rest' (nothing deleted)",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py _qf_gate, _qf_publish_gate, quick_presets_rest; quick.html fallback()/LINES/restList()",
+       ref="QUICK_FASTLANE_BRIEF.md DoD 3. Verified 10 Oct 2026: no-EULA, never-listed and slots-full QA sellers each landed on "
+           "'Here is your listing' with the right line; the slots-full seller rested one listing and published (d3_*).")
+def rg_quick_fast_1_gate():
+    py, q = repo_file("bea_main.py"), repo_file("quick.html")
+    if py is None or q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    g = _qf_fn(py, "_qf_gate")
+    for sn, why in (('if not u or not u["eula_accepted_at"]:', "the gate no longer checks the current EULA"),
+                    ('return {"ok": False, "code": "never_listed"}', "the gate no longer checks 'published before'"),
+                    ('limit_n = int(u["slot_limit"]) if u["slot_limit"] else 2', "the gate's slot limit differs from publish_listing's"),
+                    ('return {"ok": False, "code": "slots_full", "slots": slots}', "the gate no longer checks for a free slot")):
+        if sn not in g:
+            return [(FAIL, "bea_main.py: " + why)]
+    if 'slot_limit = int(slot_row["slot_limit"]) if slot_row and slot_row["slot_limit"] else 2' not in py:
+        return [(FAIL, "publish_listing's slot default moved -- the fast gate must move with it")]
+    pg = _qf_fn(py, "_qf_publish_gate")
+    if 'raise HTTPException(status_code=409, detail={"fast_gate": g["code"]' not in pg:
+        return [(FAIL, "a failed gate no longer answers 409 {fast_gate}")]
+    rs = _qf_fn(py, "quick_presets_rest")
+    if "listing_status='resting'" not in rs or "DELETE" in rs.upper().replace("DELETED", ""):
+        return [(FAIL, "'choose a listing to rest' no longer rests (or now deletes) a listing")]
+    fb = _qf_block(q, "function fallback(code, slots){", "function restList(){")
+    for sn, why in (("drawDraft();", "a failed gate no longer lands on the normal draft step"),
+                    ("if(QF.photo) window.QPHOTO=QF.photo;", "her photo no longer follows her into the normal draft"),
+                    ("id=\"qfup\"", "a full plan is no longer offered the upgrade"), ("id=\"qfrest\"", "a full plan is no longer offered 'choose a listing to rest'")):
+        if sn not in fb:
+            return [(FAIL, "quick.html: " + why)]
+    for k in ("eula:'", "never_listed:'", "slots_full:'"):
+        if k not in q:
+            return [(FAIL, "quick.html: the one line for %s is gone" % k[:-2])]
+    return [(INFO, "gate on every fast publish; three fallbacks to the normal draft step; rest, never delete")]
+
+
+@entry("RG-0963", "QUICK-FAST-1 (RUL-220(f), DoD 4): unticking (in Quick or My Space -> My quick icons -> Switch off) DELETES the "
+       "preset, and an icon left on the phone opens normal Quick at step 1 of its door with 'This quick icon was switched off.'",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py quick_presets_delete; quick.html openIcon()/normalStart()/unmake(); ms.js msQuickIconsOpen switch off",
+       ref="QUICK_FASTLANE_BRIEF.md DoD 4. Verified 10 Oct 2026: Switch off in My Space removed the preset; the old icon URL opened "
+           "'What are you selling?' with the line (d4_12, d4_20).")
+def rg_quick_fast_1_untick():
+    py, q, js = repo_file("bea_main.py"), repo_file("quick.html"), repo_file("ms.js")
+    if py is None or q is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if 'conn.execute("DELETE FROM quick_presets WHERE id=?", (int(preset_id),))' not in _qf_fn(py, "quick_presets_delete"):
+        return [(FAIL, "switching an icon off no longer deletes its preset")]
+    oi = _qf_block(q, "function openIcon(){", "if(QF.token && LIVE) openIcon();")
+    if "if(!p){ track('q_fast_switched_off'); return normalStart('This quick icon was switched off.'); }" not in oi:
+        return [(FAIL, "an icon whose preset is gone no longer opens normal Quick with the switched-off line")]
+    ns = _qf_block(q, "function normalStart(line", "/* ---------------- the photo")
+    if "start(QF.kind==='find'?'find':'sell');" not in ns:
+        return [(FAIL, "the switched-off icon no longer starts normal Quick at step 1 of its door")]
+    if "fetch(BEA_URL + '/quick-presets/' + id, {method:'DELETE', credentials:'include'})" not in js:
+        return [(FAIL, "My quick icons -> Switch off no longer deletes the preset")]
+    return [(INFO, "untick = deleted; the old icon opens normal Quick with one line")]
+
+
+@entry("RG-0964", "QUICK-FAST-1 (RUL-220(g), DoD 5): every preset installs as its own icon -- its own manifest (id, name, start_url, "
+       "scope /quick/), a sell preset declares a share_target the service worker receives and hands to the page (a one-photo "
+       "mailbox emptied on read, nothing of the app cached), and the head script points the page at the preset's manifest",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py quick_icon_manifest; assets/service-worker.js /quick/share-in; quick.html head script + takeShared()",
+       ref="QUICK_FASTLANE_BRIEF.md DoD 5. Verified 10 Oct 2026 in headless Chromium: Page.getInstallabilityErrors [] for a sell and a find "
+           "preset; a synthetic multipart POST to the share_target landed the photo on the fast screen, mailbox empty after (d5_10).")
+def rg_quick_fast_1_pwa():
+    py, q, sw = repo_file("bea_main.py"), repo_file("quick.html"), repo_file("assets/service-worker.js")
+    if py is None or q is None or sw is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    mf = _qf_fn(py, "quick_icon_manifest")
+    for sn, why in (('"id": "/quick/?p=" + r["token"]', "a preset's manifest no longer has its own id"),
+                    ('"scope": "/quick/"', "the preset manifest's scope moved off /quick/ (the share action must be inside it)"),
+                    ('m["share_target"] = {"action": "/quick/share-in?p=%s&c=%s"', "a sell preset no longer declares its share_target"),
+                    ('media_type="application/manifest+json"', "the manifest is no longer served as a manifest")):
+        if sn not in mf:
+            return [(FAIL, "bea_main.py: " + why)]
+    for sn, why in (("u.pathname !== '/quick/share-in'", "the service worker no longer receives the shared photo"),
+                    ("Response.redirect('/quick/?p='", "the service worker no longer hands the photo to the fast screen")):
+        if sn not in sw:
+            return [(FAIL, "service-worker.js: " + why)]
+    if "box.delete('/quick/__shared_photo')" not in q or "Date.now()-at>10*60*1000" not in q:
+        return [(FAIL, "quick.html no longer empties the share mailbox on read / ignores a stale photo")]
+    if "l.setAttribute('href','/quick-icon/'+m[1]+'.webmanifest')" not in q:
+        return [(FAIL, "the page no longer points at the preset's own manifest before the browser reads it")]
+    return [(INFO, "one manifest per preset, share_target received and handed over, mailbox emptied")]
+
+
+@entry("RG-0965", "QUICK-FAST-1 (DoD 6): every word the fast lane shows has a translation in South Africa's languages (af zu xh nso) "
+       "and the approved US/UK/AU lists (es zh tl vi cy pl ro pa ar yue), in roles/quick_i18n.json and the generated QI18N",
+       LOCKED, fixed_on="2026-10-10",
+       scope="quick.html QUICK-FAST-1 block T('...') literals and LINES; roles/quick_i18n.json; scripts/apply_fastlane_i18n.py",
+       ref="QUICK_FASTLANE_BRIEF.md DoD 6. Verified 10 Oct 2026: the fast screens rendered in af, zu, xh, nso (ZA phone), es (US), cy (UK), "
+           "zh (AU) with no English left (d6_*).")
+def rg_quick_fast_1_words():
+    import json as _j
+    q, qi = repo_file("quick.html"), repo_file("roles/quick_i18n.json")
+    if q is None or qi is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    blk = _qf_block(q, "QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "</script>")
+    if not blk:
+        return [(FAIL, "quick.html has no QUICK-FAST-1 block")]
+    keys = set(re.findall(r"T\('((?:[^'\\]|\\.)+)'\)", blk)) | set(re.findall(r"^\s+(?:eula|never_listed|slots_full|signin):'([^']+)'", blk, re.M))
+    keys |= {"This quick icon was switched off.", "Sign in on this phone to use your quick icon."}
+    qi = _j.loads(qi)
+    want = ["af", "zu", "xh", "nso", "es", "zh", "tl", "vi", "cy", "pl", "ro", "pa", "ar", "yue"]
+    idx = [qi["langs"].index(l) for l in want]
+    for k in sorted(keys):
+        v = qi["w"].get(k)
+        if not v:
+            return [(FAIL, "no translation entry for '%s'" % k[:60])]
+        for i, l in zip(idx, want):
+            if not str(v[i]).strip():
+                return [(FAIL, "'%s' has no %s translation" % (k[:50], l))]
+    m = re.search(r"var QI18N = (\{.*?\});\n/\* QUICK-I18N:END", q, re.S)
+    if not m or any(k not in _j.loads(m.group(1))["w"] for k in keys):
+        return [(FAIL, "quick.html's QI18N block is behind roles/quick_i18n.json -- run scripts/sync_quick_roles.py")]
+    return [(INFO, "%d fast-lane words in all 14 offered languages" % len(keys))]
+
+
+@entry("RG-0966", "QUICK-FAST-1 (rollback + DoD 7): the dashboard switch QUICK_FASTLANE ships OFF and OFF hides every entry point -- "
+       "the routes answer 404, Quick shows no tick and opens icons as normal Quick, My Space hides My quick icons -- and all nine "
+       "fast-lane routes are declared (SEC-GATE-1) with the presets owned by their account",
+       LOCKED, fixed_on="2026-10-10",
+       scope="bea_main.py launch_switches.quick_fastlane/_qf_on/_qf_need_user/_qf_public_row + /flags; route_policy.json; security_gate.py; "
+             "quick.html ready/openIcon/drawDraft tick; ms.js msQuickIconsRefresh; dashboard.server.html ls_m_fastlane",
+       ref="QUICK_FASTLANE_BRIEF.md 'Rollback' + DoD 7. stranger_test PASS 10 Oct 2026 with the nine routes; switch OFF -> /quick-icon 404 "
+           "and /quick-presets 404 in the local harness.")
+def rg_quick_fast_1_switch():
+    import json as _j
+    py, q, js, d, rp, sg = (repo_file("bea_main.py"), repo_file("quick.html"), repo_file("ms.js"), repo_file("dashboard.server.html"),
+                            repo_file("route_policy.json"), repo_file("security_gate.py"))
+    if None in (py, q, js, d, rp, sg):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if '"ALTER TABLE launch_switches ADD COLUMN quick_fastlane INTEGER NOT NULL DEFAULT 0"' not in py \
+            or 'return _bit_flag("quick_fastlane", False)' not in py:
+        return [(FAIL, "the fast-lane switch no longer defaults OFF / reads OFF on any doubt")]
+    for fn in ("_qf_need_user", "_qf_public_row", "_qf_publish_gate"):
+        if "_qf_on()" not in _qf_fn(py, fn):
+            return [(FAIL, "%s no longer honours the switch" % fn)]
+    if '"quick_fastlane":      b("quick_fastlane")' not in py:
+        return [(FAIL, "/flags no longer tells the apps whether the fast lane is on")]
+    if "if(!on){ return normalStart(''); }" not in q or "if(!QF.on || !QF.signed || mode!=='sell' || QF.preset) return;" not in q:
+        return [(FAIL, "quick.html shows fast-lane entry points with the switch off")]
+    if "const on = !DEMO_MODE && !!(window.FEATURES && window.FEATURES.quick_fastlane) && _msIsSignedIn();" not in js:
+        return [(FAIL, "My quick icons shows with the switch off (or in demo mode)")]
+    if 'id="ls_m_fastlane"' not in d or "ls_m_fastlane:'quick_fastlane'" not in d:
+        return [(FAIL, "the dashboard has no QUICK_FASTLANE switch")]
+    pol = {r["key"]: r for r in _j.loads(rp)["routes"]}
+    need = {"GET /quick-presets": "user", "POST /quick-presets": "user", "PATCH /quick-presets/{preset_id}": "user",
+            "DELETE /quick-presets/{preset_id}": "user", "POST /quick-presets/{preset_id}/rest": "user",
+            "POST /quick-presets/{preset_id}/find-parse": "user", "GET /quick-icon/{token}.webmanifest": "public",
+            "GET /quick-icon/{token}.png": "public", "GET /admin/quick-fastlane/stats": "admin"}
+    for k, lvl in need.items():
+        if k not in pol or pol[k].get("level") != lvl:
+            return [(FAIL, "route_policy.json: %s is not declared %s" % (k, lvl))]
+        if "{preset_id}" in k and not any(o.get("resource") == "quick_preset" for o in pol[k].get("own", [])):
+            return [(FAIL, "route_policy.json: %s does not check the preset is hers" % k)]
+    if '"quick_preset":       "SELECT LOWER(TRIM(email)) FROM quick_presets WHERE id = ?"' not in sg:
+        return [(FAIL, "security_gate.py cannot tell whose preset it is")]
+    return [(INFO, "switch ships OFF and hides every entry point; nine routes declared, presets owned")]
 
 
 @entry("RG-0953", "SEARCH-EX-1 (David, 10 Oct 2026): TrustSquare's search finds the AI examples the server makes per work role and "

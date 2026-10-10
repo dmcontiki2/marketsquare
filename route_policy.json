@@ -279,6 +279,84 @@
    "level": "public"
   },
   {
+   "key": "GET /quick-presets",
+   "level": "user",
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). Her presets and the fast-publish gate; the session is the only identity."
+  },
+  {
+   "key": "POST /quick-presets",
+   "level": "user",
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). 'Make this my quick icon' -- the preset belongs to the session."
+  },
+  {
+   "key": "PATCH /quick-presets/{preset_id}",
+   "level": "user",
+   "own": [
+    {
+     "name": "preset_id",
+     "in": "path",
+     "resource": "quick_preset"
+    }
+   ],
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). Rename."
+  },
+  {
+   "key": "DELETE /quick-presets/{preset_id}",
+   "level": "user",
+   "own": [
+    {
+     "name": "preset_id",
+     "in": "path",
+     "resource": "quick_preset"
+    }
+   ],
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). Untick / switch off = deleted (RUL-220(f))."
+  },
+  {
+   "key": "POST /quick-presets/{preset_id}/rest",
+   "level": "user",
+   "own": [
+    {
+     "name": "preset_id",
+     "in": "path",
+     "resource": "quick_preset"
+    },
+    {
+     "name": "listing_id",
+     "in": "json",
+     "resource": "listing"
+    }
+   ],
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). Free slots full: she rests one of her own live listings (KEEP-CHOICE-1)."
+  },
+  {
+   "key": "POST /quick-presets/{preset_id}/find-parse",
+   "level": "user",
+   "own": [
+    {
+     "name": "preset_id",
+     "in": "path",
+     "resource": "quick_preset"
+    }
+   ],
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). The Find icon's one search line."
+  },
+  {
+   "key": "GET /quick-icon/{token}.webmanifest",
+   "level": "public",
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). One manifest per preset; the token is unguessable and the manifest carries only the label."
+  },
+  {
+   "key": "GET /quick-icon/{token}.png",
+   "level": "public",
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). The preset's home-screen icon, drawn on request."
+  },
+  {
+   "key": "GET /admin/quick-fastlane/stats",
+   "level": "admin",
+   "note": "QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). The dashboard's fast-lane card."
+  },
+  {
    "key": "GET /auth/handoff",
    "level": "user",
    "note": "QUICK-DOOR-HUB-1 (3 Oct 2026): mints a one-use sign-in hop for the signed-in session only; Quick sends strangers to /?go=signin when this answers 401."

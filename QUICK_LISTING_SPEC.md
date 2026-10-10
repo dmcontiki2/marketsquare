@@ -630,3 +630,50 @@ in this plan, and it is worth more than every remaining letter on the list.
 - **The three flagged roles in §15c** (security, passenger-carrying drivers, care) — each carries a
   legal registration question, not a design one.
 - **The beta slate and its order** — the list above is a seed for discussion, as he asked.
+
+---
+
+## 19. THE FAST LANE — A REPEAT TRADER'S OWN QUICK ICONS (QUICK-FAST-1 · RUL-220 · CC-006)
+
+*David, 9 Oct 2026 (approved in chat, `QUICK_FASTLANE_BRIEF.md`). Built 10 Oct 2026 under the IP hold; ships after the
+provisional-2 application number exists.*
+
+**What it is.** At the end of a Quick flow a signed-in trader may tick **Make this my quick icon**. The flow's setup — the
+door, kind + type, condition/grading, area and the language he used — is kept as a preset (`quick_presets`, one row per
+icon) and his phone gets a home-screen icon for that preset. He can have as many as he likes, on every tier (RUL-220(c)).
+
+| | Quick Sell icon | Quick Find icon |
+|---|---|---|
+| Opens on | one screen: **Take photo** · **Use last photo** · price · *What exactly is it?* · description | one search line (e.g. *MtG, Savannah, Dual land, 4th Edition, under R2300*) |
+| Then | Publish (appears only once a real photo is attached) → live | real matches on the same page → tap one → TrustSquare's normal introduction |
+| Android | the gallery's **Share → Quick Sell · Cards** hands the photo straight in (share_target) | — |
+| iPhone | Share → Add to Home Screen (guided card); the picker opens newest-first | the same |
+
+**The rules it keeps (RUL-220).**
+- **(a) The third standard flow.** The publish is `POST /listings/quick-publish` with `preset_id` and `hold` — the advert
+  is created as a draft — then her photo goes onto that draft (`/listings/{id}/photo/draft`), then
+  `PUT /listings/{id}/publish`, the standard route with its EULA, slot and blocked gates. No second publish path.
+- **(b) The gate, on every fast publish, on the server:** signed in · the current EULA accepted · published at least once
+  before · any tier including Free · a free listing slot. A failure answers `409 {fast_gate}` before anything is made, and
+  Quick drops her into its normal flow at the failing step — the "Here is your listing" screen with her photo, price and
+  words kept — with one line:
+  - `eula` → *Your quick icon needs the TrustSquare terms accepted first …* (the button is *Save my listing*; the terms are signed in TrustSquare);
+  - `never_listed` → *Your first listing goes out the normal way. After that, your quick icon publishes in one screen.*;
+  - `slots_full` → *Your plan's listing slots are full.* with **Upgrade my plan** and **Choose a listing to rest** (KEEP-CHOICE-1's *resting*: hidden from buyers, nothing deleted, back on Plans).
+- **(d)** The price is never kept in a preset; the band follows the price typed each time.
+- **(e)** The example photo can never be published: Publish only appears with a real photo, and the photo is on the draft before the publish.
+- **(f)** Untick (in Quick, or **Switch off** in TrustSquare's My Space → *My quick icons*) deletes the preset. An icon left on the phone then opens normal Quick at step 1 of its door with *This quick icon was switched off.*
+- **(g)** Photo first, as above.
+
+**Find.** The line is split on commas and a price limit is read from its words (*under/below/max … R2300*); only a line
+written without commas uses the allocated free AI lane, once, under RUL-164's caps (30 a day per icon, inside the
+translation lane's daily ceiling). Every specific term must be in the advert (*Savannah* and *4th Edition*); generic words
+(*MtG*, *dual land*) only rank. A card name is checked with the existing Scryfall pipeline. The search itself is the
+ordinary public `/listings` search, so every visibility rule still decides what is shown; AI examples never appear (an
+introduction needs a real seller).
+
+**Switch.** Dashboard → Launch switches → *Quick fast lane (quick icons)* = `launch_switches.quick_fastlane`, default OFF.
+OFF hides every entry point (the tick, the icons, My quick icons) and the routes answer 404 — the rollback. The Quick
+Listing view's fourth page, *Quick icons — the fast lane*, shows both flows, the gate's landings and the live numbers.
+
+**Cost.** None recurring. **Schema.** One table, `quick_presets` (migrations/080_quick_presets.py).

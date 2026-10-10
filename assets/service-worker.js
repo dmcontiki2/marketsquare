@@ -60,6 +60,38 @@ const OFFLINE_HTML = '<!doctype html><html lang="en"><head><meta charset="utf-8"
   '<button onclick="location.reload()">Try again</button>' +
   '</div></body></html>';
 
+/* QUICK-FAST-1 (RUL-220(g), David 9 Oct 2026): a Quick Sell icon receives its photo from the gallery's Share sheet.
+ * Each sell preset's manifest declares share_target {action: /quick/share-in?p=<preset>, POST multipart, photo}.
+ * The phone POSTs the picture here; this worker takes it out of the form, leaves it in a one-photo mailbox and sends
+ * the page to the preset's fast sell screen, which collects it and empties the mailbox. This is a HAND-OVER, not a
+ * cache: no page, script or response of the app is ever stored (SW-FETCH-1 stands); one photo waits at most until
+ * the page opens, and anything older than ten minutes is ignored and removed. */
+const QF_INBOX = 'quick-share-inbox';
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'POST') return;
+  let u;
+  try { u = new URL(req.url); } catch (_e) { return; }
+  if (u.origin !== self.location.origin || u.pathname !== '/quick/share-in') return;
+  event.respondWith((async () => {
+    const p = (u.searchParams.get('p') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+    let got = 0;
+    try {
+      const fd = await req.formData();
+      const f = fd.get('photo') || (fd.getAll('photo') || [])[0];
+      if (f && typeof f !== 'string' && /^image\//.test(f.type || '')) {
+        const box = await caches.open(QF_INBOX);
+        await box.put('/quick/__shared_photo', new Response(f, {
+          headers: { 'Content-Type': f.type, 'X-Shared-At': String(Date.now()), 'X-Preset': p }
+        }));
+        got = 1;
+      }
+    } catch (_e) { got = 0; }
+    const c = (u.searchParams.get('c') || '').replace(/[^a-z]/g, '').slice(0, 20);
+    return Response.redirect('/quick/?p=' + encodeURIComponent(p) + '&k=sell&c=' + c + '&shared=' + got, 303);
+  })());
+});
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   // Only top-level page loads. Everything else is none of this worker's business.

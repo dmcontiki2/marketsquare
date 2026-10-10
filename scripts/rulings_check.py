@@ -1302,6 +1302,21 @@ REFLECTIONS = {
    ("RULINGS.md", ["TRUSTSQUARE'S PAID SMS ACCOUNT IS FOR OUR OUTREACH ONLY"], []),
    ("sms_provider.py", ['SMS_PURPOSES = ("outreach", "setup-test")', "def _over_daily_cap(", 'SMS_DAILY_CAP") or "40"'], ['"phone-code", "outreach"']),
  ],
+ "RUL-220": [
+   # Quick fast lane -- a repeat trader's own quick icons, the third standard flow (David 9 Oct 2026; QUICK-FAST-1, CC-006).
+   ("RULINGS.md", ["QUICK FAST LANE: A REPEAT TRADER'S OWN QUICK ICONS"], []),
+   ("CHANGE_REGISTER.md", ["## CC-006 · Quick Fast Lane"], []),
+   ("bea_main.py", ['_fast = _qf_publish_gate(sess, int(body.preset_id)) if int(body.preset_id or 0) else None',
+                    'def _qf_gate(conn, em) -> dict:', 'if key in ("price",):', '"ALTER TABLE launch_switches ADD COLUMN quick_fastlane INTEGER NOT NULL DEFAULT 0"',
+                    '"quick_fastlane":      b("quick_fastlane")', '@app.get("/quick-icon/{token}.webmanifest")'], []),
+   ("quick.html", ["QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "Add a photo to publish — the example photo is never published.",
+                   "This quick icon was switched off.", "api('/listings/'+encodeURIComponent(d.id)+'/publish?email='"], []),
+   ("genie/HARNESS.html", ["QUICK-FAST-1 (RUL-220, David 9 Oct 2026"], []),
+   ("assets/service-worker.js", ["u.pathname !== '/quick/share-in'"], []),
+   ("route_policy.json", ['"key": "POST /quick-presets/{preset_id}/find-parse"'], []),
+   ("ms.js", ["async function msQuickIconsOpen(forceOpen){"], []),
+   ("dashboard.server.html", ['id="ls_m_fastlane"'], []),
+ ],
  "RUL-219": [
    # We only introduce: no 'Absolute Must-Haves'; tutors (and trainers) list with no legal page (10 Oct; amends LEGAL-STEP-1).
    ("RULINGS.md", ["WE ONLY INTRODUCE -- NO LEGAL CHECKLIST"], []),

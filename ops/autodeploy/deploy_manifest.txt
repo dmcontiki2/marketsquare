@@ -278,6 +278,8 @@ visuals/assoc/assoc_teachers.html | static/examples/teachers.html
 # Orchestrator tab as a separate 2 pages." Both are framed by the Quick Listing view in
 # dashboard.server.html and open standalone. Gated under /orchestrator/ like quick_listing.html.
 genie/EMAIL_TO_TWO_USERS.html | orchestrator/quick_comic.html
+# QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick view's fourth page -- the fast lane's flows, gate landings and live numbers.
+genie/QUICK_FASTLANE_FLOWS.html | orchestrator/quick_fastlane.html
 genie/email_strip/ORCH_PREVIEW.html | orchestrator/quick_emails.html
 genie/email_strip/adventures_advert.jpg | orchestrator/qstrip/adventures_advert.jpg
 genie/email_strip/adventures_other.jpg | orchestrator/qstrip/adventures_other.jpg
@@ -421,6 +423,8 @@ stories/plumber.json | help/data/plumber.json
 stories/pool_cleaner.json | help/data/pool_cleaner.json
 stories/property_flat.json | help/data/property_flat.json
 stories/property_house.json | help/data/property_house.json
+stories/quick_find_icon.json | help/data/quick_find_icon.json
+stories/quick_sell_icon.json | help/data/quick_sell_icon.json
 stories/removals_helper.json | help/data/removals_helper.json
 stories/roofer.json | help/data/roofer.json
 stories/room_attendant.json | help/data/room_attendant.json

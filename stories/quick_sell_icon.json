@@ -1,0 +1,386 @@
+{
+ "type": "quick_sell_icon",
+ "status": "draft",
+ "flow": "FAST-SELL",
+ "serves": [],
+ "label": {
+  "en": "Quick Sell icon",
+  "af": "Quick Sell-ikoon",
+  "zu": "Uphawu lwe-Quick Sell",
+  "xh": "Uphawu lwe-Quick Sell",
+  "nso": "Seswantšhetšo sa Quick Sell"
+ },
+ "title": {
+  "en": "Your Quick Sell icon: photo, price, publish — one screen",
+  "af": "Jou Quick Sell-ikoon: foto, prys, plaas — een skerm",
+  "zu": "Uphawu lwakho lwe-Quick Sell: isithombe, intengo, shicilela — isikrini esisodwa",
+  "xh": "Uphawu lwakho lwe-Quick Sell: ifoto, ixabiso, papasha — isikrini esinye",
+  "nso": "Seswantšhetšo sa gago sa Quick Sell: seswantšho, theko, phatlalatša — sekirini se tee"
+ },
+ "walked_on": "2026-10-10",
+ "people": {
+  "you": "Thabo"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "Make your quick icon",
+   "af": "Maak jou vinnige ikoon",
+   "zu": "Yenza uphawu lwakho olusheshayo",
+   "xh": "Yenza uphawu lwakho olukhawulezayo",
+   "nso": "Dira seswantšhetšo sa gago sa go akgofa"
+  },
+  {
+   "id": "c2",
+   "en": "Sell in one screen",
+   "af": "Verkoop in een skerm",
+   "zu": "Thengisa esikrinini esisodwa",
+   "xh": "Thengisa kwisikrini esinye",
+   "nso": "Rekiša sekirining se tee"
+  },
+  {
+   "id": "c3",
+   "en": "When your Free slots are full",
+   "af": "As jou gratis plekke vol is",
+   "zu": "Uma izikhala zakho zamahhala zigcwele",
+   "xh": "Xa izithuba zakho zasimahla zizele",
+   "nso": "Ge dikgoba tša gago tša mahala di tletše"
+  },
+  {
+   "id": "c4",
+   "en": "Switch it off",
+   "af": "Skakel dit af",
+   "zu": "Luvale",
+   "xh": "Luvale",
+   "nso": "Se time"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "qs01_tick",
+   "pass": true,
+   "en": [
+    "Tick [[Make this my quick icon]]",
+    "At the end of a normal Quick sell, above Publish. Your answers are kept — never your price."
+   ],
+   "af": [
+    "Merk [[Make this my quick icon]]",
+    "Aan die einde van 'n gewone Quick-verkoop, bo Publiseer. Jou antwoorde word bewaar — nooit jou prys nie."
+   ],
+   "zu": [
+    "Maka [[Make this my quick icon]]",
+    "Ekugcineni kokuthengisa okujwayelekile ku-Quick, ngaphezu kokuthi Shicilela. Izimpendulo zakho ziyagcinwa — hhayi intengo yakho."
+   ],
+   "xh": [
+    "Phawula [[Make this my quick icon]]",
+    "Ekupheleni kokuthengisa okuqhelekileyo kwi-Quick, ngaphezu kokuthi Papasha. Iimpendulo zakho ziyagcinwa — hayi ixabiso lakho."
+   ],
+   "nso": [
+    "Swaya [[Make this my quick icon]]",
+    "Mafelelong a go rekiša mo go tlwaelegilego go Quick, godimo ga Phatlalatša. Dikarabo tša gago di a bolokwa — e sego theko ya gago."
+   ],
+   "quick": [
+    "draft"
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "qs02_ready",
+   "pass": true,
+   "en": [
+    "Tap [[Put it on my home screen]]",
+    "Your icon is ready: “Quick Sell · Cards”."
+   ],
+   "af": [
+    "Tik [[Put it on my home screen]]",
+    "Jou ikoon is gereed: “Quick Sell · Cards”."
+   ],
+   "zu": [
+    "Thepha [[Put it on my home screen]]",
+    "Uphawu lwakho selulungile: “Quick Sell · Cards”."
+   ],
+   "xh": [
+    "Cofa [[Put it on my home screen]]",
+    "Uphawu lwakho lulungile: “Quick Sell · Cards”."
+   ],
+   "nso": [
+    "Kgotla [[Put it on my home screen]]",
+    "Seswantšhetšo sa gago se loketše: “Quick Sell · Cards”."
+   ],
+   "quick": [
+    "saved"
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "qs03_install",
+   "pass": true,
+   "en": [
+    "Tap [[Add to home screen]]",
+    "On an iPhone: tap Share, then “Add to Home Screen”."
+   ],
+   "af": [
+    "Tik [[Add to home screen]]",
+    "Op 'n iPhone: tik Deel, dan “Add to Home Screen”."
+   ],
+   "zu": [
+    "Thepha [[Add to home screen]]",
+    "Ku-iPhone: thepha u-Share, bese uthi “Add to Home Screen”."
+   ],
+   "xh": [
+    "Cofa [[Add to home screen]]",
+    "Kwi-iPhone: cofa u-Share, emva koko “Add to Home Screen”."
+   ],
+   "nso": [
+    "Kgotla [[Add to home screen]]",
+    "Go iPhone: kgotla Share, ke moka “Add to Home Screen”."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "qs04_photo",
+   "pass": true,
+   "en": [
+    "Open your icon and add a photo",
+    "Tap [[Take photo]] or [[Use last photo]], then type the price and what exactly it is."
+   ],
+   "af": [
+    "Maak jou ikoon oop en voeg 'n foto by",
+    "Tik [[Take photo]] of [[Use last photo]], tik dan die prys en wat presies dit is."
+   ],
+   "zu": [
+    "Vula uphawu lwakho bese ufaka isithombe",
+    "Thepha [[Take photo]] noma [[Use last photo]], bese ubhala intengo nokuthi kuyini ngqo."
+   ],
+   "xh": [
+    "Vula uphawu lwakho uze ufake ifoto",
+    "Cofa [[Take photo]] okanye [[Use last photo]], emva koko ubhale ixabiso nokuba yintoni kanye kanye."
+   ],
+   "nso": [
+    "Bula seswantšhetšo sa gago o tsenye seswantšho",
+    "Kgotla [[Take photo]] goba [[Use last photo]], ke moka o ngwale theko le gore ke eng gabotse."
+   ],
+   "quick": [
+    "fast_sell"
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "qs05_publish",
+   "pass": true,
+   "en": [
+    "Tap [[Publish now — I accept the Terms]]",
+    "Publish only appears once a real photo is attached — the example photo is never published."
+   ],
+   "af": [
+    "Tik [[Publish now — I accept the Terms]]",
+    "Publiseer verskyn eers wanneer 'n regte foto aangeheg is — die voorbeeldfoto word nooit geplaas nie."
+   ],
+   "zu": [
+    "Thepha [[Publish now — I accept the Terms]]",
+    "Ukushicilela kuvela kuphela uma kunesithombe sangempela — isithombe sesibonelo asishicilelwa neze."
+   ],
+   "xh": [
+    "Cofa [[Publish now — I accept the Terms]]",
+    "Ukupapasha kuvela kuphela xa kukho ifoto yokwenyani — ifoto yomzekelo ayipapashwa nanini na."
+   ],
+   "nso": [
+    "Kgotla [[Publish now — I accept the Terms]]",
+    "Phatlalatša e tšwelela fela ge go na le seswantšho sa nnete — seswantšho sa mohlala ga se phatlalatšwe le ka mohla."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "qs06_live",
+   "pass": true,
+   "en": [
+    "Your listing is live",
+    "Three screens: your icon, the fast screen, live. Tap [[Sell another]] for the next one."
+   ],
+   "af": [
+    "Jou advertensie is aanlyn",
+    "Drie skerms: jou ikoon, die vinnige skerm, aanlyn. Tik [[Sell another]] vir die volgende een."
+   ],
+   "zu": [
+    "Isikhangiso sakho sesiphila",
+    "Izikrini ezintathu: uphawu lwakho, isikrini esisheshayo, siphila. Thepha [[Sell another]] kokulandelayo."
+   ],
+   "xh": [
+    "Isibhengezo sakho siphila ngoku",
+    "Izikrini ezithathu: uphawu lwakho, isikrini esikhawulezayo, siphila. Cofa [[Sell another]] kwesilandelayo."
+   ],
+   "nso": [
+    "Papatšo ya gago e phela bjale",
+    "Dikirini tše tharo: seswantšhetšo sa gago, sekirini sa go akgofa, e phela. Kgotla [[Sell another]] go se se latelago."
+   ],
+   "quick": [
+    "fast_done"
+   ]
+  },
+  {
+   "n": 7,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "qs07_share",
+   "pass": true,
+   "en": [
+    "Android: share a photo straight in",
+    "In your gallery tap Share, then “Quick Sell · Cards” — the photo arrives on the fast screen."
+   ],
+   "af": [
+    "Android: deel 'n foto reguit in",
+    "Tik Deel in jou galery, dan “Quick Sell · Cards” — die foto kom op die vinnige skerm aan."
+   ],
+   "zu": [
+    "Android: yabelana ngesithombe ngqo",
+    "Egalari yakho thepha u-Share, bese uthi “Quick Sell · Cards” — isithombe sifika esikrinini esisheshayo."
+   ],
+   "xh": [
+    "Android: yabelana ngefoto ngqo",
+    "Kwigalari yakho cofa u-Share, emva koko “Quick Sell · Cards” — ifoto ifika kwisikrini esikhawulezayo."
+   ],
+   "nso": [
+    "Android: abelana ka seswantšho thwii",
+    "Ka galaring ya gago kgotla Share, ke moka “Quick Sell · Cards” — seswantšho se fihla sekirining sa go akgofa."
+   ]
+  },
+  {
+   "n": 8,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "qs08_full",
+   "pass": true,
+   "en": [
+    "Slots full? You choose",
+    "Your listing is kept. Tap [[Upgrade my plan]] or [[Choose a listing to rest]]."
+   ],
+   "af": [
+    "Plekke vol? Jy kies",
+    "Jou advertensie word bewaar. Tik [[Upgrade my plan]] of [[Choose a listing to rest]]."
+   ],
+   "zu": [
+    "Izikhala zigcwele? Wena uyakhetha",
+    "Isikhangiso sakho siyagcinwa. Thepha [[Upgrade my plan]] noma [[Choose a listing to rest]]."
+   ],
+   "xh": [
+    "Izithuba zizele? Wena uyakhetha",
+    "Isibhengezo sakho siyagcinwa. Cofa [[Upgrade my plan]] okanye [[Choose a listing to rest]]."
+   ],
+   "nso": [
+    "Dikgoba di tletše? O a kgetha",
+    "Papatšo ya gago e a bolokwa. Kgotla [[Upgrade my plan]] goba [[Choose a listing to rest]]."
+   ]
+  },
+  {
+   "n": 9,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "qs09_rest",
+   "pass": true,
+   "en": [
+    "Tap [[Rest this one]], then publish",
+    "A resting listing is hidden from buyers. Nothing is deleted, and you can bring it back on Plans."
+   ],
+   "af": [
+    "Tik [[Rest this one]], plaas dan",
+    "'n Rustende advertensie is vir kopers versteek. Niks word uitgevee nie, en jy kan dit op Plans terugbring."
+   ],
+   "zu": [
+    "Thepha [[Rest this one]], bese ushicilela",
+    "Isikhangiso esiphumulayo sifihliwe kubathengi. Akukho okususwayo, futhi ungasibuyisa ku-Plans."
+   ],
+   "xh": [
+    "Cofa [[Rest this one]], emva koko upapashe",
+    "Isibhengezo esiphumlayo sifihliwe kubathengi. Akukho nto icinywayo, kwaye ungasibuyisa kwi-Plans."
+   ],
+   "nso": [
+    "Kgotla [[Rest this one]], ke moka o phatlalatše",
+    "Papatšo ye e khutšitšego e utilwe go bareki. Ga go selo seo se phumolwago, gomme o ka e bušetša go Plans."
+   ]
+  },
+  {
+   "n": 10,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "qs10_off",
+   "pass": true,
+   "en": [
+    "In TrustSquare: My Space → My quick icons",
+    "Tap [[Switch off]] twice. You can also rename an icon there."
+   ],
+   "af": [
+    "In TrustSquare: My Space → My quick icons",
+    "Tik twee keer [[Switch off]]. Jy kan 'n ikoon ook daar hernoem."
+   ],
+   "zu": [
+    "Ku-TrustSquare: My Space → My quick icons",
+    "Thepha [[Switch off]] kabili. Ungaqamba kabusha uphawu lapho futhi."
+   ],
+   "xh": [
+    "Kwi-TrustSquare: My Space → My quick icons",
+    "Cofa [[Switch off]] kabini. Unokuthiya kwakhona uphawu apho."
+   ],
+   "nso": [
+    "Go TrustSquare: My Space → My quick icons",
+    "Kgotla [[Switch off]] gabedi. O ka fetola leina la seswantšhetšo moo gape."
+   ]
+  },
+  {
+   "n": 11,
+   "ch": "c4",
+   "who": "you",
+   "cost": "free",
+   "img": "qs11_old_icon",
+   "pass": true,
+   "en": [
+    "An old icon opens normal Quick",
+    "It says “This quick icon was switched off.” and starts at step 1."
+   ],
+   "af": [
+    "'n Ou ikoon maak gewone Quick oop",
+    "Dit sê “This quick icon was switched off.” en begin by stap 1."
+   ],
+   "zu": [
+    "Uphawu oludala luvula i-Quick ejwayelekile",
+    "Luthi “This quick icon was switched off.” bese luqala esinyathelweni 1."
+   ],
+   "xh": [
+    "Uphawu oludala luvula i-Quick eqhelekileyo",
+    "Luthi “This quick icon was switched off.” luze luqale kwinyathelo 1."
+   ],
+   "nso": [
+    "Seswantšhetšo sa kgale se bula Quick ye e tlwaelegilego",
+    "Se re “This quick icon was switched off.” gomme se thoma ka mogato wa 1."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ },
+ "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_sell_icon/ (pushed with build_help.py --push-images at deploy)."
+}

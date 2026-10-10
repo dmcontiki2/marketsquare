@@ -12,6 +12,58 @@
 
 ---
 
+## CC-006 · Quick Fast Lane (QUICK-FAST-1) — a repeat trader's own quick icons
+**Stage:** 5/8 BUILT + VERIFIED LOCALLY — held under the IP hold. Built 10 Oct 2026 on the local branch `fastlane` (worktree `_fastlane_wt`, never pushed). Steps 6–8 (David's real-phone check, merge, deploy, the switch ON, the four parsed docs) run only once the provisional-2 application number exists (`Patents/provisional-2/SUBMITTED_2026-10-10.md`).
+**Opened:** 10 Oct 2026 · **Owner:** David (rulings, phone check, merge word) / Claude (build, harness, report)
+**Source decision:** RUL-220 (David in chat 9 Oct 2026 18:07–18:25 SAST; `QUICK_FASTLANE_BRIEF.md` is the CCP step 1+2 brief)
+**Step 0 (baseline):** git tag `pre-fastlane-1` = `495227a` (main HEAD at the start). Rollback = the dashboard switch `QUICK_FASTLANE` OFF (instant, every entry point hidden, routes 404) or `git checkout pre-fastlane-1` for the code.
+
+**One-paragraph change:** At the end of a Quick flow a signed-in trader may tick **Make this my quick icon**. The setup of that flow (door, kind + type, condition, area, language — never the price) is kept as a preset (`quick_presets`), and his phone gets a home-screen icon for it with its own manifest. **Quick Sell icon:** icon → one screen (Take photo / Use last photo, price, what exactly is it, description, the EULA acceptance line) → Publish → live. **Quick Find icon:** icon → one search line → real matches on the same page → tap one → TrustSquare’s normal introduction. It is the third standard flow: the publish is `POST /listings/quick-publish` (hold) → her photo onto the draft → `PUT /listings/{id}/publish`, and the RUL-220(b) gate runs on the server on every fast publish.
+
+**Term map (new terms only — nothing old is renamed, so the grep-to-zero key is the new words being present where the matrix says):**
+
+| Kind | Term | Where it must appear |
+| --- | --- | --- |
+| words | Make this my quick icon · Quick Sell · Quick Find · This quick icon was switched off. · Publish now — I accept the Terms | quick.html (+ HARNESS), roles/quick_i18n.json (15 columns), stories/quick_*_icon.json |
+| words | My quick icons · Switch off | ms.js, marketsquare.html |
+| switch | `quick_fastlane` / `QUICK_FASTLANE` | bea_main.py launch_switches + /flags, dashboard.server.html, quick.html, ms.js |
+| endpoint | `GET/POST /quick-presets`, `PATCH/DELETE /quick-presets/{preset_id}`, `POST /quick-presets/{preset_id}/rest`, `POST /quick-presets/{preset_id}/find-parse`, `GET /quick-icon/{token}.webmanifest`, `GET /quick-icon/{token}.png`, `GET /admin/quick-fastlane/stats` | bea_main.py, route_policy.json |
+| field | `preset_id`, `hold` on `POST /listings/quick-publish` | bea_main.py `_QuickPublishIn` |
+| table | `quick_presets` | bea_main.py `_qf_ensure`, migrations/080_quick_presets.py, security_gate.py RESOURCES |
+| share target | `/quick/share-in` | per-preset manifest, assets/service-worker.js |
+
+**Traceability (impact map → artifact, all built and verified in the rendered pages unless marked):**
+
+| Area | Artifact | Status |
+| --- | --- | --- |
+| Quick app | quick.html (+ genie/HARNESS.html) | built · verified (screens d1_*, d2_*, d3_*, d4_20, d5_*, d6_*) |
+| PWA | per-preset manifest endpoint, assets/service-worker.js share hand-over | built · verified (Chromium installability: no errors; synthetic share POST) |
+| iPhone | per-preset apple title + touch icon, guided Share → Add to Home Screen card | built · rendered (d5_20); real iPhone = David's phone check |
+| Backend | bea_main.py presets CRUD, gate, hold publish, find parse, icons, stats | built · verified (API + rendered), stranger_test PASS |
+| Security | route_policy.json (9 routes), security_gate.py `quick_preset` | built · stranger_test PASS |
+| Schema | migrations/080_quick_presets.py | built (idempotent; the BEA also creates it at startup) |
+| TrustSquare | ms.js + marketsquare.html “My quick icons” (see, rename, switch off) + `?go=plans` / `?go=quickicons` | built · verified (d4_1*) |
+| Dashboard | switch `QUICK_FASTLANE` (ships OFF) + Quick view page “Quick icons — the fast lane” (genie/QUICK_FASTLANE_FLOWS.html → /orchestrator/quick_fastlane.html) | built · rendered (dash_*) |
+| How | stories/quick_sell_icon.json + quick_find_icon.json, How opens at the fast step | built (screens local; pushed with `build_help.py --push-images` at deploy) |
+| Stories E2E | stories/CLOUD_WALK.md — both fast-lane stories in the walk set | built |
+| EULA | eula_clean.html | **N/A — no text change**: the sell flow’s acceptance line sits directly above the fast Publish button and gate (b) honours material-change re-acceptance, so no new version and no forced re-acceptance |
+| Specs/canon | QUICK_LISTING_SPEC.md §Fast lane, RULINGS.md RUL-220, this ticket, changelog.d/status.d fragments, OPEN_LOOPS.md | built |
+| Admin | marketsquare_admin.html | **N/A — checked, untouched** |
+
+**Verification:** regression ledger RG-0960…RG-0966 (one per definition-of-done item) + whole board vs. the pre-build baseline; `scripts/stranger_test.py` PASS; rendered headless-Chromium walks at 390 px with QA accounts (`dmcontiki2+qa-fast-*`). Screenshots: `C:\Users\David\Projects\Visuals\fastlane\`.
+**Not provable headless (the one human check):** the Android Share sheet listing “Quick Sell · Cards” and installing a second icon from the same site, and iPhone Share → Add to Home Screen opening signed in.
+**Cost model impact:** none recurring (see RUL-220).
+
+**Steps 6–8, in order, once the provisional-2 application number exists (nothing here before that):**
+1. `Patents/provisional-2/FILED.md` carries the number; David has done the phone check (or says merge first and check on live).
+2. Wait for silence in the main tree (no lane writing; the Squire-2 lane may have taken `migrations/080_*` or `RG-0960…0966` on its own branch — renumber ours on a clash before merging, never theirs).
+3. `git merge --no-ff fastlane` into main from the main tree; copy the gitignored How screens `_fastlane_wt/stories/img/quick_sell_icon/` and `quick_find_icon/` into `stories/img/`.
+4. Fold `changelog.d` / `status.d` (`changelog_compile.py`, `status_compile.py`), commit, `request_deploy.py` (migration 080 runs once on the box).
+5. After the deploy: switch QUICK_FASTLANE ON (dashboard or `POST /admin/flags {"quick_fastlane": true}`), `python3 scripts/build_help.py --push-images`, then walk DoD 1–6 on trustsquare.co with the `dmcontiki2+qa-fast-*` accounts and read RG-0960…0966 on the live board.
+6. `git worktree remove _fastlane_wt` (the tag `pre-fastlane-1` stays as the rollback anchor); close L42 in OPEN_LOOPS.md and this ticket.
+
+---
+
 ## CC-004 · S3 AI-class Pro-gate + non-rolling monthly grant
 **Stage:** 4/5 STAGED — DEPLOY-READY (built + canon landed + deploy script patched 17 Jun 2026; live push pending on David's machine) — code staged, docs tracked, awaiting David: review -> deploy (RED money lane) -> land Codex/IP/WP DRAFTs with counsel.
 **Opened:** 17 Jun 2026 · **Owner:** David (council) · **Source decision:** `MarketSquare_FreeTier_AI_Cost_Risk_Report.docx` (16 Jun), scenario S3 + no-rollover.

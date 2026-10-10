@@ -1368,6 +1368,9 @@ def run_migrations(conn):
         # slot_kept = a listing she ticked to stay live; 'resting' = hidden from buyers, never deleted.
         "ALTER TABLE users ADD COLUMN circle_grandfather INTEGER",
         "ALTER TABLE listings ADD COLUMN slot_kept INTEGER NOT NULL DEFAULT 0",
+        # QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). Default OFF = every fast-lane entry
+        # point hidden and its routes answer 404 -- the brief's rollback switch. Turned on from the dashboard.
+        "ALTER TABLE launch_switches ADD COLUMN quick_fastlane INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -4821,6 +4824,8 @@ class _QuickPublishIn(BaseModel):
     accept_terms: bool = False
     key_mode: str = "email"     # LINK-KEY-1: "link" = no e-mail, the private link is her key (RUL-167)
     name: str = ""
+    preset_id: int = 0          # QUICK-FAST-1 (RUL-220): a fast publish from her quick icon -- the gate runs first
+    hold: bool = False          # QUICK-FAST-1: create the advert as a draft; her photo is added, then the standard publish
 
 
 _QP_IP_LOG = {}
@@ -4876,6 +4881,10 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     if _qcc in COMING_SOON_COUNTRIES:
         raise HTTPException(status_code=409, detail=_coming_soon_detail(_qcc, "listings"))
     sess = _session_email(ts_user)
+    # QUICK-FAST-1 (RUL-220(b)): a fast publish is checked here, on EVERY publish, before anything is made -- signed in,
+    # the current EULA accepted, published before, a free slot. A failure answers 409 {fast_gate} and Quick drops into
+    # its normal flow at the failing step. Everything below is the same publish path every Quick listing takes.
+    _fast = _qf_publish_gate(sess, int(body.preset_id)) if int(body.preset_id or 0) else None
     key_mode = (body.key_mode or "email").strip().lower()
     key_secret = None
     # BUGSWEEP-24SEP: limit and validate FIRST - a refused or invalid tap used to leave an empty
@@ -5029,6 +5038,15 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
                     "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
         return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "email",
                 "detail": "Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
+    if _fast is not None:
+        _qf_count_use(_fast["preset_id"])
+        if body.hold:
+            # QUICK-FAST-1 (RUL-220(e)): the example photo can never be published. The fast lane's advert waits as a draft
+            # while her real photo is added (/listings/{id}/photo/draft, her session), then PUT /listings/{id}/publish --
+            # the standard publish route, with its EULA, slot and blocked gates -- makes it live.
+            _log.info("QUICK-FAST-1: draft %s held for her photo (preset %s, %s)", lid, _fast["preset_id"], em)
+            return {"id": lid, "live": False, "hold": True, "draft_token": _qdt, "identity": _qp_identity_kind(em),
+                    "open_url": _mint_signin_url(em, lid, 60)}
     _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
     try:
         publish_listing(lid, em)
@@ -24137,6 +24155,7 @@ class _FlagsUpdate(BaseModel):
     baseline_q4:           Optional[bool] = None  # BASELINE-Q4-1: the RUL-126 batch, armed by David only
     lang_layer:            Optional[bool] = None  # LANG-LAYER-1: the language layer for everybody (testers always see it)
     circle_caps:           Optional[bool] = None  # CIRCLE-CAPS-1 (RUL-176): regulars limits 10/50/200, David's switch
+    quick_fastlane:        Optional[bool] = None  # QUICK-FAST-1 (RUL-220): the Quick fast lane (quick icons), default OFF
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -24156,6 +24175,8 @@ def _flags_payload(d):
         # CIRCLE-CAPS-1 (RUL-176): a row predating the column reads OFF -- no limits is the safe side.
         "circle_caps": b("circle_caps"),
         "circle_limits": dict(CIRCLE_LIMITS),
+        # QUICK-FAST-1 (RUL-220): a row predating the column reads OFF -- the fast lane hidden is the safe side.
+        "quick_fastlane": b("quick_fastlane"),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
@@ -24171,6 +24192,7 @@ def _flags_payload(d):
             "baseline_q4":         b("baseline_q4"),   # BASELINE-Q4-1: the FEA reads it from here
             "lang_layer":          b("lang_layer") or b("baseline_q4"),   # LANG-Q4-1: rides the Q4 switch; get_flags ORs in testers
             "circle_caps":         b("circle_caps"),   # CIRCLE-CAPS-1: ms.js + quick.html show limits only when this is on
+            "quick_fastlane":      b("quick_fastlane"),   # QUICK-FAST-1: quick.html + ms.js show the quick icons only when on
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -33831,6 +33853,598 @@ def admin_promoter_active(code: str, body: _PromoActiveIn, _admin=Depends(_requi
         return {"code": c, "active": bool(body.active)}
     finally:
         conn.close()
+
+
+# ══ QUICK-FAST-1 (RUL-220, David 9 Oct 2026; CC-006) — Quick Fast Lane: a repeat trader's own quick icons ══
+# David approved the brief in chat 9 Oct 2026 18:07-18:25 SAST ("QUICK_FASTLANE_BRIEF.md"). A trader ticks
+# "Make this my quick icon" at the end of a Quick flow; the flow's setup (kind + type, condition, area, language)
+# is kept as a PRESET and his phone gets a home-screen icon for it. Sell icon: photo -> price + what exactly it is
+# + description -> Publish. Find icon: one search line -> matches on the same page -> tap to ask for an
+# introduction (normal Tuppence rules). The THIRD standard flow, never an exception (RUL-220(a)):
+#   * the publish goes through POST /listings/quick-publish (creation, checks, limits) and PUT /listings/{id}/publish
+#     (EULA gate, slot gate, blocked gate) -- the same two doors every Quick and TrustSquare listing uses. There is
+#     no second publish path: a fast publish asks quick-publish to HOLD the new advert as a draft, her real photo is
+#     added to it, and only then does the standard publish route make it live (RUL-220(e): the example photo can
+#     never be published);
+#   * the gate (RUL-220(b)) is checked on EVERY fast publish, here on the server: signed in, the CURRENT EULA accepted
+#     (a material change parks eula_accepted_at, EULA-VERSION-1), published at least once before, any tier including
+#     Free, a free listing slot. A failure answers 409 {fast_gate: <code>} and Quick drops into its normal flow at
+#     the failing step with one line;
+#   * presets are uncapped on every tier (RUL-220(c)); Free stays limited by its listing slots and a full plan is
+#     offered upgrade or 'choose which listing to rest' (KEEP-CHOICE-1's 'resting' -- hidden, never deleted);
+#   * the price is never kept in a preset (RUL-220(d)); unticking deletes the preset (RUL-220(f)).
+# Dashboard switch launch_switches.quick_fastlane (default OFF = every fast-lane entry point hidden; the routes
+# answer 404). Cost model: no recurring cost; the find line is parsed on the server without AI when it is written
+# with commas, and otherwise once on the allocated free lane under RUL-164's caps; card names are checked with the
+# existing Scryfall pipeline (resolve_scryfall_id). Schema: one table, quick_presets.
+_QF_KINDS = ("sell", "find")
+_QF_CATS = ("homehelp", "services", "tutors", "property", "cars", "collectors", "adventures", "localmarket")
+_QF_SETTINGS_MAX = 4000          # bytes of settings_json
+_QF_PARSE_DAY_MAX = 120          # find lines a preset may run per day (each may touch Scryfall)
+_QF_AI_DAY_MAX = 30              # of those, how many may use the free AI lane (RUL-164 per-feature cap)
+_QF_LABEL_RE = re.compile(r"[^\w '&\-·]", re.UNICODE)
+
+
+def _qf_on() -> bool:
+    """Fail-safe read of launch_switches.quick_fastlane: on ANY doubt the fast lane is OFF (RUL-220 rollback)."""
+    return _bit_flag("quick_fastlane", False)
+
+
+def _qf_ensure(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS quick_presets(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('sell','find')),
+        settings_json TEXT NOT NULL,
+        label TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1,
+        uses INTEGER NOT NULL DEFAULT 0,
+        last_used_at TEXT,
+        finds INTEGER NOT NULL DEFAULT 0,
+        fallbacks INTEGER NOT NULL DEFAULT 0,
+        parse_day TEXT,
+        parse_n INTEGER NOT NULL DEFAULT 0,
+        ai_n INTEGER NOT NULL DEFAULT 0)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_quick_presets_email ON quick_presets(email)")
+
+
+@app.on_event("startup")
+def _qf_startup():
+    """The table exists before the security gate's ownership lookup (security_gate RESOURCES 'quick_preset') can
+    ever ask it -- a PATCH or DELETE as the very first fast-lane call must not meet a missing table."""
+    try:
+        conn = database.get_db()
+        try:
+            _qf_ensure(conn)
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("QUICK-FAST-1 table check at startup failed: %s", exc)
+
+
+def _qf_label(v, kind="sell", settings=None) -> str:
+    t = _QF_LABEL_RE.sub("", _plain_text(str(v or ""))).strip()[:24]
+    if not t:
+        c = str((settings or {}).get("cat") or "")
+        t = {"collectors": "Collectors", "localmarket": "Local market", "property": "Property", "cars": "Cars",
+             "tutors": "Tutors", "services": "Services", "homehelp": "Home help", "adventures": "Adventures"}.get(c, "Quick")
+    return t
+
+
+def _qf_row_out(r) -> dict:
+    try:
+        st = json.loads(r["settings_json"] or "{}")
+    except Exception:
+        st = {}
+    kind = r["kind"]
+    return {"id": int(r["id"]), "token": r["token"], "kind": kind, "label": r["label"],
+            "name": "Quick %s · %s" % ("Sell" if kind == "sell" else "Find", r["label"]),
+            "settings": st, "created_at": r["created_at"], "uses": int(r["uses"] or 0),
+            "start_url": _qf_start_url(r["token"], kind, st),
+            "manifest_url": "/quick-icon/%s.webmanifest" % r["token"],
+            "icon_url": "/quick-icon/%s.png" % r["token"]}
+
+
+def _qf_start_url(token, kind, st) -> str:
+    # k= and c= ride along so an icon whose preset was switched off still opens normal Quick at step 1 of the
+    # right door (RUL-220(f)) -- the server no longer knows the preset then.
+    from urllib.parse import quote as _q
+    return "/quick/?p=%s&k=%s&c=%s" % (_q(token), kind, _q(str((st or {}).get("cat") or "")))
+
+
+def _qf_gate(conn, em) -> dict:
+    """RUL-220(b): the fast-publish gate. Mirrors publish_listing's own EULA and slot rules -- publish_listing still
+    enforces them on the publish itself; this answers early so Quick can drop into the right normal step."""
+    if not em:
+        return {"ok": False, "code": "signin"}
+    u = conn.execute("SELECT eula_accepted_at, slot_limit, is_superuser FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+    if not u or not u["eula_accepted_at"]:
+        return {"ok": False, "code": "eula"}
+    before = conn.execute(
+        "SELECT 1 FROM listings WHERE LOWER(seller_email)=? AND (published_at IS NOT NULL OR "
+        "IFNULL(listing_status,'live') IN ('live','paused','resting','faded','sold')) LIMIT 1", (em,)).fetchone()
+    if not before:
+        return {"ok": False, "code": "never_listed"}
+    limit_n = int(u["slot_limit"]) if u["slot_limit"] else 2          # publish_listing's own default
+    used = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? "
+                        "AND (listing_status IS NULL OR listing_status = 'live')", (em,)).fetchone()["n"]
+    slots = {"used": int(used), "limit": limit_n}
+    if not bool(u["is_superuser"]) and used >= limit_n:
+        return {"ok": False, "code": "slots_full", "slots": slots}
+    return {"ok": True, "code": None, "slots": slots}
+
+
+def _qf_owned(conn, preset_id, em):
+    r = conn.execute("SELECT * FROM quick_presets WHERE id=? AND active=1", (int(preset_id),)).fetchone()
+    if not r or (r["email"] or "").strip().lower() != (em or "").strip().lower():
+        raise HTTPException(status_code=404, detail="This quick icon was switched off.")
+    return r
+
+
+def _qf_publish_gate(sess, preset_id) -> dict:
+    """Called by POST /listings/quick-publish when a fast lane publishes (body.preset_id). Raises 404 when the switch
+    is off or the preset is gone, 409 {fast_gate} when RUL-220(b) fails; counts the fallback on the preset."""
+    if not _qf_on():
+        raise HTTPException(status_code=404, detail="Quick icons are switched off.")
+    if not sess:
+        raise HTTPException(status_code=409, detail={"fast_gate": "signin"})
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        r = _qf_owned(conn, preset_id, sess)
+        if r["kind"] != "sell":
+            raise HTTPException(status_code=409, detail={"fast_gate": "kind"})
+        g = _qf_gate(conn, sess)
+        if not g["ok"]:
+            conn.execute("UPDATE quick_presets SET fallbacks = fallbacks + 1 WHERE id=?", (r["id"],))
+            conn.commit()
+            raise HTTPException(status_code=409, detail={"fast_gate": g["code"], "slots": g.get("slots")})
+        return {"preset_id": int(r["id"]), "slots": g.get("slots")}
+    finally:
+        conn.close()
+
+
+def _qf_count_use(preset_id):
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE quick_presets SET uses = uses + 1, last_used_at=? WHERE id=?", (_utc_now(), int(preset_id)))
+        conn.commit()
+    except Exception as exc:
+        _log.warning("QUICK-FAST-1 use count skipped: %s", exc)
+    finally:
+        conn.close()
+
+
+def _qf_need_user(ts_user):
+    if not _qf_on():
+        raise HTTPException(status_code=404, detail="Quick icons are switched off.")
+    em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    return em
+
+
+class _QfIn(BaseModel):
+    kind: str
+    settings: dict = {}
+    label: str = ""
+
+
+class _QfPatch(BaseModel):
+    label: str = ""
+
+
+class _QfFindIn(BaseModel):
+    q: str = ""
+
+
+class _QfRestIn(BaseModel):
+    listing_id: int
+
+
+def _qf_clean_settings(st) -> dict:
+    st = dict(st or {})
+    cat = str(st.get("cat") or "").strip().lower()
+    if cat not in _QF_CATS:
+        raise HTTPException(status_code=400, detail="That quick icon has no door to open.")
+    picks = []
+    for p in (st.get("picks") or [])[:14]:
+        if not isinstance(p, dict):
+            continue
+        key = str(p.get("key") or "")[:24]
+        if key in ("price",):                       # RUL-220(d): the price is never kept in a preset
+            continue
+        o = {"key": key, "label": _plain_text(str(p.get("label") or ""))[:80]}
+        # 'ph' = the app's own picture key for the pick (PH in quick.html) -- never named 'photo', a key the security
+        # gate treats as a link on the way out (security_gate._URL_KEYS) and would blank.
+        for k_in, k_out in (("ph", "ph"), ("photo", "ph"), ("r", "r")):
+            if p.get(k_in) and not o.get(k_out):
+                o[k_out] = re.sub(r"[^a-z0-9_]", "", str(p.get(k_in)).lower())[:48]
+        if isinstance(p.get("areas"), list):
+            o["areas"] = [_plain_text(str(a))[:40] for a in p["areas"][:8]]
+        picks.append(o)
+    out = {"cat": cat, "picks": picks,
+           "city": _plain_text(str(st.get("city") or ""))[:60],
+           "suburb": _plain_text(str(st.get("suburb") or ""))[:60],
+           "country": re.sub(r"[^A-Z]", "", str(st.get("country") or "ZA").upper())[:2] or "ZA",
+           "lang": re.sub(r"[^a-z]", "", str(st.get("lang") or "en").lower())[:4] or "en",
+           # HOW she charges for work paid by time (hour/day/visit/...) -- never an amount (RUL-220(d)); the fast screen
+           # applies the same legal-minimum floor as Quick's rate step (QUICK-OPEN-RATE-1 / RUL-168)
+           "basis": re.sub(r"[^a-z]", "", str(st.get("basis") or "").lower())[:10]}
+    if len(json.dumps(out)) > _QF_SETTINGS_MAX:
+        raise HTTPException(status_code=400, detail="That quick icon carries too much -- please try again.")
+    return out
+
+
+@app.get("/quick-presets")
+def quick_presets_mine(ts_user: str = Cookie(default=None)):
+    """Her quick icons, newest first, and the fast-publish gate as it stands now (RUL-220(b))."""
+    em = _qf_need_user(ts_user)
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        rows = conn.execute("SELECT * FROM quick_presets WHERE LOWER(email)=? AND active=1 ORDER BY id DESC", (em,)).fetchall()
+        return {"presets": [_qf_row_out(r) for r in rows], "gate": _qf_gate(conn, em)}
+    finally:
+        conn.close()
+
+
+@app.post("/quick-presets")
+def quick_presets_create(body: _QfIn, ts_user: str = Cookie(default=None)):
+    """'Make this my quick icon' (RUL-220): keep the flow's setup as a preset. Uncapped on every tier (RUL-220(c))."""
+    em = _qf_need_user(ts_user)
+    kind = (body.kind or "").strip().lower()
+    if kind not in _QF_KINDS:
+        raise HTTPException(status_code=400, detail="A quick icon is for selling or finding.")
+    st = _qf_clean_settings(body.settings)
+    import secrets as _qfs
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        tok = _qfs.token_urlsafe(12)
+        conn.execute("INSERT INTO quick_presets (token, email, kind, settings_json, label, created_at, active) "
+                     "VALUES (?,?,?,?,?,?,1)", (tok, em, kind, json.dumps(st), _qf_label(body.label, kind, st), _utc_now()))
+        conn.commit()
+        r = conn.execute("SELECT * FROM quick_presets WHERE token=?", (tok,)).fetchone()
+        return _qf_row_out(r)
+    finally:
+        conn.close()
+
+
+@app.patch("/quick-presets/{preset_id}")
+def quick_presets_rename(preset_id: int, body: _QfPatch, ts_user: str = Cookie(default=None)):
+    em = _qf_need_user(ts_user)
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        r = _qf_owned(conn, preset_id, em)
+        lab = _qf_label(body.label, r["kind"], json.loads(r["settings_json"] or "{}"))
+        conn.execute("UPDATE quick_presets SET label=? WHERE id=?", (lab, r["id"]))
+        conn.commit()
+        return _qf_row_out(conn.execute("SELECT * FROM quick_presets WHERE id=?", (r["id"],)).fetchone())
+    finally:
+        conn.close()
+
+
+@app.delete("/quick-presets/{preset_id}")
+def quick_presets_delete(preset_id: int, ts_user: str = Cookie(default=None)):
+    """Untick = the preset is deleted (RUL-220(f)). An icon left on the phone then opens normal Quick at step 1 with
+    'This quick icon was switched off.' Works even with the switch off, so nobody is stuck with a preset."""
+    em = _session_email(ts_user)
+    if not em:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        _qf_owned(conn, preset_id, em)
+        conn.execute("DELETE FROM quick_presets WHERE id=?", (int(preset_id),))
+        conn.commit()
+        return {"deleted": True, "id": int(preset_id)}
+    finally:
+        conn.close()
+
+
+@app.post("/quick-presets/{preset_id}/rest")
+def quick_presets_rest(preset_id: int, body: _QfRestIn, ts_user: str = Cookie(default=None)):
+    """RUL-220(c) with KEEP-CHOICE-1: her Free slots are full and SHE chooses which live listing rests -- hidden from
+    buyers, never deleted, back when she chooses it on Plans. Only her own live listing; nothing else changes."""
+    em = _qf_need_user(ts_user)
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        _qf_owned(conn, preset_id, em)
+        row = conn.execute("SELECT seller_email, listing_status FROM listings WHERE id=?", (int(body.listing_id),)).fetchone()
+        if not row or (row["seller_email"] or "").strip().lower() != em:
+            raise HTTPException(status_code=403, detail="Only your own live listing can rest.")
+        if (row["listing_status"] or "live") != "live":
+            raise HTTPException(status_code=409, detail="Only a live listing can rest.")
+        conn.execute("UPDATE listings SET listing_status='resting', slot_kept=0, status_changed_at=? WHERE id=?",
+                     (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), int(body.listing_id)))
+        conn.commit()
+        return {"rested": int(body.listing_id), "gate": _qf_gate(conn, em)}
+    finally:
+        conn.close()
+
+
+_QF_PRICE_MAX_RE = re.compile(r"\b(?:under|below|less than|max(?:imum)?|up to|at most|tops|<)\s*(?:R|ZAR|\$|£|€|KES|KSh)?\s*([\d][\d\s,\.]*)(k)?\b", re.I)
+_QF_PRICE_MIN_RE = re.compile(r"\b(?:over|above|more than|from|min(?:imum)?|at least|>)\s*(?:R|ZAR|\$|£|€|KES|KSh)?\s*([\d][\d\s,\.]*)(k)?\b", re.I)
+_QF_GENERIC = {"mtg", "magic", "magic the gathering", "magic: the gathering", "card", "cards", "trading card", "trading cards",
+               "dual land", "dual lands", "land", "nm", "near mint", "mint", "lp", "played", "foil", "graded", "ungraded",
+               "single", "singles", "rare", "pokemon", "yugioh", "yu-gi-oh"}
+_QF_ALT = {"mtg": ["mtg", "magic"], "magic": ["magic", "mtg"], "dual land": ["dual land", "dual"],
+           "4th edition": ["4th edition", "fourth edition", "4th ed", "4ed"], "revised": ["revised", "3rd edition"],
+           "near mint": ["near mint", "nm"], "nm": ["nm", "near mint"]}
+
+
+def _qf_money(txt, k):
+    try:
+        v = float(re.sub(r"[\s,]", "", txt).rstrip("."))
+        return int(v * 1000) if k else int(v)
+    except Exception:
+        return None
+
+
+def _qf_parse_plain(q):
+    """The find line, read without AI: comma-separated parts, a price limit in words ('under R2300')."""
+    q = (q or "").strip()[:200]
+    mx = mn = None
+    m = _QF_PRICE_MAX_RE.search(q)
+    if m:
+        mx = _qf_money(m.group(1), m.group(2)); q = q[:m.start()] + q[m.end():]
+    m = _QF_PRICE_MIN_RE.search(q)
+    if m:
+        mn = _qf_money(m.group(1), m.group(2)); q = q[:m.start()] + q[m.end():]
+    if re.search(r"[,;]", q):
+        parts = [p.strip(" .-/") for p in re.split(r"[,;]", q)]
+    else:
+        parts = [p for p in re.split(r"\s+", q.strip()) if p]
+    parts = [p for p in parts if p and len(p) <= 60][:8]
+    return parts, mx, mn
+
+
+def _qf_parse_ai(q):
+    """One call on the allocated free lane (RUL-164) for a line written without commas. Returns parts or None."""
+    try:
+        import ai_provider
+        _check_cost_ceiling("")
+        prompt = ("Split this marketplace search line into its separate search terms and a price limit. Keep every "
+                  "word exactly as written; do not translate, correct or add anything. Reply with JSON only, in the form "
+                  '{"terms": ["..."], "max_price": null, "min_price": null}.\n\nLINE: ' + q[:200])
+        res = ai_provider.complete([{"role": "user", "content": prompt}], task=I18N_TASK, max_tokens=200, timeout=12)
+        _log_ai_spend("", "/quick-presets/find-parse", I18N_TASK, res.in_tokens, res.out_tokens,
+                      provider=res.provider, model=res.model)
+        if not (res.ok and res.text):
+            return None
+        m = re.search(r"\{[\s\S]*\}", res.text)
+        d = json.loads(m.group(0)) if m else {}
+        terms = [str(t).strip()[:60] for t in (d.get("terms") or []) if str(t).strip()][:8]
+        return terms or None
+    except HTTPException:
+        return None
+    except Exception as exc:
+        _log.warning("QUICK-FAST-1 find parse (AI) skipped: %s", exc)
+        return None
+
+
+async def _qf_card_known(name):
+    """True = a real card (the existing Scryfall pipeline found a priced printing, or Scryfall knows the exact name);
+    False = Scryfall answered that no such card exists; None = Scryfall could not be asked."""
+    try:
+        sid = await asyncio.wait_for(resolve_scryfall_id(name, "cards"), timeout=8)
+        if sid:
+            return True
+        async with httpx.AsyncClient(timeout=5, headers={"User-Agent": "TrustSquare/1.0", "Accept": "application/json"}) as c:
+            r = await c.get("https://api.scryfall.com/cards/named", params={"exact": name})
+        if r.status_code == 200:
+            return True
+        if r.status_code == 404:
+            return False
+        return None
+    except Exception:
+        return None
+
+
+@app.post("/quick-presets/{preset_id}/find-parse")
+async def quick_presets_find_parse(preset_id: int, body: _QfFindIn, ts_user: str = Cookie(default=None)):
+    """Quick Find icon (RUL-220): one search line -> the terms, the price limit and, for cards, whether the name is
+    a real card (the existing Scryfall pipeline). Quick then asks the ordinary /listings search, so every visibility
+    rule of the public search still decides what is shown."""
+    em = _qf_need_user(ts_user)
+    q = (body.q or "").strip()[:200]
+    if not q:
+        raise HTTPException(status_code=400, detail="Type what you are looking for.")
+    day = datetime.now(timezone.utc).date().isoformat()
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        r = _qf_owned(conn, preset_id, em)
+        if r["kind"] != "find":
+            raise HTTPException(status_code=409, detail="This quick icon sells; it does not search.")
+        n = int(r["parse_n"] or 0) if r["parse_day"] == day else 0
+        a = int(r["ai_n"] or 0) if r["parse_day"] == day else 0
+        if n >= _QF_PARSE_DAY_MAX:
+            raise HTTPException(status_code=429, detail="That is a lot of searches for one day -- please try again tomorrow.")
+        st = json.loads(r["settings_json"] or "{}")
+    finally:
+        conn.close()
+    parts, mx, mn = _qf_parse_plain(q)
+    used_ai = False
+    if not re.search(r"[,;]", q) and len(parts) > 3 and a < _QF_AI_DAY_MAX:
+        conn = database.get_db()
+        try:
+            _i18n_ensure(conn)
+            row = conn.execute("SELECT calls FROM i18n_spend WHERE day=?", (day,)).fetchone()
+            room = not (row and row["calls"] >= I18N_DAILY_CALL_CAP)
+        finally:
+            conn.close()
+        ai_terms = _qf_parse_ai(q) if room else None
+        if ai_terms:
+            used_ai = True
+            parts = [t for t in ai_terms if not (_QF_PRICE_MAX_RE.search(t) or _QF_PRICE_MIN_RE.search(t))] or parts
+    terms = []
+    for p in parts:
+        k = p.lower()
+        terms.append({"t": p, "alt": _QF_ALT.get(k, [k]), "generic": k in _QF_GENERIC})
+    # the item's own name: a card name the Scryfall pipeline knows, else the most specific term she typed
+    cardish = st.get("cat") == "collectors" or any(t["t"].lower() in ("mtg", "magic", "magic the gathering") for t in terms)
+    name, known = None, None
+    cands = [t for t in terms if not t["generic"]]
+    if cardish and cands:
+        known = False
+        for t in cands[:3]:
+            v = await _qf_card_known(t["t"])
+            if v:
+                name, known = t["t"], True
+                break
+            if v is None:
+                known = None                     # Scryfall unreachable: NOT CHECKED, never 'not a card'
+    if not name and cands:
+        name = cands[0]["t"]
+    # every specific thing she typed must be in the advert ('Savannah' AND '4th Edition'); the generic words she adds
+    # ('MtG', 'dual land') only rank -- a seller rarely repeats them. The price limit is a hard filter in Quick.
+    for t in terms:
+        t["must"] = not t["generic"]
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE quick_presets SET finds = finds + 1, last_used_at=?, parse_day=?, parse_n=?, ai_n=? WHERE id=?",
+                     (_utc_now(), day, n + 1, a + (1 if used_ai else 0), int(preset_id)))
+        if used_ai:
+            conn.execute("INSERT INTO i18n_spend (day, calls) VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET calls = calls + 1", (day,))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"q": q, "terms": terms, "max_price": mx, "min_price": mn, "name": name,
+            "card_known": known, "ai": used_ai, "cat": st.get("cat"), "city": st.get("city")}
+
+
+def _qf_public_row(token):
+    if not _qf_on():
+        return None
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        return conn.execute("SELECT * FROM quick_presets WHERE token=? AND active=1", ((token or "")[:40],)).fetchone()
+    finally:
+        conn.close()
+
+
+@app.get("/quick-icon/{token}.webmanifest")
+def quick_icon_manifest(token: str):
+    """One web-app manifest per preset (RUL-220(g)): its own id, name 'Quick Sell · Cards' and start_url, so each
+    preset installs as its own icon. A sell preset declares a share_target, so the photo can come straight from the
+    gallery's Share sheet (the service worker receives it). The owner's other presets ride along as shortcuts --
+    the fallback should a phone refuse a second icon from the same site. Public by design: the token is unguessable
+    and the manifest carries only the label."""
+    from fastapi.responses import JSONResponse as _JR
+    r = _qf_public_row(token)
+    if not r:
+        raise HTTPException(status_code=404, detail="This quick icon was switched off.")
+    o = _qf_row_out(r)
+    icon = "/quick-icon/%s.png" % r["token"]
+    m = {"id": "/quick/?p=" + r["token"], "name": o["name"], "short_name": o["label"][:12],
+         "description": "TrustSquare Quick -- " + o["name"],
+         "start_url": o["start_url"], "scope": "/quick/", "display": "standalone", "orientation": "portrait",
+         "background_color": "#04070a", "theme_color": "#7C3AED",
+         "icons": [{"src": icon + "?s=192", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                   {"src": icon + "?s=512", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                   {"src": icon + "?s=512&m=1", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
+    if r["kind"] == "sell":
+        m["share_target"] = {"action": "/quick/share-in?p=%s&c=%s" % (r["token"], str(o["settings"].get("cat") or "")),
+                             "method": "POST",
+                             "enctype": "multipart/form-data",
+                             "params": {"title": "title", "text": "text",
+                                        "files": [{"name": "photo", "accept": ["image/*"]}]}}
+    conn = database.get_db()
+    try:
+        sib = conn.execute("SELECT * FROM quick_presets WHERE LOWER(email)=LOWER(?) AND active=1 ORDER BY id DESC LIMIT 4",
+                           (r["email"],)).fetchall()
+    finally:
+        conn.close()
+    m["shortcuts"] = [{"name": _qf_row_out(s)["name"], "short_name": s["label"][:12], "url": _qf_row_out(s)["start_url"],
+                       "icons": [{"src": "/quick-icon/%s.png?s=192" % s["token"], "sizes": "192x192", "type": "image/png"}]}
+                      for s in sib]
+    return _JR(m, media_type="application/manifest+json", headers={"Cache-Control": "no-store"})
+
+
+_QF_ICON_CACHE = {}
+
+
+def _qf_font(px):
+    from PIL import ImageFont
+    for f in ("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+              "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"):
+        try:
+            return ImageFont.truetype(f, px)
+        except Exception:
+            continue
+    try:
+        return ImageFont.load_default(size=px)
+    except Exception:
+        return ImageFont.load_default()
+
+
+@app.get("/quick-icon/{token}.png")
+def quick_icon_png(token: str, s: int = 512, m: int = 0):
+    """The preset's own icon: the Quick violet with its job and label written on it, so 'Quick Sell · Cards' and
+    'Quick Find · Cards' are told apart on the home screen. Drawn here, never stored (no state on the box)."""
+    from PIL import ImageDraw
+    r = _qf_public_row(token)
+    if not r:
+        raise HTTPException(status_code=404, detail="This quick icon was switched off.")
+    s = 192 if s <= 192 else (180 if s == 180 else 512)
+    key = (r["token"], r["label"], r["kind"], s, 1 if m else 0)
+    png = _QF_ICON_CACHE.get(key)
+    if png is None:
+        im = Image.new("RGB", (s, s), (124, 58, 237))
+        d = ImageDraw.Draw(im)
+        pad = int(s * (0.16 if m else 0.08))
+        d.ellipse([pad + int(s * .14), pad + int(s * .06), s - pad - int(s * .14), s - pad - int(s * .34)], outline=(255, 255, 255), width=max(4, s // 22))
+        d.line([s * .56, s * .44, s * .70, s * .58], fill=(255, 255, 255), width=max(4, s // 20))
+        band = (34, 197, 94) if r["kind"] == "sell" else (59, 130, 246)
+        d.rectangle([0, int(s * .66), s, s], fill=band)
+        f1, f2 = _qf_font(int(s * .13)), _qf_font(int(s * .105))
+        t1 = "SELL" if r["kind"] == "sell" else "FIND"
+        t2 = (r["label"] or "")[:11]
+        for txt, f, y in ((t1, f1, .68), (t2, f2, .83)):
+            try:
+                w = d.textlength(txt, font=f)
+            except Exception:
+                w = len(txt) * s * .07
+            d.text(((s - w) / 2, int(s * y)), txt, fill=(255, 255, 255), font=f)
+        b = io.BytesIO(); im.save(b, format="PNG")
+        png = b.getvalue()
+        if len(_QF_ICON_CACHE) > 400:
+            _QF_ICON_CACHE.clear()
+        _QF_ICON_CACHE[key] = png
+    return Response(content=png, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.get("/admin/quick-fastlane/stats")
+def admin_quick_fastlane_stats(days: int = 30, admin=Depends(_require_admin)):
+    """The dashboard's fast-lane card: presets made, fast publishes, fast finds, gate fallbacks, and what a full Free
+    plan chose (upgrade / rest) -- from the presets table and Quick's own funnel beacons (people only, bot=0)."""
+    days = max(1, min(int(days), 365))
+    conn = database.get_db()
+    try:
+        _qf_ensure(conn)
+        p = conn.execute("SELECT kind, COUNT(*) AS n, SUM(uses) AS uses, SUM(finds) AS finds, SUM(fallbacks) AS fb "
+                         "FROM quick_presets WHERE active=1 GROUP BY kind").fetchall()
+        by = {r["kind"]: {"presets": int(r["n"] or 0), "uses": int(r["uses"] or 0), "finds": int(r["finds"] or 0),
+                          "fallbacks": int(r["fb"] or 0)} for r in p}
+        beacons = {}
+        try:
+            for r in conn.execute("SELECT step, COUNT(*) AS n FROM onboard_steps WHERE step LIKE 'q_fast_%' AND bot=0 "
+                                  "AND created_at > ? GROUP BY step", (_sql_since(days=days),)).fetchall():
+                beacons[r["step"]] = int(r["n"])
+        except Exception:
+            beacons = None                      # NOT MEASURED, never a zero (RG-0133)
+        return {"switch_on": _qf_on(), "days": days, "presets": by, "beacons": beacons}
+    finally:
+        conn.close()
+# ══ end QUICK-FAST-1 ══
 
 
 SEC_GATE_UNDECLARED = _sec_gate.install(

@@ -1,0 +1,232 @@
+{
+ "type": "quick_find_icon",
+ "status": "draft",
+ "flow": "FAST-FIND",
+ "serves": [],
+ "label": {
+  "en": "Quick Find icon",
+  "af": "Quick Find-ikoon",
+  "zu": "Uphawu lwe-Quick Find",
+  "xh": "Uphawu lwe-Quick Find",
+  "nso": "Seswantšhetšo sa Quick Find"
+ },
+ "title": {
+  "en": "Your Quick Find icon: one line, the matches on the same page",
+  "af": "Jou Quick Find-ikoon: een reël, die treffers op dieselfde blad",
+  "zu": "Uphawu lwakho lwe-Quick Find: umugqa owodwa, okufanayo ekhasini elifanayo",
+  "xh": "Uphawu lwakho lwe-Quick Find: umgca omnye, iziphumo kwiphepha elinye",
+  "nso": "Seswantšhetšo sa gago sa Quick Find: mothalo o tee, tše di swanago letlakaleng le tee"
+ },
+ "walked_on": "2026-10-10",
+ "people": {
+  "you": "Thabo"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "Make your quick icon",
+   "af": "Maak jou vinnige ikoon",
+   "zu": "Yenza uphawu lwakho olusheshayo",
+   "xh": "Yenza uphawu lwakho olukhawulezayo",
+   "nso": "Dira seswantšhetšo sa gago sa go akgofa"
+  },
+  {
+   "id": "c2",
+   "en": "Find in one line",
+   "af": "Soek in een reël",
+   "zu": "Thola ngomugqa owodwa",
+   "xh": "Fumana ngomgca omnye",
+   "nso": "Hwetša ka mothalo o tee"
+  },
+  {
+   "id": "c3",
+   "en": "Switch it off",
+   "af": "Skakel dit af",
+   "zu": "Luvale",
+   "xh": "Luvale",
+   "nso": "Se time"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "qf01_tick",
+   "pass": true,
+   "en": [
+    "Tick [[Make this my quick icon]]",
+    "Under your Find results. Your answers are kept as your icon."
+   ],
+   "af": [
+    "Merk [[Make this my quick icon]]",
+    "Onder jou soekresultate. Jou antwoorde word as jou ikoon bewaar."
+   ],
+   "zu": [
+    "Maka [[Make this my quick icon]]",
+    "Ngaphansi kwemiphumela yakho yokuthola. Izimpendulo zakho zigcinwa njengophawu lwakho."
+   ],
+   "xh": [
+    "Phawula [[Make this my quick icon]]",
+    "Phantsi kweziphumo zakho zokufumana. Iimpendulo zakho zigcinwa njengophawu lwakho."
+   ],
+   "nso": [
+    "Swaya [[Make this my quick icon]]",
+    "Ka fase ga dipoelo tša gago tša go hwetša. Dikarabo tša gago di bolokwa bjalo ka seswantšhetšo sa gago."
+   ],
+   "quick": [
+    "draft"
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "qf02_ready",
+   "pass": true,
+   "en": [
+    "Tap [[Put it on my home screen]]",
+    "Your icon is ready: “Quick Find · Cards”."
+   ],
+   "af": [
+    "Tik [[Put it on my home screen]]",
+    "Jou ikoon is gereed: “Quick Find · Cards”."
+   ],
+   "zu": [
+    "Thepha [[Put it on my home screen]]",
+    "Uphawu lwakho selulungile: “Quick Find · Cards”."
+   ],
+   "xh": [
+    "Cofa [[Put it on my home screen]]",
+    "Uphawu lwakho lulungile: “Quick Find · Cards”."
+   ],
+   "nso": [
+    "Kgotla [[Put it on my home screen]]",
+    "Seswantšhetšo sa gago se loketše: “Quick Find · Cards”."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "qf03_line",
+   "pass": true,
+   "en": [
+    "Open your icon and type one line",
+    "For example: MtG, Savannah, Dual land, 4th Edition, under R2300 — then tap [[Find]]."
+   ],
+   "af": [
+    "Maak jou ikoon oop en tik een reël",
+    "Byvoorbeeld: MtG, Savannah, Dual land, 4th Edition, under R2300 — tik dan [[Find]]."
+   ],
+   "zu": [
+    "Vula uphawu lwakho bese ubhala umugqa owodwa",
+    "Isibonelo: MtG, Savannah, Dual land, 4th Edition, under R2300 — bese uthepha [[Find]]."
+   ],
+   "xh": [
+    "Vula uphawu lwakho uze ubhale umgca omnye",
+    "Umzekelo: MtG, Savannah, Dual land, 4th Edition, under R2300 — emva koko ucofe [[Find]]."
+   ],
+   "nso": [
+    "Bula seswantšhetšo sa gago o ngwale mothalo o tee",
+    "Mohlala: MtG, Savannah, Dual land, 4th Edition, under R2300 — ke moka o kgotle [[Find]]."
+   ],
+   "quick": [
+    "fast_find"
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "qf04_results",
+   "pass": true,
+   "en": [
+    "The matches show on the same page",
+    "Each specific word must be in the listing; “under R2300” is a price limit. Real listings only."
+   ],
+   "af": [
+    "Die treffers wys op dieselfde blad",
+    "Elke spesifieke woord moet in die advertensie wees; “under R2300” is 'n prysgrens. Net regte advertensies."
+   ],
+   "zu": [
+    "Okufanayo kuvela ekhasini elifanayo",
+    "Igama ngalinye eliqondile kufanele libe sesikhangisweni; “under R2300” ngumkhawulo wentengo. Izikhangiso zangempela kuphela."
+   ],
+   "xh": [
+    "Iziphumo zivela kwiphepha elinye",
+    "Igama ngalinye elichanekileyo kufuneka libe kwisibhengezo; “under R2300” ngumda wexabiso. Izibhengezo zokwenyani kuphela."
+   ],
+   "nso": [
+    "Tše di swanago di bonagala letlakaleng le tee",
+    "Lentšu le lengwe le le lengwe le le itšego le swanetše go ba papatšong; “under R2300” ke moedi wa theko. Dipapatšo tša nnete fela."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c2",
+   "who": "you",
+   "cost": "1T_accept",
+   "img": "qf05_intro",
+   "pass": true,
+   "en": [
+    "Tap one to ask for an introduction",
+    "It opens in TrustSquare. The introduction follows the normal Tuppence rules."
+   ],
+   "af": [
+    "Tik een om vir 'n bekendstelling te vra",
+    "Dit maak in TrustSquare oop. Die bekendstelling volg die gewone Tuppence-reëls."
+   ],
+   "zu": [
+    "Thepha eyodwa ukuze ucele ukwethulwa",
+    "Ivuleka ku-TrustSquare. Ukwethulwa kulandela imithetho ejwayelekile ye-Tuppence."
+   ],
+   "xh": [
+    "Cofa enye ukuze ucele ukwaziswa",
+    "Ivuleka kwi-TrustSquare. Ukwaziswa kulandela imithetho eqhelekileyo ye-Tuppence."
+   ],
+   "nso": [
+    "Kgotla e tee go kgopela tsebišo",
+    "E bulega go TrustSquare. Tsebišo e latela melao ye e tlwaelegilego ya Tuppence."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "qf06_off",
+   "pass": true,
+   "en": [
+    "Untick, or switch it off in My Space",
+    "Under your Find results untick [[Make this my quick icon]] — or My Space → My quick icons → [[Switch off]]."
+   ],
+   "af": [
+    "Ontmerk, of skakel dit af in My Space",
+    "Ontmerk [[Make this my quick icon]] onder jou soekresultate — of My Space → My quick icons → [[Switch off]]."
+   ],
+   "zu": [
+    "Susa umaka, noma uluvale ku-My Space",
+    "Ngaphansi kwemiphumela susa umaka ku-[[Make this my quick icon]] — noma My Space → My quick icons → [[Switch off]]."
+   ],
+   "xh": [
+    "Susa uphawu, okanye uluvale kwi-My Space",
+    "Phantsi kweziphumo susa uphawu ku-[[Make this my quick icon]] — okanye My Space → My quick icons → [[Switch off]]."
+   ],
+   "nso": [
+    "Tloša leswao, goba o se time go My Space",
+    "Ka fase ga dipoelo tloša leswao go [[Make this my quick icon]] — goba My Space → My quick icons → [[Switch off]]."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ },
+ "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_find_icon/ (pushed with build_help.py --push-images at deploy)."
+}
