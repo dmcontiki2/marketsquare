@@ -5488,6 +5488,15 @@ drawDoor();
   };
   /* the AI example's 'I train people in this -- list me free' (and any enrolment link): /quick/?role=<sport> opens her
      sell flow on the price step with the door, group and sport already chosen */
+  /* TRAINER-SELL-CARD-1 (Goal run 35): Sell's 'Coach a sport?' card -- /quick/?c=tutors&trn=1 opens her sell flow on the
+     sport groups with the Sport & fitness door already chosen */
+  if(/[?&]trn=1\b/.test(location.search||'') && !/[?&]role=/.test(location.search||'')){
+    setTimeout(function(){
+      ci=TI; paintTheme(); start('sell');
+      picks.push({label:'Sport & fitness', photo:null, key:'tdoor', trn:1});
+      step=1; drawStep();
+    },0);
+  }
   var m=/[?&]role=([a-z0-9_]+)/.exec(location.search||''), r0=m && trnRole(m[1]);
   if(r0){
     setTimeout(function(){

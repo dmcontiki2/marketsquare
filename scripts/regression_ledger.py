@@ -37555,6 +37555,39 @@ def rg_col_kind_words_1():
     return [(INFO, "Collectors examples follow the kind; photo-talk sentences dropped; GoogleOther flagged as a machine")]
 
 
+@entry("RG-0954", "AI-PROPS-1 (Goal run 35, 10 Oct 2026): the photo read's title names only the item for sale, and its draft "
+       "never says the things standing on or beside it 'may not be included'; Sell has a 'Coach a sport?' card that opens "
+       "Quick's Trainers door on the sport groups (TRAINER-SELL-CARD-1)",
+       LOCKED, fixed_on="2026-10-10",
+       scope="ms.js sfCleanAiDesc, sfCleanAiTitle, sfApplyDraft, Sell tiles; quick.html + genie/HARNESS.html ?trn=1; "
+             "bea_main.py vision prompt (title, description_draft)",
+       ref="docs/E2E_2026-10-10.md: a Cape Town dresser photo was titled 'Oak Dresser With Vintage Radio' and her story box "
+           "read 'A vintage tabletop radio is positioned on top, with a stack of tied books beside it; these may not be included.'")
+def rg_ai_props_1():
+    js = repo_file("ms.js")
+    py = repo_file("bea_main.py")
+    if js is None or py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    c = js.find("function sfCleanAiDesc(t){")
+    cl = js[c:c + 1200]
+    if "not be (included|part of)" not in cl or "(positioned|placed|displayed|arranged|propped)" not in cl:
+        return [(FAIL, "sfCleanAiDesc lets 'these may not be included' / 'positioned on top' prop sentences into the advert again")]
+    if "function sfCleanAiTitle(title,desc){" not in js:
+        return [(FAIL, "the photo read's title is no longer cleaned of a prop ('Oak Dresser With Vintage Radio')")]
+    a = js.find("function sfApplyDraft(d){")
+    if "d.title=sfCleanAiTitle(d.title,d.description_draft)" not in js[a:a + 300]:
+        return [(FAIL, "sfApplyDraft no longer cleans the read's title before it fills her name box")]
+    if "never an object, ornament or prop standing on, in or beside it" not in py:
+        return [(FAIL, "the vision prompt no longer tells the title to name only the item being sold")]
+    q = repo_file("quick.html")
+    if q is not None:
+        if "Coach a sport?" not in js or "c=tutors&trn=1" not in js:
+            return [(FAIL, "Sell no longer has the 'Coach a sport?' card into the Trainers door (TRAINER-SELL-CARD-1)")]
+        if "/[?&]trn=1\\b/.test(location.search||'')" not in q:
+            return [(FAIL, "quick.html no longer opens ?trn=1 on the Sport & fitness groups (TRAINER-SELL-CARD-1)")]
+    return [(INFO, "photo read's title and draft name only the item for sale; Sell has the coach card into Sport & fitness")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

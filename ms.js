@@ -22422,6 +22422,13 @@ function sfHomeS(){
      '<div class="sf-bg" style="background:linear-gradient(140deg,#4c1d95,#7C3AED)">🧹</div>'+
      '<img class="sf-ph" src="/static/quick/role_home_cleaner.jpg" onerror="this.style.display=\'none\'">'+
      '<div class="sf-lab"><div class="sf-nm">Work for yourself?</div><div class="sf-ct">Cleaner, gardener, nanny, driver \u2014 listed in a minute with Quick</div></div></a>';
+  /* TRAINER-SELL-CARD-1 (Goal run 35, 10 Oct 2026): the Trainers door (RUL-217) went live today inside Quick's Tutors door,
+     but Sell showed a swimming or soccer coach only 'Tutors' -- a guided flow that asks for 'You at the board' -- and a
+     'Work for yourself?' card that opens on cleaners. Her door now has its own card here, opening straight on Sport & fitness. */
+  h+='<a class="sf-tile sf-wide sf-quick-line" href="/quick/?from=app&src=sell-trainers&c=tutors&trn=1" onclick="return sfQuickLeave(this)" style="display:block;text-decoration:none;color:inherit;">'+
+     '<div class="sf-bg" style="background:linear-gradient(140deg,#1e3a8a,#2563eb)">\u{1F3C5}</div>'+
+     '<img class="sf-ph" src="/static/quick/role_swimming_coach.jpg?v=photo1" onerror="this.style.display=\'none\'">'+
+     '<div class="sf-lab"><div class="sf-nm">Coach a sport?</div><div class="sf-ct">Gym, swimming, soccer, chess \u2014 listed in a minute with Quick</div></div></a>';
   tiles.forEach(function(t){
     var im=SF_TILE_IMGS[t[0]];
     h+='<div class="sf-tile" onclick="sfStartCat(\''+t[0]+'\')"><div class="sf-bg" style="background:'+grads[t[0]]+'">'+t[1]+'</div>'+
@@ -23033,6 +23040,7 @@ async function sfRunMultiVision(){
 }
 function sfApplyDraft(d){
   var A=sfState.A, B=sfState.B, C=sfState.C, cat=sfState.cat;
+  if(d && d.title) d.title=sfCleanAiTitle(d.title,d.description_draft);   // AI-PROPS-1 (Goal run 35)
   /* AI-PRICE-HINT-1 (Goal run 29, 4 Oct 2026): a low-confidence price guess (the jars photo: R80 at 0.28) no longer lands in
      her price box as if it were her price -- it is shown as a hint in the box instead and she types her own. */
   var _pc=(typeof d.price_confidence==='number')?d.price_confidence:1;
@@ -23105,8 +23113,22 @@ function sfAiDescRow(){ var f=sfFlow(); if(!f) return ''; for(var i=0;i<f.sectio
 function sfCleanAiDesc(t){
   t=String(t||'').trim(); if(!t) return '';
   var parts=t.match(/[^.!?]+[.!?]*(\s+|$)/g)||[t];
-  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34)
+  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b|\b(may|might|probably|possibly) not be (included|part of)|\bnot (be )?included\b|\b(is|are) (positioned|placed|displayed|arranged|propped) (on top|beside|next to|alongside|in front|behind|around)\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34) + AI-PROPS-1 (Goal run 35)
   return parts.filter(function(x){ return !bad.test(x); }).join('').trim();
+}
+/* AI-PROPS-1 (Goal run 35, 10 Oct 2026): a Cape Town dresser photo with a radio and books standing on it came back titled
+   "Oak Dresser With Vintage Radio", and its draft said the radio and books "may not be included". The title names only the
+   item: a "with <thing>" tail goes when the read's own dropped sentences show that thing is a prop around it. */
+function sfCleanAiTitle(title,desc){
+  title=String(title||'').trim(); if(!title) return '';
+  var m=title.match(/^(.{3,}?)\s+(with|and|plus|&)\s+(.+)$/i); if(!m) return title;
+  var all=String(desc||''), kept=sfCleanAiDesc(all);
+  var parts=all.match(/[^.!?]+[.!?]*(\s+|$)/g)||[];
+  var dropped=parts.filter(function(x){ return kept.indexOf(x.trim())<0; }).join(' ').toLowerCase();
+  if(!dropped) return title;
+  var words=m[3].toLowerCase().match(/[a-z\u00c0-\u024f]{4,}/g)||[];
+  for(var i=0;i<words.length;i++){ if(dropped.indexOf(words[i])>-1) return m[1].trim(); }
+  return title;
 }
 function sfSkip(warnKey,next){
   var w=document.getElementById('sf-warn-'+warnKey);
