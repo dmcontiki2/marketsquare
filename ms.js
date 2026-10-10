@@ -23224,7 +23224,7 @@ function sfLegalCat(){
   var c = sfState.cat;
   if(c==='Property') return 'property';
   if(c==='Cars') return sfIsCarHire() ? null : 'cars';   // CAR-HIRE-1: the sale paperwork (change of ownership, RC1) is not a hire's -- no card rather than the wrong one
-  if(c==='Tutors') return 'tutors';
+  if(c==='Tutors') return null;  // INTRO-ONLY-1 (RUL-219, David 10 Oct 2026): we only introduce -- a tutor (and a trainer) lists without any legal page
   if(c==='Services') return 'services';
   if(c==='Collectors') return 'collectors';
   if(c==='Adventures') return sfState.sub==='accommodation' ? 'adventures_accommodation' : 'adventures_experiences';
@@ -23249,7 +23249,7 @@ function sfLegalCard(){
 function sfLegalS(){
   var f=sfFlow(), L=sfLegalCard();
   var mut='var(--text-3,#8b93a7)';
-  var h='<div class="sf-hdr"><div class="sf-step">Step 6 of 6 · '+f.label+'</div><h2>The legal side — and who can carry it</h2></div>'+sfMeter()+
+  var h='<div class="sf-hdr"><div class="sf-step">Step 6 of 6 · '+f.label+'</div><h2>Good to know — and who can carry it</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div>'+L.note+'</div></div>';
   /* SINGLE-ITEM-NOTE-1 (RUL-199, David 3 Oct 2026: "it should be understood to be for illegal items"): a person selling one
      thing of her own is told first that the dealer rows are not hers and the permit rows are only for protected items. */
@@ -23260,9 +23260,10 @@ function sfLegalS(){
     var a=L.data.accent, d=L.data;
     h+='<div class="sf-card" style="padding:0;overflow:hidden;">'+
       '<div style="background:'+a+';padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'+
-        '<div style="font-weight:800;letter-spacing:.06em;font-size:11.5px;color:#fff;min-width:0;">ABSOLUTE MUST-HAVES · '+d.label+'</div>'+
+        '<div style="font-weight:800;letter-spacing:.06em;font-size:11.5px;color:#fff;min-width:0;">GOOD TO KNOW · '+d.label+'</div>'+
         '<div style="flex:0 0 auto;background:rgba(255,255,255,.2);border-radius:6px;padding:2px 9px;font-weight:800;font-size:12px;color:#fff;">'+L.cc+'</div></div>'+
-      '<div style="padding:2px 14px 14px;">';
+      '<div style="padding:2px 14px 14px;">'+
+      '<div style="margin:12px 0 2px;font-size:12.5px;font-weight:700;line-height:1.45;color:#4ade80;">TrustSquare only introduces. None of this is needed to list \u2014 it is between you and the other party.</div>';   // INTRO-ONLY-1
     d.rows.forEach(function(r,i){
       h+='<div style="display:flex;gap:11px;padding:12px 0;'+(i<d.rows.length-1?'border-bottom:1px solid rgba(255,255,255,.07);':'')+'">'+
         '<div style="flex:0 0 26px;height:26px;border-radius:50%;background:'+a+';color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px;">'+(i+1)+'</div>'+
@@ -23279,7 +23280,7 @@ function sfLegalS(){
       '</div></div>'+
       '<div style="font-size:11px;color:'+mut+';margin:8px 2px 0;">Shown for '+L.cname+' — this swaps automatically to the listing\'s country. General guidance, not legal advice.</div>';
   } else {
-    h+='<div class="sf-card"><div class="sf-title">Legal requirements — '+L.cname+'</div>'+
+    h+='<div class="sf-card"><div class="sf-title">Good to know — '+L.cname+'</div>'+
     '<div style="font-size:13px;line-height:1.5;">Private sales in '+L.cname+' carry their own legal steps. Our country guide for '+L.cname+' is being reviewed — meanwhile, an accredited agency can walk you through the requirements.</div></div>';
   }
   h+='<div class="sf-foot"><button class="sf-btn gho" aria-label="Back" onclick="sfGo(\'features\')">←</button>'+

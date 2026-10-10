@@ -1,3 +1,10 @@
+## 2026-10-10 — INTRO-ONLY-1 (RUL-219): no 'Absolute Must-Haves' — tutors list with no legal page
+- David: we only introduce; the Step 6 tutor card read as our blockers and stopped people listing.
+- ms.js sfLegalCat: Tutors (incl. the Trainers door) -> null, so Features goes straight to the scorecard.
+- ms.js sfLegalS: other categories' card retitled 'GOOD TO KNOW', h2 'Good to know — and who can carry it', and a first line 'TrustSquare only introduces. None of this is needed to list'.
+- gen_legal_must_haves.py: SVG/PNG header 'GOOD TO KNOW', ZA tutors foot no longer says 'not optional extras'; 28 SVG+PNG regenerated, legal-cards.js re-exported.
+- marketsquare.html: ms.js v530 -> v531, legal-cards.js v1 -> v2. Backup: ms.js.bak-20261010-introonly.
+
 ## 2026-10-10 — TRAINER-PHOTOS-1 (RUL-218): every trainer role now opens on a real-looking photo of the coaching itself
 
 David, 10 Oct 2026: "i still have $15 for Higgsfield photos; can you please replace all of the trainer/coaches artificial pictures to real photos as we have for services, but to be relevant to the trainer/coach activity - chess coach with chess set and clock, judo with judo looking trainer and child in right gear etc."

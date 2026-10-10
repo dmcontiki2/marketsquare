@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""MarketSquare 'Absolute Must-Haves' legal cards — per country, per category.
+"""MarketSquare 'Good to know' legal cards (INTRO-ONLY-1, 10 Oct 2026: was 'Absolute Must-Haves' -- we only introduce) — per country, per category.
 Usage: python3 gen_legal_must_haves.py [ZA|US|UK|AU|all]
 Output: assets/legal-must-haves/<CC>/must-haves-<CC>-<category>.{svg,png}
 Content is data-only below; layout is shared. Update rows when laws change.
@@ -79,7 +79,7 @@ CONTENT["ZA"] = {
   ("form","Written Service Agreement","Rates, cancellation, refund terms","Both parties sign — CPA-compliant terms","PROTECTS BOTH PARTIES"),
   ("lock","POPIA Consent for Learner Data","Minors' information needs guardian consent","Parent / guardian signs consent for records & progress reports","REQUIRED BY POPIA"),
   ("cash","Declare Tutoring Income (SARS)","Provisional tax may apply","Tutor invoices and declares income","SARS REQUIREMENT"),
- ],"Working with children is regulated — clearance and consent are not optional extras.",
+ ],"Good to know when working with children — arranged between tutor and family; TrustSquare only introduces.",
    "For in-home tutoring of minors, a parent or guardian present is strongly recommended."),
  "services": ([
   ("bolt","Trade Registration / Licence","Electricians: Dept of Employment & Labour. Plumbers: PIRB","Provider registers before doing regulated work","REQUIRED TO ISSUE COMPLIANCE CERTIFICATES"),
@@ -302,7 +302,7 @@ def build(cc, cat):
     title = TITLES[cat]; cname = COUNTRY_NAMES[cc]
     parts=[]; y=0
     parts.append(f'<rect x="0" y="0" width="{W}" height="86" fill="{NAVY}"/>')
-    parts.append(f'<text x="40" y="34" font-family="DejaVu Sans" font-size="15" font-weight="bold" fill="#9fb3d9" letter-spacing="2">ABSOLUTE MUST-HAVES · PRIVATE SALES · {cname}</text>')
+    parts.append(f'<text x="40" y="34" font-family="DejaVu Sans" font-size="15" font-weight="bold" fill="#9fb3d9" letter-spacing="2">GOOD TO KNOW · PRIVATE SALES · {cname}</text>')
     parts.append(f'<text x="40" y="66" font-family="DejaVu Sans" font-size="27" font-weight="bold" fill="#ffffff">{E(title)}</text>')
     parts.append(f'<rect x="{W-116}" y="24" width="76" height="38" rx="8" fill="#ffffff" opacity="0.14"/><text x="{W-78}" y="50" font-family="DejaVu Sans" font-size="20" font-weight="bold" fill="#ffffff" text-anchor="middle">{cc}</text>')
     parts.append(f'<rect x="0" y="86" width="{W}" height="46" fill="{a}"/>')
