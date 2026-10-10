@@ -1,3 +1,9 @@
+## 2026-10-10 — SF-EXIT-1: a way out of a sell flow in progress
+- David was stuck in an earlier Tutors draft (tapping Sell resumed it). Every sell step now shows '✕ New listing' top right; it opens the Sell start, where the kept listing offers 'Continue my listing' or 'Start again' (which asks first). Nothing is deleted by the link itself. Ships with ms.js v532.
+
+## 2026-10-10 — INTRO-ONLY-3 (RUL-219): tutors keep the agency tip on Step 6, without the checklist
+- David: the agency/agent advice is a good tip for every private sale. ms.js: Tutors/Trainers Step 6 shows only the 'Why tutors join an agency' note (noteOnly), no card and no fallback box; ms.js v531 -> v532.
+
 ## 2026-10-10 — INTRO-ONLY-2 (RUL-219 amended): trainer clearance is a Trust Score signal, not a visibility gate
 - David: not blockers, but still very important Trust Score indicators for parents. Trust Score points unchanged (tutors clearance 8, SACE 8).
 - build_role_registry.py: the 28 child-coaching trainer roles lose the RUL-153 gate (RUL-217(d) amended) and carry clearance_score; nanny, caregiver, au pair, crèche assistant stay gated (RUL-153).

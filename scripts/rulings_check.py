@@ -1305,7 +1305,7 @@ REFLECTIONS = {
  "RUL-219": [
    # We only introduce: no 'Absolute Must-Haves'; tutors (and trainers) list with no legal page (10 Oct; amends LEGAL-STEP-1).
    ("RULINGS.md", ["WE ONLY INTRODUCE -- NO LEGAL CHECKLIST"], []),
-   ("ms.js", ["if(c==='Tutors') return null;  // INTRO-ONLY-1", "GOOD TO KNOW · '+d.label+'", "TrustSquare only introduces. None of this is needed to list"], ["ABSOLUTE MUST-HAVES", "if(c==='Tutors') return 'tutors';"]),
+   ("ms.js", ["var noteOnly = (cat==='tutors');", "} else if(!L.noteOnly){", "GOOD TO KNOW · '+d.label+'", "TrustSquare only introduces. None of this is needed to list", "<b>Why tutors join an agency:</b>"], ["ABSOLUTE MUST-HAVES"]),
    ("assets/legal-must-haves/legal-cards.js", [], ["not optional extras"]),
    ("marketsquare.html", ["legal-cards.js?v=2"], []),
    ("roles/role_registry.json", ['"clearance_score"'], ['"ruling": "RUL-217(d) / RUL-153"']),   # trainers: score, not gate

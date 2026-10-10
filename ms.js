@@ -22234,6 +22234,10 @@ function sfRender(){
   else if(s==='agents') a.innerHTML=sfAgentsS();   // AGENT-SVC-1
   else if(s==='scorecard') a.innerHTML=sfScoreS();
   if(typeof sfCoachAskDecorate==='function'){ try{ sfCoachAskDecorate(a); }catch(_e){} }   // SF-COACH-ASK-1
+  /* SF-EXIT-1 (David 10 Oct 2026: 'I am stuck in a previous sell flow with no escape or go back to a new sell'): every step
+     carries a way out to the Sell start, where the kept listing offers 'Continue' or 'Start again'. Nothing is removed here. */
+  if(s!=='home'){ var _hd=a.querySelector('.sf-hdr'); if(_hd && !_hd.querySelector('.sf-exit')) _hd.insertAdjacentHTML('afterbegin',
+    '<a class="sf-exit" onclick="sfGo(\'home\')" style="float:right;cursor:pointer;font-size:12px;font-weight:700;color:#f2b035;text-decoration:none;padding:2px 0 6px 10px;">\u2715 New listing</a>'); }
   window.scrollTo(0,0);
   sfDraftSave();   // SF-DRAFT-KEEP-1: every redraw follows a change worth keeping
 }
@@ -23214,7 +23218,7 @@ var SF_LEGAL_NOTES = {
      agency value on Step 6, not the sale pitch. */
   property_rental: '<b>Why lessors use a rental agent:</b> a good rental agent keeps you compliant with the Rental Housing Act and all relevant property legislation — the lease, the deposit rules, the inspections and notices the law requires — properly vets and credit-checks applicants so only suitable prospective lessees reach you, and carries the monthly admin: collecting rent, managing the deposit correctly, and handling maintenance calls. You can let privately; an agent carries the legal and administrative load.',
   cars: '<b>Why sellers use a dealer or sales agency:</b> they handle the ownership and registration paperwork, settle outstanding finance correctly, screen out payment-day fraud, and give buyers the confidence that closes the sale. Privately you keep the margin — an agency carries the admin and the risk.',
-  tutors: '<b>Why tutors join an agency:</b> agencies carry the vetting, clearances and contracts above, match you with the right learners, chase the invoices, and lend you their reputation while you build your own.',
+  tutors: '<b>Why tutors join an agency:</b> agencies carry the vetting, clearances and contracts for you, match you with the right learners, chase the invoices, and lend you their reputation while you build your own.',
   services: '<b>Why providers work through an agency:</b> an agency proves your licences and insurance to cautious clients, keeps the paperwork compliant, brings a steady pipeline of work, and stands behind the job if a dispute flares.',
   adventures_accommodation: '<b>Why hosts use a travel agent or booking agency:</b> they keep you on the right side of zoning, insurance and safety rules, handle guest screening and payments, and fill your calendar in seasons you can\'t reach alone.',
   adventures_experiences: '<b>Why operators use a travel agent:</b> agents package and sell your experience to audiences you can\'t reach, keep waivers and permits watertight, and handle bookings, deposits and cancellations — you run the adventure, not the admin.',
@@ -23224,7 +23228,7 @@ function sfLegalCat(){
   var c = sfState.cat;
   if(c==='Property') return 'property';
   if(c==='Cars') return sfIsCarHire() ? null : 'cars';   // CAR-HIRE-1: the sale paperwork (change of ownership, RC1) is not a hire's -- no card rather than the wrong one
-  if(c==='Tutors') return null;  // INTRO-ONLY-1 (RUL-219, David 10 Oct 2026): we only introduce -- a tutor (and a trainer) lists without any legal page
+  if(c==='Tutors') return 'tutors';  // INTRO-ONLY-1 (RUL-219, David 10 Oct 2026): we only introduce -- a tutor (and a trainer) gets the agency tip only, no legal checklist
   if(c==='Services') return 'services';
   if(c==='Collectors') return 'collectors';
   if(c==='Adventures') return sfState.sub==='accommodation' ? 'adventures_accommodation' : 'adventures_experiences';
@@ -23238,10 +23242,11 @@ function sfLegalCard(){
   if(!cat) return null;
   var cc = sfLegalCountry();
   var live = SF_LEGAL_LIVE.indexOf(cc) >= 0;
-  var d = (live && typeof SF_LEGAL_CARDS !== 'undefined' && SF_LEGAL_CARDS[cc] && SF_LEGAL_CARDS[cc].cats[cat]) || null;
+  var noteOnly = (cat==='tutors');   // INTRO-ONLY-3 (David 10 Oct 2026: 'one good tip we added for all private sells was to advise the use of agencies'): tutors keep the agency tip, never the checklist
+  var d = (!noteOnly && live && typeof SF_LEGAL_CARDS !== 'undefined' && SF_LEGAL_CARDS[cc] && SF_LEGAL_CARDS[cc].cats[cat]) || null;
   // RENTAL-COSTS-1: To Rent property listings get the lessor-oriented agency note
   var note = (cat==='property' && sfIsRental() && SF_LEGAL_NOTES.property_rental) || SF_LEGAL_NOTES[cat];
-  return {cat:cat, cc:cc, cname:SF_LEGAL_COUNTRIES[cc]||cc, note:note, data:d};
+  return {cat:cat, cc:cc, cname:SF_LEGAL_COUNTRIES[cc]||cc, note:note, data:d, noteOnly:noteOnly};
 }
 /* LEGAL-STEP-2 (17 Jul 2026, David): phone-native render — stacked rows from
    /static/legal-must-haves/legal-cards.js (window.SF_LEGAL_CARDS), no wide PNG
@@ -23279,7 +23284,7 @@ function sfLegalS(){
       '<div style="text-align:center;margin-top:10px;font-size:12px;font-weight:700;color:'+a+';">Accredited agencies on TrustSquare manage what they may, and facilitate the rest with the right professionals.</div>'+
       '</div></div>'+
       '<div style="font-size:11px;color:'+mut+';margin:8px 2px 0;">Shown for '+L.cname+' — this swaps automatically to the listing\'s country. General guidance, not legal advice.</div>';
-  } else {
+  } else if(!L.noteOnly){
     h+='<div class="sf-card"><div class="sf-title">Good to know — '+L.cname+'</div>'+
     '<div style="font-size:13px;line-height:1.5;">Private sales in '+L.cname+' carry their own legal steps. Our country guide for '+L.cname+' is being reviewed — meanwhile, an accredited agency can walk you through the requirements.</div></div>';
   }
