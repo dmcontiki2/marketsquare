@@ -135,6 +135,12 @@ def sweep(repo, check_only):
     targets += sorted(glob.glob(os.path.join(GITDIR, "next-index-*.lock")))
     ref_locks = _ref_locks(GITDIR)          # GIT-LOCK-5 (DW-123)
     targets += ref_locks
+    # GIT-LOCK-6 (10 Oct 2026): a linked worktree (git worktree add, e.g. _fastlane_wt) keeps its OWN HEAD/index
+    # under .git/worktrees/<name>/. A commit in the fastlane worktree stranded .git/worktrees/_fastlane_wt/HEAD.lock
+    # and this sweep never looked there -- same class as GIT-LOCK-5's ref locks, one directory over.
+    wt_locks = sorted(p for n in BLOCKING for p in glob.glob(os.path.join(GITDIR, "worktrees", "*", n)))
+    targets += wt_locks
+    ref_locks = ref_locks + wt_locks        # blocking by nature: they stop the next commit in that worktree
     asides  = sorted(glob.glob(os.path.join(GITDIR, "HEAD.lock.stale-*")))
     present = [p for p in targets if os.path.exists(p)]
     # A ref lock blocks the next writer on that ref immediately, so it is blocking by

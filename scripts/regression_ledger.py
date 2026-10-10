@@ -37498,6 +37498,25 @@ def rg_photo_first_1():
     return bad or [(INFO, "the advert's first photo comes first; the rest follow it; far pictures wait for her")]
 
 
+@entry("RG-0954", "GIT-LOCK-6: the stale-lock sweep (scripts/git_unlock.py) also heals a linked worktree's own locks "
+       "(.git/worktrees/<name>/HEAD.lock, index.lock ...), and none is stranded for more than 60 minutes",
+       LOCKED, fixed_on="2026-10-10", scope="scripts/git_unlock.py sweep(); MarketSquare .git/worktrees/* (e.g. _fastlane_wt)",
+       ref="10 Oct 2026: a commit in the fastlane worktree left .git/worktrees/_fastlane_wt/HEAD.lock (FUSE blocked the unlink); "
+           "git_unlock.py --check reported nothing because it looked only at .git/*.lock and .git/refs/**. Same class as GIT-LOCK-5.")
+def rg_git_lock_6():
+    import glob as _g, time as _t
+    src = repo_file("scripts/git_unlock.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if 'glob.glob(os.path.join(GITDIR, "worktrees", "*", n))' not in src or "ref_locks = ref_locks + wt_locks" not in src:
+        return [(FAIL, "git_unlock.py no longer sweeps (or no longer treats as blocking) a worktree's own locks")]
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    old = [p for p in _g.glob(os.path.join(root, ".git", "worktrees", "*", "*.lock")) if _t.time() - os.path.getmtime(p) > 3600]
+    if old:
+        return [(FAIL, "stranded worktree lock(s) older than 60 min: " + ", ".join(os.path.relpath(p, root) for p in old[:3]))]
+    return [(INFO, "worktree locks swept; none stranded")]
+
+
 @entry("RG-0953", "SEARCH-EX-1 (David, 10 Oct 2026): TrustSquare's search finds the AI examples the server makes per work role and "
        "sport (GENERIC-EX-1 / TRAINERS-EX-1) -- 'badminton' shows the Badminton coach example -- matched in the app on the "
        "same words, since the server's search only knows stored adverts; such a hit stops the search from widening to a "
