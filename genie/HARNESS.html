@@ -5628,6 +5628,17 @@ drawDoor();
     paintTheme();
     return true;
   }
+  /* The example in the box follows the icon (found in the 10 Oct flow measurement: a Chess coach icon showed the MtG
+     example). A cards icon keeps the MtG example; any other icon is shown its own words -- "e.g. Chess coach" /
+     "e.g. Chess coach, Menlyn" -- with "e.g." taken from the already-translated cards example, so no new words. */
+  function exampleFor(p, kind){
+    var cardsSell=T('e.g. Savannah, 4th Edition'), cardsFind=T('e.g. MtG, Savannah, Dual land, 4th Edition, under R2300');
+    var ps=presetPicks(p), w=(ps.filter(function(x){ return x.key==='what'; })[0]||{}).label||'',
+        wh=(ps.filter(function(x){ return x.key==='where'; })[0]||{}).label||'';
+    if(!w || /^cards$/i.test(w)) return kind==='find' ? cardsFind : cardsSell;
+    var eg=String(cardsSell).replace(/\s*Savannah, 4th Edition\s*$/,'');
+    return eg+' '+(kind==='find' ? [T(w), wh ? T(wh) : ''].filter(Boolean).join(', ') : T(w));
+  }
   function trailOf(p){
     return presetPicks(p).filter(function(x){ return x.key!=='group'; }).map(function(x){ return '<span>'+E(x.label)+'</span>'; }).join('');
   }
@@ -5723,7 +5734,7 @@ drawDoor();
        +'<div class="qf-price"><span>'+E(sym())+'</span><input class="qf-in" id="qfprice" inputmode="decimal" autocomplete="off" placeholder="0"></div>'
        +'<div class="qf-why" id="qffloor" style="text-align:left"></div>')
       +'<div class="qf-lab">'+E(T('What exactly is it?'))+'</div>'
-      +'<input class="qf-in" id="qfwhat" maxlength="80" autocomplete="off" placeholder="'+E(T('e.g. Savannah, 4th Edition'))+'">'
+      +'<input class="qf-in" id="qfwhat" maxlength="80" autocomplete="off" placeholder="'+E(exampleFor(p,'sell'))+'">'
       +'<div class="qf-lab">'+E(T('Description'))+'</div>'
       +'<textarea class="qf-in" id="qfdesc" rows="3" maxlength="600" placeholder="'+E(T('Anything a buyer should know'))+'"></textarea>'
       +'<div class="qf-why" id="qfmsg"></div>'
@@ -5910,7 +5921,7 @@ drawDoor();
       +'<div class="body"><div class="qf-wrap">'
       +installCard(p)
       +'<div class="qf-lab">'+E(T('What are you looking for?'))+'</div>'
-      +'<form class="qf-find" id="qffform"><input class="qf-in" id="qffq" maxlength="200" enterkeyhint="search" autocomplete="off" placeholder="'+E(T('e.g. MtG, Savannah, Dual land, 4th Edition, under R2300'))+'"><button type="submit">'+E(T('Find'))+'</button></form>'
+      +'<form class="qf-find" id="qffform"><input class="qf-in" id="qffq" maxlength="200" enterkeyhint="search" autocomplete="off" placeholder="'+E(exampleFor(p,'find'))+'"><button type="submit">'+E(T('Find'))+'</button></form>'
       +'<div class="qf-chips" id="qffparsed"></div>'
       +'<div id="qffres"></div>'
       +'<button type="button" class="qf-small" id="qfnormal">'+E(T('Use the normal Quick steps instead'))+'</button>'

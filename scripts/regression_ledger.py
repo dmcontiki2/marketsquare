@@ -37713,6 +37713,29 @@ def rg_quick_fast_1_words():
     return [(INFO, "%d fast-lane words in all 14 offered languages" % len(keys))]
 
 
+@entry("RG-0967", "QUICK-FAST-1: the example in the fast screens' boxes follows the icon -- a cards icon shows the MtG "
+       "example, any other icon its own words ('e.g. Chess coach', 'e.g. Chess coach, Menlyn'), never another trade's example",
+       LOCKED, fixed_on="2026-10-10",
+       scope="quick.html QUICK-FAST-1 module exampleFor/paintSell/paintFind",
+       ref="Found 10 Oct 2026 while measuring the flows for David's timeline visual: the 'Quick Find · Chess coach' icon's "
+           "search box said 'e.g. MtG, Savannah, Dual land, 4th Edition, under R2300' (and the sell box 'e.g. Savannah, "
+           "4th Edition'). 'e.g.' is taken from the already-translated cards example, so no new words.")
+def rg_quick_fast_1_example():
+    q = repo_file("quick.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _qf_block(q, "QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "</script>")
+    if "function exampleFor(p, kind)" not in m:
+        return [(FAIL, "the fast screens have no example that follows the icon")]
+    if "placeholder=\"'+E(exampleFor(p,'sell'))+'\">" not in m or "placeholder=\"'+E(exampleFor(p,'find'))+'\">" not in m:
+        return [(FAIL, "a fast screen's box shows a fixed example instead of the icon's own")]
+    if "placeholder=\"'+E(T('e.g. MtG, Savannah" in m or "placeholder=\"'+E(T('e.g. Savannah, 4th" in m:
+        return [(FAIL, "a fast screen's box shows the cards example on every icon")]
+    if "/^cards$/i.test(w)" not in _qf_block(m, "function exampleFor(p, kind)", "\n  }\n"):
+        return [(FAIL, "exampleFor no longer keeps the MtG example for a cards icon")]
+    return [(INFO, "the example in each fast box follows the icon")]
+
+
 @entry("RG-0966", "QUICK-FAST-1 (rollback + DoD 7): the dashboard switch QUICK_FASTLANE ships OFF and OFF hides every entry point -- "
        "the routes answer 404, Quick shows no tick and opens icons as normal Quick, My Space hides My quick icons -- and all nine "
        "fast-lane routes are declared (SEC-GATE-1) with the presets owned by their account",
