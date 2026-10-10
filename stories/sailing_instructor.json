@@ -102,9 +102,10 @@
    "ch": "c1",
    "who": "you",
    "cost": "free",
-   "img": "f5_02_what",
+   "img": "r_what",
    "pass": true,
    "quick": [
+    "group",
     "what"
    ],
    "en": [
@@ -121,7 +122,7 @@
    "ch": "c1",
    "who": "you",
    "cost": "free",
-   "img": "f5_05_price",
+   "img": "r_price",
    "pass": true,
    "quick": [
     "price"
@@ -140,7 +141,7 @@
    "ch": "c1",
    "who": "you",
    "cost": "free",
-   "img": "f5_06_where",
+   "img": "r_where",
    "pass": true,
    "quick": [
     "where"
@@ -159,7 +160,7 @@
    "ch": "c1",
    "who": "you",
    "cost": "free",
-   "img": "f5_07_draft",
+   "img": "r_draft",
    "pass": true,
    "quick": [
     "draft"
@@ -178,7 +179,7 @@
    "ch": "c2",
    "who": "you",
    "cost": "free",
-   "img": "f5_08_saved",
+   "img": "r_saved",
    "pass": true,
    "quick": [
     "saved"
@@ -356,7 +357,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "free",
-   "img": "f5_16_find_what",
+   "img": "r_find_what",
    "pass": true,
    "en": [
     "Someone new taps [[Find a tutor]], then [[Sport & fitness]]",
@@ -372,7 +373,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "free",
-   "img": "f5_19_results",
+   "img": "r_results",
    "pass": true,
    "en": [
     "Then her area: she finds you",
@@ -528,7 +529,7 @@
    "ch": "c5",
    "who": "you",
    "cost": "free",
-   "img": "f5_08_saved",
+   "img": "r_saved",
    "pass": true,
    "en": [
     "Pass Quick on",

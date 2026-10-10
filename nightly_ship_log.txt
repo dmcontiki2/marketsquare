@@ -2791,3 +2791,46 @@ DEPLOY DRIFT: 49 file(s) local-ahead of live - run /ship: SESSION_COUNTER.json, 
  ============================================================
 Press any key to continue . . . 
 Fri 10/09/2026  2:02:11.78  SHIPPED rc=0 — server runs migrations + smoke itself
+============================================================
+Sat 10/10/2026  2:00:02.28  NIGHTLY SHIP wake
+
+ ============================================================
+  MEDIA PUSH  (hash-gated: only changed files upload)
+  Sat 10/10/2026  2:00:02.35
+ ============================================================
+ [1/7] SUPER exemplar photos (assets\super to /static/super)...
+   [OK] SYNC super: all 390 files already current - upload skipped.
+ [1c] Quick Listing email-strip screens (genie\email_strip to /orchestrator/qstrip)...
+   [OK] SYNC email_strip: all 24 files already current - upload skipped.
+ [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
+   [OK] SYNC quick_ph: all 345 files already current - upload skipped.
+ [1b] Study & Work Abroad example photos (assets\studywork to /static/studywork)...
+   [OK] SYNC studywork: all 12 files already current - upload skipped.
+   [OK] SYNC studywork: all 2 files already current - upload skipped.
+ [2/7] Feature/tutor videos (videos to /static/videos)...
+   [OK] SYNC videos: all 14 files already current - upload skipped.
+ [3/7] Email images - phone cards + heroes (CityLauncher to /static)...
+   [OK] SYNC assets: all 12 files already current - upload skipped.
+   [OK] SYNC assets: all 10 files already current - upload skipped.
+   [OK] SYNC assets: all 1 files already current - upload skipped.
+ [4/7] Legal must-have cards (PNGs per country)...
+   [OK] SYNC ZA: all 7 files already current - upload skipped.
+   [OK] SYNC US: all 7 files already current - upload skipped.
+   [OK] SYNC UK: all 7 files already current - upload skipped.
+   [OK] SYNC AU: all 7 files already current - upload skipped.
+ [5/7] Agency Playbook PDF...
+   [OK] SYNC MarketSquare: all 1 files already current - upload skipped.
+ [6/7] n8n email templates (untracked HTML)...
+   [OK] SYNC email_templates: all 3 files already current - upload skipped.
+ [6b] Plate-detector model (PLATE-DETECTOR-1: models\plate_detector.onnx to /models, hash-gated)...
+   [OK] SYNC models: all 1 files already current - upload skipped.
+ [7/7] Permissions + CDN purge + video re-warm...
+  [OK] CDN purge requested 
+warmed 11 tutor videos on the CF edge
+  [OK] videos re-warmed 
+
+ ============================================================
+  MEDIA PUSH COMPLETE
+ ============================================================
+Press any key to continue . . . 
+Sat 10/10/2026  2:01:38.27  drift: DEPLOY DRIFT: 49 file(s) local-ahead of live - run /ship: genie/QUICK_LISTING_ORCH.html, quick.html, stories/acrobatics_coach.json, stories/aerobics_instructor.json, stories/american_football_coach.json, stories/archery_coach.json, stories/badminton_coach.json, stories/baseball_coach.json, stories/basketball_coach.json, stories/boxing_coach.json, stories/chess_coach.json, stories/climbing_instructor.json, stories/cricket_coach.json, stories/cycling_coach.json, stories/dance_fitness_instructor.json, stories/diving_instructor.json, stories/fencing_coach.json, stories/functional_fitness_coach.json, stories/golf_coach.json, stories/gymnastics_coach.json, stories/hockey_coach.json, stories/horse_riding_instructor.json, stories/jiu_jitsu_instructor.json, stories/judo_instructor.json, stories/karate_instructor.json, stories/kickboxing_coach.json, stories/mma_coach.json, stories/netball_coach.json, stories/padel_coach.json, stories/personal_trainer.json, stories/pilates_instructor.json, stories/rowing_canoeing_coach.json, stories/rugby_coach.json, stories/running_athletics_coach.json, stories/sailing_instructor.json, stories/skating_coach.json, stories/ski_snowboard_instructor.json, stories/soccer_coach.json, stories/squash_coach.json, stories/strength_conditioning_coach.json, stories/surfing_coach.json, stories/swimming_coach.json, stories/table_tennis_coach.json, stories/taekwondo_instructor.json, stories/tennis_coach.json, stories/triathlon_coach.json, stories/volleyball_coach.json, stories/wrestling_coach.json, stories/yoga_instructor.json

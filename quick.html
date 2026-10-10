@@ -2711,7 +2711,7 @@ function qRefreshCardText(){
   var m=/[?&]role=([a-z0-9_]+)/.exec(location.search||''), r=m && svcRole(m[1]);
   if(!r) return;
   setTimeout(function(){
-    ci=SV_I; start('sell');
+    ci=SV_I; paintTheme(); start('sell');   /* ROLE-LINK-THEME-1 (10 Oct 2026): the link opens in its own door's colours */
     picks.push({label:r.g, photo:'role_'+r.k, key:'group', g:r.g});
     picks.push({label:r.l, photo:'role_'+r.k, key:'what', r:r.k});
     step=2; drawStep();
@@ -5491,7 +5491,7 @@ drawDoor();
   var m=/[?&]role=([a-z0-9_]+)/.exec(location.search||''), r0=m && trnRole(m[1]);
   if(r0){
     setTimeout(function(){
-      ci=TI; start('sell');
+      ci=TI; paintTheme(); start('sell');   /* ROLE-LINK-THEME-1 (10 Oct 2026): Tutors' colours, not the door's last */
       picks.push({label:'Sport & fitness', photo:null, key:'tdoor', trn:1});
       picks.push({label:r0.g, photo:'role_'+r0.k, key:'group', g:r0.g});
       picks.push({label:r0.l, photo:'role_'+r0.k, key:'what', r:r0.k});
