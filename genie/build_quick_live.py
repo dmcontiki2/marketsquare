@@ -29,9 +29,8 @@ DOORS = [
  ("adventures",  "Adventures",             "adventures_guest_house",     "#12A5A5"),
  ("localmarket", "Local Market",           "localmarket_food_preserves", "#D8447E"),
 ]
-# Sport & fitness: its TrustSquare-side steps still show the walked Maths listing (TRAINER-SCREENS-1 open item), so the
-# comic shows only the screens that are the coach's own and says the rest runs as in the Tutors story.
-TRAINER_OK = ("r_", "f5_01_door", "f5_10_terms", "f5_13_buzz_link", "f5_14_join", "f5_15_buzz_sent", "f2_16")
+# Sport & fitness: every step whose screen is the coach's own (Quick r_*, TrustSquare t_*, and the shared generic ones).
+TRAINER_OK = ("r_", "t_", "f5_01_door", "f5_10_terms", "f5_13_buzz_link", "f5_14_join", "f5_15_buzz_sent", "f2_16")
 
 # ---- the three email panels: (step image, alt text, caption); a None image = a screen captured for the email itself
 EMAIL = {
@@ -215,8 +214,8 @@ def comic():
         flush()
         note = ""
         if key == "trainers":
-            note = ('<p class="tnote">Sport &amp; fitness sits inside Tutors (RUL-217): every screen here is the coach&rsquo;s own. '
-                    'Publishing, the parent&rsquo;s view and the introduction run exactly as in the Tutors story.</p>')
+            note = ('<p class="tnote">Sport &amp; fitness sits inside Tutors (RUL-217): every screen here is the coach&rsquo;s own, '
+                    'in Quick and in TrustSquare.</p>')
         mail = ('<div class="act" style="--c:%s"><span>Act 0</span><h3>The email that brings her</h3></div>'
                 '<div class="mailwrap"><div class="mail">%s</div></div>' % (colour, strip(key, name, colour)))
         secs.append('<section class="story%s" id="s-%s" style="--c:%s"><header><h2><i></i>%s</h2><p>%s &middot; walked %s &middot; '

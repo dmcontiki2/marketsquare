@@ -35270,8 +35270,9 @@ def rg_trainers_door_1():
     if door.get("category") != "Tutors" or door.get("service_class") != "Trainers" or door.get("wage_floor") is not False:
         bad.append("registry trainers_door is not Tutors / Trainers with no wage floor")
     gated = {r["key"] for r in trn if (r.get("gate") or {}).get("type") == "police_clearance"}
-    for k in ("soccer_coach", "swimming_coach", "gymnastics_coach", "chess_coach"):
-        if k not in gated: bad.append("%s lost its clearance gate (RUL-217(d))" % k)
+    for k in ("soccer_coach", "swimming_coach", "gymnastics_coach", "chess_coach"):   # RUL-219 amends RUL-217(d)
+        if k in gated: bad.append("%s is clearance-GATED -- RUL-219: a trainer's clearance is a Trust Score signal, never a blocker" % k)
+        if not any(r["key"] == k and r.get("clearance_score") for r in trn): bad.append("%s lost its clearance Trust Score hint (RUL-219)" % k)
     if "personal_trainer" in gated: bad.append("personal_trainer gated -- adults' gym training carries no clearance gate")
     i18n_t = repo_file("roles/quick_i18n.json")
     w = (_j.loads(i18n_t).get("w") if i18n_t else {}) or {}

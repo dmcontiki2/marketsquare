@@ -477,3 +477,10 @@ Thu 10/08/2026  5:30:06.20  main mirrored to GitHub
 Fri 10/09/2026  5:30:02.42  committed 1 change(s)
 sync-origin [MarketSquare]: in step with origin/main (this tree is 1 commit(s) ahead)
 Fri 10/09/2026  5:30:03.80  main mirrored to GitHub
+[main b050f0f] Nightly checkpoint Sat 10/10/2026  5:30:02.79 (auto, no deploy)
+ 14 files changed, 785 insertions(+), 2049 deletions(-)
+ delete mode 100644 genie/email_strip/homehelp_strip.html
+ create mode 100644 genie/email_strip/trainers_strip.html
+Sat 10/10/2026  5:30:02.88  committed 14 change(s)
+sync-origin [MarketSquare]: in step with origin/main (this tree is 1 commit(s) ahead)
+Sat 10/10/2026  5:30:04.62  IP HOLD: commit kept local, push skipped 

@@ -210,7 +210,7 @@
    "ch": "c2",
    "who": "you",
    "cost": "free",
-   "img": "f5_09_photos",
+   "img": "t_photos",
    "pass": true,
    "en": [
     "Add photos of where you train people",
@@ -254,7 +254,7 @@
    "ch": "c2",
    "who": "you",
    "cost": "free",
-   "img": "f5_12_published",
+   "img": "t_published",
    "pass": true,
    "en": [
     "Publish: parents can find you at once",
@@ -430,7 +430,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "free",
-   "img": "f5_20_detail",
+   "img": "t_detail",
    "pass": true,
    "en": [
     "She sees your sport, your price and your trust score",
@@ -446,7 +446,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "1T",
-   "img": "f5_21_ask",
+   "img": "t_ask",
    "pass": true,
    "en": [
     "She asks for an introduction",
@@ -474,7 +474,7 @@
    "ch": "c4",
    "who": "you",
    "cost": "free",
-   "img": "f5_24_request",
+   "img": "t_request",
    "pass": true,
    "en": [
     "You see her request",
@@ -502,7 +502,7 @@
    "ch": "c4",
    "who": "you",
    "cost": "free",
-   "img": "f5_25_accept",
+   "img": "t_accept",
    "pass": true,
    "en": [
     "You accept",
@@ -530,7 +530,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "free",
-   "img": "f5_26_buyer_intros",
+   "img": "t_buyer_intros",
    "pass": true,
    "en": [
     "She is introduced",
@@ -577,10 +577,7 @@
  },
  "derived_from": "tutors_maths",
  "gate_note": {
-  "en": "Coming up at step 10: until our team has checked your police clearance, only people you send your link to can see your listing.",
-  "af": "By stap 10: totdat ons span jou polisieklaring nagegaan het, kan net mense aan wie jy jou skakel stuur jou advertensie sien.",
-  "zu": "Kuyeza esinyathelweni 10: kuze kube yilapho ithimba lethu selihlolile isitifiketi sakho samaphoyisa, ngabantu kuphela obathumelela isixhumanisi sakho abangabona isikhangiso sakho.",
-  "xh": "Kwinyathelo le-10: de iqela lethu lihlole isatifikethi sakho samapolisa, ngabantu kuphela obathumelela ikhonkco lakho abanokubona intengiso yakho.",
-  "nso": "Kgatong ya 10: go fihlela sehlopha sa rena se hlahlobile setifikeiti sa gago sa maphodisa, ke batho feela bao o ba romelago kgokagano ya gago bao ba ka bonago papatšo ya gago."
+  "en": "Step 10 is optional: your listing is visible straight away. A checked police clearance adds points to your Trust Score, and parents look for it.",
+  "af": "Stap 10 is opsioneel: jou advertensie is dadelik sigbaar. 'n Nagegane polisieklaring voeg punte by jou vertrouetelling, en ouers soek daarna."
  }
 }

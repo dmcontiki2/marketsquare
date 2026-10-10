@@ -1,3 +1,9 @@
+## 2026-10-10 — INTRO-ONLY-2 (RUL-219 amended): trainer clearance is a Trust Score signal, not a visibility gate
+- David: not blockers, but still very important Trust Score indicators for parents. Trust Score points unchanged (tutors clearance 8, SACE 8).
+- build_role_registry.py: the 28 child-coaching trainer roles lose the RUL-153 gate (RUL-217(d) amended) and carry clearance_score; nanny, caregiver, au pair, crèche assistant stay gated (RUL-153).
+- Registry, Quick role blocks (sync_quick_roles.py), 47 trainer guides and help gallery rebuilt; guide note now says the clearance step is optional and earns Trust Score points.
+- regression_ledger rg_trainers_door_1 now fails if a trainer is clearance-gated.
+
 ## 2026-10-10 — INTRO-ONLY-1 (RUL-219): no 'Absolute Must-Haves' — tutors list with no legal page
 - David: we only introduce; the Step 6 tutor card read as our blockers and stopped people listing.
 - ms.js sfLegalCat: Tutors (incl. the Trainers door) -> null, so Features goes straight to the scorecard.

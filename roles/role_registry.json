@@ -7221,9 +7221,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7287,9 +7288,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7353,9 +7355,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7419,9 +7422,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7683,9 +7687,10 @@
    "aliases": [
     "Football coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7749,9 +7754,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7815,9 +7821,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7885,9 +7892,10 @@
     "Field hockey coach",
     "Ice hockey coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -7951,9 +7959,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8017,9 +8026,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8083,9 +8093,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8152,9 +8163,10 @@
    "aliases": [
     "Softball coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8218,9 +8230,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8284,9 +8297,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8350,9 +8364,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8479,9 +8494,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8545,9 +8561,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8611,9 +8628,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8744,9 +8762,10 @@
     "Swimming teacher",
     "Learn-to-swim instructor"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -8877,9 +8896,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9079,9 +9099,10 @@
     "Athletics coach",
     "Track coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9275,9 +9296,10 @@
     "Riding instructor",
     "Equestrian coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9345,9 +9367,10 @@
     "Rock climbing instructor",
     "Bouldering coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9416,9 +9439,10 @@
     "Roller skating coach",
     "Skateboarding coach"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9486,9 +9510,10 @@
     "Ski instructor",
     "Snowboard instructor"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9552,9 +9577,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9618,9 +9644,10 @@
     "category.tutors.exp_2_5",
     "category.tutors.exp_5plus"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {
@@ -9686,9 +9713,10 @@
     "category.tutors.fide_ft",
     "category.tutors.fide_fi"
    ],
-   "gate": {
-    "type": "police_clearance",
-    "ruling": "RUL-217(d) / RUL-153"
+   "gate": null,
+   "clearance_score": {
+    "signal": "category.tutors.clearance",
+    "ruling": "RUL-219"
    },
    "employer_kinds": [],
    "role_picture": {

@@ -1308,6 +1308,7 @@ REFLECTIONS = {
    ("ms.js", ["if(c==='Tutors') return null;  // INTRO-ONLY-1", "GOOD TO KNOW · '+d.label+'", "TrustSquare only introduces. None of this is needed to list"], ["ABSOLUTE MUST-HAVES", "if(c==='Tutors') return 'tutors';"]),
    ("assets/legal-must-haves/legal-cards.js", [], ["not optional extras"]),
    ("marketsquare.html", ["legal-cards.js?v=2"], []),
+   ("roles/role_registry.json", ['"clearance_score"'], ['"ruling": "RUL-217(d) / RUL-153"']),   # trainers: score, not gate
  ],
  "RUL-218": [
    # A trainer's picture is a real-looking photo of the coaching itself, nobody recognisable (10 Oct; amends RUL-157 for Trainers).

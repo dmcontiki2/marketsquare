@@ -26,7 +26,11 @@ GATE_STEP = GATE_NOTE = None
 LANGS = ("en", "af", "zu", "xh", "nso")
 LOCAL = ("zu", "xh", "nso")
 OWN = {"f5_02_what": "r_what", "f5_05_price": "r_price", "f5_06_where": "r_where", "f5_07_draft": "r_draft",
-       "f5_16_find_what": "r_find_what", "f5_19_results": "r_results"}
+       "f5_16_find_what": "r_find_what", "f5_19_results": "r_results",
+       # TRAINER-SCREENS-2 (10 Oct 2026): the TrustSquare side too -- her Edit, her Seller Hub, her advert, the parent's
+       # Join queue and introductions -- captured as the QA test seller / parent with her sport on the screen
+       "f5_09_photos": "t_photos", "f5_12_published": "t_published", "f5_20_detail": "t_detail", "f5_21_ask": "t_ask",
+       "f5_24_request": "t_request", "f5_25_accept": "t_accept", "f5_26_buyer_intros": "t_buyer_intros"}
 
 
 def names():
@@ -64,7 +68,8 @@ def build(parent, r, nm, gp):
     for lg in LOCAL:
         t = ptitle.get(lg, ""); pl = plabel.get(lg, "")
         d["title"][lg] = (nm[lg] + t[len(pl):]) if (t and pl and t.startswith(pl)) else d["title"]["en"]
-    clear = (r.get("gate") or {}).get("type") == "police_clearance"
+    gated = (r.get("gate") or {}).get("type") == "police_clearance"
+    clear = gated or bool(r.get("clearance_score"))   # RUL-219: the upload step stays as a Trust Score step, not a gate
     G, N = gp["en"], nm["en"]
     steps = []
     for s in d["steps"]:
@@ -130,6 +135,9 @@ def build(parent, r, nm, gp):
     if clear:
         n = next(x["n"] for x in steps if x.get("gate"))
         d["gate_note"] = {lg: re.sub(r"\b\d+\b", str(n), t, count=1) for lg, t in GATE_NOTE.items()}
+        if not gated:   # RUL-219 (David 10 Oct 2026): listed and visible at once; the clearance is a Trust Score signal
+            d["gate_note"] = {"en": "Step %d is optional: your listing is visible straight away. A checked police clearance adds points to your Trust Score, and parents look for it." % n,
+                              "af": "Stap %d is opsioneel: jou advertensie is dadelik sigbaar. 'n Nagegane polisieklaring voeg punte by jou vertrouetelling, en ouers soek daarna." % n}
     # TRAINER-SCREENS-1 (David, 10 Oct 2026: "this is the Sport & fitness but it is showing maths"): every Quick screen
     # the guide shows is her OWN sport's, captured on the live site by scripts/trainer_guide_screens.py into
     # stories/img/<sport>/r_<screen>.jpg -- her sport tile, her price, her areas, her listing, her saved card, and a
@@ -143,7 +151,7 @@ def build(parent, r, nm, gp):
             if own == "r_what":
                 s["quick"] = ["group", "what"]       # How opened on the sport-group screen lands on this card too
     for s in steps:
-        if s["img"].startswith("r_"):
+        if s["img"].startswith(("r_", "t_")):
             continue
         src = os.path.join(IMG, NANNY if s.get("gate") else PARENT, s["img"] + ".jpg"); dst = os.path.join(IMG, k, s["img"] + ".jpg")
         if os.path.isfile(src):

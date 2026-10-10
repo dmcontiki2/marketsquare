@@ -210,7 +210,7 @@
    "ch": "c2",
    "who": "you",
    "cost": "free",
-   "img": "f5_09_photos",
+   "img": "t_photos",
    "pass": true,
    "en": [
     "Add photos of where you train people",
@@ -254,7 +254,7 @@
    "ch": "c2",
    "who": "you",
    "cost": "free",
-   "img": "f5_12_published",
+   "img": "t_published",
    "pass": true,
    "en": [
     "Publish: parents can find you at once",
@@ -401,7 +401,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "free",
-   "img": "f5_20_detail",
+   "img": "t_detail",
    "pass": true,
    "en": [
     "She sees your sport, your price and your trust score",
@@ -417,7 +417,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "1T",
-   "img": "f5_21_ask",
+   "img": "t_ask",
    "pass": true,
    "en": [
     "She asks for an introduction",
@@ -445,7 +445,7 @@
    "ch": "c4",
    "who": "you",
    "cost": "free",
-   "img": "f5_24_request",
+   "img": "t_request",
    "pass": true,
    "en": [
     "You see her request",
@@ -473,7 +473,7 @@
    "ch": "c4",
    "who": "you",
    "cost": "free",
-   "img": "f5_25_accept",
+   "img": "t_accept",
    "pass": true,
    "en": [
     "You accept",
@@ -501,7 +501,7 @@
    "ch": "c4",
    "who": "customer",
    "cost": "free",
-   "img": "f5_26_buyer_intros",
+   "img": "t_buyer_intros",
    "pass": true,
    "en": [
     "She is introduced",

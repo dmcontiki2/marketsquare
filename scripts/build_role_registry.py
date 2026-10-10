@@ -368,13 +368,14 @@ AF.update({
  "ski_snowboard_instructor": "Ski- en sneeuplankinstrukteur", "gymnastics_coach": "Gimnastiekafrigter",
  "acrobatics_coach": "Akrobatiekafrigter", "chess_coach": "Skaakafrigter",
 })
-# RUL-217(d): trainer types that commonly coach children carry the RUL-153 police-clearance gate
+# RUL-217(d) AMENDED by RUL-219 (David 10 Oct 2026): trainer types that commonly coach children carry NO visibility gate --
+# a police clearance is a Trust Score signal for them (category.tutors.clearance), never a blocker. Set kept for guides/hints.
 TRAINER_CLEAR = {"wrestling_coach", "judo_instructor", "karate_instructor", "taekwondo_instructor", "soccer_coach",
  "rugby_coach", "cricket_coach", "hockey_coach", "netball_coach", "basketball_coach", "volleyball_coach", "baseball_coach",
  "american_football_coach", "tennis_coach", "squash_coach", "badminton_coach", "table_tennis_coach", "golf_coach",
  "swimming_coach", "surfing_coach", "running_athletics_coach", "horse_riding_instructor", "climbing_instructor",
  "skating_coach", "ski_snowboard_instructor", "gymnastics_coach", "acrobatics_coach", "chess_coach"}
-for _k in TRAINER_CLEAR: GATES[_k] = dict(CLEAR, ruling="RUL-217(d) / RUL-153")
+# (no GATES entry for TRAINER_CLEAR -- INTRO-ONLY-1 / RUL-219)
 TRAINER_PICTURE_STYLE = PICTURE_STYLE.replace("a South African setting", "a neutral setting that reads anywhere in the world")
 
 ROLE_PATCH = json.loads('{"car_washer": {"note": "Mobile washers come to homes and offices — a direct hire. CARWASH-1 (David, 7 Oct 2026): priced per car and per kind of clean (wash only / wash & vacuum / wash, vacuum, tyres & dashboard / full valet), never per hour; area-bound like a cleaner; regulars rebook him through Buzz.", "questions": [{"key": "where", "q": "Where can you work?", "kind": "tile", "free": true}, {"key": "days", "q": "Which days are you open?", "kind": "week"}, {"key": "price", "q": "What do you charge per car?", "kind": "chip"}], "price_menu": ["Wash only", "Wash & vacuum", "Wash, vacuum, tyres & dashboard", "Full valet (inside & out)"], "employer_kinds": ["household", "business"]}}')
@@ -421,6 +422,8 @@ def main():
               row["signals"] = ["category.services_%s.%s" % ("cas" if cls == "Casuals" else "tech", s)
                                 for s in (CAS_SIGNALS if cls == "Casuals" else TECH_SIGNALS)]
             row["gate"] = GATES.get(key)
+            if key in TRAINER_CLEAR:   # RUL-219: a checked clearance earns Trust Score points; never a visibility gate
+                row["clearance_score"] = {"signal": "category.tutors.clearance", "ruling": "RUL-219"}
             if key in SHOWN:   # LICENCE-SHOWN-1: shown to buyers as checked or not, never a gate
                 row["licence_shown"] = {"licences": SHOWN[key], "label": "Driving licence", "ruling": "RUL-198"}
             row["employer_kinds"] = EK.get(key, ["household"] if cls == "Casuals" else [])
