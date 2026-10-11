@@ -1,3 +1,53 @@
+## 2026-10-11 — REACH-NATIONAL-1 (RUL-220): a free 'Nationwide' switch on every advert; tier cascade recorded (RUL-221)
+
+David, 11 Oct 2026 (the Bee Lady ships and travels ZA-wide): reach follows what the seller does, not what she pays.
+- listings.reach (NULL/'local' = her city; 'national' = every city of her own country). Migration in init (ALTER TABLE).
+- GET /listings branch A, _zoom_candidates_raw and GET /local-market/listings include nationwide adverts of the buyer's
+  country (UPPER(COALESCE(country,'ZA'))). POST /listings, POST /local-market/listings and PUT /listings accept `reach`
+  (normalised by _norm_reach).
+- ms.js: the seller's own card carries one button -- '📍 My city only' / '🌍 Nationwide ✓' (msReachButton,
+  msToggleReach -> PUT reach); the advert detail shows '· Nationwide'.
+- Paid multi-city 402 text now says the paid lane is for reach beyond her own country; in-country reach is the free switch.
+- RULINGS.md RUL-220 (switch) + RUL-221 (tier cascade: new functions at $20, previous $20 features step down to $5,
+  e.g. PA -> $5 when super-PA lands); PRICING_CANON.md §2e.
+- Ledger RG-0956 (LOCKED). RG-0954 duplicate from the Goal run 35 merge renumbered: AI-PROPS-1 is RG-0955.
+
+## 2026-10-11 — Bee Lady adverts upgraded + third advert (BEE-LADY-3)
+
+David, 11 Oct 2026: upgrade Marietjie's adverts with new pictures, prices from David, text from her CV, and her new base.
+- Pictures made with Grok Imagine 2.0 via the Higgsfield API ($0.50 total): bee_6_talk (boma talk, her face from
+  David's emailed photos), bee_7_course (field course, hops + sea), bee_8_audit (farm hive audit). Real photos added:
+  bee_9_apiary (Marietjie 2.jpeg), bee_10_frame (David's frame photo). All in assets/super + /static/super.
+- #275 Bee Talks: R 100 per person, new text, photos bee_6/1/4.
+- #274 Beekeeping course: "On demand — tailored to your group" (was R 1 200), new text, photos bee_7/10/9.
+- NEW #538 Beehive Audit & Consulting for farms (Services/Technical, "Beekeeping consultant"):
+  R 4 000 per audit + transport & accommodation outside the George area; on her account (marietjie.marais59@gmail.com).
+- #273/#274/#275/#538 moved to Great Brak River / Mossel Bay (geo 136, area Garden Route); Pretoria POIs and legacy
+  auto-linked wonders cleared (Tutors/Services/LM are outside the 12 Jun wonder allowlist).
+- Credentials text now matches her CV (NBA Secretary since 2016, SABIO, DALRRD 2025, 10 yrs); the unsupported
+  "national secretary" and "Gauteng government appointment" claims removed.
+- Server DB backup: marketsquare.db.bak-<ts>-beelady-upgrade. Verified rendered on trustsquare.co/?listing=274/275/538.
+- ZA-wide reach (David, 11 Oct: "her adverts are not area bound"): #273/#274/#275/#538 extended via listing_cities to all
+  13 other active ZA cities (tester exception to the paid multi-city rule, like her tester grant).
+- **LM-REACH-1** (bea_main.py lm_list_listings): the Local Market list now honours listing_cities, as the main browse
+  already did -- before, an LM advert showed only in its own city. Patched in place on the server (main.py.lastgood
+  saved, compile OK, restart active, /health 200); verified /local-market/listings?city=Pretoria|Durban|Cape Town -> 273.
+- OPEN DECISION put to David: reach for free sellers (nationwide flag vs paid multi-city).
+
+### The photo read stops selling the ornaments; a coach finds her door from Sell (Goal run 35)
+
+Found walking Local Market · Furniture & Home as a Cape Town seller (docs/E2E_2026-10-10.md).
+
+- **AI-PROPS-1** — a dresser photographed with a radio and books on it was titled "Oak Dresser With Vintage Radio", and her
+  story box (which buyers read as written) said the radio and books "may not be included". The read's title now names only the
+  item (a "with <prop>" tail is cut when the read's own dropped sentences show it is a prop), prop sentences are dropped from
+  her story box and the advert, and the vision prompt tells the model the same.
+- **TRAINER-SELL-CARD-1** — the Trainers door (RUL-217) lives inside Quick's Tutors door, and Sell offered a coach only
+  "Tutors" ("You at the board") or a card about cleaners. Sell now has "🏅 Coach a sport?", which opens Quick's sell flow on
+  "Which kind of sport?" with Sport & fitness already chosen (`/quick/?c=tutors&trn=1`).
+
+Ledger RG-0954. Cost model impact: none. Schema: none.
+
 ## 2026-10-10 — GIT-LOCK-6: the stale-lock sweep now covers a linked worktree's own locks (RG-0954)
 - A commit in the fastlane worktree left .git/worktrees/_fastlane_wt/HEAD.lock behind (the mount blocks git's own unlink). scripts/git_unlock.py only looked at .git/*.lock and .git/refs/**, so it reported nothing.
 - scripts/git_unlock.py (main and the fastlane worktree copy): also sweeps .git/worktrees/*/<HEAD|index|...>.lock, treated as blocking; healed by rename into .git/stale_locks/ as before.
