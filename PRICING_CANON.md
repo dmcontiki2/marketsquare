@@ -124,3 +124,7 @@ Exit 0 = code <-> canon <-> key docs agree. Non-zero = drift, with the exact mis
 - Earlier multi-tier seller/buyer subscription models and the per-day “introduction sessions” scheme were **fully retired — no grandfathering** (no existing users carried over).
 
 All superseded by the **Simpler Model (9-10 Jun 2026)** and pinned here on 15 Jun 2026. These appear only in changelogs/timelines/`_CCP_STAGED` as historical record.
+
+### 2e · Seller reach: the free Nationwide switch (David, 11 Oct 2026 -- RUL-220) and the tier cascade (RUL-221)
+**Every advert can be 'Nationwide' on every plan, free: it then shows in every city of the seller's OWN country.** A seller who ships or travels taps 'Nationwide' on her own card; 'My city only' is the default. The paid multi-city lane (`/listings/{id}/cities`, Starter/Pro/Agency) keeps its value as reach into OTHER countries' searches. **Tier cascade (RUL-221):** new exclusive functions arrive on the $20 tier and the previous $20 features step down to $5 (first planned case: PA to $5 when a super-PA lands at $20), so Free keeps improving as the feeder for paid plans.
+**Authority:** `bea_main.py` listings.reach, `_norm_reach`, `GET /listings` branch A, `_zoom_candidates_raw`, `GET /local-market/listings`; `ms.js` msReachButton / msToggleReach.

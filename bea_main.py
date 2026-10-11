@@ -1577,6 +1577,10 @@ def run_migrations(conn):
                      ("search_en", "TEXT")):
         if _lc not in listing_cols_sm:
             conn.execute("ALTER TABLE listings ADD COLUMN %s %s" % (_lc, _ld))
+    # REACH-NATIONAL-1 (David, 11 Oct 2026): 'national' = the seller ships / travels country-wide, so the advert shows
+    # in every city of HER country, on every plan, free. NULL / 'local' = her own city only (the old behaviour).
+    if "reach" not in listing_cols_sm:
+        conn.execute("ALTER TABLE listings ADD COLUMN reach TEXT")
 
     # ── EULA acceptance gate (Session 37) ────────────────────────
     # eula_accepted_at must be non-NULL before a seller can publish.
@@ -2732,6 +2736,7 @@ class Listing(_PhotoSafe, BaseModel):
     area: Optional[str] = None
     suburb: Optional[str] = None
     description: Optional[str] = None
+    reach: Optional[str] = None   # REACH-NATIONAL-1: 'local' | 'national'
     thumb_url: Optional[str] = None
     medium_url: Optional[str] = None
     # Property fields
@@ -2823,6 +2828,7 @@ class ListingUpdate(_PhotoSafe, BaseModel):
     service_class: Optional[str] = None
     service_type: Optional[str] = None
     availability: Optional[str] = None
+    reach: Optional[str] = None   # REACH-NATIONAL-1: 'local' | 'national'
     rental_status: Optional[str] = None   # 'available' | 'reserved' | 'occupied'
     available_from: Optional[str] = None  # ISO date YYYY-MM-DD
     photo_urls: Optional[str] = None    # JSON-encoded array of photo URLs
@@ -3707,6 +3713,20 @@ def _listings_etag(request, response, payload, viewer, staff):
     return payload
 
 
+def _norm_reach(v):
+    """REACH-NATIONAL-1: anything that means country-wide -> 'national'; everything else -> 'local'."""
+    return "national" if str(v or "").strip().lower() in ("national", "nationwide", "country", "za", "true", "1") else "local"
+
+
+def _reach_country_for_city(conn, city):
+    """REACH-NATIONAL-1: the country of the buyer's city -- a nationwide advert shows only inside its own country."""
+    try:
+        r = conn.execute("SELECT country_iso2 FROM geo_cities WHERE LOWER(name)=LOWER(?) LIMIT 1", (city or "",)).fetchone()
+        return (r["country_iso2"] if r else "") or ""
+    except Exception:
+        return ""
+
+
 @app.get("/listings")
 def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                  suburb: Optional[str] = None, demo: int = 0,
@@ -3729,6 +3749,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         "SELECT id FROM geo_cities WHERE LOWER(name)=LOWER(?) LIMIT 1", (city,)
     ).fetchone()
     buyer_city_id = city_row["id"] if city_row else None
+    buyer_cc = _reach_country_for_city(conn, city)   # REACH-NATIONAL-1
 
     # Base filters shared by both branches of the UNION
     # Branch A: listing's home city matches buyer city (original behaviour)
@@ -3835,8 +3856,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             SELECT l.*, gs.lat as suburb_lat, gs.lng as suburb_lng
             FROM listings l
             LEFT JOIN geo_suburbs gs ON gs.name = l.suburb AND gs.city_id = l.geo_city_id
-            WHERE l.city = ? AND {suspension_filter} AND {lm_filter_a} {demo_filter}"""
-        params_a = [city, cat_param]
+            WHERE (l.city = ? OR (l.reach = 'national' AND UPPER(COALESCE(l.country,'ZA')) = ?)) AND {suspension_filter} AND {lm_filter_a} {demo_filter}"""
+        params_a = [city, buyer_cc or "--", cat_param]   # REACH-NATIONAL-1: nationwide adverts of the buyer's country
 
     # Branch C: trip-planning reach exemption — these categories show from ALL cities,
     # for all buyers, regardless of tier. Included when the feed is the mixed/no-category
@@ -4096,6 +4117,8 @@ def _zoom_candidates_raw(conn, cat_norm: str, city: str, demo: int, tier: str, v
         params.append(cid)
     if cat_norm in ("Services", "Tutors"):
         q += " OR LOWER(COALESCE(l.mode,'')) IN ('online','both')"
+    q += " OR (l.reach = 'national' AND UPPER(COALESCE(l.country,'ZA')) = ?)"   # REACH-NATIONAL-1
+    params.append(_reach_country_for_city(conn, city) or "--")
     q += ")"
     rows = [dict(r) for r in conn.execute(q, params).fetchall()]
     seen = {r["id"] for r in rows}
@@ -4371,6 +4394,8 @@ def create_listing(listing: Listing, background_tasks: BackgroundTasks, _key: st
          listing.spec_confirmed, _country)
     )
     new_id = cursor.lastrowid
+    if listing.reach is not None:   # REACH-NATIONAL-1
+        conn.execute("UPDATE listings SET reach = ? WHERE id = ?", (_norm_reach(listing.reach), new_id))
     if listing.floor_area or listing.erf_size:   # SIZE-CARRY-1 (6 Oct 2026, Maroushka)
         conn.execute("UPDATE listings SET floor_area = COALESCE(?, floor_area), erf_size = COALESCE(?, erf_size) WHERE id = ?",
                      (int(listing.floor_area) if listing.floor_area else None,
@@ -6027,6 +6052,8 @@ def update_listing(listing_id: int, update: ListingUpdate, background_tasks: Bac
 
     # Apply only the non-None fields
     d = {k: v for k, v in update.dict().items() if v is not None}
+    if "reach" in d:
+        d["reach"] = _norm_reach(d["reach"])   # REACH-NATIONAL-1
     if not d:
         conn.close()
         return {"message": "No fields changed", "listing_id": listing_id}
@@ -13922,6 +13949,7 @@ class LMListingIn(_PhotoSafe, BaseModel):
     city: str
     geo_city_id: Optional[int] = None
     country: Optional[str] = None
+    reach: Optional[str] = None   # REACH-NATIONAL-1
     seller_email: str
     thumb_url: Optional[str] = None
     medium_url: Optional[str] = None
@@ -14180,6 +14208,8 @@ def lm_create_listing(listing: LMListingIn, background_tasks: BackgroundTasks,
          _lm_status, _lm_status, _price_number(listing.price))   # PRICE-NUM-1
     )
     new_id = cur.lastrowid
+    if listing.reach is not None:   # REACH-NATIONAL-1
+        conn.execute("UPDATE listings SET reach = ? WHERE id = ?", (_norm_reach(listing.reach), new_id))
     conn.commit()
     # LM-LOWBAL-1 (RUL-185): warn her now if she could not pay for her first buyer.
     _lm_warn = None
@@ -14221,8 +14251,9 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
         # LM-REACH-1 (11 Oct 2026, David: "she ships ZA wide"): a Local Market advert extended to more
         # cities (listing_cities) shows there too -- the main browse already honoured this, LM did not.
         clauses.append("(l.city = ? OR l.id IN (SELECT lc.listing_id FROM listing_cities lc "
-                       "JOIN geo_cities g ON g.id = lc.city_id WHERE g.name = ?))")
-        params.extend([city, city])
+                       "JOIN geo_cities g ON g.id = lc.city_id WHERE g.name = ?)"
+                       " OR (l.reach = 'national' AND UPPER(COALESCE(l.country,'ZA')) = ?))")   # REACH-NATIONAL-1
+        params.extend([city, city, _reach_country_for_city(conn, city) or "--"])
     if suburb:
         clauses.append("(l.suburb = ? OR (',' || REPLACE(LOWER(COALESCE(l.area,'')), ', ', ',') || ',') LIKE ?)")   # AREAS-MULTI-1
         params.extend([suburb, "%," + (suburb or "").strip().lower() + ",%"])
@@ -18009,7 +18040,7 @@ def add_listing_city(listing_id: int, payload: ListingCityIn,
         if tier not in _PAID_TIERS:
             raise HTTPException(
                 status_code=402,
-                detail="Multi-city reach is included with Starter ($5/month), Pro, and verified Agency accounts. Upgrade at trustsquare.co/admin.html"
+                detail="Reach into cities beyond your own country is included with Starter ($5/month), Pro, and verified Agency accounts. To show this advert in every city of your own country, tap Nationwide on your listing -- free on every plan (RUL-220)."
             )
 
         # Verify city exists

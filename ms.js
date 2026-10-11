@@ -487,6 +487,7 @@ function _msMapBeaListing(l){
           cat: normCat(l.category),
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
           country: (l.country||'ZA').toString().toUpperCase(),   // MAP+CURRENCY FIX (25 Jul): country must survive normalization, else detail view treats every adventure as ZA (Dinokeng map + rands)
+          reach: (l.reach==='national') ? 'national' : 'local',   // REACH-NATIONAL-1
           tour: (l.tour||'').toString().toLowerCase(),   // TOUR-MAP FIX (26 Jul): tour code must survive normalization too, else ADV_TOUR_MAP never resolves and a multi-country tour (Cape-to-Cairo) falls back to the ZA reserve map
           feat: false,
           title: l.title,
@@ -6459,7 +6460,7 @@ function openDetail(id){
       </div>
       ${l.super_example?'<div style="display:inline-block;background:#e63946;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:14px;letter-spacing:.02em;font-family:Syne,sans-serif;margin-bottom:6px;">AI EXAMPLE GENERATED LISTING — not a real listing from a seller; an AI-made example of the benchmark for this category</div>':''}
       <div class="dtitle" data-notranslate="1">${_lv.title||(l.cat?l.cat+' listing':'Untitled')}${_lv.chip}</div>${_lv.flip}
-      <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(l.area)}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||_lmEsc(l.country.toUpperCase())}`:''}${advEnvLabel?' · '+advEnvLabel:''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
+      <div class="dmeta"><div class="dmi" onclick="showListingAreaMap('${id}')" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${_lmEsc(l.area)}${isAdv&&l.country?` · ${ADV_COUNTRY_FLAGS[l.country.toUpperCase()]||_lmEsc(l.country.toUpperCase())}`:''}${advEnvLabel?' · '+advEnvLabel:''}${l.reach==='national'?' · <b style="color:var(--navy);">Nationwide</b>':''} <span style="color:var(--accent);font-size:11px;font-weight:600;">· View on map</span></div></div>
       <div class="price-block">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;">${(l.cat==='Cars' && /hire|rent/i.test(l.carDeal||'')) ? '🔑 For hire · hire rate' : 'Price'}</div>
@@ -12188,6 +12189,31 @@ function msKeepLive(id){
 
 // E2E-HMI-1 (24 Sep 2026): Pause was a dead button ('Pause coming soon') on every advert while
 // the EULA (s4.6) promises a PAUSED state. Paused adverts are hidden from buyers; the fade clock runs on.
+/* REACH-NATIONAL-1 (David, 11 Oct 2026): one tap on her own card -- "My city only" or "Nationwide" (she ships or
+   travels). Free on every plan; a nationwide advert shows in every city of her own country. */
+function msReachButton(dl){
+  var nat = !!(dl._raw && dl._raw.reach === 'national');
+  return '<button class="mla-btn" title="' + (nat ? 'Shown in every city of your country. Tap to show it in your own city only.'
+      : 'Shown in your own city only. Tap if you ship or travel country-wide.') + '" onclick="msToggleReach(' + Number(dl.beaListingId) + ',' + (nat ? 'false' : 'true') + ')"'
+    + (nat ? ' style="border-color:#16a34a;color:#15803d;font-weight:800;"' : '') + '>'
+    + (nat ? '\ud83c\udf0d Nationwide \u2713' : '\ud83d\udccd My city only') + '</button>';
+}
+function msToggleReach(id, national){
+  var em = ''; try { em = localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || ''; } catch(e) {}
+  fetch(BEA_URL + '/listings/' + id + '?email=' + encodeURIComponent(em), {
+    method: 'PUT', credentials: 'include', headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY},
+    body: JSON.stringify({reach: national ? 'national' : 'local'})
+  }).then(function(r){ if(!r.ok) return r.json().then(function(j){ throw new Error((j && j.detail) || ('HTTP ' + r.status)); }); return r.json(); })
+    .then(function(){
+      var dl = dashState.listings.find(function(x){ return x.beaListingId === id || x.id === id; });
+      if(dl && dl._raw) dl._raw.reach = national ? 'national' : 'local';
+      showToast(national ? 'Nationwide \u2014 buyers in every city of your country can now find this advert.'
+                         : 'My city only \u2014 this advert now shows in your own city.');
+      renderDash();
+    })
+    .catch(function(e){ showToast('Could not change it: ' + e.message, 6000); });
+}
+
 function msPauseListing(id, pause){
   fetch(BEA_URL + '/listings/' + id + '/pause', {
     method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY},
@@ -12370,7 +12396,7 @@ function renderDashCard(dl){
       ${wonderBanners}
       ${introsHtml}
       ${lmNoShowRows(dl)}
-      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived listing cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${(_ls==='paused' && !(dl.isCommit && pendingIntros.length))?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
+      ${dl.beaListingId?(_ls==='archived'?`<div class="ml-actions"><span style="font-size:11px;color:var(--text-3);">Archived — an archived listing cannot come back. Make a new one any time.</span><button class="mla-btn" style="color:#dc2626;border-color:#fecaca;" onclick="dashDeleteListing(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Delete</button></div>`:`<div class="ml-actions">${dl.status==='draft'?`<button class="mla-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);" onclick="dashPublish(${dl.beaListingId})">Publish</button>`:''}<button class="mla-btn" onclick="openEditListing(${dl.beaListingId})">Edit</button>${(dl.status!=='draft')?msReachButton(dl):''}${(dl.status!=='draft'&&_ls==='live')?`<button class="mla-btn" style="border-color:#25D366;color:#128C7E;font-weight:800;" onclick="msShareStatus(${dl.beaListingId}, ${JSON.stringify(String(dl.title||'')).replace(/"/g,'&quot;')})">Share to Status</button>`:''}${_ls==='live'?`<button class="mla-btn" onclick="msPauseListing(${dl.beaListingId}, true)">Pause</button>`:''}${(_ls==='paused' && !(dl.isCommit && pendingIntros.length))?`<button class="mla-btn accent" onclick="msPauseListing(${dl.beaListingId}, false)">Resume</button>`:''}</div>`):''}
     </div>
   </div>`;
 }

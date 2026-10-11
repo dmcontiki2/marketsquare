@@ -37574,7 +37574,7 @@ def rg_col_kind_words_1():
     return [(INFO, "Collectors examples follow the kind; photo-talk sentences dropped; GoogleOther flagged as a machine")]
 
 
-@entry("RG-0954", "AI-PROPS-1 (Goal run 35, 10 Oct 2026): the photo read's title names only the item for sale, and its draft "
+@entry("RG-0955", "AI-PROPS-1 (Goal run 35, 10 Oct 2026): the photo read's title names only the item for sale, and its draft "
        "never says the things standing on or beside it 'may not be included'; Sell has a 'Coach a sport?' card that opens "
        "Quick's Trainers door on the sport groups (TRAINER-SELL-CARD-1)",
        LOCKED, fixed_on="2026-10-10",
@@ -37605,6 +37605,32 @@ def rg_ai_props_1():
         if "/[?&]trn=1\\b/.test(location.search||'')" not in q:
             return [(FAIL, "quick.html no longer opens ?trn=1 on the Sport & fitness groups (TRAINER-SELL-CARD-1)")]
     return [(INFO, "photo read's title and draft name only the item for sale; Sell has the coach card into Sport & fitness")]
+
+
+@entry("RG-0956", "REACH-NATIONAL-1 (David, 11 Oct 2026): a seller who ships or travels taps 'Nationwide' on her own card "
+       "and the advert shows in every city of her own country, free on every plan; the Local Market list honours extra "
+       "cities and nationwide adverts too (LM-REACH-1)",
+       LOCKED, fixed_on="2026-10-11",
+       scope="bea_main.py listings.reach + _norm_reach + get_listings branch A + _zoom_candidates_raw + lm_list_listings; "
+             "ms.js msReachButton / msToggleReach + detail 'Nationwide'",
+       ref="Bee Lady (Marietjie) ships honey ZA-wide and travels for talks, courses and hive audits; her adverts were "
+           "Pretoria-only, then Mossel Bay-only. Paid multi-city reach (Starter) now means reach abroad.")
+def rg_reach_national_1():
+    js = repo_file("ms.js")
+    py = repo_file("bea_main.py")
+    if js is None or py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if 'ADD COLUMN reach TEXT' not in py or 'def _norm_reach(v):' not in py:
+        return [(FAIL, "listings.reach or _norm_reach is gone -- the Nationwide switch has nowhere to live")]
+    if "(l.city = ? OR (l.reach = 'national' AND UPPER(COALESCE(l.country,'ZA')) = ?))" not in py:
+        return [(FAIL, "the main browse no longer shows nationwide adverts of the buyer's own country")]
+    if py.count("l.reach = 'national'") < 3:
+        return [(FAIL, "a reach path (browse / zoom / Local Market) lost the nationwide branch")]
+    if "JOIN geo_cities g ON g.id = lc.city_id WHERE g.name = ?)" not in py:
+        return [(FAIL, "the Local Market list ignores listing_cities again (LM-REACH-1)")]
+    if "function msToggleReach(id, national){" not in js or "msReachButton(dl)" not in js:
+        return [(FAIL, "the seller's card lost the My city only / Nationwide switch")]
+    return [(INFO, "Nationwide switch on the seller card; main, zoom and Local Market browse honour it within her country")]
 
 
 def _server_vantage_wrap():
