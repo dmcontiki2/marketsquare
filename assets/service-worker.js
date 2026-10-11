@@ -60,7 +60,7 @@ const OFFLINE_HTML = '<!doctype html><html lang="en"><head><meta charset="utf-8"
   '<button onclick="location.reload()">Try again</button>' +
   '</div></body></html>';
 
-/* QUICK-FAST-1 (RUL-220(g), David 9 Oct 2026): a Quick Sell icon receives its photo from the gallery's Share sheet.
+/* QUICK-FAST-1 (RUL-222(g), David 9 Oct 2026): a Quick Sell icon receives its photo from the gallery's Share sheet.
  * Each sell preset's manifest declares share_target {action: /quick/share-in?p=<preset>, POST multipart, photo}.
  * The phone POSTs the picture here; this worker takes it out of the form, leaves it in a one-photo mailbox and sends
  * the page to the preset's fast sell screen, which collects it and empties the mailbox. This is a HAND-OVER, not a

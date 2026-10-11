@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""apply_fastlane_i18n.py -- QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane's words in every Quick language.
+"""apply_fastlane_i18n.py -- QUICK-FAST-1 (RUL-222, 10 Oct 2026): the Quick fast lane's words in every Quick language.
 
 Claude's drafts (RUL-160) for all 15 columns of roles/quick_i18n.json -- South Africa's (af zu st xh nso) and the
 approved US/UK/AU lists (es zh tl vi cy pl ro pa ar yue, RUL-204). App words stay English (TrustSquare, Quick, Plans).

@@ -65,7 +65,7 @@ RESOURCES = {
     "agent_intro_agent":  "SELECT LOWER(TRIM(agent_email)) FROM agent_intros WHERE id = ?",
     "agent_intro_seller": "SELECT LOWER(TRIM(seller_email)) FROM agent_intros WHERE id = ?",
     "document":           "SELECT LOWER(TRIM(email)) FROM seller_documents WHERE id = ?",
-    # QUICK-FAST-1 (RUL-220, 10 Oct 2026): a quick icon's preset belongs to the account that made it.
+    # QUICK-FAST-1 (RUL-222, 10 Oct 2026): a quick icon's preset belongs to the account that made it.
     "quick_preset":       "SELECT LOWER(TRIM(email)) FROM quick_presets WHERE id = ?",
 }
 

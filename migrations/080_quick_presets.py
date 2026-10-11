@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""080_quick_presets.py -- QUICK-FAST-1 (RUL-220, David 9-10 Oct 2026; CC-006): the Quick fast lane's one table.
+"""080_quick_presets.py -- QUICK-FAST-1 (RUL-222, David 9-10 Oct 2026; CC-006): the Quick fast lane's one table.
 
 A repeat trader ticks "Make this my quick icon" at the end of a Quick flow; the flow's setup is kept as a PRESET and
 his phone gets a home-screen icon for it. Schema (the brief's one table, plus counters the dashboard reads):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""apply_fastlane_d_i18n.py -- QUICK-FAST-2 (RUL-221, David 10 Oct 2026, option D): the four new words for 'her quick
+"""apply_fastlane_d_i18n.py -- QUICK-FAST-2 (RUL-223, David 10 Oct 2026, option D): the four new words for 'her quick
 icons live in Quick' in every Quick language. Claude's drafts (RUL-160) for all 15 columns of roles/quick_i18n.json;
 app words stay English (Quick). isiZulu, isiXhosa and Sepedi are drafts until a first-language reader has read them
 (RUL-165). Idempotent: adds only keys that are missing. Then: python3 scripts/sync_quick_roles.py; cp quick.html genie/HARNESS.html."""

@@ -1368,7 +1368,7 @@ def run_migrations(conn):
         # slot_kept = a listing she ticked to stay live; 'resting' = hidden from buyers, never deleted.
         "ALTER TABLE users ADD COLUMN circle_grandfather INTEGER",
         "ALTER TABLE listings ADD COLUMN slot_kept INTEGER NOT NULL DEFAULT 0",
-        # QUICK-FAST-1 (RUL-220, 10 Oct 2026): the Quick fast lane (quick icons). Default OFF = every fast-lane entry
+        # QUICK-FAST-1 (RUL-222, 10 Oct 2026): the Quick fast lane (quick icons). Default OFF = every fast-lane entry
         # point hidden and its routes answer 404 -- the brief's rollback switch. Turned on from the dashboard.
         "ALTER TABLE launch_switches ADD COLUMN quick_fastlane INTEGER NOT NULL DEFAULT 0",
     ):
@@ -4824,7 +4824,7 @@ class _QuickPublishIn(BaseModel):
     accept_terms: bool = False
     key_mode: str = "email"     # LINK-KEY-1: "link" = no e-mail, the private link is her key (RUL-167)
     name: str = ""
-    preset_id: int = 0          # QUICK-FAST-1 (RUL-220): a fast publish from her quick icon -- the gate runs first
+    preset_id: int = 0          # QUICK-FAST-1 (RUL-222): a fast publish from her quick icon -- the gate runs first
     hold: bool = False          # QUICK-FAST-1: create the advert as a draft; her photo is added, then the standard publish
 
 
@@ -4881,7 +4881,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     if _qcc in COMING_SOON_COUNTRIES:
         raise HTTPException(status_code=409, detail=_coming_soon_detail(_qcc, "listings"))
     sess = _session_email(ts_user)
-    # QUICK-FAST-1 (RUL-220(b)): a fast publish is checked here, on EVERY publish, before anything is made -- signed in,
+    # QUICK-FAST-1 (RUL-222(b)): a fast publish is checked here, on EVERY publish, before anything is made -- signed in,
     # the current EULA accepted, published before, a free slot. A failure answers 409 {fast_gate} and Quick drops into
     # its normal flow at the failing step. Everything below is the same publish path every Quick listing takes.
     _fast = _qf_publish_gate(sess, int(body.preset_id)) if int(body.preset_id or 0) else None
@@ -5041,7 +5041,7 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     if _fast is not None:
         _qf_count_use(_fast["preset_id"])
         if body.hold:
-            # QUICK-FAST-1 (RUL-220(e)): the example photo can never be published. The fast lane's advert waits as a draft
+            # QUICK-FAST-1 (RUL-222(e)): the example photo can never be published. The fast lane's advert waits as a draft
             # while her real photo is added (/listings/{id}/photo/draft, her session), then PUT /listings/{id}/publish --
             # the standard publish route, with its EULA, slot and blocked gates -- makes it live.
             _log.info("QUICK-FAST-1: draft %s held for her photo (preset %s, %s)", lid, _fast["preset_id"], em)
@@ -24155,7 +24155,7 @@ class _FlagsUpdate(BaseModel):
     baseline_q4:           Optional[bool] = None  # BASELINE-Q4-1: the RUL-126 batch, armed by David only
     lang_layer:            Optional[bool] = None  # LANG-LAYER-1: the language layer for everybody (testers always see it)
     circle_caps:           Optional[bool] = None  # CIRCLE-CAPS-1 (RUL-176): regulars limits 10/50/200, David's switch
-    quick_fastlane:        Optional[bool] = None  # QUICK-FAST-1 (RUL-220): the Quick fast lane (quick icons), default OFF
+    quick_fastlane:        Optional[bool] = None  # QUICK-FAST-1 (RUL-222): the Quick fast lane (quick icons), default OFF
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -24175,7 +24175,7 @@ def _flags_payload(d):
         # CIRCLE-CAPS-1 (RUL-176): a row predating the column reads OFF -- no limits is the safe side.
         "circle_caps": b("circle_caps"),
         "circle_limits": dict(CIRCLE_LIMITS),
-        # QUICK-FAST-1 (RUL-220): a row predating the column reads OFF -- the fast lane hidden is the safe side.
+        # QUICK-FAST-1 (RUL-222): a row predating the column reads OFF -- the fast lane hidden is the safe side.
         "quick_fastlane": b("quick_fastlane"),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
@@ -33855,24 +33855,24 @@ def admin_promoter_active(code: str, body: _PromoActiveIn, _admin=Depends(_requi
         conn.close()
 
 
-# ══ QUICK-FAST-1 (RUL-220, David 9 Oct 2026; CC-006) — Quick Fast Lane: a repeat trader's own quick icons ══
+# ══ QUICK-FAST-1 (RUL-222, David 9 Oct 2026; CC-006) — Quick Fast Lane: a repeat trader's own quick icons ══
 # David approved the brief in chat 9 Oct 2026 18:07-18:25 SAST ("QUICK_FASTLANE_BRIEF.md"). A trader ticks
 # "Make this my quick icon" at the end of a Quick flow; the flow's setup (kind + type, condition, area, language)
 # is kept as a PRESET and his phone gets a home-screen icon for it. Sell icon: photo -> price + what exactly it is
 # + description -> Publish. Find icon: one search line -> matches on the same page -> tap to ask for an
-# introduction (normal Tuppence rules). The THIRD standard flow, never an exception (RUL-220(a)):
+# introduction (normal Tuppence rules). The THIRD standard flow, never an exception (RUL-222(a)):
 #   * the publish goes through POST /listings/quick-publish (creation, checks, limits) and PUT /listings/{id}/publish
 #     (EULA gate, slot gate, blocked gate) -- the same two doors every Quick and TrustSquare listing uses. There is
 #     no second publish path: a fast publish asks quick-publish to HOLD the new advert as a draft, her real photo is
-#     added to it, and only then does the standard publish route make it live (RUL-220(e): the example photo can
+#     added to it, and only then does the standard publish route make it live (RUL-222(e): the example photo can
 #     never be published);
-#   * the gate (RUL-220(b)) is checked on EVERY fast publish, here on the server: signed in, the CURRENT EULA accepted
+#   * the gate (RUL-222(b)) is checked on EVERY fast publish, here on the server: signed in, the CURRENT EULA accepted
 #     (a material change parks eula_accepted_at, EULA-VERSION-1), published at least once before, any tier including
 #     Free, a free listing slot. A failure answers 409 {fast_gate: <code>} and Quick drops into its normal flow at
 #     the failing step with one line;
-#   * presets are uncapped on every tier (RUL-220(c)); Free stays limited by its listing slots and a full plan is
+#   * presets are uncapped on every tier (RUL-222(c)); Free stays limited by its listing slots and a full plan is
 #     offered upgrade or 'choose which listing to rest' (KEEP-CHOICE-1's 'resting' -- hidden, never deleted);
-#   * the price is never kept in a preset (RUL-220(d)); unticking deletes the preset (RUL-220(f)).
+#   * the price is never kept in a preset (RUL-222(d)); unticking deletes the preset (RUL-222(f)).
 # Dashboard switch launch_switches.quick_fastlane (default OFF = every fast-lane entry point hidden; the routes
 # answer 404). Cost model: no recurring cost; the find line is parsed on the server without AI when it is written
 # with commas, and otherwise once on the allocated free lane under RUL-164's caps; card names are checked with the
@@ -33886,7 +33886,7 @@ _QF_LABEL_RE = re.compile(r"[^\w '&\-·]", re.UNICODE)
 
 
 def _qf_on() -> bool:
-    """Fail-safe read of launch_switches.quick_fastlane: on ANY doubt the fast lane is OFF (RUL-220 rollback)."""
+    """Fail-safe read of launch_switches.quick_fastlane: on ANY doubt the fast lane is OFF (RUL-222 rollback)."""
     return _bit_flag("quick_fastlane", False)
 
 
@@ -33950,13 +33950,13 @@ def _qf_row_out(r) -> dict:
 
 def _qf_start_url(token, kind, st) -> str:
     # k= and c= ride along so an icon whose preset was switched off still opens normal Quick at step 1 of the
-    # right door (RUL-220(f)) -- the server no longer knows the preset then.
+    # right door (RUL-222(f)) -- the server no longer knows the preset then.
     from urllib.parse import quote as _q
     return "/quick/?p=%s&k=%s&c=%s" % (_q(token), kind, _q(str((st or {}).get("cat") or "")))
 
 
 def _qf_gate(conn, em) -> dict:
-    """RUL-220(b): the fast-publish gate. Mirrors publish_listing's own EULA and slot rules -- publish_listing still
+    """RUL-222(b): the fast-publish gate. Mirrors publish_listing's own EULA and slot rules -- publish_listing still
     enforces them on the publish itself; this answers early so Quick can drop into the right normal step."""
     if not em:
         return {"ok": False, "code": "signin"}
@@ -33986,7 +33986,7 @@ def _qf_owned(conn, preset_id, em):
 
 def _qf_publish_gate(sess, preset_id) -> dict:
     """Called by POST /listings/quick-publish when a fast lane publishes (body.preset_id). Raises 404 when the switch
-    is off or the preset is gone, 409 {fast_gate} when RUL-220(b) fails; counts the fallback on the preset."""
+    is off or the preset is gone, 409 {fast_gate} when RUL-222(b) fails; counts the fallback on the preset."""
     if not _qf_on():
         raise HTTPException(status_code=404, detail="Quick icons are switched off.")
     if not sess:
@@ -34055,7 +34055,7 @@ def _qf_clean_settings(st) -> dict:
         if not isinstance(p, dict):
             continue
         key = str(p.get("key") or "")[:24]
-        if key in ("price",):                       # RUL-220(d): the price is never kept in a preset
+        if key in ("price",):                       # RUL-222(d): the price is never kept in a preset
             continue
         o = {"key": key, "label": _plain_text(str(p.get("label") or ""))[:80]}
         # 'ph' = the app's own picture key for the pick (PH in quick.html) -- never named 'photo', a key the security
@@ -34071,7 +34071,7 @@ def _qf_clean_settings(st) -> dict:
            "suburb": _plain_text(str(st.get("suburb") or ""))[:60],
            "country": re.sub(r"[^A-Z]", "", str(st.get("country") or "ZA").upper())[:2] or "ZA",
            "lang": re.sub(r"[^a-z]", "", str(st.get("lang") or "en").lower())[:4] or "en",
-           # HOW she charges for work paid by time (hour/day/visit/...) -- never an amount (RUL-220(d)); the fast screen
+           # HOW she charges for work paid by time (hour/day/visit/...) -- never an amount (RUL-222(d)); the fast screen
            # applies the same legal-minimum floor as Quick's rate step (QUICK-OPEN-RATE-1 / RUL-168)
            "basis": re.sub(r"[^a-z]", "", str(st.get("basis") or "").lower())[:10]}
     if len(json.dumps(out)) > _QF_SETTINGS_MAX:
@@ -34081,7 +34081,7 @@ def _qf_clean_settings(st) -> dict:
 
 @app.get("/quick-presets")
 def quick_presets_mine(ts_user: str = Cookie(default=None)):
-    """Her quick icons, newest first, and the fast-publish gate as it stands now (RUL-220(b))."""
+    """Her quick icons, newest first, and the fast-publish gate as it stands now (RUL-222(b))."""
     em = _qf_need_user(ts_user)
     conn = database.get_db()
     try:
@@ -34094,7 +34094,7 @@ def quick_presets_mine(ts_user: str = Cookie(default=None)):
 
 @app.post("/quick-presets")
 def quick_presets_create(body: _QfIn, ts_user: str = Cookie(default=None)):
-    """'Make this my quick icon' (RUL-220): keep the flow's setup as a preset. Uncapped on every tier (RUL-220(c))."""
+    """'Make this my quick icon' (RUL-222): keep the flow's setup as a preset. Uncapped on every tier (RUL-222(c))."""
     em = _qf_need_user(ts_user)
     kind = (body.kind or "").strip().lower()
     if kind not in _QF_KINDS:
@@ -34131,7 +34131,7 @@ def quick_presets_rename(preset_id: int, body: _QfPatch, ts_user: str = Cookie(d
 
 @app.delete("/quick-presets/{preset_id}")
 def quick_presets_delete(preset_id: int, ts_user: str = Cookie(default=None)):
-    """Untick = the preset is deleted (RUL-220(f)). An icon left on the phone then opens normal Quick at step 1 with
+    """Untick = the preset is deleted (RUL-222(f)). An icon left on the phone then opens normal Quick at step 1 with
     'This quick icon was switched off.' Works even with the switch off, so nobody is stuck with a preset."""
     em = _session_email(ts_user)
     if not em:
@@ -34149,7 +34149,7 @@ def quick_presets_delete(preset_id: int, ts_user: str = Cookie(default=None)):
 
 @app.post("/quick-presets/{preset_id}/rest")
 def quick_presets_rest(preset_id: int, body: _QfRestIn, ts_user: str = Cookie(default=None)):
-    """RUL-220(c) with KEEP-CHOICE-1: her Free slots are full and SHE chooses which live listing rests -- hidden from
+    """RUL-222(c) with KEEP-CHOICE-1: her Free slots are full and SHE chooses which live listing rests -- hidden from
     buyers, never deleted, back when she chooses it on Plans. Only her own live listing; nothing else changes."""
     em = _qf_need_user(ts_user)
     conn = database.get_db()
@@ -34249,7 +34249,7 @@ async def _qf_card_known(name):
 
 @app.post("/quick-presets/{preset_id}/find-parse")
 async def quick_presets_find_parse(preset_id: int, body: _QfFindIn, ts_user: str = Cookie(default=None)):
-    """Quick Find icon (RUL-220): one search line -> the terms, the price limit and, for cards, whether the name is
+    """Quick Find icon (RUL-222): one search line -> the terms, the price limit and, for cards, whether the name is
     a real card (the existing Scryfall pipeline). Quick then asks the ordinary /listings search, so every visibility
     rule of the public search still decides what is shown."""
     em = _qf_need_user(ts_user)
@@ -34335,7 +34335,7 @@ _QF_APP_MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sta
 
 
 def _qf_quick_app_manifest(ts_user):
-    """QUICK-FAST-2 (RUL-221, David 10 Oct 2026, option D): Quick's OWN manifest, served live, so a signed-in trader's
+    """QUICK-FAST-2 (RUL-223, David 10 Oct 2026, option D): Quick's OWN manifest, served live, so a signed-in trader's
     quick icons ride on the one Quick home-screen icon as press-and-hold shortcuts (Android) instead of each needing
     its own icon. It is the static static/brand/quick.webmanifest with the same id ("/quick.html"), so an installed
     Quick stays the same app; switch off, signed out or no presets = that file unchanged. Always answers -- it is
@@ -34371,13 +34371,13 @@ def _qf_quick_app_manifest(ts_user):
 
 @app.get("/quick-icon/{token}.webmanifest")
 def quick_icon_manifest(token: str, ts_user: str = Cookie(default=None)):
-    """One web-app manifest per preset (RUL-220(g)): its own id, name 'Quick Sell · Cards' and start_url, so each
+    """One web-app manifest per preset (RUL-222(g)): its own id, name 'Quick Sell · Cards' and start_url, so each
     preset installs as its own icon. A sell preset declares a share_target, so the photo can come straight from the
     gallery's Share sheet (the service worker receives it). The owner's other presets ride along as shortcuts --
     the fallback should a phone refuse a second icon from the same site. Public by design: the token is unguessable
     and the manifest carries only the label."""
     from fastapi.responses import JSONResponse as _JR
-    if token == "app":                      # QUICK-FAST-2 (RUL-221): Quick's own manifest (tokens are 6+ chars, never "app")
+    if token == "app":                      # QUICK-FAST-2 (RUL-223): Quick's own manifest (tokens are 6+ chars, never "app")
         return _qf_quick_app_manifest(ts_user)
     r = _qf_public_row(token)
     if not r:

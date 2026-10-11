@@ -1376,7 +1376,7 @@ async function _msInit(){
       });
     }, 600);
   }
-  /* QUICK-FAST-1 (RUL-220): Quick's fast lane hands over here -- a full Free plan's "Upgrade my plan" (go=plans) and
+  /* QUICK-FAST-1 (RUL-222): Quick's fast lane hands over here -- a full Free plan's "Upgrade my plan" (go=plans) and
      "My quick icons" (go=quickicons). Same pattern as go=signin below. */
   if((sp.get('go')==='plans' || sp.get('go')==='quickicons') && !sp.get('signin')){
     const _qfGo = sp.get('go');
@@ -18580,7 +18580,7 @@ function msInit(){
   const sellerSigninCard = document.getElementById('ms-seller-signin-card');
   if(sellerHubCard)    sellerHubCard.style.display    = isSeller ? '' : 'none';
   if(sellerSigninCard) sellerSigninCard.style.display = isSeller ? 'none' : '';
-  try{ msQuickIconsRefresh(); }catch(_qf){}   // QUICK-FAST-1 (RUL-220): "My quick icons" under the Seller hub
+  try{ msQuickIconsRefresh(); }catch(_qf){}   // QUICK-FAST-1 (RUL-222): "My quick icons" under the Seller hub
   // Remove the old label element ref (now always visible via static HTML)
   const sellerHubLbl = document.getElementById('ms-seller-hub-lbl');
   if(sellerHubLbl) sellerHubLbl.style.display = '';
@@ -25126,9 +25126,9 @@ function msOwnerBar(id){
   try{ setTimeout(hubOffer, 2500); setInterval(function(){ if(!document.getElementById('pk-offer')) hubOffer(); }, 15000); }catch(e){}
 })();
 
-/* ══ QUICK-FAST-1 (RUL-220, David 9 Oct 2026; CC-006) — "My quick icons" in My Space ══════════════════════════════════
+/* ══ QUICK-FAST-1 (RUL-222, David 9 Oct 2026; CC-006) — "My quick icons" in My Space ══════════════════════════════════
    A trader's quick icons are made in Quick ("Make this my quick icon"). Here she sees them, renames them and switches
-   them off. Switching off DELETES the preset (RUL-220(f)): an icon left on her phone then opens normal Quick at step 1
+   them off. Switching off DELETES the preset (RUL-222(f)): an icon left on her phone then opens normal Quick at step 1
    with "This quick icon was switched off." Fast-lane listings are ordinary listings -- nothing else in the app changes.
    Shown only when the dashboard switch is on (FEATURES.quick_fastlane) and she is signed in. DEMO_MODE: the card stays
    hidden and nothing is fetched -- a demo visitor has no presets, so there is nothing to serve from the demo arrays. */

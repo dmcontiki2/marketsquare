@@ -633,14 +633,14 @@ in this plan, and it is worth more than every remaining letter on the list.
 
 ---
 
-## 19. THE FAST LANE — A REPEAT TRADER'S OWN QUICK ICONS (QUICK-FAST-1 · RUL-220 · CC-006)
+## 19. THE FAST LANE — A REPEAT TRADER'S OWN QUICK ICONS (QUICK-FAST-1 · RUL-222 · CC-006)
 
 *David, 9 Oct 2026 (approved in chat, `QUICK_FASTLANE_BRIEF.md`). Built 10 Oct 2026 under the IP hold; ships after the
 provisional-2 application number exists.*
 
 **What it is.** At the end of a Quick flow a signed-in trader may tick **Make this my quick icon**. The flow's setup — the
 door, kind + type, condition/grading, area and the language he used — is kept as a preset (`quick_presets`, one row per
-icon) and his phone gets a home-screen icon for that preset. He can have as many as he likes, on every tier (RUL-220(c)).
+icon) and his phone gets a home-screen icon for that preset. He can have as many as he likes, on every tier (RUL-222(c)).
 
 | | Quick Sell icon | Quick Find icon |
 |---|---|---|
@@ -649,7 +649,7 @@ icon) and his phone gets a home-screen icon for that preset. He can have as many
 | Android | the gallery's **Share → Quick Sell · Cards** hands the photo straight in (share_target) | — |
 | iPhone | Share → Add to Home Screen (guided card); the picker opens newest-first | the same |
 
-**The rules it keeps (RUL-220).**
+**The rules it keeps (RUL-222).**
 - **(a) The third standard flow.** The publish is `POST /listings/quick-publish` with `preset_id` and `hold` — the advert
   is created as a draft — then her photo goes onto that draft (`/listings/{id}/photo/draft`), then
   `PUT /listings/{id}/publish`, the standard route with its EULA, slot and blocked gates. No second publish path.
@@ -678,5 +678,5 @@ Listing view's fourth page, *Quick icons — the fast lane*, shows both flows, t
 
 **Cost.** None recurring. **Schema.** One table, `quick_presets` (migrations/080_quick_presets.py).
 
-**Amended 10 Oct 2026 — RUL-221 (option D, QUICK-FAST-2): her quick icons live in Quick.** A phone carries two icons by default (TrustSquare + Quick). Her quick icons sit at the top of Quick's first screen as a strip (blue = sell, purple = find); one tap opens the same fast screen. On Android, pressing and holding the Quick icon lists up to four of them — Quick's own manifest is served live at `/quick-icon/app.webmanifest` (same id as `static/brand/quick.webmanifest`) with her presets as shortcuts, linked with `crossorigin="use-credentials"` so the browser sends her cookie. On iPhone the strip is the way in. A preset's own home-screen icon is optional: the ready card says *"It now sits at the top of Quick, ready to tap."* and offers *"Also put it on my home screen"*. Quick's own *Add Quick to your home screen* offer is no longer removed. Everything else in this section stands. Ledger RG-0968, RG-0969.
+**Amended 10 Oct 2026 — RUL-223 (option D, QUICK-FAST-2): her quick icons live in Quick.** A phone carries two icons by default (TrustSquare + Quick). Her quick icons sit at the top of Quick's first screen as a strip (blue = sell, purple = find); one tap opens the same fast screen. On Android, pressing and holding the Quick icon lists up to four of them — Quick's own manifest is served live at `/quick-icon/app.webmanifest` (same id as `static/brand/quick.webmanifest`) with her presets as shortcuts, linked with `crossorigin="use-credentials"` so the browser sends her cookie. On iPhone the strip is the way in. A preset's own home-screen icon is optional: the ready card says *"It now sits at the top of Quick, ready to tap."* and offers *"Also put it on my home screen"*. Quick's own *Add Quick to your home screen* offer is no longer removed. Everything else in this section stands. Ledger RG-0968, RG-0969.
 

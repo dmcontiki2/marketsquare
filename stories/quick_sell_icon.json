@@ -382,5 +382,5 @@
   "xh": "draft",
   "nso": "draft"
  },
- "_note": "QUICK-FAST-1 (RUL-220): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_sell_icon/ (pushed with build_help.py --push-images at deploy). QUICK-FAST-2 (RUL-221, 10 Oct 2026): step 2 now says the icon lives at the top of Quick; the home-screen icon is optional."
+ "_note": "QUICK-FAST-1 (RUL-222): walked 10 Oct 2026 in the local harness (QA accounts, headless Chromium, 390 px) under the IP hold; screens in stories/img/quick_sell_icon/ (pushed with build_help.py --push-images at deploy). QUICK-FAST-2 (RUL-223, 10 Oct 2026): step 2 now says the icon lives at the top of Quick; the home-screen icon is optional."
 }

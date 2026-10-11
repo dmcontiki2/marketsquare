@@ -15,11 +15,11 @@
 ## CC-006 · Quick Fast Lane (QUICK-FAST-1) — a repeat trader's own quick icons
 **Stage:** 5/8 BUILT + VERIFIED LOCALLY — held under the IP hold. Built 10 Oct 2026 on the local branch `fastlane` (worktree `_fastlane_wt`, never pushed). Steps 6–8 (David's real-phone check, merge, deploy, the switch ON, the four parsed docs) run only once the provisional-2 application number exists (`Patents/provisional-2/SUBMITTED_2026-10-10.md`).
 **Opened:** 10 Oct 2026 · **Owner:** David (rulings, phone check, merge word) / Claude (build, harness, report)
-**Source decision:** RUL-220 (David in chat 9 Oct 2026 18:07–18:25 SAST; `QUICK_FASTLANE_BRIEF.md` is the CCP step 1+2 brief)
-**Amendment (10 Oct 2026):** RUL-221 — option D, *quick icons live in Quick* (QUICK-FAST-2): a strip on Quick's door, Android press-and-hold shortcuts on the Quick icon (live manifest `/quick-icon/app.webmanifest`), a preset's own home-screen icon optional. Same gates, same publish path, no schema change. Artifacts: quick.html (+ HARNESS), bea_main.py `_qf_quick_app_manifest`, roles/quick_i18n.json (4 words), stories steps 2–3, RG-0968, RG-0969, rulings_check RUL-221.
+**Source decision:** RUL-222 (David in chat 9 Oct 2026 18:07–18:25 SAST; `QUICK_FASTLANE_BRIEF.md` is the CCP step 1+2 brief)
+**Amendment (10 Oct 2026):** RUL-223 — option D, *quick icons live in Quick* (QUICK-FAST-2): a strip on Quick's door, Android press-and-hold shortcuts on the Quick icon (live manifest `/quick-icon/app.webmanifest`), a preset's own home-screen icon optional. Same gates, same publish path, no schema change. Artifacts: quick.html (+ HARNESS), bea_main.py `_qf_quick_app_manifest`, roles/quick_i18n.json (4 words), stories steps 2–3, RG-0968, RG-0969, rulings_check RUL-223.
 **Step 0 (baseline):** git tag `pre-fastlane-1` = `495227a` (main HEAD at the start). Rollback = the dashboard switch `QUICK_FASTLANE` OFF (instant, every entry point hidden, routes 404) or `git checkout pre-fastlane-1` for the code.
 
-**One-paragraph change:** At the end of a Quick flow a signed-in trader may tick **Make this my quick icon**. The setup of that flow (door, kind + type, condition, area, language — never the price) is kept as a preset (`quick_presets`), and his phone gets a home-screen icon for it with its own manifest. **Quick Sell icon:** icon → one screen (Take photo / Use last photo, price, what exactly is it, description, the EULA acceptance line) → Publish → live. **Quick Find icon:** icon → one search line → real matches on the same page → tap one → TrustSquare’s normal introduction. It is the third standard flow: the publish is `POST /listings/quick-publish` (hold) → her photo onto the draft → `PUT /listings/{id}/publish`, and the RUL-220(b) gate runs on the server on every fast publish.
+**One-paragraph change:** At the end of a Quick flow a signed-in trader may tick **Make this my quick icon**. The setup of that flow (door, kind + type, condition, area, language — never the price) is kept as a preset (`quick_presets`), and his phone gets a home-screen icon for it with its own manifest. **Quick Sell icon:** icon → one screen (Take photo / Use last photo, price, what exactly is it, description, the EULA acceptance line) → Publish → live. **Quick Find icon:** icon → one search line → real matches on the same page → tap one → TrustSquare’s normal introduction. It is the third standard flow: the publish is `POST /listings/quick-publish` (hold) → her photo onto the draft → `PUT /listings/{id}/publish`, and the RUL-222(b) gate runs on the server on every fast publish.
 
 **Term map (new terms only — nothing old is renamed, so the grep-to-zero key is the new words being present where the matrix says):**
 
@@ -48,12 +48,12 @@
 | How | stories/quick_sell_icon.json + quick_find_icon.json, How opens at the fast step | built (screens local; pushed with `build_help.py --push-images` at deploy) |
 | Stories E2E | stories/CLOUD_WALK.md — both fast-lane stories in the walk set | built |
 | EULA | eula_clean.html | **N/A — no text change**: the sell flow’s acceptance line sits directly above the fast Publish button and gate (b) honours material-change re-acceptance, so no new version and no forced re-acceptance |
-| Specs/canon | QUICK_LISTING_SPEC.md §Fast lane, RULINGS.md RUL-220, this ticket, changelog.d/status.d fragments, OPEN_LOOPS.md | built |
+| Specs/canon | QUICK_LISTING_SPEC.md §Fast lane, RULINGS.md RUL-222, this ticket, changelog.d/status.d fragments, OPEN_LOOPS.md | built |
 | Admin | marketsquare_admin.html | **N/A — checked, untouched** |
 
 **Verification:** regression ledger RG-0960…RG-0966 (one per definition-of-done item) + whole board vs. the pre-build baseline; `scripts/stranger_test.py` PASS; rendered headless-Chromium walks at 390 px with QA accounts (`dmcontiki2+qa-fast-*`). Screenshots: `C:\Users\David\Projects\Visuals\fastlane\`.
 **Not provable headless (the one human check):** the Android Share sheet listing “Quick Sell · Cards” and installing a second icon from the same site, and iPhone Share → Add to Home Screen opening signed in.
-**Cost model impact:** none recurring (see RUL-220).
+**Cost model impact:** none recurring (see RUL-222).
 
 **Steps 6–8, in order, once the provisional-2 application number exists (nothing here before that):**
 1. `Patents/provisional-2/FILED.md` carries the number; David has done the phone check (or says merge first and check on live).

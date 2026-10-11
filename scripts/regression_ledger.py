@@ -35174,7 +35174,7 @@ def rg_quick_own_photo_1():
     if "if(window.QPHOTO) b.description='[photos:own]" not in q:
         return [(FAIL, "quick.html: the strength ring ignores her photo (ONE-SCORER-1 preview)")]
     # QUICK-FAST-1 (10 Oct 2026): five hand-backs, not four -- the fast lane's held draft returns its token to its own
-    # signed-in owner (the RUL-220(b) gate has proven the session; that path is never reached for another person's account).
+    # signed-in owner (the RUL-222(b) gate has proven the session; that path is never reached for another person's account).
     _qp = b[b.find("\ndef quick_publish("):b.find('\n@app.get("/k/{secret}")')]
     _ea = _qp[_qp.find("if existing_account:"):_qp.find("if not signed_member:")]
     if b.count('"draft_token": _qdt') != 5 or '"draft_token"' in _ea or "if not existing_account and _qdt and response is not None:" not in b:
@@ -37526,7 +37526,7 @@ def _qf_fn(py, name):
     return "\n".join(l.split("  #")[0] if "  #" in l else l for l in body.splitlines() if not l.strip().startswith("#"))
 
 
-@entry("RG-0960", "QUICK-FAST-1 (RUL-220(a)(e), DoD 1): a fast publish rides the ONE publish path -- quick-publish checks the "
+@entry("RG-0960", "QUICK-FAST-1 (RUL-222(a)(e), DoD 1): a fast publish rides the ONE publish path -- quick-publish checks the "
        "gate before anything is made, HOLDS the advert as a draft, her real photo goes onto that draft, and only the standard "
        "PUT /listings/{id}/publish makes it live; the fast-lane code never writes a listing live itself",
        LOCKED, fixed_on="2026-10-10",
@@ -37548,20 +37548,20 @@ def rg_quick_fast_1_path():
     hb = qp[qp.find("if _fast is not None:"):h]
     if not hb or re.search(r"listing_status|UPDATE\s+listings|publish_listing\(", hb, re.I):
         return [(FAIL, "the held fast publish changes the advert's status itself before her photo is on")]
-    blk = _qf_block(py, "# ══ QUICK-FAST-1 (RUL-220", "# ══ end QUICK-FAST-1 ══")
+    blk = _qf_block(py, "# ══ QUICK-FAST-1 (RUL-222", "# ══ end QUICK-FAST-1 ══")
     code = "\n".join(l for l in blk.splitlines() if not l.strip().startswith("#"))
     if re.search(r"SET\s+listing_status\s*=\s*'live'", code, re.I) or "publish_listing(" in code:
-        return [(FAIL, "the fast-lane block writes a listing live itself -- a second publish path (RUL-220(a))")]
+        return [(FAIL, "the fast-lane block writes a listing live itself -- a second publish path (RUL-222(a))")]
     m = _qf_block(q, "function publish(btn){", "/* ---------------- screen 3: live")
     a, b, d = (m.find("api('/listings/quick-publish'"), m.find("'/photo/draft?email='"), m.find("'/publish?email='"))
     if "hold:true" not in m or min(a, b, d) < 0 or not (a < b < d):
         return [(FAIL, "quick.html's fast publish no longer goes quick-publish (hold) -> her photo onto the draft -> the standard publish")]
     if "if(!ok){ f.innerHTML='<div class=\"qf-why\">'+E(T('Add a photo to publish" not in q:
-        return [(FAIL, "the fast sell screen shows Publish without a real photo (RUL-220(e))")]
+        return [(FAIL, "the fast sell screen shows Publish without a real photo (RUL-222(e))")]
     return [(INFO, "one publish path: gate first, draft held, real photo on, standard publish")]
 
 
-@entry("RG-0961", "QUICK-FAST-1 (RUL-220, DoD 2): the Quick Find icon reads one search line on the server (commas without AI; "
+@entry("RG-0961", "QUICK-FAST-1 (RUL-222, DoD 2): the Quick Find icon reads one search line on the server (commas without AI; "
        "the price limit from its words; a card name through the Scryfall pipeline), every specific term must be in the "
        "listing, and the matches come from the ordinary public /listings search -- real listings only, the price limit hard",
        LOCKED, fixed_on="2026-10-10",
@@ -37591,7 +37591,7 @@ def rg_quick_fast_1_find():
     return [(INFO, "one line, parsed on the server; real matches only; price limit hard")]
 
 
-@entry("RG-0962", "QUICK-FAST-1 (RUL-220(b)(c), DoD 3): the fast-publish gate runs on every fast publish on the server -- current "
+@entry("RG-0962", "QUICK-FAST-1 (RUL-222(b)(c), DoD 3): the fast-publish gate runs on every fast publish on the server -- current "
        "EULA, listed before, a free slot (the same default as publish_listing) -- and each failure lands her in the normal "
        "draft step with its one line; a full Free plan is offered upgrade or 'choose a listing to rest' (nothing deleted)",
        LOCKED, fixed_on="2026-10-10",
@@ -37629,7 +37629,7 @@ def rg_quick_fast_1_gate():
     return [(INFO, "gate on every fast publish; three fallbacks to the normal draft step; rest, never delete")]
 
 
-@entry("RG-0963", "QUICK-FAST-1 (RUL-220(f), DoD 4): unticking (in Quick or My Space -> My quick icons -> Switch off) DELETES the "
+@entry("RG-0963", "QUICK-FAST-1 (RUL-222(f), DoD 4): unticking (in Quick or My Space -> My quick icons -> Switch off) DELETES the "
        "preset, and an icon left on the phone opens normal Quick at step 1 of its door with 'This quick icon was switched off.'",
        LOCKED, fixed_on="2026-10-10",
        scope="bea_main.py quick_presets_delete; quick.html openIcon()/normalStart()/unmake(); ms.js msQuickIconsOpen switch off",
@@ -37652,7 +37652,7 @@ def rg_quick_fast_1_untick():
     return [(INFO, "untick = deleted; the old icon opens normal Quick with one line")]
 
 
-@entry("RG-0964", "QUICK-FAST-1 (RUL-220(g), DoD 5): every preset installs as its own icon -- its own manifest (id, name, start_url, "
+@entry("RG-0964", "QUICK-FAST-1 (RUL-222(g), DoD 5): every preset installs as its own icon -- its own manifest (id, name, start_url, "
        "scope /quick/), a sell preset declares a share_target the service worker receives and hands to the page (a one-photo "
        "mailbox emptied on read, nothing of the app cached), and the head script points the page at the preset's manifest",
        LOCKED, fixed_on="2026-10-10",
@@ -37692,7 +37692,7 @@ def rg_quick_fast_1_words():
     q, qi = repo_file("quick.html"), repo_file("roles/quick_i18n.json")
     if q is None or qi is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    blk = _qf_block(q, "QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "</script>")
+    blk = _qf_block(q, "QUICK-FAST-1 (RUL-222, David 9 Oct 2026", "</script>")
     if not blk:
         return [(FAIL, "quick.html has no QUICK-FAST-1 block")]
     keys = set(re.findall(r"T\('((?:[^'\\]|\\.)+)'\)", blk)) | set(re.findall(r"^\s+(?:eula|never_listed|slots_full|signin):'([^']+)'", blk, re.M))
@@ -37724,7 +37724,7 @@ def rg_quick_fast_1_example():
     q = repo_file("quick.html")
     if q is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    m = _qf_block(q, "QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "</script>")
+    m = _qf_block(q, "QUICK-FAST-1 (RUL-222, David 9 Oct 2026", "</script>")
     if "function exampleFor(p, kind)" not in m:
         return [(FAIL, "the fast screens have no example that follows the icon")]
     if "placeholder=\"'+E(exampleFor(p,'sell'))+'\">" not in m or "placeholder=\"'+E(exampleFor(p,'find'))+'\">" not in m:
@@ -37779,7 +37779,7 @@ def rg_quick_fast_1_switch():
     return [(INFO, "switch ships OFF and hides every entry point; nine routes declared, presets owned")]
 
 
-@entry("RG-0968", "QUICK-FAST-2 (RUL-221, option D): Quick's own manifest is served live at /quick-icon/app.webmanifest -- the "
+@entry("RG-0968", "QUICK-FAST-2 (RUL-223, option D): Quick's own manifest is served live at /quick-icon/app.webmanifest -- the "
        "static file with the SAME id (an installed Quick stays the same app) plus, for a signed-in trader with the switch on, "
        "her quick icons as press-and-hold shortcuts (max 4); it always answers, and quick.html links it with credentials",
        LOCKED, fixed_on="2026-10-10",
@@ -37808,7 +37808,7 @@ def rg_quick_fast_2_manifest():
     return [(INFO, "Quick's manifest is live, same id, her quick icons as shortcuts when signed in and on")]
 
 
-@entry("RG-0969", "QUICK-FAST-2 (RUL-221, option D): her quick icons live in Quick -- the door shows them as a strip "
+@entry("RG-0969", "QUICK-FAST-2 (RUL-223, option D): her quick icons live in Quick -- the door shows them as a strip "
        "(blue sell, purple find, one tap opens the fast screen) only with the switch on and her signed in; the ready card "
        "says it now sits at the top of Quick and offers the home-screen icon as an optional second step; the generic "
        "'Add Quick to your home screen' offer is no longer removed",
@@ -37820,7 +37820,7 @@ def rg_quick_fast_2_strip():
     q = repo_file("quick.html")
     if q is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    m = _qf_block(q, "QUICK-FAST-1 (RUL-220, David 9 Oct 2026", "</script>")
+    m = _qf_block(q, "QUICK-FAST-1 (RUL-222, David 9 Oct 2026", "</script>")
     for sn, why in (("function addStrip(){", "the door has no strip of her quick icons"),
                     ("drawDoor=function(){ _ddoor.apply(this, arguments); addStrip(); };", "the strip is not added when the door draws"),
                     ("if(!on || !QF.signed) return;", "the strip shows with the switch off or signed out"),
