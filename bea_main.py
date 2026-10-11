@@ -14218,8 +14218,11 @@ def lm_list_listings(city: Optional[str] = None, suburb: Optional[str] = None,
                "(l.is_demo = 0 OR l.is_demo IS NULL)" if not demo else "1=1"]
     params: list = [LM_CATEGORY, max(0, min_trust)]
     if city:
-        clauses.append("l.city = ?")
-        params.append(city)
+        # LM-REACH-1 (11 Oct 2026, David: "she ships ZA wide"): a Local Market advert extended to more
+        # cities (listing_cities) shows there too -- the main browse already honoured this, LM did not.
+        clauses.append("(l.city = ? OR l.id IN (SELECT lc.listing_id FROM listing_cities lc "
+                       "JOIN geo_cities g ON g.id = lc.city_id WHERE g.name = ?))")
+        params.extend([city, city])
     if suburb:
         clauses.append("(l.suburb = ? OR (',' || REPLACE(LOWER(COALESCE(l.area,'')), ', ', ',') || ',') LIKE ?)")   # AREAS-MULTI-1
         params.extend([suburb, "%," + (suburb or "").strip().lower() + ",%"])

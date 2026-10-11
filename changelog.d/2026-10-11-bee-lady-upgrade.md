@@ -13,3 +13,9 @@ David, 11 Oct 2026: upgrade Marietjie's adverts with new pictures, prices from D
 - Credentials text now matches her CV (NBA Secretary since 2016, SABIO, DALRRD 2025, 10 yrs); the unsupported
   "national secretary" and "Gauteng government appointment" claims removed.
 - Server DB backup: marketsquare.db.bak-<ts>-beelady-upgrade. Verified rendered on trustsquare.co/?listing=274/275/538.
+- ZA-wide reach (David, 11 Oct: "her adverts are not area bound"): #273/#274/#275/#538 extended via listing_cities to all
+  13 other active ZA cities (tester exception to the paid multi-city rule, like her tester grant).
+- **LM-REACH-1** (bea_main.py lm_list_listings): the Local Market list now honours listing_cities, as the main browse
+  already did -- before, an LM advert showed only in its own city. Patched in place on the server (main.py.lastgood
+  saved, compile OK, restart active, /health 200); verified /local-market/listings?city=Pretoria|Durban|Cape Town -> 273.
+- OPEN DECISION put to David: reach for free sellers (nationwide flag vs paid multi-city).
