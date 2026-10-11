@@ -1,3 +1,6 @@
+- **BEE-PHOTOS-15 (David, 11 Oct 2026):** each of Marietjie's five adverts (273 products, 274 course, 275 talks, 538 audit, 539 removals draft) now carries 15 photos — generic Higgsfield (Grok Imagine 2.0) pictures under `/static/super/ml/`, which she can keep, remove or replace; every shot of her tending hives is generated from her real hood-up photo, and that real photo is in the course advert.
+- **STATIC-PHOTO-KEEP-1 (RG-0957):** AUD-027's photo-address guard dropped every `/static/...` photo on a seller's Edit-save, so a staff-seeded advert lost its cover and gallery the first time she saved. Plain image files under `/static/` are now kept; `..`, dot-files and non-images are still refused.
+
 - BEE-REMOVALS-1 (David, 11 Oct): draft #539 "Bee removals in Pretoria & district" (Services/Technical, service_type
   'Bee removal', reach local, listing_status draft) on Marietjie's account for her to review and Publish; photo
   bee_11_removal.jpg (Higgsfield, $0.08). Promoter link MARIETJIE-V97T (own_email = hers, target 100) under RUL-212 --
