@@ -37633,6 +37633,31 @@ def rg_reach_national_1():
     return [(INFO, "Nationwide switch on the seller card; main, zoom and Local Market browse honour it within her country")]
 
 
+@entry("RG-0957", "STATIC-PHOTO-KEEP-1 (11 Oct 2026, Marietjie's adverts): a staff-seeded advert whose photos live at "
+       "/static/super/... keeps its cover and gallery when the seller edits it -- AUD-027 used to drop every /static/ "
+       "photo on her first Save, while still refusing '..', backslashes and non-image paths",
+       LOCKED, fixed_on="2026-10-11",
+       scope="bea_main.py _STATIC_IMG_RX + _safe_client_photo_url",
+       ref="Marietjie's five Bee Lady adverts carry 15 photos each under /static/super/; she is asked to keep or replace them")
+def rg_static_photo_keep_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "_STATIC_IMG_RX = re.compile(" not in py or "if _STATIC_IMG_RX.match(u) and \"..\" not in u:" not in py:
+        return [(FAIL, "the photo-address guard drops /static/ photos again -- a seeded advert loses its photos on Edit-save")]
+    import re as _re
+    m = _re.search(r'_STATIC_IMG_RX = re\.compile\(r"([^"]+)"', py)
+    if not m:
+        return [(FAIL, "_STATIC_IMG_RX pattern unreadable")]
+    rx = _re.compile(m.group(1), _re.I)
+    if not rx.match("/static/super/ml/bee_273_01.jpg"):
+        return [(FAIL, "a nested /static/super/ml photo is refused")]
+    for bad in ("/static/../.env", "/static/.env", "/static/x.js", "/static//a.jpg"):
+        if rx.match(bad) and ".." not in bad:
+            return [(FAIL, "the guard lets through " + bad)]
+    return [(INFO, "/static/ image photos survive Edit-save; '..', dot-files and non-images still refused")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

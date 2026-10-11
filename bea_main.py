@@ -2678,6 +2678,11 @@ JPEG_QUALITY_MEDIUM = 82
 
 from pydantic import field_validator as _field_validator
 _MEDIA_NAME_RX = re.compile(r"^/media/[A-Za-z0-9][A-Za-z0-9._-]{0,200}$")
+# STATIC-PHOTO-KEEP-1 (11 Oct 2026, Marietjie adverts): staff-seeded adverts carry photos at /static/super/...
+# AUD-027 dropped them on the seller's first Edit-save, so her cover and gallery vanished. A plain image file
+# under /static/ (every segment starts alphanumeric, no "..", no backslash) is already public and is never read
+# or copied by the /media/ migration, so it is kept.
+_STATIC_IMG_RX = re.compile(r"^/static/[A-Za-z0-9][A-Za-z0-9._-]{0,120}(/[A-Za-z0-9][A-Za-z0-9._-]{0,120}){0,3}\.(jpe?g|png|webp)$", re.I)
 
 
 def _safe_client_photo_url(v):
@@ -2690,6 +2695,8 @@ def _safe_client_photo_url(v):
     if u.lower().startswith("https://") and " " not in u and "\\" not in u and len(u) <= 1000:
         return u
     if _MEDIA_NAME_RX.match(u) and ".." not in u:
+        return u
+    if _STATIC_IMG_RX.match(u) and ".." not in u:   # STATIC-PHOTO-KEEP-1
         return u
     return None
 
