@@ -12211,7 +12211,9 @@ function msToggleReach(id, national){
                          : 'My city only \u2014 this advert now shows in your own city.');
       renderDash();
     })
-    .catch(function(e){ showToast('Could not change it: ' + e.message, 6000); });
+    .catch(function(e){ var m = String((e && e.message) || '');
+      showToast(/eula|terms/i.test(m) ? 'First accept the seller terms once: tap Edit, then Save Changes. Then tap this again.'
+                                      : 'Could not change it: ' + m, 7000); });
 }
 
 function msPauseListing(id, pause){
