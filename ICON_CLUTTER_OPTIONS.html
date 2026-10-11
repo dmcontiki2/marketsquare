@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home-Screen Icon Options</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14181f;--mute:#5b6472;--line:#e3e6eb;--phone:#1b1f27;
+--ts:#22C55E;--quick:#F59E0B;--sell:#3B82F6;--find:#8B5CF6;--rec:#16a34a;--warn:#dc2626}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1217;--card:#171b22;--ink:#e8ebf0;--mute:#9aa3b2;--line:#2a303a;--phone:#05070a}}
+:root[data-theme="dark"]{--bg:#0f1217;--card:#171b22;--ink:#e8ebf0;--mute:#9aa3b2;--line:#2a303a;--phone:#05070a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:24px 16px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 16px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 20px;font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}.dot{width:14px;height:14px;border-radius:4px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;max-width:1100px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column}
+.opt.rec{border:2px solid var(--rec)}
+.tag{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.opt.rec .tag{color:var(--rec)}
+h2{font-size:17px;margin:2px 0 12px}
+.phone{background:var(--phone);border-radius:22px;padding:18px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 8px;min-height:190px;align-content:start}
+.ic{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ic b{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.ic i{font-style:normal;font-size:10px;color:#cfd5de;text-align:center;line-height:1.15}
+.ic.opt-in b{outline:2px dashed #fff;outline-offset:2px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 10px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:8px}
+.stat .n{font-size:22px;font-weight:800}.stat .l{font-size:11px;color:var(--mute)}
+.bad{color:var(--warn)}.good{color:var(--rec)}
+.verdict{font-size:14px;margin:0}
+.note{max-width:1100px;margin:20px 0 0;color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+<h1>Home-screen icons: four options</h1>
+<p class="sub">Example user: a card collector who also trades property, with a Cards preset and a Property preset.</p>
+<div class="legend">
+<span><i class="dot" style="background:var(--ts)"></i>TrustSquare (full app)</span>
+<span><i class="dot" style="background:var(--quick)"></i>Quick (spreader)</span>
+<span><i class="dot" style="background:var(--sell)"></i>Trader: Sell preset</span>
+<span><i class="dot" style="background:var(--find)"></i>Trader: Find preset</span>
+<span><i class="dot" style="outline:2px dashed var(--mute);background:transparent"></i>User chose to pin it</span>
+</div>
+
+<div class="grid">
+
+<div class="opt">
+<div class="tag">A · Built (ruling 9 Oct)</div>
+<h2>One icon per preset</h2>
+<div class="phone">
+<div class="ic"><b style="background:var(--ts)">TS</b><i>TrustSquare</i></div>
+<div class="ic"><b style="background:var(--quick)">Q</b><i>Quick</i></div>
+<div class="ic"><b style="background:var(--sell)">S</b><i>Sell · Cards</i></div>
+<div class="ic"><b style="background:var(--find)">F</b><i>Find · Cards</i></div>
+<div class="ic"><b style="background:var(--sell)">S</b><i>Sell · Property</i></div>
+<div class="ic"><b style="background:var(--find)">F</b><i>Find · Property</i></div>
+</div>
+<div class="stats"><div class="stat"><div class="n bad">6</div><div class="l">icons on phone</div></div><div class="stat"><div class="n good">0</div><div class="l">extra taps to reach a preset</div></div></div>
+<p class="verdict">Fastest per action, but icons grow by two for every preset.</p>
+</div>
+
+<div class="opt">
+<div class="tag">B</div>
+<h2>One Trader launcher</h2>
+<div class="phone">
+<div class="ic"><b style="background:var(--ts)">TS</b><i>TrustSquare</i></div>
+<div class="ic"><b style="background:var(--quick)">Q</b><i>Quick</i></div>
+<div class="ic"><b style="background:linear-gradient(135deg,var(--sell) 50%,var(--find) 50%)">T</b><i>Trader</i></div>
+</div>
+<div class="stats"><div class="stat"><div class="n">3</div><div class="l">icons on phone</div></div><div class="stat"><div class="n">1</div><div class="l">extra tap (preset grid)</div></div></div>
+<p class="verdict">Fixed at three icons, but adds a third brand for users to learn.</p>
+</div>
+
+<div class="opt">
+<div class="tag">C</div>
+<h2>Quick absorbs Trader</h2>
+<div class="phone">
+<div class="ic"><b style="background:var(--ts)">TS</b><i>TrustSquare</i></div>
+<div class="ic"><b style="background:var(--quick)">Q</b><i>Quick<br>(opens on my presets)</i></div>
+</div>
+<div class="stats"><div class="stat"><div class="n good">2</div><div class="l">icons on phone</div></div><div class="stat"><div class="n">0–1</div><div class="l">Android long-press 0 · iPhone 1 tap</div></div></div>
+<p class="verdict">Least clutter; Quick opens on a preset strip, and Android long-press lists the presets.</p>
+</div>
+
+<div class="opt rec">
+<div class="tag">D · Recommended</div>
+<h2>C, plus pin a favourite</h2>
+<div class="phone">
+<div class="ic"><b style="background:var(--ts)">TS</b><i>TrustSquare</i></div>
+<div class="ic"><b style="background:var(--quick)">Q</b><i>Quick<br>(opens on my presets)</i></div>
+<div class="ic opt-in"><b style="background:var(--sell)">S</b><i>Sell · Cards<br>(pinned)</i></div>
+</div>
+<div class="stats"><div class="stat"><div class="n good">2–3</div><div class="l">icons on phone</div></div><div class="stat"><div class="n good">0</div><div class="l">taps for the daily preset</div></div></div>
+<p class="verdict">Two icons by default; the user pins only the preset he uses daily.</p>
+</div>
+
+</div>
+<p class="note">Changing to C or D would make per-preset icons optional rather than the default set by the 9 Oct ruling; the fast-lane switch still ships off, so the change is cheap now.</p>
+</body>
+</html>

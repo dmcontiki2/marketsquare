@@ -1,3 +1,8 @@
+## 2026-10-10 — GIT-LOCK-6: the stale-lock sweep now covers a linked worktree's own locks (RG-0954)
+- A commit in the fastlane worktree left .git/worktrees/_fastlane_wt/HEAD.lock behind (the mount blocks git's own unlink). scripts/git_unlock.py only looked at .git/*.lock and .git/refs/**, so it reported nothing.
+- scripts/git_unlock.py (main and the fastlane worktree copy): also sweeps .git/worktrees/*/<HEAD|index|...>.lock, treated as blocking; healed by rename into .git/stale_locks/ as before.
+- Ledger RG-0954 (source check + no worktree lock stranded over 60 minutes).
+
 ## 2026-10-10 — SF-EXIT-1: a way out of a sell flow in progress
 - David was stuck in an earlier Tutors draft (tapping Sell resumed it). Every sell step now shows '✕ New listing' top right; it opens the Sell start, where the kept listing offers 'Continue my listing' or 'Start again' (which asks first). Nothing is deleted by the link itself. Ships with ms.js v532.
 

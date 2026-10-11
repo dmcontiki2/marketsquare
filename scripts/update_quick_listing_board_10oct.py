@@ -133,7 +133,7 @@ STATUS = '''<div class="status">
   <div class="st next"><h3>Next</h3><ul>
     <li><b>L16:</b> landing in TrustSquare from Quick is still slow on weak 3G — skip the home imagery on that landing.</li>
     <li><b>L17:</b> Android shell for Quick — waits on the D-U-N-S number for the Play account.</li>
-    <li><b>Language reviewer</b> pass on the trainer words in isiZulu, isiXhosa and Sepedi (English stands in until then).</li>
+    <li><b>Language reviewer</b> pass on the trainer words in isiZulu and isiXhosa (Sepedi read and signed off 10 Oct).</li>
   </ul></div>
 </div>''' % (n_live, len(g), nt, len(tg))
 s = re.sub(r'<div class="status">.*?\n</div>\n', STATUS + "\n", s, count=1, flags=re.S)
