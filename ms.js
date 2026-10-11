@@ -19344,26 +19344,41 @@ function sqRender(){
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:700;font-size:14px;">Say what you need</div>'+
     '<div class="ms-cred-msg" style="margin:0;">'+al.remaining+' of '+al.limit+' approaches left · '+(s.reach==='global'?'national + global reach':'local reach')+'</div></div>'+
     '<div class="ms-cred-form"><textarea id="sq-need" rows="3" placeholder="e.g. maths tutor for a Grade 9 learner, failing trig, patient, Afrikaans or English, Menlo Park, weekday afternoons" style="border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:Inter,sans-serif;background:var(--surface);color:var(--text);"></textarea>'+
+    '<div class="sq-rules" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;">'+
+      '<select id="sq-kind" onchange="sqKindChanged()" style="min-height:44px;border:1.5px solid var(--border);border-radius:10px;padding:0 8px;background:var(--surface);color:var(--text);"><option value="buy">I want to buy</option><option value="sell">I want to sell</option><option value="watch">Just watch</option></select>'+
+      '<span id="sq-pct-lbl">Buy at market −</span><input id="sq-pct" type="number" min="0" max="90" step="1" placeholder="20" style="width:64px;">%'+
+      '<input id="sq-max" inputmode="decimal" placeholder="Max price" style="width:100px;"><input id="sq-yield" type="number" step="0.1" placeholder="Min yield %" style="width:100px;">'+
+      '<label style="display:flex;gap:6px;align-items:center;min-height:44px;"><input id="sq-nm" type="checkbox" style="width:22px;height:22px;min-height:0;padding:0;margin:0;flex:none;"> Near Mint only</label></div>'+
+    '<details><summary style="font-size:12.5px;cursor:pointer;">Paste a card list (up to 100)</summary><textarea id="sq-cards" rows="5" placeholder="One card per line: Name | SET | your price | qty&#10;Lightning Bolt | M10 | 2.50 | 4&#10;2x Counterspell (MH2) 1.20" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:Inter,sans-serif;background:var(--surface);color:var(--text);"></textarea></details>'+
     '<button id="sq-brief-btn" onclick="sqCreateBrief()">Brief my squire</button></div><div class="ms-cred-msg" id="sq-out"></div>';
   (s.briefs||[]).forEach(function(b){
     h += '<div class="ms-cred-claim" style="flex-direction:column;align-items:stretch;gap:4px;">'+
       '<div style="display:flex;justify-content:space-between;gap:8px;"><b>'+_wlEsc(b.category)+'</b><span style="color:var(--text-3);font-size:12px;">'+b.matches+' match'+(b.matches===1?'':'es')+(b.new_matches?' · <b style="color:#0f6e56;">'+b.new_matches+' new</b>':'')+'</span></div>'+
-      '<div style="font-size:12.5px;color:var(--text-2);">'+_wlEsc(b.need_text||'')+(b.is_minor?' <span class="cred-badge" title="Held under you as account holder; minimised; never sent in identifying form">learner · minimised</span>':'')+'</div>'+
-      '<div style="display:flex;gap:8px;"><button class="ms-sig-action" onclick="sqOpen('+b.id+')">Shortlist</button><button class="ms-sig-action" style="background:transparent;color:var(--text-3);" onclick="sqDelete('+b.id+')">Remove</button></div>'+
-      (_sqState.open===b.id ? '<div id="sq-sl-'+b.id+'"></div>' : '')+'</div>';
+      '<div style="font-size:12.5px;color:var(--text-2);"><span class="cred-badge sq-kind-badge">'+_wlEsc(b.kind||'buy')+'</span> '+_wlEsc(b.need_text||'')+(b.is_minor?' <span class="cred-badge" title="Held under you as account holder; minimised; never sent in identifying form">learner · minimised</span>':'')+(b.status==='paused'?' <span class="cred-badge" style="color:#92400e;">paused — top up</span>':'')+'</div>'+
+      (b.rules&&Object.keys(b.rules).length ? '<div style="font-size:12px;color:var(--text-3);">Your rules: '+_wlEsc(Object.keys(b.rules).map(function(k){ var v=b.rules[k]; return k.replace(/_/g,' ')+' '+(Array.isArray(v)?v.join(', '):v); }).join(' · '))+'</div>' : '')+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+(b.lines?'<button class="ms-sig-action" onclick="sqAdvice('+b.id+')">Advice ('+b.lines+')</button>':'')+((b.kind||'buy')!=='sell'||!b.lines?'<button class="ms-sig-action" onclick="sqOpen('+b.id+')">Shortlist</button>':'')+'<button class="ms-sig-action" style="background:transparent;color:var(--text-3);" onclick="sqDelete('+b.id+')">Remove</button></div>'+
+      '<div id="sq-adv-'+b.id+'"></div>'+
+      (_sqState.open===b.id ? '<div id="sq-real-'+b.id+'"></div><div id="sq-sl-'+b.id+'"></div>'+sqPaPanel(b) : '')+'</div>';
   });
+  h += sqRenderFeed();
   card.innerHTML = h;
-  if(_sqState.open) sqRenderShortlist();
+  if(_sqState.open){ sqRenderShortlist(); sqReality(_sqState.open); }
 }
 async function sqCreateBrief(){
   var need = (document.getElementById('sq-need')||{}).value||''; var out=document.getElementById('sq-out'); var btn=document.getElementById('sq-brief-btn');
-  if(need.trim().length<8){ if(out) out.textContent='Say it in a sentence or two.'; return; }
+  var cards = ((document.getElementById('sq-cards')||{}).value||'').trim(); var kind=(document.getElementById('sq-kind')||{}).value||'buy';
+  if(need.trim().length<8 && !cards){ if(out) out.textContent='Say it in a sentence or two.'; return; }
   if(btn){ btn.disabled=true; btn.textContent='Specifying…'; }
   try{
-    var r = await fetch(BEA_URL+'/squire/brief',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), need_text:need, city:(activeCity&&activeCity.name)||''})});
+    var r = await fetch(BEA_URL+'/squire/brief',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), need_text:need, city:(activeCity&&activeCity.name)||'', kind:kind, rules:sqRulesFromForm(), cards:(cards||null)})});
     var d = await r.json().catch(function(){return {};});
     if(!r.ok){ if(out) out.textContent = d.detail || ('Could not brief ('+r.status+')'); }
-    else { showToast('✓ Brief written — '+d.matches+' match'+(d.matches===1?'':'es')+' so far'); _sqState.open = d.brief_id; await sqLoad(); return; }
+    else {
+      showToast(d.lines ? ('✓ '+d.lines+' card'+(d.lines===1?'':'s')+' read — '+((d.unresolved||[]).length)+' to check') : ('✓ Brief written — '+d.matches+' match'+(d.matches===1?'':'es')+' so far'));
+      _sqState.open = d.lines ? null : d.brief_id; await sqLoad();
+      if(d.lines){ sqAdvice(d.brief_id); }
+      var o2=document.getElementById('sq-out'); if(o2 && d.reality && d.reality.line) o2.innerHTML='<b>Reality-check:</b> '+_wlEsc(d.reality.line)+((d.unresolved||[]).length?'<br><b>Could not identify — check name/set:</b> '+_wlEsc(d.unresolved.map(function(u){return u.text;}).join(', ')):'');
+      return; }
   }catch(e){ if(out) out.textContent='Could not reach the server.'; }
   if(btn){ btn.disabled=false; btn.textContent='Brief my squire'; }
 }
@@ -19386,7 +19401,10 @@ function sqRenderShortlist(){
       '<div style="font-size:12.5px;color:var(--text-2);">'+_wlEsc((m.reasons||[]).join(' · '))+'</div>'+
       (ap ? '<div style="font-size:12.5px;">'+(ap.status==='answered' ? '<b>Seller answered:</b> '+_wlEsc(ap.answer||'') : 'Brief sent '+_wlEsc(String(ap.created_at||'').slice(0,10))+' — waiting for the seller')+'</div>' : '')+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+(ap?'':'<button class="ms-sig-action" onclick="sqApproach('+id+','+m.listing_id+')">Send my brief</button>')+
-      '<button class="ms-sig-action" style="background:transparent;color:var(--accent);border:1px solid var(--border);" onclick="try{openDetail(\'bea_'+m.listing_id+'\')}catch(e){}">Introduce me (1T)</button></div></div>';
+      '<button class="ms-sig-action" style="background:transparent;color:var(--accent);border:1px solid var(--border);" onclick="try{openDetail(\'bea_'+m.listing_id+'\')}catch(e){}">Introduce me (1T)</button>'+
+      ((L.category||'').toLowerCase()==='property'?'<button class="ms-sig-action" onclick="sqCrux('+id+','+m.listing_id+')">Crux report</button>':'')+
+      '<select class="sq-fb" aria-label="Not for me" onchange="sqFeedback('+id+','+m.listing_id+',this.value)" style="min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);"><option value="">Not for me…</option>'+Object.keys(((_sqState.status||{}).feedback_reasons)||{}).map(function(k){ return '<option value="'+k+'">'+_wlEsc(_sqState.status.feedback_reasons[k])+'</option>'; }).join('')+'</select></div>'+
+      '<div id="sq-crux-'+m.listing_id+'"></div></div>';
   });
   el.innerHTML = h;
 }
@@ -19416,6 +19434,84 @@ async function sqTopup(){
   try{ var r=await fetch(BEA_URL+'/squire/topup',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail()})}); var d=await r.json().catch(function(){return {};});
     if(!r.ok){ showToast(d.detail||'Top-up failed'); return; } showToast('✓ '+d.allowance.extra+' extra approaches this month — '+d.charged_tuppence+'T'); if(_sqState.shortlist) _sqState.shortlist.allowance=d.allowance; sqRenderShortlist(); try{ if(typeof d.charged_tuppence==='number'){ tuppence=Math.max(0,tuppence-d.charged_tuppence); updateTuppenceUI(); } }catch(e){}   /* BUGSWEEP-24SEP: syncTuppence never existed */ }catch(e){ showToast('Could not reach the server'); }
 }
+/* ── SQUIRE-2 (SQUIRE_2_BUILD_BRIEF.md · 10 Oct 2026): brief kinds + rules, bulk card lists, price advice,
+   reality-check, learning from reactions, the property crux report, alerts + monthly reports, and the Pro PA
+   quote (only drawn when the server says the switch is on). Same card, same flag (msBaselineOn), same Pro gate. */
+function sqKindChanged(){
+  var k=(document.getElementById('sq-kind')||{}).value||'buy'; var l=document.getElementById('sq-pct-lbl');
+  if(l) l.textContent = k==='sell' ? 'Sell at market +' : (k==='buy' ? 'Buy at market −' : 'Watch only');
+  var p=document.getElementById('sq-pct'); if(p) p.disabled = (k==='watch');
+}
+function sqRulesFromForm(){
+  var k=(document.getElementById('sq-kind')||{}).value||'buy', r={};
+  var pct=parseFloat((document.getElementById('sq-pct')||{}).value||''); if(!isNaN(pct)&&pct>=0){ if(k==='sell') r.sell_margin_pct=pct; else if(k==='buy') r.buy_discount_pct=pct; }
+  var mx=parseFloat(String((document.getElementById('sq-max')||{}).value||'').replace(/[^\d.]/g,'')); if(!isNaN(mx)&&mx>0) r.max_price=mx;
+  var my=parseFloat((document.getElementById('sq-yield')||{}).value||''); if(!isNaN(my)&&my>0) r.min_yield_pct=my;
+  if((document.getElementById('sq-nm')||{}).checked) r.min_condition='NM';
+  return r;
+}
+function sqStatusChip(st){ var c={pass:'#0f6e56',warn:'#b45309',unverified:'#6b7280',unresolved:'#b91c1c',info:'#1d4ed8'}[st]||'#6b7280';
+  return '<span class="cred-badge" style="background:transparent;border:1px solid '+c+';color:'+c+';">'+_wlEsc(st||'')+'</span>'; }
+async function sqAdvice(id, refresh){
+  var el=document.getElementById('sq-adv-'+id); if(!el) return; el.innerHTML='<div class="ms-cred-msg">Pricing your list…</div>';
+  try{ var r=await fetch(BEA_URL+'/squire/brief/'+id+'/advice?email='+encodeURIComponent(_sqEmail())+(refresh?'&refresh=1':''),{credentials:'include'}); var d=await r.json().catch(function(){return {};});
+    if(!r.ok){ el.innerHTML='<div class="ms-cred-msg">'+_wlEsc(d.detail||'Advice unavailable')+'</div>'; return; }
+    var c=d.counts||{}; var h='<div class="ms-cred-msg"><b>Price advice</b> — '+(c.pass||0)+' pass · '+(c.warn||0)+' warn · '+(c.unverified||0)+' not verified · '+(c.unresolved||0)+' not identified <button class="ms-sig-action" onclick="sqAdvice('+id+',1)">Refresh prices</button></div>';
+    (d.advice||[]).forEach(function(a){ h+='<div class="ms-cred-claim sq-adv-line" style="flex-direction:column;align-items:stretch;gap:2px;"><div style="display:flex;justify-content:space-between;gap:8px;"><b>'+_wlEsc(a.name)+(a.set?' ('+_wlEsc(a.set)+')':'')+(a.quantity>1?' ×'+a.quantity:'')+'</b>'+sqStatusChip(a.status)+'</div><div style="font-size:12.5px;color:var(--text-2);">'+_wlEsc(a.reason||'')+'</div></div>'; });
+    el.innerHTML=h;
+  }catch(e){ el.innerHTML='<div class="ms-cred-msg">Could not reach the server.</div>'; }
+}
+async function sqReality(id){
+  var el=document.getElementById('sq-real-'+id); if(!el) return;
+  try{ var r=await fetch(BEA_URL+'/squire/brief/'+id+'/reality?email='+encodeURIComponent(_sqEmail()),{credentials:'include'}); var d=await r.json().catch(function(){return {};}); if(!r.ok) return;
+    var rc=d.reality||{}; var h='<div class="ms-cred-msg" style="'+(rc.realistic===false?'color:#92400e;':'')+'"><b>Reality-check:</b> '+_wlEsc(rc.line||'')+'</div>';
+    if(rc.realistic===false && (rc.alternatives||[]).length) h+='<ol class="ms-cred-msg" style="margin:0 0 0 18px;">'+rc.alternatives.slice(0,5).map(function(a){ return '<li>'+_wlEsc((a.card?a.card+': ':'')+a.change)+' → '+a.would_have_matched+' match'+(a.would_have_matched===1?'':'es')+'</li>'; }).join('')+'</ol>';
+    el.innerHTML=h;
+  }catch(e){}
+}
+async function sqFeedback(briefId, listingId, reason){
+  if(!reason) return;
+  try{ var r=await fetch(BEA_URL+'/squire/brief/'+briefId+'/feedback',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), listing_id:listingId, reason:reason})}); var d=await r.json().catch(function(){return {};});
+    if(!r.ok){ showToast(d.detail||'Could not save'); return; } showToast('✓ '+d.change); _sqState.lastChange=d.change; await sqLoad(); sqOpen(briefId); sqOpen(briefId);
+  }catch(e){ showToast('Could not reach the server'); }
+}
+async function sqCrux(briefId, listingId){
+  var el=document.getElementById('sq-crux-'+listingId); if(!el) return; el.innerHTML='<div class="ms-cred-msg">Building the report…</div>';
+  try{ var r=await fetch(BEA_URL+'/squire/brief/'+briefId+'/report?listing_id='+listingId+'&email='+encodeURIComponent(_sqEmail()),{credentials:'include'}); var d=await r.json().catch(function(){return {};});
+    if(!r.ok){ el.innerHTML='<div class="ms-cred-msg">'+_wlEsc(d.detail||'Report unavailable')+'</div>'; return; }
+    if(!d.report){ el.innerHTML='<div class="ms-cred-msg">'+_wlEsc(d.reason||'No report')+'</div>'; return; }
+    var p=d.report; el.innerHTML='<div class="ms-cred-msg sq-crux"><b>'+_wlEsc(p.verdict)+'</b><br>'+(p.numbers||[]).map(function(n){return _wlEsc(n.label)+': <b>'+_wlEsc(n.value)+'</b>';}).join(' · ')+
+      '<br><b>Risks</b><ul style="margin:2px 0 4px 18px;">'+p.risks.map(function(x){return '<li>'+_wlEsc(x)+'</li>';}).join('')+'</ul><b>Advantages</b><ul style="margin:2px 0 4px 18px;">'+p.advantages.map(function(x){return '<li>'+_wlEsc(x)+'</li>';}).join('')+'</ul><span style="color:var(--text-3);font-size:11.5px;">Sources: '+_wlEsc((p.sources||[]).join('; '))+' · included in Pro, no Tuppence</span></div>';
+  }catch(e){ el.innerHTML='<div class="ms-cred-msg">Could not reach the server.</div>'; }
+}
+function sqRenderFeed(){
+  var s=_sqState.status||{}; var h='';
+  var al=(s.alerts||[]).slice(0,5);
+  if(al.length) h+='<div class="ms-cred-msg" style="margin-top:8px;"><b>Recent alerts</b></div>'+al.map(function(a){ return '<div class="ms-cred-claim" style="flex-direction:column;align-items:stretch;gap:2px;"><div style="display:flex;justify-content:space-between;gap:8px;"><b style="font-size:13px;">'+_wlEsc(a.title)+'</b><span class="cred-badge">'+(a.urgency==='instant'?'instant':'digest')+'</span></div><div style="font-size:12px;color:var(--text-2);">'+_wlEsc(a.body||'')+'</div></div>'; }).join('');
+  var rp=(s.reports||[])[0];
+  if(rp&&rp.body) h+='<div class="ms-cred-msg sq-monthly" style="margin-top:8px;"><b>'+_wlEsc(rp.body.title||'Monthly report')+'</b><br>'+(rp.body.lines||[]).map(_wlEsc).join('<br>')+'</div>';
+  return h;
+}
+function sqPaPanel(b){
+  var s=_sqState.status||{}; if(!(s.pa&&s.pa.available)) return '';
+  var pa=b.pa; var h='<div class="ms-cred-msg" style="margin-top:8px;"><b>Premium data (monthly, in Tuppence)</b></div>';
+  if(pa && pa.status==='active') return h+'<div class="ms-cred-msg">Active: '+pa.tuppence_per_month+'T a month for '+_wlEsc((pa.feeds||[]).join(', '))+' — runs until you cancel. <button class="ms-sig-action" onclick="sqPaCancel('+pa.charge_id+')">Cancel</button></div>';
+  if(pa && pa.status==='paused') return h+'<div class="ms-cred-msg" style="color:#92400e;">Paused — top up your Tuppence and it resumes. <button class="ms-sig-action" onclick="sqPaCancel('+pa.charge_id+')">Cancel</button></div>';
+  return h+'<div class="ms-cred-form"><input id="sq-pa-feeds-'+b.id+'" placeholder="Premium feeds, comma separated"><button class="ms-sig-action" onclick="sqPaQuote('+b.id+')">Get one quote</button></div><div id="sq-pa-q-'+b.id+'"></div>';
+}
+async function sqPaQuote(id){
+  var feeds=((document.getElementById('sq-pa-feeds-'+id)||{}).value||'').split(',').map(function(x){return x.trim();}).filter(Boolean); var el=document.getElementById('sq-pa-q-'+id);
+  try{ var r=await fetch(BEA_URL+'/squire/pa/quote',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), brief_id:id, feeds:feeds})}); var d=await r.json().catch(function(){return {};});
+    if(!r.ok){ if(el) el.innerHTML='<div class="ms-cred-msg">'+_wlEsc(d.detail||'No quote')+'</div>'; return; }
+    if(el) el.innerHTML='<div class="ms-cred-msg sq-pa-quote"><b>'+d.tuppence_per_month+'T a month</b> for '+_wlEsc(d.feeds.map(function(f){return f.feed;}).join(', '))+'.<br><span class="sq-caution" style="display:block;margin:6px 0;padding:8px;border:1px solid #b45309;border-radius:8px;color:#92400e;">'+_wlEsc(d.caution_text)+'</span><label style="display:flex;gap:6px;align-items:center;min-height:44px;"><input type="checkbox" id="sq-pa-ok-'+d.charge_id+'" style="width:22px;height:22px;min-height:0;padding:0;margin:0;flex:none;"> I have read this and accept it</label><button class="ms-sig-action" onclick="sqPaAccept('+d.charge_id+')">Start</button></div>';
+  }catch(e){ if(el) el.innerHTML='<div class="ms-cred-msg">Could not reach the server.</div>'; }
+}
+async function sqPaAccept(cid){
+  var ok=!!(document.getElementById('sq-pa-ok-'+cid)||{}).checked; if(!ok){ showToast('Please read and accept the caution first'); return; }
+  try{ var r=await fetch(BEA_URL+'/squire/pa/accept',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), charge_id:cid, accept_caution:true})}); var d=await r.json().catch(function(){return {};});
+    if(!r.ok || d.status!=='active'){ showToast(d.detail||d.message||'Not started'); return; } showToast('✓ '+d.message); await sqLoad(); }catch(e){ showToast('Could not reach the server'); }
+}
+async function sqPaCancel(cid){ try{ await fetch(BEA_URL+'/squire/pa/cancel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:_sqEmail(), charge_id:cid})}); showToast('✓ Cancelled — no further charges'); await sqLoad(); }catch(e){} }
 async function sqDelete(id){ try{ await fetch(BEA_URL+'/squire/brief/'+id+'?email='+encodeURIComponent(_sqEmail()),{method:'DELETE',credentials:'include'}); _sqState.open=null; await sqLoad(); }catch(e){} }
 /* Seller side: briefs sent to my listings (anonymous -- the need, never the buyer). */
 async function msRenderSquireInbox(){

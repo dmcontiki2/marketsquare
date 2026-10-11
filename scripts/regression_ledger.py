@@ -13811,7 +13811,18 @@ def rg_maint_intake_lanes():
              "most, invisibly. CLASS: "
              "the metering line is OBSERVE vs ACT -- any new Squire capability must land on "
              "the correct side of it, and a capability that quietly meters watching is a "
-             "defect of this entry.",
+             "defect of this entry. "
+             "EXTENDED 10 Oct 2026 (SQUIRE-2 Phase 1, SQUIRE_2_BUILD_BRIEF.md s5): brief kinds buy/sell/watch + "
+             "rules, bulk card lists, price advice both sides, sell-side watch, first-in alerts on publish, the "
+             "property crux report, reality-check, learning, urgency routing, the always-sent monthly report and the "
+             "Pro PA monthly-Tuppence machinery. The added half asserts: (10) the layer judges candidates from the "
+             "ONE matcher (no second matcher); (11) a Near Mint rule is never 'met' from a price that is not "
+             "condition-verified; (12) no verified data -> no crux report and no charge; (13) the monthly report is "
+             "built for every brief, zero matches included, and a Pro PA month is never charged without it; (14) "
+             "with feature_flags switch squire_pro_pa OFF no quote and no recurring charge can exist (404), the "
+             "switch defaults OFF and only a literal true arms it, and the caution must be accepted before the first "
+             "charge; (15) no AI model name in the SQUIRE-2 files. PROVEN 10 Oct 2026 by test_squire2.py (13 engine "
+             "checks) and scripts/smoke_harness/verify_squire2.py (real BEA, throwaway DB, all 10 acceptance items).",
        ref="SQUIRE-1 (30 Aug 2026). David ruled Squire onto the EXISTING $20 Pro tier and "
            "asked for a cap with a purchasable top-up rather than a hard lock. CTO answer: "
            "the currency already exists -- Tuppence, not a new token. The tier axis is the "
@@ -13883,6 +13894,36 @@ def rg_squire():
     for needle in ("function msRenderSquireCard(){", "Introduce me (1T)", "draft_only:1"):
         if needle not in js:
             out.append((FAIL, "ms.js lost %r (SQUIRE-1)" % needle))
+    # ── SQUIRE-2 (10 Oct 2026): criteria 10-15 ──
+    eng = repo_file("squire2_engine.py"); ff = repo_file("feature_flags.py")
+    if eng is None or ff is None:
+        out.append((FAIL, "squire2_engine.py / feature_flags.py missing -- SQUIRE-2's rules engine or its switch is gone"))
+    else:
+        for needle, why in (
+                ('if need_nm and not market.get("condition_verified"):', "(11) the Near Mint guard in the advice"),
+                ('if rules.get("min_condition") == "NM" and not market.get("condition_verified"):\n        return False', "(11) the Near Mint guard on a listing"),
+                ("int(comps.get(\"n\") or 0) < 5:\n        return None", "(12) no verified comparables -> no report"),
+                ("even in a \"\n    \"month when no matching sellers or listings appear", "(14) the mandatory caution wording"),
+                ("No new matches this month", "(13) the zero-match monthly report")):
+            n2 = needle.encode().decode("unicode_escape")
+            if n2 not in eng:
+                out.append((FAIL, "squire2_engine.py lost %r -- %s (SQUIRE-2)" % (needle[:60], why)))
+        if 'SWITCHES: tuple[str, ...] = ("squire_pro_pa",)' not in ff or "state[\"switches\"][name] = (val is True)" not in ff \
+                or '"switches": {k: False for k in SWITCHES}' not in ff:
+            out.append((FAIL, "feature_flags.py: squire_pro_pa is no longer a fail-safe default-OFF switch (SQUIRE-2 criterion 14)"))
+        if re.search(r"\b(claude|sonnet|opus|haiku|gpt-?\d|chatgpt|openai|gemini|llama|mistral)\b", eng + (repo_file("squire2_feeds.py") or ""), re.I):
+            out.append((FAIL, "an AI model name appears in the SQUIRE-2 files -- a function is never labelled with a model (criterion 15)"))
+    for needle, why in (
+            ("def _squire2_pa_gate(", "(14) the Pro PA gate"),
+            ('    if not feature_flags.squire_pro_pa_on():\n        raise HTTPException(status_code=404, detail="Not found")', "(14) no quote/charge while the switch is OFF"),
+            ("if body.accept_caution is not True:", "(14) the caution accepted before the first charge"),
+            ("return \"none\"        # no report then no charges", "(13) no PA charge without the month's report"),
+            ("_pub_thr.Thread(target=_squire2_on_publish, args=(listing_id,), daemon=True).start()", "(B) first-in alerts on publish"),
+            ("for m in _squire_shortlist(conn, brief, limit=None, apply_rules=False):", "(10) candidates from the ONE matcher"),
+            ("def _squire2_monthly(", "(13) the monthly report job")):
+        n2 = needle.encode().decode("unicode_escape")
+        if n2 not in bea:
+            out.append((FAIL, "bea_main.py lost %r -- %s (SQUIRE-2)" % (needle[:60], why)))
     return out or [(INFO, "spec intact; Squire gated to Pro, metered on the approach, offer with the limit, "
                           "Tuppence top-up, minors minimised, no introduction ever written by it, watches free")]
 

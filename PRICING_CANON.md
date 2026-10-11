@@ -67,6 +67,9 @@ Exempt categories (raw `l.category` keys): `adventures`, `adventure`, `experienc
 
 **Consequence David accepted in choosing it:** a pure buyer who never sells now buys a seller plan to get reach — same $5, plus slots they may not use. **Not ruled here:** the Agency Pro seat (RUL-048) stays its own $5 price point.
 
+### 2e · Squire Pro PA — a monthly Tuppence figure for premium data (David, 9 Oct 2026 — SQUIRE-2 s4; built 10 Oct 2026, DARK)
+When a Pro subscriber's brief needs a **paid** data feed, Squire quotes **one** monthly figure **in Tuppence** (feed cost share + AI run cost + margin, rounded up to whole Tuppence — no second currency). The caution is shown and must be accepted first: the data part is due **every month, even in a month with no matches**, and that month still brings the monthly report. Per-result charges keep "no report, no charge"; out of Tuppence → the brief pauses with the usual top-up prompt; it runs until the user cancels (no lapsing timer, RUL-141). Only a feed that is live in feature_flags with a monthly cost David has set can be quoted. **Switch `squire_pro_pa` is OFF; arming it is David's act.** Introductions stay 1T (§3) — the PA never grants one.
+
 ### 2b · Online-mode reach exemption (David, 6 Jul 2026)
 **Listings with `mode` Online/Both (tutors + online-capable services) are borderless — visible to EVERYONE from ANY city on ANY tier.** Same principle as 2a: reach follows whether the buyer can USE the thing from where they are — an online chess trainer is as usable from Sydney as from Pretoria. Physical listings are unchanged (Free = home city, Global = everywhere): **the Global tier's value is reach for the physical world.** Future (logged, demand-driven, NOT built): a "ships nationwide" seller toggle could extend the same principle to shippable goods (collectors); until then physical categories stay tier-gated by design.
 

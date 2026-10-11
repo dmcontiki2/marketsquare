@@ -14,6 +14,12 @@
     "payprop_tpn": true,
     "internal_comps": true,
     "web_comps": true,
+    "mtgjson": true,
+    "epc_register": true,
+    "police_uk": true,
+    "ea_flood": true,
+    "boe_rate": true,
+    "sarb_rate": true,
 
     "pricecharting": false,
     "pcgs": false,
@@ -30,5 +36,10 @@
     "caphpi": false,
     "redbook": false,
     "transunion_auto": false
-  }
+  },
+  "_switches": "SQUIRE-2 (10 Oct 2026): product switches. squire_pro_pa arms the Pro PA monthly-Tuppence quote + recurring charge. Default false; only a literal true arms it; arming is David's act.",
+  "switches": {
+    "squire_pro_pa": false
+  },
+  "feed_costs_usd_month": {}
 }
