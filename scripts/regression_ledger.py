@@ -37682,7 +37682,7 @@ def rg_subscriptions_audit_1():
         return [(FAIL, "the static Pro plan card mentions Squire; only /pricing/ladder may add it, once armed")]
     if 'Nationwide in your own country' not in html.split('id="plan-card-free"')[1].split('id="plan-card-starter"')[0]:
         return [(FAIL, "the Free plan card lost the free Nationwide line (RUL-220)")]
-    if '"Nationwide in your own country' not in py or 'Browse your city + every Nationwide advert in your country' not in py:
+    if '"Nationwide in your own country' not in py or 'Browse your city + every Nationwide listing in your country' not in py:
         return [(FAIL, "/pricing/ladder's Free rung no longer states the Nationwide switch")]
     if "'Nationwide in your own country" not in js:
         return [(FAIL, "the subscription screen's Free bullets lost the Nationwide line")]
@@ -37696,6 +37696,39 @@ def rg_subscriptions_audit_1():
     if q != h:
         return [(FAIL, "quick.html and genie/HARNESS.html differ -- they are kept identical by rule (17 Sep 2026)")]
     return [(INFO, "plan cards, ladder and subscription screen agree; Quick names a full plan and offers both ways out")]
+
+
+@entry("RG-0959", "QUICK-DRAFT-VIEW-1 + GEO-NATIONAL-NUDGE-1 (Goal run 36, 11 Oct 2026): on Quick's draft screen the sign-in "
+       "box scrolls at the end of her listing instead of being pinned under it (only Save and the terms line stay pinned, "
+       "and a Save tap with no address scrolls the box into view); Home's empty-city bar stays quiet when a Nationwide "
+       "advert (RUL-220) already shows in her city, and /geo/city-counts carries the nationwide count as a trailing row",
+       LOCKED, fixed_on="2026-10-11",
+       scope="quick.html + genie/HARNESS.html drawDraft wrapper (qpid host) and the Save check; bea_main.py GET /geo/city-counts; "
+             "ms.js msEmptyCityNudge",
+       ref="Goal run 36 walk (docs/E2E_2026-10-11.md): a Durban dog walker's draft showed a 315px strip of an example photo "
+           "under a 380px pinned sign-in box; Durban Home said 'No real listings in Durban yet ... Mossel Bay has 4' above "
+           "a Services list holding the Bee Lady's nationwide advert #538")
+def rg_quick_draft_view_geo_national():
+    py = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    q = repo_file("quick.html")
+    h = repo_file("genie/HARNESS.html")
+    if None in (py, js, q, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    for name, src in (("quick.html", q), ("genie/HARNESS.html", h)):
+        if "(_qpHost||foot).insertAdjacentHTML(_qpHost?'beforeend':'afterbegin','<div class=\"qpbox\" id=\"qpid\">'" not in src:
+            return [(FAIL, name + ": the sign-in box is pinned in the foot again -- her listing shrinks to a strip (QUICK-DRAFT-VIEW-1)")]
+        if "scrollIntoView({block:'center',behavior:'smooth'}); }catch(_){} m.focus();" not in src:
+            return [(FAIL, name + ": a Save tap with no address no longer brings the box into view")]
+    if q != h:
+        return [(FAIL, "quick.html and genie/HARNESS.html differ -- they are kept identical by rule (17 Sep 2026)")]
+    seg = py.split('@app.get("/geo/city-counts")')[1].split("@app.get(")[0] if '@app.get("/geo/city-counts")' in py else ""
+    if "l.reach = 'national'" not in seg or '"national": True' not in seg:
+        return [(FAIL, "/geo/city-counts no longer reports Nationwide adverts -- an empty-city bar contradicts the list under it")]
+    n = js.find("async function msEmptyCityNudge(){")
+    if n < 0 or "x.national && x.n > 0" not in js[n:n + 3000]:
+        return [(FAIL, "msEmptyCityNudge ignores Nationwide adverts -- Durban is told it has nothing while #538 shows")]
+    return [(INFO, "her listing is visible above the sign-in box; Nationwide adverts count for every city")]
 
 
 def _server_vantage_wrap():

@@ -2984,7 +2984,7 @@ const AI_PRO_ONLY = new Set(['heritage_tour','expedition_dossier','weekend_itine
 
 const _SUB_TIERS = [
   { id:'free',    label:'Free',    usd:0,  slots:2,  zar:0,   tup:0,  color:'#64748b', desc:'no card needed',   /* CARD-WORDS-2 (26 Sep 2026): no card is ever taken (langt-04). CARD-WORDS-3: the plan card already says 'Free forever' before the description -- the 26 Sep line read 'Free forever · Free forever · no card needed' */
-    bullets:['2 listing slots','Nationwide in your own country — a free switch on every advert (RUL-220)','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
+    bullets:['2 listing slots','Nationwide in your own country — a free switch on every listing (RUL-220)','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
   { id:'starter', label:'Starter', usd:5,  slots:10, zar:90,  tup:2,  color:'#4f46e5', desc:'The regular individual seller',
     bullets:['10 listing slots','2 Tuppence granted every month — runs your Offer Strategy brief monthly','Everything in Free'] },
   { id:'pro',     label:'Pro',     usd:20, slots:30, zar:360, tup:10, color:'#7c3aed', desc:'The power seller',
@@ -12209,8 +12209,8 @@ function msToggleReach(id, national){
     .then(function(){
       var dl = dashState.listings.find(function(x){ return x.beaListingId === id || x.id === id; });
       if(dl && dl._raw) dl._raw.reach = national ? 'national' : 'local';
-      showToast(national ? 'Nationwide \u2014 buyers in every city of your country can now find this advert.'
-                         : 'My city only \u2014 this advert now shows in your own city.');
+      showToast(national ? 'Nationwide \u2014 buyers in every city of your country can now find this listing.'
+                         : 'My city only \u2014 this listing now shows in your own city.');
       renderDash();
     })
     .catch(function(e){ var m = String((e && e.message) || '');
@@ -20537,7 +20537,9 @@ async function msEmptyCityNudge(){
     const rows = Array.isArray(_msCityCounts[cc]) ? _msCityCounts[cc] : [];
     const here = rows.find(function(x){ return String(x.city).toLowerCase() === String(activeCity.name).toLowerCase(); });
     if (here && here.n > 0) return;
-    const best = rows.filter(function(x){ return x.n > 0 && String(x.city).toLowerCase() !== String(activeCity.name).toLowerCase(); })[0];
+    /* GEO-NATIONAL-NUDGE-1 (Goal run 36): a Nationwide listing shows in every city of its country -- this city is not empty. */
+    if (rows.some(function(x){ return x.national && x.n > 0; })) return;
+    const best = rows.filter(function(x){ return !x.national && x.city && x.n > 0 && String(x.city).toLowerCase() !== String(activeCity.name).toLowerCase(); })[0];
     if (!best) return;
     const cities = await _msGeoCities(cc);
     const tc = cities.find(function(c){ return c.name.toLowerCase() === String(best.city).toLowerCase(); });
