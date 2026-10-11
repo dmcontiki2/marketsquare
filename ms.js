@@ -901,7 +901,9 @@ function formatZAR(value, cc) {
   if (value === null || value === undefined || value === '') return null;
   const s = String(value);
   // Detect non-ZAR currency prefix — return raw value as-is
-  const currMatch = s.match(/^([A-Z]{1,3}\$?|[£$€¥₹])/);
+  /* PRICE-TEXT-1 (11 Oct 2026, Bee Lady draft #539): 'Quote per job ...' was read as a currency code ('Q') and cut at
+     'per', so the advert showed just 'Quote'. A currency prefix must be followed by an amount; plain words stay whole. */
+  const currMatch = s.match(/^([A-Z]{1,3}\$?|[£$€¥₹])\s*\d/);
   /* SELLER-TEXT-ESC-1 + PRICE-ESC-1 (25 Sep 2026 inspection, ts1-01 + ts3-02): "as-is" is the seller's own text and every
      caller paints it as HTML, so it leaves escaped here; callers must not escape this result again (only their raw fallback). */
   /* PRICE-BASIS-INTL-1 (5 Oct 2026): a dollar / pound / A$ rate ('$65 / hour') kept its basis here AND the card's own
