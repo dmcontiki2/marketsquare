@@ -183,7 +183,7 @@ ul.one li{margin:5px 0}
       <tr class="grp" style="--fc:var(--tup)"><td colspan="5">Tuppence</td></tr>
       <tr><td class="f" style="--fc:var(--tup)">Monthly grant<small>non-rolling; bought and earned Tuppence never swept</small></td><td class="c"><span class="tag no">0</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">2T</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">10T</span></td><td class="c"><span class="tag no">0</span></td></tr>
       <tr><td class="f" style="--fc:var(--tup)">Introduction<small>HOLD model: commit on request, burn on delivery, release on non-delivery</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--tup)">1T = $2 ≈ R36 on every plan</span></td></tr>
-      <tr><td class="f" style="--fc:var(--tup)">Paid plan period<small>RUL-201: 30 days paid, no auto-renew, returns to Free; adverts above the limit rest</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">30 days</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">30 days</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">seat 30 days</span></td></tr>
+      <tr><td class="f" style="--fc:var(--tup)">Paid plan period<small>RUL-224 (11 Oct, amends RUL-201): renews automatically every 30 days as the standard; one tick box makes it month-by-month; Cancel renewal is one tap; a lapse rests adverts above the limit</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">30 days</span> <span class="tag dark" style="--fc:var(--tup)">auto-renew</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">30 days</span> <span class="tag dark" style="--fc:var(--tup)">auto-renew</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">seat</span> <span class="tag dark" style="--fc:var(--tup)">auto-renew</span></td></tr>
       <tr><td class="f" style="--fc:var(--tup)">Founders Badge +20% T for life<small>parked (RUL-047); once-off window machinery env-gated OFF</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag plan">parked</span></td><td class="c"><span class="tag no">—</span></td></tr>
 
       <tr class="grp" style="--fc:var(--comm)"><td colspan="5">Communication</td></tr>
@@ -569,7 +569,7 @@ ul.one li{margin:5px 0}
     <h4>Worked example: one property investor on Pro for a year (illustrative)</h4>
     <div class="tablewrap"><table>
       <tr><th>Line</th><th>Per month</th><th>Per year</th><th>Note</th></tr>
-      <tr><td>Pro subscription</td><td class="n">$20</td><td class="n">$240</td><td>30 days paid each time, no auto-renew (RUL-201) — assumes she renews 12×</td></tr>
+      <tr><td>Pro subscription</td><td class="n">$20</td><td class="n">$240</td><td>renews automatically every 30 days (RUL-224) unless she unticks the box or cancels</td></tr>
       <tr><td>Property Deeds feed quote</td><td class="n">8T = $16</td><td class="n">$192</td><td>feed share $9 + AI runs $3 + margin $4 (illustrative split)</td></tr>
       <tr><td>Introductions (3 matches she pursued)</td><td class="n">—</td><td class="n">3T = $6</td><td>1T each; buyer pays</td></tr>
       <tr><td>Area Dossier attached to each match (3T, internal discount)</td><td class="n">—</td><td class="n">charged 9T = $18 · cost to TrustSquare ≈ $2.40</td><td>her 10T/month grant covers most of it</td></tr>
@@ -610,6 +610,7 @@ ul.one li{margin:5px 0}
     <li><b>Provisional-2 receipt</b> — the Traders lane and Squire-2 merge and deploy only after the CIPC filing receipt exists; both branches are committed and private.</li>
     <li><b>JustTCG $19/month</b> — the lawful commercial lane for Near Mint condition prices in the collector brief; without it the NM rule reads "condition not verified".</li>
     <li><b>First premium feed costs</b> — each quote needs a David-set monthly cost in <code>feed_costs_usd_month</code>; nothing is quoted until then.</li>
+    <li><b>Arm <code>auto_renew</code></b> once the 12 Oct 01:30 build reports — flag-dark until then; while off, the one-off flow stands (RUL-224, AUTO_RENEW_BRIEF.md).</li>
   </ul>
   <div class="meta" style="margin-top:28px">Built 11 Oct 2026 · saved in Projects\MarketSquare and tiled in the Visuals gallery · regression ledger RG-0958 · deploy 7f1b8b1</div>
 </div>
