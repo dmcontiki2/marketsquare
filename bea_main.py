@@ -6434,9 +6434,21 @@ def geo_city_counts(country: str = "ZA"):
             "WHERE UPPER(COALESCE(NULLIF(l.country,''),'ZA')) = ? AND COALESCE(l.city,'') <> '' "
             "AND %s AND %s AND NOT %s GROUP BY l.city ORDER BY n DESC LIMIT 40"
             % (_buyer_live_sql("l."), _stranger_visible_sql("l."), _example_sql("l.")), (cc,)).fetchall()
+        # GEO-NATIONAL-NUDGE-1 (Goal run 36, 11 Oct 2026): an advert set to Nationwide (REACH-NATIONAL-1, RUL-220) shows in
+        # EVERY city of its country, so a city with no adverts of its own is not empty. Durban showed the Bee Lady's
+        # nationwide audit advert in Services while the bar above it said "No real listings in Durban yet" and sent her
+        # 1,100 km to Mossel Bay. The nationwide count rides at the END as {"city": "", "national": true}: a cached
+        # client skips it (no city has an empty name), the current one stays quiet when it is above zero.
+        nat = conn.execute(
+            "SELECT COUNT(*) AS n FROM listings l WHERE l.reach = 'national' "
+            "AND UPPER(COALESCE(NULLIF(l.country,''),'ZA')) = ? AND %s AND %s AND NOT %s"
+            % (_buyer_live_sql("l."), _stranger_visible_sql("l."), _example_sql("l.")), (cc,)).fetchone()
     finally:
         conn.close()
-    return [{"city": r["city"], "n": int(r["n"])} for r in rows]
+    out = [{"city": r["city"], "n": int(r["n"])} for r in rows]
+    if nat and int(nat["n"] or 0) > 0:
+        out.append({"city": "", "national": True, "n": int(nat["n"])})
+    return out
 
 
 @app.get("/geo/cities")
@@ -18047,7 +18059,7 @@ def add_listing_city(listing_id: int, payload: ListingCityIn,
         if tier not in _PAID_TIERS:
             raise HTTPException(
                 status_code=402,
-                detail="Reach into cities beyond your own country is included with Starter ($5/month), Pro, and verified Agency accounts. To show this advert in every city of your own country, tap Nationwide on your listing -- free on every plan (RUL-220)."
+                detail="Reach into cities beyond your own country is included with Starter ($5/month), Pro, and verified Agency accounts. To show this listing in every city of your own country, tap Nationwide on your listing -- free on every plan (RUL-220)."
             )
 
         # Verify city exists
@@ -33069,7 +33081,7 @@ def pricing_ladder():
     t = _SELLER_SUB_TIERS
     ladder = [
         {"id": "free", "label": t["free"]["label"], "usd": t["free"]["usd"], "slots": t["free"]["slot_limit"],
-         "reach": "local", "features": ["%d active listing slots" % t["free"]["slot_limit"], "Nationwide in your own country — a free switch on every advert", "Browse your city + every Nationwide advert in your country", "Tuppence pay-as-you-go", "Anonymous seller profile"]},   # REACH-NATIONAL-1 (RUL-220)
+         "reach": "local", "features": ["%d active listing slots" % t["free"]["slot_limit"], "Nationwide in your own country — a free switch on every listing", "Browse your city + every Nationwide listing in your country", "Tuppence pay-as-you-go", "Anonymous seller profile"]},   # REACH-NATIONAL-1 (RUL-220)
         {"id": "starter", "label": t["starter"]["label"], "usd": t["starter"]["usd"], "slots": t["starter"]["slot_limit"],
          "reach": "global" if armed else "local",
          "features": ["%d active listing slots" % t["starter"]["slot_limit"]] + (["Global buyer reach — national + worldwide"] if armed else []) + ["+2 Tuppence every month", "All features included"]},
