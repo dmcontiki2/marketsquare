@@ -5,6 +5,33 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 35 — Sat 10 Oct 2026, 20:56–21:25 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; candidate copies `_to_delete/goalrun35_ms.js` and
+  `_to_delete/goalrun35_quick.html` left there). Built in server worktree `/root/w35` (removed at the end), shipped
+  `claude/goal-run35` 45779bd via CLOUD-SHIP-1 (21:13Z SHIPPED). Cloudflare first handed out a page on `ms.js?v=1016` holding the
+  old script; a minute later the page carried v=1017 (the new one). Check the page's `src=` with `/?fresh=…`.
+- **Walk (Local Market · Furniture & Home, a Cape Town seller, `docs/E2E_2026-10-10.md`):** cold Home → "Selling in Cape Town? Be
+  the first →" → Local Market → Furniture & Home → dresser photo (read in 9 s, score 70) → five steps → score card; stopped at
+  Publish. No errors. **Break:** the read titled the piece "Oak Dresser With Vintage Radio" and her story box said the radio and
+  books on it "may not be included". **Friction:** Sell had nothing for a sports coach the day the 47-role Trainers door went
+  live (it sits inside Quick's Tutors door; Sell's Tutors card asks for "You at the board"). Both fixed and proven live (GI-0035).
+- **Number: 0.** Live 141 = 132 `*@trustsquare.co` + family 9 (unchanged since run 34). **By a stranger's hand: 0.** No new
+  users and no new listings since 9 Oct 21:00Z.
+- **Where people stop:** no strangers. Human (bot=0) sessions since run 34: two, both the family iPhone 18_7 (Quick find walks,
+  9 Oct 21:35–21:53Z).
+- **Outreach:** still stopped — the 9 Oct 22:10Z wave sent nothing; `prospects.emailed_at` max is 3 Oct 22:10Z (2,614). Waits on
+  GI-0034.
+- **Shipped (45779bd):** GI-0035 AI-PROPS-1 + TRAINER-SELL-CARD-1, RG-0954 LOCKED. **Live proof (21:20Z, fresh phone, v=1017):**
+  Sell shows "🏅 Coach a sport? — Gym, swimming, soccer, chess — listed in a minute with Quick" under "Work for yourself?"; it
+  opens `/quick/?…&c=tutors&trn=1` on "Which kind of sport? · Sport & fitness · Fitness & gym … Mind sports". Same dresser photo:
+  title "Oak Three Drawer Dresser"; the read's "A vintage-style tabletop radio is positioned on top, but the advertised item is the
+  dresser." did not reach her story box.
+- **Ledger:** new tree 0 !!!!, base `/opt/marketsquare-src` d520ac6 0 !!!! (30 NOT EVALUATED on both, as before).
+- **REVIEW NOW:** GI-0034 only (unchanged — the 434 stranded addresses; outreach stays at zero until it is answered).
+- **QA data:** none created (no save, no account); walk rows bot=2.
+- **Not reached:** nothing this run.
+
 ## RUN 34b — Fri 9 Oct 2026, 21:45–22:10 UTC (David live: "fix the waiting items" — ledger false reds, probe file, outreach record)
 
 - **Ledger:** LEDGER-VANTAGE-TRAINERS-1. On the server, RG-0949 and RG-0950 now read NOT EVALUATED when every failure is a
