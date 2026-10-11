@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Subscriptions & Super-PA Map</title>
+<meta name="description" content="TrustSquare subscriptions audit 11 Oct 2026: the three apps, what each tier buys, build status, the tier cascade, and the Super-PA specialist analyses with example reports.">
+<style>
+/* Layout: one column of stacked boards, each board a full-width grid; colour = function family, texture = build status. */
+:root{
+  --bg:#f7f6f2; --fg:#1b2230; --mute:#5b6572; --line:#d9d6cc; --card:#ffffff; --card2:#f0eee7;
+  --navy:#16325c; --accent:#16325c;
+  --cap:#1d6fb8;   /* capacity (slots)            */
+  --reach:#1a8a5a; /* reach / visibility           */
+  --tup:#b7791f;   /* Tuppence / money             */
+  --comm:#6b46c1;  /* communication (Buzz/Circle)  */
+  --ai:#d9480f;    /* AI tools                     */
+  --agent:#b4232c; /* agents / PA / Super-PA       */
+  --mech:#4b5563;  /* plan mechanics               */
+  --ok:#1a8a5a; --warn:#b7791f; --bad:#b4232c;
+  --f-display:"Syne",system-ui,sans-serif; --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#121620; --fg:#e8e6df; --mute:#a3aab5; --line:#2b3240; --card:#1a1f2b; --card2:#222838; --navy:#9fc0ea; --accent:#9fc0ea; --cap:#5aa3e6; --reach:#4cc08a; --tup:#e0a53b; --comm:#a98be8; --ai:#f08a4b; --agent:#ef6b73; --mech:#9aa3b1; --ok:#4cc08a; --warn:#e0a53b; --bad:#ef6b73; color-scheme:dark } }
+:root[data-theme="dark"]{ --bg:#121620; --fg:#e8e6df; --mute:#a3aab5; --line:#2b3240; --card:#1a1f2b; --card2:#222838; --navy:#9fc0ea; --accent:#9fc0ea; --cap:#5aa3e6; --reach:#4cc08a; --tup:#e0a53b; --comm:#a98be8; --ai:#f08a4b; --agent:#ef6b73; --mech:#9aa3b1; --ok:#4cc08a; --warn:#e0a53b; --bad:#ef6b73; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 60px;padding-inline:16px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(26px,4vw,40px);letter-spacing:-.01em}
+h2{font-size:clamp(20px,2.6vw,26px);margin-top:48px;padding-top:18px;border-top:3px solid var(--line)}
+h3{font-size:17px;margin-top:22px}
+p{max-width:72ch;margin:10px 0}
+.lead{font-size:16.5px;color:var(--mute);max-width:80ch}
+.eyebrow{font:600 11.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.meta{font:12.5px var(--f-mono);color:var(--mute);margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:16px 0 6px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid transparent}
+.sw.cap{background:var(--cap)} .sw.reach{background:var(--reach)} .sw.tup{background:var(--tup)} .sw.comm{background:var(--comm)} .sw.ai{background:var(--ai)} .sw.agent{background:var(--agent)} .sw.mech{background:var(--mech)}
+.st-live{background:currentColor} .st-dark{background:repeating-linear-gradient(45deg,currentColor 0 3px,transparent 3px 6px)} .st-branch{border:2px dotted currentColor;background:transparent} .st-plan{border:1.5px dashed currentColor;opacity:.55;background:transparent}
+/* app boards */
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:18px}
+.app{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;border-top:6px solid var(--c)}
+.app .t{font-family:var(--f-display);font-size:19px}
+.app .s{font:12.5px var(--f-mono);color:var(--mute);margin:2px 0 10px}
+.app ul{margin:0;padding-left:18px}
+.app li{margin:4px 0}
+.pill{display:inline-block;font:600 11px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;border:1px solid currentColor;margin-left:4px;vertical-align:middle}
+.pill.live{color:var(--ok)} .pill.dark{color:var(--warn)} .pill.branch{color:var(--agent)} .pill.plan{color:var(--mute)}
+/* matrix */
+.tablewrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:13.5px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{font:600 12px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute);background:var(--card2);position:sticky;top:0}
+th.tier{text-align:center;font-size:13px;color:var(--fg)}
+th.tier small{display:block;font-weight:400;color:var(--mute);letter-spacing:0;text-transform:none;font-family:var(--f-body)}
+td.f{font-weight:600;border-left:5px solid var(--fc);padding-left:10px;min-width:220px}
+td.f small{display:block;font-weight:400;color:var(--mute);font-size:12px}
+td.c{text-align:center;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:3px 8px;border-radius:6px;font:600 12.5px/1.2 var(--f-body);color:#fff;background:var(--fc)}
+.tag.dark{background:repeating-linear-gradient(45deg,var(--fc) 0 4px,color-mix(in srgb,var(--fc) 70%,#000) 4px 8px);text-shadow:0 0 3px rgba(0,0,0,.7)}
+.tag.branch{background:transparent;color:var(--fc);border:2px dotted var(--fc)}
+.tag.plan{background:transparent;color:var(--mute);border:1.5px dashed var(--mute)}
+.tag.no{background:transparent;color:var(--mute);border:1px solid var(--line)}
+tr.grp td{background:var(--card2);font:600 11.5px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fc);padding:7px 10px;border-left:5px solid var(--fc)}
+/* cascade + loop figures */
+figure{margin:18px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+figcaption{font:12.5px var(--f-mono);color:var(--mute);margin-top:8px}
+svg text{font-family:var(--f-body)}
+/* PA segment cards */
+.seg{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:18px;border-left:6px solid var(--sc)}
+.seg h3{margin-top:0;color:var(--sc)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
+.cols>div{min-width:0}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;font-size:13.5px;margin:0}
+.kv dt{color:var(--mute);font:600 12px var(--f-mono);padding-top:3px}
+.kv dd{margin:0}
+.box{background:var(--card2);border-radius:8px;padding:12px 14px;font-size:13.5px;margin-top:10px}
+.box.req{font-family:var(--f-mono);font-size:12.5px;white-space:pre-wrap;line-height:1.5}
+.rep{border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:12px;background:var(--card)}
+.rep h4{margin:0 0 6px;font:700 14px var(--f-display)}
+.rep table{min-width:0;font-size:13px}
+.rep td,.rep th{padding:5px 8px}
+.rep td.n{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:12.5px;white-space:nowrap}
+.verdict{display:inline-block;padding:5px 10px;border-radius:6px;font-weight:700;margin-top:8px}
+.verdict.ok{background:color-mix(in srgb,var(--ok) 18%,var(--card));color:var(--ok)} .verdict.warn{background:color-mix(in srgb,var(--warn) 18%,var(--card));color:var(--warn)} .verdict.bad{background:color-mix(in srgb,var(--bad) 18%,var(--card));color:var(--bad)}
+ul.one li{margin:5px 0}
+.risk{border-left:4px solid var(--bad);padding-left:10px;margin:6px 0}
+.sug{border-left:4px solid var(--reach);padding-left:10px;margin:6px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:12px var(--f-mono);padding:3px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--line)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.tile .big{font:700 26px/1.1 var(--f-display);color:var(--tc)}
+.tile .l{font:600 11.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.note{font-size:13px;color:var(--mute)}
+@media (max-width:560px){ .kv{grid-template-columns:1fr} .kv dt{padding-top:6px} }
+@media (prefers-reduced-motion:no-preference){ .app:hover{transform:translateY(-1px);transition:transform .15s} }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">TrustSquare · subscriptions audit · 11 October 2026</div>
+  <h1>Subscriptions &amp; Super-PA Map</h1>
+  <p class="lead">Three apps, one subscription ladder. What each app is, what each tier buys today, what is built but dark, what sits on a private branch under the IP hold, and where the Personal Assistant goes next. Colour = function family. Texture = build status.</p>
+  <div class="meta">Sources: PRICING_CANON.md (pinned 15 Jun 2026, §2e added today) · RULINGS.md RUL-077/078/108/128/173/179/180/201/220/221 · fastlane branch RUL-222/223 · SQUIRE_SPEC.md · SQUIRE_2_BUILD_BRIEF.md · live /pricing/ladder and /ai/functions · check_pricing_canon.py = ALL IN LINE</div>
+
+  <div class="legend">
+    <span><i class="sw cap"></i>Capacity</span><span><i class="sw reach"></i>Reach</span><span><i class="sw tup"></i>Tuppence</span><span><i class="sw comm"></i>Communication</span><span><i class="sw ai"></i>AI tools</span><span><i class="sw agent"></i>Agents / PA</span><span><i class="sw mech"></i>Plan mechanics</span>
+  </div>
+  <div class="legend">
+    <span><i class="sw st-live" style="color:var(--mech)"></i>Live on trustsquare.co</span>
+    <span><i class="sw st-dark" style="color:var(--mech)"></i>Built, dark — waits on David arming <code>baseline_q4</code></span>
+    <span><i class="sw st-branch" style="color:var(--mech)"></i>On a private branch — IP hold until the CIPC receipt</span>
+    <span><i class="sw st-plan" style="color:var(--mech)"></i>Ruled as direction, not built</span>
+  </div>
+
+  <h2>1 · The three apps</h2>
+  <div class="apps">
+    <div class="app" style="--c:var(--navy)">
+      <div class="t">TrustSquare</div>
+      <div class="s">trustsquare.co · the full app · marketsquare.html + ms.js + bea_main.py</div>
+      <ul>
+        <li>Browse, Zoom, Watches, Local Market, Adventures, Heritage — free to everyone.</li>
+        <li>The long guided Sell flow: photos, detail, Trust Score, EULA, publish.</li>
+        <li>Seller Hub with her own card: <b>My city only / Nationwide</b> switch <span class="pill live">live today</span></li>
+        <li>Wallet, Tuppence, Plans page, AI Features (10 paid reports), Buzz.</li>
+        <li>Squire card (Pro agent) <span class="pill dark">dark</span> · Circle limits <span class="pill dark">switch off</span></li>
+        <li>Porthole one-question PA (Adventures) <span class="pill plan">concept</span></li>
+      </ul>
+    </div>
+    <div class="app" style="--c:#7c3aed">
+      <div class="t">Quick</div>
+      <div class="s">trustsquare.co/quick/ · the door · quick.html ≡ genie/HARNESS.html</div>
+      <ul>
+        <li>Few-click Sell and Find for every category; 47 casual roles + 47 trainer roles with local AI examples.</li>
+        <li>Publishes through <code>/listings/quick-publish</code>: a signed member goes live in one tap; everyone else gets a draft and a way back.</li>
+        <li>Languages follow the person (ZA: en/af/zu/xh/nso; per-country lists for US/UK/AU and more).</li>
+        <li>Every tier may use it, including Free; Buzz permissions are shown here, switched on in TrustSquare onboarding.</li>
+        <li>Full plan now says so and offers upgrade or rest-an-advert <span class="pill live">fixed today</span></li>
+        <li>Regulars text (10 / 50 / 200) appears only while the Circle switch is on.</li>
+      </ul>
+    </div>
+    <div class="app" style="--c:#B7791F">
+      <div class="t">Traders</div>
+      <div class="s">the fast lane inside Quick · branch <code>fastlane</code> · flag QUICK_FASTLANE off · RUL-222/223</div>
+      <ul>
+        <li>A repeat trader ticks "Make this my quick icon": the flow's setup becomes a preset (kind, condition, area, language — never the price).</li>
+        <li><b>Quick Sell icon:</b> photo → price + what it is → Publish → live. <b>Quick Find icon:</b> one search line → matches → introduction.</li>
+        <li>Gate on every fast publish: EULA accepted · listed before · any tier including Free · a free slot — a miss drops into normal Quick at that step.</li>
+        <li>Presets uncapped on every tier; Free stays bound by its 2 slots (upgrade or rest, nothing deleted).</li>
+        <li>Option D: icons live in a strip inside Quick; a home-screen icon only when she pins it. Two phone icons by default.</li>
+        <li><span class="pill branch">IP hold</span> merges and deploys only after provisional-2 is filed (submitted 10 Oct, no receipt yet).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>2 · What each tier buys</h2>
+  <p class="lead">The seller ladder is the one ladder (Free · Starter $5 · Pro $20 · Agency). Introductions cost 1 Tuppence on every plan; subscriptions buy slots, reach and representation — never introductions.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr>
+      <th style="min-width:230px">Function</th>
+      <th class="tier">Free<small>$0 · 2 slots · 0T</small></th>
+      <th class="tier">Starter<small>$5 · R90 · 10 slots · 2T/mo</small></th>
+      <th class="tier">Pro<small>$20 · R360 · 30 slots · 10T/mo</small></th>
+      <th class="tier">Agency<small>free + verified · $5 Pro seat</small></th>
+    </tr></thead>
+    <tbody>
+      <tr class="grp" style="--fc:var(--cap)"><td colspan="5">Capacity</td></tr>
+      <tr><td class="f" style="--fc:var(--cap)">Live listing slots<small>a cap, not a wallet; extras rest on downgrade (KEEP-CHOICE-1)</small></td><td class="c"><span class="tag" style="--fc:var(--cap)">2</span></td><td class="c"><span class="tag" style="--fc:var(--cap)">10</span></td><td class="c"><span class="tag" style="--fc:var(--cap)">30</span></td><td class="c"><span class="tag" style="--fc:var(--cap)">10 → 100 → 500</span><br><small class="note">grows with Trust Score; $5 seat = 20</small></td></tr>
+      <tr><td class="f" style="--fc:var(--cap)">Quick door<small>few-click sell/find, all categories</small></td><td class="c"><span class="tag" style="--fc:var(--cap)">yes</span></td><td class="c"><span class="tag" style="--fc:var(--cap)">yes</span></td><td class="c"><span class="tag" style="--fc:var(--cap)">yes</span></td><td class="c"><span class="tag" style="--fc:var(--cap)">yes</span></td></tr>
+      <tr><td class="f" style="--fc:var(--cap)">Traders quick icons<small>presets uncapped; bound only by slots</small></td><td class="c"><span class="tag branch" style="--fc:var(--cap)">branch</span></td><td class="c"><span class="tag branch" style="--fc:var(--cap)">branch</span></td><td class="c"><span class="tag branch" style="--fc:var(--cap)">branch</span></td><td class="c"><span class="tag branch" style="--fc:var(--cap)">branch</span></td></tr>
+
+      <tr class="grp" style="--fc:var(--reach)"><td colspan="5">Reach</td></tr>
+      <tr><td class="f" style="--fc:var(--reach)">Nationwide switch<small>her advert in every city of her own country (RUL-220)</small></td><td class="c"><span class="tag" style="--fc:var(--reach)">free</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">free</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">free</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">free</span></td></tr>
+      <tr><td class="f" style="--fc:var(--reach)">Paid multi-city lane<small>/listings/{id}/cities — value is now reach into OTHER countries' searches</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">yes</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">yes</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">yes</span></td></tr>
+      <tr><td class="f" style="--fc:var(--reach)">Buyer reach — where she may look<small>trip-planning and online-mode categories are borderless for all</small></td><td class="c"><span class="tag" style="--fc:var(--reach)">her city + nationwide adverts</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">local</span> <span class="tag dark" style="--fc:var(--reach)">global on arming</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">global (RUL-078)</span></td><td class="c"><span class="tag" style="--fc:var(--reach)">as seat</span></td></tr>
+      <tr><td class="f" style="--fc:var(--reach)">Separate "Global" buyer plan $5<small>retires into Starter when baseline_q4 is armed (RUL-128); 0 live rows</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--reach)">sold today</span> → <span class="tag dark" style="--fc:var(--reach)">folds into Starter</span></td></tr>
+
+      <tr class="grp" style="--fc:var(--tup)"><td colspan="5">Tuppence</td></tr>
+      <tr><td class="f" style="--fc:var(--tup)">Monthly grant<small>non-rolling; bought and earned Tuppence never swept</small></td><td class="c"><span class="tag no">0</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">2T</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">10T</span></td><td class="c"><span class="tag no">0</span></td></tr>
+      <tr><td class="f" style="--fc:var(--tup)">Introduction<small>HOLD model: commit on request, burn on delivery, release on non-delivery</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--tup)">1T = $2 ≈ R36 on every plan</span></td></tr>
+      <tr><td class="f" style="--fc:var(--tup)">Paid plan period<small>RUL-201: 30 days paid, no auto-renew, returns to Free; adverts above the limit rest</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">30 days</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">30 days</span></td><td class="c"><span class="tag" style="--fc:var(--tup)">seat 30 days</span></td></tr>
+      <tr><td class="f" style="--fc:var(--tup)">Founders Badge +20% T for life<small>parked (RUL-047); once-off window machinery env-gated OFF</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag plan">parked</span></td><td class="c"><span class="tag no">—</span></td></tr>
+
+      <tr class="grp" style="--fc:var(--comm)"><td colspan="5">Communication</td></tr>
+      <tr><td class="f" style="--fc:var(--comm)">Buzz<small>web push + email, never SMS; one free line each way; regulars book and buzz free</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--comm)">free on every plan</span></td></tr>
+      <tr><td class="f" style="--fc:var(--comm)">Circle of managed regulars<small>RUL-173/179: behind David's "Regulars limits" switch, OFF — no limit while off</small></td><td class="c"><span class="tag dark" style="--fc:var(--comm)">10</span></td><td class="c"><span class="tag dark" style="--fc:var(--comm)">50 + group msgs</span></td><td class="c"><span class="tag dark" style="--fc:var(--comm)">200</span></td><td class="c"><span class="tag dark" style="--fc:var(--comm)">50</span></td></tr>
+      <tr><td class="f" style="--fc:var(--comm)">Watches · For You · Zoom<small>passive matching; a Watch that fires earns 1T only when the buyer asks</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--comm)">free on every plan</span></td></tr>
+
+      <tr class="grp" style="--fc:var(--ai)"><td colspan="5">AI tools</td></tr>
+      <tr><td class="f" style="--fc:var(--ai)">Free AI<small>AI Coach on every listing, local AI examples, photo read, fair-price hints</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--ai)">free, capped, on the allocated model</span></td></tr>
+      <tr><td class="f" style="--fc:var(--ai)">Pay-per-use, open to all<small>Fair Price 1T · AI Yield Estimate 1T · Offer Strategy Advisor 2T</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--ai)">Tuppence per use</span></td></tr>
+      <tr><td class="f" style="--fc:var(--ai)">Pro research class (9 reports)<small>Property Area Dossier 3T · Car Purchase Dossier 3T · Collectables Advert + Market Report 5T · Collection Liquidation Plan 5T · Heritage Tour 5T · Expedition Dossier 5T · Retirement Relocation 5T · Weekend Itinerary 3T · Exam Study Plan 3T</small></td><td class="c"><span class="tag no">PRO chip</span></td><td class="c"><span class="tag no">PRO chip</span></td><td class="c"><span class="tag" style="--fc:var(--ai)">yes</span></td><td class="c"><span class="tag" style="--fc:var(--ai)">$5 seat</span></td></tr>
+      <tr><td class="f" style="--fc:var(--ai)">"No report, no charge"<small>a paid report with no verified data for its subject is never charged (7 Oct 2026)</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--ai)">every plan</span></td></tr>
+
+      <tr class="grp" style="--fc:var(--agent)"><td colspan="5">Agents / PA</td></tr>
+      <tr><td class="f" style="--fc:var(--agent)">Squire — your agent (v1)<small>RUL-077: specifies, watches, shortlists with reasons, prepares the approach; 20 approaches/mo, +5 for 1T</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag dark" style="--fc:var(--agent)">built, dark</span></td><td class="c"><span class="tag dark" style="--fc:var(--agent)">$5 seat</span></td></tr>
+      <tr><td class="f" style="--fc:var(--agent)">Squire-2 — the full PA (Phase 1)<small>standing briefs with rules, bulk card lists, price advice both sides, first-in alerts, crux property report, reality check, learning, monthly report</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag branch" style="--fc:var(--agent)">branch squire2</span></td><td class="c"><span class="tag branch" style="--fc:var(--agent)">$5 seat</span></td></tr>
+      <tr><td class="f" style="--fc:var(--agent)">Pro PA — premium data on a monthly Tuppence quote<small>one option quoted; due even in months with no match; monthly report always; runs until cancelled, no lapsing timer (approved 9 Oct)</small></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag no">—</span></td><td class="c"><span class="tag branch" style="--fc:var(--agent)">machinery, flag OFF</span></td><td class="c"><span class="tag no">—</span></td></tr>
+      <tr><td class="f" style="--fc:var(--agent)">Super-PA (the $20 cascade step)<small>RUL-221: lands at $20; PA steps down to $5; $5 features may step to Free</small></td><td class="c"><span class="tag plan">later: a standing Watch brief</span></td><td class="c"><span class="tag plan">PA (Squire v1)</span></td><td class="c"><span class="tag plan">Super-PA</span></td><td class="c"><span class="tag plan">seat</span></td></tr>
+      <tr><td class="f" style="--fc:var(--agent)">BOTs — bolted-on terminals<small>RUL-108: included in Pro when built; listing conversationally and keeping a watch stay free for all</small></td><td class="c"><span class="tag plan">free parts</span></td><td class="c"><span class="tag plan">free parts</span></td><td class="c"><span class="tag plan">included</span></td><td class="c"><span class="tag plan">seat</span></td></tr>
+
+      <tr class="grp" style="--fc:var(--mech)"><td colspan="5">Plan mechanics</td></tr>
+      <tr><td class="f" style="--fc:var(--mech)">Downgrade standard<small>RUL-180: she picks what stays; the rest rests; upgrading wakes it</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--mech)">live for listing slots · regulars when the switch is on</span></td></tr>
+      <tr><td class="f" style="--fc:var(--mech)">Agency Pro seat<small>RUL-048: agent's own $5/month subscription lifts 10 → 20 slots + Pro AI suite; console invites, never grants</small></td><td class="c" colspan="3"><span class="tag no">n/a</span></td><td class="c"><span class="tag dark" style="--fc:var(--mech)">purchasable flow RG-0167</span></td></tr>
+      <tr><td class="f" style="--fc:var(--mech)">Sign-in<small>email is the anchor; passkey (Face ID / fingerprint) offered after every sign-in</small></td><td class="c" colspan="4"><span class="tag" style="--fc:var(--mech)">every plan</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Today's fixes: the Pro card no longer advertises Squire while it is dark; Free shows the Nationwide switch on the plans page, the ladder and the subscription screen; Quick names a full plan and offers both ways out; the fast-lane rulings are RUL-222/223 so they cannot collide with today's RUL-220/221. Ledger RG-0958.</p>
+
+  <h3>The tier cascade (RUL-221)</h3>
+  <figure>
+    <svg viewBox="0 0 900 250" width="100%" style="max-width:900px;display:block" role="img" aria-label="Tier cascade: new functions arrive at $20, previous $20 features step down to $5, $5 features may step to Free">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <g fill="var(--fg)" font-size="13">
+        <text x="20" y="34" font-weight="700" font-family="Syne">Today</text>
+        <text x="330" y="34" font-weight="700" font-family="Syne">When Super-PA lands</text>
+        <text x="640" y="34" font-weight="700" font-family="Syne">Next step up</text>
+      </g>
+      <g font-size="12.5">
+        <rect x="20" y="50" width="270" height="44" rx="8" fill="var(--agent)"/><text x="34" y="77" fill="#fff" font-weight="700">$20 Pro · Squire + Squire-2 PA</text>
+        <rect x="20" y="110" width="270" height="44" rx="8" fill="var(--cap)"/><text x="34" y="137" fill="#fff" font-weight="700">$5 Starter · 10 slots, 2T, reach</text>
+        <rect x="20" y="170" width="270" height="44" rx="8" fill="var(--reach)"/><text x="34" y="197" fill="#fff" font-weight="700">Free · 2 slots, Nationwide, Quick</text>
+
+        <rect x="330" y="50" width="270" height="44" rx="8" fill="var(--agent)" opacity=".45" stroke="var(--agent)" stroke-dasharray="5 4"/><text x="344" y="77" fill="var(--fg)" font-weight="700">$20 Pro · Super-PA (premium feeds)</text>
+        <rect x="330" y="110" width="270" height="44" rx="8" fill="var(--agent)"/><text x="344" y="137" fill="#fff" font-weight="700">$5 Starter · + Squire PA</text>
+        <rect x="330" y="170" width="270" height="44" rx="8" fill="var(--cap)"/><text x="344" y="197" fill="#fff" font-weight="700">Free · + one standing Watch brief</text>
+
+        <rect x="640" y="50" width="240" height="44" rx="8" fill="var(--agent)" opacity=".25" stroke="var(--agent)" stroke-dasharray="5 4"/><text x="654" y="77" fill="var(--fg)" font-weight="700">$20 · the next exclusive</text>
+        <rect x="640" y="110" width="240" height="44" rx="8" fill="var(--agent)" opacity=".6"/><text x="654" y="137" fill="#fff" font-weight="700">$5 · Super-PA (lite)</text>
+        <rect x="640" y="170" width="240" height="44" rx="8" fill="var(--agent)" opacity=".35"/><text x="654" y="197" fill="var(--fg)" font-weight="700">Free · Squire PA, capped</text>
+      </g>
+      <g stroke="var(--mute)" stroke-width="2" fill="none" marker-end="url(#arr)" color="var(--mute)">
+        <path d="M292 72 C 312 72, 312 132, 328 132"/>
+        <path d="M292 132 C 312 132, 312 192, 328 192"/>
+        <path d="M602 72 C 622 72, 622 132, 638 132"/>
+        <path d="M602 132 C 622 132, 622 192, 638 192"/>
+      </g>
+      <text x="20" y="240" font-size="12" fill="var(--mute)">Each step-down is put to David with its cost before it ships (RUL-221). The free tier keeps improving because free users feed the paid plans.</text>
+    </svg>
+    <figcaption>Direction ruled 11 Oct 2026, nothing built: the $20 tier always carries the newest exclusive; yesterday's top feature moves down a price.</figcaption>
+  </figure>
+
+  <h2>3 · The Super-PA — how it works for everyone</h2>
+  <p class="lead">Squire-2 already gives Pro a standing brief with rules, free data feeds, alerts and a monthly report. The Super-PA is the same engine with premium data and a specialist request form per field. It never touches money, never negotiates, never sees a seller's identity and never grants an introduction. It reports facts against the user's own rules.</p>
+  <figure>
+    <svg viewBox="0 0 980 170" width="100%" style="max-width:980px;display:block" role="img" aria-label="PA loop: request, scope, quote, approve, watch, trigger, report, learn">
+      <defs><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--mute)"/></marker></defs>
+      <g font-size="12.5" font-weight="700">
+        <rect x="10" y="40" width="110" height="60" rx="9" fill="var(--comm)"/><text x="65" y="66" text-anchor="middle" fill="#fff">1 · Request</text><text x="65" y="84" text-anchor="middle" fill="#fff" font-weight="400">her own words</text>
+        <rect x="150" y="40" width="110" height="60" rx="9" fill="var(--ai)"/><text x="205" y="66" text-anchor="middle" fill="#fff">2 · Scope</text><text x="205" y="84" text-anchor="middle" fill="#fff" font-weight="400">rules + feeds</text>
+        <rect x="290" y="40" width="110" height="60" rx="9" fill="var(--tup)"/><text x="345" y="66" text-anchor="middle" fill="#fff">3 · Quote</text><text x="345" y="84" text-anchor="middle" fill="#fff" font-weight="400">T/month, one option</text>
+        <rect x="430" y="40" width="110" height="60" rx="9" fill="var(--mech)"/><text x="485" y="66" text-anchor="middle" fill="#fff">4 · Approve</text><text x="485" y="84" text-anchor="middle" fill="#fff" font-weight="400">caution accepted</text>
+        <rect x="570" y="40" width="110" height="60" rx="9" fill="var(--reach)"/><text x="625" y="66" text-anchor="middle" fill="#fff">5 · Watch</text><text x="625" y="84" text-anchor="middle" fill="#fff" font-weight="400">app + feeds, nightly</text>
+        <rect x="710" y="40" width="110" height="60" rx="9" fill="var(--agent)"/><text x="765" y="66" text-anchor="middle" fill="#fff">6 · Trigger</text><text x="765" y="84" text-anchor="middle" fill="#fff" font-weight="400">instant / daily / monthly</text>
+        <rect x="850" y="40" width="120" height="60" rx="9" fill="var(--navy)"/><text x="910" y="66" text-anchor="middle" fill="#fff">7 · Report</text><text x="910" y="84" text-anchor="middle" fill="#fff" font-weight="400">crux + verdict</text>
+      </g>
+      <g stroke="var(--mute)" stroke-width="2" marker-end="url(#arr2)">
+        <line x1="122" y1="70" x2="148" y2="70"/><line x1="262" y1="70" x2="288" y2="70"/><line x1="402" y1="70" x2="428" y2="70"/><line x1="542" y1="70" x2="568" y2="70"/><line x1="682" y1="70" x2="708" y2="70"/><line x1="822" y1="70" x2="848" y2="70"/>
+        <path d="M910 102 C 910 150, 65 150, 65 104" fill="none"/>
+      </g>
+      <text x="490" y="138" text-anchor="middle" font-size="12" fill="var(--mute)">8 · Learn: "Not for me" rewrites the rules; the reality-check says how many of the last 90 days' listings met them, and what to relax.</text>
+    </svg>
+    <figcaption>Steps 1–8 exist in Squire-2 Phase 1 (branch squire2). Premium feeds and the specialist forms below are the Super-PA increment.</figcaption>
+  </figure>
+  <div class="grid3">
+    <div class="tile" style="--tc:var(--agent)"><div class="l">Trigger classes</div><div class="big">3</div><div class="note"><b>Instant</b> — a match inside the rules (first-in alert, push + email). <b>Daily digest</b> — close calls, sell-side interest, price moves. <b>Monthly</b> — the report, even with zero matches.</div></div>
+    <div class="tile" style="--tc:var(--tup)"><div class="l">What meters</div><div class="big">Acts</div><div class="note">Watching and reports are included; an <b>approach</b> (a brief sent to a seller + its Q&amp;A) counts against 20/month, +5 for 1T. Introductions stay 1T. Premium feeds are a monthly Tuppence quote.</div></div>
+    <div class="tile" style="--tc:var(--reach)"><div class="l">Data order</div><div class="big">Free → paid</div><div class="note">Phase 1 free feeds first (Scryfall, MTGJSON, JustTCG free, police.uk, EA flood, BoE, SARB). Paid feeds only when David has set a monthly cost; only those may be quoted.</div></div>
+  </div>
+
+  <h2>4 · Specialist requests — how each field would set up the PA</h2>
+  <p class="lead">Each card shows the request a specialist would make in his own words, the filter the PA derives, what it watches for, when it fires, when it reports, a full example report with the numbers, the risks, and what to build. Figures in the examples are illustrative and marked; the PA only ever prints verified figures and says "not available" otherwise.</p>
+
+  <!-- PROPERTY -->
+  <div class="seg" style="--sc:var(--reach)">
+    <h3>A · Property investor (buy-to-let, ZA)</h3>
+    <div class="cols">
+      <div>
+        <div class="eyebrow">The request, in her words</div>
+        <div class="box req">"Find me 2–3 bedroom sectional-title flats in Pretoria East, Centurion or Midrand under R1.6m that would gross 9% or better at the going rent, built after 2005, levies under R2 500. Tell me when one appears, and tell me if my numbers are unrealistic."</div>
+        <div class="eyebrow" style="margin-top:12px">Filter the PA derives</div>
+        <dl class="kv">
+          <dt>kind</dt><dd>buy · category Property · type Flat/Townhouse (sectional title)</dd>
+          <dt>area</dt><dd>Pretoria East, Centurion, Midrand (suburb radius from the city list)</dd>
+          <dt>price</dt><dd>≤ R1 600 000 asking; flag anything ≤ 7% under the area median</dd>
+          <dt>min_yield_pct</dt><dd>9.0 gross = (12 × achievable rent) ÷ asking</dd>
+          <dt>age</dt><dd>built ≥ 2005 (EPC/age band where available, else "not verified")</dd>
+          <dt>levies</dt><dd>≤ R2 500/month; rates and taxes recorded, not capped</dd>
+          <dt>exclusions</dt><dd>ground floor on a main road; "needs TLC"; sold-as-is deceased estates (her choice)</dd>
+          <dt>reach</dt><dd>her tier's reach (Pro = global; she set three suburbs)</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="eyebrow">What it watches for</div>
+        <ul class="one">
+          <li>New TrustSquare adverts and private-seller drafts that meet the rules — she gets in first.</li>
+          <li>Asking price against the area's verified sold median (Deeds data when the paid feed is on; municipal valuation roll free).</li>
+          <li>Achievable rent from the app's own Stays/rental adverts and the StatsSA rental index for the suburb.</li>
+          <li>Price drops on adverts she was shown but passed on ("close call" → now inside the rules).</li>
+          <li>Flood / crime / scheme-levy signals where a free source exists; otherwise "not available", never a guess.</li>
+        </ul>
+        <div class="eyebrow" style="margin-top:12px">When it triggers · when it reports</div>
+        <dl class="kv">
+          <dt>instant</dt><dd>an advert inside all rules, or a price drop that brings one inside</dd>
+          <dt>daily digest</dt><dd>close calls within 10% on price or yield; new comparables that move the median</dd>
+          <dt>monthly</dt><dd>report on the 1st: matches, close calls, market movement, reality check — even with zero matches</dd>
+          <dt>reality check</dt><dd>at creation and monthly: "0 of 212 flats in 90 days met 9%; 7 met 8%; relax yield to 8% or price to R1.75m"</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="rep">
+      <h4>Example crux report (illustrative figures)</h4>
+      <div class="note">Match: 2-bed, 2-bath sectional-title flat, Equestria, Pretoria East · listed 09:41 today · advert #612</div>
+      <div class="tablewrap" style="margin-top:8px"><table>
+        <tr><th>Item</th><th>Figure</th><th>Source / note</th></tr>
+        <tr><td>Asking price</td><td class="n">R1 495 000</td><td>advert</td></tr>
+        <tr><td>Area median (2-bed ST, 12 months, n = 38)</td><td class="n">R1 560 000</td><td>Deeds feed (paid) — asking is 4.2% under median</td></tr>
+        <tr><td>Achievable rent (2-bed, Equestria)</td><td class="n">R11 800 / month</td><td>app rentals + StatsSA index; range R11 200–R12 400</td></tr>
+        <tr><td>Gross yield</td><td class="n">9.47%</td><td>12 × 11 800 ÷ 1 495 000 — <b>meets 9.0% rule</b></td></tr>
+        <tr><td>Levy · rates</td><td class="n">R2 150 · R780</td><td>advert · municipal valuation roll</td></tr>
+        <tr><td>Vacancy + management + maintenance</td><td class="n">R1 590</td><td>5% vacancy, 7% agent, 1.5% maintenance of rent (her defaults)</td></tr>
+        <tr><td>Net operating income</td><td class="n">R86 760 / yr</td><td>(11 800 − 2 150 − 780 − 1 590) × 12</td></tr>
+        <tr><td>Net yield</td><td class="n">5.80%</td><td>NOI ÷ asking</td></tr>
+        <tr><td>Finance line (90% bond, 20 yrs, prime 10.5% illustrative)</td><td class="n">R13 430 / month</td><td>bond R1 345 500; rate from SARB repo + bank margin, re-read each run</td></tr>
+        <tr><td>Monthly cash flow after bond</td><td class="n">−R6 200</td><td>negative gearing; break-even needs ≈ 46% deposit at this rate</td></tr>
+        <tr><td>Transfer duty + conveyancing (est.)</td><td class="n">≈ R52 000</td><td>SARS transfer-duty table + typical fees; not verified for this deed</td></tr>
+      </table></div>
+      <p><b>Three risks:</b> the scheme's levy history is not verified (special levies are the usual surprise); the median is built on 38 sales, so one outlier moves it; rent assumes the current occupancy rate in a suburb with 11% of stock listed to let.</p>
+      <p><b>Three advantages:</b> under median by 4.2%; the only match in 90 days inside all her rules; built 2016 with a 2024 geyser and roof report in the advert.</p>
+      <span class="verdict ok">Meets your rules on price, yield, age and levies — cash-flow negative at 90% finance.</span>
+      <div class="note" style="margin-top:8px">Wording stays factual: "meets / does not meet your rules", never "buy". No verified sold prices → no report, no charge.</div>
+    </div>
+    <div class="cols">
+      <div><div class="eyebrow">Risks for TrustSquare</div>
+        <div class="risk">Deeds-level data is paid per lookup or per month (Lightstone / WinDeed class); the monthly Tuppence quote must cover it even in zero-match months, exactly as David ruled.</div>
+        <div class="risk">A yield report that reads as advice: the report prints facts against her rules and the rate it used; it must not say "good buy".</div>
+        <div class="risk">Rent estimates from the app's own adverts are thin in small towns; the report must show n and fall back to "not available".</div>
+      </div>
+      <div><div class="eyebrow">Suggestions</div>
+        <div class="sug">Add `net_yield_pct`, `max_levy`, `min_year_built`, `finance_pct` and `deposit_pct` to the rules JSON so the net line is hers, not a default.</div>
+        <div class="sug">Free data first: municipal valuation rolls (public), StatsSA rental index, SARB repo; paid Deeds feed only once ≥ 25 Pro property briefs exist.</div>
+        <div class="sug">Let an estate agency hold a sell-side brief ("tell me when a buyer brief matches my stock") — the agency pays, one agency at a time (RUL-131).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- M&A -->
+  <div class="seg" style="--sc:var(--navy)">
+    <h3>B · Mergers &amp; acquisitions scout (small-cap, owner-managed businesses)</h3>
+    <div class="cols">
+      <div>
+        <div class="eyebrow">The request, in his words</div>
+        <div class="box req">"I buy owner-managed businesses in Gauteng and the Western Cape with EBITDA between R3m and R15m, asking at or below 4× EBITDA, in logistics, light manufacturing, facilities services or specialist retail. Owner over 58 or a stated succession reason is a plus. Alert me the day one appears; weekly on near-misses; monthly on multiples in my sectors."</div>
+        <div class="eyebrow" style="margin-top:12px">Filter the PA derives</div>
+        <dl class="kv">
+          <dt>kind</dt><dd>buy · category Businesses (a new listing type: business-for-sale advert with anonymised financials)</dd>
+          <dt>geography</dt><dd>Gauteng, Western Cape (province-level, not suburb)</dd>
+          <dt>size</dt><dd>EBITDA R3m–R15m (seller-stated, flagged "unverified" until a data-room figure is shared after introduction)</dd>
+          <dt>price rule</dt><dd>asking ÷ EBITDA ≤ 4.0; EV = asking + stated debt − cash where given</dd>
+          <dt>sectors</dt><dd>logistics, light manufacturing, facilities services, specialist retail (SIC-style tags)</dd>
+          <dt>plus signals</dt><dd>owner age ≥ 58, succession/emigration/health stated, > 10 years trading, customer concentration < 30%</dd>
+          <dt>exclusions</dt><dd>franchise resale, businesses under business rescue (Chapter 6), single-contract businesses</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="eyebrow">What it watches for</div>
+        <ul class="one">
+          <li>Business-for-sale adverts on TrustSquare matching sector, size and multiple (anonymous until bilateral acceptance — exactly Mode B).</li>
+          <li>Public signals: Government Gazette liquidation and business-rescue notices (free) to exclude, CIPC director-age data (paid lookup, post-introduction only).</li>
+          <li>Listed-peer multiples for his sectors (JSE small-cap EV/EBITDA, free delayed data) to show whether 4× is realistic this quarter.</li>
+          <li>Repeat listings and price cuts on adverts he passed on.</li>
+        </ul>
+        <div class="eyebrow" style="margin-top:12px">When it triggers · when it reports</div>
+        <dl class="kv">
+          <dt>instant</dt><dd>an advert inside sector, size and multiple — he gets a first-in alert before the broker email round</dd>
+          <dt>weekly</dt><dd>near-misses (multiple 4–5×, EBITDA R2–3m), new sector multiples</dd>
+          <dt>monthly</dt><dd>report: deal flow seen, multiples by sector, how many met his rules, what to relax</dd>
+          <dt>never</dt><dd>contacts a seller, exchanges financials or drafts an offer — he asks for the introduction himself</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="rep">
+      <h4>Example crux report (illustrative figures)</h4>
+      <div class="note">Match: regional cold-chain logistics operator, East Rand · 14 trucks · 22 years trading · advert #640 (anonymous)</div>
+      <div class="tablewrap" style="margin-top:8px"><table>
+        <tr><th>Item</th><th>Figure</th><th>Source / note</th></tr>
+        <tr><td>Asking price (equity)</td><td class="n">R34 000 000</td><td>advert; seller states debt-free, R2.1m cash to be retained</td></tr>
+        <tr><td>Revenue (FY2025, stated)</td><td class="n">R112 000 000</td><td>unverified until data room</td></tr>
+        <tr><td>EBITDA (stated, normalised for owner salary R1.8m)</td><td class="n">R9 400 000</td><td>8.4% margin; sector median 7–11%</td></tr>
+        <tr><td>EV / EBITDA</td><td class="n">3.62×</td><td>(34.0 + 0 − 2.1) ÷ 9.4 — <b>meets ≤ 4.0× rule</b></td></tr>
+        <tr><td>Listed-peer EV/EBITDA (transport &amp; logistics, JSE small-cap, trailing)</td><td class="n">5.1×</td><td>free delayed data; private-company discount of 25–35% implies 3.3–3.8×</td></tr>
+        <tr><td>Customer concentration</td><td class="n">top 3 = 41%</td><td>stated — <b>fails his &lt; 30% plus-signal</b>; flagged, not a rule</td></tr>
+        <tr><td>Owner / reason</td><td class="n">61 · retirement</td><td>stated in advert</td></tr>
+        <tr><td>Fleet age · replacement capex (est.)</td><td class="n">avg 7.2 yrs · R6–8m over 3 yrs</td><td>from stated fleet list; prices from current truck adverts on the app</td></tr>
+        <tr><td>Debt service at 60% acquisition finance (prime + 2%, 5 yrs, illustrative)</td><td class="n">R5.6m / yr</td><td>DSCR = 9.4 ÷ 5.6 = 1.68× before capex; 1.15× after capex midpoint</td></tr>
+        <tr><td>Payback on equity at 40% in</td><td class="n">≈ 4.1 years</td><td>at stated EBITDA less finance and capex</td></tr>
+      </table></div>
+      <p><b>Three risks:</b> 41% concentration in three customers with contracts renewing in 2027; fleet capex eats a third of EBITDA for three years; all figures are seller-stated until a data room follows the introduction.</p>
+      <p><b>Three advantages:</b> 3.62× is below both his rule and the discounted peer range; a retirement sale with a 12-month handover offered; 22 years trading with a stated 92% customer retention.</p>
+      <span class="verdict warn">Meets your price and size rules; fails one plus-signal (concentration). DSCR after capex is thin at 60% finance.</span>
+    </div>
+    <div class="cols">
+      <div><div class="eyebrow">Risks for TrustSquare</div>
+        <div class="risk">Advice on buying shares in a company is "advice on a financial product" under FAIS; the PA stays on the right side by reporting the seller's own figures against the buyer's own rules and never recommending — the verdict line names rules, not merits.</div>
+        <div class="risk">Confidentiality: a business advert must be anonymous enough that staff and customers cannot identify it before bilateral acceptance — same Mode B rule, stricter anonymisation (no fleet photos with branding, no suburb).</div>
+        <div class="risk">Thin market at launch: the monthly report must be useful with zero matches (sector multiples, deal flow seen) or the Tuppence subscription feels empty.</div>
+      </div>
+      <div><div class="eyebrow">Suggestions</div>
+        <div class="sug">Add a "Business for sale" listing type (Quick: 7 cards — sector, province, revenue band, EBITDA band, asking band, reason, handover) feeding the same brief engine.</div>
+        <div class="sug">Charge the premium part as a monthly Tuppence quote (CIPC lookups + peer multiples) only after the first introduction; the free Gazette and JSE data carry the brief until then.</div>
+        <div class="sug">Let brokers and agencies hold sell-side briefs as an Agency category (business brokers), under the one-agency-at-a-time queue of RUL-131.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLECTORS -->
+  <div class="seg" style="--sc:var(--comm)">
+    <h3>C · Collector (trading cards, coins, stamps, watches)</h3>
+    <div class="cols">
+      <div>
+        <div class="eyebrow">The request, in his words</div>
+        <div class="box req">"Here is my list of 120 Magic cards. Sell anything that reaches market +20% — warn me first. Buy Near Mint copies of the 14 on my want-list at market −20% or better, Revised or older only. Tell me the day someone lists one; tell me if my prices are unrealistic."</div>
+        <div class="eyebrow" style="margin-top:12px">Filter the PA derives</div>
+        <dl class="kv">
+          <dt>kind</dt><dd>sell (120 lines) + buy (14 lines) + watch — one brief, three kinds</dd>
+          <dt>identity</dt><dd>each line resolved to a Scryfall id (name + set); near-names returned "could not identify", never guessed</dd>
+          <dt>sell_margin_pct</dt><dd>+20 over market (Scryfall today, MTGJSON 30-day trend)</dd>
+          <dt>buy_discount_pct</dt><dd>−20 under market, min_condition NM (JustTCG condition price; else "condition not verified")</dd>
+          <dt>sets</dt><dd>Revised (3ED) or older for the buy lines; any for sell</dd>
+          <dt>reach</dt><dd>global (Pro) — collectors hunt nationally and abroad</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="eyebrow">What it watches for</div>
+        <ul class="one">
+          <li>Buy side: a new TrustSquare advert for a want-list card inside the price and condition rules — instant, first-in.</li>
+          <li>Sell side: a Watch, wishlist signal or demand ticket that names one of his cards — "someone wants your Underground Sea".</li>
+          <li>Market moves: a card on his sell list crossing +20% on the 30-day trend; a want-list card dropping to his buy line.</li>
+          <li>Grade and fair-value read on each match (ties to Fair Price 1T), with the Numista N# lane for coins.</li>
+        </ul>
+        <div class="eyebrow" style="margin-top:12px">When it triggers · when it reports</div>
+        <dl class="kv">
+          <dt>instant</dt><dd>a buy match inside the rules; a sell-side request for one of his cards</dd>
+          <dt>daily digest</dt><dd>close calls (within 10%), market crossings, condition-unverified matches</dd>
+          <dt>monthly</dt><dd>portfolio report: market value of the 120, movement, what met the rules, what to relax</dd>
+          <dt>warn first</dt><dd>a sell alert is a suggestion with the number; he lists it himself (the PA never publishes)</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="rep">
+      <h4>Example monthly report extract (illustrative figures)</h4>
+      <div class="tablewrap" style="margin-top:8px"><table>
+        <tr><th>Line</th><th>Rule</th><th>Market today</th><th>30-day trend</th><th>His price</th><th>Verdict</th></tr>
+        <tr><td>Underground Sea (3ED) — sell</td><td>≥ market +20%</td><td class="n">$640</td><td class="n">+6.1%</td><td class="n">$768 (+20%)</td><td><span class="verdict warn" style="margin:0">close — list at $770 if the trend holds 2 weeks</span></td></tr>
+        <tr><td>Wheel of Fortune (3ED) NM — buy</td><td>≤ market −20%, NM</td><td class="n">$215 (NM, JustTCG)</td><td class="n">−2.3%</td><td class="n">≤ $172</td><td><span class="verdict ok" style="margin:0">match: advert #655 at $165, NM stated — introduce?</span></td></tr>
+        <tr><td>Mana Drain (LEG) — sell</td><td>≥ market +20%</td><td class="n">$380</td><td class="n">−9.8%</td><td class="n">$456</td><td><span class="verdict bad" style="margin:0">unrealistic this month — market falling; 0 sales ≥ $430 in 90 days</span></td></tr>
+        <tr><td>Portfolio (120 lines)</td><td>—</td><td class="n">$18 920</td><td class="n">+1.4%</td><td class="n">—</td><td>3 sell lines crossed; 1 buy match; 2 lines unidentified (check set)</td></tr>
+      </table></div>
+      <p><b>Reality check:</b> 1 of 14 want-list cards was listed inside the rules in 90 days; at −10% it would have been 4. <b>Risks:</b> condition is seller-stated until the introduction; a Near Mint rule is never "met" from an unverified price. <b>Charges this month:</b> 0 — no premium feed; 1 introduction (1T) if he accepts the Wheel of Fortune match.</p>
+    </div>
+    <div class="cols">
+      <div><div class="eyebrow">Risks for TrustSquare</div>
+        <div class="risk">JustTCG's free tier is personal/non-commercial — the $19/month plan is the lawful commercial lane for the NM condition price (already an open David spend item).</div>
+        <div class="risk">Over-alerting: 120 sell lines × daily trend crossings is noise; the digest, not instant push, carries market moves.</div>
+        <div class="risk">AI-fabricated prices are the known failure (Scryfall pipeline exists to stop it); every figure prints its source and date.</div>
+      </div>
+      <div><div class="eyebrow">Suggestions</div>
+        <div class="sug">Extend the bulk-list lane past cards: coins via Numista N# (built on disk), stamps via Colnect catalogue ids, watches via reference numbers — same "identify or say so" rule.</div>
+        <div class="sug">A Traders preset "Quick Sell · Cards" that pre-fills the PA's suggested price when a sell line crosses its rule — one tap from alert to advert.</div>
+        <div class="sug">Agency class for collector shops: sell-side briefs on their stock, the shop pays the introduction (RUL-131 pattern).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METALS -->
+  <div class="seg" style="--sc:var(--tup)">
+    <h3>D · Metals and bullion trader (Krugerrands, silver, platinum, scrap)</h3>
+    <div class="cols">
+      <div>
+        <div class="eyebrow">The request, in her words</div>
+        <div class="box req">"Buy 1 oz Krugerrands at spot +2% or less and silver Krugerrands or Maple Leafs at spot +8% or less, Gauteng only, up to R400k a month. Sell my 40 oz when gold passes R62 000/oz or when a buyer asks at spot +5%. Platinum bars and scrap gold only if assayed. Daily spot in Rand, please."</div>
+        <div class="eyebrow" style="margin-top:12px">Filter the PA derives</div>
+        <dl class="kv">
+          <dt>kind</dt><dd>buy (gold 1 oz, silver 1 oz) + sell (40 oz) + watch (spot level)</dd>
+          <dt>price rule</dt><dd>premium over spot: gold ≤ +2%, silver ≤ +8%; spot = LBMA PM fix × USD/ZAR (free, delayed) re-read each run</dd>
+          <dt>sell triggers</dt><dd>gold ≥ R62 000/oz, or a buyer brief/Watch at ≥ spot +5%</dd>
+          <dt>condition</dt><dd>coins: year and grade stated; bars: assay/serial stated; scrap: assay certificate required (her rule)</dd>
+          <dt>area · budget</dt><dd>Gauteng; monthly cap R400 000 (a reporting cap, the PA holds no money)</dd>
+          <dt>exclusions</dt><dd>unassayed scrap, "investment packages", anything priced in a currency without a spot reference</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="eyebrow">What it watches for</div>
+        <ul class="one">
+          <li>Collectors / Local Market adverts for coins and bars with a premium over today's spot inside her rule — instant.</li>
+          <li>Spot in Rand each run (gold, silver, platinum), and the Rand move that changes a premium without the seller changing a price.</li>
+          <li>Buyer briefs and Watches naming Krugerrands at or above her sell premium.</li>
+          <li>Sellers whose Trust Score carries the ID-verified and assay signals (shown as facts, not gates).</li>
+        </ul>
+        <div class="eyebrow" style="margin-top:12px">When it triggers · when it reports</div>
+        <dl class="kv">
+          <dt>instant</dt><dd>a coin or bar inside her premium rule; gold crossing her sell level</dd>
+          <dt>daily</dt><dd>spot in Rand and the premiums of every open advert she is watching</dd>
+          <dt>monthly</dt><dd>bought/sold against rules, average premium paid, what the market offered, what to relax</dd>
+          <dt>guard</dt><dd>an advert priced below spot −3% is flagged "below metal value — verify" rather than celebrated</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="rep">
+      <h4>Example daily report extract (illustrative figures)</h4>
+      <div class="tablewrap" style="margin-top:8px"><table>
+        <tr><th>Item</th><th>Spot (R/oz)</th><th>Advert price</th><th>Premium</th><th>Rule</th><th>Verdict</th></tr>
+        <tr><td>Gold spot (LBMA PM × USD/ZAR 17.42, delayed)</td><td class="n">R58 940</td><td class="n">—</td><td class="n">—</td><td>sell ≥ R62 000</td><td>not reached (−4.9%)</td></tr>
+        <tr><td>1 oz Krugerrand 1984, advert #671, Centurion</td><td class="n">R58 940</td><td class="n">R59 900</td><td class="n">+1.63%</td><td>≤ +2%</td><td><span class="verdict ok" style="margin:0">match — introduce?</span></td></tr>
+        <tr><td>1 oz Krugerrand 2021 proof, advert #668</td><td class="n">R58 940</td><td class="n">R64 500</td><td class="n">+9.4%</td><td>≤ +2%</td><td>no — proof premium; close call off</td></tr>
+        <tr><td>1 oz silver Maple Leaf × 20, advert #674</td><td class="n">R712</td><td class="n">R760 each</td><td class="n">+6.7%</td><td>≤ +8%</td><td><span class="verdict ok" style="margin:0">match; 20 oz = R15 200 (cap used: R75 100 of R400 000)</span></td></tr>
+        <tr><td>Scrap 9ct, 38 g, no assay, advert #670</td><td class="n">R58 940</td><td class="n">R21 000</td><td class="n">≈ −8% of fine content</td><td>assay required</td><td><span class="verdict bad" style="margin:0">excluded by her rule; flagged below metal value</span></td></tr>
+      </table></div>
+      <p><b>Tax line printed on every gold-coin match:</b> gold coins issued by the Reserve Bank (Krugerrands) are zero-rated for VAT (VAT Act s11(1)(k)); silver and platinum coins and bars are standard-rated at 15% when bought from a vendor — the premium shown is before VAT where the seller is a vendor. <b>Risks:</b> spot is delayed, so a fast Rand move can turn +1.6% into +2.4% by the time she pays; the PA re-prices at introduction time and shows both. <b>Charges this month:</b> premium spot feed quote 4T/month if she wants live rather than delayed spot (David sets the cost); otherwise 0 beyond introductions.</p>
+    </div>
+    <div class="cols">
+      <div><div class="eyebrow">Risks for TrustSquare</div>
+        <div class="risk">Counterfeit coins and tungsten-filled bars: the report must carry "weight 33.93 g · diameter 32.77 mm · verify before payment" and the seller's assay/ID signals as facts; the platform only introduces.</div>
+        <div class="risk">Large cash deals attract FICA obligations on the dealer's side, not ours; the report must not imply TrustSquare has verified identity for FICA purposes.</div>
+        <div class="risk">Delayed spot: a free feed is 10–20 minutes old; the quote text must say so.</div>
+      </div>
+      <div><div class="eyebrow">Suggestions</div>
+        <div class="sug">Give Collectors a "Bullion" kind with weight, fineness, year, grade/proof and assay fields so premiums compute without AI guessing.</div>
+        <div class="sug">Spot feed: free delayed LBMA + SARB rates first; a live feed as the first metals premium quote once ≥ 10 Pro bullion briefs exist.</div>
+        <div class="sug">A Traders preset "Quick Sell · Krugerrand" that prints today's spot and her premium as the suggested price — the use-and-throw-away icon she asked for.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARS -->
+  <div class="seg" style="--sc:var(--cap)">
+    <h3>E · Car dealer / sourcing agent (compact example)</h3>
+    <div class="cols">
+      <div>
+        <div class="box req">"Source 2018–2022 double-cab bakkies under 120 000 km, full service history, priced 8% or more under the trade book, within 150 km of Polokwane. Alert me the hour one is listed."</div>
+        <dl class="kv" style="margin-top:10px">
+          <dt>rules</dt><dd>make/model class, year range, max km, FSH stated, price ≤ book −8% (free book from the app's own Car Purchase Dossier data; paid book quoted if he wants it), radius 150 km</dd>
+          <dt>triggers</dt><dd>instant on a match; daily on close calls; monthly on what the market offered and the average discount seen</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="rep" style="margin-top:0">
+          <h4>Report line (illustrative)</h4>
+          <div class="note">2020 Hilux 2.8 GD-6 4×4 DC, 96 400 km, FSH · advert #690, Mokopane · asking R489 000 · book R538 000 · −9.1% · plate blurred, VIN hidden until introduction · <span class="verdict ok" style="margin:0">meets rules</span></div>
+          <p class="note" style="margin-top:8px"><b>Risk:</b> odometer and FSH are seller-stated until the introduction; the report prints them as stated. <b>Suggestion:</b> the Car Dossier (3T) runs automatically on a match for Pro at the internal discount David approved, so the alert arrives with the dossier attached.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>5 · The money side of the Super-PA</h2>
+  <div class="grid3">
+    <div class="tile" style="--tc:var(--tup)"><div class="l">Included in $20</div><div class="big">Watch + reports</div><div class="note">Standing briefs, nightly watching, digests, the monthly report and 20 approaches — all inside Pro. Internal discount on app features the PA uses (invisible to the user) makes $20 read as better value.</div></div>
+    <div class="tile" style="--tc:var(--agent)"><div class="l">Quoted on top</div><div class="big">T / month</div><div class="note">One option per brief covering the premium feeds it needs + AI run cost + margin. Example quotes (illustrative, David sets each feed's cost): property Deeds feed 8T · live spot 4T · CIPC lookups 6T · live truck book 3T.</div></div>
+    <div class="tile" style="--tc:var(--reach)"><div class="l">Caution, every time</div><div class="big">Due monthly</div><div class="note">The subscription portion is due even when no sellers or matches appear; in those months the report still arrives (close calls, market movement). Out of Tuppence → the brief pauses with a top-up prompt; no lapsing timer.</div></div>
+  </div>
+  <div class="rep">
+    <h4>Worked example: one property investor on Pro for a year (illustrative)</h4>
+    <div class="tablewrap"><table>
+      <tr><th>Line</th><th>Per month</th><th>Per year</th><th>Note</th></tr>
+      <tr><td>Pro subscription</td><td class="n">$20</td><td class="n">$240</td><td>30 days paid each time, no auto-renew (RUL-201) — assumes she renews 12×</td></tr>
+      <tr><td>Property Deeds feed quote</td><td class="n">8T = $16</td><td class="n">$192</td><td>feed share $9 + AI runs $3 + margin $4 (illustrative split)</td></tr>
+      <tr><td>Introductions (3 matches she pursued)</td><td class="n">—</td><td class="n">3T = $6</td><td>1T each; buyer pays</td></tr>
+      <tr><td>Area Dossier attached to each match (3T, internal discount)</td><td class="n">—</td><td class="n">charged 9T = $18 · cost to TrustSquare ≈ $2.40</td><td>her 10T/month grant covers most of it</td></tr>
+      <tr><td><b>Revenue from her</b></td><td class="n"></td><td class="n"><b>≈ $456</b></td><td>vs $240 on Pro without the PA</td></tr>
+      <tr><td>Our direct cost (feed share + AI + alerts)</td><td class="n"></td><td class="n">≈ $150</td><td>spread falls as the $20 base grows (feed cost is per account tier, not per brief)</td></tr>
+    </table></div>
+    <p class="note">The point for the business model: the PA nearly doubles the value of one $20 subscriber without a new tier, and the premium quote only exists where a paid feed is live with a David-set cost.</p>
+  </div>
+
+  <h2>6 · Risks across the whole design</h2>
+  <ul class="one">
+    <li class="risk">Advertising dark features on a price card — fixed today for Squire; make the plans page read only from <code>/pricing/ladder</code> so a static line can never drift again.</li>
+    <li class="risk">Ruling-number collisions between branches and main (RUL-220/221 happened today) — reserve a number block per branch before a build run.</li>
+    <li class="risk">Uncommitted branch work — Squire-2 Phase 1 sat uncommitted for a day because a worktree pointed at a dead session path; the nightly checkpoint should commit every worktree, not only main.</li>
+    <li class="risk">Premium-feed quotes with no matches can read as paying for nothing; the monthly report with close calls and market movement is the answer David already approved — it must never be skipped.</li>
+    <li class="risk">FAIS and "advice": reports print facts against the user's own rules with sources and dates; the verdict names rules, never merits; no "buy / sell" wording anywhere.</li>
+    <li class="risk">Anonymity under pressure: an M&amp;A or bullion brief tempts richer seller detail before acceptance; Mode B stays absolute — the brief describes the need, never the person.</li>
+    <li class="risk">Cost drift of unattended AI loops: the PA uses the allocated model and steps down on price, never halts on cost (17 Sep ruling); feeds fail safe to "not available".</li>
+  </ul>
+
+  <h2>7 · Suggestions — in order of return</h2>
+  <ul class="one">
+    <li class="sug"><b>Arm <code>baseline_q4</code></b> — it lights Squire, the one-$5-tier fold, Zoom and credential claims in one move; until then Pro cannot say "Squire" and the ladder still sells two $5 products.</li>
+    <li class="sug"><b>One ladder source</b> — render the static plan cards and the subscription screen from <code>/pricing/ladder</code>; today three surfaces carry the same words by hand.</li>
+    <li class="sug"><b>Nationwide inside Quick</b> — one switch on Quick's price card ("I ship or travel countrywide") so a Quick seller gets the free reach without opening TrustSquare.</li>
+    <li class="sug"><b>Specialist request forms</b> — add Property, Business, Collectables, Bullion and Vehicle rule sets to <code>squire_briefs.rules</code> (fields above) so each field types its own filter.</li>
+    <li class="sug"><b>Business-for-sale listing type</b> — the M&amp;A lane needs a supply side; seven Quick cards and the existing anonymity rules are enough to start.</li>
+    <li class="sug"><b>Bullion kind in Collectors</b> — weight, fineness, year, grade, assay; premiums over spot computed, never guessed.</li>
+    <li class="sug"><b>Cascade plan on paper</b> — write the first step-down (Squire v1 → $5, a standing Watch brief → Free) with its cost now, so it ships the day Super-PA lands.</li>
+    <li class="sug"><b>Traders ↔ PA seam</b> — a sell alert offers "Quick Sell · Cards / Krugerrand" with the suggested price pre-filled; one tap from alert to advert.</li>
+    <li class="sug"><b>Agency sell-side briefs</b> — agencies, business brokers and collector shops hold briefs on their stock and pay the introduction, under RUL-131's one-at-a-time queue.</li>
+    <li class="sug"><b>Feed roadmap by count</b> — free sources now; the first paid feed per field only once a stated number of Pro briefs exists (25 property, 10 bullion, 10 business), so feed cost never runs ahead of the base.</li>
+  </ul>
+
+  <h2>8 · Decisions that are David's</h2>
+  <ul class="one">
+    <li><b>Arm baseline_q4?</b> Cost: none. Changes: Global $5 retires into Starter (0 live Global rows), Squire opens to Pro, Zoom and credential claims go live, the plans page shows one ladder. Reverses RUL-126's "batch, once" only if he chooses a partial arming.</li>
+    <li><b>Provisional-2 receipt</b> — the Traders lane and Squire-2 merge and deploy only after the CIPC filing receipt exists; both branches are committed and private.</li>
+    <li><b>JustTCG $19/month</b> — the lawful commercial lane for Near Mint condition prices in the collector brief; without it the NM rule reads "condition not verified".</li>
+    <li><b>First premium feed costs</b> — each quote needs a David-set monthly cost in <code>feed_costs_usd_month</code>; nothing is quoted until then.</li>
+  </ul>
+  <div class="meta" style="margin-top:28px">Built 11 Oct 2026 · saved in Projects\MarketSquare and tiled in the Visuals gallery · regression ledger RG-0958 · deploy 7f1b8b1</div>
+</div>
+
+</body>
+</html>
