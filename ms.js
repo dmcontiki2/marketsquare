@@ -2984,7 +2984,7 @@ const AI_PRO_ONLY = new Set(['heritage_tour','expedition_dossier','weekend_itine
 
 const _SUB_TIERS = [
   { id:'free',    label:'Free',    usd:0,  slots:2,  zar:0,   tup:0,  color:'#64748b', desc:'no card needed',   /* CARD-WORDS-2 (26 Sep 2026): no card is ever taken (langt-04). CARD-WORDS-3: the plan card already says 'Free forever' before the description -- the 26 Sep line read 'Free forever · Free forever · no card needed' */
-    bullets:['2 listing slots','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
+    bullets:['2 listing slots','Nationwide in your own country — a free switch on every advert (RUL-220)','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
   { id:'starter', label:'Starter', usd:5,  slots:10, zar:90,  tup:2,  color:'#4f46e5', desc:'The regular individual seller',
     bullets:['10 listing slots','2 Tuppence granted every month — runs your Offer Strategy brief monthly','Everything in Free'] },
   { id:'pro',     label:'Pro',     usd:20, slots:30, zar:360, tup:10, color:'#7c3aed', desc:'The power seller',

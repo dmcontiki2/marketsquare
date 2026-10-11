@@ -33069,7 +33069,7 @@ def pricing_ladder():
     t = _SELLER_SUB_TIERS
     ladder = [
         {"id": "free", "label": t["free"]["label"], "usd": t["free"]["usd"], "slots": t["free"]["slot_limit"],
-         "reach": "local", "features": ["%d active listing slots" % t["free"]["slot_limit"], "Local buyer reach (your city)", "Tuppence pay-as-you-go", "Anonymous seller profile"]},
+         "reach": "local", "features": ["%d active listing slots" % t["free"]["slot_limit"], "Nationwide in your own country — a free switch on every advert", "Browse your city + every Nationwide advert in your country", "Tuppence pay-as-you-go", "Anonymous seller profile"]},   # REACH-NATIONAL-1 (RUL-220)
         {"id": "starter", "label": t["starter"]["label"], "usd": t["starter"]["usd"], "slots": t["starter"]["slot_limit"],
          "reach": "global" if armed else "local",
          "features": ["%d active listing slots" % t["starter"]["slot_limit"]] + (["Global buyer reach — national + worldwide"] if armed else []) + ["+2 Tuppence every month", "All features included"]},

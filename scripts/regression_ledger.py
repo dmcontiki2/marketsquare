@@ -37658,6 +37658,46 @@ def rg_static_photo_keep_1():
     return [(INFO, "/static/ image photos survive Edit-save; '..', dot-files and non-images still refused")]
 
 
+@entry("RG-0958", "SUBSCRIPTIONS-AUDIT-1 (11 Oct 2026): the three apps say the same thing about the plans -- the Pro plan card "
+       "advertises Squire only through /pricing/ladder once baseline_q4 is armed (PLANS-TRUTH-1, never a dark feature on a price "
+       "card); Free carries the free Nationwide switch on the static card, the server ladder and the subscription screen "
+       "(RUL-220); Quick names a full plan plainly and offers a bigger plan or resting an advert (SLOT-FULL-QUICK-1, "
+       "KEEP-CHOICE-1), in every language, and genie/HARNESS.html stays identical to quick.html",
+       LOCKED, fixed_on="2026-10-11",
+       scope="marketsquare.html plan cards; bea_main.py pricing_ladder; ms.js _SUB_TIERS; quick.html + genie/HARNESS.html "
+             "celebrate()/qSaveFail() + QI18N",
+       ref="Subscriptions audit, 11 Oct 2026: a $20 buyer was promised Squire while _squire_on() was False; a Free member with "
+           "two live adverts was told by Quick 'Your listing is saved' and never why it did not publish")
+def rg_subscriptions_audit_1():
+    html = repo_file("marketsquare.html")
+    py = repo_file("bea_main.py")
+    js = repo_file("ms.js")
+    q = repo_file("quick.html")
+    h = repo_file("genie/HARNESS.html")
+    if None in (html, py, js, q, h):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "AI research suite and Squire</div>" in html:
+        return [(FAIL, "the static Pro plan card advertises Squire again while Squire is flag-dark (PLANS-TRUTH-1)")]
+    if "Squire" in html.split('id="plan-card-pro"')[1].split('id="plan-card-agency"')[0] if 'id="plan-card-pro"' in html else False:
+        return [(FAIL, "the static Pro plan card mentions Squire; only /pricing/ladder may add it, once armed")]
+    if 'Nationwide in your own country' not in html.split('id="plan-card-free"')[1].split('id="plan-card-starter"')[0]:
+        return [(FAIL, "the Free plan card lost the free Nationwide line (RUL-220)")]
+    if '"Nationwide in your own country' not in py or 'Browse your city + every Nationwide advert in your country' not in py:
+        return [(FAIL, "/pricing/ladder's Free rung no longer states the Nationwide switch")]
+    if "'Nationwide in your own country" not in js:
+        return [(FAIL, "the subscription screen's Free bullets lost the Nationwide line")]
+    for name, src in (("quick.html", q), ("genie/HARNESS.html", h)):
+        if "var slotsFull = !live && (+r.status===402" not in src:
+            return [(FAIL, name + ": celebrate() no longer recognises a full plan (SLOT-FULL-QUICK-1)")]
+        if "if(st===402) return qTr(" not in src:
+            return [(FAIL, name + ": a raw 402 is read as 'try again' instead of a full plan")]
+        if '"Your plan\u2019s listing slots are full.": {' not in src and "\"Your plan\u2019s listing slots are full.\": {" not in src:
+            return [(FAIL, name + ": the slot-full strings have no language entries")]
+    if q != h:
+        return [(FAIL, "quick.html and genie/HARNESS.html differ -- they are kept identical by rule (17 Sep 2026)")]
+    return [(INFO, "plan cards, ladder and subscription screen agree; Quick names a full plan and offers both ways out")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

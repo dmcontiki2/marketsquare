@@ -1,0 +1,1 @@
+- 11 Oct 2026 — SUBSCRIPTIONS-AUDIT-1: plans page no longer advertises dark Squire; Free shows the free Nationwide switch on all three plan surfaces; Quick names a full plan and offers upgrade-or-rest; fast-lane rulings renumbered RUL-222/223 on the branch; Squire-2 Phase 1 committed on its branch. Verified by: RG-0958 pass; rendered check in the run report.
