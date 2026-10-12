@@ -38111,6 +38111,28 @@ def rg_gx_retry_1():
     return out or [(INFO, "a failed example read is asked again within seconds")]
 
 
+@entry("RG-0969", "SMS-REPLY-1 (David, 12 Oct 2026: 'Make \"Reply STOP\" true'): every BulkSMS text goes from the reply "
+       "number and every reply is read before a wave -- a STOP is honoured before the next text",
+       LOCKED, fixed_on="2026-10-12",
+       scope="sms_provider.send sets from={type: REPLIABLE} for BulkSMS (a named sender cannot be answered); sms_provider.received() "
+             "reads RECEIVED messages; CityLauncher sms_wave.py --refresh-status calls poll_inbound first (STOP -> sms_stop + "
+             "e-mail suppression; other replies kept), and the server's 09:10 run (sms_arm.py) refreshes before it sends.",
+       ref="RUL-226(d). Proven 12 Oct 2026: a REPLIABLE submission to BulkSMS's free test number 1111111 answered 201 at 0 credits; "
+           "received() answered 200 on the live account; sms_wave.py --selftest-stop PASS on a copy of the server DB (a STOP read "
+           "from a reply shaped as BulkSMS returns it removes that number from the wave; a second read records nothing twice; "
+           "a non-STOP reply leaves its number textable). The live inbound reply is the one step left to see (David's test text).")
+def rg_sms_reply_1():
+    src = repo_file("sms_provider.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if 'body["from"] = {"type": "REPLIABLE"}' not in src:
+        out.append((FAIL, "BulkSMS texts no longer go from the reply number -- 'Reply STOP' would reach nobody"))
+    if "def received(" not in src:
+        out.append((FAIL, "the reply reader is gone -- a STOP would never be read"))
+    return out or [(INFO, "texts go REPLIABLE and replies are read")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

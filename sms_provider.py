@@ -7,7 +7,8 @@ Provider-agnostic, fails DARK: with no provider configured ready() is False, eve
     SMS_PROVIDER=bulksms | clickatell | smsportal
     SMS_TOKEN=<token id>:<token secret>      (BulkSMS: basic-auth token pair;  Clickatell: the API key;
                                               SMSPortal: <client id>:<client secret>)
-    SMS_SENDER=TrustSquare                    (optional alphanumeric sender where the network allows it)
+    SMS_SENDER=TrustSquare                    (clickatell / smsportal only. BulkSMS always sends REPLIABLE -- SMS-REPLY-1,
+                                              12 Oct 2026: our texts say "Reply STOP", so a reply must reach us)
 
 Numbers are normalised to E.164 for South Africa (0XX... -> +27XX...). PHONE-CC-1 (25 Sep 2026 inspection,
 backend-12): a caller that knows the seller's country passes it, and a local number is then placed in THAT
@@ -170,8 +171,13 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
         if prov == "bulksms":
             basic = base64.b64encode(tok.encode()).decode()
             body = {"to": e164, "body": text}
-            if sender:
-                body["from"] = sender
+            # SMS-REPLY-1 (David, 12 Oct 2026: 'Make "Reply STOP" true'). Every text we send says "Reply STOP to
+            # opt out", so every text must come from a number a reply can reach US on. A named (alphanumeric)
+            # sender cannot be replied to, and leaving "from" out leaves it to the account's default-repliable
+            # setting. REPLIABLE asks BulkSMS for its reply number and files each reply under RECEIVED messages,
+            # linked to the text it answers -- received() below reads them. The text itself names TrustSquare.
+            # Proven 12 Oct 2026: a REPLIABLE submission to BulkSMS's free test number 1111111 -> 201, 0 credits.
+            body["from"] = {"type": "REPLIABLE"}
             r = httpx.post("https://api.bulksms.com/v1/messages", json=body,
                            headers={"Authorization": "Basic " + basic}, timeout=15)
             ok = r.status_code in (200, 201)
@@ -248,6 +254,35 @@ def status(msg_id: str) -> tuple:
         return ("unknown", typ.lower() or "no status")
     except Exception as exc:
         return ("unknown", str(exc)[:80])
+
+
+def received(limit: int = 500) -> list:
+    """SMS-REPLY-1: the replies people sent to our texts (BulkSMS RECEIVED messages), newest first. Reads only --
+    never sends, never costs. Each item: {"id", "from" (+E.164), "body", "at", "related"}; [] when unknown.
+    sms_wave.py --refresh-status turns a STOP among them into the phone STOP list before every wave."""
+    if provider() != "bulksms" or not ready():
+        return []
+    try:
+        import httpx
+        basic = base64.b64encode((os.environ.get("SMS_TOKEN") or "").strip().encode()).decode()
+        r = httpx.get("https://api.bulksms.com/v1/messages",
+                      params={"filter": "type=RECEIVED", "limit": max(1, min(int(limit), 1000)), "sortOrder": "DESCENDING"},
+                      headers={"Authorization": "Basic " + basic}, timeout=20)
+        if r.status_code != 200:
+            _log.warning("sms received() read failed: bulksms %s", r.status_code)
+            return []
+        out = []
+        for m in (r.json() or []):
+            if str(m.get("type") or "").upper() != "RECEIVED":
+                continue
+            frm = normalise(str(m.get("from") or ""))
+            out.append({"id": str(m.get("id") or ""), "from": frm, "body": str(m.get("body") or "")[:320],
+                        "at": str((m.get("submission") or {}).get("date") or ""),
+                        "related": str(m.get("relatedSentMessageId") or "")})
+        return [x for x in out if x["id"] and x["from"]]
+    except Exception as exc:
+        _log.warning("sms received() read failed: %s", exc)
+        return []
 
 
 def credits() -> float:

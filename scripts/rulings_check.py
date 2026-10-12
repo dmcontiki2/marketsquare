@@ -1509,6 +1509,14 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-226": [
+   # David, 12 Oct 2026: "G5 pilot go - approved", "Agreed" (cap 40 -> 200 after a clean 48 h read), "Make 'Reply STOP' true".
+   ("RULINGS.md", ["THE SMS WAVE RUNS ITSELF FROM THE SERVER", "AMENDS [[RUL-192]](d)"], []),
+   ("sms_provider.py", ["SMS-REPLY-1", 'body["from"] = {"type": "REPLIABLE"}', "def received("], []),
+   ("../CityLauncher/sms_arm.py", ["SMS-ARM-1", "CAP_CEILING = 200", "def cmd_read("], []),
+   ("../CityLauncher/sms_wave.py", ["def poll_inbound(", "poll_inbound(conn, sp)   # SMS-REPLY-1", "WAVE_RUNS_ON_SERVER"], []),
+   ("../CityLauncher/nightly_wave.sh", ["sms_arm.py read"], []),
+ ],
  "RUL-225": [
    # David, 12 Oct 2026: "Bee Lady is a pseudo name like the Handyman." A trade pseudonym stays in an advert; real
    # names still go (ANON-NAMES-1), and a title that loses one no longer ends on "by the".
