@@ -38155,5 +38155,32 @@ def _server_vantage_wrap():
 
 _server_vantage_wrap()
 
+
+
+@entry("RG-0967", "EULA-119-SWITCH-1: from 12 Oct 2026 Terms v1.19 is the material version -- an account that accepted an "
+       "earlier text is parked and asked to accept again at her next listing, edit, introduction request or top-up",
+       LOCKED, fixed_on="2026-10-12",
+       scope="bea_main.py _EULA_MATERIAL_STEPS (1.19 dated EULA_V119_EFFECTIVE), _eula_meta_sync at boot and in the daily "
+             "sweep, _eula_apply_material (staff/seed/superuser/.invalid exempt), _terms_missing at the money doors. "
+             "SCOPE: every account with a pre-1.19 acceptance. CLASS: a dated legal switch that must land without a deploy.",
+       ref="RUL-181. PROBED 12 Oct 2026 07:02Z: eula_meta.material_version=1.19; server log 00:02:09Z 'EULA-VERSION-1: 3 "
+           "account(s) re-accept v1.19'; the 3 accounts (accepted 1.16 on 18/24 Sep, no live listings) now have no acceptance "
+           "and their old one parked; one earlier account has already re-accepted today. Not clicked through as one of "
+           "those users -- Claude has no session for them.")
+def rg_eula_119_switch_1():
+    bm = repo_file("bea_main.py")
+    if bm is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py not readable from here")]
+    bad = []
+    if '("1.19", EULA_V119_EFFECTIVE,' not in bm or 'EULA_V119_EFFECTIVE = "2026-10-12"' not in bm:
+        bad.append("v1.19 is no longer the dated material step for 12 Oct 2026")
+    if "parked = _eula_apply_material(conn)" not in bm:
+        bad.append("the daily/boot sync no longer parks older acceptances")
+    if 'return not (row and row["eula_accepted_at"])' not in bm:
+        bad.append("the money doors no longer ask a parked account to accept again")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "the dated v1.19 switch parks older acceptances and the doors ask again")]
+
 if __name__ == "__main__":
     sys.exit(main())
