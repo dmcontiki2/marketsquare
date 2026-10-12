@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-11 - subscriptions audit)
+## Last Completed (2026-10-12 - auto renew 1)
 
-- 11 Oct 2026 — SUBSCRIPTIONS-AUDIT-1: plans page no longer advertises dark Squire; Free shows the free Nationwide switch on all three plan surfaces; Quick names a full plan and offers upgrade-or-rest; fast-lane rulings renumbered RUL-222/223 on the branch; Squire-2 Phase 1 committed on its branch. Verified by: RG-0958 pass; rendered check in the run report.
+- 12 Oct 2026 — AUTO-RENEW-1 (RUL-224) BUILT FLAG-DARK: paid plans renew automatically as the standard, one tick box (default ON) makes it month-by-month; Paystack plan per tier made once by maintenance; webhook handles subscription.create / renewal charge.success / invoice.payment_failed / subscription.disable + not_renew; Cancel renewal route session-bound; "Renews on <date>" + Cancel renewal on the plan card (Plans, Subscription, Wallet). The switch `launch_switches.auto_renew` ships OFF and is David's to arm on the +1 page. Verified by: differential proof OFF = pre-build byte for byte (37 answers, 10 Paystack requests, 4 tables IDENTICAL); scripts/prove_auto_renew.py 88 checks pass; rendered in headless Chromium 412x915 with QA accounts, 46 checks, AUTO_RENEW_shots/ (22 pictures); stranger_test PASS; RG-0964/0965 LOCKED, RG-0966 OPEN until the deploy is probed live. NOT PROVEN: Paystack itself — no test key in reach, the rendered run used a local stand-in; the first real subscription is still to be seen.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 12 Oct 2026 — AUTO-RENEW-1 (RUL-224) BUILT FLAG-DARK: paid plans renew automatically as the standard, one tick box (default ON) makes it month-by-month; Paystack plan per tier made once by maintenance; webhook handles subscription.create / renewal charge.success / invoice.payment_failed / subscription.disable + not_renew; Cancel renewal route session-bound; "Renews on <date>" + Cancel renewal on the plan card (Plans, Subscription, Wallet). The switch `launch_switches.auto_renew` ships OFF and is David's to arm on the +1 page. Verified by: differential proof OFF = pre-build byte for byte (37 answers, 10 Paystack requests, 4 tables IDENTICAL); scripts/prove_auto_renew.py 88 checks pass; rendered in headless Chromium 412x915 with QA accounts, 46 checks, AUTO_RENEW_shots/ (22 pictures); stranger_test PASS; RG-0964/0965 LOCKED, RG-0966 OPEN until the deploy is probed live. NOT PROVEN: Paystack itself — no test key in reach, the rendered run used a local stand-in; the first real subscription is still to be seen.
 
 - 11 Oct 2026 — SUBSCRIPTIONS-AUDIT-1: plans page no longer advertises dark Squire; Free shows the free Nationwide switch on all three plan surfaces; Quick names a full plan and offers upgrade-or-rest; fast-lane rulings renumbered RUL-222/223 on the branch; Squire-2 Phase 1 committed on its branch. Verified by: RG-0958 pass; rendered check in the run report.
 

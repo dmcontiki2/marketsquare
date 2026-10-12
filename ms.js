@@ -1658,7 +1658,7 @@ async function _msInit(){
               sobSelTier(sobState.selectedTier);
               showToast((d.label || sobState.selectedTier) + ' activated — complete your EULA to go live.', 4000);
             } else {
-              showToast((d.label ? d.label : 'Your new plan') + ' is active \u2014 thank you.', 5000);   // PLAN-RETURN-1: a Plans-screen upgrade has nothing to resume
+              showToast((d.label ? d.label : 'Your new plan') + ' is active \u2014 thank you.' + _arReturnNote(d), 5000);   // PLAN-RETURN-1: a Plans-screen upgrade has nothing to resume
               try{ if(typeof loadLiveDash==='function') loadLiveDash(); goTo('dashboard'); }catch(_){}
             }
           } else {
@@ -3032,7 +3032,7 @@ function _renderSubscriptionScreen(d, email) {
   document.getElementById('sub-screen-slots-used').textContent = used + ' / ' + limit + ' slots used';
   document.getElementById('sub-screen-billing').textContent = pending
     ? 'Downgrade to ' + (pending.charAt(0).toUpperCase()+pending.slice(1)) + ' pending ' + (billEnd||'')
-    : (billEnd ? 'Renews ' + billEnd : meta.usd > 0 ? 'Monthly billing' : 'No billing required');
+    : (billEnd ? _arBillingLine(d, billEnd) : meta.usd > 0 ? 'Monthly billing' : 'No billing required');   // AUTO-RENEW-1: 'Renews ' + billEnd unless renewal data came back
 
   // Slot bar
   const pct = limit > 0 ? Math.min(100, Math.round((used/limit)*100)) : 0;
@@ -3070,6 +3070,7 @@ function _renderSubscriptionScreen(d, email) {
       ${_circleBullets(t).map(b=>'<div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">· '+b+'</div>').join('')}
       ${isDown && !isCur ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
     `;
+    if (isCur) { const _arl = _arPlanLine(d, t.id); if (_arl) card.insertAdjacentHTML('beforeend', _arl); }   // AUTO-RENEW-1: 'Renews on <date>' + Cancel renewal
     container.appendChild(card);
   });
 
@@ -3139,6 +3140,179 @@ async function _subKeepLoad(d, email){
   };
 }
 
+// ── AUTO-RENEW-1 (RUL-224, David 11 Oct 2026; built 12 Oct 2026) ─────────────────────────────
+// "It should be shown as auto-renew standard with an manual change of a tick box to change it to monthly."
+// A paid plan renews automatically every month on the checkout card; ONE tick box, ticked by default,
+// makes it a single 30-day payment instead. Where the plan is shown, "Cancel renewal" is one tap.
+//
+// FLAG-DARK. Everything here is drawn only when /flags reports effective.auto_renew (David's switch,
+// launch_switches.auto_renew) AND the tier's Paystack plan exists (auto_renew_tiers). While the switch
+// is off: _arOn() is false, every plan checkout below runs its old confirm-and-redirect unchanged
+// (_arQuery(null) adds nothing to the request), and _arPlanLine() returns '' so no card changes.
+// The server is the authority: it only opens a subscription when the switch is on, whatever is sent.
+const _AR_TICK_LABEL  = 'Renew automatically each month — cancel any time with one tap.';
+const _AR_ACCEPT_LINE = 'Renews automatically every month until you cancel. Cancelling takes one tap and your paid days still run to the end.';
+const _AR_ONEOFF_LINE = 'One payment for 30 days. Nothing is charged again unless you choose the plan again.';
+const _AR_NOCARD_LINE = 'Automatic renewal needs a card payment';
+function _arOn(){ try{ return !!(window.FEATURES && window.FEATURES.auto_renew); }catch(e){ return false; } }
+function _arTierReady(tierId){
+  try{ const raw = window.FEATURES && window.FEATURES._raw;
+       return !!(raw && Array.isArray(raw.auto_renew_tiers) && raw.auto_renew_tiers.indexOf(tierId) !== -1); }
+  catch(e){ return false; }
+}
+// what the tick box adds to the checkout request: nothing at all unless she left it on and pays by card
+function _arQuery(ar){ return (ar && ar.autoRenew) ? '&auto_renew=1&channel=card' : ''; }
+function _arDay(iso){
+  if(!iso) return '';
+  try{ const d = new Date(iso); if(isNaN(d.getTime())) return String(iso).substring(0,10);
+       return d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); }
+  catch(e){ return String(iso).substring(0,10); }
+}
+function _arBillingLine(d, billEnd){
+  // the Subscription screen's top line. Without renewal data (the switch is off) it is the old line.
+  if(!d || !('auto_renew_on' in d)) return 'Renews ' + billEnd;
+  return (d.auto_renew ? 'Renews on ' : 'Runs to ') + (_arDay(d.runs_to) || billEnd);
+}
+function _arReturnNote(d){
+  return (d && d.auto_renew && d.renews_on) ? (' It renews on ' + _arDay(d.renews_on) + '. Cancel any time under Subscription.') : '';
+}
+
+// The plan checkout step. Resolves {autoRenew, channel} when she continues, null when she closes it.
+function _arCheckout(o){
+  return new Promise(function(resolve){
+    const old = document.getElementById('ar-checkout'); if(old) old.remove();
+    const t = _SUB_TIERS.find(function(x){ return x.id === o.tierId; }) || { label: o.label || 'Plan', usd: o.usd || 0, zar: '' };
+    const ov = document.createElement('div');
+    ov.id = 'ar-checkout';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+    const sh = document.createElement('div');
+    sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true'); sh.setAttribute('aria-label', t.label + ' plan checkout');
+    sh.style.cssText = 'background:#fff;color:#1e293b;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:18px 20px 22px;box-sizing:border-box;';
+    const pill = 'flex:1;border-radius:50px;padding:10px 12px;font-family:\'Syne\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;';
+    sh.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+      +   '<div style="font-size:17px;font-weight:800;color:#1e293b;">' + _lmEsc(t.label) + ' plan</div>'
+      +   '<button type="button" id="ar-x" aria-label="Close" style="background:#f1f5f9;border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#64748b;font-weight:700;">✕</button>'
+      + '</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#1e293b;">$' + t.usd + ' a month<span style="font-weight:400;color:#64748b;"> · ≈ R' + t.zar + ', charged in rand</span></div>'
+      + (o.note ? '<div style="font-size:12px;color:#92400e;background:#fef3c7;border-radius:8px;padding:8px 10px;margin-top:10px;white-space:pre-line;">' + _lmEsc(String(o.note).trim()) + '</div>' : '')
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#64748b;margin:16px 0 6px;">How will you pay?</div>'
+      + '<div style="display:flex;gap:8px;">'
+      +   '<button type="button" id="ar-ch-card" style="' + pill + '">Card</button>'
+      +   '<button type="button" id="ar-ch-other" style="' + pill + '">EFT or another way</button>'
+      + '</div>'
+      + '<label id="ar-tick-row" style="display:flex;gap:10px;align-items:flex-start;margin-top:16px;cursor:pointer;">'
+      +   '<input type="checkbox" id="ar-tick" checked style="width:20px;height:20px;margin:1px 0 0;flex-shrink:0;accent-color:#4f46e5;">'
+      +   '<span id="ar-tick-label" style="font-size:14px;font-weight:600;line-height:1.4;color:#1e293b;">' + _AR_TICK_LABEL + '</span>'
+      + '</label>'
+      + '<div id="ar-line" style="font-size:12.5px;color:#475569;line-height:1.5;margin:8px 0 0 30px;"></div>'
+      + '<button type="button" id="ar-go" style="width:100%;margin-top:18px;background:#4f46e5;color:#fff;border:none;border-radius:50px;padding:13px 16px;font-family:\'Syne\',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Continue to payment →</button>'
+      + '<button type="button" id="ar-no" style="width:100%;margin-top:8px;background:none;color:#64748b;border:none;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;">Not now</button>';
+    ov.appendChild(sh);
+    document.body.appendChild(ov);
+    const q = function(id){ return sh.querySelector('#' + id); };
+    const tick = q('ar-tick');
+    let channel = 'card', wantRenew = true;
+    function paint(){
+      const card = channel === 'card';
+      q('ar-ch-card').setAttribute('aria-pressed', card ? 'true' : 'false');
+      q('ar-ch-other').setAttribute('aria-pressed', card ? 'false' : 'true');
+      q('ar-ch-card').style.background  = card ? '#1e1b4b' : '#fff';
+      q('ar-ch-card').style.color       = card ? '#fff' : '#475569';
+      q('ar-ch-card').style.border      = card ? '1.5px solid #1e1b4b' : '1.5px solid #cbd5e1';
+      q('ar-ch-other').style.background = card ? '#fff' : '#1e1b4b';
+      q('ar-ch-other').style.color      = card ? '#475569' : '#fff';
+      q('ar-ch-other').style.border     = card ? '1.5px solid #cbd5e1' : '1.5px solid #1e1b4b';
+      tick.disabled = !card;
+      tick.checked  = card && wantRenew;
+      q('ar-tick-row').style.opacity = card ? '1' : '.55';
+      q('ar-tick-row').style.cursor  = card ? 'pointer' : 'default';
+      q('ar-line').innerHTML = !card
+        ? '<b style="color:#b45309;">' + _AR_NOCARD_LINE + '</b>. ' + _AR_ONEOFF_LINE
+        : (tick.checked ? _AR_ACCEPT_LINE : _AR_ONEOFF_LINE);
+    }
+    function done(v){ ov.remove(); resolve(v); }
+    q('ar-ch-card').onclick  = function(){ channel = 'card';  paint(); };
+    q('ar-ch-other').onclick = function(){ channel = 'other'; paint(); };
+    tick.onchange = function(){ if(channel === 'card') wantRenew = tick.checked; paint(); };
+    q('ar-go').onclick = function(){ done({ autoRenew: channel === 'card' && tick.checked, channel: channel }); };
+    q('ar-no').onclick = function(){ done(null); };
+    q('ar-x').onclick  = function(){ done(null); };
+    ov.addEventListener('click', function(e){ if(e.target === ov) done(null); });
+    paint();
+  });
+}
+
+// The renewal line on the CURRENT plan's card. '' when there is nothing to say -- always, while the
+// switch is off and she holds no subscription (the server then sends none of these fields).
+function _arPlanLine(d, tierId){
+  if(!d || (d.seller_tier || 'free') !== tierId) return '';
+  if(!(d.auto_renew_on || d.auto_renew || d.auto_renew_cancelled || d.renewal_failed)) return '';
+  const day = _arDay(d.runs_to);
+  if(!day) return '';
+  const after = _lmEsc(d.after_label || 'Free');
+  const box = function(html){ return '<div class="ar-plan-line" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--text-2);">' + html + '</div>'; };
+  const btn = function(label, fn){ return '<button type="button" onclick="' + fn + '(this)" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:50px;padding:7px 14px;font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">' + label + '</button>'; };
+  if(d.renewal_failed){ window._arFailedTier = tierId;
+    return box('<span style="color:#b45309;">Your renewal payment did not go through. Runs to <b>' + day + '</b>, then ' + after + '.</span>' + btn('Pay again', '_arPayAgain')); }
+  if(d.auto_renew) return box('<span>Renews on <b>' + day + '</b></span>' + btn('Cancel renewal', '_arCancelRenewal'));
+  if(d.auto_renew_cancelled) return box('<span>Runs to <b>' + day + '</b>, then ' + after + '</span>' + btn('Renew again', '_arRenewAgain'));
+  if((d.usd_per_month || 0) > 0) return box('<span>Runs to <b>' + day + '</b>, then ' + after + '</span>');
+  return '';
+}
+// after a failed renewal: pay for the plan again through the same checkout step (a new 30 days from the payment)
+function _arPayAgain(btn){
+  const t = _SUB_TIERS.find(function(x){ return x.id === window._arFailedTier; });
+  if(t && t.usd > 0) _subSelectTier(t.id, t.label, t.usd, false);
+}
+// the static Plans screen: the same line under the current plan's card
+function _arPlansScreenLine(d){
+  document.querySelectorAll('#plans-body .ar-plan-line').forEach(function(n){ n.remove(); });
+  if(!d) return;
+  const cur = d.seller_tier || 'free';
+  const card = document.getElementById('plan-card-' + cur);
+  const html = _arPlanLine(d, cur);
+  if(card && html) card.insertAdjacentHTML('beforeend', html);
+}
+async function _arRefresh(){
+  if (DEMO_MODE) return;                                   // demo: no account, nothing to re-read
+  const email = localStorage.getItem('ms_aa_email') || '';
+  if (!email || !BEA_ENABLED) return;
+  let d = null;
+  try { const r = await fetch(BEA_URL + '/users/' + encodeURIComponent(email) + '/subscription', { credentials: 'include' });
+        if (r.ok) d = await r.json(); } catch(_) {}
+  if (!d) return;
+  const act = document.querySelector('.screen.active');
+  try { if (act && act.id === 'screen-subscription') _renderSubscriptionScreen(d, email); } catch(_) {}
+  try { const bt = document.getElementById('ms-tab-billing'); if (bt && bt.classList.contains('active')) _renderBillingTab(d, email); } catch(_) {}
+  try { _arPlansScreenLine(d); } catch(_) {}
+}
+async function _arRenewalCall(path, btn, okText, failText){
+  if (DEMO_MODE) { showToast('This is a demo. Sign in on trustsquare.co to manage a real plan.'); return; }   // demo: no call is made
+  const email = localStorage.getItem('ms_aa_email') || '';
+  if (!email || !BEA_ENABLED) { showToast('Sign in to manage your subscription'); return; }
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch(BEA_URL + path, { method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': API_KEY }, body: JSON.stringify({ email: email }) });
+    const d = await r.json().catch(function(){ return {}; });
+    if (!r.ok) { showToast(typeof d.detail === 'string' ? d.detail : failText, 6000); if (btn) btn.disabled = false; return; }
+    showToast(okText(d), 6000);
+    _arRefresh();
+  } catch(_) { showToast('Could not reach the server — nothing was changed.', 5000); if (btn) btn.disabled = false; }
+}
+// Cancel renewal: ONE tap (RUL-224c). Nothing is charged again; the paid days still run to the end.
+function _arCancelRenewal(btn){
+  return _arRenewalCall('/payment/seller-subscription/cancel', btn,
+    function(d){ return 'Renewal cancelled. Nothing more will be charged' + (d.runs_to ? ', and your plan runs to ' + _arDay(d.runs_to) + '.' : '.'); },
+    'Could not cancel the renewal — nothing was changed.');
+}
+function _arRenewAgain(btn){
+  return _arRenewalCall('/payment/seller-subscription/resume', btn,
+    function(d){ return 'Automatic renewal is back on' + (d.renews_on ? '. Your plan renews on ' + _arDay(d.renews_on) + '.' : '.'); },
+    'Could not switch renewal back on — nothing was changed.');
+}
+
 async function _subSelectTier(tierId, tierLabel, usdPrice, isDowngrade) {
   const email = localStorage.getItem('ms_aa_email') || '';
   if (!email) { showToast('Sign in to manage your subscription'); return; }
@@ -3155,14 +3329,23 @@ async function _subSelectTier(tierId, tierLabel, usdPrice, isDowngrade) {
     return;
   }
 
+  // AUTO-RENEW-1 (RUL-224): with the switch on, the checkout step carries the tick box (default ON) and the
+  // renewal line; with it off, the old confirm below runs exactly as before and _arQuery(null) adds nothing.
+  let _ar = null;
+  if (_arOn() && _arTierReady(tierId)) {
+    _ar = await _arCheckout({ tierId: tierId, label: tierLabel, usd: usdPrice,
+      note: isDowngrade ? ('Takes effect at the end of your billing period.' + _subDownWarning(tierId)) : '' });
+    if (!_ar) return;
+  } else {
   const confirmMsg = isDowngrade
     ? `Downgrade to ${tierLabel} ($${usdPrice}/mo, takes effect at end of billing period)?` + _subDownWarning(tierId)
     : `Upgrade to ${tierLabel} ($${usdPrice}/mo)?\nYou'll be redirected to Paystack to complete payment.`;
   if (!confirm(confirmMsg)) return;
+  }
 
   try {
     const r = await _tsWithTerms(email, function(){ return fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' +
-      encodeURIComponent(email) + '&tier=' + tierId + '&callback_url=' + encodeURIComponent(window.location.origin + window.location.pathname + '?ps_sub_return=1'), { method: 'POST' }); }, { seller: true });   // BUYER-TERMS-1: a plan is a Seller's purchase
+      encodeURIComponent(email) + '&tier=' + tierId + '&callback_url=' + encodeURIComponent(window.location.origin + window.location.pathname + '?ps_sub_return=1') + _arQuery(_ar), { method: 'POST' }); }, { seller: true });   // BUYER-TERMS-1: a plan is a Seller's purchase
     if (!r) { showToast('Payment not started — the Terms were not accepted.'); return; }   // PLAN-RETURN-1: come back to the handler that applies the plan
     const d = await r.json();
     if (!r.ok) { showToast(d.detail || 'Could not start payment'); return; }
@@ -3194,6 +3377,7 @@ function openPlans(returnTo, showSlotCallout) {
         const cur = d.seller_tier || 'free';
         const btn = document.getElementById('plan-btn-' + cur);
         if (btn) { btn.textContent = '✓ Current plan'; btn.className = 'plan-btn secondary'; btn.disabled = true; }
+        try { _arPlansScreenLine(d); } catch(_) {}   // AUTO-RENEW-1: nothing is drawn unless renewal data came back
       }).catch(() => {});
   }
   goTo('plans');
@@ -3217,10 +3401,19 @@ function setPlan(tier, label){
     return;
   }
   if (!email) { showToast('Sign in first to upgrade'); return; }
+  // AUTO-RENEW-1 (RUL-224): with the switch on, the checkout step (tick box, default ON) comes first;
+  // with it off this goes straight to Paystack exactly as before.
+  if (_arOn() && _arTierReady(tier)) {
+    _arCheckout({ tierId: tier, label: label }).then(function(ar){ if (ar) _setPlanPay(email, tier, ar); });
+    return;
+  }
+  _setPlanPay(email, tier, null);
+}
+function _setPlanPay(email, tier, _ar){
   // Initiate Paystack subscription payment
   const cb = encodeURIComponent(window.location.origin + window.location.pathname + '?ps_sub_return=1');   // PLAN-RETURN-1 (25 Sep 2026 inspection, ts1-02): nothing read ?sub_verify, so a paid upgrade was never applied
   _tsWithTerms(email, function(){ return fetch(BEA_URL + '/payment/seller-subscription/initialize?email=' + encodeURIComponent(email) +
-        '&tier=' + tier + '&callback_url=' + cb, { method: 'POST' }); }, { seller: true })   // BUYER-TERMS-1: a plan is a Seller's purchase
+        '&tier=' + tier + '&callback_url=' + cb + _arQuery(_ar), { method: 'POST' }); }, { seller: true })   // BUYER-TERMS-1: a plan is a Seller's purchase
     .then(r => r ? r.json() : { detail: 'Payment not started — the Terms were not accepted.' })
     .then(d => {
       if (d.authorization_url) {
@@ -8357,6 +8550,14 @@ async function sobContinueFromTier() {
   const email = sobState.email;
   if (!email) { showToast('Session expired — open your latest sign-in link.'); return; }   // SIGNIN-WORDS-1 (langt-23)
 
+  // AUTO-RENEW-1 (RUL-224): with the switch on, the checkout step (tick box, default ON) comes first
+  let _ar = null;
+  if (_arOn() && _arTierReady(tier)) {
+    const _t = _SUB_TIERS.find(function(x){ return x.id === tier; }) || {};
+    _ar = await _arCheckout({ tierId: tier, label: _t.label || tier });
+    if (!_ar) return;
+  }
+
   const btn = document.getElementById('sob-p2-next');
   if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
 
@@ -8379,7 +8580,7 @@ async function sobContinueFromTier() {
     const url = BEA_URL + '/payment/seller-subscription/initialize'
       + '?email=' + encodeURIComponent(email)
       + '&tier='  + encodeURIComponent(tier)
-      + '&callback_url=' + callbackUrl;
+      + '&callback_url=' + callbackUrl + _arQuery(_ar);
     const res  = await _tsWithTerms(email, function(){ return fetch(url, { method: 'POST' }); }, { seller: true });   // BUYER-TERMS-1: a plan is a Seller's purchase
     if (!res) { showToast('Payment not started — the Terms were not accepted.'); if (btn) { btn.disabled = false; btn.textContent = 'Continue →'; } return; }
     const data = await res.json();
@@ -19030,6 +19231,7 @@ function _renderBillingTab(d, email) {
       ${isAgency && !isCur ? '<div style="font-size:11px;color:var(--text-3);margin-top:4px;">Apply through the support form with your agency\'s name, country and number of agents — we set up your console after a short check.</div>' : ''}
       ${isDown && (Number(t.usd) || 0) > 0 ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px;">⏳ Takes effect at end of billing period</div>' : ''}
     `;
+    if (isCur) { const _arl = _arPlanLine(d, t.id); if (_arl) card.insertAdjacentHTML('beforeend', _arl); }   // AUTO-RENEW-1: 'Renews on <date>' + Cancel renewal
     container.appendChild(card);
   });
 }

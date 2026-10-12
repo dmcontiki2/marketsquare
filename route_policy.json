@@ -573,6 +573,33 @@
    ]
   },
   {
+   "key": "POST /payment/seller-subscription/cancel",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "note": "AUTO-RENEW-1 (RUL-224, 12 Oct 2026): Cancel renewal. Acts only as the signed-in session -- a typed email is rewritten to it, so nobody can stop another seller's renewal."
+  },
+  {
+   "key": "POST /payment/seller-subscription/resume",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ],
+   "note": "AUTO-RENEW-1 (RUL-224, 12 Oct 2026): Renew again (undo a Cancel renewal while the paid period runs). Acts only as the signed-in session."
+  },
+  {
+   "key": "POST /admin/auto-renew/plans",
+   "level": "admin",
+   "note": "AUTO-RENEW-1 (RUL-224, 12 Oct 2026): maintenance -- make or adopt the Paystack plan per paid tier. Admin credential only; called by scripts/paystack_plans_sync.py."
+  },
+  {
    "key": "GET /admin/ai-spend/summary",
    "level": "admin"
   },

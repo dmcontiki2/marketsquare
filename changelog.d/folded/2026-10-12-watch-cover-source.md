@@ -1,0 +1,6 @@
+## 2026-10-12 — WATCH-COVER-1 finished at the source: the collectors letters that SEND show the wristwatch
+
+- **Found** while clearing the board for AUTO-RENEW-1: RG-0344 (the Ops preview mirror matches the letters that send) had been red, and an honest mirror rebuild turned RG-0908 (no pocket watch on a wristwatch example) red instead. The two could never both hold.
+- **Cause:** the 6 Oct fix changed only the preview mirror (`orchestration_v2/templates/collectors_outreach.html`, `collectors_dealer_outreach.html`). The two SOURCE letters the wave runner actually sends (`CityLauncher/emailer/templates/`) still carried `sup_email2_watch_1.jpg` (the pocket watch).
+- **Fix:** one line in each source letter -> `sup_email2_watch_2.jpg` (CityLauncher commit 788bbde, backups `*.bak-watchcover-20261012-*` beside each file). The mirror in this repo is unchanged from HEAD and is now in step with its source.
+- **Verified 12 Oct 2026 (PROBED on the working tree):** `python3 scripts/build_email_templates_page.py --check` -> "0 mirror file(s) stale", "page current"; `https://trustsquare.co/static/super/sup_email2_watch_2.jpg` answers 200. RG-0344 and RG-0908 are locked together by the pair: mirror == source, and mirror never carries watch_1.

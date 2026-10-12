@@ -86,6 +86,23 @@ def _outside_repo(path):
 # first run's seven FAILs were this checker's own needles breaking on 80-col wraps -- a
 # checker wrong on day one teaches the right lesson: verify the checker before the canon.
 REFLECTIONS = {
+ "RUL-224": [
+   # AUTO-RENEW-1 (built 12 Oct 2026): a paid plan renews automatically as the standard; one tick box makes it
+   # month-by-month. Built behind launch_switches.auto_renew, which ships OFF and is David's to arm.
+   ("RULINGS.md", ["A PAID PLAN RENEWS AUTOMATICALLY AS THE STANDARD"], []),
+   ("PRICING_CANON.md", ["RUL-224"], []),
+   ("AUTO_RENEW_BRIEF.md", ["RUL-224"], []),
+   ("bea_main.py", ["AUTO-RENEW-1 (RUL-224", 'return _bit_flag("auto_renew", False)',
+                    "ALTER TABLE launch_switches ADD COLUMN auto_renew INTEGER NOT NULL DEFAULT 0",
+                    '@app.post("/payment/seller-subscription/cancel")', "def _auto_renew_webhook("],
+                   ["ADD COLUMN auto_renew INTEGER NOT NULL DEFAULT 1", "/transaction/charge_authorization"]),
+   ("payments.py", ["AUTO-RENEW-1 (RUL-224", 'payload["plan"] = plan'], ["/transaction/charge_authorization"]),
+   ("ms.js", ["AUTO-RENEW-1 (RUL-224", "Renew automatically each month", "Automatic renewal needs a card payment",
+              "Cancel renewal"], []),
+   ("route_policy.json", ['"POST /payment/seller-subscription/cancel"'], []),
+   ("dashboard.server.html", ["ls_m_autorenew:'auto_renew'"], []),
+   ("scripts/regression_ledger.py", ['@entry("RG-0964", "AUTO-RENEW-1 (RUL-224'], []),
+ ],
  "RUL-189": [
    ("RULINGS.md", ["TESTERS RUN EVERY PAID AI FEATURE ON ANY PLAN, FOR EVER"], []),
    ("bea_main.py", ["def _ai_is_tester(", "_paid_feed_gate_active() and not _ai_is_tester(conn, email)"], []),

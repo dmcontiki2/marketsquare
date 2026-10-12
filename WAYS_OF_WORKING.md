@@ -121,3 +121,22 @@ session ends.** Ranked — David reads top-down and stops when he stops caring; 
 correlates across files or parallel sessions. Because it lives on disk it is the shared memory
 between parallel sessions: a loop staged in one session is visible to another. A stale ledger
 (disagreeing with STATUS) is a visible bug. Success = David's rounds go DOWN.
+
+## Scheduled tasks -- access is settled when the task is CREATED, not when it runs (SCHEDULED-TASK-ACCESS-1, 12 Oct 2026)
+
+What happened: the AUTO-RENEW-1 build was scheduled for Mon 12 Oct 01:30 SAST, unattended. It could not start. A
+scheduled task opens a FRESH session with no folder attached, the approval prompt for `Projects` sat on the PC for two
+hours with nobody there, and the run ended having read nothing. David, 05:01 SAST: *"why did you not tell me the promp
+cant run before the time when we set it up?"* He was right: nobody had checked.
+
+The rule, for whoever creates a scheduled task that needs this project:
+- **Before saying a task is scheduled, name what it needs and confirm it is already granted to THAT task:** the
+  `Projects` folder (approved for the task, not just for the chat that created it), and anything else the run will touch
+  -- the GitHub repo if it is to read code from there, a browser, a key.
+- **If the folder is not yet approved for the task, say so in the same message, plainly:** "this will not be able to
+  read your files at 01:30 unless you approve the folder for it now." Do not leave it to the run to discover.
+- **Prove it once:** fire the task (or a one-line probe task with the same settings) while David is still there, and
+  see it list the project folder. A task that has never started is not set up.
+- **An unattended run that finds itself without access notifies David at once** (it did) and says exactly which
+  approval is missing -- and the approval, once given, covers that task's later runs.
+- Use the `/access` skill before any unattended or overnight run: it exists for exactly this.

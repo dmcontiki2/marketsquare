@@ -1,0 +1,51 @@
+AUTO-RENEW-1 rendered proof on the rig (headless Chromium 412x915, QA accounts, Paystack STAND-IN - not Paystack)
+2026-10-12 04:17:20 UTC
+
+OK   the app reads the switch as OFF
+OK   OFF: no renewal line anywhere on the Plans screen
+OK   OFF: tapping Starter goes straight to Paystack with today's request (no tick box sent)
+OK   OFF: the payment page is a single payment, not a subscription
+OK   OFF: the Subscription screen asks today's question, word for word: ["Upgrade to Starter ($5/mo)?\nYou'll be redirected to Paystack to complete payment."]
+OK   OFF: no tick box, no checkout sheet
+OK   OFF: Paystack holds no plan and no subscription
+OK   the +1 page shows the switch: "Automatic plan renewal"
+OK   it ships OFF
+OK   one tap arms it: /flags auto_renew true, Starter + Pro ready
+OK   arming made the three monthly plans at Paystack, once
+OK   the row now says which plans are ready: 'out card · one tick box for month-by-month · plans ready: Starter, Pro'
+OK   the app reads the switch as ON
+OK   the tick box is there and ticked by default
+OK   its label is the ruled wording
+OK   the acceptance line under it is the ruled disclosure
+OK   not paying by card: the tick box is shown disabled with "Automatic renewal needs a card payment"
+OK   back on Card the tick box is ticked again
+OK   unticked: it says one payment for 30 days
+OK   Continue sends the tick box with the checkout request
+OK   the payment page is now a monthly subscription on the Starter plan
+OK   back in the app she is told the plan is active and when it renews: 'Starter is active — thank you. It renews on 11 Nov 2026. Cancel any time under Subscription.'
+OK   a Paystack subscription exists for the QA customer (stand-in): SUB_rig0004
+OK   her account is on Starter with that subscription stored
+OK   Subscription screen: 'Renews on 11 Nov 2026 | Cancel renewal'
+OK   the header line says: 'Renews on 11 Nov 2026'
+OK   Wallet (Billing tab): 'Renews on 11 Nov 2026 | Cancel renewal'
+OK   Plans screen: 'Renews on 11 Nov 2026 | Cancel renewal'
+OK   after one tap the card says: 'Runs to 11 Nov 2026, then Free | Renew again'
+OK   and she is told: 'Renewal cancelled. Nothing more will be charged, and your plan runs to 11 Nov 2026.'
+OK   the Paystack subscription is disabled (stand-in status: non-renewing)
+OK   her plan and its end date are untouched
+OK   Renew again switches the same subscription back on
+OK   Paystack's renewal charge moved the end date on by 30 days: 2026-11-11 -> 2026-12-11
+OK   after a failed renewal the card says so and offers Pay again: 'Your renewal payment did not go through. Runs to 11 Dec 2026, then Free. | Pay again'
+OK   Pay again opens the same checkout step for her plan
+OK   the same checkout step, ticked by default, on the Subscription screen
+OK   unticked: today's request is sent (nothing added)
+OK   the payment page is a single payment
+OK   no subscription was created for her at Paystack
+OK   her card says: 'Runs to 11 Nov 2026, then Free'
+OK   the seller-onboarding tier step opens the same checkout, ticked by default
+OK   "Not now" closes it and nothing is charged
+OK   the app is in demo mode
+OK   Cancel renewal / Renew again make no call in demo mode and say why: 'This is a demo. Sign in on trustsquare.co to manage a real plan.'
+OK   no page errors in any step: []
+
+ALL RENDERED CHECKS PASS

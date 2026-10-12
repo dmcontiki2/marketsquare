@@ -37867,6 +37867,223 @@ def rg_lm_thumbs_1():
     return out or [(INFO, "a Local Market advert carries the row of small pictures")]
 
 
+@entry("RG-0964", "AUTO-RENEW-1 (RUL-224, David 11 Oct 2026): a paid plan renews automatically as the standard and one "
+       "tick box makes it month-by-month -- built behind David's switch, and with the switch OFF the one-off 30-day "
+       "payment of RUL-201 is the flow it was",
+       LOCKED, fixed_on="2026-10-12",
+       scope="bea_main.py (launch_switches.auto_renew default 0; users.auto_renew / paystack_subscription_code / "
+             "paystack_email_token / renewal_failed_at added in run_migrations; _auto_renew_checkout_plan + "
+             "_auto_renew_initialize on /payment/seller-subscription/initialize; _auto_renew_after_purchase on /verify; "
+             "_auto_renew_webhook on /payment/webhook for subscription.create, a renewal charge.success, "
+             "invoice.payment_failed, subscription.disable / subscription.not_renew; the wait and the ending in the "
+             "RUL-201 lapse pass; POST /payment/seller-subscription/cancel + /resume; POST /admin/auto-renew/plans; "
+             "four launch-metrics tiles); payments.py (plan + subscription calls, never a charge of a stored card); "
+             "route_policy.json (the three routes declared -- SEC-GATE-1); ms.js (the tick box, default ON, on all "
+             "four plan checkout surfaces -- Plans screen, Subscription screen, Wallet/Billing tab, seller onboarding "
+             "-- and 'Renews on <date>' + Cancel renewal on the subscriber's plan card on all three plan surfaces; "
+             "DEMO_MODE guard on every new call); dashboard.server.html (the +1 page switch + the tiles). quick.html "
+             "is untouched -- Quick does not sell plans. SCOPE: every country (a plan is per account, not per market); "
+             "the Paystack plans are ZAR, as every plan charge is today. FLAG-DARK: each hook returns today's value "
+             "first -- no plan code, {} extra keys, the webhook's old path, an unchanged lapse -- unless the switch is "
+             "on or the seller already holds a subscription. A seller who holds one is served whatever the switch "
+             "says afterwards (her renewals are applied, she can always cancel); the switch decides who may START one. "
+             "NOT BUILT HERE: the Agency Pro seat has no checkout of its own (RG-0167, OPEN since 26 Sep); its "
+             "Paystack plan is prepared by the same maintenance step so the seat inherits the tick box when that "
+             "checkout exists.",
+       ref="RUL-224 (amends RUL-201a), AUTO_RENEW_BRIEF.md. Built 12 Oct 2026. PROVEN that day: (1) OFF = unchanged, "
+           "by a DIFFERENTIAL run of one scenario against the pre-build source 031273f and the built source "
+           "(scripts/prove_auto_renew_off_parity.py: 37 answers, 10 Paystack requests, 4 tables -- IDENTICAL; the one "
+           "allowed difference is /flags gaining the switch's three keys, all off); (2) the lane EXECUTED on a "
+           "throwaway database with signed webhook POSTs (scripts/prove_auto_renew.py, RG-0965); (3) RENDERED in "
+           "headless Chromium at 412x915 with QA accounts on the rig (AUTO_RENEW_shots/, 22 pictures + "
+           "verify_log.txt) against a local Paystack STAND-IN. NOT PROVEN: Paystack itself -- no Paystack test key "
+           "was within reach (the server holds the live key only), so the first real subscription on Paystack is "
+           "the one step still to be seen. The switch is David's to arm (RUL-076); this entry asserts the "
+           "machinery, not the switch.")
+def rg_auto_renew_1():
+    py = repo_file("bea_main.py")
+    pay = repo_file("payments.py")
+    js = repo_file("ms.js")
+    rp = repo_file("route_policy.json")
+    dash = repo_file("dashboard.server.html")
+    if None in (py, pay, js, rp, dash):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    # ── the switch ships OFF and fails safe ──
+    if "ALTER TABLE launch_switches ADD COLUMN auto_renew INTEGER NOT NULL DEFAULT 0" not in py:
+        out.append((FAIL, "the auto_renew switch column is gone or no longer defaults OFF"))
+    if "ADD COLUMN auto_renew INTEGER NOT NULL DEFAULT 1" in py:
+        out.append((FAIL, "the auto_renew switch defaults ON -- arming it is David's act (RUL-076)"))
+    if 'return _bit_flag("auto_renew", False)' not in py:
+        out.append((FAIL, "_auto_renew_on() no longer reads the switch fail-safe to OFF"))
+    # ── OFF = today's one-off payment: the original call is still there, word for word, behind the guard ──
+    oneoff = ('    result = payments.initialize_payment(\n        email=email,\n        amount_rands=plan["amount_rands"],\n'
+              '        reference=reference,\n        metadata={\n            "type": "seller_subscription",\n'
+              '            "tier": tier,\n            "email": email,\n            "is_downgrade": is_downgrade,\n'
+              '        },\n        callback_url=_safe_callback_url(callback_url),   # SEC-GATE-1 (24 Sep 2026): own-site callback only\n    )\n')
+    if oneoff not in py:
+        out.append((FAIL, "the one-off plan payment call in /payment/seller-subscription/initialize is no longer the "
+                          "original (RUL-201's flow changed)"))
+    seg = py.split("def _auto_renew_checkout_plan(", 1)[1].split("\ndef ", 1)[0] if "def _auto_renew_checkout_plan(" in py else ""
+    order = [seg.find("if not want:"), seg.find('!= "card"'), seg.find("if not _auto_renew_on():"), seg.find("_ar_plan_code(conn, tier)")]
+    if -1 in order or order != sorted(order):
+        out.append((FAIL, "_auto_renew_checkout_plan no longer needs ALL of: tick box on, card, switch on, plan made"))
+    for needle, why in (
+            ("    _ar_plan = _auto_renew_checkout_plan(tier, bool(auto_renew), channel)\n    if _ar_plan:\n        return _auto_renew_initialize(",
+             "initialize no longer takes the plan path only when a plan code came back"),
+            ("    _ar_extra = _auto_renew_after_purchase(email, tier, metadata, result[\"data\"])", "verify lost its after-purchase step"),
+            ("            if not want and not old_code:\n                return {}", "the after-purchase step no longer returns {} for a one-off payment"),
+            ("    if _auto_renew_webhook(event_type, data):\n        return {\"status\": \"ok\"}", "the webhook lost its subscription lane"),
+            ("            _ar_state = _auto_renew_lapse_state(conn, em, _now_s)\n            if _ar_state == \"grace\":\n                continue",
+             "the lapse pass lost the wait for a renewal that is due"),
+            ("    if not u or not u[\"code\"]:\n        return None", "the lapse pass no longer leaves a seller with no subscription exactly as before"),
+            ("            if not on and not has and not failed:\n                return {}", "the subscription answer no longer stays as it was while the switch is off"),
+    ):
+        if needle not in py:
+            out.append((FAIL, "bea_main.py: " + why))
+    # ── the webhook handles the four events, a renewal applies once, 30 days from the previous end ──
+    wseg = py.split("def _auto_renew_webhook(", 1)[1].split("\ndef ", 1)[0] if "def _auto_renew_webhook(" in py else ""
+    for ev in ('"charge.success"', '"subscription.create"', '"subscription.disable", "subscription.not_renew"', '"invoice.payment_failed"'):
+        if ev not in wseg:
+            out.append((FAIL, "the webhook no longer handles %s" % ev))
+    rseg = py.split("def _ar_apply_renewal(", 1)[1].split("\ndef ", 1)[0] if "def _ar_apply_renewal(" in py else ""
+    for needle, why in (('_claim_payment_ref(conn, reference, "seller_subscription")', "a replayed renewal reference is no longer ignored"),
+                        ("base = max(prev, paid) if prev else paid", "a renewal no longer runs from the previous end date"),
+                        ("timedelta(days=30)", "a renewal no longer adds 30 days"),
+                        ("launch_redemption.grant_monthly_tuppence(conn, email, tier)", "a renewal no longer grants the month's Tuppence"),
+                        ("_paystack_paid_enough(data, plan_rands, reference)", "a renewal is applied without checking what was paid")):
+        if needle not in rseg:
+            out.append((FAIL, "renewal: " + why))
+    fseg = py.split("def _ar_on_payment_failed(", 1)[1].split("\ndef ", 1)[0] if "def _ar_on_payment_failed(" in py else ""
+    if "AND renewal_failed_at IS NULL" not in fseg or "_ar_notify_failed(*told)" not in fseg:
+        out.append((FAIL, "a failed renewal is no longer told exactly once (one Buzz + one email)"))
+    sseg = py.split("def _ar_on_stopped(", 1)[1].split("\ndef ", 1)[0] if "def _ar_on_stopped(" in py else ""
+    if "UPDATE users SET auto_renew=0 WHERE paystack_subscription_code=?" not in sseg:
+        out.append((FAIL, "subscription.disable / not_renew no longer set auto_renew=0"))
+    # ── schema, privacy, and never charging a card ourselves ──
+    for needle in ('("auto_renew", "INTEGER DEFAULT 1"), ("paystack_subscription_code", "TEXT")',
+                   '("paystack_email_token", "TEXT"), ("renewal_failed_at", "TEXT")',
+                   '"auto_renew", "paystack_subscription_code", "paystack_email_token", "renewal_failed_at"):',
+                   '@app.post("/payment/seller-subscription/cancel")', '@app.post("/payment/seller-subscription/resume")',
+                   '@app.post("/admin/auto-renew/plans")'):
+        if needle not in py:
+            out.append((FAIL, "bea_main.py lost %s" % needle[:70]))
+    if "/transaction/charge_authorization" in py or "/transaction/charge_authorization" in pay:
+        out.append((FAIL, "something charges a stored card from our side -- Paystack's subscription does the charging (brief s2)"))
+    if 'if plan:\n        payload["plan"] = plan' not in pay or "    plan: str | None = None,\n    channels: list | None = None,\n" not in pay:
+        out.append((FAIL, "payments.initialize_payment no longer sends a plan only when one is given"))
+    # ── the routes are declared, the two seller routes bound to the session ──
+    try:
+        routes = {r["key"]: r for r in json.loads(rp)["routes"]}
+    except Exception:
+        routes = {}
+    for k in ("POST /payment/seller-subscription/cancel", "POST /payment/seller-subscription/resume"):
+        r = routes.get(k) or {}
+        if r.get("level") != "user" or {"name": "email", "in": "json"} not in (r.get("bind") or []):
+            out.append((FAIL, "route_policy.json: %s is not a user route bound to the session email" % k))
+    if (routes.get("POST /admin/auto-renew/plans") or {}).get("level") != "admin":
+        out.append((FAIL, "route_policy.json: the plan maintenance route is not admin-only"))
+    # ── the app: tick box default ON, shown only when the switch is on; the old checkout still there ──
+    for needle, why in (
+            ("function _arOn(){ try{ return !!(window.FEATURES && window.FEATURES.auto_renew); }catch(e){ return false; } }", "the app no longer asks the switch"),
+            ("'<input type=\"checkbox\" id=\"ar-tick\" checked ", "the tick box is gone or no longer ticked by default"),
+            ("const _AR_TICK_LABEL  = 'Renew automatically each month — cancel any time with one tap.';", "the tick box label changed"),
+            ("const _AR_ACCEPT_LINE = 'Renews automatically every month until you cancel. Cancelling takes one tap and your paid days still run to the end.';",
+             "the disclosure line under the tick box changed (CPA s14 / ECTA s43)"),
+            ("const _AR_NOCARD_LINE = 'Automatic renewal needs a card payment';", "the non-card line is gone"),
+            ("tick.disabled = !card;", "the tick box is no longer disabled for a non-card payment"),
+            ("function _arQuery(ar){ return (ar && ar.autoRenew) ? '&auto_renew=1&channel=card' : ''; }", "the checkout request changed while the switch is off"),
+            ("You'll be redirected to Paystack to complete payment.", "the old plan confirm (the switch-off checkout) is gone"),
+            ("btn('Cancel renewal', '_arCancelRenewal')", "the plan card lost Cancel renewal"),
+            ("btn('Renew again', '_arRenewAgain')", "the plan card lost Renew again"),
+            ("if (DEMO_MODE) { showToast('This is a demo. Sign in on trustsquare.co to manage a real plan.'); return; }", "the new calls lost their DEMO_MODE guard"),
+    ):
+        if needle not in js:
+            out.append((FAIL, "ms.js: " + why))
+    if js.count("if (_arOn() && _arTierReady(") < 3:
+        out.append((FAIL, "ms.js: a plan checkout surface lost the tick box (Plans screen, Subscription screen + Wallet, onboarding)"))
+    if js.count("const _arl = _arPlanLine(d, t.id);") != 2 or "try { _arPlansScreenLine(d); } catch(_) {}" not in js:
+        out.append((FAIL, "ms.js: a plan surface lost the 'Renews on <date>' line (Subscription screen, Wallet, Plans screen)"))
+    q = repo_file("quick.html")
+    if q is not None and ("auto_renew" in q or "AUTO-RENEW" in q):
+        out.append((FAIL, "quick.html carries auto-renew code -- Quick does not sell plans (brief s7)"))
+    if ('id="ls_m_autorenew"' not in dash or "ls_m_autorenew:'auto_renew'" not in dash or "auto_renew:!!S.auto_renew" not in dash
+            or "id!=='ls_m_autorenew');" not in dash):
+        out.append((FAIL, "the +1 page lost the Automatic plan renewal switch"))
+    for tile in ("renewals_month", "renewals_failed_month", "renewals_cancelled_month", "auto_renew_share"):
+        if ('"%s"' % tile) not in py or ("'%s'" % tile) not in dash:
+            out.append((FAIL, "the dashboard tile %s is not both served and drawn" % tile))
+    for f in ("scripts/prove_auto_renew.py", "scripts/prove_auto_renew_off_parity.py", "scripts/paystack_plans_sync.py"):
+        if repo_file(f) is None:
+            out.append((FAIL, f + " is gone"))
+    if not out:
+        return [(INFO, "switch ships OFF and fails safe; the one-off payment call is the original; tick box default ON only "
+                       "behind the switch; cancel route declared and session-bound; the webhook handles the four events")]
+    return out
+
+
+@entry("RG-0965", "AUTO-RENEW-1 EXECUTED: the renewal lane holds against the real bea_main.py on a throwaway database, with "
+       "signed webhook POSTs through the security gate (scripts/prove_auto_renew.py)",
+       LOCKED, fixed_on="2026-10-12",
+       scope="scripts/prove_auto_renew.py imports bea_main with a temp SQLite file and an in-process Paystack stand-in "
+             "(no network, no money) and proves: A switch OFF -- same Paystack request, same answers, no subscription, "
+             "no new write, the lapse of RUL-201 unchanged; B arming makes each plan once and adopts an existing one; "
+             "C tick box ON opens a subscription, tick box OFF or a non-card payment is the one-off payment; D a "
+             "renewal runs 30 days from the previous end, grants the month's Tuppence once, a replayed reference is "
+             "ignored, and a plan whose renewal is due is not ended a day early; E a failed renewal is told once (one "
+             "Buzz + one email) and the plan ends as RUL-201 ends it; F subscription.disable / not_renew set "
+             "auto_renew=0 and nothing else; G Cancel renewal acts only as the signed-in session; H nobody is billed "
+             "for two plans, and a move to Free or a closed account stops the subscription. 88 checks.",
+       ref="RUL-224. Built and passing 12 Oct 2026 (cloud workspace, Python 3.13). The stand-in follows Paystack's "
+           "published API; Paystack itself is not exercised here (see RG-0964 ref). Heavy check (~20 s: it imports the "
+           "app) -- known cost, one process.")
+def rg_auto_renew_executed():
+    proof = os.path.join(REPO, "scripts", "prove_auto_renew.py")
+    if not os.path.exists(proof):
+        return [(FAIL, "scripts/prove_auto_renew.py is gone -- nothing executes the renewal lane any more")]
+    ok, blind, det = _harness([_app_python(), proof], timeout=170, cwd=REPO)
+    if blind:
+        return [(INFO, det)]
+    if not ok:
+        return [(FAIL, "prove_auto_renew.py fails: " + str(det)[-260:])]
+    if "ALL AUTO-RENEW-1 CHECKS PASS" not in str(det):
+        return [(FAIL, "prove_auto_renew.py exited 0 without its pass line -- it did not run its checks")]
+    return [(INFO, "the renewal lane proof passes: OFF unchanged, plans made once, renewal +30 days once, cancel session-bound")]
+
+
+@entry("RG-0966", "AUTO-RENEW-1 LIVE: the deployed app reports the auto-renew switch (OFF until David arms it), serves the "
+       "tick-box code, and refuses a stranger on Cancel renewal",
+       OPEN,
+       scope="LIVE probes of trustsquare.co: /flags carries auto_renew + effective.auto_renew + auto_renew_tiers; the "
+             "served ms.js carries _arOn / the tick box; POST /payment/seller-subscription/cancel with no sign-in is "
+             "refused. OPEN until the build is deployed; when it passes it prints READY TO LOCK. Whether the switch is "
+             "armed is reported as INFO, never judged -- arming is David's act.",
+       ref="RUL-224, AUTO_RENEW_BRIEF.md s6.5 (deploy through the normal gate with the switch OFF). Opened 12 Oct 2026 "
+           "with the build commit; to be LOCKED after the deploy lands and these probes pass.")
+def rg_auto_renew_live():
+    out = []
+    try:
+        f = json.loads(_get("/flags"))
+    except ProbeOffline:
+        raise
+    except Exception as e:
+        return [(FAIL, "LIVE /flags not answering: %s" % str(e)[:120])]
+    if "auto_renew" not in f or "auto_renew" not in (f.get("effective") or {}) or "auto_renew_tiers" not in f:
+        out.append((FAIL, "LIVE /flags does not report the auto-renew switch (not deployed yet?)"))
+    live = _get("/static/ms.js")
+    if "function _arOn()" not in live or 'id="ar-tick" checked' not in live:
+        out.append((FAIL, "the live ms.js does not carry the tick box yet (not deployed yet?)"))
+    code = _post_status("/payment/seller-subscription/cancel", b"{}")
+    if code not in (401, 403):
+        out.append((FAIL, "LIVE Cancel renewal answered %r to a stranger (expected a refusal)" % code))
+    if out:
+        return out
+    armed = bool(f.get("auto_renew"))
+    return [(INFO, "deployed; the switch is %s; a stranger is refused on Cancel renewal"
+                   % ("ARMED live (David's act) with plans ready for %s" % (", ".join(f.get("auto_renew_tiers") or []) or "no tier yet")
+                      if armed else "OFF (the one-off payment of RUL-201 is in force)"))]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

@@ -1362,6 +1362,11 @@ def run_migrations(conn):
         # Default OFF = no limit anywhere and the app shows only a count. Arming it is DAVID'S act,
         # from the +1 page or POST /admin/flags {"circle_caps": true}; reversible, no deploy.
         "ALTER TABLE launch_switches ADD COLUMN circle_caps INTEGER NOT NULL DEFAULT 0",
+        # AUTO-RENEW-1 (RUL-224, 12 Oct 2026): paid plans renew automatically as the standard, one tick box
+        # for month-by-month. Default OFF = today's one-off 30-day payment, untouched. Arming it is DAVID'S
+        # act (RUL-076), from the +1 page or POST /admin/flags {"auto_renew": true}; reversible, no deploy.
+        # Switching it off again stops NEW subscriptions only -- a seller who holds one keeps being served.
+        "ALTER TABLE launch_switches ADD COLUMN auto_renew INTEGER NOT NULL DEFAULT 0",
         # KEEP-CHOICE-1 (RUL-176 standard, 27 Sep 2026): when a plan holds fewer than she has, SHE
         # chooses what stays active. circle_grandfather = her regulars count when the limits were
         # switched on (nobody is cut off by the switch); cleared when her plan is lowered.
@@ -1581,6 +1586,18 @@ def run_migrations(conn):
     # in every city of HER country, on every plan, free. NULL / 'local' = her own city only (the old behaviour).
     if "reach" not in listing_cols_sm:
         conn.execute("ALTER TABLE listings ADD COLUMN reach TEXT")
+    # AUTO-RENEW-1 (RUL-224, 12 Oct 2026): a paid plan renews automatically as the standard.
+    # auto_renew        1 = renew (the default, the tick box); 0 = she cancelled renewal or paid month-by-month.
+    #                   It only means something while paystack_subscription_code is set.
+    # paystack_subscription_code / paystack_email_token   the Paystack subscription her first card payment
+    #                   opened; both are needed to switch it off or back on. Never sent to any app.
+    # renewal_failed_at set when a renewal payment did not go through (she is told once); cleared by the
+    #                   next renewal or when the plan ends.
+    _ar_user_cols = {r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+    for _arc, _ard in (("auto_renew", "INTEGER DEFAULT 1"), ("paystack_subscription_code", "TEXT"),
+                       ("paystack_email_token", "TEXT"), ("renewal_failed_at", "TEXT")):
+        if _arc not in _ar_user_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN %s %s" % (_arc, _ard))
 
     # ── EULA acceptance gate (Session 37) ────────────────────────
     # eula_accepted_at must be non-NULL before a seller can publish.
@@ -1926,8 +1943,13 @@ def _apply_pending_downgrades():
             "AND pending_downgrade_tier IS NULL AND billing_period_end IS NOT NULL "
             "AND billing_period_end <= ? "
             "AND COALESCE(is_superuser, 0) = 0", (_now_s,)).fetchall()
+        _ar_ended = []
         for row in lapsed:
             em = (row["email"] or "").lower()
+            # AUTO-RENEW-1 (RUL-224d): None for a seller who holds no subscription -- she lapses exactly as before.
+            _ar_state = _auto_renew_lapse_state(conn, em, _now_s)
+            if _ar_state == "grace":
+                continue          # her card is charged for the next month around now; a failed charge ends the wait
             upd = conn.execute(
                 "UPDATE users SET seller_tier='free', slot_limit=?, billing_period_end=NULL "
                 "WHERE LOWER(email)=? AND billing_period_end IS NOT NULL "
@@ -1945,8 +1967,12 @@ def _apply_pending_downgrades():
                 break
             _plan_changed(conn, row["email"], new_tier, lowered=True)
             _log.info("AUD-016: paid period over, plan lapsed: %s -> %s", em, new_tier)
+            if _ar_state:
+                _ar_ended.append(em)
         if lapsed:
             conn.commit()
+        for _ar_em in _ar_ended:
+            _auto_renew_plan_ended(_ar_em)   # AUTO-RENEW-1: switch the subscription off; tell her once if a renewal never came
     except Exception as exc:
         _log.warning("Pending downgrade worker error: %s", exc)
     finally:
@@ -7998,7 +8024,10 @@ def get_user(email: str, _key: str = Depends(auth.require_api_key),
     # C1/H2 (audit 16 Jul 2026): never expose identity-document internals over this
     # public-by-email read. Hashed ID number, legal ID name and the AI match score
     # are PII; verified STATUS still travels via id_verified_at.
-    for _sensitive in ("id_number_hash", "id_name", "id_ai_score"):
+    for _sensitive in ("id_number_hash", "id_name", "id_ai_score",
+                       # AUTO-RENEW-1: the subscription code and token are the server's; the plan card reads
+                       # its renewal state from /users/{email}/subscription, so this answer stays as it was.
+                       "auto_renew", "paystack_subscription_code", "paystack_email_token", "renewal_failed_at"):
         data.pop(_sensitive, None)
     return data
 
@@ -8038,7 +8067,7 @@ def get_user_subscription(email: str):
             _resting_n = 0
     finally:
         conn.close()
-    return {
+    _sub_out = {
         "circle_caps_on": bool(_cst and _cst["on"]),
         "circle_limit": (_cst or {}).get("limit"),
         "circle_allowance": (_cst or {}).get("allowance"),
@@ -8056,6 +8085,10 @@ def get_user_subscription(email: str):
         "billing_period_end": row["billing_period_end"],
         "usd_per_month": plan["usd"],
     }
+    # AUTO-RENEW-1 (RUL-224): renewal state for the plan card. {} while the switch is OFF and she holds no
+    # subscription, so the answer is then exactly what it always was.
+    _sub_out.update(_auto_renew_status(email))
+    return _sub_out
 
 @app.get("/sellers/credentials/{listing_id}")
 def seller_public_credentials(listing_id: int):
@@ -8711,6 +8744,7 @@ def close_user_account(email: str,
         raise HTTPException(status_code=400, detail=str(exc))
     finally:
         conn.close()
+    _auto_renew_stop(email, "account closed", forget=True)   # AUTO-RENEW-1: a closed account is never charged again
     if result["forfeited"]:
         result["message"] = ("Account closed. Tuppence forfeited under EULA 14.2 "
                              f"({result['cause']}).")
@@ -10630,6 +10664,12 @@ async def paystack_webhook(request: Request):
     event_type = event.get("event")
     data = event.get("data", {})
 
+    # AUTO-RENEW-1 (RUL-224): subscription.create, a renewal charge (charge.success carrying one of our plans),
+    # invoice.payment_failed, subscription.disable / subscription.not_renew. False for everything else --
+    # and for every event while no plan and no subscription exists -- which then runs the path below as before.
+    if _auto_renew_webhook(event_type, data):
+        return {"status": "ok"}
+
     if event_type == "charge.success":
         reference = data.get("reference", "")
         metadata  = data.get("metadata", {}) or {}
@@ -10740,7 +10780,7 @@ def list_subscription_tiers():
 
 
 @app.post("/payment/seller-subscription/initialize")
-def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
+def init_seller_subscription(email: str, tier: str, callback_url: str = "", auto_renew: int = 0, channel: str = ""):
     """Initialize a Paystack payment for a seller subscription tier change.
     tier: starter | pro  (Simpler Model, Jun 2026 -- the only payable tiers)
     Upgrades: charged immediately.
@@ -10786,6 +10826,11 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = ""):
     is_downgrade = _tier_rank(tier) < _tier_rank(current_tier)
 
     reference = f"ms_sub_{tier}_{uuid.uuid4().hex[:12]}"
+    # AUTO-RENEW-1 (RUL-224): a plan code only when the seller left the tick box on, pays by card, the switch
+    # is ON and the tier's plan exists. Otherwise None, and the one-off payment below runs exactly as before.
+    _ar_plan = _auto_renew_checkout_plan(tier, bool(auto_renew), channel)
+    if _ar_plan:
+        return _auto_renew_initialize(email, tier, plan, is_downgrade, reference, callback_url, _ar_plan)
     result = payments.initialize_payment(
         email=email,
         amount_rands=plan["amount_rands"],
@@ -10897,8 +10942,903 @@ def verify_seller_subscription(reference: str):
     _log.info("Seller subscription %s: %s → %s (ref %s, effective: %s)",
               "downgrade scheduled" if is_downgrade else "upgraded",
               email, tier, reference, effective)
+    # AUTO-RENEW-1 (RUL-224): {} for a one-off payment by a seller who holds no subscription, so the answer
+    # below is then exactly what it always was.
+    _ar_extra = _auto_renew_after_purchase(email, tier, metadata, result["data"])
     return {"status": "ok", "email": email, "tier": tier, "label": plan["label"],
-            "slot_limit": slot_limit, "is_downgrade": is_downgrade, "effective": effective}
+            "slot_limit": slot_limit, "is_downgrade": is_downgrade, "effective": effective, **_ar_extra}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# AUTO-RENEW-1 (RUL-224, David 11 Oct 2026; built 12 Oct 2026)
+# "It should be shown as auto-renew standard with an manual change of a tick box to change it to monthly."
+#
+# A paid plan renews automatically every month on the card used at checkout. Paystack does the
+# charging (one plan per tier, made once by maintenance; a subscription opened by the first card
+# payment); this server reads Paystack's events and can switch a subscription off or back on. It never
+# charges a stored card itself.
+#
+# FLAG-DARK behind launch_switches.auto_renew (default 0). Arming is David's act (RUL-076). While the
+# switch is OFF the checkout never sends a plan code, so no subscription can exist, and every hook
+# below returns its "today's path" value before it writes, sends or calls anything:
+#   _auto_renew_checkout_plan -> None      (the one-off 30-day payment of RUL-201, untouched)
+#   _auto_renew_after_purchase -> {}       (the verify answer, untouched)
+#   _auto_renew_webhook -> False           (the webhook's old path, untouched)
+#   _auto_renew_lapse_state -> None        (the lapse pass, untouched)
+#   _auto_renew_status -> {}               (the subscription answer, untouched)
+# A seller who already HOLDS a subscription is served whatever the switch says afterwards: her
+# renewals are applied and she can always cancel. The switch decides who may START one.
+#
+# Dates. Paystack bills "monthly" on the same day each month (28-31 days apart); a paid period here is
+# 30 days. A renewal therefore runs from the later of the previous end date and the payment, plus 30
+# days -- nobody loses a paid day and the two calendars never drift apart. A plan whose renewal is
+# due is held for _AUTO_RENEW_GRACE_H past its end date so a 31-day month can not lapse a seller the
+# day before her card is charged. A failed renewal ends that wait at once.
+# ══════════════════════════════════════════════════════════════════════════════
+_AUTO_RENEW_GRACE_H = 72
+
+
+def _auto_renew_on() -> bool:
+    """Fail-safe read of launch_switches.auto_renew: on ANY doubt it is OFF (today's one-off payment)."""
+    return _bit_flag("auto_renew", False)
+
+
+def _ar_now_s() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _ar_key_mode() -> str:
+    """'live' | 'test' | 'none'. A plan made with a test key does not exist for the live key, so every
+    stored plan carries the mode it was made in and only a matching one is ever used."""
+    k = os.getenv("PAYSTACK_SECRET_KEY", "")
+    return "live" if k.startswith("sk_live") else ("test" if k.startswith("sk_test") else "none")
+
+
+def _ar_plan_specs() -> dict:
+    """The Paystack plans this lane needs. Amounts come from _SELLER_SUB_TIERS -- PRICING_CANON's source
+    of truth -- never typed twice. `tier` is the seller tier a payment on that plan buys; the Agency Pro
+    seat (RUL-048, the $5 price point) has its plan prepared here, and gains a `tier` when its own
+    checkout exists (regression ledger RG-0167)."""
+    t = _SELLER_SUB_TIERS
+    return {
+        "starter":     {"name": "TrustSquare Starter",         "amount_rands": t["starter"]["amount_rands"], "tier": "starter"},
+        "pro":         {"name": "TrustSquare Pro",             "amount_rands": t["pro"]["amount_rands"],     "tier": "pro"},
+        "agency_seat": {"name": "TrustSquare Agency Pro seat", "amount_rands": t["starter"]["amount_rands"], "tier": None},
+    }
+
+
+def _ar_ensure_tables(conn) -> None:
+    """paystack_plans: one row per plan this server made or adopted (current rows have active=1; a plan
+    replaced after a price change stays, inactive, so its subscribers' renewals are still recognised).
+    subscription_events: the operational record behind the dashboard tiles.
+    paystack_stop_queue: a subscription that must be switched off but Paystack could not be reached."""
+    conn.execute("""CREATE TABLE IF NOT EXISTS paystack_plans (
+        plan_code     TEXT PRIMARY KEY,
+        tier          TEXT NOT NULL,
+        key_mode      TEXT NOT NULL,
+        amount_kobo   INTEGER NOT NULL,
+        plan_interval TEXT NOT NULL DEFAULT 'monthly',
+        active        INTEGER NOT NULL DEFAULT 1,
+        created_at    TEXT NOT NULL
+    )""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS subscription_events (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        email             TEXT NOT NULL,
+        event             TEXT NOT NULL,
+        tier              TEXT,
+        reference         TEXT,
+        subscription_code TEXT,
+        detail            TEXT,
+        created_at        TEXT NOT NULL
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_sub_events_event ON subscription_events(event, created_at)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS paystack_stop_queue (
+        subscription_code TEXT PRIMARY KEY,
+        email_token       TEXT NOT NULL,
+        email             TEXT,
+        why               TEXT,
+        attempts          INTEGER NOT NULL DEFAULT 0,
+        queued_at         TEXT NOT NULL
+    )""")
+
+
+def _ar_event(conn, email, event, tier=None, reference=None, code=None, detail=None) -> None:
+    """One operational line on the caller's open transaction. Never raises."""
+    try:
+        conn.execute(
+            "INSERT INTO subscription_events (email, event, tier, reference, subscription_code, detail, created_at) "
+            "VALUES (?,?,?,?,?,?,?)",
+            ((email or "").strip().lower(), event, tier, reference, code, (detail or "")[:300] or None, _ar_now_s()))
+    except Exception as exc:
+        _log.warning("AUTO-RENEW-1: event %s not recorded: %s", event, exc)
+
+
+def _ar_flag_int(v, default=1) -> int:
+    try:
+        return int(v) if v is not None else default
+    except (TypeError, ValueError):
+        return default
+
+
+def _ar_plan_code(conn, product: str):
+    """The CURRENT plan code for a product in this key mode, or None. A plan whose amount no longer
+    matches the tier price is not current: the checkout falls back to the one-off payment until
+    maintenance has made the plan for the new price."""
+    spec = _ar_plan_specs().get(product)
+    if not spec:
+        return None
+    try:
+        r = conn.execute(
+            "SELECT plan_code FROM paystack_plans WHERE tier=? AND key_mode=? AND active=1 AND amount_kobo=?",
+            (product, _ar_key_mode(), int(round(spec["amount_rands"] * 100)))).fetchone()
+    except Exception:
+        return None
+    return r["plan_code"] if r else None
+
+
+def _ar_plan_row(conn, plan_code: str):
+    """(product, amount in rands) for a plan code this server made -- current or retired -- else None."""
+    if not plan_code:
+        return None
+    try:
+        r = conn.execute("SELECT tier, amount_kobo FROM paystack_plans WHERE plan_code=? AND key_mode=?",
+                         (plan_code, _ar_key_mode())).fetchone()
+    except Exception:
+        return None
+    return (r["tier"], int(r["amount_kobo"] or 0) / 100.0) if r else None
+
+
+def _auto_renew_ready_tiers() -> list:
+    """The paid tiers a checkout can open a subscription for right now: the switch is ON and the tier's
+    plan exists. [] while the switch is OFF (no query is made)."""
+    if not _auto_renew_on():
+        return []
+    try:
+        conn = database.get_db()
+        try:
+            return [p for p, spec in _ar_plan_specs().items() if spec["tier"] and _ar_plan_code(conn, p)]
+        finally:
+            conn.close()
+    except Exception:
+        return []
+
+
+def _auto_renew_sync_plans(dry_run: bool = False) -> dict:
+    """MAINTENANCE -- make sure Paystack holds one monthly plan per product and that this server knows
+    its code. Run by scripts/paystack_plans_sync.py, by the arming of the switch, and by the hourly
+    loop while the switch is ON and a plan is missing. Never run by a checkout.
+
+    Idempotent: a product whose current plan is already known is left alone; a plan that already
+    exists on the Paystack account under the same name, amount and interval is ADOPTED rather than
+    made twice; a plan is only created when Paystack's own list was read and did not hold it."""
+    mode = _ar_key_mode()
+    out = {"ok": True, "key_mode": mode, "dry_run": bool(dry_run), "plans": []}
+    if mode == "none":
+        out["ok"] = False
+        out["reason"] = "PAYSTACK_SECRET_KEY is not set on this server"
+        return out
+    remote = None
+    conn = database.get_db()
+    try:
+        _ar_ensure_tables(conn)
+        for product, spec in _ar_plan_specs().items():
+            kobo = int(round(spec["amount_rands"] * 100))
+            known = _ar_plan_code(conn, product)
+            if known:
+                out["plans"].append({"product": product, "plan_code": known, "state": "known"})
+                continue
+            if dry_run:
+                out["plans"].append({"product": product, "plan_code": None, "state": "missing"})
+                continue
+            if remote is None:
+                remote = payments.list_plans()
+            if not remote.get("ok"):
+                out["ok"] = False
+                out["plans"].append({"product": product, "plan_code": None, "state": "failed",
+                                     "reason": "Paystack's plan list could not be read: %s" % remote.get("reason")})
+                continue
+            code, state = None, None
+            for p in remote["plans"]:
+                if (p["name"] == spec["name"] and p["amount"] == kobo and p["interval"] == "monthly"
+                        and p["currency"] == "ZAR" and not p["gone"] and p["plan_code"]):
+                    code, state = p["plan_code"], "adopted"
+                    break
+            if not code:
+                made = payments.create_plan(spec["name"], spec["amount_rands"], "monthly", "ZAR")
+                if not made.get("ok"):
+                    out["ok"] = False
+                    out["plans"].append({"product": product, "plan_code": None, "state": "failed",
+                                         "reason": made.get("reason")})
+                    continue
+                code, state = made["plan_code"], "created"
+            conn.execute("UPDATE paystack_plans SET active=0 WHERE tier=? AND key_mode=?", (product, mode))
+            conn.execute(
+                "INSERT INTO paystack_plans (plan_code, tier, key_mode, amount_kobo, plan_interval, active, created_at) "
+                "VALUES (?,?,?,?,?,1,?) "
+                "ON CONFLICT(plan_code) DO UPDATE SET tier=excluded.tier, key_mode=excluded.key_mode, "
+                "amount_kobo=excluded.amount_kobo, plan_interval=excluded.plan_interval, active=1",
+                (code, product, mode, kobo, "monthly", _ar_now_s()))
+            conn.commit()
+            out["plans"].append({"product": product, "plan_code": code, "state": state})
+            _log.warning("AUTO-RENEW-1: Paystack plan %s for %s (%s, R%.2f a month, %s key)",
+                         state, product, code, spec["amount_rands"], mode)
+    finally:
+        conn.close()
+    return out
+
+
+def _auto_renew_checkout_plan(tier: str, want: bool, channel: str = ""):
+    """The plan code to start THIS checkout with, or None for today's one-off payment.
+    None unless every one of these holds: the seller left the tick box on, she is paying by card
+    (no other channel gives Paystack a card it may charge again), the switch is ON, and the tier's
+    plan exists. The first test is the cheapest and it is the one every call fails while the app
+    does not send the tick box at all."""
+    if not want:
+        return None
+    if (channel or "card").strip().lower() != "card":
+        return None
+    if not _auto_renew_on():
+        return None
+    try:
+        conn = database.get_db()
+        try:
+            return _ar_plan_code(conn, tier)
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+
+def _auto_renew_initialize(email, tier, plan, is_downgrade, reference, callback_url, plan_code):
+    """The checkout with the tick box ON: the same Paystack transaction as the one-off payment, started
+    with the tier's plan code so Paystack opens the subscription on the first successful card payment."""
+    result = payments.initialize_payment(
+        email=email,
+        amount_rands=plan["amount_rands"],
+        reference=reference,
+        metadata={
+            "type": "seller_subscription",
+            "tier": tier,
+            "email": email,
+            "is_downgrade": is_downgrade,
+            "auto_renew": True,
+            "plan_code": plan_code,
+        },
+        callback_url=_safe_callback_url(callback_url),
+        plan=plan_code,
+        channels=["card"],
+    )
+    if result.get("status"):
+        return {
+            "status": "ok",
+            "reference": reference,
+            "authorization_url": result["data"]["authorization_url"],
+            "tier": tier,
+            "label": plan["label"],
+            "amount_rands": plan["amount_rands"],
+            "is_downgrade": is_downgrade,
+            "auto_renew": True,
+        }
+    raise HTTPException(status_code=400, detail="Subscription payment initialization failed")
+
+
+def _ar_queue_stop(conn, code, token, email, why) -> None:
+    try:
+        conn.execute(
+            "INSERT INTO paystack_stop_queue (subscription_code, email_token, email, why, attempts, queued_at) "
+            "VALUES (?,?,?,?,0,?) ON CONFLICT(subscription_code) DO NOTHING",
+            (code, token or "", (email or "").lower(), (why or "")[:200], _ar_now_s()))
+    except Exception as exc:
+        _log.error("AUTO-RENEW-1: could not queue the stop of %s: %s", code, exc)
+
+
+def _ar_stop_code(conn, code, token, email, why) -> bool:
+    """Switch one subscription off at Paystack; queue it for the hourly retry when Paystack can not be
+    reached or refuses. True = Paystack confirmed it is off."""
+    if not code:
+        return True
+    res = payments.disable_subscription(code, token or "")
+    if res.get("ok"):
+        return True
+    _ar_queue_stop(conn, code, token, email, why)
+    _log.warning("AUTO-RENEW-1: stop of %s queued for retry (%s)", code, res.get("reason"))
+    return False
+
+
+def _auto_renew_stop(email: str, why: str, forget: bool = False, plan_code: str = None,
+                     event: str = "cancelled") -> dict:
+    """Switch off the subscription a seller holds because her plan is ending by her own act or by ours
+    (moving to Free, account closed, plan ended, replaced by another purchase). Returns {} and does
+    nothing at all when she holds none -- which is every seller while the switch has never been armed.
+    `forget` also clears the stored code and any failed-renewal mark once the plan itself is over.
+    `plan_code` lets a renewal that arrived for a seller with no stored code find the subscription that
+    charged her. `event` is the line recorded when renewal was still on (None records nothing: the
+    caller has already recorded why the plan ended)."""
+    email = (email or "").strip().lower()
+    if not email:
+        return {}
+    conn = database.get_db()
+    try:
+        try:
+            u = conn.execute(
+                "SELECT auto_renew, paystack_subscription_code AS code, paystack_email_token AS tok, seller_tier "
+                "FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        except Exception:
+            return {}
+        if not u:
+            return {}
+        code, tok = u["code"], u["tok"]
+        if not code and plan_code:
+            found = payments.find_subscription(email, plan_code)
+            if found.get("ok"):
+                code, tok = found["subscription_code"], found["email_token"]
+        if not code:
+            return {}
+        _ar_ensure_tables(conn)
+        confirmed = _ar_stop_code(conn, code, tok, email, why)
+        if event and (_ar_flag_int(u["auto_renew"]) == 1 or not u["code"]):
+            _ar_event(conn, email, event, tier=u["seller_tier"], code=code, detail=why)
+        if forget:
+            conn.execute("UPDATE users SET auto_renew=0, paystack_subscription_code=NULL, paystack_email_token=NULL, "
+                         "renewal_failed_at=NULL WHERE LOWER(email)=?", (email,))
+        else:
+            conn.execute("UPDATE users SET auto_renew=0 WHERE LOWER(email)=?", (email,))
+        conn.commit()
+        _log.info("AUTO-RENEW-1: renewal stopped for %s (%s; Paystack %s)", email, why,
+                  "confirmed" if confirmed else "queued")
+        return {"stopped": True, "confirmed": confirmed}
+    except Exception as exc:
+        _log.error("AUTO-RENEW-1: stop failed for %s (%s): %s", email, why, exc)
+        return {"stopped": False}
+    finally:
+        conn.close()
+
+
+def _auto_renew_after_purchase(email: str, tier: str, metadata, data) -> dict:
+    """Runs once a plan payment has been applied by /payment/seller-subscription/verify. Returns the
+    extra keys for that answer -- {} for a one-off payment by a seller who holds no subscription, which
+    is every payment while the switch is OFF.
+
+    Tick box ON: finds the subscription Paystack just opened and stores its code and token (if
+    Paystack has not opened it yet, the subscription.create webhook stores it a moment later).
+    Any plan purchase by a seller who already holds a DIFFERENT subscription switches the old one off,
+    so nobody is ever billed for two plans."""
+    try:
+        md = metadata if isinstance(metadata, dict) else {}
+        plan_code = str(md.get("plan_code") or "").strip()
+        want = bool(md.get("auto_renew")) and bool(plan_code)
+        conn = database.get_db()
+        try:
+            try:
+                u = conn.execute(
+                    "SELECT paystack_subscription_code AS code, paystack_email_token AS tok, billing_period_end "
+                    "FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+            except Exception:
+                return {}
+            old_code = (u["code"] if u else None) or None
+            old_tok = (u["tok"] if u else None) or None
+            if not want and not old_code:
+                return {}                                   # today's one-off payment: nothing to do
+            _ar_ensure_tables(conn)
+            if not want:
+                # a one-off payment by a seller who held a subscription: the new purchase replaces it
+                _ar_stop_code(conn, old_code, old_tok, email, "replaced by a one-off plan payment")
+                conn.execute("UPDATE users SET auto_renew=0, paystack_subscription_code=NULL, "
+                             "paystack_email_token=NULL, renewal_failed_at=NULL WHERE LOWER(email)=?", (email,))
+                _ar_event(conn, email, "cancelled", tier=tier, code=old_code,
+                          detail="replaced by a one-off plan payment")
+                conn.commit()
+                return {"auto_renew": False}
+            cust = (data or {}).get("customer") or {}
+            cust_email = str((cust.get("email") if isinstance(cust, dict) else "") or email).strip().lower()
+            found = payments.find_subscription(cust_email, plan_code)
+            if found.get("ok"):
+                new_code, new_tok = found["subscription_code"], found["email_token"]
+                conn.execute("UPDATE users SET auto_renew=1, paystack_subscription_code=?, paystack_email_token=?, "
+                             "renewal_failed_at=NULL WHERE LOWER(email)=?", (new_code, new_tok, email))
+                if new_code != old_code:
+                    _ar_event(conn, email, "created", tier=tier, reference=str((data or {}).get("reference") or ""),
+                              code=new_code)
+                    if old_code:
+                        _ar_stop_code(conn, old_code, old_tok, email, "replaced by a new subscription")
+            else:
+                conn.execute("UPDATE users SET auto_renew=1, renewal_failed_at=NULL WHERE LOWER(email)=?", (email,))
+            conn.commit()
+            end = conn.execute("SELECT billing_period_end FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+            return {"auto_renew": True, "renews_on": (end["billing_period_end"] if end else None)}
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.error("AUTO-RENEW-1: after-purchase step failed for %s: %s", email, exc)
+        return {}
+
+
+def _ar_notify_failed(email: str, tier: str, runs_to) -> None:
+    """The ONE Buzz (the free web-push lane, RUL-122) and the ONE email for a renewal that did not go
+    through. Called once per failed renewal -- the caller has already claimed renewal_failed_at."""
+    label = _SELLER_SUB_TIERS.get(tier or "", {}).get("label") or "paid"
+    day = str(runs_to or "")[:10]
+    over = bool(day) and str(runs_to) <= _ar_now_s()
+    if not day:
+        when = "so it has ended"
+    elif over:
+        when = "so it ended on " + day
+    else:
+        when = "so it ends on " + day
+    line = ("We could not take this month's payment for your %s plan, %s. Nothing more will be charged. "
+            "Adverts above the Free limit rest - nothing is deleted - and choosing the plan again brings "
+            "them all back." % (label, when))
+    try:
+        conn = database.get_db()
+        try:
+            _push_to_seller(conn, email, "Your plan renewal did not go through", line, timeout=4)
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("AUTO-RENEW-1: renewal-failed Buzz not sent to %s: %s", email, exc)
+    try:
+        _send_system_email(email, "Your TrustSquare plan renewal did not go through",
+                           _lc_email_html("Your plan renewal did not go through", line, "Open TrustSquare"))
+    except Exception as exc:
+        _log.warning("AUTO-RENEW-1: renewal-failed email not sent to %s: %s", email, exc)
+
+
+def _auto_renew_lapse_state(conn, em: str, now_s: str):
+    """For the lapse pass (RUL-201). None = this seller holds no subscription: lapse her exactly as
+    before. 'grace' = her renewal is due and nothing has failed: hold for _AUTO_RENEW_GRACE_H.
+    'ended' = she held a subscription and the plan is now over (cancelled, failed, or the wait ran out)."""
+    try:
+        u = conn.execute(
+            "SELECT auto_renew, paystack_subscription_code AS code, renewal_failed_at, billing_period_end "
+            "FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+    except Exception:
+        return None
+    if not u or not u["code"]:
+        return None
+    if _ar_flag_int(u["auto_renew"]) == 1 and not u["renewal_failed_at"]:
+        end = _lc_parse_ts(u["billing_period_end"])
+        now = _lc_parse_ts(now_s)
+        if end and now and now < end + timedelta(hours=_AUTO_RENEW_GRACE_H):
+            return "grace"
+    return "ended"
+
+
+def _auto_renew_plan_ended(email: str) -> None:
+    """After the lapse pass ended the plan of a seller who held a subscription: switch the
+    subscription off at Paystack so the card is never tried again a month later, forget its code, and
+    -- if the plan ended because a renewal never arrived and she has not been told -- tell her once."""
+    email = (email or "").strip().lower()
+    tell, tier_was = False, None
+    try:
+        conn = database.get_db()
+        try:
+            u = conn.execute(
+                "SELECT auto_renew, paystack_subscription_code AS code, renewal_failed_at FROM users "
+                "WHERE LOWER(email)=?", (email,)).fetchone()
+            if not u or not u["code"]:
+                return
+            last = conn.execute(
+                "SELECT tier, detail FROM subscription_events WHERE email=? AND event IN ('created','renewal') "
+                "ORDER BY id DESC LIMIT 1", (email,)).fetchone()
+            tier_was = last["tier"] if last else None
+            if _ar_flag_int(u["auto_renew"]) == 1 and not u["renewal_failed_at"]:
+                cur = conn.execute(
+                    "UPDATE users SET renewal_failed_at=? WHERE LOWER(email)=? AND renewal_failed_at IS NULL",
+                    (_ar_now_s(), email))
+                tell = cur.rowcount == 1
+                if tell:
+                    _ar_event(conn, email, "payment_failed", tier=tier_was, code=u["code"],
+                              detail="no renewal arrived within %dh of the end date" % _AUTO_RENEW_GRACE_H)
+            _ar_event(conn, email, "ended", tier=tier_was, code=u["code"])
+            conn.commit()
+        finally:
+            conn.close()
+        _auto_renew_stop(email, "the paid period ended without a renewal", forget=True, event=None)
+        if tell:
+            _ar_notify_failed(email, tier_was, None)
+    except Exception as exc:
+        _log.error("AUTO-RENEW-1: plan-ended step failed for %s: %s", email, exc)
+
+
+def _ar_apply_renewal(data: dict, product: str, plan_rands: float, reference: str, plan_code: str) -> bool:
+    """A renewal charge: Paystack billed the card for another month. Extends the paid period by 30 days
+    from the later of the previous end date and the payment, grants the month's Tuppence (once per
+    month by its own key), and clears any failed-renewal mark. One reference applies once."""
+    cust = data.get("customer") or {}
+    email = str((cust.get("email") if isinstance(cust, dict) else "") or "").strip().lower()
+    tier = (_ar_plan_specs().get(product) or {}).get("tier")
+    if not email or not reference or not tier:
+        _log.warning("AUTO-RENEW-1: renewal %s on plan product %r could not be placed", reference, product)
+        return True
+    if not _payment_grants_allowed():
+        _log.warning("AUTO-RENEW-1: grants gated (test key, ALLOW_TEST_PAYMENTS!=1) - renewal %s not applied", reference)
+        return True
+    if not _paystack_paid_enough(data, plan_rands, reference):
+        return True                                           # PAY-AMOUNT-1: logged; nothing granted
+    plan = _SELLER_SUB_TIERS[tier]
+    paid = _lc_parse_ts(data.get("paid_at") or data.get("paidAt")) or datetime.now(timezone.utc)
+    stop_after = False
+    conn = database.get_db()
+    try:
+        u = conn.execute(
+            "SELECT seller_tier, billing_period_end, auto_renew, pending_downgrade_tier FROM users "
+            "WHERE LOWER(email)=?", (email,)).fetchone()
+        if not u:
+            _log.warning("AUTO-RENEW-1: renewal %s is for %s, who has no account here", reference, email)
+            return True
+        if not _claim_payment_ref(conn, reference, "seller_subscription"):
+            _log.info("AUTO-RENEW-1: renewal %s already applied - ignored", reference)
+            return True
+        prev = _lc_parse_ts(u["billing_period_end"])
+        base = max(prev, paid) if prev else paid
+        new_end = (base + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        cur_tier = (u["seller_tier"] or "free").lower()
+        if cur_tier != tier:
+            conn.execute("UPDATE users SET seller_tier=?, slot_limit=? WHERE LOWER(email)=?",
+                         (tier, plan["slot_limit"], email))
+            _plan_changed(conn, email, tier, lowered=(plan["slot_limit"] < _tier_slot_limit(cur_tier)))
+        conn.execute("UPDATE users SET billing_period_end=?, renewal_failed_at=NULL WHERE LOWER(email)=?",
+                     (new_end, email))
+        if (u["pending_downgrade_tier"] or "") == tier:
+            conn.execute("UPDATE users SET pending_downgrade_tier=NULL WHERE LOWER(email)=?", (email,))
+        try:
+            launch_redemption.grant_monthly_tuppence(conn, email, tier)
+        except Exception as _alloc_e:
+            _log.warning("monthly Tuppence grant skipped for %s: %s", email, _alloc_e)
+        _ar_ensure_tables(conn)
+        _ar_event(conn, email, "renewal", tier=tier, reference=reference, detail="paid period now runs to " + new_end)
+        stop_after = _ar_flag_int(u["auto_renew"]) == 0
+        conn.commit()
+    finally:
+        conn.close()
+    _log.info("AUTO-RENEW-1: renewal applied: %s %s to %s (ref %s)", email, tier, new_end, reference)
+    if stop_after:
+        # she had cancelled and was charged anyway: she keeps the month she paid for, and the stop is sent again
+        _auto_renew_stop(email, "charged after renewal was cancelled", plan_code=plan_code, event="stop_resent")
+    return True
+
+
+def _ar_on_charge(data: dict, plan_code: str) -> bool:
+    conn = database.get_db()
+    try:
+        row = _ar_plan_row(conn, plan_code)
+    finally:
+        conn.close()
+    if not row:
+        return False                                          # not a plan this server made: the old path
+    product, plan_rands = row
+    md = data.get("metadata")
+    md = md if isinstance(md, dict) else {}
+    reference = str(data.get("reference") or "")
+    if md.get("type") == "seller_subscription" and reference.startswith("ms_sub_"):
+        # The FIRST payment of a subscription. The app applies it when Paystack sends her back; applying
+        # it here too means a seller who closes the tab at Paystack still gets the plan she is now being
+        # billed for. Same door as the app (/verify), same once-only claim, so it can never apply twice.
+        try:
+            verify_seller_subscription(reference)
+        except HTTPException as exc:
+            _log.warning("AUTO-RENEW-1: first payment %s not applied from the webhook: %s", reference, exc.detail)
+        return False                                          # the old path still runs (PAYNAME-1)
+    return _ar_apply_renewal(data, product, plan_rands, reference, plan_code)
+
+
+def _ar_on_created(data: dict) -> bool:
+    code = str(data.get("subscription_code") or "").strip()
+    token = str(data.get("email_token") or "").strip()
+    plan_code = payments._plan_code_of(data)
+    cust = data.get("customer") or {}
+    email = str((cust.get("email") if isinstance(cust, dict) else "") or "").strip().lower()
+    if not code or not email or not plan_code:
+        return False
+    conn = database.get_db()
+    try:
+        row = _ar_plan_row(conn, plan_code)
+        if not row:
+            return False
+        u = conn.execute(
+            "SELECT paystack_subscription_code AS code, paystack_email_token AS tok FROM users "
+            "WHERE LOWER(email)=?", (email,)).fetchone()
+        if not u:
+            _log.warning("AUTO-RENEW-1: subscription %s opened for %s, who has no account here", code, email)
+            return True
+        old_code, old_tok = u["code"], u["tok"]
+        if old_code == code:
+            if token and not old_tok:
+                conn.execute("UPDATE users SET paystack_email_token=? WHERE LOWER(email)=?", (token, email))
+                conn.commit()
+            return True
+        _ar_ensure_tables(conn)
+        conn.execute("UPDATE users SET auto_renew=1, paystack_subscription_code=?, paystack_email_token=?, "
+                     "renewal_failed_at=NULL WHERE LOWER(email)=?", (code, token, email))
+        _ar_event(conn, email, "created", tier=(_ar_plan_specs().get(row[0]) or {}).get("tier") or row[0], code=code)
+        if old_code:
+            _ar_stop_code(conn, old_code, old_tok, email, "replaced by a new subscription")
+        conn.commit()
+    finally:
+        conn.close()
+    _log.info("AUTO-RENEW-1: subscription %s stored for %s", code, email)
+    return True
+
+
+def _ar_on_stopped(event_type: str, data: dict) -> bool:
+    code = str(data.get("subscription_code") or "").strip()
+    if not code:
+        return False
+    conn = database.get_db()
+    try:
+        try:
+            u = conn.execute("SELECT email, auto_renew, seller_tier FROM users WHERE paystack_subscription_code=?",
+                             (code,)).fetchone()
+        except Exception:
+            return False
+        if not u:
+            return False                                      # an old or foreign subscription: the old path
+        if _ar_flag_int(u["auto_renew"]) == 1:
+            _ar_ensure_tables(conn)
+            conn.execute("UPDATE users SET auto_renew=0 WHERE paystack_subscription_code=?", (code,))
+            _ar_event(conn, u["email"], "cancelled", tier=u["seller_tier"], code=code,
+                      detail="Paystack reported " + event_type)
+            conn.commit()
+            _log.info("AUTO-RENEW-1: %s for %s - renewal marked off", event_type, u["email"])
+    finally:
+        conn.close()
+    return True
+
+
+def _ar_on_payment_failed(data: dict) -> bool:
+    sub = data.get("subscription")
+    code = str((sub.get("subscription_code") if isinstance(sub, dict) else sub) or "").strip()
+    if not code:
+        return False
+    told = None
+    conn = database.get_db()
+    try:
+        try:
+            u = conn.execute(
+                "SELECT email, seller_tier, billing_period_end, renewal_failed_at FROM users "
+                "WHERE paystack_subscription_code=?", (code,)).fetchone()
+        except Exception:
+            return False
+        if not u:
+            return False
+        if u["renewal_failed_at"]:
+            return True                                       # already told about this failed renewal
+        cur = conn.execute("UPDATE users SET renewal_failed_at=? WHERE paystack_subscription_code=? "
+                           "AND renewal_failed_at IS NULL", (_ar_now_s(), code))
+        if cur.rowcount == 1:
+            _ar_ensure_tables(conn)
+            _ar_event(conn, u["email"], "payment_failed", tier=u["seller_tier"], code=code,
+                      detail="Paystack reported invoice.payment_failed")
+            told = (u["email"], u["seller_tier"], u["billing_period_end"])
+        conn.commit()
+    finally:
+        conn.close()
+    if told:
+        _log.warning("AUTO-RENEW-1: renewal failed for %s - told once (Buzz + email)", told[0])
+        _ar_notify_failed(*told)
+    return True
+
+
+def _auto_renew_webhook(event_type, data) -> bool:
+    """The webhook's subscription lane. True = the event belonged to a subscription or plan this server
+    holds and is fully handled. False = anything else, which then takes the webhook's old path exactly
+    as before -- including every event while no plan and no subscription exists.
+
+    A renewal that cannot be written (the database is busy) raises, the webhook answers 5xx, and
+    Paystack sends the event again; the once-only claim on the reference makes that safe."""
+    if not isinstance(data, dict):
+        return False
+    if event_type == "charge.success":
+        plan_code = payments._plan_code_of({"plan": data.get("plan"), "plan_object": data.get("plan_object")})
+        if not plan_code:
+            return False
+        return _ar_on_charge(data, plan_code)
+    if event_type == "subscription.create":
+        return _ar_on_created(data)
+    if event_type in ("subscription.disable", "subscription.not_renew"):
+        return _ar_on_stopped(event_type, data)
+    if event_type == "invoice.payment_failed":
+        return _ar_on_payment_failed(data)
+    return False
+
+
+def _auto_renew_status(email: str) -> dict:
+    """What the plan card needs. {} while the switch is OFF and this seller holds no subscription, so
+    the subscription answer is then exactly what it always was. Never returns a code or a token."""
+    try:
+        on = _auto_renew_on()
+        conn = database.get_db()
+        try:
+            try:
+                u = conn.execute(
+                    "SELECT auto_renew, paystack_subscription_code AS code, renewal_failed_at, billing_period_end "
+                    "FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+            except Exception:
+                return {}
+            has = bool(u and u["code"])
+            failed = bool(u and u["renewal_failed_at"])
+            if not on and not has and not failed:
+                return {}
+            tiers = [p for p, spec in _ar_plan_specs().items() if spec["tier"] and _ar_plan_code(conn, p)] if on else []
+            # where the plan goes when its paid period ends (the lapse pass, RUL-201): Free, or her agency's seat
+            try:
+                seat = conn.execute("SELECT 1 FROM agency_members WHERE LOWER(agent_email)=? "
+                                    "AND COALESCE(status,'') != 'removed' LIMIT 1", (email,)).fetchone()
+            except Exception:
+                seat = None
+        finally:
+            conn.close()
+        renewing = has and _ar_flag_int(u["auto_renew"]) == 1 and not failed
+        end = u["billing_period_end"] if u else None
+        return {
+            "auto_renew_on": on,
+            "auto_renew": renewing,
+            "auto_renew_cancelled": has and _ar_flag_int(u["auto_renew"]) != 1,
+            "renews_on": end if renewing else None,
+            "runs_to": end,
+            "renewal_failed": failed,
+            "auto_renew_tiers": tiers,
+            "after_label": "your agency seat" if seat else "Free",
+        }
+    except Exception as exc:
+        _log.warning("AUTO-RENEW-1: status read failed: %s", exc)
+        return {}
+
+
+def _auto_renew_hourly() -> None:
+    """Rides the hourly plan loop. Retries subscriptions that must be switched off but could not be
+    (Paystack unreachable), and -- only while the switch is ON -- makes a plan that is still missing.
+    Does nothing at all while the queue is empty and the switch is OFF."""
+    try:
+        conn = database.get_db()
+        try:
+            try:
+                rows = conn.execute("SELECT subscription_code, email_token, email, attempts FROM paystack_stop_queue "
+                                    "ORDER BY queued_at LIMIT 25").fetchall()
+            except Exception:
+                rows = []
+            for r in rows:
+                res = payments.disable_subscription(r["subscription_code"], r["email_token"])
+                if res.get("ok"):
+                    conn.execute("DELETE FROM paystack_stop_queue WHERE subscription_code=?", (r["subscription_code"],))
+                    _log.info("AUTO-RENEW-1: queued stop of %s confirmed by Paystack", r["subscription_code"])
+                else:
+                    conn.execute("UPDATE paystack_stop_queue SET attempts=attempts+1 WHERE subscription_code=?",
+                                 (r["subscription_code"],))
+                    if int(r["attempts"] or 0) + 1 >= 24:
+                        _log.error("AUTO-RENEW-1: subscription %s for %s is STILL not switched off after %d tries: %s",
+                                   r["subscription_code"], r["email"], int(r["attempts"] or 0) + 1, res.get("reason"))
+            if rows:
+                conn.commit()
+        finally:
+            conn.close()
+        if _auto_renew_on():
+            want = [p for p, spec in _ar_plan_specs().items()]
+            conn = database.get_db()
+            try:
+                missing = [p for p in want if not _ar_plan_code(conn, p)]
+            finally:
+                conn.close()
+            if missing:
+                _auto_renew_sync_plans()
+    except Exception as exc:
+        _log.warning("AUTO-RENEW-1 hourly step error: %s", exc)
+
+
+class _AutoRenewReq(BaseModel):
+    email: Optional[str] = None
+
+
+@app.post("/payment/seller-subscription/cancel")
+def cancel_seller_subscription_renewal(req: _AutoRenewReq, ts_user: str = Cookie(default=None),
+                                       x_admin_key: str = Header(default=None)):
+    """Cancel renewal -- one tap (RUL-224c). Switches the seller's Paystack subscription off; nothing is
+    charged again and the paid period runs to its end date, where the plan ends exactly as RUL-201
+    ends it (adverts above the limit rest, nothing is deleted). Works whatever the switch says: a
+    seller who holds a subscription can always stop it. Acts only as the signed-in session.
+
+    Answers ok only once Paystack has confirmed the stop. If Paystack can not be reached nothing is
+    changed and she is told so -- 'cancelled' is never said about a subscription that may still charge."""
+    email = (_actor(ts_user, req.email, "auto-renew-cancel", x_admin_key) or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    conn = database.get_db()
+    try:
+        try:
+            u = conn.execute(
+                "SELECT auto_renew, paystack_subscription_code AS code, paystack_email_token AS tok, seller_tier, "
+                "billing_period_end FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        except Exception:
+            u = None
+        if not u or not u["code"]:
+            raise HTTPException(status_code=409, detail="Your plan is not set to renew automatically, so there is nothing to cancel.")
+        tier = (u["seller_tier"] or "free").lower()
+        end = u["billing_period_end"]
+        if _ar_flag_int(u["auto_renew"]) == 1:
+            res = payments.disable_subscription(u["code"], u["tok"] or "")
+            if not res.get("ok"):
+                _log.warning("AUTO-RENEW-1: cancel for %s not confirmed by Paystack: %s", email, res.get("reason"))
+                raise HTTPException(status_code=502, detail="We could not reach the payment service, so nothing was changed. "
+                                                            "Your plan still renews. Please try again in a minute.")
+            _ar_ensure_tables(conn)
+            conn.execute("UPDATE users SET auto_renew=0 WHERE LOWER(email)=?", (email,))
+            _ar_event(conn, email, "cancelled", tier=tier, code=u["code"], detail="Cancel renewal, by the seller")
+            conn.commit()
+            _log.info("AUTO-RENEW-1: renewal cancelled by %s; plan runs to %s", email, end)
+    finally:
+        conn.close()
+    return {"status": "ok", "auto_renew": False, "tier": tier,
+            "label": _SELLER_SUB_TIERS.get(tier, _SELLER_SUB_TIERS["free"])["label"], "runs_to": end}
+
+
+@app.post("/payment/seller-subscription/resume")
+def resume_seller_subscription_renewal(req: _AutoRenewReq, ts_user: str = Cookie(default=None),
+                                       x_admin_key: str = Header(default=None)):
+    """Renew again -- undo a Cancel renewal while the paid period is still running. Switches the same
+    Paystack subscription back on; nothing is charged now, the card is next charged on its usual date.
+    Also lifts a move to Free that was booked for the end date. Acts only as the signed-in session."""
+    email = (_actor(ts_user, req.email, "auto-renew-resume", x_admin_key) or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    conn = database.get_db()
+    try:
+        try:
+            u = conn.execute(
+                "SELECT auto_renew, paystack_subscription_code AS code, paystack_email_token AS tok, seller_tier, "
+                "billing_period_end, pending_downgrade_tier FROM users WHERE LOWER(email)=?", (email,)).fetchone()
+        except Exception:
+            u = None
+        end = (u["billing_period_end"] if u else None) or ""
+        if not u or not u["code"] or not end or end <= _ar_now_s():
+            raise HTTPException(status_code=409, detail="There is no running plan to renew. Choose a plan to start again.")
+        tier = (u["seller_tier"] or "free").lower()
+        if _ar_flag_int(u["auto_renew"]) != 1:
+            res = payments.enable_subscription(u["code"], u["tok"] or "")
+            if not res.get("ok"):
+                _log.warning("AUTO-RENEW-1: resume for %s not confirmed by Paystack: %s", email, res.get("reason"))
+                if res.get("unreachable"):
+                    raise HTTPException(status_code=502, detail="We could not reach the payment service, so nothing was changed. "
+                                                                "Please try again in a minute.")
+                raise HTTPException(status_code=409, detail="Automatic renewal could not be switched back on. Your plan runs to "
+                                                            + end[:10] + "; choose the plan again then to keep it.")
+            _ar_ensure_tables(conn)
+            conn.execute("UPDATE users SET auto_renew=1 WHERE LOWER(email)=?", (email,))
+            if (u["pending_downgrade_tier"] or "") == "free":
+                conn.execute("UPDATE users SET pending_downgrade_tier=NULL WHERE LOWER(email)=?", (email,))
+            try:
+                conn.execute("DELETE FROM paystack_stop_queue WHERE subscription_code=?", (u["code"],))
+            except Exception:
+                pass
+            _ar_event(conn, email, "resumed", tier=tier, code=u["code"], detail="Renew again, by the seller")
+            conn.commit()
+            _log.info("AUTO-RENEW-1: renewal switched back on by %s; next charge about %s", email, end)
+    finally:
+        conn.close()
+    return {"status": "ok", "auto_renew": True, "tier": tier,
+            "label": _SELLER_SUB_TIERS.get(tier, _SELLER_SUB_TIERS["free"])["label"], "renews_on": end}
+
+
+@app.post("/admin/auto-renew/plans")
+def admin_auto_renew_plans(dry_run: int = 0, _admin=Depends(_require_admin_or_key)):
+    """MAINTENANCE (admin only): make sure Paystack holds the monthly plan for each paid tier and
+    that this server knows the codes. Idempotent. dry_run=1 only reports. Called by
+    scripts/paystack_plans_sync.py; arming the switch runs the same step."""
+    out = _auto_renew_sync_plans(dry_run=bool(dry_run))
+    out["switch_on"] = _auto_renew_on()
+    return out
+
+
+# AUTO-RENEW-1: the three small tables exist from start-up (the users columns are added in run_migrations).
+try:
+    _ar_boot = database.get_db()
+    try:
+        _ar_ensure_tables(_ar_boot)
+        _ar_boot.commit()
+    finally:
+        _ar_boot.close()
+except Exception as _ar_boot_e:
+    _log.warning("AUTO-RENEW-1 tables not ensured at start-up: %s", _ar_boot_e)
 
 
 # ── PHOTO MIGRATION (local /media → Hetzner Object Storage) ──
@@ -18164,6 +19104,9 @@ def set_seller_tier(email: str, tier: str, _key: str = Depends(auth.require_api_
         conn.commit()
     finally:
         conn.close()
+    if _SELLER_SUB_TIERS[tier]["amount_rands"] <= 0:
+        # AUTO-RENEW-1: ops moved her to a plan that costs nothing -- her subscription must not keep charging.
+        _auto_renew_stop(email, "plan set to %s by ops" % tier, forget=True)
     return {"email": email, "seller_tier": tier, "slot_limit": new_limit}
 
 
@@ -18191,6 +19134,8 @@ def downgrade_to_free(email: str):
         if (user["seller_tier"] or "free").lower() != "free" and end and end > now_iso:
             conn.execute("UPDATE users SET pending_downgrade_tier='free' WHERE LOWER(email)=?", (email,))
             conn.commit()
+            # AUTO-RENEW-1: moving to Free also stops the renewal (nothing is charged again). No-op unless she holds a subscription.
+            _auto_renew_stop(email, "moving to Free at the end of the paid period")
             return {"email": email, "seller_tier": (user["seller_tier"] or "free").lower(),
                     "pending_downgrade_tier": "free", "effective": "end_of_billing_period",
                     "billing_period_end": end, "slot_limit_after": free_limit}
@@ -18202,6 +19147,7 @@ def downgrade_to_free(email: str):
         conn.commit()
     finally:
         conn.close()
+    _auto_renew_stop(email, "moved to Free", forget=True)   # AUTO-RENEW-1: no-op unless she holds a subscription
     return {"email": email, "seller_tier": "free", "slot_limit": free_limit, "effective": "immediate",
             "listings_resting": (res or {}).get("resting", 0)}
 
@@ -18780,6 +19726,30 @@ async def dashboard_launch_metrics(_admin=Depends(_require_admin_or_key)):
         v, ok, note = _count(
             "SELECT COUNT(*) FROM users WHERE COALESCE(seller_tier,'free') NOT IN ('free','')")
         out.append(_m("subscriptions", "Paid subscriptions", v, ok, "users.seller_tier", note))
+
+        # AUTO-RENEW-1 (RUL-224): renewals this month, failed renewals, cancellations, auto-renew share.
+        # Counted from subscription_events (written only by the renewal lane); each tile is measured or
+        # says NOT MEASURED, never a guess (RG-0133).
+        _ar_m0 = datetime.now(timezone.utc).strftime("%Y-%m-01T00:00:00Z")
+        for _ar_id, _ar_label, _ar_ev in (("renewals_month", "Renewals this month", "renewal"),
+                                          ("renewals_failed_month", "Failed renewals this month", "payment_failed"),
+                                          ("renewals_cancelled_month", "Renewals cancelled this month", "cancelled")):
+            v, ok, note = _count("SELECT COUNT(*) FROM subscription_events WHERE event=? AND created_at >= ?",
+                                 (_ar_ev, _ar_m0))
+            out.append(_m(_ar_id, _ar_label, v, ok, "subscription_events.event='%s'" % _ar_ev, note))
+        _ar_paid, ok1, n1 = _count("SELECT COUNT(*) FROM users WHERE LOWER(COALESCE(seller_tier,'')) IN ('starter','pro') "
+                                   "AND billing_period_end IS NOT NULL")
+        _ar_auto, ok2, n2 = _count("SELECT COUNT(*) FROM users WHERE LOWER(COALESCE(seller_tier,'')) IN ('starter','pro') "
+                                   "AND billing_period_end IS NOT NULL AND paystack_subscription_code IS NOT NULL "
+                                   "AND COALESCE(auto_renew,1)=1 AND renewal_failed_at IS NULL")
+        if ok1 and ok2 and _ar_paid:
+            out.append(_m("auto_renew_share", "Auto-renew share",
+                          "%d of %d (%d%%)" % (_ar_auto, _ar_paid, round(100.0 * _ar_auto / _ar_paid)), True,
+                          "users.paystack_subscription_code / paid plans"))
+        else:
+            out.append(_m("auto_renew_share", "Auto-renew share", None, False,
+                          "users.paystack_subscription_code / paid plans",
+                          (n1 or n2) or "NOT MEASURED — no paid plan is running, so there is no share to state"))
 
         # PG-READINESS (26 Aug 2026): the cutoff is computed in Python and BOUND, not
         # written as SQLite's datetime('now','-1 day') -- Postgres has no such function, and
@@ -24209,6 +25179,7 @@ class _FlagsUpdate(BaseModel):
     baseline_q4:           Optional[bool] = None  # BASELINE-Q4-1: the RUL-126 batch, armed by David only
     lang_layer:            Optional[bool] = None  # LANG-LAYER-1: the language layer for everybody (testers always see it)
     circle_caps:           Optional[bool] = None  # CIRCLE-CAPS-1 (RUL-176): regulars limits 10/50/200, David's switch
+    auto_renew:            Optional[bool] = None  # AUTO-RENEW-1 (RUL-224): paid plans renew automatically, David's switch
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -24228,6 +25199,10 @@ def _flags_payload(d):
         # CIRCLE-CAPS-1 (RUL-176): a row predating the column reads OFF -- no limits is the safe side.
         "circle_caps": b("circle_caps"),
         "circle_limits": dict(CIRCLE_LIMITS),
+        # AUTO-RENEW-1 (RUL-224): a row predating the column reads OFF -- the one-off payment is the safe side.
+        # auto_renew_tiers = the tiers whose Paystack plan exists; the tick box shows only for those.
+        "auto_renew": b("auto_renew"),
+        "auto_renew_tiers": (_auto_renew_ready_tiers() if b("auto_renew") else []),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
@@ -24243,6 +25218,7 @@ def _flags_payload(d):
             "baseline_q4":         b("baseline_q4"),   # BASELINE-Q4-1: the FEA reads it from here
             "lang_layer":          b("lang_layer") or b("baseline_q4"),   # LANG-Q4-1: rides the Q4 switch; get_flags ORs in testers
             "circle_caps":         b("circle_caps"),   # CIRCLE-CAPS-1: ms.js + quick.html show limits only when this is on
+            "auto_renew":          b("auto_renew"),    # AUTO-RENEW-1: ms.js shows the tick box and the renewal lines only when this is on
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -24410,6 +25386,15 @@ def set_flags(upd: _FlagsUpdate, _admin=Depends(_require_admin)):
                 _log.warning("CIRCLE-CAPS-1 armed: %d seller(s) over their limit grandfathered at what they have", _gfn)
         except Exception as _ge:
             _log.error("CIRCLE-CAPS-1 grandfathering on arming failed: %s", _ge)
+        # AUTO-RENEW-1 (RUL-224): arming the switch (0 -> 1) makes sure Paystack holds the plan for each paid
+        # tier, once. Idempotent. If Paystack can not be reached the switch stays armed, the tick box simply
+        # does not show for a tier without a plan (one-off payment as today), and the hourly loop tries again.
+        try:
+            if data.get("auto_renew") and not int(prior.get("auto_renew") or 0) and row and int(row["auto_renew"] or 0):
+                _arp = _auto_renew_sync_plans()
+                _log.warning("AUTO-RENEW-1 armed: plans %s", [(p["product"], p["state"]) for p in _arp.get("plans", [])])
+        except Exception as _are:
+            _log.error("AUTO-RENEW-1 plan step on arming failed (the hourly loop retries): %s", _are)
         # D4: the change is RECORDED — actor, prior value, new value, reason, timestamp.
         try:
             _actor = str((_admin or {}).get("name") or (_admin or {}).get("sub") or "admin")[:80]
@@ -31839,6 +32824,7 @@ def _plan_change_hourly_loop():
             _apply_pending_downgrades()
         except Exception as _pe:
             print("PLAN-CHANGE loop error: %s" % _pe)
+        _auto_renew_hourly()   # AUTO-RENEW-1: retries queued stops; nothing to do while the queue is empty and the switch is OFF
         _pt.sleep(3600)
 threading.Thread(target=_plan_change_hourly_loop, daemon=True).start()
 

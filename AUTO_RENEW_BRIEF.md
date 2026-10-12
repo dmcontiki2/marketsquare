@@ -35,3 +35,34 @@ Starter (R90), Pro (R360) and the Agency Pro seat (R90) renew automatically ever
 
 ## 7 · House rules that apply
 Big files by Python string-replace + verify; `.bak-autorenew-<ts>` before edits; `quick.html` untouched (Quick does not sell plans); no AI model named as a label; no secrets printed (the Paystack secret stays in the systemd unit — read nothing that echoes it); wait for silence before the one commit; push + deploy via `scripts/request_deploy.py`; close every loop in `OPEN_LOOPS.md`.
+
+## 8 · Build record (12 Oct 2026)
+**BUILT, flag-dark. The switch `launch_switches.auto_renew` ships OFF; arming is David's act, on the +1 page.**
+Status as of 12 Oct 2026, verified by the three proofs below (not by this sentence -- run them).
+
+| Section | Built | Where |
+|---|---|---|
+| s2 plans, once, by maintenance | yes | `bea_main.py _auto_renew_sync_plans` - `scripts/paystack_plans_sync.py` - `POST /admin/auto-renew/plans` - table `paystack_plans` |
+| s2 checkout with the plan code only when the tick box is on | yes | `_auto_renew_checkout_plan` + `_auto_renew_initialize` |
+| s2 webhook: subscription.create, renewal charge.success, invoice.payment_failed, subscription.disable / not_renew | yes | `_auto_renew_webhook` |
+| s2 Cancel renewal, declared in route_policy.json | yes | `POST /payment/seller-subscription/cancel` (+ `/resume` for Renew again) |
+| s2 non-card: tick box disabled, one-off flow | yes | ms.js `_arCheckout` |
+| s2 replayed reference ignored; never charge from our side | yes | `_claim_payment_ref(..., "seller_subscription")`; no `charge_authorization` anywhere |
+| s3 schema | yes | `run_migrations` (ALTER TABLE) |
+| s4 app: tick box, 'Renews on <date>', Cancel renewal, DEMO_MODE guard | yes | ms.js block `AUTO-RENEW-1` |
+| s4 Agency Pro seat: same tick box and button | **not applicable yet** | the seat has no checkout of its own (regression ledger RG-0167, open since 26 Sep); its Paystack plan is prepared, so it inherits the tick box when that checkout exists |
+| s5 dashboard tiles, rulings_check RUL-224, ledger | yes | `/dashboard/launch-metrics` - `scripts/rulings_check.py` - RG-0964 / RG-0965 / RG-0966 |
+
+**Definition of done (s6), item by item**
+1. Switch OFF = today: **proven** -- `python3 scripts/prove_auto_renew_off_parity.py --base <pre-build source> --new .` -> IDENTICAL (37 answers, 10 Paystack requests, 4 tables).
+2. Switch ON, QA account buys Starter with the tick box on, plan card shows 'Renews on <date>' and Cancel renewal, cancel disables the subscription: **proven in the rendered app against a Paystack STAND-IN** (`AUTO_RENEW_shots/`, `scripts/smoke_harness/rig_autorenew/`). **Not proven against Paystack itself** -- no Paystack test key was in reach (the server holds the live key only).
+3. Webhook replay: **proven** -- `python3 scripts/prove_auto_renew.py` (signed POSTs, throwaway database).
+4. Tick box off -> one-off purchase, no subscription: **proven** (both proofs + rendered).
+5. Ledger, stranger test, pricing canon: see the changelog fragment `changelog.d/2026-10-12-auto-renew-1.md` for the run of the day.
+6. Report to David: sent 12 Oct 2026.
+
+**Three things the brief did not know, decided in the build (David may veto):** Paystack bills on the same day each
+month, not every 30 days, so a renewal runs from the later of the previous end and the payment (+30 days) and a plan
+whose renewal is due waits up to 72 hours; Paystack does not retry a failed charge before the next payment date, so
+after a failure the plan ends on its date and the subscription is switched off (one Buzz + one email in total); and a
+seller who already renews is still served if the switch is turned off again.
