@@ -66,3 +66,5 @@ month, not every 30 days, so a renewal runs from the later of the previous end a
 whose renewal is due waits up to 72 hours; Paystack does not retry a failed charge before the next payment date, so
 after a failure the plan ends on its date and the subscription is switched off (one Buzz + one email in total); and a
 seller who already renews is still served if the switch is turned off again.
+
+**Deployed 12 Oct 2026, 07:11 SAST (release af39a00), switch OFF.** Deploy log: stranger test PASS, QA Bot gate pass, DEPLOY OK, health ok, no rollback. PROBED live after it landed: `/flags` reports `auto_renew: false` with no tiers ready; the served ms.js carries the tick-box code; Cancel renewal, Renew again and the plans route each answer 401 to a stranger; the live database (read-only) has the four new `users` columns, `launch_switches.auto_renew = 0`, 0 plans and 0 subscriptions; `scripts/prove_auto_renew.py` passes on the server's own Python against the deployed source. RG-0966 LOCKED. Still not proven: Paystack itself (no test key in reach).

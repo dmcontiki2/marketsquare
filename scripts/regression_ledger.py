@@ -38053,13 +38053,17 @@ def rg_auto_renew_executed():
 
 @entry("RG-0966", "AUTO-RENEW-1 LIVE: the deployed app reports the auto-renew switch (OFF until David arms it), serves the "
        "tick-box code, and refuses a stranger on Cancel renewal",
-       OPEN,
+       LOCKED, fixed_on="2026-10-12",
        scope="LIVE probes of trustsquare.co: /flags carries auto_renew + effective.auto_renew + auto_renew_tiers; the "
              "served ms.js carries _arOn / the tick box; POST /payment/seller-subscription/cancel with no sign-in is "
-             "refused. OPEN until the build is deployed; when it passes it prints READY TO LOCK. Whether the switch is "
+             "refused. Whether the switch is "
              "armed is reported as INFO, never judged -- arming is David's act.",
        ref="RUL-224, AUTO_RENEW_BRIEF.md s6.5 (deploy through the normal gate with the switch OFF). Opened 12 Oct 2026 "
-           "with the build commit; to be LOCKED after the deploy lands and these probes pass.")
+           "with the build commit. LOCKED the same day after release af39a00 (deploy log DEPLOY OK, stranger test PASS, "
+           "QA Bot gate pass): /flags auto_renew false with no tiers ready, the served ms.js carries the tick-box code, "
+           "Cancel renewal answers 401 to a stranger at the front door; live database read-only: the four users "
+           "columns exist, launch_switches.auto_renew=0, 0 plans, 0 subscriptions; prove_auto_renew.py passes on the "
+           "server's own Python against the deployed source.")
 def rg_auto_renew_live():
     out = []
     try:

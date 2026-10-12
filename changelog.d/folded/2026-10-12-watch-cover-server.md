@@ -1,0 +1,4 @@
+## 2026-10-12 — WATCH-COVER-1 reached the server copy the nightly wave sends from
+
+- The server's `/var/www/citylauncher/emailer/templates/collectors_outreach.html` and `collectors_dealer_outreach.html` were byte-identical to the PC's pre-fix letters (sha256 compared), i.e. still the pocket watch. The two fixed letters (CityLauncher commit 788bbde, pushed to GitHub by the host queue at 07:15 SAST) were placed there -- the same two files the CityLauncher deploy lane copies, nothing else from that working tree (it carries other lanes' uncommitted work, which was NOT shipped).
+- **PROBED on the server 12 Oct 2026 07:16 SAST:** both files match the PC's fixed letters by sha256; 0 lines carry `watch_1.jpg`, 1 line each carries `watch_2.jpg`; owner unchanged; backups `*.bak-watchcover-20261012-*` beside each file. No other letter in that folder carries the pocket-watch picture.
