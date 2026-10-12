@@ -39,3 +39,14 @@ lost in going live?"*
   (RG-0154, RG-0234, RG-0344).
 
 Cost model impact: none. Schema: none.
+
+**Shipped and proven, 12 Oct 2026 04:05Z (06:05 SAST).** Release 5be9241 through the one deploy lane: stranger test
+PASS (356 routes), QA Bot gate pass, health ok, auto-rollback not triggered. On the deployed code:
+`prove_trust_badge_one_rule.py` — every order of screens leaves the same badge, 0 sellers move; the real save path run
+on her five adverts — the name read flags nothing and each title and text comes back unchanged. Seen in the app in
+David's Chrome: #273 carries the row of 15 small pictures (tapping one changes the photo) and "— by the Bee Lady";
+#538 shows the title, R7,500, Trust Score 100, "11 years" and "R 7 500 per audit and report".
+Fact board after (sandbox, 637 of 764 entries): the same 3 regressions as before (RG-0154, RG-0234, RG-0344), none
+new; RG-0960..0963 pass and are LOCKED. The full board and the rulings check are queued host-side.
+Rulings check: RUL-225 reflected; its 2 FAILs (RUL-169 confirm.html wording, RUL-211 GEO-NET-CITY-1 marker) pre-date
+this work.

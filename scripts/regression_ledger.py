@@ -37737,13 +37737,13 @@ def rg_quick_draft_view_geo_national():
 
 @entry("RG-0960", "TRUST-BADGE-ONE-RULE-1 (David, 12 Oct 2026): a seller's Trust Score badge is the same on every screen -- the "
        "Bee Lady's adverts read 100 on the detail and 90 on the cards, moving with whichever screen was opened last",
-       OPEN, fixed_on="2026-10-12",
+       LOCKED, fixed_on="2026-10-12",
        scope="bea_main.py _seller_score_key (the one key rule, SUPER-CRED-2) + _write_listing_badges (the one badge writer); "
              "trust_score_breakdown, seller_public_credentials, trust_score_set_credential all go through them. "
              "Proved on a copy of the live database by scripts/prove_trust_badge_one_rule.py.",
        ref="David 12 Oct 2026. Server journal: Edit's /trust-score/breakdown?category=Services-Technical wrote 90 on #538/#539 "
            "while /sellers/credentials/<id> writes 100 (Local Market model). Fourth in the family after base-40, "
-           "TRUST-ONE-SET-1 and CRED-SCORE-SYNC-1; closes AUD-101 (4 Oct audit).")
+           "TRUST-ONE-SET-1 and CRED-SCORE-SYNC-1; closes AUD-101 (4 Oct audit). LOCKED 12 Oct 2026 after deploy 5be9241 (QA Bot pass) + the rendered check in David's Chrome.")
 def rg_trust_badge_one_rule_1():
     py = repo_file("bea_main.py")
     if py is None:
@@ -37771,11 +37771,11 @@ def rg_trust_badge_one_rule_1():
 
 @entry("RG-0961", "ANON-TITLE-TAIL-1 (12 Oct 2026): when a name is taken out of an advert's title (ANON-NAMES-1) the title still "
        "reads as a title -- the Bee Lady's five adverts went live as '... \u2014 by the' when she saved them",
-       OPEN, fixed_on="2026-10-12",
+       LOCKED, fixed_on="2026-10-12",
        scope="bea_main.py _anon_title_tidy + _anon_names_apply(title=True): the joining words and dash before a removed name "
              "go with it; a title whose first word was the name starts with a capital. Table-tested here on her five titles.",
        ref="Listing versions of #273/#274/#275/#538/#539, 12 Oct 2026 02:29-02:35Z; journal 'ANON-NAMES-1 (edit #538) ... "
-           "[Bee Lady]'. The five live titles were tidied by hand the same morning.")
+           "[Bee Lady]'. The five live titles were tidied by hand the same morning. LOCKED 12 Oct 2026 after deploy 5be9241 (QA Bot pass) + the rendered check in David's Chrome.")
 def rg_anon_title_tail_1():
     py = repo_file("bea_main.py")
     if py is None:
@@ -37809,10 +37809,10 @@ def rg_anon_title_tail_1():
 
 @entry("RG-0962", "ANON-PSEUDONYM-1 (RUL-225, David 12 Oct 2026: 'Bee Lady is a pseudo name like the Handyman'): a trade pseudonym "
        "stays in an advert -- the name removal took 'Bee Lady' out of all five of her titles when she saved them",
-       OPEN, fixed_on="2026-10-12",
+       LOCKED, fixed_on="2026-10-12",
        scope="bea_main.py _ANON_NAMES_SYSTEM (the AI read is told a trade pseudonym is never a name) + _anon_is_trade_pseudonym "
              "in _anon_names_find (a fixed check drops one the AI flags anyway). Real names still go. Table-tested here.",
-       ref="RULINGS.md RUL-225. Journal 12 Oct 2026 02:29-02:35Z: 'ANON-NAMES-1 (edit #538) ... [Bee Lady]' on #273/#274/#275/#538/#539.")
+       ref="RULINGS.md RUL-225. Journal 12 Oct 2026 02:29-02:35Z: 'ANON-NAMES-1 (edit #538) ... [Bee Lady]' on #273/#274/#275/#538/#539. LOCKED 12 Oct 2026 after deploy 5be9241 (QA Bot pass) + the rendered check in David's Chrome.")
 def rg_anon_pseudonym_1():
     py = repo_file("bea_main.py")
     if py is None:
@@ -37848,9 +37848,9 @@ def rg_anon_pseudonym_1():
 
 @entry("RG-0963", "LM-THUMBS-1 (David, 12 Oct 2026): a Local Market advert shows its row of small pictures like every other advert "
        "page -- the Bee Lady's honey advert had 15 photos and read as one ('did Marietjie remove these photos?')",
-       OPEN, fixed_on="2026-10-12",
+       LOCKED, fixed_on="2026-10-12",
        scope="ms.js lmOpenDetail: the adv-thumbs row under the big photo, wired to advThumbClick / syncAdvThumbs (shared gallery strip).",
-       ref="David 12 Oct 2026 05:40 with a screenshot of #273. All 15 photos were stored and served; only the row was missing.")
+       ref="David 12 Oct 2026 05:40 with a screenshot of #273. All 15 photos were stored and served; only the row was missing. LOCKED 12 Oct 2026 after deploy 5be9241 (QA Bot pass) + the rendered check in David's Chrome.")
 def rg_lm_thumbs_1():
     js = repo_file("ms.js")
     if js is None:
