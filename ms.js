@@ -3962,6 +3962,35 @@ function applyFilters(cat){
   renderGrid();
 }
 
+/* BROWSE-EMPTY-SELL-1 (Goal run 37): is any filter set for this category? Search is handled before this is asked. */
+function msBrowseFiltersActive(cat){
+  try{
+    var f = filterState[String(cat||'').toLowerCase()];
+    if(!f) return false;
+    return Object.keys(f).some(function(k){ var v=f[k]; return Array.isArray(v) ? v.length>0 : (v!=='' && v!=null); });
+  }catch(_){ return true; }
+}
+function msBrowseEmptyHtml(cat){
+  var c = String(cat||''), where = (activeCity && activeCity.name) ? activeCity.name : ((activeCountry && activeCountry.name) || '');
+  var guided = (typeof SF_CATS!=='undefined' && SF_CATS[c]) ? c : '';
+  var label = (c && c!=='All') ? c+' listings' : 'listings';
+  var esc = (typeof _wlEsc==='function') ? _wlEsc : function(x){ return String(x); };
+  var h = '<div class="no-res" id="ms-browse-empty" style="grid-column:1/-1;text-align:left;line-height:1.45;max-width:420px;">'+
+    '<div style="font-weight:700;font-size:15px;margin-bottom:4px;">No '+esc(label)+(where ? ' in '+esc(where) : '')+' yet.</div>'+
+    '<div style="font-size:13px;opacity:.85;margin-bottom:12px;">Have one to sell? Yours would be the first people here see — about three minutes, on the free plan.</div>'+
+    '<button type="button" id="ms-browse-empty-sell" onclick="msBrowseSellCat(\''+esc(guided)+'\')" style="background:var(--accent,#1e3a8a);color:#fff;border:0;border-radius:20px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;">'+
+    (guided ? 'List '+(guided==='Property'?'a property':guided==='Cars'?'a car':'yours')+' here →' : 'List yours here →')+'</button>';
+  if(typeof openLocPanel==='function')
+    h += '<div style="margin-top:12px;font-size:13px;"><span style="cursor:pointer;color:var(--accent);text-decoration:underline;" onclick="openLocPanel(\'city\');var b=document.getElementById(\'city-selector-bg\');if(b)b.classList.add(\'open\');">Look in another city</span></div>';
+  return h+'</div>';
+}
+function msBrowseSellCat(cat){
+  var signedIn = false; try{ signedIn = !!localStorage.getItem('ms_aa_email'); }catch(_){}
+  if(!cat || signedIn || typeof sfStartCat!=='function' || typeof SF_ENABLED==='undefined' || !SF_ENABLED){ openSellNav(); return; }
+  if(typeof _demoBlock==='function' && _demoBlock('openSellNav')) return;
+  goTo('sell-flow');
+  setTimeout(function(){ try{ sfStartCat(cat); }catch(_){} }, 60);
+}
 function clearFilters(cat){
   if(cat==='property'){
     filterState.property = { minPrice:'', maxPrice:'', type:'', beds:'', baths:'', garages:'', area:'', listingType:'', furnished:'', pets:'', features:[] };
@@ -5940,6 +5969,14 @@ function renderGrid(){
   if(!filtered.length){
     if(_msSearchIds){
       grid.innerHTML='<div class="no-res">No matches for \u201C'+_wlEsc(_msSearchQ)+'\u201D — try fewer or different words.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="msClearSearch()">Clear search</span></div>';
+      return;
+    }
+    /* BROWSE-EMPTY-SELL-1 (Goal run 37, 12 Oct 2026): a Gqeberha stranger tapped Collectors (0 listings) on Home and Browse
+       said "No listings match your filters. Clear filters" -- she had set no filter, and the page had no way forward. With no
+       filter set, say the category is empty here and offer to list in it (straight into that category's guided flow). */
+    if(!msBrowseFiltersActive(activeFilter)){
+      grid.innerHTML=(typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'')+msBrowseEmptyHtml(activeFilter);
+      if(typeof catAgentsRestore==='function') catAgentsRestore();
       return;
     }
     grid.innerHTML=(typeof svcAgentsBannerHtml==='function'?svcAgentsBannerHtml():'')+'<div class="no-res">No listings match your filters.<br><span style="font-size:12px;cursor:pointer;color:var(--accent);" onclick="clearFilters(\''+activeFilter.toLowerCase()+'\')">Clear filters</span></div>';
