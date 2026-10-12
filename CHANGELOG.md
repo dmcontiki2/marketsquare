@@ -1,3 +1,17 @@
+## 2026-10-11 — Goal run 36: QUICK-DRAFT-VIEW-1, GEO-NATIONAL-NUDGE-1, three ledger reds from today (RG-0959)
+
+Walked Casual / services as a Durban dog walker (docs/E2E_2026-10-11.md), cold Home → Quick → letter → photo + terms → Publish.
+- **QUICK-DRAFT-VIEW-1 (quick.html = genie/HARNESS.html):** "Here is your listing" showed a 315 px strip of an example photo
+  under a 380 px pinned sign-in box. The box now sits at the end of her listing and scrolls; Save + terms stay pinned; a Save
+  with no address scrolls the box into view.
+- **GEO-NATIONAL-NUDGE-1 (bea_main.py /geo/city-counts, ms.js msEmptyCityNudge):** Durban Home said "No real listings in Durban
+  yet … Mossel Bay has 4" while the Bee Lady's Nationwide advert #538 showed in its Services list. Nationwide adverts now count
+  for every city of their country (trailing `national` row; cached clients skip it).
+- **LISTING-WORD (RG-0504):** the Nationwide switch toasts, plan bullets and the reach error say "listing", not "advert".
+- **QI18N source (RG-0501 / RG-0878):** SUBSCRIPTIONS-AUDIT-1's slot-full strings moved into roles/quick_i18n.json, block
+  regenerated; Cantonese "See plans" typo fixed.
+Cost model impact: none. Schema: none.
+
 ## 2026-10-11 — SUBSCRIPTIONS-AUDIT-1: the three apps say the same thing about the plans (PLANS-TRUTH-1, SLOT-FULL-QUICK-1, RUL-RENUMBER-1)
 
 David, 11 Oct 2026: audit TrustSquare, Quick and Traders against the latest subscription rulings and make them consistent.
