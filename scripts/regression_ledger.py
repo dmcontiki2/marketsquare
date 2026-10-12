@@ -38088,6 +38088,29 @@ def rg_auto_renew_live():
                       if armed else "OFF (the one-off payment of RUL-201 is in force)"))]
 
 
+@entry("RG-0968", "GX-RETRY-1 (David, 12 Oct 2026): a category tile does not sit without its AI example cards because one request "
+       "dropped -- Tutors read 3 beside Services 51 until the 3-minute refresh ('tutors has lost all of the new sub catagory cards')",
+       OPEN, fixed_on="2026-10-12",
+       scope="ms.js msGenericExLoad + _msGxRetry: a failed read of /examples/roles or /examples/trainers is asked again after 2 s "
+             "and 6 s (twice per city and language), cancelled by a newer list. Executed by scripts/prove_gx_retry.js.",
+       ref="Server journal 12 Oct 2026 08:26:07Z: his page load asked /examples/roles and never /examples/trainers; the cards "
+           "came back at the 08:29:07Z refresh. The server answered 47 trainer cards throughout.")
+def rg_gx_retry_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("async function msGenericExLoad(")
+    body = js[i:i + 6000] if i >= 0 else ""
+    out = []
+    if "function _msGxRetry(key, seq){" not in js or "if (seq === _msListSeq) msGenericExLoad(seq);" not in js:
+        out.append((FAIL, "the ask-again for a failed example read is gone"))
+    if "_msGxRetry(key, seq); return;" not in body:
+        out.append((FAIL, "a failed Services example read waits for the 3-minute refresh again"))
+    if "_msGxRetry(tkey, seq);" not in body:
+        out.append((FAIL, "a failed Tutors example read leaves the tile without its cards until the refresh again"))
+    return out or [(INFO, "a failed example read is asked again within seconds")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

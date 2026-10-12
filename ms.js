@@ -644,6 +644,18 @@ async function loadLiveListings(retryCount) {
    other (RUL-040): marked, listed after real adverts (RUL-194), hidden by the same switch, never counted on a tile, and
    never take an introduction -- a tap opens a small sheet that says so and offers 'I do this work - list me free'. */
 const _msGxCache = new Map();
+/* GX-RETRY-1 (David, 12 Oct 2026: "Services kept its 51 but tutors has lost all of the new sub catagory cards"): the one
+   request for the trainer examples did not reach the server on his page load (the Services one did), the failure was
+   swallowed, and the Tutors tile sat at 3 until the 3-minute refresh asked again. A failed read of either example list
+   is now asked again after 2 s and then 6 s (twice per city and language -- loadLiveListings' own backoff idea); after
+   that the normal refresh takes over. A newer list (another city, a later refresh) cancels the retry. */
+const _msGxTries = new Map();
+function _msGxRetry(key, seq){
+  const n = _msGxTries.get(key) || 0;
+  if (n >= 2) return;
+  _msGxTries.set(key, n + 1);
+  setTimeout(function(){ if (seq === _msListSeq) msGenericExLoad(seq); }, n === 0 ? 2000 : 6000);
+}
 async function msGenericExLoad(seq){
   try{
     if (!BEA_ENABLED || isOffline()) return;
@@ -655,8 +667,8 @@ async function msGenericExLoad(seq){
       const r = await fetch(BEA_URL + '/examples/roles?country=' + encodeURIComponent(cc) + '&city=' + encodeURIComponent(city)
                             + '&lang=' + encodeURIComponent(lang)).catch(function(){ return null; });
       rows = (r && r.ok) ? await r.json().catch(function(){ return null; }) : null;
-      if (!Array.isArray(rows)) return;
-      _msGxCache.set(key, rows);
+      if (!Array.isArray(rows)) { _msGxRetry(key, seq); return; }   // GX-RETRY-1: ask again, do not wait for the refresh
+      _msGxCache.set(key, rows); _msGxTries.delete(key);
     }
     if (seq !== _msListSeq) return;   // LIST-SWAP-1: another city owns the list now
     for (let i = LISTINGS.length - 1; i >= 0; i--) if (LISTINGS[i].generic) LISTINGS.splice(i, 1);
@@ -681,7 +693,8 @@ async function msGenericExLoad(seq){
         const r2 = await fetch(BEA_URL + '/examples/trainers?country=' + encodeURIComponent(cc) + '&city=' + encodeURIComponent(city)
                                + '&lang=' + encodeURIComponent(lang)).catch(function(){ return null; });
         trows = (r2 && r2.ok) ? await r2.json().catch(function(){ return null; }) : null;
-        if (Array.isArray(trows)) _msGxCache.set(tkey, trows); else trows = [];
+        if (Array.isArray(trows)) { _msGxCache.set(tkey, trows); _msGxTries.delete(tkey); }
+        else { trows = []; _msGxRetry(tkey, seq); }   // GX-RETRY-1: the Tutors tile must not sit without its cards
       }
       if (seq === _msListSeq && trows.length) {
         const tHere = LISTINGS.filter(function(l){ return l.cat === 'Tutors' && !l.generic && !String(l.id).startsWith('ph_')
