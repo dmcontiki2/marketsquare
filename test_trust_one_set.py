@@ -91,11 +91,12 @@ def test_panel_subtotals_are_capped_like_the_formula():
 # ---- write authority: a surface may not answer a question it was not asked ---
 def test_panel_listing_writes_are_category_scoped():
     body = _func_body(SRC, "def seller_public_credentials(")
-    ups = re.findall(r"UPDATE listings SET trust_score[^\"']*", body)
-    assert ups, "the panel's listing heal disappeared"
-    for u in ups:
-        assert "AND category" in u, \
-            "the panel wrote a per-listing score to EVERY listing: %r" % u
+    # TRUST-BADGE-ONE-RULE-1 (12 Oct 2026): the panel no longer carries an UPDATE of its own -- it asks the one
+    # writer, and only for THIS advert's category.
+    assert not re.findall(r"UPDATE listings\s+SET\s+trust_score", body), \
+        "the panel writes badges itself again -- only _write_listing_badges may"
+    assert '_write_listing_badges(conn, email, l["category"])' in body, \
+        "the panel's listing heal disappeared, or lost its category scope"
 
 def test_panel_user_write_requires_primary_category():
     body = _func_body(SRC, "def seller_public_credentials(")
@@ -108,6 +109,29 @@ def test_scorer_still_only_persists_on_primary():
     body = _func_body(SRC, "def trust_score_breakdown(")
     assert re.search(r"if not category and prior_score != score_total", body), \
         "the scorer lost the rule that a ?category= override never writes users.trust_score"
+
+# ---- TRUST-BADGE-ONE-RULE-1 (12 Oct 2026): one key rule, one badge writer ----
+# The fourth bug in this family. David: "her TS has gone to 90 - it was still 100 last night and even shows 100 on
+# the detail but show 90 in the adverts". The Edit screen scored the Bee Lady's Services adverts under Services (90);
+# the buyer's panel scored them under Local Market (100, SUPER-CRED-2); each wrote its own number onto the cards.
+def test_one_rule_decides_the_set_on_every_surface():
+    key = _func_body(SRC, "def _seller_score_key(")
+    assert "local_market" in key and "_norm_cat_key(category, service_class)" in key, \
+        "the seller rule (any Local Market advert -> Local Market model on all her adverts) left _seller_score_key"
+    assert "_seller_score_key(conn, email, category)" in _func_body(SRC, "def trust_score_breakdown("), \
+        "the Edit screen's ?category= read ignores the seller rule again"
+    assert '_seller_score_key(conn, email, l["category"], l["service_class"])' in _func_body(SRC, "def seller_public_credentials("), \
+        "the buyer's panel decides the signal set on its own again"
+    assert "_seller_score_key(" in _func_body(SRC, "def _write_listing_badges("), \
+        "the badge writer scores an advert without the seller rule"
+
+def test_only_the_one_writer_writes_a_badge():
+    ups = re.findall(r"UPDATE listings\s+SET\s+trust_score\s*=\s*\?", SRC)
+    assert len(ups) == 1, "%d places write listings.trust_score -- only _write_listing_badges may" % len(ups)
+    assert "UPDATE listings SET trust_score" in _func_body(SRC, "def _write_listing_badges("), \
+        "the one badge writer no longer writes the badge"
+    for fn in ("def seller_public_credentials(", "def trust_score_breakdown(", "def trust_score_set_credential("):
+        assert "_write_listing_badges(" in _func_body(SRC, fn), "%s no longer heals the badges" % fn
 
 if __name__ == "__main__":
     fails = 0

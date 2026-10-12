@@ -18202,12 +18202,18 @@ async function lmOpenDetail(listingId) {
     const lmArrows = lmPhotos.length > 1
       ? `<button class="strip-arrow strip-arrow-left" aria-label="Previous photo" onclick="stripNav('${lmStripId}',-1)">&#8249;</button><button class="strip-arrow strip-arrow-right" aria-label="Next photo" onclick="stripNav('${lmStripId}',1)">&#8250;</button>`
       : '';
+    // LM-THUMBS-1 (12 Oct 2026, David on the Bee Lady's honey advert: "Did Marietjie remove these photos or was it lost
+    // in going live?"): this page showed one big photo and two arrows, so 15 photos read as one. It now carries the same
+    // row of small pictures as every other advert page (the shared gallery strip -- galThumbClick / syncGalThumbs).
+    const lmThumbs = lmPhotos.length > 1
+      ? '<div class="adv-thumbs" id="adv-thumbs-' + lmStripId + '">' + lmPhotos.map(function(u, ti){ return '<div class="adv-thumb' + (ti===0?' active':'') + '" id="adv-thumb-' + lmStripId + '-' + ti + '" onclick="advThumbClick(\'' + lmStripId + '\',' + ti + ')"><img src="' + _lmEsc(u) + '" alt="" loading="lazy"></div>'; }).join('') + '</div>'
+      : '';
     const heroHtml =
       `<div class="photo-strip-wrap" id="pstrip-wrap-${lmStripId}">` +
-        `<div class="photo-strip" id="pstrip-${lmStripId}" onscroll="updateStripDots('${lmStripId}',${lmPhotos.length})">` +
+        `<div class="photo-strip" id="pstrip-${lmStripId}" onscroll="updateStripDots('${lmStripId}',${lmPhotos.length}); if(typeof syncAdvThumbs==='function') syncAdvThumbs('${lmStripId}', Math.round(this.scrollLeft/this.offsetWidth))">` +
           lmSlides +
         `</div>` +
-        lmDotsHtml + lmArrows +
+        lmDotsHtml + lmArrows + lmThumbs +
         `<div class="dnav">` +
           `<button class="dib" aria-label="Back to Local Market" onclick="goTo('local-market')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>` +
           `<button class="dib" aria-label="${wishlist.has('lm_'+c.id)?'Remove from saved':'Save listing'}" aria-pressed="${wishlist.has('lm_'+c.id)?'true':'false'}" onclick="lmToggleWish(event,${c.id})"><svg xmlns="http://www.w3.org/2000/svg" fill="${wishlist.has('lm_'+c.id)?'#c8873a':'none'}" stroke="${wishlist.has('lm_'+c.id)?'#c8873a':'currentColor'}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>` +

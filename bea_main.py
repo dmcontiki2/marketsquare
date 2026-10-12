@@ -8086,13 +8086,8 @@ def seller_public_credentials(listing_id: int):
         # SUPER-CRED-2 (22 Jul 2026): a seller with ANY Local Market listing is scored
         # under the LM model on ALL their listings — the visible list IS the score, on
         # every surface, so the model may not change between their own adverts.
-        _is_lm = (l["category"] or "").strip().lower() in ("local_market", "local market")
-        if not _is_lm:
-            _is_lm = bool(conn.execute(
-                "SELECT 1 FROM listings WHERE LOWER(seller_email)=? AND category='local_market' LIMIT 1",
-                (email,)).fetchone())
-        cat_key = "local_market" if _is_lm else (
-            _norm_cat_key(l["category"], l["service_class"]) or _category_key_for_user(conn, email))
+        cat_key = _seller_score_key(conn, email, l["category"], l["service_class"])   # TRUST-BADGE-ONE-RULE-1: the one rule
+        _is_lm = (cat_key == "local_market")
 
         ev = _trust_evidence(conn, email, cat_key)
 
@@ -8200,9 +8195,9 @@ def seller_public_credentials(listing_id: int):
                 # CASE-HEAL FIX (28 Jul 2026): email arrives lowercased; the stored row
                 # may not be — exact-match UPDATEs silently no-oped.
                 conn.execute("UPDATE users SET trust_score = ? WHERE LOWER(email) = ?", (_persist, email))
-            conn.execute(
-                "UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND category = ? AND trust_score != ?",
-                (_persist, email, l["category"], _persist))
+            # TRUST-BADGE-ONE-RULE-1: badges go through the one writer -- this advert's category only (the panel's
+            # write authority, TRUST-ONE-SET-1), each service class under its own set; unconditional (LISTINGS-SYNC).
+            _write_listing_badges(conn, email, l["category"])
             conn.commit()
         except Exception:
             pass
@@ -15476,6 +15471,43 @@ def _norm_cat_key(category, service_class=None) -> str:
     return _TRUST_CAT_NORM.get(cat, cat)
 
 
+def _seller_score_key(conn, email: str, category=None, service_class=None) -> str:
+    """TRUST-BADGE-ONE-RULE-1 (12 Oct 2026, David: "her TS has gone to 90 ... shows 100 on the detail but show 90 in
+    the adverts"): THE rule for which signal set one advert of a seller is scored under -- in one place. SUPER-CRED-2
+    (22 Jul 2026): a seller with ANY Local Market advert is scored under the Local Market model on ALL her adverts.
+    The buyer's panel and the credential decision each carried a copy of that rule; the Edit screen's
+    /trust-score/breakdown?category= had none (AUD-047 taught it the advert's own category on 4 Oct, never the
+    seller's), so it scored the Bee Lady's Services adverts under Services (90) and wrote that over the 100 the panel
+    writes -- the badge moved with whichever screen was opened last. Every surface asks here."""
+    em = (email or "").strip().lower()
+    if conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email) = ? "
+                    "AND LOWER(TRIM(category)) IN ('local_market', 'local market') LIMIT 1", (em,)).fetchone():
+        return "local_market"
+    return _norm_cat_key(category, service_class) or _category_key_for_user(conn, email)
+
+
+def _write_listing_badges(conn, email: str, db_category=None) -> int:
+    """TRUST-BADGE-ONE-RULE-1: THE only writer of an advert's stored Trust Score badge (listings.trust_score). Each
+    of the seller's adverts gets the score of the set it is scored under (_seller_score_key) -- per category AND
+    service class -- so no two screens can write different numbers onto the same advert (AUD-101: the profile read
+    wrote the primary-category score onto every advert; the panel and the Edit screen wrote theirs back).
+    db_category narrows the write to one listings.category; the values are the same whoever asks. Does not commit.
+    Returns the number of adverts whose badge changed."""
+    em = (email or "").strip().lower()
+    q, args = "SELECT DISTINCT category, service_class FROM listings WHERE LOWER(seller_email) = ?", [em]
+    if db_category:
+        q += " AND category = ?"
+        args.append(db_category)
+    changed = 0
+    for r in conn.execute(q, args).fetchall():
+        sc = int(_trust_evidence(conn, em, _seller_score_key(conn, em, r["category"], r["service_class"]))["score"])
+        cur = conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND category = ? "
+                           "AND COALESCE(service_class,'') = COALESCE(?,'') AND COALESCE(trust_score,-1) != ?",
+                           (sc, em, r["category"], r["service_class"], sc))
+        changed += max(0, cur.rowcount or 0)
+    return changed
+
+
 # ── RUL-129 (17 Sep 2026): the VEL catalogue, readable -- a draft screen reads its points from
 # HERE, never from a table typed on the screen. Public, read-only, names/points/how-to only.
 # Entries carrying baseline_q4 are served only once David arms the batch (RUL-126).
@@ -15688,7 +15720,9 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
     # _norm_cat_key/_trust_evidence so the buyer-facing panel cannot count a different
     # set. This endpoint keeps the items themselves — it needs their statuses for the
     # checklist and the tip; the panel keeps only what a buyer may see.
-    cat_key = _norm_cat_key(category) if category else _category_key_for_user(conn, email)
+    # TRUST-BADGE-ONE-RULE-1 (12 Oct 2026): a ?category= read obeys the seller rule too -- a Local Market seller's
+    # Services advert is scored under the Local Market model here exactly as on the buyer's panel (SUPER-CRED-2).
+    cat_key = _seller_score_key(conn, email, category) if category else _category_key_for_user(conn, email)
     ev = _trust_evidence(conn, email, cat_key)
     cat_signals = ev["cat_signals"]
     items_u, items_t, items_c = ev["items_u"], ev["items_t"], ev["items_c"]
@@ -15732,12 +15766,9 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
             "UPDATE users SET trust_score = ? WHERE LOWER(email) = LOWER(?)",
             (score_total, email)
         )
-        # Sync score to all listing rows for this seller+category so the
-        # browse card badge stays accurate without a separate job.
-        conn.execute(
-            "UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = LOWER(?)",
-            (score_total, email)
-        )
+        # TRUST-BADGE-ONE-RULE-1 (AUD-101): each advert's badge is written under ITS OWN set by the one writer. This
+        # used to put the primary-category score on every advert, and the panel / Edit screen wrote theirs back.
+        _write_listing_badges(conn, email)
         conn.commit()
         # Hook into LM suspension/restoration
         _lm_recompute_seller_state(conn, email)
@@ -15757,10 +15788,7 @@ def trust_score_breakdown(email: str, category: Optional[str] = None):
             "Collectors": "Collectors", "Cars": "Cars",
         }
         db_cat = _cat_listing_map.get(category, category)
-        conn.execute(
-            "UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = LOWER(?) AND category = ?",
-            (score_total, email, db_cat)
-        )
+        _write_listing_badges(conn, email, db_cat)   # TRUST-BADGE-ONE-RULE-1: the one writer -- never a score computed here
         conn.commit()
 
     tip = _haiko_tip(items_u, items_t, items_c, cat_signals, score_total, tier)
@@ -15861,16 +15889,7 @@ def trust_score_set_credential(req: CredentialUpdateReq, _key: str = Depends(aut
     # under -- the same evidence set and the same Local Market rule as /sellers/credentials.
     try:
         _em = (req.email or "").strip().lower()
-        _rows = conn.execute("SELECT DISTINCT category, service_class FROM listings WHERE LOWER(seller_email) = ?",
-                             (_em,)).fetchall()
-        _lm_any = any((r["category"] or "").strip().lower() in ("local_market", "local market") for r in _rows)
-        for _r in _rows:
-            _ck = "local_market" if _lm_any else (_norm_cat_key(_r["category"], _r["service_class"])
-                                                  or _category_key_for_user(conn, _em))
-            _sc = int(_trust_evidence(conn, _em, _ck)["score"])
-            conn.execute("UPDATE listings SET trust_score = ? WHERE LOWER(seller_email) = ? AND category = ? "
-                         "AND COALESCE(service_class,'') = COALESCE(?,'') AND COALESCE(trust_score,-1) != ?",
-                         (_sc, _em, _r["category"], _r["service_class"], _sc))
+        _write_listing_badges(conn, _em)   # TRUST-BADGE-ONE-RULE-1: the same one writer every other surface uses
     except Exception as _sx:
         _log.warning("CRED-SCORE-SYNC-1: score sync after a credential decision failed (non-fatal): %s", _sx)
     conn.commit()
@@ -32395,12 +32414,32 @@ _ANON_NAMES_SYSTEM = (
     "the goods, appliances, fittings or materials -- they describe the item, not the seller (Toyota, Smeg, Bosch, "
     "Defy, Caesarstone, Samsung, Weber are NEVER names to remove); public bodies, regulators, "
     "associations and qualifications named as a credential (DALRRD, PSIRA, SAPS, a beekeepers' association, a "
-    "university degree); or generic words (complex, estate, townhouse, simplex). "
+    "university degree); a trade pseudonym -- a working nickname made of ordinary words for what the seller does "
+    "('the Bee Lady', 'the Handyman', 'the Cake Lady', 'die Byetannie'): it names a trade, not a person or a "
+    "registered business, so it is NEVER a name to remove (RUL-225); "
+    "or generic words (complex, estate, townhouse, simplex). "
     "Reply with ONLY JSON: {\"names\":[{\"text\":\"<the name exactly as written>\",\"kind\":\"complex|estate|building|"
     "residence|business|person|other\",\"replace\":\"<neutral words that read naturally in its place, e.g. 'the "
     "complex', or empty>\"}]}. If there are none: {\"names\":[]}."
 )
 _ANON_NAMES_MEMO = {}   # pure memo of identical text (idempotent) -- not shared state; a cold box just asks again
+
+# ANON-PSEUDONYM-1 (RUL-225, David 12 Oct 2026: "Bee Lady is a pseudo name like the Handyman"): a trade pseudonym -- a
+# working nickname made of ordinary words for what the seller does -- names a trade, not a person or a registered
+# business, so it stays in her advert. The AI read is told so; this fixed check drops one it flags anyway (it took
+# "Bee Lady" out of all five of her titles on 12 Oct). The LAST word must be a persona word; a possessive, a digit or
+# a fourth word makes it an ordinary name again ("Pam's Cleaning", "Tannie Maria" and "Smith Properties" still go).
+_ANON_PSEUDONYM_ROLES = frozenset((
+    "lady", "man", "guy", "girl", "woman", "auntie", "aunty", "uncle", "tannie", "oom", "queen", "king", "doctor",
+    "doc", "whisperer", "wizard", "guru", "mama", "papa", "gogo", "handyman", "handywoman", "handylady"))
+
+
+def _anon_is_trade_pseudonym(name) -> bool:
+    w = re.sub(r"^(?:the|die|a|an)\s+", "", str(name or "").strip().lower())
+    parts = w.split()
+    if not parts or len(parts) > 3 or any(not re.fullmatch(r"[a-z\u00e0-\u024f-]+", p) for p in parts):
+        return False
+    return parts[-1] in _ANON_PSEUDONYM_ROLES
 
 
 def _anon_names_find(text, place="", who=""):
@@ -32435,6 +32474,8 @@ def _anon_names_find(text, place="", who=""):
         nt = str(n.get("text") or "").strip()
         if len(nt) < 2 or nt.lower() in keep_whole or nt.lower() not in t.lower():
             continue                      # never the advert's own suburb; never a name the text does not contain
+        if _anon_is_trade_pseudonym(nt):
+            continue                      # ANON-PSEUDONYM-1 (RUL-225): 'the Bee Lady', 'the Handyman' -- a trade, not a person
         rp = str(n.get("replace") or "").strip()[:40]
         if nt.lower() in rp.lower():
             rp = ""
@@ -32445,6 +32486,27 @@ def _anon_names_find(text, place="", who=""):
     return True, out
 
 
+# ANON-TITLE-TAIL-1 (12 Oct 2026, the Bee Lady's five adverts): ANON-NAMES-1 takes a name out of a title and the words
+# that led up to it stayed -- "Beehive Audit & Consulting for farms — by the", live to every buyer. A title never
+# ends on a joining word or a dash, and never starts in lower case because the name in front of it went.
+_ANON_TITLE_TAIL_RX = re.compile(
+    r"(?i)[\s,;:|/\u2013\u2014-]*\b(?:next to|close to|by|via|from|at|with|for|of|in|near|on|opposite|inside|behind"
+    r"|deur|van|naby|op)(?:\s+(?:the|a|an|die|'n))?\s*$")
+
+
+def _anon_title_tidy(out, original=""):
+    t = out or ""
+    for _ in range(3):
+        t2 = re.sub(r"[\s,;:|/\u2013\u2014-]+$", "", _ANON_TITLE_TAIL_RX.sub("", t))
+        if t2 == t:
+            break
+        t = t2
+    t = re.sub(r"^[\s,;:|/\u2013\u2014-]+", "", t)
+    if t and t[0].islower() and (original or "").lstrip()[:1].isupper():
+        t = t[0].upper() + t[1:]
+    return t or out
+
+
 def _anon_names_apply(text, names, title=False):
     if not text or not names:
         return text
@@ -32452,10 +32514,13 @@ def _anon_names_apply(text, names, title=False):
     for n in sorted(names, key=lambda x: -len(x["text"])):
         # a title is a short descriptor: the name simply goes ("3 Bed 2 Bath Modern unit for sale")
         out = re.sub(r"(?i)(?<![\w])" + re.escape(n["text"]) + r"(?![\w])", "" if title else n["replace"], out)
+    _went = (out != text)
     out = re.sub(r"(?i)\b(the|a|an)\s+(the|a|an)\b", lambda m: m.group(2) if m.group(1)[0].islower() else m.group(2).capitalize(), out)
     out = re.sub(r"[ \t]{2,}", " ", out)
     out = re.sub(r" +([,.;:!?])", r"\1", out)
     out = re.sub(r"(?im)^[ \t]+|[ \t]+$", "", out)
+    if title and _went:
+        out = _anon_title_tidy(out, text)   # ANON-TITLE-TAIL-1: no dangling "by the", no lower-case start
     return out.strip() if out.strip() else text
 
 

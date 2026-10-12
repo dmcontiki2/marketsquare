@@ -87,9 +87,17 @@ def test_selfheal_only_with_base():
         "a base-less total must never gain write authority over stored scores"
     # LISTINGS-SYNC (28 Jul): the listings heal must run unconditionally — gating it
     # on the users-differ check strands browse cards at a stale score forever.
-    ls = body.find("UPDATE listings SET trust_score")
-    assert ls != -1 and "AND trust_score != ?" in body, \
+    # TRUST-BADGE-ONE-RULE-1 (12 Oct 2026): the heal goes through the one writer, _write_listing_badges. It must
+    # still be unconditional here -- at the indent of the users-differ `if`, never inside it -- and the
+    # value-changed guard now lives in the writer.
+    lines = body.split("\n")
+    ifs = [x for x in lines if x.strip().startswith("if cat_key == _category_key_for_user(conn, email)")]
+    calls = [x for x in lines if x.strip().startswith('_write_listing_badges(conn, email, l["category"])')]
+    assert ifs and calls and (len(calls[0]) - len(calls[0].lstrip())) == (len(ifs[0]) - len(ifs[0].lstrip())), \
         "listings self-heal must be unconditional (guarded only by value-changed)"
+    w = _func_body(src, "def _write_listing_badges(")
+    assert "UPDATE listings SET trust_score" in w and "COALESCE(trust_score,-1) != ?" in w, \
+        "the one badge writer lost its value-changed guard"
 
 # ---- the sell-flow preview (ms.js) must agree ------------------------------
 def test_sellflow_preview_has_base40():

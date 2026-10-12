@@ -1492,6 +1492,14 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-225": [
+   # David, 12 Oct 2026: "Bee Lady is a pseudo name like the Handyman." A trade pseudonym stays in an advert; real
+   # names still go (ANON-NAMES-1), and a title that loses one no longer ends on "by the".
+   ("bea_main.py", ["def _anon_is_trade_pseudonym(", "if _anon_is_trade_pseudonym(nt):", "NEVER a name to remove (RUL-225)",
+                    "def _anon_title_tidy("], []),
+   ("scripts/regression_ledger.py", ["ANON-PSEUDONYM-1 (RUL-225", "ANON-TITLE-TAIL-1 (12 Oct 2026)"], []),
+   ("RULINGS.md", ["A TRADE PSEUDONYM IS NOT A NAME"], []),
+ ],
 }
 
 
