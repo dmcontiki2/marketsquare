@@ -1,3 +1,5 @@
+- **BROWSE-EMPTY-SELL-1** (Goal run 37, RG-0970): Browse on an empty category with no filter set says it is empty in her city and offers "List yours here →" (straight into that category's guided Sell flow) and "Look in another city"; "No listings match your filters" now only shows when a filter is set. Found walking as a Gqeberha stamp collector (docs/E2E_2026-10-12.md).
+
 ## 2026-10-12 — "Reply STOP" now reaches us; the SMS wave runs itself from the server (SMS-REPLY-1, RUL-226)
 
 David, 12 Oct 2026, on the SMS wave readiness board: *"G5 pilot go - approved"*, *"Agreed"* (cap 40 -> 200 after a clean
