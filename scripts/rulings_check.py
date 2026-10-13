@@ -1509,6 +1509,12 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-227": [
+   # David, 13 Oct 2026: "I asked for an auto renew, why did you place a 12 month expire clause to it? ... Please remove that"
+   ("RULINGS.md", ["AUTO-RENEW HAS NO END DATE -- IT RENEWS UNTIL THE SELLER CANCELS", "CONFIRMS RUL-224"], []),
+   ("bea_main.py", ["RUL-227 (David, 13 Oct 2026): NO invoice_limit"], ["invoice_limit="]),
+   ("payments.py", ["def initialize_payment("], ["invoice_limit"]),
+ ],
  "RUL-226": [
    # David, 12 Oct 2026: "G5 pilot go - approved", "Agreed" (cap 40 -> 200 after a clean 48 h read), "Make 'Reply STOP' true".
    ("RULINGS.md", ["THE SMS WAVE RUNS ITSELF FROM THE SERVER", "AMENDS [[RUL-192]](d)"], []),

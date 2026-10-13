@@ -67,7 +67,6 @@ def initialize_payment(
     callback_url: str | None = None,
     plan: str | None = None,
     channels: list | None = None,
-    invoice_limit: int | None = None,
 ) -> dict:
     """
     Create a Paystack transaction and return the authorization URL.
@@ -94,8 +93,6 @@ def initialize_payment(
         payload["plan"] = plan              # AUTO-RENEW-1: Paystack charges the plan's own amount
     if channels:
         payload["channels"] = list(channels)
-    if plan and invoice_limit:
-        payload["invoice_limit"] = int(invoice_limit)   # QA-RED-AR-3: Paystack stops the subscription after this many charges
 
     try:
         resp = requests.post(

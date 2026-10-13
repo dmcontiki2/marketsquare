@@ -38254,5 +38254,29 @@ def rg_eula_119_switch_1():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "the dated v1.19 switch parks older acceptances and the doors ask again")]
 
+@entry("RG-0971", "QA-RED-AR-1/2 + RUL-227: an auto-renew plan checkout starts only as the signed-in seller, her renewal "
+       "state is shown only to her, and the subscription has NO end date -- it renews until she cancels",
+       LOCKED, fixed_on="2026-10-13",
+       scope="bea_main.py init_seller_subscription (_session_email gate + _actor), get_user_subscription (owner/admin-only "
+             "_auto_renew_status), _auto_renew_initialize (no invoice_limit); payments.py initialize_payment (no "
+             "invoice_limit); route_policy.json POST /payment/seller-subscription/initialize = user + bind(email, query). "
+             "SCOPE: every seller plan checkout. CLASS: a security fix that quietly adds a business limit nobody ruled.",
+       ref="QA Bot nightly review 13 Oct 2026 (3 RED). Fix 3 (a 12-charge cap) was Claude's own addition and David "
+           "reversed it the same morning: 'I asked for an auto renew ... i did not ask for that' (RUL-227).")
+def rg_auto_renew_bind_nocap():
+    bm = repo_file("bea_main.py"); pm = repo_file("payments.py")
+    if bm is None or pm is None:
+        return [(INFO, "NOT EVALUATED - bea_main.py / payments.py not readable from here")]
+    bad = []
+    if '_actor(ts_user, email, "seller-subscription-init", x_admin_key)' not in bm:
+        bad.append("the plan checkout no longer acts as the signed-in session")
+    if "if _owner or (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY):\n        _sub_out.update(_auto_renew_status(email))" not in bm:
+        bad.append("renewal state is no longer limited to the owner")
+    if "invoice_limit=" in bm or "invoice_limit" in pm:
+        bad.append("an end date (invoice_limit) is back on auto-renew -- RUL-227 says it renews until she cancels")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    return [(INFO, "checkout bound to session, renewal state owner-only, no end date on auto-renew")]
+
 if __name__ == "__main__":
     sys.exit(main())

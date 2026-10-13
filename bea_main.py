@@ -10991,11 +10991,6 @@ def verify_seller_subscription(reference: str):
 # day before her card is charged. A failed renewal ends that wait at once.
 # ══════════════════════════════════════════════════════════════════════════════
 _AUTO_RENEW_GRACE_H = 72
-# QA-RED-AR-3 (13 Oct 2026, QA Bot review RED): a subscription is never open-ended. Paystack charges it at most
-# this many times (invoice_limit, the first payment included) and then completes it; Paystack's own
-# subscription.not_renew / subscription.disable events then run the normal plan-ended path, and she ticks the
-# box again to carry on. 12 = one year of monthly charges before she re-confirms.
-_AUTO_RENEW_MAX_CHARGES = 12
 
 
 def _auto_renew_on() -> bool:
@@ -11223,12 +11218,14 @@ def _auto_renew_initialize(email, tier, plan, is_downgrade, reference, callback_
             "is_downgrade": is_downgrade,
             "auto_renew": True,
             "plan_code": plan_code,
-            "max_charges": _AUTO_RENEW_MAX_CHARGES,
         },
         callback_url=_safe_callback_url(callback_url),
         plan=plan_code,
         channels=["card"],
-        invoice_limit=_AUTO_RENEW_MAX_CHARGES,   # QA-RED-AR-3: no unlimited future charges
+        # RUL-227 (David, 13 Oct 2026): NO invoice_limit / term / spend ceiling, on purpose. Auto-renew runs until SHE
+        # cancels; a hidden end date would drop her plan, and the income, without anyone choosing it. Her protection is
+        # RUL-224: each charge is the fixed plan price, the checkout says "renews monthly until cancelled", and
+        # "Cancel renewal" is one tap (POST /payment/seller-subscription/cancel, session-bound). Guarded by RG-0971.
     )
     if result.get("status"):
         return {
@@ -11240,7 +11237,6 @@ def _auto_renew_initialize(email, tier, plan, is_downgrade, reference, callback_
             "amount_rands": plan["amount_rands"],
             "is_downgrade": is_downgrade,
             "auto_renew": True,
-            "max_charges": _AUTO_RENEW_MAX_CHARGES,
         }
     raise HTTPException(status_code=400, detail="Subscription payment initialization failed")
 
