@@ -37589,7 +37589,7 @@ def _qf_fn(py, name):
     return "\n".join(l.split("  #")[0] if "  #" in l else l for l in body.splitlines() if not l.strip().startswith("#"))
 
 
-@entry("RG-0960", "QUICK-FAST-1 (RUL-222(a)(e), DoD 1): a fast publish rides the ONE publish path -- quick-publish checks the "
+@entry("RG-0973", "QUICK-FAST-1 (RUL-222(a)(e), DoD 1): a fast publish rides the ONE publish path -- quick-publish checks the "
        "gate before anything is made, HOLDS the advert as a draft, her real photo goes onto that draft, and only the standard "
        "PUT /listings/{id}/publish makes it live; the fast-lane code never writes a listing live itself",
        LOCKED, fixed_on="2026-10-10",
@@ -37624,7 +37624,7 @@ def rg_quick_fast_1_path():
     return [(INFO, "one publish path: gate first, draft held, real photo on, standard publish")]
 
 
-@entry("RG-0961", "QUICK-FAST-1 (RUL-222, DoD 2): the Quick Find icon reads one search line on the server (commas without AI; "
+@entry("RG-0974", "QUICK-FAST-1 (RUL-222, DoD 2): the Quick Find icon reads one search line on the server (commas without AI; "
        "the price limit from its words; a card name through the Scryfall pipeline), every specific term must be in the "
        "listing, and the matches come from the ordinary public /listings search -- real listings only, the price limit hard",
        LOCKED, fixed_on="2026-10-10",
@@ -37654,7 +37654,7 @@ def rg_quick_fast_1_find():
     return [(INFO, "one line, parsed on the server; real matches only; price limit hard")]
 
 
-@entry("RG-0962", "QUICK-FAST-1 (RUL-222(b)(c), DoD 3): the fast-publish gate runs on every fast publish on the server -- current "
+@entry("RG-0975", "QUICK-FAST-1 (RUL-222(b)(c), DoD 3): the fast-publish gate runs on every fast publish on the server -- current "
        "EULA, listed before, a free slot (the same default as publish_listing) -- and each failure lands her in the normal "
        "draft step with its one line; a full Free plan is offered upgrade or 'choose a listing to rest' (nothing deleted)",
        LOCKED, fixed_on="2026-10-10",
@@ -37692,7 +37692,7 @@ def rg_quick_fast_1_gate():
     return [(INFO, "gate on every fast publish; three fallbacks to the normal draft step; rest, never delete")]
 
 
-@entry("RG-0963", "QUICK-FAST-1 (RUL-222(f), DoD 4): unticking (in Quick or My Space -> My quick icons -> Switch off) DELETES the "
+@entry("RG-0976", "QUICK-FAST-1 (RUL-222(f), DoD 4): unticking (in Quick or My Space -> My quick icons -> Switch off) DELETES the "
        "preset, and an icon left on the phone opens normal Quick at step 1 of its door with 'This quick icon was switched off.'",
        LOCKED, fixed_on="2026-10-10",
        scope="bea_main.py quick_presets_delete; quick.html openIcon()/normalStart()/unmake(); ms.js msQuickIconsOpen switch off",
@@ -37715,7 +37715,7 @@ def rg_quick_fast_1_untick():
     return [(INFO, "untick = deleted; the old icon opens normal Quick with one line")]
 
 
-@entry("RG-0964", "QUICK-FAST-1 (RUL-222(g), DoD 5): every preset installs as its own icon -- its own manifest (id, name, start_url, "
+@entry("RG-0977", "QUICK-FAST-1 (RUL-222(g), DoD 5): every preset installs as its own icon -- its own manifest (id, name, start_url, "
        "scope /quick/), a sell preset declares a share_target the service worker receives and hands to the page (a one-photo "
        "mailbox emptied on read, nothing of the app cached), and the head script points the page at the preset's manifest",
        LOCKED, fixed_on="2026-10-10",
@@ -37744,7 +37744,7 @@ def rg_quick_fast_1_pwa():
     return [(INFO, "one manifest per preset, share_target received and handed over, mailbox emptied")]
 
 
-@entry("RG-0965", "QUICK-FAST-1 (DoD 6): every word the fast lane shows has a translation in South Africa's languages (af zu xh nso) "
+@entry("RG-0978", "QUICK-FAST-1 (DoD 6): every word the fast lane shows has a translation in South Africa's languages (af zu xh nso) "
        "and the approved US/UK/AU lists (es zh tl vi cy pl ro pa ar yue), in roles/quick_i18n.json and the generated QI18N",
        LOCKED, fixed_on="2026-10-10",
        scope="quick.html QUICK-FAST-1 block T('...') literals and LINES; roles/quick_i18n.json; scripts/apply_fastlane_i18n.py",
@@ -37776,7 +37776,7 @@ def rg_quick_fast_1_words():
     return [(INFO, "%d fast-lane words in all 14 offered languages" % len(keys))]
 
 
-@entry("RG-0967", "QUICK-FAST-1: the example in the fast screens' boxes follows the icon -- a cards icon shows the MtG "
+@entry("RG-0980", "QUICK-FAST-1: the example in the fast screens' boxes follows the icon -- a cards icon shows the MtG "
        "example, any other icon its own words ('e.g. Chess coach', 'e.g. Chess coach, Menlyn'), never another trade's example",
        LOCKED, fixed_on="2026-10-10",
        scope="quick.html QUICK-FAST-1 module exampleFor/paintSell/paintFind",
@@ -37799,7 +37799,7 @@ def rg_quick_fast_1_example():
     return [(INFO, "the example in each fast box follows the icon")]
 
 
-@entry("RG-0966", "QUICK-FAST-1 (rollback + DoD 7): the dashboard switch QUICK_FASTLANE ships OFF and OFF hides every entry point -- "
+@entry("RG-0979", "QUICK-FAST-1 (rollback + DoD 7): the dashboard switch QUICK_FASTLANE ships OFF and OFF hides every entry point -- "
        "the routes answer 404, Quick shows no tick and opens icons as normal Quick, My Space hides My quick icons -- and all nine "
        "fast-lane routes are declared (SEC-GATE-1) with the presets owned by their account",
        LOCKED, fixed_on="2026-10-10",
@@ -37842,7 +37842,7 @@ def rg_quick_fast_1_switch():
     return [(INFO, "switch ships OFF and hides every entry point; nine routes declared, presets owned")]
 
 
-@entry("RG-0968", "QUICK-FAST-2 (RUL-223, option D): Quick's own manifest is served live at /quick-icon/app.webmanifest -- the "
+@entry("RG-0981", "QUICK-FAST-2 (RUL-223, option D): Quick's own manifest is served live at /quick-icon/app.webmanifest -- the "
        "static file with the SAME id (an installed Quick stays the same app) plus, for a signed-in trader with the switch on, "
        "her quick icons as press-and-hold shortcuts (max 4); it always answers, and quick.html links it with credentials",
        LOCKED, fixed_on="2026-10-10",
@@ -37871,7 +37871,7 @@ def rg_quick_fast_2_manifest():
     return [(INFO, "Quick's manifest is live, same id, her quick icons as shortcuts when signed in and on")]
 
 
-@entry("RG-0969", "QUICK-FAST-2 (RUL-223, option D): her quick icons live in Quick -- the door shows them as a strip "
+@entry("RG-0982", "QUICK-FAST-2 (RUL-223, option D): her quick icons live in Quick -- the door shows them as a strip "
        "(blue sell, purple find, one tap opens the fast screen) only with the switch on and her signed in; the ready card "
        "says it now sits at the top of Quick and offers the home-screen icon as an optional second step; the generic "
        "'Add Quick to your home screen' offer is no longer removed",

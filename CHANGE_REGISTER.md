@@ -16,7 +16,7 @@
 **Stage:** 5/8 BUILT + VERIFIED LOCALLY — held under the IP hold. Built 10 Oct 2026 on the local branch `fastlane` (worktree `_fastlane_wt`, never pushed). Steps 6–8 (David's real-phone check, merge, deploy, the switch ON, the four parsed docs) run only once the provisional-2 application number exists (`Patents/provisional-2/SUBMITTED_2026-10-10.md`).
 **Opened:** 10 Oct 2026 · **Owner:** David (rulings, phone check, merge word) / Claude (build, harness, report)
 **Source decision:** RUL-222 (David in chat 9 Oct 2026 18:07–18:25 SAST; `QUICK_FASTLANE_BRIEF.md` is the CCP step 1+2 brief)
-**Amendment (10 Oct 2026):** RUL-223 — option D, *quick icons live in Quick* (QUICK-FAST-2): a strip on Quick's door, Android press-and-hold shortcuts on the Quick icon (live manifest `/quick-icon/app.webmanifest`), a preset's own home-screen icon optional. Same gates, same publish path, no schema change. Artifacts: quick.html (+ HARNESS), bea_main.py `_qf_quick_app_manifest`, roles/quick_i18n.json (4 words), stories steps 2–3, RG-0968, RG-0969, rulings_check RUL-223.
+**Amendment (10 Oct 2026):** RUL-223 — option D, *quick icons live in Quick* (QUICK-FAST-2): a strip on Quick's door, Android press-and-hold shortcuts on the Quick icon (live manifest `/quick-icon/app.webmanifest`), a preset's own home-screen icon optional. Same gates, same publish path, no schema change. Artifacts: quick.html (+ HARNESS), bea_main.py `_qf_quick_app_manifest`, roles/quick_i18n.json (4 words), stories steps 2–3, RG-0981, RG-0982, rulings_check RUL-223.
 **Step 0 (baseline):** git tag `pre-fastlane-1` = `495227a` (main HEAD at the start). Rollback = the dashboard switch `QUICK_FASTLANE` OFF (instant, every entry point hidden, routes 404) or `git checkout pre-fastlane-1` for the code.
 
 **One-paragraph change:** At the end of a Quick flow a signed-in trader may tick **Make this my quick icon**. The setup of that flow (door, kind + type, condition, area, language — never the price) is kept as a preset (`quick_presets`), and his phone gets a home-screen icon for it with its own manifest. **Quick Sell icon:** icon → one screen (Take photo / Use last photo, price, what exactly is it, description, the EULA acceptance line) → Publish → live. **Quick Find icon:** icon → one search line → real matches on the same page → tap one → TrustSquare’s normal introduction. It is the third standard flow: the publish is `POST /listings/quick-publish` (hold) → her photo onto the draft → `PUT /listings/{id}/publish`, and the RUL-222(b) gate runs on the server on every fast publish.
@@ -51,16 +51,16 @@
 | Specs/canon | QUICK_LISTING_SPEC.md §Fast lane, RULINGS.md RUL-222, this ticket, changelog.d/status.d fragments, OPEN_LOOPS.md | built |
 | Admin | marketsquare_admin.html | **N/A — checked, untouched** |
 
-**Verification:** regression ledger RG-0960…RG-0966 (one per definition-of-done item) + whole board vs. the pre-build baseline; `scripts/stranger_test.py` PASS; rendered headless-Chromium walks at 390 px with QA accounts (`dmcontiki2+qa-fast-*`). Screenshots: `C:\Users\David\Projects\Visuals\fastlane\`.
+**Verification:** regression ledger RG-0973…RG-0979 (one per definition-of-done item) + whole board vs. the pre-build baseline; `scripts/stranger_test.py` PASS; rendered headless-Chromium walks at 390 px with QA accounts (`dmcontiki2+qa-fast-*`). Screenshots: `C:\Users\David\Projects\Visuals\fastlane\`.
 **Not provable headless (the one human check):** the Android Share sheet listing “Quick Sell · Cards” and installing a second icon from the same site, and iPhone Share → Add to Home Screen opening signed in.
 **Cost model impact:** none recurring (see RUL-222).
 
 **Steps 6–8, in order, once the provisional-2 application number exists (nothing here before that):**
 1. `Patents/provisional-2/FILED.md` carries the number; David has done the phone check (or says merge first and check on live).
-2. Wait for silence in the main tree (no lane writing; the Squire-2 lane may have taken `migrations/080_*` or `RG-0960…0966` on its own branch — renumber ours on a clash before merging, never theirs).
+2. Wait for silence in the main tree (no lane writing; the Squire-2 lane may have taken `migrations/080_*` or `RG-0973…0966` on its own branch — renumber ours on a clash before merging, never theirs).
 3. `git merge --no-ff fastlane` into main from the main tree; copy the gitignored How screens `_fastlane_wt/stories/img/quick_sell_icon/` and `quick_find_icon/` into `stories/img/`.
 4. Fold `changelog.d` / `status.d` (`changelog_compile.py`, `status_compile.py`), commit, `request_deploy.py` (migration 080 runs once on the box).
-5. After the deploy: switch QUICK_FASTLANE ON (dashboard or `POST /admin/flags {"quick_fastlane": true}`), `python3 scripts/build_help.py --push-images`, then walk DoD 1–6 on trustsquare.co with the `dmcontiki2+qa-fast-*` accounts and read RG-0960…0966 on the live board.
+5. After the deploy: switch QUICK_FASTLANE ON (dashboard or `POST /admin/flags {"quick_fastlane": true}`), `python3 scripts/build_help.py --push-images`, then walk DoD 1–6 on trustsquare.co with the `dmcontiki2+qa-fast-*` accounts and read RG-0973…0966 on the live board.
 6. `git worktree remove _fastlane_wt` (the tag `pre-fastlane-1` stays as the rollback anchor); close L42 in OPEN_LOOPS.md and this ticket.
 
 ---
