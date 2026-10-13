@@ -32,6 +32,10 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 - **Ledger:** new tree 6 !!!! = base `origin/main` 176e986 6 !!!! (RG-0175, RG-0391, RG-0477, RG-0546, RG-0964, RG-0965 — all
   pre-existing; RG-0391/0477 read "quick.html no longer links its manifest" after the RUL-223 fast-lane merge; RG-0965's prover
   fails on "0 prospects mapped to geo_cities ids". Not this run's; flagged for their lanes.)
+- **Ship gate unblocked:** CLOUD-SHIP-1 refused the first push (21:19Z): build_help --check found the fast-lane story screens
+  (quick_find_icon 6, quick_sell_icon 11) missing — on origin/main since the RUL-222/223 merge, so every lane's ship was blocked.
+  The screens were only in the laptop's `_fastlane_wt/stories/img`; copied to `/var/www/marketsquare/help/img/quick_{find,sell}_icon/`
+  (the CHANGE_REGISTER CC-006 deploy step). build_help --check: 127 stories, 0 errors.
 - **REVIEW NOW:** GI-0039 (the SMS pilot converted — keep it going / widen it; spend is yours).
 - **QA data:** none created; walk rows bot=2.
 - **Not reached:** tonight's email wave result; SMS b1 delivery figures.
