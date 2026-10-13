@@ -975,6 +975,8 @@ function _priceLabel(l){
 
 function formatDescLegacy(desc) {
   if (!desc) return '';
+  // EXPERIENCE-YEARS-1 (Goal run 38): Quick stored a bare number ('**Experience:** 9') -- say what it counts
+  desc = String(desc).replace(/^(\*\*Experience:\*\*[ \t]*)(\d{1,2})[ \t]*$/gm, function(m,a,n){ return a + n + (n === '1' ? ' year' : ' years'); });
   const lines = desc.split('\n');
   const out = [];
   let listType = null;
@@ -23538,7 +23540,7 @@ function sfAiDescRow(){ var f=sfFlow(); if(!f) return ''; for(var i=0;i<f.sectio
 function sfCleanAiDesc(t){
   t=String(t||'').trim(); if(!t) return '';
   var parts=t.match(/[^.!?]+[.!?]*(\s+|$)/g)||[t];
-  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b|\b(may|might|probably|possibly) not be (included|part of)|\bnot (be )?included\b|\b(is|are) (positioned|placed|displayed|arranged|propped) (on top|beside|next to|alongside|in front|behind|around)\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34) + AI-PROPS-1 (Goal run 35)
+  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b|\b(may|might|probably|possibly) not be (included|part of)|\bnot (be )?included\b|\b(is|are) (positioned|placed|displayed|arranged|propped) (on top|beside|next to|alongside|in front|behind|around)\b|\b(should|must|need to|needs to|would need to) be (confirmed|checked|verified|clarified)\b|\bto be confirmed\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34) + AI-PROPS-1 (Goal run 35) + AI-META-CONFIRM-1 (Goal run 38)
   return parts.filter(function(x){ return !bad.test(x); }).join('').trim();
 }
 /* AI-PROPS-1 (Goal run 35, 10 Oct 2026): a Cape Town dresser photo with a radio and books standing on it came back titled

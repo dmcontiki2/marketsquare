@@ -5,6 +5,37 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 38 — Tue 13 Oct 2026, 20:56–21:45 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe `.wtest` left in the laptop repo root). Device VM disk has
+  ~250 MB free again, so `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w38` (base comparison in `/root/w38base`,
+  both removed at the end), shipped `claude/goal-run38` via CLOUD-SHIP-1.
+- **THE NUMBER MOVED: 1.** #542 "Appliance repair — Montana" (Pretoria), user 1778 `britneyrobertson37@gmail.com`, published
+  13 Oct 11:54:51Z **by a stranger's own hand**. Path: SMS pilot batch b1 (07:10Z, 40 texts, Gumtree Pretoria services, R8,
+  David's "G5 pilot go", 12 Oct) → `/q/services?src=sms-b1-svc-pta` on a Huawei Android 12 (MAO-LX9) → Quick door 11:37:46Z →
+  draft in 56 s → ~10 min away on the draft (q_leave s=649) → handover 11:49:09Z → Google sign-in → Terms 11:54:38Z → live.
+  Her own photo (a robot vacuum opened on the bench), R450 / call-out, 20 km, quality 70. Visible to a Pretoria stranger in
+  Browse → Services ("2 real listings"). 1 of 40 texts → a published listing. Not in prospects.db / orchestration.db (SMS pool only).
+- **Live:** 141 = 132 `*@trustsquare.co` + family 8 + **stranger 1**.
+- **Walk (Local Market · Handmade & Craft, a Johannesburg craft seller, `docs/E2E_2026-10-13.md`):** cold Home → Local Market tile →
+  Sell → Local Market → Handmade & Craft → stall photo (read in 7.1 s, score 64) → five steps → score card; stopped at Publish.
+  No errors. **Breaks:** (1) Local Market's selected trust chip "Any seller" is a blank pill — `--accent-bright` used 13 times,
+  defined nowhere (also blanks the wishlist's "+ Add to wishlist" / "Enable pings" buttons); (2) her drafted story ended
+  "Individual sizes, materials and prices should be confirmed for each item." Read #542 as a buyer: "**Experience:** 9" with no
+  unit, and "Experience, no certificate." All fixed (GI-0038). Cold `/quick/` after today's fast-lane merge: fine for a stranger.
+- **Where people stop:** bot=0 since run 37: one session, hers — it did not stop. The other 39 texts: no visit recorded; the SMS
+  delivery refresh runs at 07:10Z, so delivered/undelivered for b1 was not yet known.
+- **Outreach (email):** GI-0034 done 13 Oct 02:47Z by David's live session; `publish_sendable` 96 in 25 cities. Tonight's 22:10Z
+  wave runs after this run — not seen.
+- **Shipped:** GI-0038 ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 + EXPERIENCE-YEARS-1, RG-0983 LOCKED (#542 is fixed render-side; her row
+  is untouched).
+- **Ledger:** new tree 6 !!!! = base `origin/main` 176e986 6 !!!! (RG-0175, RG-0391, RG-0477, RG-0546, RG-0964, RG-0965 — all
+  pre-existing; RG-0391/0477 read "quick.html no longer links its manifest" after the RUL-223 fast-lane merge; RG-0965's prover
+  fails on "0 prospects mapped to geo_cities ids". Not this run's; flagged for their lanes.)
+- **REVIEW NOW:** GI-0039 (the SMS pilot converted — keep it going / widen it; spend is yours).
+- **QA data:** none created; walk rows bot=2.
+- **Not reached:** tonight's email wave result; SMS b1 delivery figures.
+
 ## RUN 37 — Mon 12 Oct 2026, 20:58–21:30 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; candidate copies `_to_delete/goalrun37{,b,c}_ms.js` left there).
