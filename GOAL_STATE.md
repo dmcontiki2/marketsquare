@@ -27,8 +27,9 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   delivery refresh runs at 07:10Z, so delivered/undelivered for b1 was not yet known.
 - **Outreach (email):** GI-0034 done 13 Oct 02:47Z by David's live session; `publish_sendable` 96 in 25 cities. Tonight's 22:10Z
   wave runs after this run — not seen.
-- **Shipped:** GI-0038 ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 + EXPERIENCE-YEARS-1, RG-0983 LOCKED (#542 is fixed render-side; her row
-  is untouched).
+- **Shipped (b4170a7 + 697ac28, CLOUD-SHIP-1 21:25Z):** GI-0038 ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 + EXPERIENCE-YEARS-1, RG-0983
+  LOCKED. **Live proof 21:31Z** (fresh phone, Pretoria, ms.css v=906 / ms.js v=1042): "Any seller" chip white on blue; #542 reads
+  "Experience: 9 years" (her row untouched); /quick/ says "Experienced, no formal certificate."
 - **Ledger:** new tree 6 !!!! = base `origin/main` 176e986 6 !!!! (RG-0175, RG-0391, RG-0477, RG-0546, RG-0964, RG-0965 — all
   pre-existing; RG-0391/0477 read "quick.html no longer links its manifest" after the RUL-223 fast-lane merge; RG-0965's prover
   fails on "0 prospects mapped to geo_cities ids". Not this run's; flagged for their lanes.)
