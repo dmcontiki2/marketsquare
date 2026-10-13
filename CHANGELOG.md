@@ -1,3 +1,43 @@
+## 2026-10-12 — "Reply STOP" now reaches us; the SMS wave runs itself from the server (SMS-REPLY-1, RUL-226)
+
+David, 12 Oct 2026, on the SMS wave readiness board: *"G5 pilot go - approved"*, *"Agreed"* (cap 40 -> 200 after a clean
+48 h read), *"Yes"* (casuals search plan), and *"Make 'Reply STOP' true"*.
+
+- **SMS-REPLY-1 (sms_provider.py):** every BulkSMS text now goes from BulkSMS's reply number (`from: {type: REPLIABLE}`).
+  Before, no sender was set, so whether a reply reached us depended on an account setting nobody had checked. New
+  `received()` reads the replies (read-only, no cost). Proven: a REPLIABLE send to BulkSMS's free test number answered
+  201 at 0 credits; `received()` answered 200 on the live account.
+- **CityLauncher (same evening, its own deploy):** the daytime wave runs on the server only (Mon-Sat 09:10 SAST) and only
+  while an ARM file holds David's words; replies are read before every send (a STOP stops that number and her e-mail);
+  the 48 h reading rule is applied by machine; the Gumtree pool was refreshed from the city's own shelf. Details in
+  CityLauncher/CHANGELOG.md and STATUS.md.
+- Regression ledger RG-0969; rulings_check RUL-226.
+
+## 2026-10-12 — A tile no longer sits without its AI example cards because one request dropped (GX-RETRY-1)
+
+David, 12 Oct 2026 10:28, with a screenshot of Home in Pretoria (Tutors 3 listings beside Services 51): *"Something
+broke. Services kept its 51 but tutors has lost all of the new sub catagory cards"*.
+
+Nothing was lost on the server: `/examples/trainers` answered its 47 cards all morning (probed at the app and through
+the front door). The server journal shows his page load at 08:26:07Z asking `/examples/roles` and never
+`/examples/trainers` — that one request did not reach the server (the cause on the way is not visible from the
+server; it is the only such page load of 26 today). `msGenericExLoad` swallowed the failure, so the Tutors tile sat at 3
+until the 3-minute list refresh asked again at 08:29:07Z, when the cards came back by themselves.
+
+- **GX-RETRY-1 (ms.js):** a failed read of `/examples/roles` or `/examples/trainers` is asked again after 2 s and then
+  6 s (twice per city and language — the same idea as `loadLiveListings`' own backoff); a newer list cancels the retry;
+  after that the normal refresh takes over.
+- Executed by `scripts/prove_gx_retry.js`, which runs the real `msGenericExLoad` out of ms.js with a network that drops
+  the first trainer request: before the change Tutors stays at 0 cards; after it the 47 cards arrive in about 2 s with
+  no duplicates, and a dropped Services request recovers the same way.
+
+Cost model impact: none. Schema: none.
+
+**Shipped and proven, 12 Oct 2026 08:37Z (10:37 SAST).** Release cb4d74b through the one deploy lane: stranger test
+PASS, QA Bot gate pass, health ok. In the live app in David's Chrome: Home in Pretoria reads Tutors 50 / Services 51;
+with the trainer request dropped on purpose the tiles read Tutors 3 / Services 51 — his screenshot exactly — and
+Tutors 50 again 3 seconds later, after one ask-again. RG-0968 LOCKED.
+
 ## 2026-10-12 — WATCH-COVER-1 reached the server copy the nightly wave sends from
 
 - The server's `/var/www/citylauncher/emailer/templates/collectors_outreach.html` and `collectors_dealer_outreach.html` were byte-identical to the PC's pre-fix letters (sha256 compared), i.e. still the pocket watch. The two fixed letters (CityLauncher commit 788bbde, pushed to GitHub by the host queue at 07:15 SAST) were placed there -- the same two files the CityLauncher deploy lane copies, nothing else from that working tree (it carries other lanes' uncommitted work, which was NOT shipped).
