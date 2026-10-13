@@ -37702,6 +37702,33 @@ def rg_subscriptions_audit_1():
     return [(INFO, "plan cards, ladder and subscription screen agree; Quick names a full plan and offers both ways out")]
 
 
+@entry("RG-0970", "BROWSE-EMPTY-SELL-1 (Goal run 37, 12 Oct 2026): Browse on a category with nothing in her city and no filter "
+       "set no longer says 'No listings match your filters. Clear filters' -- it says the category is empty there, offers "
+       "'List yours here' straight into that category's guided Sell flow, and 'Look in another city' opens the city picker; "
+       "with a filter set, the old message and Clear filters stay",
+       LOCKED, fixed_on="2026-10-12",
+       scope="ms.js renderGrid empty branch, msBrowseFiltersActive / msBrowseEmptyHtml / msBrowseSellCat",
+       ref="Goal run 37 walk (docs/E2E_2026-10-12.md): a Gqeberha stamp collector tapped Collectors (0 listings) on Home; "
+           "Browse said 'No listings match your filters. Clear filters' though she had set none, with no way forward")
+def rg_browse_empty_sell():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    j = js.find("if(!msBrowseFiltersActive(activeFilter)){")
+    i = js.find("No listings match your filters.<br>", j if j >= 0 else 0)
+    if j < 0 or i < 0 or i - j > 1500:
+        return [(FAIL, "renderGrid no longer asks whether a filter is set before saying 'No listings match your filters'")]
+    for needle, why in (("function msBrowseFiltersActive(cat){", "the filter test is gone"),
+                        ("function msBrowseEmptyHtml(cat){", "the empty-category message is gone"),
+                        ("function msBrowseSellCat(cat){", "the 'List yours here' action is gone"),
+                        ("sfStartCat(cat)", "'List yours here' no longer opens the category's guided flow"),
+                        ("Look in another city", "the other-city way out is gone"),
+                        ("city-selector-bg\\');if(b)b.classList.add(\\'open\\')", "'Look in another city' no longer opens the picker sheet")):
+        if needle not in js:
+            return [(FAIL, why + " (BROWSE-EMPTY-SELL-1)")]
+    return [(INFO, "an empty category with no filter set offers to list in it; filters keep Clear filters")]
+
+
 @entry("RG-0959", "QUICK-DRAFT-VIEW-1 + GEO-NATIONAL-NUDGE-1 (Goal run 36, 11 Oct 2026): on Quick's draft screen the sign-in "
        "box scrolls at the end of her listing instead of being pinned under it (only Save and the terms line stay pinned, "
        "and a Save tap with no address scrolls the box into view); Home's empty-city bar stays quiet when a Nationwide "

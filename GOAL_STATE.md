@@ -5,6 +5,31 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 37 — Mon 12 Oct 2026, 20:58–21:30 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; candidate copies `_to_delete/goalrun37{,b,c}_ms.js` left there).
+  **The device VM's /sessions disk is full (0 bytes free)**, so `load_sandbox_ssh.sh` cannot write `~/.ssh` and SSH fails with
+  "Host key verification failed". Worked round it with `ssh -i ssh_hetzner_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`
+  straight from the repo root. Built in server worktree `/root/w37` (removed at the end), shipped `claude/goal-run37` 05c8174 via
+  CLOUD-SHIP-1 (21:16Z SHIPPED).
+- **Walk (Collectors / goods, a Gqeberha stamp collector, `docs/E2E_2026-10-12.md`):** cold Home → Collectors tile → Sell → Collectors →
+  stamp-album photo (read in 6.5 s, kind Stamps, stamp examples) → six steps → score 70; stopped at Publish. No errors.
+  **Break:** the Collectors tile (0 in Gqeberha) opened Browse on "No listings match your filters. Clear filters" with no filter set —
+  a dead end. Fixed (GI-0037). Small, not fixed: the photo read fills Provenance & history with a description of the stamps, not a provenance.
+- **Number: 0.** Live 140 = 132 `*@trustsquare.co` + family 8 (Marietjie 4, David Jnr 2, Maroushka 2). **By a stranger's hand: 0.**
+  No new users except another lane's QA row (1741 `+qa-autorenew`).
+- **Where people stop:** no strangers. bot=0 since run 36: one Windows desktop visit 12 Oct 02:20Z (dwell only, ~70 s) plus the
+  family iPhone rows from 11 Oct 17:58Z already counted.
+- **Outreach:** still stopped — `prospects.emailed_at` max 3 Oct 22:10Z (2,614); the 11 Oct 22:11Z wave sent nothing. Waits on GI-0034.
+  RG-0175 (wave-hygiene witness >14 days) is red on base and new tree alike for the same reason.
+- **Shipped (05c8174):** GI-0037 BROWSE-EMPTY-SELL-1, RG-0970 LOCKED. **Live proof (21:20Z, fresh phone, v=1033):** Collectors tile in Gqeberha →
+  "No Collectors listings in Gqeberha (Port Elizabeth) yet." with List yours here → (opens Collectors Step 1) and Look in another city.
+  Plain `/` from Cloudflare still handed out v=1032 at 21:19Z — check with `/?fresh=…`.
+- **Ledger:** new tree 1 !!!! = base `/opt/marketsquare-src` c6fcee2 1 !!!! (RG-0175 only).
+- **REVIEW NOW:** GI-0034 only (unchanged).
+- **QA data:** none created (no save, no account); walk rows bot=2.
+- **Not reached:** nothing.
+
 ## RUN 36 — Sun 11 Oct 2026, 20:58–21:50 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe `.wtest` left in the laptop repo root). Built in server worktree
