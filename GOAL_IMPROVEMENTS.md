@@ -7,7 +7,9 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 *Open actions only — updated 12 Oct 2026 (run 37). GI-0034 still waits; the wave sent nothing again on 11 Oct (nine nights).*
 
-### GI-0034 — 434 new addresses are stranded; the nightly letter has sent nothing since 3 Oct
+### GI-0034 — DONE 13 Oct 02:47Z (David: "proceed"). Dry run on a copy: 481 moved, 271 pass the wave's own guards in 28 cities (London 22, Chicago 21, Cape Town 14, Port Elizabeth 10 …). Moved into prospects.db (source `orch:*`, notes "GI-0034"), orchestration rows stamped approved_at; backups `/root/backup_gi0034_20261013024703_*.db`. publish_sendable now reads 271 sendable; tonight's 22:10Z wave sends under the 250/day cap.
+
+#### (was) 434 new addresses are stranded; the nightly letter has sent nothing since 3 Oct
 - **What I found:** the nightly wave runs every night at 22:10Z and logs "0 sendable · 0/40 cities" — the only addresses left
   are 344 in Maine, held as unreachable. The last letter went out 3 Oct. Meanwhile the scrape engine keeps working: since
   12 Sep it has found **665 contacts, 434 never written to and not suppressed** (380 without info@/admin@/government
