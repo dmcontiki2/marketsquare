@@ -2380,6 +2380,54 @@
    "deal": "sale"
   },
   {
+   "type": "quick_find_icon",
+   "status": "draft",
+   "flow": "FAST-FIND",
+   "label": {
+    "en": "Quick Find icon",
+    "af": "Quick Find-ikoon",
+    "zu": "Uphawu lwe-Quick Find",
+    "xh": "Uphawu lwe-Quick Find",
+    "nso": "Seswantšhetšo sa Quick Find"
+   },
+   "title": {
+    "en": "Your Quick Find icon: one line, the matches on the same page",
+    "af": "Jou Quick Find-ikoon: een reël, die treffers op dieselfde blad",
+    "zu": "Uphawu lwakho lwe-Quick Find: umugqa owodwa, okufanayo ekhasini elifanayo",
+    "xh": "Uphawu lwakho lwe-Quick Find: umgca omnye, iziphumo kwiphepha elinye",
+    "nso": "Seswantšhetšo sa gago sa Quick Find: mothalo o tee, tše di swanago letlakaleng le tee"
+   },
+   "walked_on": "2026-10-10",
+   "steps": 6,
+   "cover": "qf01_tick",
+   "door": "services",
+   "quick": true
+  },
+  {
+   "type": "quick_sell_icon",
+   "status": "draft",
+   "flow": "FAST-SELL",
+   "label": {
+    "en": "Quick Sell icon",
+    "af": "Quick Sell-ikoon",
+    "zu": "Uphawu lwe-Quick Sell",
+    "xh": "Uphawu lwe-Quick Sell",
+    "nso": "Seswantšhetšo sa Quick Sell"
+   },
+   "title": {
+    "en": "Your Quick Sell icon: photo, price, publish — one screen",
+    "af": "Jou Quick Sell-ikoon: foto, prys, plaas — een skerm",
+    "zu": "Uphawu lwakho lwe-Quick Sell: isithombe, intengo, shicilela — isikrini esisodwa",
+    "xh": "Uphawu lwakho lwe-Quick Sell: ifoto, ixabiso, papasha — isikrini esinye",
+    "nso": "Seswantšhetšo sa gago sa Quick Sell: seswantšho, theko, phatlalatša — sekirini se tee"
+   },
+   "walked_on": "2026-10-10",
+   "steps": 11,
+   "cover": "qs01_tick",
+   "door": "services",
+   "quick": true
+  },
+  {
    "type": "removals_helper",
    "status": "draft",
    "flow": "F1",

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Quick icons — fast lane flows</title>
+<!-- QUICK-FAST-1 (RUL-222, David 9 Oct 2026; CC-006). The Ops Dashboard's Quick view, fourth page: the two fast-lane
+     flows (Quick Sell icon, Quick Find icon), the gate and where each failure lands, and the live numbers. Served as
+     /orchestrator/quick_fastlane.html (deploy_manifest), shown inside dashboard.server.html's Quick Listing view.
+     Every number comes from GET /admin/quick-fastlane/stats (admin token from this tab's dashboard sign-in); when it
+     cannot be read it says NOT MEASURED in grey -- never a zero (RG-0133, PROVENANCE-1). Lane colours carry a written
+     label too: Sell = green, Find = blue, the gate = amber, a fallback = amber outline. -->
+<style>
+  :root{--bg:#0b0d10;--panel:#121821;--line:#243041;--text:#e8eef5;--dim:#94a3b8;--sell:#22C55E;--find:#3B82F6;--gate:#D9A23A;--q:#7C3AED}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:12.5px;margin:0 0 14px}
+  .sw{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);font-weight:800;font-size:12.5px;margin-bottom:14px}
+  .sw i{width:10px;height:10px;border-radius:50%;background:#64748b}
+  .sw.on i{background:var(--sell)} .sw.off i{background:#64748b}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 18px}
+  .m{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .m b{display:block;font-size:24px;line-height:1.1}
+  .m span{display:block;color:var(--dim);font-size:12px;margin-top:3px}
+  .m.nm b{color:#64748b;font-size:15px}
+  .m .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:999px;margin-bottom:6px}
+  .tag.sell{background:rgba(34,197,94,.15);color:var(--sell)} .tag.find{background:rgba(59,130,246,.15);color:var(--find)} .tag.gate{background:rgba(217,162,58,.15);color:var(--gate)}
+  .lane{margin:0 0 18px}
+  .lane h2{font-size:15.5px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .lane h2 i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+  .st{flex:1 1 130px;min-width:120px;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:9px 10px}
+  .st b{display:block;font-size:13px}
+  .st span{display:block;color:var(--dim);font-size:11.5px;margin-top:2px}
+  .ar{align-self:center;color:var(--dim);font-size:18px}
+  .sell .st.k{border-color:var(--sell)} .find .st.k{border-color:var(--find)}
+  .st.g{border-color:var(--gate)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:700}
+  td.code{font-family:ui-monospace,Menlo,monospace;color:var(--gate);white-space:nowrap}
+  .foot{color:var(--dim);font-size:11.5px;margin-top:14px}
+  @media (max-width:560px){ .ar{display:none} .st{flex-basis:100%} }
+</style>
+</head>
+<body>
+<h1>⚡ Quick icons — the fast lane</h1>
+<p class="sub">RUL-222 · CC-006. A repeat trader ticks <b>Make this my quick icon</b>; his phone gets an icon that opens straight on one screen. Same gates, same publish path as every Quick listing.</p>
+<div class="sw" id="sw"><i></i><span>Switch: reading…</span></div>
+
+<div class="grid" id="nums">
+  <div class="m nm"><span class="tag sell">SELL</span><b>NOT MEASURED</b><span>Quick Sell icons</span></div>
+</div>
+
+<div class="lane sell">
+  <h2><i style="background:var(--sell)"></i>Quick Sell icon — 3 screens</h2>
+  <div class="flow">
+    <div class="st k"><b>1 · Home-screen icon</b><span>“Quick Sell · Cards” — or the gallery’s Share → Quick Sell (Android)</span></div><div class="ar">→</div>
+    <div class="st k"><b>2 · Fast sell screen</b><span>Take photo / Use last photo · price · what exactly · description · acceptance line</span></div><div class="ar">→</div>
+    <div class="st g"><b>Gate (server, every publish)</b><span>signed in · current EULA · listed before · a free slot</span></div><div class="ar">→</div>
+    <div class="st k"><b>Draft held → her photo → standard publish</b><span>POST quick-publish (hold) · photo onto the draft · PUT /listings/{id}/publish</span></div><div class="ar">→</div>
+    <div class="st k"><b>3 · Live</b><span>See it on TrustSquare · Sell another</span></div>
+  </div>
+</div>
+
+<div class="lane find">
+  <h2><i style="background:var(--find)"></i>Quick Find icon — 2 screens</h2>
+  <div class="flow">
+    <div class="st k"><b>1 · Home-screen icon</b><span>“Quick Find · Cards”</span></div><div class="ar">→</div>
+    <div class="st k"><b>2 · One search line</b><span>“MtG, Savannah, Dual land, 4th Edition, under R2300” → matches on the same page</span></div><div class="ar">→</div>
+    <div class="st k"><b>Tap one → TrustSquare</b><span>the normal introduction, normal Tuppence rules</span></div>
+  </div>
+</div>
+
+<div class="lane">
+  <h2><i style="background:var(--gate)"></i>When the gate says no — where she lands</h2>
+  <table>
+    <tr><th>Gate</th><th>Lands on</th><th>The one line she reads</th></tr>
+    <tr><td class="code">eula</td><td>Normal Quick, “Here is your listing” (her photo, price and words kept)</td><td>Your quick icon needs the TrustSquare terms accepted first …</td></tr>
+    <tr><td class="code">never_listed</td><td>Normal Quick, “Here is your listing”</td><td>Your first listing goes out the normal way …</td></tr>
+    <tr><td class="code">slots_full</td><td>Normal Quick, “Here is your listing” + Upgrade my plan / Choose a listing to rest</td><td>Your plan’s listing slots are full.</td></tr>
+    <tr><td class="code">switched off</td><td>Normal Quick, step 1 of the icon’s door</td><td>This quick icon was switched off.</td></tr>
+  </table>
+</div>
+
+<p class="foot">Numbers: <span id="src">GET /admin/quick-fastlane/stats</span> — presets table + Quick’s own beacons (people only). Grey = not measured, never a zero.</p>
+
+<script>
+(function(){
+  var B=(location.protocol==='file:'?'https://trustsquare.co':'');
+  function tok(){ try{ return sessionStorage.getItem('ms_admin_token')||''; }catch(e){ return ''; } }
+  function E(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function m(tag, cls, n, label){ var nm=(n===null||n===undefined);
+    return '<div class="m'+(nm?' nm':'')+'"><span class="tag '+cls+'">'+tag+'</span><b>'+(nm?'NOT MEASURED':E(n))+'</b><span>'+E(label)+'</span></div>'; }
+  function paint(d){
+    var sw=document.getElementById('sw');
+    if(!d){ sw.className='sw'; sw.innerHTML='<i></i><span>Switch: NOT MEASURED (sign in to the dashboard)</span>';
+      document.getElementById('nums').innerHTML=m('SELL','sell',null,'Quick Sell icons')+m('FIND','find',null,'Quick Find icons')+m('GATE','gate',null,'Gate fallbacks'); return; }
+    sw.className='sw '+(d.switch_on?'on':'off'); sw.innerHTML='<i></i><span>Switch QUICK_FASTLANE: '+(d.switch_on?'ON':'OFF — every fast-lane entry point hidden')+'</span>';
+    var s=(d.presets||{}).sell||{presets:0,uses:0,fallbacks:0}, f=(d.presets||{}).find||{presets:0,finds:0}, b=d.beacons;
+    var bv=function(k){ return b ? (b[k]||0) : null; };
+    document.getElementById('nums').innerHTML=
+      m('SELL','sell',s.presets,'Quick Sell icons in use')
+     +m('SELL','sell',s.uses,'fast publishes started')
+     +m('SELL','sell',bv('q_fast_published'),'fast publishes live ('+d.days+' days)')
+     +m('FIND','find',f.presets,'Quick Find icons in use')
+     +m('FIND','find',f.finds,'fast finds run')
+     +m('GATE','gate',s.fallbacks,'gate fallbacks')
+     +m('GATE','gate',bv('q_fast_slots_full'),'slots full shown')
+     +m('GATE','gate',bv('q_fast_upgrade'),'→ upgrade')
+     +m('GATE','gate',bv('q_fast_rest'),'→ rested a listing');
+  }
+  fetch(B+'/admin/quick-fastlane/stats',{headers:{'X-Admin-Token':tok()}})
+    .then(function(r){ return r.ok ? r.json() : null; }).then(paint).catch(function(){ paint(null); });
+})();
+</script>
+</body>
+</html>

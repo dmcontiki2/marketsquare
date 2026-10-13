@@ -44,7 +44,8 @@ function loadFeatureFlags(){
       if(f && f.effective){ window.FEATURES = Object.assign(window.FEATURES, f.effective, {_loaded:true, _raw:f});
         try{ document.documentElement.setAttribute('data-verified', window.FEATURES.verified_visible ? '1':'0'); }catch(e){}
         try{ if(window.FEATURES.lang_layer && typeof window.msLangSync==='function') window.msLangSync(); }catch(e){}
-        try{ document.documentElement.setAttribute('data-baseline', msBaselineOn() ? '1':'0'); if(typeof _msBaselineApplied==='function') _msBaselineApplied(); }catch(e){} }
+        try{ document.documentElement.setAttribute('data-baseline', msBaselineOn() ? '1':'0'); if(typeof _msBaselineApplied==='function') _msBaselineApplied(); }catch(e){}
+        try{ if(typeof msQuickIconsRefresh==='function') msQuickIconsRefresh(); }catch(e){} }   // QUICK-FAST-1: the switch arrives after My Space may have drawn
     }).catch(function(e){ console.warn('feature flags load failed (default: free-only)', e); });
   }catch(e){ console.warn('feature flags load error', e); }
 }
@@ -1412,6 +1413,22 @@ async function _msInit(){
       }catch(e){}
       });
     }, 600);
+  }
+  /* QUICK-FAST-1 (RUL-222): Quick's fast lane hands over here -- a full Free plan's "Upgrade my plan" (go=plans) and
+     "My quick icons" (go=quickicons). Same pattern as go=signin below. */
+  if((sp.get('go')==='plans' || sp.get('go')==='quickicons') && !sp.get('signin')){
+    const _qfGo = sp.get('go');
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(function(){ try{
+      _msNav.user = true;
+      if(_qfGo==='plans'){ openSubscriptionScreen('myspace'); }
+      else { goTo('myspace'); setTimeout(function(){ try{
+        const _meTab = Array.prototype.find.call(document.querySelectorAll('.ms-tab'), function(t){ return /msTab\('me'/.test(t.getAttribute('onclick')||''); });
+        msTab('me', _meTab || null);   // the Seller hub (and My quick icons) live on the Me tab
+        msQuickIconsOpen(true);
+        const _qc = document.getElementById('ms-quick-icons-card'); if(_qc) _qc.scrollIntoView({block:'start'});
+      }catch(_){} }, 600); }
+    }catch(_){} }, 500);
   }
   /* QUICK-DOOR-HUB-1 (David, 3 Oct 2026): Quick's "Sign in" lands here. */
   if(sp.get('go')==='signin' && !sp.get('signin')){
@@ -18871,6 +18888,7 @@ function msInit(){
   const sellerSigninCard = document.getElementById('ms-seller-signin-card');
   if(sellerHubCard)    sellerHubCard.style.display    = isSeller ? '' : 'none';
   if(sellerSigninCard) sellerSigninCard.style.display = isSeller ? 'none' : '';
+  try{ msQuickIconsRefresh(); }catch(_qf){}   // QUICK-FAST-1 (RUL-222): "My quick icons" under the Seller hub
   // Remove the old label element ref (now always visible via static HTML)
   const sellerHubLbl = document.getElementById('ms-seller-hub-lbl');
   if(sellerHubLbl) sellerHubLbl.style.display = '';
@@ -25445,3 +25463,67 @@ function msOwnerBar(id){
   /* a sign-in that lands without a screen change (an e-mailed link, Google's return, a code) is caught here too */
   try{ setTimeout(hubOffer, 2500); setInterval(function(){ if(!document.getElementById('pk-offer')) hubOffer(); }, 15000); }catch(e){}
 })();
+
+/* ══ QUICK-FAST-1 (RUL-222, David 9 Oct 2026; CC-006) — "My quick icons" in My Space ══════════════════════════════════
+   A trader's quick icons are made in Quick ("Make this my quick icon"). Here she sees them, renames them and switches
+   them off. Switching off DELETES the preset (RUL-222(f)): an icon left on her phone then opens normal Quick at step 1
+   with "This quick icon was switched off." Fast-lane listings are ordinary listings -- nothing else in the app changes.
+   Shown only when the dashboard switch is on (FEATURES.quick_fastlane) and she is signed in. DEMO_MODE: the card stays
+   hidden and nothing is fetched -- a demo visitor has no presets, so there is nothing to serve from the demo arrays. */
+function _qfMsEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function msQuickIconsRefresh(){
+  const card = document.getElementById('ms-quick-icons-card');
+  if(!card) return;
+  const on = !DEMO_MODE && !!(window.FEATURES && window.FEATURES.quick_fastlane) && _msIsSignedIn();
+  card.style.display = on ? '' : 'none';
+  if(!on && window.FEATURES && window.FEATURES._loaded){ const l = document.getElementById('ms-quick-icons-list'); if(l) l.style.display = 'none'; }
+}
+async function msQuickIconsOpen(forceOpen){
+  const box = document.getElementById('ms-quick-icons-list');
+  if(!box || DEMO_MODE) return;
+  if(box.style.display !== 'none' && !forceOpen){ box.style.display = 'none'; return; }
+  box.style.display = '';
+  box.innerHTML = '<div class="ms-empty">Loading your quick icons…</div>';
+  let d = null;
+  try{ const r = await fetch(BEA_URL + '/quick-presets', {credentials:'include'}); d = r.ok ? await r.json() : null; }catch(e){ d = null; }
+  if(!d){ box.innerHTML = '<div class="ms-empty">Your quick icons could not be loaded. Please sign in and try again.</div>'; return; }
+  const ps = d.presets || [];
+  if(!ps.length){
+    box.innerHTML = '<div class="ms-empty">No quick icons yet. In Quick, tick <b>Make this my quick icon</b> at the end of a sell or a search.</div>';
+    return;
+  }
+  box.innerHTML = ps.map(function(p){
+    const btn = 'flex:1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;text-align:center;text-decoration:none;';
+    return '<div class="qfms-row" data-id="'+p.id+'" style="padding:10px 2px 12px;border-bottom:1px solid var(--border);">'
+      + '<div style="display:flex;align-items:center;gap:10px;">'
+      + '<img src="'+_qfMsEsc(p.icon_url)+'?s=192" alt="" style="width:42px;height:42px;border-radius:11px;flex:0 0 auto;">'
+      + '<div style="flex:1;min-width:0;"><div class="qfms-name" style="font-size:14px;font-weight:700;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_qfMsEsc(p.name)+'</div>'
+      + '<div style="font-size:12px;color:var(--text-3);">'+(p.kind==='sell'?'Sell':'Find')+' · used '+(p.uses||0)+' time'+((p.uses||0)===1?'':'s')+'</div></div></div>'
+      + '<div class="qfms-edit" style="display:none;gap:6px;margin-top:8px;"><input class="qfms-in" maxlength="24" value="'+_qfMsEsc(p.label)+'" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;background:var(--surface-2);color:var(--text);">'
+      + '<button class="qfms-save" style="border:0;border-radius:9px;padding:8px 14px;background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;">Save</button></div>'
+      + '<div style="display:flex;gap:8px;margin-top:9px;">'
+      + '<a href="'+_qfMsEsc(p.start_url)+'" style="'+btn+'border:1.5px solid var(--navy);color:var(--navy);">Open</a>'
+      + '<button class="qfms-ren" style="'+btn+'border:1.5px solid var(--border);background:none;color:var(--text);">Rename</button>'
+      + '<button class="qfms-off" style="'+btn+'border:1.5px solid #c0392b;background:none;color:#c0392b;">Switch off</button>'
+      + '</div></div>';
+  }).join('') + '<div style="font-size:11.5px;color:var(--text-3);margin-top:8px;">Switching an icon off deletes it. If it is still on your phone, it then opens the normal Quick steps.</div>';
+  if(forceOpen){ try{ const _qc = document.getElementById('ms-quick-icons-card'); if(_qc) _qc.scrollIntoView({block:'start'}); }catch(_){} }
+  box.querySelectorAll('.qfms-row').forEach(function(row){
+    const id = row.getAttribute('data-id');
+    row.querySelector('.qfms-ren').onclick = function(){ const e = row.querySelector('.qfms-edit'); e.style.display = e.style.display==='flex' ? 'none' : 'flex'; };
+    row.querySelector('.qfms-save').onclick = async function(){
+      const v = (row.querySelector('.qfms-in').value||'').trim(); if(!v) return;
+      try{ const r = await fetch(BEA_URL + '/quick-presets/' + id, {method:'PATCH', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({label:v})});
+           const j = r.ok ? await r.json() : null; if(j){ row.querySelector('.qfms-name').textContent = j.name; row.querySelector('.qfms-edit').style.display = 'none'; } }catch(e){}
+    };
+    const off = row.querySelector('.qfms-off');
+    off.onclick = async function(){
+      if(off.getAttribute('data-sure') !== '1'){ off.setAttribute('data-sure','1'); off.textContent = 'Tap again to switch off'; return; }   // no browser dialogs
+      off.disabled = true;
+      try{ const r = await fetch(BEA_URL + '/quick-presets/' + id, {method:'DELETE', credentials:'include'});
+           if(r.ok){ row.parentNode.removeChild(row); if(!box.querySelector('.qfms-row')) msQuickIconsOpen(true); } else { off.disabled = false; off.textContent = 'Switch off'; off.removeAttribute('data-sure'); } }
+      catch(e){ off.disabled = false; }
+    };
+  });
+}
+
