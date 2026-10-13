@@ -8032,7 +8032,8 @@ def get_user(email: str, _key: str = Depends(auth.require_api_key),
     return data
 
 @app.get("/users/{email}/subscription")
-def get_user_subscription(email: str):
+def get_user_subscription(email: str, ts_user: str = Cookie(default=None),
+                          x_admin_key: str = Header(default=None)):
     """Return seller's subscription tier, slot usage, and pending downgrade info."""
     email = email.lower().strip()
     conn = database.get_db()
@@ -8087,7 +8088,11 @@ def get_user_subscription(email: str):
     }
     # AUTO-RENEW-1 (RUL-224): renewal state for the plan card. {} while the switch is OFF and she holds no
     # subscription, so the answer is then exactly what it always was.
-    _sub_out.update(_auto_renew_status(email))
+    # QA-RED-AR-2 (13 Oct 2026, QA Bot review RED): renewal on/cancelled/failed is her private payment state,
+    # so it is added only for the signed-in owner (or the admin key) -- anyone else gets the plan card without it.
+    _owner = (_session_email(ts_user) or "").strip().lower() == email
+    if _owner or (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY):
+        _sub_out.update(_auto_renew_status(email))
     return _sub_out
 
 @app.get("/sellers/credentials/{listing_id}")
@@ -10780,7 +10785,9 @@ def list_subscription_tiers():
 
 
 @app.post("/payment/seller-subscription/initialize")
-def init_seller_subscription(email: str, tier: str, callback_url: str = "", auto_renew: int = 0, channel: str = ""):
+def init_seller_subscription(email: str = "", tier: str = "", callback_url: str = "", auto_renew: int = 0,
+                             channel: str = "", ts_user: str = Cookie(default=None),
+                             x_admin_key: str = Header(default=None)):
     """Initialize a Paystack payment for a seller subscription tier change.
     tier: starter | pro  (Simpler Model, Jun 2026 -- the only payable tiers)
     Upgrades: charged immediately.
@@ -10789,7 +10796,15 @@ def init_seller_subscription(email: str, tier: str, callback_url: str = "", auto
     Agency: free + verified — no payment; handled by the agency verification flow.
     Returns {status, reference, authorization_url, tier, amount_rands}
     """
-    email = email.lower().strip()
+    # QA-RED-AR-1 (13 Oct 2026, QA Bot review RED): a plan checkout -- above all one that opens a recurring
+    # card subscription -- is started only AS the signed-in session (admin key excepted). The typed email
+    # is ignored when it differs, so nobody can attach a payment or a renewal to another person's account.
+    _admin = bool(x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY)
+    if not _admin and not _session_email(ts_user):
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
+    email = (_actor(ts_user, email, "seller-subscription-init", x_admin_key) or "").lower().strip()
+    if not email:
+        raise HTTPException(status_code=401, detail="Please sign in to do that.")
     if tier == "agency":
         raise HTTPException(status_code=400,
                             detail="The Agency plan is free — no payment needed. "
@@ -10976,6 +10991,11 @@ def verify_seller_subscription(reference: str):
 # day before her card is charged. A failed renewal ends that wait at once.
 # ══════════════════════════════════════════════════════════════════════════════
 _AUTO_RENEW_GRACE_H = 72
+# QA-RED-AR-3 (13 Oct 2026, QA Bot review RED): a subscription is never open-ended. Paystack charges it at most
+# this many times (invoice_limit, the first payment included) and then completes it; Paystack's own
+# subscription.not_renew / subscription.disable events then run the normal plan-ended path, and she ticks the
+# box again to carry on. 12 = one year of monthly charges before she re-confirms.
+_AUTO_RENEW_MAX_CHARGES = 12
 
 
 def _auto_renew_on() -> bool:
@@ -11203,10 +11223,12 @@ def _auto_renew_initialize(email, tier, plan, is_downgrade, reference, callback_
             "is_downgrade": is_downgrade,
             "auto_renew": True,
             "plan_code": plan_code,
+            "max_charges": _AUTO_RENEW_MAX_CHARGES,
         },
         callback_url=_safe_callback_url(callback_url),
         plan=plan_code,
         channels=["card"],
+        invoice_limit=_AUTO_RENEW_MAX_CHARGES,   # QA-RED-AR-3: no unlimited future charges
     )
     if result.get("status"):
         return {
@@ -11218,6 +11240,7 @@ def _auto_renew_initialize(email, tier, plan, is_downgrade, reference, callback_
             "amount_rands": plan["amount_rands"],
             "is_downgrade": is_downgrade,
             "auto_renew": True,
+            "max_charges": _AUTO_RENEW_MAX_CHARGES,
         }
     raise HTTPException(status_code=400, detail="Subscription payment initialization failed")
 

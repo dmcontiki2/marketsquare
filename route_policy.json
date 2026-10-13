@@ -563,7 +563,14 @@
   },
   {
    "key": "POST /payment/seller-subscription/initialize",
-   "level": "public"
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ],
+   "note": "QA-RED-AR-1 (13 Oct 2026): a plan checkout -- and above all an auto-renew subscription -- starts only as the signed-in session; a typed email is rewritten to it, so nobody can attach a payment or renewal to another person's account."
   },
   {
    "key": "GET /payment/seller-subscription/verify",
