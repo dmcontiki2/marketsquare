@@ -2003,6 +2003,80 @@
    "level": "admin"
   },
   {
+   "key": "GET /squire/brief/{brief_id}/advice",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "GET /squire/brief/{brief_id}/reality",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/brief/{brief_id}/feedback",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "GET /squire/brief/{brief_id}/report",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "query"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/pa/quote",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/pa/accept",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/pa/cancel",
+   "level": "user",
+   "bind": [
+    {
+     "name": "email",
+     "in": "json"
+    }
+   ]
+  },
+  {
+   "key": "POST /squire/v2/run",
+   "level": "admin"
+  },
+  {
    "key": "GET /pricing/ladder",
    "level": "public"
   },

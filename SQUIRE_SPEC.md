@@ -192,3 +192,12 @@ a build session implements them, it does not re-open them.)*
 
 *Written 30 Aug 2026. Named by David ("I love the new word SQUIRE") — a squire attends you, carries
 your brief, and speaks for you in a square where you cannot be seen.*
+
+---
+
+## 8 · SQUIRE-2 Phase 1 (built 10 Oct 2026 — held on branch `squire2` under the IP hold)
+SQUIRE_2_BUILD_BRIEF.md (David "Go", 9 Oct 2026) extends this spec; §3 boundaries and §7 criteria above stay in force
+unchanged. Built as a layer over the one matcher: brief kinds + rules, bulk card lists with price advice on both sides,
+sell-side watch, first-in alerts, the UK property crux report, reality-check, learning, urgency routing, the monthly report
+(always sent) and the Pro PA monthly-Tuppence machinery (switch `squire_pro_pa`, OFF). See CHANGE_REGISTER CC-006 and RG-0224
+criteria 10–15.

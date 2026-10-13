@@ -103,6 +103,13 @@ DEFAULT_PROVIDERS: dict[str, bool] = {
     "internal_comps":  True,   # our own marketplace comps (still needs sample!)
     "ebay_browse":     False,  # EBAY-DROP-1 (30 Sep 2026): eBay rejected the developer registration; David: "Lets drop eBay".
     "web_comps":       True,   # FAIR-PRICE-WEB-1: asking prices read on named shop pages (median of >=3)
+    # SQUIRE-2 Phase 1 (10 Oct 2026) -- free, no per-request cost (SQUIRE_2_BUILD_BRIEF.md s2)
+    "mtgjson":         True,   # MTGJSON daily price file -> local price history (nightly)
+    "epc_register":    True,   # UK EPC open data (free key, server-side only)
+    "police_uk":       True,   # data.police.uk street crime (keyless)
+    "ea_flood":        True,   # Environment Agency flood areas (keyless)
+    "boe_rate":        True,   # Bank of England Bank Rate
+    "sarb_rate":       True,   # SARB repo rate
 
     # --- paid / contract (OFF until revenue + B7 + contract) ---
     "pricecharting":   False,  # collectibles multi-category (flat sub)

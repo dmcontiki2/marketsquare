@@ -4246,6 +4246,12 @@ def zoom_watch_save(w: _ZoomWatchIn,
                       datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
         conn.commit()
         rows = conn.execute("SELECT id, category, city, path, label, created_at FROM zoom_watches WHERE email=? ORDER BY id DESC", (email,)).fetchall()
+        # SQUIRE-2 A (10 Oct 2026): a new Watch is demand -- sellers with a matching sell brief hear (anonymously, in the digest).
+        try:
+            if _squire_on():
+                threading.Thread(target=_squire2_on_demand, args=(_zoom.norm_cat(w.category),), daemon=True).start()
+        except Exception:
+            pass
         return {"watches": [dict(r) for r in rows]}
     finally:
         conn.close()
@@ -5658,6 +5664,9 @@ def publish_listing(listing_id: int, email: str, attested: int = 0,
     # one-tap publish looked frozen. They now run beside it, exactly as /admin/refresh-pois already does.
     import threading as _pub_thr
     _pub_thr.Thread(target=_publish_autolinks, args=(listing_id,), daemon=True).start()
+    # SQUIRE-2 B (10 Oct 2026): FIRST-IN -- matching buy briefs hear now, not on the 6-hourly watch. Dark until baseline_q4.
+    if _squire_on():
+        _pub_thr.Thread(target=_squire2_on_publish, args=(listing_id,), daemon=True).start()
     return {"message": "Listing is now live", "listing_id": listing_id}
 
 
@@ -32928,6 +32937,7 @@ def _squire_ensure(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS squire_events(
         id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, email TEXT, kind TEXT NOT NULL,
         tier TEXT, category TEXT, limit_n INTEGER, detail TEXT)""")
+    _squire2_ensure(conn)   # SQUIRE-2 (10 Oct 2026): kinds, rules, card lines, alerts, reports, Pro PA
 
 def _squire_now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -33026,10 +33036,13 @@ def _squire_draft_brief(need: str, cat_norm: str, chips: list, is_minor: bool, e
         pass
     return template
 
-def _squire_shortlist(conn, brief) -> list:
+def _squire_shortlist(conn, brief, limit=12, apply_rules=True) -> list:
     """Rule-based matching over the SAME reach-scoped set Zoom uses -- cheap, nightly-safe. Reasons
     are facts a buyer can check: chips matched, trust, quality, availability. Seller identity never
-    enters: every row is stripped before it reaches this function's output."""
+    enters: every row is stripped before it reaches this function's output.
+    SQUIRE-2 (10 Oct 2026): `limit=None` returns every match (first-in alerts, reality-check, monthly
+    close calls), and the brief's own `rules` (learned exclusions, price/yield limits) are applied here,
+    on top of the one matcher -- there is no second matcher."""
     email = brief["email"]
     tier = _buyer_reach_tier(conn, email)   # RUL-078: Pro -> global
     cat_norm = _zoom.norm_cat(brief["category"])
@@ -33042,10 +33055,15 @@ def _squire_shortlist(conn, brief) -> list:
     by_id = {r["id"]: r for r in cands}
     out = []
     nchips = len([c for c in res["chips"] if not c.get("auto")])
-    for lid in res["ids"][:12]:
+    _rules = _squire2_rules_of(brief) if apply_rules else {}
+    for lid in (res["ids"] if limit is None else res["ids"][:max(int(limit) * 3, int(limit))]):
+        if limit is not None and len(out) >= int(limit):
+            break
         r = by_id.get(lid)
         if not r:
             continue
+        if _rules and not _sq2.passes_rules(_rules, r)[0]:
+            continue      # SQUIRE-2 F: a learned exclusion or a rule the user set is never shown again
         reasons = []
         if nchips:
             reasons.append("matches all %d of your chips" % nchips if nchips > 1 else "matches your chip")
@@ -33079,9 +33097,12 @@ def _squire_store_matches(conn, brief_id, shortlist):
 
 class _SquireBriefIn(BaseModel):
     email: str
-    need_text: str
+    need_text: str = ""
     category: Optional[str] = None
     city: Optional[str] = None
+    kind: Optional[str] = None          # SQUIRE-2: buy | sell | watch (default buy, as v1 behaved)
+    rules: Optional[dict] = None        # SQUIRE-2: e.g. {"sell_margin_pct": 20} / {"buy_discount_pct": 20, "min_condition": "NM"}
+    cards: Optional[_TAny] = None         # SQUIRE-2: up to 100 card lines (text, one per line, or a list)
 
 @app.get("/squire/status")
 def squire_status(email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
@@ -33105,7 +33126,9 @@ def squire_status(email: str = "", ts_user: str = Cookie(default=None), x_admin_
                 d["questions"] = json.loads(d.get("questions") or "[]"); d["answers"] = json.loads(d.get("answers") or "{}")
                 d["matches"] = conn.execute("SELECT COUNT(*) AS n FROM squire_matches WHERE brief_id=?", (b["id"],)).fetchone()["n"]
                 d["new_matches"] = conn.execute("SELECT COUNT(*) AS n FROM squire_matches WHERE brief_id=? AND seen=0", (b["id"],)).fetchone()["n"]
+                _squire2_status_brief(conn, d)
                 out["briefs"].append(d)
+            _squire2_status_user(conn, em, out)
         return out
     finally:
         conn.close()
@@ -33117,9 +33140,12 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
         _squire_ensure(conn)
         em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-brief", x_admin_key))
         need = (body.need_text or "").strip()
+        _sq2_kind, _sq2_lines, _sq2_rejected = _squire2_prepare(body)
+        if _sq2_lines and len(need) < 8:
+            need = "%s list: %d card%s" % (_sq2_kind.capitalize(), len(_sq2_lines), "" if len(_sq2_lines) == 1 else "s")
         if len(need) < 8:
             raise HTTPException(status_code=400, detail="Say it in a sentence or two.")
-        cat_norm = _zoom.norm_cat(body.category or "") if body.category else _squire_guess_category(need)
+        cat_norm = _zoom.norm_cat(body.category or "") if body.category else ("Collectors" if _sq2_lines else _squire_guess_category(need))
         city = (body.city or "Pretoria").strip()
         is_minor = 1 if _MINOR_RX.search(need) else 0
         tier = _buyer_reach_tier(conn, em)
@@ -33135,12 +33161,18 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
                            (em, cat_norm, city, _squire_minimise(need, bool(is_minor)), path, brief_text,   # AUD-026: always scrubbed
                             json.dumps(questions), "{}", is_minor, "active", now, now))
         bid = cur.lastrowid
+        _squire2_ensure(conn)
+        conn.execute("UPDATE squire_briefs SET kind=?, rules=? WHERE id=?",
+                     (_sq2_kind, json.dumps(_sq2.clean_rules(body.rules or {})), bid))
         b = dict(conn.execute("SELECT * FROM squire_briefs WHERE id=?", (bid,)).fetchone())
-        sl = _squire_shortlist(conn, b)
+        sl = _squire_shortlist(conn, b) if not _sq2_lines else []
         _squire_store_matches(conn, bid, sl)
         conn.commit()
-        return {"brief_id": bid, "category": cat_norm, "chips": chips, "brief_text": brief_text, "questions": questions,
-                "is_minor": bool(is_minor), "matches": len(sl), "shortlist": sl[:5]}
+        out = {"brief_id": bid, "category": cat_norm, "chips": chips, "brief_text": brief_text, "questions": questions,
+               "is_minor": bool(is_minor), "matches": len(sl), "shortlist": sl[:5], "kind": _sq2_kind,
+               "rules": _sq2.clean_rules(body.rules or {})}
+        out.update(_squire2_after_create(conn, b, _sq2_lines, _sq2_rejected))
+        return out
     finally:
         conn.close()
 
@@ -33910,9 +33942,15 @@ def squire_brief_shortlist(brief_id: int, email: str = "", refresh: int = 0, ts_
         b = conn.execute("SELECT * FROM squire_briefs WHERE id=? AND email=?", (brief_id, em)).fetchone()
         if not b:
             raise HTTPException(status_code=404, detail="brief not found")
-        sl = _squire_shortlist(conn, dict(b))
-        if refresh:
-            _squire_store_matches(conn, brief_id, sl)
+        if _squire2_has_lines(conn, brief_id):
+            # SQUIRE-2: a card list's shortlist is its stored line matches (identity on the one candidate door)
+            if refresh:
+                _squire2_card_watch(conn, dict(b), notify=False)
+            sl = _squire2_stored_shortlist(conn, brief_id)
+        else:
+            sl = _squire_shortlist(conn, dict(b))
+            if refresh:
+                _squire_store_matches(conn, brief_id, sl)
         conn.execute("UPDATE squire_matches SET seen=1 WHERE brief_id=?", (brief_id,))
         appr = {r["listing_id"]: dict(r) for r in conn.execute("SELECT * FROM squire_approaches WHERE brief_id=? ORDER BY id", (brief_id,)).fetchall()}
         for m in sl:
@@ -34081,6 +34119,9 @@ def _squire_watch_all(conn):
         if _seller_tier_of(conn, b["email"]) != "pro":
             continue     # criterion 1 holds on the schedule too: a lapsed Pro is not watched for
         try:
+            if _squire2_has_lines(conn, b["id"]):
+                n_briefs += 1; n_new += _squire2_card_watch(conn, b)
+                continue
             sl = _squire_shortlist(conn, b)
             new = _squire_store_matches(conn, b["id"], sl)
             n_briefs += 1; n_new += new
@@ -34125,6 +34166,1011 @@ if os.getenv("SQUIRE_WATCH_ENABLED", "1") == "1":
                 print("SQUIRE-WATCH error: %s" % _se)
             _st.sleep(6 * 3600)
     threading.Thread(target=_squire_watch_loop, daemon=True).start()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# SQUIRE-2 — Squire becomes the full personal assistant (SQUIRE_2_BUILD_BRIEF.md · Phase 1 · 10 Oct 2026)
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# A LAYER over Squire v1 above -- not a new agent, not a new tier, not a second matcher. Candidates
+# always come from the one door (_zoom_candidates / _squire_shortlist); squire2_engine.py only JUDGES
+# them against the user's own rules, and squire2_feeds.py brings the free Phase 1 data (all flag-gated,
+# all fail-safe). Adds: brief kinds buy|sell|watch + rules, bulk card lists (<=100), price advice both
+# sides (A/C), sell-side watch (A), first-in alerts on publish (B), the property crux report (D), the
+# reality-check (E), learning from reactions (F), urgency routing instant|digest (G), the monthly report
+# that is ALWAYS sent (H), and the Pro PA monthly-Tuppence machinery (I) -- dark behind feature_flags
+# switch `squire_pro_pa` (default OFF; arming is David's act). Everything stays inside Squire v1's
+# boundaries: Pro-only, dark until baseline_q4, advice never negotiation, never an introduction (this
+# block sits inside the window RG-0224 scans for intro writes), seller identity never in context, and
+# watching/advice/alerts/reports are INCLUDED -- the approach stays the metered unit.
+import squire2_engine as _sq2
+import squire2_feeds as _sq2f
+
+SQUIRE2_DIGEST_HOUR_UTC = 5          # daily digest + nightly price job run after 05:00 UTC (07:00 SAST)
+SQUIRE2_SCRYFALL_GAP_S = 0.12         # Scryfall asks for 50-100 ms between requests
+
+
+def _squire2_ensure(conn):
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(squire_briefs)").fetchall()}
+    if cols and "kind" not in cols:
+        conn.execute("ALTER TABLE squire_briefs ADD COLUMN kind TEXT NOT NULL DEFAULT 'buy'")
+    if cols and "rules" not in cols:
+        conn.execute("ALTER TABLE squire_briefs ADD COLUMN rules TEXT NOT NULL DEFAULT '{}'")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_lines(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, brief_id INTEGER NOT NULL, line_no INTEGER NOT NULL,
+        name TEXT NOT NULL, set_code TEXT, user_price REAL, quantity INTEGER NOT NULL DEFAULT 1,
+        scryfall_id TEXT, resolved INTEGER NOT NULL DEFAULT 0, note TEXT, advice TEXT, advice_at TEXT)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_sq_lines_brief ON squire_lines(brief_id)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS card_price_history(
+        uuid TEXT NOT NULL, provider TEXT NOT NULL, finish TEXT NOT NULL, date TEXT NOT NULL,
+        price REAL NOT NULL, currency TEXT NOT NULL, PRIMARY KEY(uuid, provider, finish, date))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS mtgjson_ids(
+        scryfall_id TEXT PRIMARY KEY, uuid TEXT NOT NULL, set_code TEXT)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_alerts(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, brief_id INTEGER, kind TEXT NOT NULL,
+        urgency TEXT NOT NULL, listing_id INTEGER, ref TEXT NOT NULL, title TEXT NOT NULL, body TEXT,
+        created_at TEXT NOT NULL, sent_at TEXT, channel TEXT, UNIQUE(email, ref))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_feedback(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, brief_id INTEGER NOT NULL, listing_id INTEGER NOT NULL,
+        email TEXT NOT NULL, reason TEXT NOT NULL, change_text TEXT, rules_before TEXT, rules_after TEXT,
+        created_at TEXT NOT NULL)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire_reports(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, brief_id INTEGER NOT NULL, email TEXT NOT NULL, kind TEXT NOT NULL,
+        period TEXT NOT NULL, listing_id INTEGER NOT NULL DEFAULT 0, body TEXT NOT NULL,
+        charged INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, UNIQUE(brief_id, kind, period, listing_id))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS recurring_charges(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, brief_id INTEGER NOT NULL,
+        tuppence_per_month INTEGER NOT NULL, feeds_json TEXT NOT NULL, started_at TEXT,
+        last_charged_period TEXT, status TEXT NOT NULL DEFAULT 'quoted', caution_text TEXT,
+        caution_accepted_at TEXT, created_at TEXT NOT NULL)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS squire2_jobs(
+        name TEXT PRIMARY KEY, last_key TEXT, last_at TEXT, last_result TEXT)""")
+
+
+def _squire2_run(coro):
+    """Run a coroutine from a sync route / worker thread (FastAPI runs sync routes in a threadpool, so
+    there is no running loop here)."""
+    try:
+        return asyncio.run(coro)
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+
+
+def _squire2_rules_of(brief) -> dict:
+    try:
+        raw = brief["rules"] if "rules" in (brief.keys() if hasattr(brief, "keys") else brief) else None
+    except Exception:
+        raw = None
+    try:
+        return _sq2.clean_rules(json.loads(raw or "{}"))
+    except Exception:
+        return {}
+
+
+def _squire2_kind_of(brief) -> str:
+    try:
+        k = (brief["kind"] or "buy").lower()
+    except Exception:
+        k = "buy"
+    return k if k in _sq2.BRIEF_KINDS else "buy"
+
+
+def _squire2_prepare(body):
+    kind = (getattr(body, "kind", None) or "buy").strip().lower()
+    if kind not in _sq2.BRIEF_KINDS:
+        raise HTTPException(status_code=400, detail="kind must be buy, sell or watch")
+    cards = getattr(body, "cards", None)
+    lines, rejected = _sq2.parse_card_list(cards) if cards else ([], [])
+    return kind, lines, rejected
+
+
+def _squire2_has_lines(conn, brief_id) -> bool:
+    try:
+        return bool(conn.execute("SELECT 1 FROM squire_lines WHERE brief_id=? LIMIT 1", (brief_id,)).fetchone())
+    except Exception:
+        return False
+
+
+def _squire2_country(conn, row) -> str:
+    """ISO-2 of a listing: its own country column if it has one, else its city in geo_cities (by id, then by
+    name), else the existing default. 'GB' and 'UK' are the same answer here ('UK')."""
+    try:
+        keys = row.keys()
+    except Exception:
+        keys = []
+    c = None
+    try:
+        if "country" in keys and row["country"]:
+            c = _listing_country_iso2(row)
+        if not c and conn is not None and "geo_city_id" in keys and row["geo_city_id"]:
+            r = conn.execute("SELECT country_iso2 FROM geo_cities WHERE id=?", (row["geo_city_id"],)).fetchone()
+            c = r["country_iso2"] if r else None
+        if not c and conn is not None and "city" in keys and row["city"]:
+            r = conn.execute("SELECT country_iso2 FROM geo_cities WHERE LOWER(name)=LOWER(?) ORDER BY id LIMIT 1", (row["city"],)).fetchone()
+            c = r["country_iso2"] if r else None
+    except Exception:
+        c = None
+    if not c:
+        try:
+            c = _listing_country_iso2(row)
+        except Exception:
+            c = "ZA"
+    c = str(c).upper()
+    return "UK" if c in ("GB", "UK") else c
+
+
+def _squire2_currency(row, conn=None) -> str:
+    c = _squire2_country(conn, row)
+    return {"UK": "GBP", "US": "USD", "AU": "AUD", "KE": "KES", "NA": "NAD", "BW": "BWP"}.get(c, "ZAR")
+
+
+# ── cards: identify (never guess), market, advice ─────────────────────────────
+async def _squire2_lookup_card(name: str, set_code: str = "") -> Optional[dict]:
+    """Identify one card. With a set code: exact name in that set. Without: the existing
+    resolve_scryfall_id lane, then a NAME-EQUALITY guard -- a fuzzy near-name is 'could not identify',
+    never a guess."""
+    if not feature_flags.is_provider_live("scryfall"):
+        return None
+    try:
+        if set_code:
+            async with httpx.AsyncClient(timeout=10, headers={"User-Agent": "TrustSquare/1.0", "Accept": "application/json"}) as c:
+                r = await c.get("https://api.scryfall.com/cards/named", params={"exact": name, "set": set_code.lower()})
+                if r.status_code != 200:
+                    return None
+                d = r.json()
+            pr = (d.get("prices") or {})
+            return {"id": d.get("id"), "name": d.get("name"), "set": (d.get("set") or "").upper(),
+                    "usd": float(pr["usd"]) if pr.get("usd") else None}
+        sid = await resolve_scryfall_id(name, "trading cards")
+        if not sid:
+            return None
+        p = await scryfall_price_by_id(sid)
+        if not p or _sq2._norm(p.get("name")) != _sq2._norm(name):
+            return None          # the lookup landed on a DIFFERENT card name: refuse, never guess
+        return {"id": sid, "name": p.get("name"), "set": "", "usd": p.get("usd")}
+    except Exception:
+        return None
+
+
+async def _squire2_nm_price(name: str, set_code: str = "") -> Optional[dict]:
+    """Condition-specific (Near Mint) price from the existing JustTCG lane. None without its key."""
+    if not feature_flags.is_provider_live("justtcg_free"):
+        return None
+    try:
+        r = await tier_resolvers.justtcg_price(("%s %s" % (name, set_code)).strip())
+        if r and "Near Mint" in (r.get("provenance") or "") and _sq2.to_num(r.get("value")):
+            return {"value": float(r["value"]), "currency": r.get("currency") or "USD"}
+    except Exception:
+        pass
+    return None
+
+
+def _squire2_trend(conn, scryfall_id) -> Optional[dict]:
+    try:
+        u = conn.execute("SELECT uuid FROM mtgjson_ids WHERE scryfall_id=?", (scryfall_id,)).fetchone()
+        if not u:
+            return None
+        return _sq2.trend(_sq2f.history_for(conn, u["uuid"]))
+    except Exception:
+        return None
+
+
+async def _squire2_advise_lines(conn, brief) -> list:
+    """Identify unresolved lines once, then price every line and store the advice snapshot."""
+    kind = _squire2_kind_of(brief); rules = _squire2_rules_of(brief)
+    rows = [dict(r) for r in conn.execute("SELECT * FROM squire_lines WHERE brief_id=? ORDER BY line_no", (brief["id"],)).fetchall()]
+    out = []
+    for ln in rows:
+        today = None
+        if not ln["resolved"]:
+            hit = await _squire2_lookup_card(ln["name"], ln["set_code"] or "")
+            await asyncio.sleep(SQUIRE2_SCRYFALL_GAP_S)
+            if hit and hit.get("id"):
+                ln.update(resolved=1, scryfall_id=hit["id"], name=hit.get("name") or ln["name"],
+                          set_code=(hit.get("set") or ln["set_code"] or ""))
+                conn.execute("UPDATE squire_lines SET resolved=1, scryfall_id=?, name=?, set_code=?, note=NULL WHERE id=?",
+                             (ln["scryfall_id"], ln["name"], ln["set_code"], ln["id"]))
+                today = {"usd": hit.get("usd")} if hit.get("usd") else None
+            else:
+                conn.execute("UPDATE squire_lines SET note=? WHERE id=?", ("could not identify — check name/set", ln["id"]))
+        market = None
+        if ln["resolved"]:
+            if today is None:
+                p = await scryfall_price_by_id(ln["scryfall_id"])
+                await asyncio.sleep(SQUIRE2_SCRYFALL_GAP_S)
+                today = {"usd": p["usd"]} if p and p.get("usd") else None
+            nm = await _squire2_nm_price(ln["name"], ln["set_code"] or "")
+            market = _sq2.market_reference(today, _squire2_trend(conn, ln["scryfall_id"]), nm)
+        adv = _sq2.advise_line({**ln, "resolved": bool(ln["resolved"])}, kind, rules, market)
+        conn.execute("UPDATE squire_lines SET advice=?, advice_at=? WHERE id=?", (json.dumps(adv), _squire_now(), ln["id"]))
+        out.append({"line_id": ln["id"], "line_no": ln["line_no"], "name": ln["name"], "set": ln["set_code"] or "",
+                    "quantity": ln["quantity"], "user_price": ln["user_price"], **adv})
+    conn.commit()
+    return out
+
+
+def _squire2_line_market(ln) -> Optional[dict]:
+    """The market stored in a line's advice snapshot, in the shape buy_line_met expects."""
+    try:
+        a = json.loads(ln["advice"] or "{}")
+    except Exception:
+        return None
+    if not a.get("market"):
+        return None
+    return {"value": float(a["market"]), "currency": a.get("currency") or "USD",
+            "condition_verified": bool(a.get("condition_verified"))}
+
+
+def _squire2_after_create(conn, brief, lines, rejected) -> dict:
+    """Runs inside POST /squire/brief after Squire v1 wrote the brief."""
+    out = {}
+    if lines:
+        for i, ln in enumerate(lines, 1):
+            conn.execute("INSERT INTO squire_lines (brief_id, line_no, name, set_code, user_price, quantity) VALUES (?,?,?,?,?,?)",
+                         (brief["id"], i, ln["name"], ln["set_code"] or "", ln["user_price"], ln["quantity"]))
+        conn.commit()
+        advice = _squire2_run(_squire2_advise_lines(conn, brief))
+        out["lines"] = len(lines)
+        out["advice"] = advice
+        out["unresolved"] = list(rejected) + [{"line": a["line_no"], "text": a["name"], "reason": a["reason"]}
+                                              for a in advice if a["status"] == "unresolved"]
+        if _squire2_kind_of(brief) == "sell":
+            out["demand_alerts"] = _squire2_sell_side(conn, brief)
+        else:
+            _squire2_card_watch(conn, brief, notify=False)
+        out["reality"] = _squire2_card_reality(conn, brief)
+    else:
+        if rejected:
+            out["unresolved"] = list(rejected)
+        out["reality"] = _squire2_reality(conn, brief)
+        if _squire2_kind_of(brief) == "sell":
+            out["demand_alerts"] = _squire2_sell_side(conn, brief)
+    conn.commit()
+    return out
+
+
+# ── reality-check (E) ─────────────────────────────────────────────────────────
+def _squire2_recent(rows, days=_sq2.REALITY_DAYS):
+    cut = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    keep = []
+    for r in rows:
+        pa = str(r.get("published_at") or r.get("created_at") or "")[:10]
+        if not pa or pa >= cut:
+            keep.append(r)
+    return keep
+
+
+def _squire2_candidates(conn, brief) -> list:
+    """Every listing the ONE matcher returns for this brief, rules NOT applied, as plain rows
+    (identity already stripped by _zoom_public_row inside the shortlist)."""
+    rows = []
+    for m in _squire_shortlist(conn, brief, limit=None, apply_rules=False):
+        r = dict(m.get("listing") or {})
+        r.setdefault("id", m["listing_id"])
+        r["price_num"] = _sq2.to_num(r.get("price_num") if r.get("price_num") is not None else r.get("price"))
+        r.setdefault("currency", _squire2_currency(r, conn))
+        rows.append(r)
+    return rows
+
+
+def _squire2_reality(conn, brief) -> Optional[dict]:
+    rules = _squire2_rules_of(brief)
+    if not rules:
+        return None
+    try:
+        return _sq2.reality_check(rules, _squire2_recent(_squire2_candidates(conn, brief)))
+    except Exception as ex:
+        _log.warning("squire2 reality: %s", ex)
+        return None
+
+
+def _squire2_card_listings(conn, brief):
+    tier = _buyer_reach_tier(conn, brief["email"])
+    cands, _ = _zoom_candidates(conn, "Collectors", brief["city"] or "Pretoria", 0, tier)
+    return cands
+
+
+def _squire2_card_reality(conn, brief) -> Optional[dict]:
+    if _squire2_kind_of(brief) != "buy":
+        return None
+    rules = _squire2_rules_of(brief)
+    cands = _squire2_recent(_squire2_card_listings(conn, brief))
+    lines_out = []
+    for ln in conn.execute("SELECT * FROM squire_lines WHERE brief_id=? AND resolved=1", (brief["id"],)).fetchall():
+        prices = [p for p in (_sq2.to_num(c.get("price_num") if c.get("price_num") is not None else c.get("price"))
+                              for c in cands if _sq2.card_name_matches(ln["name"], c.get("title")) or
+                              (ln["scryfall_id"] and c.get("scryfall_id") == ln["scryfall_id"])) if p is not None]
+        rc = _sq2.card_reality(dict(ln), rules, _squire2_line_market(ln), prices)
+        if rc and rc.get("line"):
+            lines_out.append(rc)
+    if not lines_out:
+        return {"realistic": True, "line": "No reality problem found for the lines Squire could price.", "alternatives": []}
+    return {"realistic": False, "line": "%d of your cards had no listing inside your rule in the last %d days." % (len(lines_out), _sq2.REALITY_DAYS),
+            "cards": lines_out[:30], "alternatives": [dict(c["alternative"], card=c["line"].split(":")[0]) for c in lines_out[:30]]}
+
+
+# ── alerts + urgency (B, G) ───────────────────────────────────────────────────
+def _squire2_alert(conn, email, brief_id, kind, urg, listing_id, ref, title, body) -> bool:
+    """One alert per (email, ref) for ever -- no repeats. 'instant' goes now (push, e-mail backup);
+    'digest' waits for the daily digest. No identity of either side is ever in title/body."""
+    cur = conn.execute("INSERT INTO squire_alerts (email, brief_id, kind, urgency, listing_id, ref, title, body, created_at) "
+                       "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING", (email, brief_id, kind, urg, listing_id, ref, title[:140], (body or "")[:600], _squire_now()))
+    if not cur.rowcount:
+        return False
+    if urg == "instant":
+        ch = []
+        try:
+            if _push_to_seller(conn, email, title[:80], (body or "")[:160], timeout=4):
+                ch.append("push")
+        except Exception:
+            pass
+        try:
+            html = "<p>%s</p><p>%s</p><p>Open <b>Squire</b> in My Space on TrustSquare to see it.</p>" % (_html_esc(title), _html_esc(body or ""))
+            if _send_system_email(email, title, html) == "sent":
+                ch.append("email")
+        except Exception:
+            pass
+        conn.execute("UPDATE squire_alerts SET sent_at=?, channel=? WHERE email=? AND ref=?",
+                     (_squire_now(), ",".join(ch) or "app", email, ref))
+    return True
+
+
+def _html_esc(t) -> str:
+    return (str(t or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+
+def _squire2_card_watch(conn, brief, only_listing=None, notify=True) -> int:
+    """Card briefs (buy/watch): a listing matches a LINE when it is that card (identity, on the one
+    candidate door). Inside the user's rule -> instant; anything else -> digest."""
+    b = dict(brief)
+    kind = _squire2_kind_of(b); rules = _squire2_rules_of(b)
+    if kind == "sell":
+        return _squire2_sell_side(conn, b)
+    lines = [dict(r) for r in conn.execute("SELECT * FROM squire_lines WHERE brief_id=? AND resolved=1", (b["id"],)).fetchall()]
+    if not lines:
+        return 0
+    new = 0
+    for c in _squire2_card_listings(conn, b):
+        if only_listing is not None and c["id"] != only_listing:
+            continue
+        for ln in lines:
+            if not (_sq2.card_name_matches(ln["name"], c.get("title")) or (ln["scryfall_id"] and c.get("scryfall_id") == ln["scryfall_id"])):
+                continue
+            price = _sq2.to_num(c.get("price_num") if c.get("price_num") is not None else c.get("price"))
+            mk = _squire2_line_market(ln)
+            met = _sq2.buy_line_met(ln, rules, mk, price) if kind == "buy" else False
+            reasons = ["is %s" % ln["name"]]
+            if mk:
+                reasons.append("market %s%s" % (_sq2._fmt_money(mk["value"], mk["currency"]), "" if mk["condition_verified"] else " (condition not verified)"))
+            reasons.append("inside your rule" if met else "outside your rule")
+            cur = conn.execute("INSERT INTO squire_matches (brief_id, listing_id, score, reasons, created_at) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING",
+                               (b["id"], c["id"], 1.0 if met else 0.5, json.dumps(reasons), _squire_now()))
+            if cur.rowcount:
+                new += 1
+                if notify:
+                    urg = _sq2.urgency(kind, met)
+                    _squire2_alert(conn, b["email"], b["id"], "first_in", urg, c["id"], "match:%d:%d" % (b["id"], c["id"]),
+                                   ("First in: %s is listed inside your rule" % ln["name"]) if met else ("New listing: %s" % ln["name"]),
+                                   "%s — %s. %s" % (c.get("title") or "listing", c.get("price") or "price on request", "; ".join(reasons)))
+            break
+    conn.execute("UPDATE squire_briefs SET last_match_at=? WHERE id=?", (_squire_now(), b["id"]))
+    return new
+
+
+def _squire2_on_publish(listing_id: int):
+    """B -- FIRST-IN: runs beside the publish request (thread), so a matching buy brief hears within
+    seconds, not on the 6-hourly watch. Never raises."""
+    try:
+        if not _squire_on():
+            return
+        conn = database.get_db()
+        try:
+            _squire_ensure(conn)
+            L = conn.execute("SELECT id, category, seller_email, listing_status FROM listings WHERE id=?", (listing_id,)).fetchone()
+            if not L or (L["listing_status"] not in (None, "live")):
+                return
+            cat = _zoom.norm_cat(L["category"] or "")
+            seller = (L["seller_email"] or "").lower()
+            for b in conn.execute("SELECT * FROM squire_briefs WHERE status='active' AND COALESCE(kind,'buy') IN ('buy','watch') AND category=?", (cat,)).fetchall():
+                b = dict(b)
+                if b["email"].lower() == seller or _seller_tier_of(conn, b["email"]) != "pro":
+                    continue
+                try:
+                    if _squire2_has_lines(conn, b["id"]):
+                        _squire2_card_watch(conn, b, only_listing=listing_id)
+                        continue
+                    allm = [m for m in _squire_shortlist(conn, b, limit=None, apply_rules=False) if m["listing_id"] == listing_id]
+                    if not allm:
+                        continue
+                    m = allm[0]; row = dict(m.get("listing") or {})
+                    row["price_num"] = _sq2.to_num(row.get("price_num") if row.get("price_num") is not None else row.get("price"))
+                    rules = _squire2_rules_of(b)
+                    inside = _sq2.passes_rules(rules, row)[0]
+                    kind = _squire2_kind_of(b)
+                    if inside:
+                        _squire_store_matches(conn, b["id"], [m])
+                    elif not _sq2.close_call(rules, row):
+                        continue     # outside the rules and not close: no alert at all
+                    urg = _sq2.urgency(kind, inside)
+                    _squire2_alert(conn, b["email"], b["id"], "first_in", urg, listing_id, "match:%d:%d" % (b["id"], listing_id),
+                                   ("First in: a new listing matches your brief" if inside else "Close call: a new listing is near your rules"),
+                                   "%s — %s. %s" % (row.get("title") or "listing", row.get("price") or "price on request", "; ".join(m.get("reasons") or [])))
+                except Exception as ex:
+                    _log.warning("squire2 first-in brief %s: %s", b.get("id"), ex)
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as ex:
+        try:
+            _log.warning("squire2 first-in: %s", ex)
+        except Exception:
+            pass
+
+
+# ── sell-side watch (A) ───────────────────────────────────────────────────────
+def _squire2_sell_side(conn, brief) -> int:
+    """Tell a SELLER when someone wants what he listed: open want-lists (explicit wishlist signals),
+    Zoom Watches and open demand tickets, across the reach of the market. Anonymous both ways -- the
+    alert carries COUNTS and the item, never a buyer token, e-mail or name. Digest urgency (G)."""
+    b = dict(brief)
+    if _squire2_kind_of(b) != "sell":
+        return 0
+    now = _squire_now()
+    cat = b["category"]
+    items = [dict(r) for r in conn.execute("SELECT id, name FROM squire_lines WHERE brief_id=? AND resolved=1", (b["id"],)).fetchall()]
+    if not items:
+        items = [{"id": 0, "name": (b["need_text"] or "")}]
+    raw_cats = [c.lower() for c in _ZOOM_RAW_CATS.get(cat, (cat.lower(),))]
+    try:
+        sigs = [dict(r) for r in conn.execute("SELECT id, raw_text, category FROM wishlist_signals WHERE signal_type='explicit' AND expires_at > ?",
+                                              (now.replace("T", " ").replace("Z", ""),)).fetchall()]
+    except Exception:
+        sigs = []
+    try:
+        watches = [dict(r) for r in conn.execute("SELECT id, category, city, path, label FROM zoom_watches WHERE category=?", (cat,)).fetchall()]
+    except Exception:
+        watches = []
+    try:
+        tickets = [dict(r) for r in conn.execute("SELECT id, query_norm, category FROM demand_tickets WHERE state='open'").fetchall()]
+    except Exception:
+        tickets = []
+    new = 0
+    for it in items:
+        name = it["name"]
+        is_card = bool(it["id"])
+        def hit(text):
+            if not text:
+                return False
+            if is_card:
+                return _sq2.card_name_matches(name, text) or _sq2.card_name_matches(text, name)
+            ws = [w for w in _sq2._norm(name).split() if len(w) > 3]
+            t = _sq2._norm(text)
+            return len(ws) > 0 and sum(1 for w in ws if w in t) >= max(1, min(2, len(ws)))
+        srcs = []
+        srcs += [("want-list", s["id"]) for s in sigs if (not s.get("category") or str(s["category"]).lower() in raw_cats + [cat.lower()]) and hit(s.get("raw_text"))]
+        srcs += [("watch", w["id"]) for w in watches if hit(unquote(" ".join([w.get("label") or "", w.get("path") or ""]).replace("|", " ").replace(":", " ")))]
+        srcs += [("search", t["id"]) for t in tickets if (not t.get("category") or str(t["category"]).lower() in raw_cats + [cat.lower()]) and hit(t.get("query_norm"))]
+        fresh = 0
+        for src, rid in srcs:
+            if conn.execute("INSERT INTO squire_alerts (email, brief_id, kind, urgency, listing_id, ref, title, body, created_at) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",
+                            (b["email"], b["id"], "sell_side", "digest", None, "sell:%d:%d:%s:%d" % (b["id"], it["id"], src, rid),
+                             ("Someone wants %s" % name)[:140], ("A buyer's %s matches %s on your sell list. You stay anonymous; so do they." % (src, name))[:600], now)).rowcount:
+                fresh += 1
+        new += fresh
+    return new
+
+
+def _squire2_on_demand(category: str):
+    """On-event sell-side: a new Watch or want-list in a category re-checks that category's sell briefs."""
+    try:
+        if not _squire_on():
+            return
+        conn = database.get_db()
+        try:
+            _squire_ensure(conn)
+            for b in conn.execute("SELECT * FROM squire_briefs WHERE status='active' AND kind='sell' AND category=?", (_zoom.norm_cat(category or ""),)).fetchall():
+                if _seller_tier_of(conn, b["email"]) == "pro":
+                    _squire2_sell_side(conn, dict(b))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as ex:
+        try:
+            _log.warning("squire2 on-demand: %s", ex)
+        except Exception:
+            pass
+
+
+def _squire2_send_digests(conn) -> dict:
+    """G -- everything that is not instant goes out once a day, one message per person."""
+    rows = [dict(r) for r in conn.execute("SELECT * FROM squire_alerts WHERE urgency='digest' AND sent_at IS NULL ORDER BY email, id").fetchall()]
+    by = {}
+    for r in rows:
+        by.setdefault(r["email"], []).append(r)
+    sent = 0
+    for em, al in by.items():
+        if _seller_tier_of(conn, em) != "pro":
+            continue
+        title = "Squire daily digest — %d update%s" % (len(al), "" if len(al) == 1 else "s")
+        body = "\n".join("• %s" % a["title"] for a in al[:20])
+        ch = []
+        try:
+            if _push_to_seller(conn, em, title, (al[0]["title"] + (" and %d more" % (len(al) - 1) if len(al) > 1 else ""))[:160], timeout=4):
+                ch.append("push")
+        except Exception:
+            pass
+        try:
+            html = "<p><b>%s</b></p><ul>%s</ul><p>Open <b>Squire</b> in My Space on TrustSquare.</p>" % (
+                _html_esc(title), "".join("<li>%s — %s</li>" % (_html_esc(a["title"]), _html_esc(a["body"] or "")) for a in al[:20]))
+            if _send_system_email(em, title, html) == "sent":
+                ch.append("email")
+        except Exception:
+            pass
+        conn.execute("UPDATE squire_alerts SET sent_at=?, channel=? WHERE urgency='digest' AND sent_at IS NULL AND email=?",
+                     (_squire_now(), ",".join(ch) or "app", em))
+        sent += 1
+    conn.commit()
+    return {"digests": sent, "alerts": len(rows)}
+
+
+# ── monthly report (H) + the Pro PA charge that rides on it (I) ───────────────
+def _squire2_prev_period(today=None) -> str:
+    d = (today or datetime.now(timezone.utc).date()).replace(day=1) - timedelta(days=1)
+    return d.strftime("%Y-%m")
+
+
+def _squire2_monthly(conn, today=None) -> dict:
+    """First of the month: a report for EVERY active (or Tuppence-paused) brief of a Pro holder -- sent
+    even with zero matches. Then, and only for a brief whose report exists, the Pro PA month is charged
+    (no report then no charges). With squire_pro_pa OFF no charge ever runs."""
+    today = today or datetime.now(timezone.utc).date()
+    period = _squire2_prev_period(today)
+    this_month = today.strftime("%Y-%m")
+    made = charged = paused = 0
+    for b in conn.execute("SELECT * FROM squire_briefs WHERE status IN ('active','paused')").fetchall():
+        b = dict(b)
+        if _seller_tier_of(conn, b["email"]) != "pro":
+            continue
+        try:
+            rep = _squire2_build_monthly(conn, b, period)
+            cur = conn.execute("INSERT INTO squire_reports (brief_id, email, kind, period, listing_id, body, created_at) VALUES (?,?,?,?,0,?,?) ON CONFLICT DO NOTHING",
+                               (b["id"], b["email"], "monthly", period, json.dumps(rep), _squire_now()))
+            if cur.rowcount:
+                made += 1
+                try:
+                    _send_system_email(b["email"], rep["title"], "<p>" + "<br>".join(_html_esc(x) for x in rep["lines"]) + "</p>")
+                except Exception:
+                    pass
+                try:
+                    _push_to_seller(conn, b["email"], rep["title"][:80], rep["lines"][0][:160], timeout=4)
+                except Exception:
+                    pass
+            conn.commit()
+        except Exception as ex:
+            _log.warning("squire2 monthly brief %s: %s", b.get("id"), ex)
+            continue
+        if feature_flags.squire_pro_pa_on():
+            r = _squire2_charge_pa(conn, b, period, this_month)
+            charged += 1 if r == "charged" else 0
+            paused += 1 if r == "paused" else 0
+    return {"period": period, "reports": made, "pa_charged": charged, "pa_paused": paused}
+
+
+def _squire2_build_monthly(conn, b, period) -> dict:
+    import statistics as _stat
+    rules = _squire2_rules_of(b)
+    prices = []
+    matches = conn.execute("SELECT COUNT(*) AS n FROM squire_matches WHERE brief_id=? AND substr(created_at,1,7)=?", (b["id"], period)).fetchone()["n"]
+    close, movement, reality_line = [], [], None
+    if _squire2_has_lines(conn, b["id"]):
+        for ln in conn.execute("SELECT * FROM squire_lines WHERE brief_id=? AND resolved=1", (b["id"],)).fetchall():
+            tr = _squire2_trend(conn, ln["scryfall_id"])
+            if tr:
+                movement.append("%s: %s %+.1f%% over %d days (%s → %s)" % (ln["name"], tr["direction"], tr["change_pct"], _sq2.TREND_DAYS,
+                                                                            _sq2._fmt_money(tr["from"]), _sq2._fmt_money(tr["to"])))
+        rc = _squire2_card_reality(conn, b) if _squire2_kind_of(b) == "buy" else None
+        reality_line = rc.get("line") if rc else None
+    else:
+        cands = _squire2_candidates(conn, b)
+        for r in cands:
+            cc = _sq2.close_call(rules, r) if rules else None
+            if cc:
+                close.append("%s: %s" % (r.get("title") or "listing", cc))
+        prices = [r["price_num"] for r in cands if r.get("price_num")]
+        if prices:
+            med = _stat.median(prices)
+            prev = conn.execute("SELECT body FROM squire_reports WHERE brief_id=? AND kind='monthly' ORDER BY period DESC LIMIT 1", (b["id"],)).fetchone()
+            pm = None
+            try:
+                pm = json.loads(prev["body"]).get("median_asking") if prev else None
+            except Exception:
+                pm = None
+            cur = cands[0].get("currency") if cands else None
+            if pm:
+                movement.append("Median asking of matching listings: %s (was %s, %+.1f%%)" % (_sq2._fmt_money(med, cur), _sq2._fmt_money(pm, cur), _sq2.pct(med, pm)))
+            else:
+                movement.append("Median asking of matching listings: %s (first month on record)" % _sq2._fmt_money(med, cur))
+        if rules:
+            reality_line = _sq2.reality_check(rules, _squire2_recent(cands)).get("line")
+    rep = _sq2.monthly_report(b, period, matches=matches, close_calls=close, movement=movement, reality_line=reality_line)
+    rep["median_asking"] = _stat.median(prices) if prices else None
+    return rep
+
+
+def _squire2_charge_pa(conn, b, period, this_month) -> str:
+    """One Pro PA month, transactional (scale-shape invariant 2). Out of Tuppence -> the brief pauses with
+    the same top-up prompt every payer gets. Never runs without the month's report on record."""
+    rc = conn.execute("SELECT * FROM recurring_charges WHERE brief_id=? AND email=? AND status IN ('active','paused') ORDER BY id DESC LIMIT 1",
+                      (b["id"], b["email"])).fetchone()
+    if not rc or rc["last_charged_period"] == this_month or not rc["caution_accepted_at"]:
+        return "none"
+    if not conn.execute("SELECT 1 FROM squire_reports WHERE brief_id=? AND kind='monthly' AND period=?", (b["id"], period)).fetchone():
+        return "none"        # no report then no charges
+    try:
+        if not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
+        bal = conn.execute("SELECT COALESCE(SUM(amount), 0) AS bal FROM transactions WHERE user_email = ?", (b["email"],)).fetchone()["bal"]
+        t = int(rc["tuppence_per_month"])
+        if bal is None or bal < t:
+            conn.execute("UPDATE recurring_charges SET status='paused' WHERE id=?", (rc["id"],))
+            conn.execute("UPDATE squire_briefs SET status='paused', updated_at=? WHERE id=?", (_squire_now(), b["id"]))
+            conn.commit()
+            _squire2_alert(conn, b["email"], b["id"], "topup", "instant", None, "pa-topup:%d:%s" % (rc["id"], this_month),
+                           "Your Squire brief is paused — top up to continue",
+                           "This month's %dT for your premium data could not be taken (balance %dT). Top up your Tuppence and the brief resumes; nothing is lost." % (t, int(bal or 0)))
+            conn.commit()
+            return "paused"
+        conn.execute("INSERT INTO transactions (user_email, type, amount, description) VALUES (?, 'squire_pa_month', ?, ?)",
+                     (b["email"], -t, "Squire Pro PA: premium data for %s (brief %d)" % (this_month, b["id"])))
+        conn.execute("UPDATE recurring_charges SET last_charged_period=?, status='active' WHERE id=?", (this_month, rc["id"]))
+        if b["status"] == "paused":
+            conn.execute("UPDATE squire_briefs SET status='active', updated_at=? WHERE id=?", (_squire_now(), b["id"]))
+        conn.commit()
+        return "charged"
+    except Exception as ex:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        _log.warning("squire2 PA charge brief %s: %s", b.get("id"), ex)
+        return "error"
+
+
+# ── status additions ──────────────────────────────────────────────────────────
+def _squire2_stored_shortlist(conn, brief_id) -> list:
+    out = []
+    for m in conn.execute("SELECT m.listing_id, m.score, m.reasons, l.* FROM squire_matches m JOIN listings l ON l.id=m.listing_id "
+                          "WHERE m.brief_id=? AND (l.listing_status IS NULL OR l.listing_status='live') ORDER BY m.score DESC, m.id DESC LIMIT 30",
+                          (brief_id,)).fetchall():
+        d = dict(m)
+        for k in _ZOOM_PRIVATE_COLS:
+            d.pop(k, None)
+        out.append({"listing_id": d["listing_id"], "score": d["score"], "reasons": json.loads(d.get("reasons") or "[]"),
+                    "listing": _zoom_public_row(d)})
+    return out
+
+
+def _squire2_status_brief(conn, d):
+    d["kind"] = _squire2_kind_of(d)
+    d["rules"] = _squire2_rules_of(d)
+    try:
+        n = conn.execute("SELECT COUNT(*) AS n, SUM(CASE WHEN resolved=1 THEN 0 ELSE 1 END) AS u FROM squire_lines WHERE brief_id=?", (d["id"],)).fetchone()
+        d["lines"] = int(n["n"] or 0); d["unresolved_lines"] = int(n["u"] or 0)
+        pc = conn.execute("SELECT * FROM recurring_charges WHERE brief_id=? AND status IN ('quoted','active','paused') ORDER BY id DESC LIMIT 1", (d["id"],)).fetchone()
+        d["pa"] = ({"charge_id": pc["id"], "status": pc["status"], "tuppence_per_month": pc["tuppence_per_month"],
+                    "feeds": json.loads(pc["feeds_json"] or "[]")} if pc else None)
+    except Exception:
+        d["lines"] = 0
+
+
+def _squire2_status_user(conn, em, out):
+    try:
+        out["alerts"] = [dict(r) for r in conn.execute("SELECT id, brief_id, kind, urgency, listing_id, title, body, created_at, sent_at FROM squire_alerts WHERE email=? ORDER BY id DESC LIMIT 20", (em,)).fetchall()]
+        out["reports"] = [{"id": r["id"], "brief_id": r["brief_id"], "kind": r["kind"], "period": r["period"], "listing_id": r["listing_id"],
+                           "body": json.loads(r["body"])} for r in conn.execute("SELECT * FROM squire_reports WHERE email=? AND kind='monthly' ORDER BY id DESC LIMIT 6", (em,)).fetchall()]
+    except Exception:
+        out["alerts"], out["reports"] = [], []
+    out["feedback_reasons"] = _sq2.feedback_reasons()
+    out["pa"] = {"available": bool(feature_flags.squire_pro_pa_on())}
+
+
+def _squire2_own_brief(conn, brief_id, em):
+    b = conn.execute("SELECT * FROM squire_briefs WHERE id=? AND email=? AND status!='deleted'", (brief_id, em)).fetchone()
+    if not b:
+        raise HTTPException(status_code=404, detail="brief not found")
+    return dict(b)
+
+
+# ── routes ────────────────────────────────────────────────────────────────────
+@app.get("/squire/brief/{brief_id}/advice")
+def squire2_advice(brief_id: int, email: str = "", refresh: int = 0, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """C -- one advice line per card: market, trend, the user's price, pass/warn against HIS rule.
+    Included in Pro (advice is observing, not acting)."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, email, "squire-advice", x_admin_key))
+        b = _squire2_own_brief(conn, brief_id, em)
+        if refresh:
+            adv = _squire2_run(_squire2_advise_lines(conn, b))
+        else:
+            adv = []
+            for ln in conn.execute("SELECT * FROM squire_lines WHERE brief_id=? ORDER BY line_no", (brief_id,)).fetchall():
+                a = json.loads(ln["advice"] or "{}") or {"status": "unverified", "reason": "not priced yet"}
+                adv.append({"line_id": ln["id"], "line_no": ln["line_no"], "name": ln["name"], "set": ln["set_code"] or "",
+                            "quantity": ln["quantity"], "user_price": ln["user_price"], **a})
+        counts = {}
+        for a in adv:
+            counts[a.get("status")] = counts.get(a.get("status"), 0) + 1
+        return {"brief_id": brief_id, "kind": _squire2_kind_of(b), "rules": _squire2_rules_of(b), "advice": adv, "counts": counts}
+    finally:
+        conn.close()
+
+
+@app.get("/squire/brief/{brief_id}/reality")
+def squire2_reality(brief_id: int, email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, email, "squire-reality", x_admin_key))
+        b = _squire2_own_brief(conn, brief_id, em)
+        rc = _squire2_card_reality(conn, b) if _squire2_has_lines(conn, brief_id) else _squire2_reality(conn, b)
+        return {"brief_id": brief_id, "reality": rc or {"realistic": True, "line": "Set a rule (price, yield, percentage) and Squire checks it against the last %d days." % _sq2.REALITY_DAYS, "alternatives": []}}
+    finally:
+        conn.close()
+
+
+class _Squire2FeedbackIn(BaseModel):
+    email: str
+    listing_id: int
+    reason: str
+
+
+@app.post("/squire/brief/{brief_id}/feedback")
+def squire2_feedback(brief_id: int, body: _Squire2FeedbackIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """F -- a thumbs-down reason becomes a stored rule change, shown back as the change made."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-feedback", x_admin_key))
+        b = _squire2_own_brief(conn, brief_id, em)
+        if not conn.execute("SELECT 1 FROM squire_matches WHERE brief_id=? AND listing_id=?", (brief_id, body.listing_id)).fetchone():
+            raise HTTPException(status_code=404, detail="listing not on this brief's shortlist")
+        L = conn.execute("SELECT * FROM listings WHERE id=?", (body.listing_id,)).fetchone()
+        if not L:
+            raise HTTPException(status_code=404, detail="listing not found")
+        row = _zoom_public_row(dict(L))
+        row["price_num"] = _sq2.to_num(row.get("price_num") if row.get("price_num") is not None else row.get("price"))
+        row["currency"] = _squire2_currency(L, conn)
+        before = _squire2_rules_of(b)
+        try:
+            after, change = _sq2.apply_feedback(before, body.reason, row)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="reason must be one of: " + ", ".join(_sq2.feedback_reasons()))
+        conn.execute("UPDATE squire_briefs SET rules=?, updated_at=? WHERE id=?", (json.dumps(after), _squire_now(), brief_id))
+        conn.execute("DELETE FROM squire_matches WHERE brief_id=? AND listing_id=?", (brief_id, body.listing_id))
+        conn.execute("INSERT INTO squire_feedback (brief_id, listing_id, email, reason, change_text, rules_before, rules_after, created_at) VALUES (?,?,?,?,?,?,?,?)",
+                     (brief_id, body.listing_id, em, body.reason, change, json.dumps(before), json.dumps(after), _squire_now()))
+        conn.commit()
+        return {"status": "ok", "change": change, "rules": after}
+    finally:
+        conn.close()
+
+
+@app.get("/squire/brief/{brief_id}/report")
+async def squire2_crux_report(brief_id: int, listing_id: int, email: str = "", ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """D -- the bargain crux report for a UK property match. Built only from verified free data; with no
+    verified sold prices there is NO report and NO charge. Included in Pro (no Tuppence moves here)."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, email, "squire-report", x_admin_key))
+        b = _squire2_own_brief(conn, brief_id, em)
+        if not conn.execute("SELECT 1 FROM squire_matches WHERE brief_id=? AND listing_id=?", (brief_id, listing_id)).fetchone():
+            raise HTTPException(status_code=404, detail="listing not on this brief's shortlist")
+        L = conn.execute("SELECT * FROM listings WHERE id=?", (listing_id,)).fetchone()
+        if not L:
+            raise HTTPException(status_code=404, detail="listing not found")
+        if (L["category"] or "").lower() != "property":
+            return {"report": None, "charged": False, "reason": "The crux report is for property listings."}
+        if _squire2_country(conn, L) != "UK":
+            return {"report": None, "charged": False, "reason": "No verified sold-price data for this country yet — no report, no charge."}
+        city = L["city"] or ""
+        comps = await tier_resolvers.uk_land_registry_median(city) if feature_flags.is_provider_live("land_registry") else None
+        if not comps:
+            return {"report": None, "charged": False, "reason": "No verified sold prices for %s — no report, no charge." % (city or "this area")}
+        rent = tier_resolvers.uk_market_rent(city) if feature_flags.is_provider_live("ons_voa") else None
+        pt = None
+        try:
+            pt = _suburb_point_for_listing(listing_id, write=False)
+        except Exception:
+            pt = None
+        lat, lng = (pt or (None, None))
+        keys = L.keys()
+        postcode = (L["postcode"] if "postcode" in keys else None) or ""
+        crime, flood, epc, rate = await asyncio.gather(_sq2f.police_crime_count(lat, lng), _sq2f.ea_flood_area(lat, lng),
+                                                       _sq2f.epc_lookup(postcode), _sq2f.boe_bank_rate())
+        asking = _sq2.to_num(L["price_num"] if "price_num" in keys and L["price_num"] is not None else L["price"])
+        rep = _sq2.crux_report(asking=asking, currency="GBP", comps=comps, rent=rent, epc=epc, crime=crime, flood=flood,
+                               rate=rate, rules=_squire2_rules_of(b))
+        if not rep:
+            return {"report": None, "charged": False, "reason": "Not enough verified data for a report — no report, no charge."}
+        rep["title"] = L["title"]
+        conn.execute("INSERT INTO squire_reports (brief_id, email, kind, period, listing_id, body, charged, created_at) VALUES (?,?,?,?,?,?,0,?) "
+                     "ON CONFLICT(brief_id, kind, period, listing_id) DO UPDATE SET body=excluded.body, created_at=excluded.created_at",
+                     (brief_id, em, "crux", _squire_period(), listing_id, json.dumps(rep), _squire_now()))
+        conn.commit()
+        return {"report": rep, "charged": False}
+    finally:
+        conn.close()
+
+
+class _Squire2PaQuoteIn(BaseModel):
+    email: str
+    brief_id: int
+    feeds: list
+
+
+class _Squire2PaAcceptIn(BaseModel):
+    email: str
+    charge_id: int
+    accept_caution: bool = False
+
+
+def _squire2_pa_gate(conn, ts_user, email, ctx, admin_key):
+    """I -- with squire_pro_pa OFF the Pro PA does not exist: no quote, no recurring charge, ever."""
+    if not feature_flags.squire_pro_pa_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    return _squire_require_pro(conn, _actor(ts_user, email, ctx, admin_key))
+
+
+@app.post("/squire/pa/quote")
+def squire2_pa_quote(body: _Squire2PaQuoteIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire2_pa_gate(conn, ts_user, body.email, "squire-pa-quote", x_admin_key)
+        _squire2_own_brief(conn, body.brief_id, em)
+        live = {p for p in feature_flags.PAID_PROVIDERS if feature_flags.is_provider_live(p)}
+        sharing = {}
+        for r in conn.execute("SELECT feeds_json FROM recurring_charges WHERE status='active'").fetchall():
+            for f in json.loads(r["feeds_json"] or "[]"):
+                sharing[f] = sharing.get(f, 0) + 1
+        pp = feature_flags.pa_pricing()
+        try:
+            q = _sq2.pa_quote(body.feeds, live_feeds=live, feed_costs_usd=feature_flags.feed_costs_usd_month(), sharing=sharing,
+                              ai_usd_month=pp.get("ai_usd_month", 1.0), margin_pct=pp.get("margin_pct", 30.0))
+        except ValueError as ve:
+            raise HTTPException(status_code=400, detail=str(ve))
+        conn.execute("UPDATE recurring_charges SET status='superseded' WHERE brief_id=? AND email=? AND status='quoted'", (body.brief_id, em))
+        cur = conn.execute("INSERT INTO recurring_charges (email, brief_id, tuppence_per_month, feeds_json, status, caution_text, created_at) VALUES (?,?,?,?,?,?,?)",
+                           (em, body.brief_id, q["tuppence_per_month"], json.dumps([f["feed"] for f in q["feeds"]]), "quoted", q["caution_text"], _squire_now()))
+        conn.commit()
+        return {"charge_id": cur.lastrowid, "status": "quoted", **q}
+    finally:
+        conn.close()
+
+
+@app.post("/squire/pa/accept")
+def squire2_pa_accept(body: _Squire2PaAcceptIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """The caution must be shown AND accepted before the first charge. Accepting charges nothing now:
+    the first month is taken on the 1st, after that month's report exists."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire2_pa_gate(conn, ts_user, body.email, "squire-pa-accept", x_admin_key)
+        rc = conn.execute("SELECT * FROM recurring_charges WHERE id=? AND email=?", (body.charge_id, em)).fetchone()
+        if not rc or rc["status"] != "quoted":
+            raise HTTPException(status_code=404, detail="quote not found")
+        if body.accept_caution is not True:
+            return {"status": "needs_caution", "caution_text": rc["caution_text"], "charged": False,
+                    "message": "Please read and accept the caution before the plan starts."}
+        now = _squire_now()
+        conn.execute("UPDATE recurring_charges SET status='active', caution_accepted_at=?, started_at=? WHERE id=?", (now, now, rc["id"]))
+        conn.commit()
+        return {"status": "active", "charge_id": rc["id"], "tuppence_per_month": rc["tuppence_per_month"], "charged": False,
+                "message": "Started. %dT is taken on the 1st of each month, after your monthly report. Runs until you cancel." % rc["tuppence_per_month"]}
+    finally:
+        conn.close()
+
+
+@app.post("/squire/pa/cancel")
+def squire2_pa_cancel(body: _Squire2PaAcceptIn, ts_user: str = Cookie(default=None), x_admin_key: str = Header(default=None)):
+    """Cancelling is always allowed (even if the switch was turned off since): it can only stop charges."""
+    conn = database.get_db()
+    try:
+        _squire_ensure(conn)
+        em = _squire_require_pro(conn, _actor(ts_user, body.email, "squire-pa-cancel", x_admin_key))
+        conn.execute("UPDATE recurring_charges SET status='cancelled' WHERE id=? AND email=? AND status IN ('quoted','active','paused')", (body.charge_id, em))
+        conn.commit()
+        return {"status": "cancelled", "charge_id": body.charge_id}
+    finally:
+        conn.close()
+
+
+def _squire2_job_due(conn, name, key) -> bool:
+    r = conn.execute("SELECT last_key FROM squire2_jobs WHERE name=?", (name,)).fetchone()
+    return not r or r["last_key"] != key
+
+
+def _squire2_job_done(conn, name, key, result):
+    conn.execute("INSERT INTO squire2_jobs (name, last_key, last_at, last_result) VALUES (?,?,?,?) "
+                 "ON CONFLICT(name) DO UPDATE SET last_key=excluded.last_key, last_at=excluded.last_at, last_result=excluded.last_result",
+                 (name, key, _squire_now(), json.dumps(result)[:2000]))
+    conn.commit()
+
+
+def _squire2_jobs(conn, now=None, force=None) -> dict:
+    """The scheduled half (RUL-070, server-side): nightly prices + sell-side + digest; monthly report
+    + Pro PA charge on the 1st. Idempotent by key, so a restart never runs a job twice."""
+    _squire_ensure(conn)
+    now = now or datetime.now(timezone.utc)
+    out = {}
+    day = now.strftime("%Y-%m-%d"); month = now.strftime("%Y-%m")
+    if (force in ("nightly", "all")) or (not force and now.hour >= SQUIRE2_DIGEST_HOUR_UTC and _squire2_job_due(conn, "nightly", day)):
+        res = {}
+        try:
+            res["prices"] = _sq2f.nightly_mtgjson(conn)
+        except Exception as ex:
+            res["prices"] = {"error": str(ex)[:200]}
+        n = 0
+        for b in conn.execute("SELECT * FROM squire_briefs WHERE status='active' AND kind='sell'").fetchall():
+            if _seller_tier_of(conn, b["email"]) == "pro":
+                n += _squire2_sell_side(conn, dict(b))
+        conn.commit()
+        res["sell_side_new"] = n
+        res["digest"] = _squire2_send_digests(conn)
+        _squire2_job_done(conn, "nightly", day, res)
+        out["nightly"] = res
+    # "first of the month": days 1-3 so a restart on the 1st never skips a month, and a mid-month deploy never
+    # sends last month's report late.
+    if (force in ("monthly", "all")) or (not force and now.day <= 3 and _squire2_job_due(conn, "monthly", month)):
+        res = _squire2_monthly(conn, now.date())
+        _squire2_job_done(conn, "monthly", month, res)
+        out["monthly"] = res
+    return out
+
+
+class _Squire2RunIn(BaseModel):
+    job: Optional[str] = None          # nightly | monthly | all
+    date: Optional[str] = None         # YYYY-MM-DD (test/backfill)
+
+
+@app.post("/squire/v2/run")
+def squire2_run(body: _Squire2RunIn = Body(default=None), _admin=Depends(_require_admin_or_key)):
+    if not _squire_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    conn = database.get_db()
+    try:
+        now = None
+        if body and body.date:
+            now = datetime.fromisoformat(body.date).replace(hour=12, tzinfo=timezone.utc)
+        return _squire2_jobs(conn, now=now, force=(body.job if body else None) or "all")
+    finally:
+        conn.close()
+
+
+if os.getenv("SQUIRE2_JOBS_ENABLED", "1") == "1":
+    def _squire2_loop():
+        import time as _st2
+        _st2.sleep(300)
+        while True:
+            try:
+                if _squire_on():
+                    _c = database.get_db()
+                    try:
+                        _r = _squire2_jobs(_c)
+                    finally:
+                        _c.close()
+                    if _r:
+                        print("SQUIRE2-JOBS: %s" % _r)
+            except Exception as _se2:
+                print("SQUIRE2-JOBS error: %s" % _se2)
+            _st2.sleep(900)
+    threading.Thread(target=_squire2_loop, daemon=True).start()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════

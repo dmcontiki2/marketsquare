@@ -614,3 +614,29 @@ this is a wording tidy, not a legal question.
 
 **Verification when built:** RG-0238 green on `ms.js` + `marketsquare.html`; `rulings_check.py`
 RUL-088 reflected; visual pass on the filter row and a 90+ card.
+
+---
+
+## CC-006 · SQUIRE-2 Phase 1 — Squire becomes the full personal assistant (+ Pro PA monthly Tuppence, dark)
+**Stage:** 4/5 STAGED — built + tested 10 Oct 2026 on local branch `squire2` (worktree `_squire2_wt`); HELD by the IP hold
+until `Patents/provisional-2/FILED.md` carries the application number; then merge to main, one commit, one deploy.
+**Opened:** 10 Oct 2026 · **Owner:** David · **Source decision:** SQUIRE_2_BUILD_BRIEF.md ("Go", 9 Oct 2026), extends RUL-077/078.
+
+**One-paragraph change:** Squire v1 (buyer side) gains brief kinds buy/sell/watch with the user's own rules, bulk card lists
+(<=100) with price advice on both sides, sell-side demand alerts, first-in alerts on publish, the UK property crux report,
+the reality-check, learning from thumbs-down reasons, instant/digest routing and an always-sent monthly report. It is a
+layer over the one Zoom/Squire matcher. The Pro PA monthly-Tuppence machinery (`recurring_charges`) is built but dark:
+feature_flags switch `squire_pro_pa` defaults OFF and arming it is David's act. Paid feeds stay OFF.
+
+**Term map:** none renamed — additive only (new tables, three optional fields on POST /squire/brief, eight new routes).
+
+**Code:** `squire2_engine.py` (new), `squire2_feeds.py` (new), `bea_main.py` (SQUIRE-2 block inside the Squire window +
+publish/Watch hooks), `feature_flags.py` (+6 free providers, `switches`, `feed_costs_usd_month`, `pa_pricing`),
+`ai_service_tiers.py` (+6 free providers), `ms.js` (Squire card), `route_policy.json` (+8), deploy manifest (+2),
+`migrations/081_squire2_tables.py`, `test_squire2.py`, `scripts/smoke_harness/verify_squire2.py`, RG-0224 extended.
+
+**Docs:** CHANGELOG fragment `changelog.d/2026-10-10-squire2-phase1.md`; STATUS fragment `status.d/2026-10-10-squire2-phase1.md`;
+PRICING_CANON §2e (Pro PA monthly Tuppence, dark); SQUIRE_SPEC §8 pointer.
+
+**Verification:** test_squire2.py 13/13; verify_squire2.py — all 10 acceptance items of the brief on the real BEA with a
+throwaway database. Live verification follows the deploy, after the filing.
