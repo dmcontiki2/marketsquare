@@ -38160,6 +38160,30 @@ def rg_sms_reply_1():
     return out or [(INFO, "texts go REPLIABLE and replies are read")]
 
 
+@entry("RG-0972", "SIGNIN-BALANCE-1 (David, 13 Oct 2026: 'Does this happen to all users? They cant like me fix it instantly'): "
+       "every code sign-in reads her own Tuppence at once and a different person leaves nothing of the previous one behind",
+       LOCKED, fixed_on="2026-10-13",
+       scope="ms.js msSignedInAs(): called by all four /auth/verify-code success paths (sign-in screen, Quick's proof step, "
+             "the go-live proof, the sell flow's sign-in). A different email than the one saved clears MS_PERSON_KEYS and "
+             "the shown balance first; then _msRefreshBalance reads her balance from the server.",
+       ref="Server log 13 Oct 2026 04:08:12Z: David signed in with a code; no balance read followed until his reload at "
+           "04:12:50Z (359T). Three of the four code paths set the email and never read the balance.")
+def rg_signin_balance_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if "function msSignedInAs(" not in js:
+        out.append((FAIL, "the shared sign-in step is gone -- a code sign-in shows the old balance again"))
+    n = js.count("msSignedInAs(")
+    if n < 5:
+        out.append((FAIL, "only %d of the 4 code sign-in paths read her balance" % max(0, n - 1)))
+    import re as _re
+    if len(_re.findall(r"localStorage\.setItem\('ms_user_email', *(res\.d\.email|who)\); *localStorage\.setItem\('ms_aa_email'", js)) > 1:   # one is msSignedInAs itself
+        out.append((FAIL, "a code sign-in writes the email without reading the balance again"))
+    return out or [(INFO, "every code sign-in reads her own balance at once")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

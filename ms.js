@@ -1254,6 +1254,28 @@ function msSessionAlive(){
    someone else, every per-person key is cleared and set from the session. Signed-out phones are left alone. */
 var MS_PERSON_KEYS = ['ms_aa_email','ms_user_email','ms_aa_name','ms_seller_profile','ms_seller_photo','ms_seller_photo_url',
   'ms_user_photo','ms_user_name','ms_trust_score','ms_intros_sent','ms_superuser','ms_joined_date'];
+/* SIGNIN-BALANCE-1 (David, 13 Oct 2026: "Why have i again lost my Tuppence account? ... Does this happen to all users?
+   They cant like me fix it instantly"). Three of the four code sign-in boxes (Quick's proof step, the sell flow's
+   sign-in, the go-live proof) wrote the new email into the phone and carried on WITHOUT reading her balance, so the
+   screen kept whatever it showed before -- 0T for a signed-out phone, or the previous account's figure after a switch --
+   until she reloaded. Every successful code sign-in now goes through here: a different person than the one saved on
+   this phone clears that person's saved details first (as signOut does), then her own balance is read at once. */
+function msSignedInAs(who){
+  who = String(who || '').trim();
+  if (!who) return;
+  try{
+    var prev = String(localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email') || '').trim().toLowerCase();
+    if (prev && prev !== who.toLowerCase()){
+      MS_PERSON_KEYS.forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+      try{ if(typeof SELLER_PHOTOS!=='undefined') SELLER_PHOTOS[0]=null; if(typeof SELLERS!=='undefined' && SELLERS) SELLERS[0]={}; }catch(_){}
+      try{ tuppence = 0; if (typeof updateTuppenceUI === 'function') updateTuppenceUI(); }catch(_){}
+    }
+    localStorage.setItem('ms_user_email', who); localStorage.setItem('ms_aa_email', who);
+  }catch(_){}
+  try{ if (typeof updateHeaderAuthBtn === 'function') updateHeaderAuthBtn(); }catch(_){}
+  try{ if (typeof _msRefreshBalance === 'function') _msRefreshBalance(); else msSyncBalance(); }catch(_){}
+}
+
 function msIdentityGuard(){
   try{ if (!BEA_ENABLED || (typeof DEMO_MODE !== 'undefined' && DEMO_MODE)) return Promise.resolve(false); }catch(_){ return Promise.resolve(false); }
   return fetch(BEA_URL + '/quick/me', {credentials: 'include'})
@@ -2347,8 +2369,7 @@ function showSignInCodeBox(email, msg){
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, status:r.status, d:d}; }); })
     .then(function(res){
       if(res.ok && res.d && res.d.ok){
-        try{ localStorage.setItem('ms_user_email', res.d.email);
-             localStorage.setItem('ms_aa_email', res.d.email); }catch(e){}
+        try{ msSignedInAs(res.d.email); }catch(e){}   // SIGNIN-BALANCE-1 (the page reloads next; a switch leaves nothing behind)
         m2.style.color='var(--green,#16a34a)'; m2.textContent='✓ Signed in.';
         if(typeof updateHeaderAuthBtn==='function') updateHeaderAuthBtn();
         setTimeout(function(){ location.reload(); }, 550);
@@ -8838,7 +8859,7 @@ function _msCodeProof(host, email, opts, onOk){
       .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return {ok:r.ok, status:r.status, d:d}; }); })
       .then(function(res){
         if(res.ok && res.d && res.d.ok){
-          try { localStorage.setItem('ms_user_email', res.d.email); localStorage.setItem('ms_aa_email', res.d.email); } catch(_){}
+          try { msSignedInAs(res.d.email); } catch(_){}   // SIGNIN-BALANCE-1
           try { if(typeof updateHeaderAuthBtn === 'function') updateHeaderAuthBtn(); } catch(_){}
           say('✓ Confirmed.');
           onOk(res.d.email || email, res.d);
@@ -9264,7 +9285,7 @@ function sobAskInboxCode(email){
     .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, status:r.status, d:d}; }); })
     .then(function(res){
       if(res.ok && res.d && res.d.ok){
-        try{ localStorage.setItem('ms_user_email', res.d.email); localStorage.setItem('ms_aa_email', res.d.email); }catch(e){}
+        try{ msSignedInAs(res.d.email); }catch(e){}   // SIGNIN-BALANCE-1
         if(typeof updateHeaderAuthBtn==='function') { try{ updateHeaderAuthBtn(); }catch(e){} }
         sobState._proofDone = true;
         m.style.color='#34d399'; m.textContent='\u2713 Confirmed \u2014 going live\u2026';
@@ -22619,7 +22640,7 @@ async function sfAuthVerify(){
     var d=await r.json().catch(function(){ return {}; });
     if(r.ok && d && d.ok){
       var who=d.email||em;
-      try{ localStorage.setItem('ms_user_email', who); localStorage.setItem('ms_aa_email', who); }catch(e){}
+      try{ msSignedInAs(who); }catch(e){}   // SIGNIN-BALANCE-1
       if(typeof updateHeaderAuthBtn==='function'){ try{ updateHeaderAuthBtn(); }catch(e){} }
       _sfMe={signed_in:true, email:who}; _sfMeT=Date.now();
       if(!String(sfState.email||'').trim()) sfState.email=who;
