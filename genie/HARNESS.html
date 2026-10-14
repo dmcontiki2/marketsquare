@@ -5316,10 +5316,10 @@ drawDoor();
         var u=URL.createObjectURL(file), im=new Image();
         im.onload=function(){
           try{
-            var w=im.naturalWidth, h=im.naturalHeight, m=1600, s=Math.min(1, m/Math.max(w,h));
+            var w=im.naturalWidth, h=im.naturalHeight, m=1280, s=Math.min(1, m/Math.max(w,h));   /* PHOTO-WAIT-1: 1600 -> 1280, a third less to send on a phone line */
             var cv=document.createElement('canvas'); cv.width=Math.round(w*s); cv.height=Math.round(h*s);
             cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
-            cv.toBlob(function(b){ res({blob:b||file, url:u}); }, 'image/jpeg', 0.86);
+            cv.toBlob(function(b){ res({blob:b||file, url:u}); }, 'image/jpeg', 0.8);
           }catch(e){ res({blob:file, url:u}); }
         };
         im.onerror=function(){ res({blob:file, url:u}); };
@@ -5374,6 +5374,20 @@ drawDoor();
       if(!s){ s=document.createElement('div'); s.className='qphst'; var c=ov.querySelector('.ar-card'); (c&&c.parentNode||ov).insertBefore(s, c?c.nextSibling:null); }
       s.textContent=txt; }catch(e){}
   }
+  /* PHOTO-WAIT-1: hold a tap that would leave the page while her photo is still uploading */
+  document.addEventListener('click', function(e){
+    try{
+      if(!window.QPHOTO_PENDING) return;
+      var a=e.target && e.target.closest && e.target.closest('#arrive a[href]'); if(!a) return;
+      if((a.getAttribute('target')||'')==='_blank') return;          /* WhatsApp opens beside us: the page stays */
+      e.preventDefault(); e.stopPropagation();
+      window.QPHOTO_GO=a.href; try{ qTrack('q_own_photo_hold'); }catch(_){}
+      status(qTr('One moment \u2014 your photo is still uploading. We will go on as soon as it lands.'));
+    }catch(_){}
+  }, true);
+  window.addEventListener('beforeunload', function(e){ if(window.QPHOTO_PENDING){ e.preventDefault(); e.returnValue=''; return ''; } });
+  try{ var st3=document.createElement('style'); st3.textContent='#arrive.qphwait .ar-btn{opacity:.6}#arrive .qphst{color:#fde68a}';
+    document.head.appendChild(st3); }catch(_){}
   window.qOwnPhotoAfterSave=function(j, em){
     var p=window.QPHOTO; if(!p || !p.blob || !j || !j.id || j.verify) return;
     setTimeout(function(){ status(qTr('Adding your photo to the listing…')); }, 200);
@@ -5383,10 +5397,27 @@ drawDoor();
       opts.headers={'X-Api-Key':'ms_mk_2026_pretoria_admin'}; }
     else { if(j.draft_token) fd.append('draft_token', j.draft_token);
       url='/listings/'+encodeURIComponent(j.id)+'/photo/draft?email='+encodeURIComponent(em||''); }
-    fetch(url, opts).then(function(r){
+    /* PHOTO-WAIT-1 (14 Oct 2026): on 14 Oct a Pretoria worker (SMS b2) built her advert in two minutes with her own
+       photo, then left the saved screen 20 s later while the photo was still on its way -- the upload died with the
+       page, and listing 543 stayed a draft with no photo. The saved screen now waits for the photo: a tap on a link
+       that would LEAVE the page is held until the photo has landed (then it goes on by itself), the page asks before
+       it is closed, and a dropped upload is tried once more. Buttons that stay in Quick are never held. */
+    function send(){ return fetch(url, opts); }
+    function done(ok){
+      window.QPHOTO_PENDING=null;
+      try{ var ov=$('arrive'); if(ov) ov.classList.remove('qphwait'); }catch(_){}
+      setTimeout(function(){ status(ok ? '\u2713 '+qTr('Your photo is on your listing.') : qTr('Your photo did not upload \u2014 add it in TrustSquare before you publish.')); }, 300);
+      var go=window.QPHOTO_GO; window.QPHOTO_GO=null; if(go) setTimeout(function(){ location.href=go; }, ok ? 700 : 1600);
+      return ok;
+    }
+    window.QPHOTO_PENDING=send().catch(function(){
+      return new Promise(function(r){ setTimeout(r, 2500); }).then(send);   /* one retry: phone lines drop */
+    }).then(function(r){
       try{ qTrack(r.ok ? 'q_own_photo_ok' : 'q_own_photo_fail', {st:r.status}); }catch(_){}
-      setTimeout(function(){ status(r.ok ? '✓ '+qTr('Your photo is on your listing.') : qTr('Your photo did not upload — add it in TrustSquare before you publish.')); }, 300);
-    }).catch(function(){ setTimeout(function(){ status(qTr('Your photo did not upload — add it in TrustSquare before you publish.')); }, 300); });
+      return done(r.ok);
+    }, function(){ try{ qTrack('q_own_photo_fail', {st:0}); }catch(_){} return done(false); });
+    setTimeout(function(){ try{ var ov=$('arrive'); if(ov && window.QPHOTO_PENDING){ ov.classList.add('qphwait');
+      status(qTr('Adding your photo to the listing\u2026 keep this page open.')); } }catch(_){} }, 220);
   };
 })();
 </script>
