@@ -12993,6 +12993,8 @@ async def aa_publish(
     }
     for key, label in field_labels.items():
         val = field_data.get(key, "").strip() if isinstance(field_data.get(key), str) else ""
+        if val and key == "experience" and val.isdigit() and len(val) <= 2:
+            val = val + (" year" if val == "1" else " years")   # EXPERIENCE-YEARS-1 (Goal run 38): '9' -> '9 years'
         if val:
             structured_lines.append(f"**{label}:** {val}")
 

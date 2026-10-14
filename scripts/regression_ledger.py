@@ -38680,5 +38680,29 @@ def rg_auto_renew_bind_nocap():
         return [(FAIL, "; ".join(bad))]
     return [(INFO, "checkout bound to session, renewal state owner-only, no end date on auto-renew")]
 
+@entry("RG-0983", "ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 (Goal run 38, 13 Oct 2026): --accent-bright is defined in ms.css :root "
+       "(it was used 13 times and defined nowhere, so Local Market's active trust chip 'Any seller' and the wishlist's "
+       "'+ Add to wishlist' / 'Enable pings' buttons were white text on no background); the photo read's notes-to-self "
+       "'... should be confirmed for each item' / 'to be confirmed' never reach her story box; EXPERIENCE-YEARS-1: a bare "
+       "years-of-experience number reads '9 years' (render-side in formatDescLegacy, server-side in the structured block)",
+       LOCKED, fixed_on="2026-10-13",
+       scope="ms.css :root --accent-bright; ms.js sfCleanAiDesc bad-sentence pattern; ms.js formatDescLegacy + bea_main.py structured_lines (experience)",
+       ref="Goal run 38 walk (docs/E2E_2026-10-13.md): a Johannesburg craft seller saw Local Market's 'Any seller' chip as a "
+           "blank pill, and her story box ended 'Individual sizes, materials and prices should be confirmed for each item.'")
+def rg_accent_bright_meta_confirm():
+    css = repo_file("ms.css"); js = repo_file("ms.js")
+    if css is None or js is None:
+        return [(INFO, "NOT EVALUATED - ms.css / ms.js not readable from here")]
+    root = css[:css.find("}")]
+    if "--accent-bright:" not in root:
+        return [(FAIL, "--accent-bright is no longer defined in ms.css :root -- white-on-nothing chips and buttons are back")]
+    i = js.find("function sfCleanAiDesc(t){")
+    if i < 0 or "be (confirmed|checked|verified|clarified)" not in js[i:i + 1500] or "to be confirmed" not in js[i:i + 1500]:
+        return [(FAIL, "sfCleanAiDesc no longer drops 'should be confirmed' notes-to-self from the story box")]
+    bm = repo_file("bea_main.py")
+    if "EXPERIENCE-YEARS-1" not in js[js.find("function formatDescLegacy(desc) {"):][:600] or (bm is not None and "EXPERIENCE-YEARS-1" not in bm):
+        return [(FAIL, "a bare years-of-experience number ('**Experience:** 9') is shown without 'years' again")]
+    return [(INFO, "--accent-bright defined; 'should be confirmed' sentences dropped; experience reads '9 years'")]
+
 if __name__ == "__main__":
     sys.exit(main())
