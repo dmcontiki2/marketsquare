@@ -1,3 +1,17 @@
+## 2026-10-14 — OPS-GUARD-1: subscriptions page + nightly checks and balances (RUL-230)
+- ops/guard/ops_guard.py: hourly orchestrator/v2/subscriptions.html (plans, real vs tester users, real listers per plan,
+  onboarding funnel by source, daily sign-ups/adverts, latest real adverts, subscription events); nightly guard.html with
+  money (Paystack success vs our top-up/plan records, below-zero balances, unknown Tuppence kinds, free-credit volume),
+  data (contacts opened per account/total vs 7-day average, sign-up spikes) and config (live code vs released source;
+  CityLauncher/SMS/ARM/systemd changes since last night, reviewed by the QA Bot's OpenAI judge). E-mail only on RED.
+- Dry run 14 Oct (server, temp state): Paystack live — 3 successful payments R108 in 120 days, all 3 in our records;
+  2 known test accounts below zero (baselined); 45 live MarketSquare code files identical to the release; 116 outreach and
+  timer files watched; 1 real lister with a live advert (Free).
+- migrations/082_install_ops_guard.py installs trustsquare-opsguard-page.timer (hourly :07) and
+  trustsquare-opsguard-nightly.timer (23:40 UTC). Cockpit gains "Subscriptions & Listers" and "Checks & Balances".
+
+- **ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 + EXPERIENCE-YEARS-1** (Goal run 38, RG-0983): Local Market's selected trust chip and the wishlist buttons are visible again (`--accent-bright` was used but never defined); the photo read's "should be confirmed" notes no longer reach a seller's story box; a bare years-of-experience number reads "9 years"; Quick's English qualification line reads "Experienced, no formal certificate." Found walking as a Johannesburg craft seller and reading the first stranger's listing (docs/E2E_2026-10-13.md).
+
 ## 2026-10-13 — A code sign-in shows her own Tuppence at once (SIGNIN-BALANCE-1)
 
 David, 13 Oct 2026, after signing in with a code: *"Why have i again lost my Tuppence account?"* and *"Does this happen to
