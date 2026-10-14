@@ -216,9 +216,9 @@ def gather(c):
         for i, (_, fn) in enumerate(stages):
             if fn is None:
                 # LIVE-LINK-1: Quick creates the advert at the hand-over (same second), so a session is 'live' when a
-                # real advert that is live now was created within 2 minutes of one of its hand-overs.
+                # real advert that is live now was created 0-10 s before one of its hand-overs (a 2-min window credited a neighbour's advert).
                 ok = bool(s["steps"] & {"q_live", "q_published", "published"}) or any(
-                    abs((_ts(l["created_at"]) - _ts(h)).total_seconds()) <= 120 for h in s["handover"] for l in live_real)
+                    -5 <= (_ts(h) - _ts(l["created_at"])).total_seconds() <= 10 for h in s["handover"] for l in live_real)
             else:
                 ok = fn(s["steps"])
             if ok:
