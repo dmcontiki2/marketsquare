@@ -415,6 +415,11 @@
    "level": "token"
   },
   {
+   "key": "POST /listings/{listing_id}/claim-draft",
+   "level": "user",
+   "note": "DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026): the signed-in person on the phone that MADE a Quick draft (ts_draft, SEC-GATE-1 draft token) moves that draft to her account -- only a draft, only from an address nobody ever proved. Ownership is the draft token, checked in the handler; the record is not hers until it moves, so no own rule."
+  },
+  {
    "key": "POST /users",
    "level": "user",
    "bind": [

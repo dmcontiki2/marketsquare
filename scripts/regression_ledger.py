@@ -38753,5 +38753,39 @@ def rg_ops_guard_1():
             return [(FAIL, "CityLauncher sms_funnel.py counts live adverts without the Quick hand-over again (LIVE-LINK-1)")]
     return [(INFO, "ops guard read-only with money/data/config checks + both timers + both cockpit links; SMS funnel links hand-over to live")]
 
+@entry("RG-0985", "DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026): a Quick draft saved under one address can be moved, by the "
+       "signed-in person on the phone that made it (ts_draft), to the account she signed in with -- only a draft, only from an "
+       "address nobody ever proved; the app offers it instead of 'we could not find that listing'; a first Google/Apple sign-in "
+       "from a draft landing opens the draft (it used to land on Home with nothing); the sign-in screen names the address the "
+       "draft waits on and Google opens on it (login_hint)",
+       LOCKED, fixed_on="2026-10-14",
+       scope="bea_main.py claim_quick_draft + auth_oauth_start hint; route_policy.json; ms.js msClaimDraft / msSigninDraftNote / "
+             "signedin=1 branch / _oneTapBtn; scripts/prove_draft_claim.py",
+       ref="SMS b2, 14 Oct 07:11-07:14Z: a Pretoria cleaner saved draft #543 under bekezela...@gmail.com, signed in with Google "
+           "as bekezela...23@gmail.com, added a passkey, found nothing and left. b5: the published tutor (#544) also landed on "
+           "Home after Google and found her draft only by opening My Space herself.")
+def rg_draft_claim_1():
+    bm, js, pol = repo_file("bea_main.py"), repo_file("ms.js"), repo_file("route_policy.json")
+    if bm is None or js is None or pol is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = bm.find("def claim_quick_draft(")
+    if i < 0:
+        return [(FAIL, "POST /listings/{id}/claim-draft is gone -- a draft saved under the wrong address is stranded again")]
+    body = bm[i:i + 4000]
+    for need in ('_purpose_token_ok(ts_draft, "draft"', "_session_email(ts_user)", "listing_status", "auth_provider",
+                 "eula_accepted_at", "key_hash", "last_seen", "FROM passkeys", "published_at IS NULL"):
+        if need not in body:
+            return [(FAIL, "claim_quick_draft lost its guard '%s' -- it could move somebody else's advert" % need)]
+    if '"POST /listings/{listing_id}/claim-draft"' not in pol:
+        return [(FAIL, "claim-draft is not declared in route_policy.json (SEC-GATE refuses it)")]
+    if 'params["login_hint"]' not in bm:
+        return [(FAIL, "Google sign-in no longer opens on the address her draft waits on (login_hint)")]
+    for need in ("function msClaimDraft(id)", "msClaimDraft(id); }", "function msSigninDraftNote()", "const _siWasIn=_msIsSignedIn();",
+                 "&hint="):
+        if need not in js:
+            return [(FAIL, "ms.js lost '%s' (DRAFT-CLAIM-1)" % need)]
+    return [(INFO, "claim-draft guarded (same phone, draft only, unproven address) and declared; app offers the move, lands the draft after a first Google sign-in, names the address")]
+
+
 if __name__ == "__main__":
     sys.exit(main())

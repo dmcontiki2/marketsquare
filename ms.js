@@ -1411,6 +1411,7 @@ async function _msInit(){
            screen with her advert still waiting, instead of an empty hub that greets her as a first-timer. */
         if(localStorage.getItem('ms_aa_email')){ (adopted ? Promise.resolve(true) : msSessionAlive()).then(function(alive){ if(alive === false){ msSessionEnded(); return; } goTo('dashboard'); msLandDraft(); }); }
         else { try{ var _qe=localStorage.getItem('ts_quick_email')||''; var _si=document.getElementById('si-email'); if(_qe && _si && !_si.value) _si.value=_qe; }catch(_){}   /* E2E-HMI-1: no re-asking what Quick knows */
+          msSigninDraftNote();   /* DRAFT-CLAIM-1 (Goal run 39) */
           showToast('Sign in with the email your listing is waiting on \u2014 it opens straight after.'); goTo('signin'); }
       }catch(e){}
       });
@@ -1448,9 +1449,13 @@ async function _msInit(){
   if(sp.get('signedin')==='1' && !sp.get('signin')){
     window.history.replaceState({}, '', window.location.pathname);
     let _siFirst=false; try{ _siFirst=!localStorage.getItem('ms_joined_date'); }catch(_){}
+    const _siWasIn=_msIsSignedIn();
     msAdoptSession().then(function(){
       let _siDraft=false; try{ _siDraft=!!sessionStorage.getItem('ts_land_draft'); }catch(_){}
-      if(_siDraft) return;
+      /* DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026): a FIRST Google/Apple sign-in on this phone has no email in storage until
+         msAdoptSession answers, so DRAFT-AFTER-SIGNIN-1 below (which runs at load) saw her as signed out and nothing opened
+         her advert -- SMS b2/b5 listers landed on Home with no sign of it. Land it here, once the session is adopted. */
+      if(_siDraft){ if(!_siWasIn && _msIsSignedIn()) setTimeout(function(){ try{ _msNav.user = true; goTo('dashboard'); msLandDraft(); }catch(_){} }, 300); return; }
       try{ if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString()); }catch(_){}
       setTimeout(function(){ try{
         goTo('home');
@@ -2336,7 +2341,9 @@ function mountOneTap(containerId, dividerId){
 }
 function _oneTapBtn(provider, label, bg, fg, border, icon){
   var nxt = encodeURIComponent(location.pathname || '/');
+  /* DRAFT-CLAIM-1 (Goal run 39): Google opens on the address in the email box (Quick fills it with the one her draft waits on) */
   return '<a href="' + BEA_URL + '/auth/oauth/' + provider + '/start?next=' + nxt + '" '
+    + (provider === 'google' ? 'onclick="try{var _v=(document.getElementById(\'si-email\')||{}).value||\'\';if(/.+@.+\\..+/.test(_v)){this.href+=\'&hint=\'+encodeURIComponent(_v.trim());}}catch(_){}" ' : '')
     + 'style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;'
     + 'box-sizing:border-box;margin-bottom:10px;background:' + bg + ';color:' + fg + ';'
     + 'border:' + border + ';border-radius:50px;padding:13px 14px;font-family:\'Syne\',sans-serif;'
@@ -6513,6 +6520,58 @@ function msHomeFromDraft(id){
     selectCity(null, city, null, null);
   }catch(e){}
 }
+/* DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026): she saved her Quick draft under one address and signed in here with another
+   (Google picked the account her phone uses first). The phone that made the draft can move it to the account she is
+   signed in with -- the server checks it is still a draft, made on this phone, on an address nobody ever proved. */
+/* DRAFT-CLAIM-1 (Goal run 39): the sign-in screen says, and keeps saying, which address her listing waits on -- the
+   7-second toast was gone before she chose, and Google then picked the account her phone uses first. */
+function msSigninDraftNote(){
+  try{
+    var qe=localStorage.getItem('ts_quick_email')||''; if(!/.+@.+\..+/.test(qe) || /@key\.trustsquare\.co$/i.test(qe)) return;
+    var box=document.getElementById('onetap-buttons'); if(!box || !box.parentNode) return;
+    var n=document.getElementById('si-draft-note');
+    if(!n){ n=document.createElement('div'); n.id='si-draft-note'; box.parentNode.insertBefore(n, box); }
+    var _e=function(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    n.style.cssText='background:#fef9c3;border:1.5px solid #facc15;color:#422006;border-radius:12px;padding:11px 13px;margin:0 0 14px;font-size:13.5px;line-height:1.45;text-align:left';
+    n.innerHTML='Your listing is waiting on <b>'+_e(qe)+'</b>. Sign in with that address \u2014 with Google, choose that account.';
+  }catch(_){}
+}
+function msClaimDraft(id){
+  function giveUp(){ if(typeof showToast==='function') showToast('We could not find that listing on this account yet \u2014 if you used another email in Quick, sign in with that one.', 7000); }
+  fetch(BEA_URL + '/listings/' + id + '/claim-draft?check=1', {method:'POST', credentials:'include'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if(!j || !j.claimable){ giveUp(); return; }
+      var _e=function(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+      var me=''; try{ me=localStorage.getItem('ms_aa_email')||''; }catch(_){}
+      var ov=document.createElement('div'); ov.id='ms-claim-draft';
+      ov.style.cssText='position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center';
+      ov.innerHTML='<div style="background:#fff;color:#0f172a;width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:22px 20px 26px;box-sizing:border-box;font-family:Inter,sans-serif">'
+        +'<div style="font:800 17px/1.3 Syne,sans-serif;margin-bottom:8px">Your listing is here</div>'
+        +'<div style="font-size:14px;line-height:1.5;margin-bottom:6px"><b>'+_e(j.title||('Listing #'+id))+'</b></div>'
+        +'<div style="font-size:13.5px;line-height:1.5;color:#334155;margin-bottom:16px">You saved it on this phone under <b>'+_e(j.from)+'</b>. '
+        +'You are signed in as <b>'+_e(me||'this account')+'</b>. Move it here so you can publish it?</div>'
+        +'<button id="ms-claim-yes" style="width:100%;padding:14px;border:none;border-radius:50px;background:#16a34a;color:#fff;font:700 15px Syne,sans-serif;cursor:pointer">Move it to this account</button>'
+        +'<button id="ms-claim-no" style="width:100%;margin-top:10px;padding:12px;border:none;background:transparent;color:#475569;font:600 13.5px Inter,sans-serif;cursor:pointer">Not now</button></div>';
+      document.body.appendChild(ov);
+      try{ if(typeof qTrack==='function') qTrack('claim_offer'); }catch(_){}
+      document.getElementById('ms-claim-no').onclick=function(){ try{ ov.parentNode.removeChild(ov); }catch(_){} giveUp(); };
+      document.getElementById('ms-claim-yes').onclick=function(){
+        var b=this; b.disabled=true; b.textContent='Moving\u2026';
+        fetch(BEA_URL + '/listings/' + id + '/claim-draft', {method:'POST', credentials:'include'})
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(k){
+            try{ ov.parentNode.removeChild(ov); }catch(_){}
+            if(!k || !k.moved){ giveUp(); return; }
+            try{ sessionStorage.setItem('ts_land_draft', String(id)); }catch(_){}
+            goTo('dashboard');
+            setTimeout(msLandDraft, 400);
+          })
+          .catch(function(){ try{ ov.parentNode.removeChild(ov); }catch(_){} giveUp(); });
+      };
+    })
+    .catch(giveUp);
+}
 function msLandDraft(){
   var id=0; try{ id=parseInt(sessionStorage.getItem('ts_land_draft')||'',10)||0; }catch(e){}
   if(!id) return;
@@ -6533,7 +6592,7 @@ function msLandDraft(){
     }
     if(n>0) setTimeout(function(){ tryIt(n-1); }, 500);
     else { try{ sessionStorage.removeItem('ts_land_draft'); }catch(e){}   /* DRAFT-AFTER-SIGNIN-1: never a silent give-up */
-      if(typeof showToast==='function') showToast('We could not find that listing on this account yet \u2014 if you used another email in Quick, sign in with that one.', 7000); }
+      msClaimDraft(id); }
   })(40);
 }
 

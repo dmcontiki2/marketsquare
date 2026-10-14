@@ -5126,6 +5126,67 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             "open_url": _mint_signin_url(em, lid, 60)}
 
 
+# DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026). SMS batch b2: a Pretoria cleaner built her advert in Quick, typed
+# bekezela...@gmail.com, then tapped "Continue with Google" in the app -- and Google signed her in as bekezela...23@gmail.com.
+# Her draft (#543) stayed on the first address, the Hub said "we could not find that listing", and she left after adding a
+# passkey: she was committed, the address was the only thing wrong. The phone that MADE a draft holds its own proof (the
+# SEC-GATE-1 ts_draft cookie, HttpOnly, 7 days, minted only when the address belonged to nobody yet). So a signed-in person
+# on that same phone may move that one draft to the account she is signed in with -- only while it is still a draft, and
+# only when the address it waits on was never proven by anyone (no sign-in, no Google/Apple, no terms, no key, no passkey,
+# nothing ever published). Nobody else's account can lose anything: the draft's words came from this phone.
+def _dc_mask(em):
+    try:
+        u, d = em.split("@", 1)
+        return (u[:3] + "\u2026" if len(u) > 3 else u[:1] + "\u2026") + "@" + d
+    except Exception:
+        return "another address"
+
+
+@app.post("/listings/{listing_id}/claim-draft")
+def claim_quick_draft(listing_id: int, check: int = 0,
+                      ts_user: str = Cookie(default=None), ts_draft: str = Cookie(default=None)):
+    sess = _session_email(ts_user)
+    if not sess:
+        raise HTTPException(status_code=401, detail="Please sign in first.")
+    if not _purpose_token_ok(ts_draft, "draft", int(listing_id)):
+        return {"claimable": False, "reason": "not_this_phone"}
+    conn = database.get_db()
+    try:
+        l = conn.execute("SELECT id, title, seller_email, listing_status, published_at FROM listings WHERE id=?",
+                         (int(listing_id),)).fetchone()
+        if not l:
+            return {"claimable": False, "reason": "gone"}
+        prev = (l["seller_email"] or "").strip().lower()
+        if prev == sess:
+            return {"claimable": False, "reason": "already_yours"}
+        if (l["listing_status"] or "") != "draft" or l["published_at"]:
+            return {"claimable": False, "reason": "not_a_draft"}
+        u = conn.execute("SELECT auth_provider, eula_accepted_at, key_hash, last_seen, phone_verified_at "
+                         "FROM users WHERE LOWER(email)=?", (prev,)).fetchone()
+        proven = bool(u and (u["auth_provider"] or u["eula_accepted_at"] or u["key_hash"]
+                             or u["last_seen"] or u["phone_verified_at"]))
+        if not proven:
+            proven = bool(conn.execute("SELECT 1 FROM passkeys WHERE LOWER(email)=? LIMIT 1", (prev,)).fetchone())
+        if not proven:
+            proven = bool(conn.execute("SELECT 1 FROM listings WHERE LOWER(seller_email)=? AND "
+                                       "(listing_status!='draft' OR published_at IS NOT NULL) LIMIT 1",
+                                       (prev,)).fetchone())
+        if proven:
+            return {"claimable": False, "reason": "other_account"}
+        if check:
+            return {"claimable": True, "id": int(l["id"]), "title": l["title"] or "", "from": _dc_mask(prev)}
+        cur = conn.execute("UPDATE listings SET seller_email=?, updated_at=? WHERE id=? AND listing_status='draft' "
+                           "AND published_at IS NULL AND LOWER(seller_email)=?",
+                           (sess, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), int(listing_id), prev))
+        conn.commit()
+        if cur.rowcount != 1:
+            return {"claimable": False, "reason": "changed"}
+    finally:
+        conn.close()
+    _log.info("DRAFT-CLAIM-1: draft %s moved from %s to %s (same phone, ts_draft)", listing_id, prev, sess)
+    return {"claimable": True, "moved": True, "id": int(listing_id)}
+
+
 @app.get("/k/{secret}")
 def key_link_open(secret: str, draft: int = 0):
     """LINK-KEY-1 (RUL-167): her private link is her key. It never lapses; each visit mints a short
@@ -21706,7 +21767,7 @@ def _oauth_safe_next(nxt) -> str:
     return nxt
 
 @app.get("/auth/oauth/{provider}/start")
-def auth_oauth_start(provider: str, request: Request, next: str = "/"):
+def auth_oauth_start(provider: str, request: Request, next: str = "/", hint: str = ""):
     """Send the browser to the provider. Plain 302, no script anywhere."""
     from fastapi.responses import RedirectResponse
     from urllib.parse import urlencode as _ue
@@ -21734,6 +21795,11 @@ def auth_oauth_start(provider: str, request: Request, next: str = "/"):
     }
     if provider == "google":
         params["prompt"] = "select_account"
+        # DRAFT-CLAIM-1 (Goal run 39): the app passes the address her Quick draft waits on, so Google's account picker
+        # opens on that account instead of whichever one the phone uses first. A hint only -- she can still pick another.
+        _h = (hint or "").strip()
+        if 3 <= len(_h) <= 254 and re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", _h):
+            params["login_hint"] = _h
     if provider == "apple":
         params["response_mode"] = "form_post"   # Apple POSTs the callback
     resp = RedirectResponse(url=cfg["authorize"] + "?" + _ue(params), status_code=302)
