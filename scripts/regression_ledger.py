@@ -24536,7 +24536,17 @@ def rg_quick_ready_6():
         if not ic.startswith("data:image/png"):
             out.append((FAIL, "the Quick icon is no longer inlined -- a first deploy would lose the tile to a screenshot"))
         html = _get("/quick.html")
-        if not re.search(r'<link rel="manifest" href="/static/brand/quick\.webmanifest(\?v=\d+)?">', html):
+        # ASSERTION CORRECTED 14 Oct 2026 (RUL-223, QUICK-FAST-2): quick.html now links Quick's LIVE manifest,
+        # /quick-icon/app.webmanifest (served by bea_main with her quick icons as long-press shortcuts). The tile's
+        # identity must survive that move, so the served manifest is held to the same id / scope / colour / icon.
+        if re.search(r'<link rel="manifest" href="/quick-icon/app\.webmanifest"', html):
+            lm = json.loads(_get("/quick-icon/app.webmanifest"))
+            if lm.get("id") != "/quick.html" or lm.get("scope") != "/quick/" \
+                    or not str(lm.get("start_url") or "").startswith("/quick/") \
+                    or str(lm.get("theme_color", "")).upper() != "#7C3AED" \
+                    or not str(((lm.get("icons") or [{}])[0]).get("src", "")).startswith("data:image/png"):
+                out.append((FAIL, "the live Quick manifest (/quick-icon/app.webmanifest) lost the tile's id, scope, colour or inlined icon"))
+        elif not re.search(r'<link rel="manifest" href="/static/brand/quick\.webmanifest(\?v=\d+)?">', html):
             out.append((FAIL, "quick.html no longer links its manifest"))
         import urllib.request as _u
         try:
@@ -29492,9 +29502,20 @@ def rg_seam_quick():
         for tok, what in (("BACK-GESTURE-1", "the Back-gesture guard"), ("FIND-REAL-1", "the real Find"),
                           ("/listings?city=", "the listings read"), ("CITY-FROM-AREA-1", "city from area"),
                           ("ts_lang", "the language carry"), ("QUICK-PASS-1", "Pass Quick on"),
-                          ("/quick-invite", "the invite routes"), ("quick.webmanifest?v=2", "the manifest stamp")):
+                          ("/quick-invite", "the invite routes")):
             if tok not in q:
                 bad.append("quick.html lost " + what)
+        # ASSERTION CORRECTED 14 Oct 2026 (RUL-223): the ?v=2 stamp existed so installed tiles re-read the /quick/ scope;
+        # quick.html now links the live /quick-icon/app.webmanifest, which must carry that same scope.
+        if "quick.webmanifest?v=2" not in q:
+            if '<link rel="manifest" href="/quick-icon/app.webmanifest"' not in q:
+                bad.append("quick.html lost the manifest stamp")
+            else:
+                try:
+                    if json.loads(_get("/quick-icon/app.webmanifest")).get("scope") != "/quick/":
+                        bad.append("the live Quick manifest's scope is not /quick/")
+                except Exception as e:
+                    bad.append("the live Quick manifest did not answer: %r" % (e,))
         body = q[q.find("drawLookup=function"):q.find("drawLookup=function")+4000]
         if "Menlyn first" in body or "c.ads(" in body:
             bad.append("Find is back on invented cards")
@@ -38413,7 +38434,7 @@ def rg_auto_renew_1():
     if q is not None and ("auto_renew" in q or "AUTO-RENEW" in q):
         out.append((FAIL, "quick.html carries auto-renew code -- Quick does not sell plans (brief s7)"))
     if ('id="ls_m_autorenew"' not in dash or "ls_m_autorenew:'auto_renew'" not in dash or "auto_renew:!!S.auto_renew" not in dash
-            or "id!=='ls_m_autorenew');" not in dash):
+            or "id!=='ls_m_autorenew'" not in dash):   # ASSERTION CORRECTED 14 Oct 2026: the fast-lane merge appended '&& id!=='ls_m_fastlane
         out.append((FAIL, "the +1 page lost the Automatic plan renewal switch"))
     for tile in ("renewals_month", "renewals_failed_month", "renewals_cancelled_month", "auto_renew_share"):
         if ('"%s"' % tile) not in py or ("'%s'" % tile) not in dash:

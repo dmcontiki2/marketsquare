@@ -30,6 +30,13 @@ import json, os, subprocess, sys, time, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CITYLAUNCHER = os.path.abspath(os.path.join(ROOT, "..", "CityLauncher"))
+# WITNESS-SERVER-1 (14 Oct 2026): the maintenance loop moved to the server, where no CityLauncher checkout sat beside a
+# worktree, so the witness went stale (RG-0175 red 16 days). Order: $CITYLAUNCHER_REPO, the sibling checkout (laptop,
+# /opt/marketsquare-src), then the server copy /opt/CityLauncher.
+for _cl in (os.environ.get("CITYLAUNCHER_REPO"), CITYLAUNCHER, "/opt/CityLauncher"):
+    if _cl and os.path.isdir(os.path.join(_cl, "tests")):
+        CITYLAUNCHER = os.path.abspath(_cl)
+        break
 WITNESS = os.path.join(ROOT, "wave_hygiene_status.json")
 
 # item -> (suite relative to CityLauncher, substrings that identify its PASS lines)

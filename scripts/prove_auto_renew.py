@@ -172,7 +172,8 @@ def bal(e): return q("SELECT COALESCE(SUM(amount),0) AS b FROM transactions WHER
 def grants(e): return q("SELECT COUNT(*) AS n FROM transactions WHERE user_email=? AND type='monthly_allocation'", e)[0]["n"]
 def init(email, tier, **kw):
     params = {"email": email, "tier": tier, "callback_url": "https://trustsquare.co/?ps_sub_return=1"}; params.update(kw)
-    return C.post("/payment/seller-subscription/initialize", params=params)
+    # RUL-227 (13 Oct 2026): the plan checkout acts as the signed-in session (route_policy user + bind(email)), as the app calls it
+    return C.post("/payment/seller-subscription/initialize", params=params, cookies=cookie(email))
 def verify(ref): return C.get("/payment/seller-subscription/verify", params={"reference": ref})
 def switch(on): b.set_flags(b._FlagsUpdate(auto_renew=on, reason="prove_auto_renew"), _admin={"name": "prove"})
 def last_init_payload(): return [c for c in PS.calls if c[1] == "/transaction/initialize"][-1][2]
