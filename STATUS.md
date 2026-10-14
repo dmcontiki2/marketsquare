@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-12 - Automatic plan renewal)
+## Last Completed (2026-10-10 - squire2 phase1)
 
-- 12 Oct 2026 — AUTO-RENEW-1 (RUL-224) LIVE FLAG-DARK (release af39a00, 07:11 SAST): deploy log DEPLOY OK, stranger test PASS, QA Bot gate pass, no rollback. PROBED live 12 Oct ~07:15 SAST: /flags auto_renew false; served ms.js carries the tick-box code; Cancel renewal 401 to a stranger; live DB read-only has the four users columns, switch 0, 0 plans, 0 subscriptions; prove_auto_renew.py passes on the server's own Python. RG-0964/0965/0966 LOCKED. David arms **Automatic plan renewal** on the +1 page. NOT PROVEN: Paystack itself (no test key in reach). Also this session: WATCH-COVER-1 fixed at the source (CityLauncher 788bbde) -- RG-0344 and RG-0908 both hold again; fresh verified backup 2026-10-12_0440.zip.
+- 10 Oct 2026 — SQUIRE-2 Phase 1 built by the scheduled run, HELD under the IP hold: worktree `_squire2_wt`, local branch `squire2`, not pushed, not deployed (provisional-2 submitted at CIPC 10 Oct, Record Id 1670607; no application number yet, so no FILED.md). Flag-dark behind baseline_q4; new switch squire_pro_pa OFF. Verified by: test_squire2.py 13/13 and verify_squire2.py all 10 acceptance items PASS on the real BEA with a throwaway database (EXECUTED, not live). Open: EPC registration key (free) — report shows "not available" until it exists. Next step: merge `squire2` into main the day FILED.md carries the application number, then one commit + one deploy.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 10 Oct 2026 — SQUIRE-2 Phase 1 built by the scheduled run, HELD under the IP hold: worktree `_squire2_wt`, local branch `squire2`, not pushed, not deployed (provisional-2 submitted at CIPC 10 Oct, Record Id 1670607; no application number yet, so no FILED.md). Flag-dark behind baseline_q4; new switch squire_pro_pa OFF. Verified by: test_squire2.py 13/13 and verify_squire2.py all 10 acceptance items PASS on the real BEA with a throwaway database (EXECUTED, not live). Open: EPC registration key (free) — report shows "not available" until it exists. Next step: merge `squire2` into main the day FILED.md carries the application number, then one commit + one deploy.
+
+- 10 Oct 2026 — QUICK-FAST-1 (RUL-222, CC-006): the Quick fast lane (quick icons) built and verified locally on the `fastlane` branch; held under the IP hold — merge, deploy and the switch ON follow the provisional-2 application number. Verified by: headless 390 px walks of all 7 DoD items with QA accounts (screenshots in Projects\Visuals\fastlane), stranger_test PASS, RG-0973…0966. Open: real-phone check (Android share sheet, iPhone Add to Home Screen).
 
 - 12 Oct 2026 — AUTO-RENEW-1 (RUL-224) LIVE FLAG-DARK (release af39a00, 07:11 SAST): deploy log DEPLOY OK, stranger test PASS, QA Bot gate pass, no rollback. PROBED live 12 Oct ~07:15 SAST: /flags auto_renew false; served ms.js carries the tick-box code; Cancel renewal 401 to a stranger; live DB read-only has the four users columns, switch 0, 0 plans, 0 subscriptions; prove_auto_renew.py passes on the server's own Python. RG-0964/0965/0966 LOCKED. David arms **Automatic plan renewal** on the +1 page. NOT PROVEN: Paystack itself (no test key in reach). Also this session: WATCH-COVER-1 fixed at the source (CityLauncher 788bbde) -- RG-0344 and RG-0908 both hold again; fresh verified backup 2026-10-12_0440.zip.
 
