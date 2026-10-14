@@ -4205,6 +4205,7 @@ def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q:
             except Exception:
                 pass
         out = dict(res)
+        out.pop("scores", None)   # RS-HIDE-1 (David, 14 Oct 2026): the order in `ids` IS the ranking; the number stays server-side
         out["category"] = cat_norm
         if rows:
             by_id = {r["id"]: r for r in cands}
@@ -5858,6 +5859,12 @@ def get_seller_listings(email: str = "", ts_user: str = Cookie(default=None), x_
             d["licence_status"] = _lic
         if (d.get("category") or "").lower() == "property":
             d["availability_label"] = _rental_availability(d.get("rental_status"), d.get("available_from"))
+        # RS-HIDE-1 (David, 14 Oct 2026): buyers never see the Ranking Score; the seller sees her own, computed by the
+        # same zoom_engine.rank_score the search orders by, so her number and her list position cannot disagree.
+        try:
+            d["rank_score"] = _zoom.rank_score(d, lambda _r: _import_quality_score(_r)[0])
+        except Exception:
+            d["rank_score"] = None
         out.append(d)
     return out
 

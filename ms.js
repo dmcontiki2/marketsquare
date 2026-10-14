@@ -6070,7 +6070,7 @@ function cardHtml(l){
       ${l.feat&&!l.paused?'<div class="feat-badge">Featured</div>':''}
       ${l.paused?'<div class="paused-badge">⏸ On hold for a buyer</div>':''}
       ${(msLangOn() && l._lo && l._lo!=='en')?'<div class="ts-lchip" style="position:absolute;bottom:8px;left:8px;margin:0;z-index:5" data-notranslate="1">'+msLangCode(l._lo)+(l._lx?' \u00b7 '+msLangCode(l._lx.lang):'')+'</div>':''}
-      ${(typeof _zoomScores!=='undefined' && _zoomScores && _zoomScores.has(l.id))?'<div class="zoom-score" title="Ranking score: half listing quality, half seller trust">'+_zoomScores.get(l.id)+'</div>':''}
+      ${''/* RS-HIDE-1 (David, 14 Oct 2026): the Ranking Score orders the results but is never painted for buyers -- it read as a second Trust Score. Sellers see their own RS on the Hub card and the owner bar. */}
       ${rentalCardBadge(l)}
       <div class="model-badge ${m}">${m==='commit'?'⏳ One buyer at a time':'👥 Open to several buyers'}</div>
       ${l.cat==='Services'&&l.service_class?`<div class="model-badge queue" style="bottom:24px;">${l.service_class==='Technical'?'🔧 Technical':'🤝 Casuals'}</div>`:''}
@@ -12615,6 +12615,14 @@ async function _msRefreshBalance(){
     if(typeof d.balance === 'number'){ tuppence = d.balance; if(typeof updateTuppenceUI === 'function') updateTuppenceUI(); if(typeof renderDash === 'function') renderDash(); }
   }catch(_){}
 }
+/* RS-HIDE-1 (David, 14 Oct 2026): the Ranking Score orders search results but buyers never see it. The seller sees her
+   own, here and on her owner bar, from /listings/mine (the same zoom_engine.rank_score the search sorts by). */
+function msOwnRankHtml(rs, dark){
+  if(rs==null || isNaN(Number(rs))) return '';
+  var n = Number(rs), txt = (Math.round(n*10)/10).toString();
+  return '<div class="ms-own-rs" style="font-size:11px;margin-top:5px;color:'+(dark?'rgba(255,255,255,.85)':'var(--text-3)')+';">'
+    + 'Your ranking <b style="color:'+(dark?'#fff':'var(--navy)')+';">'+txt+'</b> \u00b7 only you see this \u2014 half Trust Score, half listing quality</div>';
+}
 function renderDashCard(dl){
   const pendingIntros = dl.intros.filter(i=>i.status==='pending');
   /* HUB-ADD-PHOTO-1 (Goal run 33b, David 9 Oct 2026): a listing with no photo showed its category's icon (a gear for a hair
@@ -12687,6 +12695,7 @@ function renderDashCard(dl){
       <div class="mltitle">${dl.title}</div>
       <div class="mlcat">${dl.cat === 'LocalMarket' ? 'Local Market' : dl.cat}</div>
       ${statusBadge}
+      ${(dl._raw && _ls!=='archived') ? msOwnRankHtml(dl._raw.rank_score, false) : ''}
       ${(dl._raw && dl._raw.hidden_from_strangers && _ls==='live') ? msHiddenCasualNote(dl.beaListingId, dl._raw) : ''}${(dl._raw && !dl._raw.hidden_from_strangers && dl._raw.licence_shown && _ls==='live') ? msLicenceShownNote(dl.beaListingId, dl._raw) : ''}
       ${wonderBanners}
       ${introsHtml}
@@ -24038,13 +24047,12 @@ function sfAgentCardHtml(a,top){
     (top?'<div style="position:absolute;top:-9px;right:10px;background:#C8873A;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;letter-spacing:.05em;">BEST MATCH</div>':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
-      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=7" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:17px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:'+mut+';letter-spacing:.08em;">RANK &#9432;</div></div></div>'+
+      '</div>'+   /* RS-HIDE-1: no RANK chip on a public agent card */
     '<div style="font-size:12px;color:'+mut+';margin-top:3px;">'+(a.suburbs||a.city)+' · <b style="color:inherit;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:8px;">'+
       '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Trust Score '+a.trust_score+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
       '<div style="flex:1;"><div style="font-size:9.5px;color:'+mut+';">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
-      '<div style="font-size:9px;color:'+mut+';margin-top:3px;text-align:right;">Ranking = half Trust Score, half listing quality.</div>'+
     '<button class="sf-btn pri" style="width:100%;margin-top:9px;padding:9px;font-size:13px;" onclick="sfAgentIntro(\''+a.anon_ref+'\')">Introduce me — free for you</button></div>';
 }
 async function sfAgentIntro(ref){
@@ -24629,13 +24637,12 @@ function advAgentCard(a,card){
     (a.photo?'<img src="'+a.photo+'" alt="" style="width:calc(100% + 28px);margin:-12px -14px 8px;display:block;">':'')+
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
       '<div style="font-weight:800;font-size:14px;">Agent '+a.anon_ref+'</div>'+
-      '<div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=7" data-t="How scores &amp; ranking work" title="How scores & ranking work" style="text-align:center;cursor:pointer;"><div style="font-weight:800;font-size:16px;line-height:1;">'+a.rank_score+'</div><div style="font-size:8.5px;color:#68758c;letter-spacing:.07em;">RANK &#9432;</div></div></div>'+
+      '</div>'+   /* RS-HIDE-1: no RANK chip on a public agent card */
     '<div style="font-size:12px;color:#68758c;margin-top:2px;">'+(a.suburbs||a.city||'')+' · <b style="color:#1c2434;">'+a.experience+'</b>'+sold+'</div>'+
     '<div style="margin-top:5px;">'+badges+'</div>'+
     '<div style="display:flex;gap:10px;margin-top:7px;">'+
       '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Trust Score '+a.trust_score+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.trust_score+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div>'+
       '<div style="flex:1;"><div style="font-size:9.5px;color:#68758c;">Listing quality '+a.avg_listing_quality+'</div><div style="height:5px;background:#eef1f6;border-radius:3px;margin-top:2px;"><div style="height:5px;border-radius:3px;width:'+a.avg_listing_quality+'%;background:linear-gradient(90deg,#2a5298,#C8873A);"></div></div></div></div>'+
-      '<div style="font-size:9px;color:#8a96a8;margin-top:3px;text-align:right;">Ranking = half Trust Score, half listing quality.</div>'+
     '<button onclick="advAgentIntro(\''+a.anon_ref+'\')" style="width:100%;margin-top:9px;background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer;">'+((window._agentDirVert||'travel')==='travel'?'Plan my trip with this agent — free for you':'Introduce me — free for you')+'</button></div>';
 }
 async function advAgentIntro(ref){
@@ -25389,7 +25396,9 @@ function msMineIds(){
   _msMine.p = fetch(BEA_URL + '/listings/mine' + (em ? '?email=' + encodeURIComponent(em) : ''), {credentials: 'include', headers: {'X-Api-Key': API_KEY}})
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(rows){ _msMine.p = null; if (!Array.isArray(rows)) return null;
-      _msMine.ids = rows.map(function(x){ return String(x.id); }); _msMine.at = Date.now(); return _msMine.ids; })
+      _msMine.ids = rows.map(function(x){ return String(x.id); }); _msMine.at = Date.now();
+      _msMine.rs = {}; rows.forEach(function(x){ _msMine.rs[String(x.id)] = x.rank_score; });   // RS-HIDE-1
+      return _msMine.ids; })
     .catch(function(){ _msMine.p = null; return null; });
   return _msMine.p;
 }
@@ -25405,7 +25414,8 @@ function msOwnerBar(id){
     var bar = document.createElement('div'); bar.id = 'ms-owner-bar';
     bar.style.cssText = 'position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;'
       + 'background:#1e1b4b;color:#fff;font:600 13px Inter,system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)';
-    bar.innerHTML = '<span style="flex:1;min-width:150px;">This is your listing \u2014 buyers see it like this.</span>'
+    bar.innerHTML = '<span style="flex:1;min-width:150px;">This is your listing \u2014 buyers see it like this.'
+      + msOwnRankHtml((_msMine.rs || {})[n], true) + '</span>'
       + '<button type="button" id="ms-owner-edit" style="background:#C8873A;color:#fff;border:none;border-radius:999px;padding:8px 16px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;">Edit</button>'
       + '<button type="button" id="ms-owner-hub" style="background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:999px;padding:7px 14px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;">My listings</button>';
     scr.insertBefore(bar, scr.firstChild);

@@ -948,6 +948,11 @@ def _rank_agents(conn, city: str, suburb: str = "", limit: int = 10, vertical: s
     out.sort(key=lambda r: (not r["suburb_match"], -r["rank_score"]))
     return out[:max(1, min(50, limit))]
 
+
+def _public_agents(agents):
+    """RS-HIDE-1 (David, 14 Oct 2026): the list order is the ranking; the Ranking Score itself never leaves the server."""
+    return [{k: v for k, v in a.items() if k != "rank_score"} for a in agents]
+
 @router.get("/agents/nearby")
 def agents_nearby(city: str, suburb: str = "", limit: int = 10, vertical: str = "property"):
     conn = database.get_db()
@@ -957,7 +962,7 @@ def agents_nearby(city: str, suburb: str = "", limit: int = 10, vertical: str = 
     finally:
         conn.close()
     return _pt_deep({"city": city, "suburb": suburb or None, "vertical": _vert(vertical),   # AUD-054: rows saved before
-            "count": len(agents), "agents": agents})                                             # the door rule, too
+            "count": len(agents), "agents": _public_agents(agents)})                                             # the door rule, too
 
 @router.get("/agents/pitch")
 def agent_pitch(city: str = "", suburb: str = "", vertical: str = "property", side: str = "sell"):
@@ -979,7 +984,7 @@ def agent_pitch(city: str = "", suburb: str = "", vertical: str = "property", si
     return {"vertical": v, "label": V["label"], "side": ("buy" if _buy else "sell"),
             "advantages": (V.get("advantages_buy") or V["advantages"]) if _buy else V["advantages"],
             "legal_note": (V.get("legal_note_buy") or V["legal_note"]) if _buy else V["legal_note"],
-            "local_agent_count": n, "preview": preview,
+            "local_agent_count": n, "preview": _public_agents(preview),
             "cta": ("Pick one and we introduce you — no phoning around, no lead brokers. They pay 1T only if they accept."
                     if v != "travel" else
                     "Tell us what you are dreaming of and we introduce you — free for you. The agent pays 1T only if they accept your request.")}
