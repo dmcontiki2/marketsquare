@@ -65,6 +65,14 @@ def esc(s):
     return html.escape(str(s if s is not None else ""))
 
 
+def _ts(v):
+    v = str(v or "")[:19].replace("T", " ")
+    try:
+        return datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return datetime.datetime(1970, 1, 1)
+
+
 def mask(email):
     e = (email or "").lower()
     if "@" not in e:
@@ -79,6 +87,15 @@ def _lines(name):
         return {l.strip().lower() for l in open(os.path.join(STATE, name), encoding="utf-8") if l.strip() and not l.startswith("#")}
     except OSError:
         return set()
+
+
+def rule_tester(email, name="", title=""):
+    e = (email or "").lower()
+    local, _, dom = e.partition("@")
+    return bool(dom in ("example.com", "trustsquare.co") or local.startswith("dmcontiki2")
+                or re.match(r"^(probe|flowtest|walkproof|qa[-_.]|test[-_.]?|demo)", local) or "+qa" in local
+                or "+probe" in local or (name or "").upper().startswith("PROBE")
+                or re.search(r"\b(PROBE|FLOW TEST|QA TEST)\b", (title or "").upper()))
 
 
 def tester_set(c):
@@ -101,6 +118,9 @@ def tester_set(c):
     except sqlite3.OperationalError:
         pass
     t |= _lines("testers.txt")
+    for r in c.execute("SELECT DISTINCT LOWER(seller_email) e, title FROM listings"):
+        if rule_tester(r["e"], "", r["title"]):
+            t.add(r["e"])
     t -= _lines("real.txt")
     t.discard(None)
     return t
@@ -161,10 +181,13 @@ def gather(c):
     recent.sort(key=lambda r: r["at"] or "", reverse=True)
     # onboarding: sessions in the last 30 days, humans only, testers out where we know the address
     since = (now() - datetime.timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S")
+    live_real = [l for l in listings if l["st"] == "live" and l["email"] not in T and l["created_at"]]
     sess = {}
     for r in c.execute("SELECT sid, LOWER(COALESCE(email,'')) email, COALESCE(src,'') src, step, created_at FROM onboard_steps "
                        "WHERE COALESCE(bot,0)=0 AND created_at >= ? ORDER BY id", (since,)):
-        s = sess.setdefault(r["sid"], {"email": "", "src": r["src"], "steps": set(), "first": r["created_at"]})
+        s = sess.setdefault(r["sid"], {"email": "", "src": r["src"], "steps": set(), "first": r["created_at"], "handover": []})
+        if r["step"] == "q_handover":
+            s["handover"].append(r["created_at"])
         if r["email"]:
             s["email"] = r["email"]
         if r["src"] and not s["src"]:
@@ -192,9 +215,10 @@ def gather(c):
         row = funnel.setdefault(g, [0] * len(stages))
         for i, (_, fn) in enumerate(stages):
             if fn is None:
+                # LIVE-LINK-1: Quick creates the advert at the hand-over (same second), so a session is 'live' when a
+                # real advert that is live now was created within 2 minutes of one of its hand-overs.
                 ok = bool(s["steps"] & {"q_live", "q_published", "published"}) or any(
-                    l["st"] == "live" and (l["created_at"] or "") >= (s["first"] or "")[:19].replace("T", " ")
-                    for l in by_email.get(s["email"], [])) if s["email"] else bool(s["steps"] & {"q_live", "q_published", "published"})
+                    abs((_ts(l["created_at"]) - _ts(h)).total_seconds()) <= 120 for h in s["handover"] for l in live_real)
             else:
                 ok = fn(s["steps"])
             if ok:
