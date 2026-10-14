@@ -1,3 +1,11 @@
+## 2026-10-14 — RS-HIDE-1: Ranking Score used, not shown to buyers (RUL-231)
+- ms.js: listing cards no longer paint the corner RS number; public agent cards drop the RANK chip and the 'Ranking =' line.
+- bea_main.py: /zoom/next no longer returns `scores` (the `ids` order is the ranking); /listings/mine returns the seller's own
+  `rank_score` from the same zoom_engine.rank_score the search sorts by.
+- estate_agents.py: /agents/nearby and /agents/pitch strip `rank_score` after sorting (_public_agents); tests check the 50/50 math
+  on _rank_agents and that the public card carries no rank_score (56/56 pass).
+- ms.js: seller's own RS shown on her Hub listing card and on her advert's owner bar — "Your ranking 72.5 · only you see this".
+
 ## 2026-10-14 — OPS-GUARD-1: subscriptions page + nightly checks and balances (RUL-230)
 - ops/guard/ops_guard.py: hourly orchestrator/v2/subscriptions.html (plans, real vs tester users, real listers per plan,
   onboarding funnel by source, daily sign-ups/adverts, latest real adverts, subscription events); nightly guard.html with

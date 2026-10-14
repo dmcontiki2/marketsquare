@@ -2377,3 +2377,6 @@ Press any key to continue . . .
 Tue 10/13/2026  5:35:39.85  SHIPPED rc=0 - server now runs migrations + health itself
 Tue 10/13/2026  5:45:07.62  IN SYNC - DEPLOY DRIFT: clean - all 333 tracked files match live
 Wed 10/14/2026  4:55:32.63  BLOCKED - gate rc=2 | DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, estate_agents.py, ms.js | ship withheld
+Wed 10/14/2026 10:10:53.02  BLOCKED - gate rc=2 | DEPLOY DRIFT: unknown - could not reach server (ssh: connect to host 178.104.73.239 port 22: Unknown error) | ship withheld
+Wed 10/14/2026 10:10:58.18  BLOCKED - gate rc=2 | DEPLOY DRIFT: unknown - could not reach server (ssh: connect to host 178.104.73.239 port 22: Unknown error) | ship withheld
+Wed 10/14/2026 10:15:16.03  SHIPPING - DEPLOY DRIFT: 4 file(s) local-ahead of live - run /ship: bea_main.py, estate_agents.py, ms.css, ms.js | gate green, releasing unattended

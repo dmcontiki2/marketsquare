@@ -499,3 +499,9 @@ Mon 10/12/2026  5:30:04.30  IP HOLD: commit kept local, push skipped
 Tue 10/13/2026  5:30:02.74  committed 1 change(s)
 sync-origin [MarketSquare]: in step with origin/main (this tree is 2 commit(s) ahead)
 Tue 10/13/2026  5:30:04.24  IP HOLD: commit kept local, push skipped 
+[main a0a8046] Nightly checkpoint Wed 10/14/2026 10:10:45.89 (auto, no deploy)
+ 6 files changed, 132 insertions(+), 14 deletions(-)
+ delete mode 100644 TSL_READY.flag
+Wed 10/14/2026 10:10:46.82  committed 6 change(s)
+sync-origin [MarketSquare]: could not reach GitHub (fatal: unable to access 'https://github.com/dmcontiki2/marketsquare.git/': Could not resolve host: github.com) -- NOT safe to push blind; stopping
+Wed 10/14/2026 10:10:49.50  SYNC STOP - see SYNC_CONFLICT.txt; main NOT mirrored 
