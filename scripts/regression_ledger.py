@@ -38704,5 +38704,33 @@ def rg_accent_bright_meta_confirm():
         return [(FAIL, "a bare years-of-experience number ('**Experience:** 9') is shown without 'years' again")]
     return [(INFO, "--accent-bright defined; 'should be confirmed' sentences dropped; experience reads '9 years'")]
 
+
+@entry("RG-0984", "OPS-GUARD-1 (RUL-230): the Ops subscriptions page and the nightly money / data / config checks stay "
+       "installed and read-only, and an advert Quick creates at the hand-over counts as LIVE on both funnels (LIVE-LINK-1)",
+       LOCKED, fixed_on="2026-10-14",
+       scope="ops/guard/ops_guard.py + migrations/082_install_ops_guard.py + orchestration_v2/cockpit.html links; "
+             "../CityLauncher/sms_funnel.py live count",
+       ref="David 14 Oct 2026 04:39 SAST: 'Please build it Claude ... a clear report regarding subscriptions ... a number of "
+           "real listers for all subscription types.' LIVE-LINK-1: the 13 Oct SMS b1 lister (listing 542, live 13:54 SAST) "
+           "read 'live 0' because only q_published/publish_ok counted, while Quick creates the advert at q_handover.")
+def rg_ops_guard_1():
+    g, m, ck = repo_file("ops/guard/ops_guard.py"), repo_file("migrations/082_install_ops_guard.py"), repo_file("orchestration_v2/cockpit.html")
+    if g is None or m is None or ck is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "mode=ro" not in g or re.search(r"\b(INSERT|UPDATE|DELETE)\s", g):
+        return [(FAIL, "ops_guard.py no longer opens the database read-only, or writes to it")]
+    for need in ("def cmd_money", "paid_not_ours", "def cmd_data", "def cmd_drift", "LIVE-LINK-1", "NOT MEASURED"):
+        if need not in g:
+            return [(FAIL, "ops_guard.py lost '%s'" % need)]
+    if "trustsquare-opsguard-nightly.timer" not in m or "trustsquare-opsguard-page.timer" not in m:
+        return [(FAIL, "migration 082 no longer installs both ops-guard timers")]
+    if 'href="subscriptions.html"' not in ck or 'href="guard.html"' not in ck:
+        return [(FAIL, "the Ops Dashboard lost its Subscriptions or Checks & Balances button")]
+    cl = os.path.join(REPO, "..", "CityLauncher", "sms_funnel.py")
+    if os.path.exists(cl):
+        if "q_handover" not in open(cl, encoding="utf-8", errors="replace").read():
+            return [(FAIL, "CityLauncher sms_funnel.py counts live adverts without the Quick hand-over again (LIVE-LINK-1)")]
+    return [(INFO, "ops guard read-only with money/data/config checks + both timers + both cockpit links; SMS funnel links hand-over to live")]
+
 if __name__ == "__main__":
     sys.exit(main())
