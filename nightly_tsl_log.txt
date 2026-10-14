@@ -2376,3 +2376,4 @@ DEPLOY DRIFT: 4 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
 Press any key to continue . . . 
 Tue 10/13/2026  5:35:39.85  SHIPPED rc=0 - server now runs migrations + health itself
 Tue 10/13/2026  5:45:07.62  IN SYNC - DEPLOY DRIFT: clean - all 333 tracked files match live
+Wed 10/14/2026  4:55:32.63  BLOCKED - gate rc=2 | DEPLOY DRIFT: 3 file(s) local-ahead of live - run /ship: bea_main.py, estate_agents.py, ms.js | ship withheld

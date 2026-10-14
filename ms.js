@@ -3547,6 +3547,7 @@ function renderFilterBar(){
     else if(v !== '') activeCount++;
   }
 
+  try{ if(zoomState.active && zoomState.cat.toLowerCase()===cat){ activeCount += Object.keys(zoomState.chips||{}).filter(k => !((zoomState.res&&zoomState.res.chips)||[]).find(c => c.facet===k && c.auto)).length; } }catch(e){}
   const badgeHtml = activeCount > 0
     ? `<span style="background:var(--accent);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px;">${activeCount}</span>`
     : '';
@@ -3554,7 +3555,7 @@ function renderFilterBar(){
   area.innerHTML = `<div class="filter-bar" style="display:flex;gap:8px;align-items:center;">
     <div class="filter-pill${activeCount>0?' has-value':''}" style="flex:1;justify-content:center;gap:6px;" onclick="openFilterSheet('${cat}')">
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-      ${(typeof msBaselineOn==='function' && msBaselineOn() && typeof ZOOM_CATS!=='undefined' && ZOOM_CATS[activeFilter]) ? 'Zoom · one question at a time' : 'Filtered Search'}${badgeHtml}
+      ${(typeof msBaselineOn==='function' && msBaselineOn() && typeof ZOOM_CATS!=='undefined' && ZOOM_CATS[activeFilter]) ? 'Narrow your search' : 'Filtered Search'}${badgeHtml}
     </div>
   </div>`;
 
@@ -3618,7 +3619,7 @@ function closeFsBg(e, id){
 // FLAG-DARK: every entry point checks msBaselineOn(); with the flag off nothing here runs and
 // the pre-Zoom filter sheets serve exactly as before (acceptance 8).
 const ZOOM_CATS = {Property:1, Tutors:1, Services:1, Adventures:1, Collectors:1, Cars:1};
-const zoomState = { active:false, cat:'', chips:{}, res:null, mode:'question', taps:0, busy:false, seq:0, text:'' };
+const zoomState = { active:false, shown:false, cat:'', chips:{}, res:null, mode:'question', taps:0, busy:false, seq:0, text:'' };
 let _zoomIds = null;      // Set of FEA ids that survive (like _msSearchIds)
 let _zoomOrder = null;    // Map FEA id -> rank position (server order = Ranking Score, pinned first)
 let _zoomScores = null;   // Map FEA id -> ranking score, painted on the card
@@ -3645,12 +3646,12 @@ function zoomEnter(cat){
   if(zoomState.active && zoomState.cat===cat){ zoomFetch(); return; }
   zoomState.active = true; zoomState.cat = cat; zoomState.chips = {}; zoomState.res = null;
   zoomState.mode = 'question'; zoomState.taps = 0; zoomState.text = '';
-  document.body.classList.add('zoom-open'); document.body.classList.remove('zoom-peek');
+  zoomState.shown = false;   // ZOOM-QUIET-1: entering a door never pops the sheet; only the Filter pill opens it
   zoomFetch();
 }
 function zoomReset(){
   if(!zoomState.active && !_zoomIds) return;
-  zoomState.active = false; zoomState.cat = ''; zoomState.chips = {}; zoomState.res = null; zoomState.taps = 0;
+  zoomState.active = false; zoomState.shown = false; zoomState.cat = ''; zoomState.chips = {}; zoomState.res = null; zoomState.taps = 0;
   _zoomIds = null; _zoomOrder = null; _zoomScores = null;
   document.body.classList.remove('zoom-open','zoom-peek');
   const el = document.getElementById('zoom-sheet'); if(el){ el.classList.remove('open','peek'); el.innerHTML=''; }
@@ -3660,8 +3661,16 @@ function zoomOpen(cat){   // the Filter pill under the flag: (re)open the sheet 
   const c = cat==='adventures' ? 'Adventures' : (cat.charAt(0).toUpperCase()+cat.slice(1));
   if(!ZOOM_CATS[c]) return false;
   if(!zoomState.active || zoomState.cat!==c) zoomEnter(c);
-  else { zoomState.mode = 'question'; _zoomRender(); }
+  zoomState.shown = true; zoomState.mode = 'question';
+  document.body.classList.add('zoom-open'); document.body.classList.remove('zoom-peek');
+  _zoomRender();
   return true;
+}
+function zoomClose(){   // ZOOM-QUIET-1: × hides the sheet; chosen chips stay applied and show as a count on the Filter pill
+  zoomState.shown = false;
+  document.body.classList.remove('zoom-open','zoom-peek');
+  const el = document.getElementById('zoom-sheet'); if(el) el.classList.remove('open','peek');
+  try{ renderFilterBar(); }catch(e){}
 }
 async function zoomFetch(){
   const seq = ++zoomState.seq;
@@ -3771,7 +3780,7 @@ async function zoomSave(){
 function _zoomEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function _zoomRender(){
   const el = _zoomEl();
-  if(!zoomState.active || !msBaselineOn()){ el.classList.remove('open'); return; }
+  if(!zoomState.active || !zoomState.shown || !msBaselineOn()){ el.classList.remove('open'); return; }
   el.classList.add('open');
   const r = zoomState.res;
   const total = r ? (r.total||0) : 0;
@@ -3805,7 +3814,7 @@ function _zoomRender(){
       <div class="zoom-opts">${opts}${locked}${more}</div>${relax}
       <div class="zoom-type" style="margin-top:8px;"><input id="zoom-type-in" type="search" placeholder="…or type it: '2 bed Menlo Park'" onkeydown="if(event.key==='Enter'){zoomType();}"><button onclick="zoomType()">Go</button></div>`;
   }
-  el.innerHTML = `<div class="zoom-handle" onclick="zoomPeek()" aria-label="Show or hide the question"></div><div class="zoom-rail">${rail}</div><div class="zoom-body">${body}</div>`;
+  el.innerHTML = `<div class="zoom-head"><span class="zoom-title" onclick="zoomPeek()">🔍 Narrow your search <small>optional</small></span><button class="zoom-x" onclick="zoomClose()" aria-label="Close">×</button></div><div class="zoom-rail">${rail}</div><div class="zoom-body">${body}</div>`;
 }
 // After the flags load (or the local preview flips), a door already open re-enters the funnel.
 function _msBaselineApplied(){
