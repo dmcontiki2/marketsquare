@@ -24536,7 +24536,17 @@ def rg_quick_ready_6():
         if not ic.startswith("data:image/png"):
             out.append((FAIL, "the Quick icon is no longer inlined -- a first deploy would lose the tile to a screenshot"))
         html = _get("/quick.html")
-        if not re.search(r'<link rel="manifest" href="/static/brand/quick\.webmanifest(\?v=\d+)?">', html):
+        # ASSERTION CORRECTED 14 Oct 2026 (RUL-223, QUICK-FAST-2): quick.html now links Quick's LIVE manifest,
+        # /quick-icon/app.webmanifest (served by bea_main with her quick icons as long-press shortcuts). The tile's
+        # identity must survive that move, so the served manifest is held to the same id / scope / colour / icon.
+        if re.search(r'<link rel="manifest" href="/quick-icon/app\.webmanifest"', html):
+            lm = json.loads(_get("/quick-icon/app.webmanifest"))
+            if lm.get("id") != "/quick.html" or lm.get("scope") != "/quick/" \
+                    or not str(lm.get("start_url") or "").startswith("/quick/") \
+                    or str(lm.get("theme_color", "")).upper() != "#7C3AED" \
+                    or not str(((lm.get("icons") or [{}])[0]).get("src", "")).startswith("data:image/png"):
+                out.append((FAIL, "the live Quick manifest (/quick-icon/app.webmanifest) lost the tile's id, scope, colour or inlined icon"))
+        elif not re.search(r'<link rel="manifest" href="/static/brand/quick\.webmanifest(\?v=\d+)?">', html):
             out.append((FAIL, "quick.html no longer links its manifest"))
         import urllib.request as _u
         try:
@@ -29492,9 +29502,20 @@ def rg_seam_quick():
         for tok, what in (("BACK-GESTURE-1", "the Back-gesture guard"), ("FIND-REAL-1", "the real Find"),
                           ("/listings?city=", "the listings read"), ("CITY-FROM-AREA-1", "city from area"),
                           ("ts_lang", "the language carry"), ("QUICK-PASS-1", "Pass Quick on"),
-                          ("/quick-invite", "the invite routes"), ("quick.webmanifest?v=2", "the manifest stamp")):
+                          ("/quick-invite", "the invite routes")):
             if tok not in q:
                 bad.append("quick.html lost " + what)
+        # ASSERTION CORRECTED 14 Oct 2026 (RUL-223): the ?v=2 stamp existed so installed tiles re-read the /quick/ scope;
+        # quick.html now links the live /quick-icon/app.webmanifest, which must carry that same scope.
+        if "quick.webmanifest?v=2" not in q:
+            if '<link rel="manifest" href="/quick-icon/app.webmanifest"' not in q:
+                bad.append("quick.html lost the manifest stamp")
+            else:
+                try:
+                    if json.loads(_get("/quick-icon/app.webmanifest")).get("scope") != "/quick/":
+                        bad.append("the live Quick manifest's scope is not /quick/")
+                except Exception as e:
+                    bad.append("the live Quick manifest did not answer: %r" % (e,))
         body = q[q.find("drawLookup=function"):q.find("drawLookup=function")+4000]
         if "Menlyn first" in body or "c.ads(" in body:
             bad.append("Find is back on invented cards")
@@ -38413,7 +38434,7 @@ def rg_auto_renew_1():
     if q is not None and ("auto_renew" in q or "AUTO-RENEW" in q):
         out.append((FAIL, "quick.html carries auto-renew code -- Quick does not sell plans (brief s7)"))
     if ('id="ls_m_autorenew"' not in dash or "ls_m_autorenew:'auto_renew'" not in dash or "auto_renew:!!S.auto_renew" not in dash
-            or "id!=='ls_m_autorenew');" not in dash):
+            or "id!=='ls_m_autorenew'" not in dash):   # ASSERTION CORRECTED 14 Oct 2026: the fast-lane merge appended '&& id!=='ls_m_fastlane
         out.append((FAIL, "the +1 page lost the Automatic plan renewal switch"))
     for tile in ("renewals_month", "renewals_failed_month", "renewals_cancelled_month", "auto_renew_share"):
         if ('"%s"' % tile) not in py or ("'%s'" % tile) not in dash:
@@ -38732,8 +38753,41 @@ def rg_ops_guard_1():
             return [(FAIL, "CityLauncher sms_funnel.py counts live adverts without the Quick hand-over again (LIVE-LINK-1)")]
     return [(INFO, "ops guard read-only with money/data/config checks + both timers + both cockpit links; SMS funnel links hand-over to live")]
 
+@entry("RG-0985", "DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026): a Quick draft saved under one address can be moved, by the "
+       "signed-in person on the phone that made it (ts_draft), to the account she signed in with -- only a draft, only from an "
+       "address nobody ever proved; the app offers it instead of 'we could not find that listing'; a first Google/Apple sign-in "
+       "from a draft landing opens the draft (it used to land on Home with nothing); the sign-in screen names the address the "
+       "draft waits on and Google opens on it (login_hint)",
+       LOCKED, fixed_on="2026-10-14",
+       scope="bea_main.py claim_quick_draft + auth_oauth_start hint; route_policy.json; ms.js msClaimDraft / msSigninDraftNote / "
+             "signedin=1 branch / _oneTapBtn; scripts/prove_draft_claim.py",
+       ref="SMS b2, 14 Oct 07:11-07:14Z: a Pretoria cleaner saved draft #543 under bekezela...@gmail.com, signed in with Google "
+           "as bekezela...23@gmail.com, added a passkey, found nothing and left. b5: the published tutor (#544) also landed on "
+           "Home after Google and found her draft only by opening My Space herself.")
+def rg_draft_claim_1():
+    bm, js, pol = repo_file("bea_main.py"), repo_file("ms.js"), repo_file("route_policy.json")
+    if bm is None or js is None or pol is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = bm.find("def claim_quick_draft(")
+    if i < 0:
+        return [(FAIL, "POST /listings/{id}/claim-draft is gone -- a draft saved under the wrong address is stranded again")]
+    body = bm[i:i + 4000]
+    for need in ('_purpose_token_ok(ts_draft, "draft"', "_session_email(ts_user)", "listing_status", "auth_provider",
+                 "eula_accepted_at", "key_hash", "last_seen", "FROM passkeys", "published_at IS NULL"):
+        if need not in body:
+            return [(FAIL, "claim_quick_draft lost its guard '%s' -- it could move somebody else's advert" % need)]
+    if '"POST /listings/{listing_id}/claim-draft"' not in pol:
+        return [(FAIL, "claim-draft is not declared in route_policy.json (SEC-GATE refuses it)")]
+    if 'params["login_hint"]' not in bm:
+        return [(FAIL, "Google sign-in no longer opens on the address her draft waits on (login_hint)")]
+    for need in ("function msClaimDraft(id)", "msClaimDraft(id); }", "function msSigninDraftNote()", "const _siWasIn=_msIsSignedIn();",
+                 "&hint="):
+        if need not in js:
+            return [(FAIL, "ms.js lost '%s' (DRAFT-CLAIM-1)" % need)]
+    return [(INFO, "claim-draft guarded (same phone, draft only, unproven address) and declared; app offers the move, lands the draft after a first Google sign-in, names the address")]
 
-@entry("RG-0985", "SA-MOBILE-ONLY-1: the SMS wave texts only South African mobile numbers (+27 6x/7x/8x) -- never a "
+
+@entry("RG-0987", "SA-MOBILE-ONLY-1: the SMS wave texts only South African mobile numbers (+27 6x/7x/8x) -- never a "
        "landline (which cannot receive it) and never a foreign number from a ZA lane",
        LOCKED, fixed_on="2026-10-15", scope="../CityLauncher/sms_wave.py candidates(); every SMS lane",
        ref="14 Oct batches b4/b7/b8: every 01x-05x landline undelivered, five +1 (US) numbers texted from the estate-agent lane.")
@@ -38747,7 +38801,7 @@ def rg_sa_mobile_only():
     return [(INFO, "SMS candidates limited to +27 6x/7x/8x")]
 
 
-@entry("RG-0986", "NO-VOUCH-GATE-1 (RUL-233): a casual worker's published advert is shown to everyone -- the vouch only adds "
+@entry("RG-0988", "NO-VOUCH-GATE-1 (RUL-233): a casual worker's published advert is shown to everyone -- the vouch only adds "
        "Trust Score -- while the police-clearance (RUL-153) and licence (RUL-156) gates stay in place",
        LOCKED, fixed_on="2026-10-15", scope="bea_main.py CASUAL_VOUCH_GATE + _stranger_hidden_sql",
        ref="David 15 Oct 2026 17:13 SAST: 'i did not say we should block anybody ... Please Claude, list her.' (listing 554)")
