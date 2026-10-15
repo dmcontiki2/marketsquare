@@ -1457,6 +1457,7 @@ async function _msInit(){
          msAdoptSession answers, so DRAFT-AFTER-SIGNIN-1 below (which runs at load) saw her as signed out and nothing opened
          her advert -- SMS b2/b5 listers landed on Home with no sign of it. Land it here, once the session is adopted. */
       if(_siDraft){ if(!_siWasIn && _msIsSignedIn()) setTimeout(function(){ try{ _msNav.user = true; goTo('dashboard'); msLandDraft(); }catch(_){} }, 300); return; }
+      function _siWelcome(){
       try{ if(!localStorage.getItem('ms_joined_date')) localStorage.setItem('ms_joined_date', new Date().toISOString()); }catch(_){}
       setTimeout(function(){ try{
         goTo('home');
@@ -1464,6 +1465,22 @@ async function _msInit(){
         showToast(_siFirst ? '\u2713 Signed in \u2014 welcome to TrustSquare! Look around; tap Sell when you are ready.'
                            : '\u2713 Signed in \u2014 welcome back!', 5000);
       }catch(_){} }, 300);
+      }
+      /* SIGNIN-DRAFT-FIND-1 (Goal run 40, 15 Oct 2026): a Google/Apple sign-in that arrived WITHOUT ?draft= in this tab
+         (Quick's 'Sign in' link, the Hub's own sign-in, a second tab) landed on Home with 'Look around; tap Sell' -- over a
+         listing she had already saved. SMS lister #556 (gardener, Johannesburg) did exactly that at 11:52Z, wandered her
+         profile for 4 minutes and left with the draft unpublished. Ask the server: a waiting draft opens in the Hub. */
+      if(!_msIsSignedIn()){ _siWelcome(); return; }
+      fetch(BEA_URL + '/listings/mine', {credentials: 'include', headers: {'X-Api-Key': API_KEY}})
+        .then(function(r){ return r && r.ok ? r.json() : null; }).catch(function(){ return null; })
+        .then(function(mine){
+          var d = null;
+          try{ (Array.isArray(mine) ? mine : []).forEach(function(l){
+            if(String(l.listing_status || l.status || '').toLowerCase() === 'draft' && (!d || +l.id > +d.id)) d = l; }); }catch(_){ d = null; }
+          if(!d){ _siWelcome(); return; }
+          try{ sessionStorage.setItem('ts_land_draft', String(d.id)); }catch(_){}
+          setTimeout(function(){ try{ _msNav.user = true; goTo('dashboard'); msLandDraft(); }catch(_){} }, 300);
+        });
     });
   }
   if(sp.get('signin')){
