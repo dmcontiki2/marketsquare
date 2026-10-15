@@ -38732,5 +38732,19 @@ def rg_ops_guard_1():
             return [(FAIL, "CityLauncher sms_funnel.py counts live adverts without the Quick hand-over again (LIVE-LINK-1)")]
     return [(INFO, "ops guard read-only with money/data/config checks + both timers + both cockpit links; SMS funnel links hand-over to live")]
 
+
+@entry("RG-0985", "SA-MOBILE-ONLY-1: the SMS wave texts only South African mobile numbers (+27 6x/7x/8x) -- never a "
+       "landline (which cannot receive it) and never a foreign number from a ZA lane",
+       LOCKED, fixed_on="2026-10-15", scope="../CityLauncher/sms_wave.py candidates(); every SMS lane",
+       ref="14 Oct batches b4/b7/b8: every 01x-05x landline undelivered, five +1 (US) numbers texted from the estate-agent lane.")
+def rg_sa_mobile_only():
+    cl = os.path.join(REPO, "..", "CityLauncher", "sms_wave.py")
+    if not os.path.exists(cl):
+        return [(INFO, "NOT EVALUATED - CityLauncher not visible from here")]
+    t = open(cl, encoding="utf-8", errors="replace").read()
+    if r'^\+27[678]\d{8}$' not in t or "not an SA mobile number" not in t:
+        return [(FAIL, "sms_wave.py no longer restricts texts to SA mobile numbers")]
+    return [(INFO, "SMS candidates limited to +27 6x/7x/8x")]
+
 if __name__ == "__main__":
     sys.exit(main())
