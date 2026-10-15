@@ -38820,5 +38820,23 @@ def rg_no_vouch_gate():
                        "(15 Oct: QA Bot rolled the release back on a 500 from /wishlist/feed)")]
     return [(INFO, "casual vouch gate off; clearance and licence gates intact")]
 
+
+@entry("RG-0989", "SHOW-ALL-1 (RUL-234): no published advert is hidden for a missing referral, police clearance or licence; "
+       "Browse cards carry a fixed 'waiting' chip instead",
+       LOCKED, fixed_on="2026-10-15", scope="bea_main.py gate switches + _pending_check_sql + get_listings; ms.js cardHtml",
+       ref="David 15 Oct 2026 17:36 SAST: 'For all please, if it lifts blocks then it is great.'")
+def rg_show_all_1():
+    py, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if py is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    for flag in ("CASUAL_VOUCH_GATE = False", "CLEARANCE_GATE = False", "LICENCE_GATE = False"):
+        if flag not in py:
+            return [(FAIL, "a visibility gate is switched back on (%s missing)" % flag)]
+    if "def _pending_check_sql(" not in py or "_attach_pending_checks(out)" not in py:
+        return [(FAIL, "get_listings no longer attaches pending_check")]
+    if "function msPendingCheckChip(" not in js or "${msPendingCheckChip(l)}" not in js or "pending_check: l.pending_check" not in js:
+        return [(FAIL, "the Browse card no longer paints the waiting chip")]
+    return [(INFO, "all three gates off; pending_check attached and painted")]
+
 if __name__ == "__main__":
     sys.exit(main())

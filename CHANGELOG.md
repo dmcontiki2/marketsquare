@@ -1,3 +1,13 @@
+## 2026-10-15 — SHOW-ALL-1: every published advert shows; missing checks become a card chip (RUL-234)
+- bea_main.py: CLEARANCE_GATE / LICENCE_GATE = False (with CASUAL_VOUCH_GATE); _pending_check_sql labels an advert
+  'referral' / 'clearance' / 'licence'; get_listings attaches pending_check (one query per page).
+- ms.js: cards show "Waiting for a referral" / "Police clearance not yet uploaded" / "Licence not yet checked".
+- Tested in isolation: seamstress -> referral, nanny -> clearance, driver -> licence, vouched cleaner -> none; nothing hidden.
+
+- **LEDGER-SIX-1** (14 Oct 2026, David: "resolve the 6 failures"): the ledger is back to **0 !!!!**. RG-0391 / RG-0477 / RG-0964 were assertions left behind by the Quick fast-lane merge (RUL-223 moved Quick's manifest link to the live `/quick-icon/app.webmanifest`; the +1 page's launch-lock line gained `ls_m_fastlane`) — corrected, and the live manifest is now held to the tile's id, scope, colour and inlined icon. RG-0965: `prove_auto_renew.py` called the plan checkout anonymously, which RUL-227's session binding rightly refuses — it now signs in as the app does (88 checks pass). RG-0175: the wave-hygiene witness had gone 16 days stale because the maintenance loop now runs on the server, where no CityLauncher checkout sat beside it — WITNESS-SERVER-1 lets the witness find `/opt/CityLauncher` (a copy of the citylaunch repo at 2677e15 placed there) and re-proved all three items. RG-0546 cleared when the fast-lane help screens were placed on the server (Goal run 38). RG-0154 / RG-0176 were transient (counter caught up on main; CityLauncher restarted at 03:01Z during the probe).
+
+- **DRAFT-CLAIM-1** (Goal run 39, RG-0985): a Quick draft saved under one address is no longer lost when she signs in with another. The phone that made the draft (its ts_draft proof) can move it to the account she is signed in with -- only a draft, only from an address nobody ever proved -- and the app offers that instead of "we could not find that listing". A first Google/Apple sign-in from a draft link now opens the draft (it landed on Home with nothing). The sign-in screen names the address the draft waits on, and Google opens on that account (login_hint). Found on SMS b2: a Pretoria cleaner saved #543 under one Gmail, signed in with Google under another, added a passkey and left. Ships PHOTO-WAIT-1 (laptop 8e4db13, already live) into origin/main so this deploy does not undo it.
+
 ## 2026-10-15 — NO-VOUCH-GATE-1: casual workers visible on publish (RUL-233)
 - bea_main.py: CASUAL_VOUCH_GATE = False — the stranger gate no longer hides an unvouched casual advert; a vouch or
   ID check still earns its Trust Score points. Clearance (RUL-153) and licence (RUL-156) branches unchanged.

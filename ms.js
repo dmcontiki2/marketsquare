@@ -510,6 +510,7 @@ function _msMapBeaListing(l){
           sellerIdx: null,
           isLive: true,
           service_class: l.service_class || null,
+          pending_check: l.pending_check || null,   // SHOW-ALL-1 (RUL-234): the check this advert still waits for
           super_example: l.super_example || 0,   // SUPER-1: red-corner exemplar flag
           showcase: l.showcase || 0,   // SHOWCASE-BANNER-1 (11 Aug 2026): banner without the pin
           suburb_lat: l.suburb_lat || null,
@@ -6044,6 +6045,19 @@ function renderGrid(){
 }
 
 
+/* SHOW-ALL-1 (RUL-234, David 15 Oct 2026: "For all please, if it lifts blocks then it is great."): every advert shows;
+   one still waiting for its check says so in a small chip instead of being hidden. Fixed wording, never seller text. */
+const MS_PENDING_CHECK = {
+  referral:  '\u23F3 Waiting for a referral',
+  clearance: '\u23F3 Police clearance not yet uploaded',
+  licence:   '\u23F3 Licence not yet checked'
+};
+function msPendingCheckChip(l){
+  var t = l && MS_PENDING_CHECK[l.pending_check];
+  return t ? '<div class="cpending" style="display:inline-block;margin:4px 0 2px;padding:2px 8px;border-radius:9px;'
+           + 'font-size:10.5px;font-weight:700;background:#fff4e0;color:#8a5a00;border:1px solid #f0d49a">' + t + '</div>' : '';
+}
+
 function cardHtml(l){
   const isPlaceholder = String(l.id).startsWith('ph_');
   const sv=wishlist.has(l.id);
@@ -6096,6 +6110,7 @@ function cardHtml(l){
       <div class="ccat">${l.cat}</div>
       <div class="ctitle" data-notranslate="1">${l.title?_lmEsc(l.title):(l.cat?l.cat+' listing':'Untitled')}</div>
       <div class="cloc">📍 ${_lmEsc(l.area)}${_distLabel(l)}</div>
+      ${msPendingCheckChip(l)}
       <div class="cbot">
         <div class="cprice">${l.price?`${_priceLabel(l)}${l.per?`<span class="per"> ${_lmEsc(l.per)}</span>`:''}`:'<span class="neg">Negotiable</span>'}</div>
         ${l.generic?"":tbadge(l.trust)}${fspark(l)}

@@ -3641,6 +3641,11 @@ def _sql_lit(s) -> str:
 # publishes; a vouch still earns its Trust Score points. The police-clearance (RUL-153) and licence (RUL-156) gates
 # are separate branches above the casual one and are NOT changed by this switch.
 CASUAL_VOUCH_GATE = False
+# SHOW-ALL-1 (RUL-234, David 15 Oct 2026 17:36 SAST: "For all please, if it lifts blocks then it is great."): the
+# police-clearance (RUL-153) and licence (RUL-156) gates no longer hide an advert either. Every published advert shows;
+# one still missing its check carries a small label on its card instead (_pending_check_sql -> 'pending_check').
+CLEARANCE_GATE = False
+LICENCE_GATE = False
 
 
 def _stranger_hidden_sql(p: str = "l.") -> str:
@@ -3661,17 +3666,65 @@ def _stranger_hidden_sql(p: str = "l.") -> str:
     lic_in = ",".join(_sql_lit(x) for x in sorted(_gate_licence_roles())) or "''"   # LICENCE-GATE-1 (RUL-156)
     return ("(LOWER(COALESCE(%scategory,'')) IN (%s) AND COALESCE(%sis_demo,0) = 0 AND COALESCE(%ssuper_example,0) = 0 "
             "AND COALESCE(%sshowcase,0) = 0 AND (CASE "
-            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
-            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE %s END) "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE %s END) "
             "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
             "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE %s END) "
             "ELSE 0 END) = 1)" % (
                 p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
+                st, clr_in, _has(_GATE_CLEARANCE_SIGNALS), "1" if CLEARANCE_GATE else "0",
+                st, lic_in, _has(_GATE_LICENCE_SIGNALS), "1" if LICENCE_GATE else "0",
+                p, st, cas_in,
+                _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file,
+                "1" if CASUAL_VOUCH_GATE else "0"))   # NO-VOUCH-GATE-1 / SHOW-ALL-1: operands, not '+' ('%' binds tighter)
+
+
+def _pending_check_sql(p: str = "l.") -> str:
+    """SHOW-ALL-1 (RUL-234): SQL expression, the check an advert is still waiting for -- 'clearance', 'licence' or
+    'referral' -- or NULL. Same roles and signals as the old stranger gate; it only LABELS, it never hides."""
+    casual, clearance = _gate_role_names()
+    st = "LOWER(TRIM(COALESCE(%sservice_type,'')))" % p
+    who = "LOWER(TRIM(COALESCE(%sseller_email,'')))" % p
+
+    def _has(sigs):
+        return ("%s IN (SELECT LOWER(TRIM(_gc.email)) FROM user_credentials _gc WHERE _gc.signal_id IN (%s) "
+                "AND _gc.status = 'earned')" % (who, ",".join(_sql_lit(x) for x in sigs)))
+    _id_on_file = ("%s IN (SELECT LOWER(TRIM(_gu.email)) FROM users _gu WHERE _gu.id_verified_at IS NOT NULL)" % who)
+    clr_in = ",".join(_sql_lit(x) for x in sorted(clearance)) or "''"
+    cas_in = ",".join(_sql_lit(x) for x in sorted(casual)) or "''"
+    lic_in = ",".join(_sql_lit(x) for x in sorted(_gate_licence_roles())) or "''"
+    return ("(CASE WHEN LOWER(COALESCE(%scategory,'')) IN (%s) AND COALESCE(%sis_demo,0) = 0 "
+            "AND COALESCE(%ssuper_example,0) = 0 AND COALESCE(%sshowcase,0) = 0 THEN (CASE "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN NULL ELSE 'clearance' END) "
+            "WHEN %s IN (%s) THEN (CASE WHEN %s THEN NULL ELSE 'licence' END) "
+            "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
+            "THEN (CASE WHEN %s OR %s OR %s THEN NULL ELSE 'referral' END) "
+            "ELSE NULL END) ELSE NULL END)" % (
+                p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
                 st, clr_in, _has(_GATE_CLEARANCE_SIGNALS),
                 st, lic_in, _has(_GATE_LICENCE_SIGNALS),
                 p, st, cas_in,
-                _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file,
-                "1" if CASUAL_VOUCH_GATE else "0"))   # NO-VOUCH-GATE-1 (an operand, not a '+': '%' binds tighter)
+                _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file))
+
+
+def _attach_pending_checks(items):
+    """SHOW-ALL-1: add 'pending_check' to each advert dict that has an 'id' (one query for the whole page)."""
+    try:
+        ids = [int(d["id"]) for d in items if isinstance(d, dict) and str(d.get("id", "")).isdigit()]
+        if not ids:
+            return items
+        conn = database.get_db()
+        try:
+            got = {r[0]: r[1] for r in conn.execute(
+                "SELECT l.id, %s FROM listings l WHERE l.id IN (%s)" % (_pending_check_sql("l."), ",".join("?" * len(ids))), ids)}
+        finally:
+            conn.close()
+        for d in items:
+            if isinstance(d, dict) and str(d.get("id", "")).isdigit():
+                d["pending_check"] = got.get(int(d["id"]))
+    except Exception as e:
+        logging.getLogger("bea").warning("SHOW-ALL-1: pending checks not attached: %s", e)
+    return items
 
 
 def _stranger_visible_sql(p: str = "l.", viewer: str = "") -> str:
@@ -4042,8 +4095,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             fc["error"] = "facets unavailable"
         finally:
             conn2.close()
-        return _listings_etag(request, response, {"items": out, "facets": fc}, _gate_viewer, _gate_staff)   # LIST-ETAG-1
-    return _listings_etag(request, response, out, _gate_viewer, _gate_staff)   # LIST-ETAG-1 (ts1-15)
+        return _listings_etag(request, response, {"items": _attach_pending_checks(out), "facets": fc}, _gate_viewer, _gate_staff)   # LIST-ETAG-1
+    return _listings_etag(request, response, _attach_pending_checks(out), _gate_viewer, _gate_staff)   # LIST-ETAG-1 (ts1-15); SHOW-ALL-1
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
 # ZOOM — the narrowing funnel (ZOOM-HMI-1 · RUL-076/078/089 · RG-0221 · 17 Sep 2026)
