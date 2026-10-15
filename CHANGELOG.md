@@ -1,3 +1,20 @@
+## 2026-10-15 — NO-VOUCH-GATE-1: casual workers visible on publish (RUL-233)
+- bea_main.py: CASUAL_VOUCH_GATE = False — the stranger gate no longer hides an unvouched casual advert; a vouch or
+  ID check still earns its Trust Score points. Clearance (RUL-153) and licence (RUL-156) branches unchanged.
+- Trigger: listing 554 (seamstress, Sunnyside, live 15 Oct 09:33 via SMS) was missing from Browse. RG-0986 locks it.
+
+## 14 Oct 2026 · PHOTO-WAIT-1 — Quick's saved screen waits for her photo
+
+David, 14 Oct 2026: "Please do" (fix approved after SMS b2 showed an 'app fault').
+- Found: SMS b2 lister (Pretoria services, 14 Oct 07:11-07:13 UTC) built her advert in 2 min with her own photo, left the saved screen 20 s later while the photo was still uploading; the upload died with the page (q_api_fail "network /listings/543/photo/draft") and listing 543 stayed a draft with no photo.
+- quick.html: a tap on a saved-screen link that LEAVES the page is held while the photo uploads and goes on by itself when it lands; the page asks before closing mid-upload; a dropped upload is retried once; status line says "keep this page open". WhatsApp (new tab) and stay-in-Quick buttons are never held. Photo shrink 1600 px/0.86 -> 1280 px/0.8.
+- Proof: Playwright walk (stubbed upload, 3 s) -- tap held, then navigated; same with first upload failing (retry path). Live: /quick/ renders, no console errors; sms_path_probe PASS 17:08 UTC (4 doors reach the draft). Server md5 = laptop. genie/HARNESS.html kept identical (HARNESS-PARITY-1).
+
+## 2026-10-14 — QUICK_FASTLANE switched ON (David: "Can you please switch on the fast lane - approved")
+- 19:17 SAST: `quick_fastlane` flipped ON from the Launch Switch card (David's enrolled browser). PROBED: GET /flags -> quick_fastlane true, mode live; /quick renders with the fast-lane code present.
+- Not yet probed: the quick-icons strip for a signed-in repeat trader with a preset, and David's real-phone check (Android Share / press-and-hold, iPhone Add to Home Screen).
+- David, same message: JustTCG ($19/month) stays OFF until he has the budget. Premium feed costs (`feed_costs_usd_month`) stay empty: they are only needed when a paid feed is subscribed; none is live, so nothing to set now.
+
 ## 2026-10-14 — RS-HIDE-1: Ranking Score used, not shown to buyers (RUL-231)
 - ms.js: listing cards no longer paint the corner RS number; public agent cards drop the RANK chip and the 'Ranking =' line.
 - bea_main.py: /zoom/next no longer returns `scores` (the `ids` order is the ranking); /listings/mine returns the seller's own

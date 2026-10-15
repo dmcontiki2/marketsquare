@@ -38746,5 +38746,22 @@ def rg_sa_mobile_only():
         return [(FAIL, "sms_wave.py no longer restricts texts to SA mobile numbers")]
     return [(INFO, "SMS candidates limited to +27 6x/7x/8x")]
 
+
+@entry("RG-0986", "NO-VOUCH-GATE-1 (RUL-233): a casual worker's published advert is shown to everyone -- the vouch only adds "
+       "Trust Score -- while the police-clearance (RUL-153) and licence (RUL-156) gates stay in place",
+       LOCKED, fixed_on="2026-10-15", scope="bea_main.py CASUAL_VOUCH_GATE + _stranger_hidden_sql",
+       ref="David 15 Oct 2026 17:13 SAST: 'i did not say we should block anybody ... Please Claude, list her.' (listing 554)")
+def rg_no_vouch_gate():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if "CASUAL_VOUCH_GATE = False" not in py:
+        return [(FAIL, "the casual-worker vouch gate is switched back on -- unvouched casual adverts are hidden again")]
+    i = py.find("def _stranger_hidden_sql(")
+    body = py[i:i + 4000]
+    if "_GATE_CLEARANCE_SIGNALS" not in body or "_GATE_LICENCE_SIGNALS" not in body:
+        return [(FAIL, "the clearance or licence gate disappeared with the vouch gate (RUL-233(c) keeps them)")]
+    return [(INFO, "casual vouch gate off; clearance and licence gates intact")]
+
 if __name__ == "__main__":
     sys.exit(main())

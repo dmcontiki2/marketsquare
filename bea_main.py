@@ -3636,6 +3636,13 @@ def _sql_lit(s) -> str:
     return "'" + str(s).replace("'", "''") + "'"
 
 
+# NO-VOUCH-GATE-1 (RUL-233, David 15 Oct 2026 17:13 SAST: "i did not say we should block anybody. We want them to get
+# a referral to improve their TS ... Please Claude, list her."): a casual worker is visible from the moment she
+# publishes; a vouch still earns its Trust Score points. The police-clearance (RUL-153) and licence (RUL-156) gates
+# are separate branches above the casual one and are NOT changed by this switch.
+CASUAL_VOUCH_GATE = False
+
+
 def _stranger_hidden_sql(p: str = "l.") -> str:
     """SQL, TRUE when the advert row (its columns prefixed with p) must not be shown to a stranger. Every value in
     it comes from this file or the role registry, never from a request."""
@@ -3657,7 +3664,7 @@ def _stranger_hidden_sql(p: str = "l.") -> str:
             "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
-            "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE 1 END) "
+            "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE " + ("1" if CASUAL_VOUCH_GATE else "0") + " END) "
             "ELSE 0 END) = 1)" % (
                 p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
                 st, clr_in, _has(_GATE_CLEARANCE_SIGNALS),
