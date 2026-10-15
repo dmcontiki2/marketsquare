@@ -5,32 +5,25 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 13 Oct 2026 (run 38). GI-0034 is done (below). New: GI-0039.*
+*Open actions only — updated 15 Oct 2026 (run 40). GI-0041 widened (8 stranded drafts now). GI-0039 answered by you in RUL-232
+(15 Oct: 400 texts a day, 60-day re-text, every-city services lane) — closed below.*
 
-### GI-0041 — three SMS listers saved a draft and stopped at the account key (data change + mail: yours)
-- **What I found:** 14 Oct, 199 texts → 4 saved drafts → 1 published (#544). #543 (Pretoria cleaner) saved under
-  bekezelansingo@gmail.com, then Google signed her in as bekezelansingo23@gmail.com (same IP, 42 s later; she added a
-  passkey) — her draft is on the first address. #545 (wishesmtutwa@) and #546 (modestarmasiye5@) typed an email and never
-  opened the letter.
-- **Why it is yours:** moving #543 changes a real seller's record; a reminder goes out in TrustSquare's name.
-- **What I would do:** (a) move #543 to bekezelansingo23@gmail.com (she can now do it herself, but only on the same phone,
-  until ~21 Oct); (b) one short "your listing is saved — tap to finish" note to all three.
-- **Recommend:** yes to both.
+### GI-0041 — eight SMS drafts are saved and waiting; one short "tap to finish" note (mail in your name: yours)
+- **What I found:** 14–15 Oct, 599 texts → 10 saved drafts → 2 published (#544, #554). Eight wait, every one with nothing
+  left to do but sign and publish: #543 Pretoria cleaner (her draft is on bekezelansingo@, Google signed her in as
+  bekezelansingo23@), #545 Jhb tutor, #546 Jhb nanny, #555 Jhb carpenter (never opened the letter); and three who signed in
+  with Google and still stopped — #556 Jhb gardener (landed on Home), #557/#558 Jhb Code 10 driver (Quick told him his
+  licence had to be checked first), #559 Pta cleaner (photo added, Terms signed, left on a toast). Run 40 fixed all three
+  of those causes live (GI-0042) — so a note that brings them back now lands them on their draft with Publish in reach.
+- **Why it is yours:** it goes out in TrustSquare's name to real people; moving #543 changes a real seller's record.
+- **What I would do:** (a) one plain letter to the eight, today's wording: "Your listing is saved — one tap to put it
+  live" with their own sign-in link (the existing ONE-TAP letter template, re-sent once; #558 left out as #557's
+  duplicate); (b) move #543 to bekezelansingo23@gmail.com.
+- **Recommend:** yes to both, now — these are the warmest people we have; every day the link gets colder (it lapses at 3 days).
 
 
-### GI-0039 — the SMS pilot produced the first stranger's listing; keep it going and widen it (spend: yours)
-- **What I found:** batch b1 (13 Oct 07:10Z, 40 texts to Gumtree Pretoria service providers, R8) produced #542 "Appliance
-  repair — Montana", published 11:54Z by the person herself — the first listing by a stranger's own hand. Path: SMS link →
-  Quick → draft in 56 s → Google sign-in → Terms → live. 1 published from 40 texts; the 27 Sep–3 Oct email waves (2,614 letters)
-  produced none.
-- **Why it is yours:** each text costs money (R0.20 a part) and goes out in TrustSquare's name; the daily cap (40) and the pool
-  (Gumtree Pretoria services, 218 held) are what you approved.
-- **What it costs:** R8 a day at today's cap; R40 a day at 200.
-- **What I would do:** let the daily run continue as armed, and widen it once b1's delivery figures land (07:10Z tomorrow):
-  next the other Gumtree cities and the trades with the most phones-without-email (the 1,111 South Africans from the 26 Apr scrape).
-  One stranger is a signal, not a rate — judge it after five batches.
-- **Recommend:** keep the 40/day pilot running through five batches; approve widening to a second city/category now so the
-  next five batches are not all one city.
+### GI-0039 — CLOSED 15 Oct by RUL-232 (your words: 400 texts a day, a number re-texted after 60 days, service providers in every
+city get a lane, the e-mail re-send waits for each address's 60 days). 15 Oct: 400 sent in b9–b15.
 
 
 ### GI-0034 — DONE 13 Oct 02:47Z (David: "proceed"). Dry run on a copy: 481 moved, 271 pass the wave's own guards in 28 cities (London 22, Chicago 21, Cape Town 14, Port Elizabeth 10 …). Moved into prospects.db (source `orch:*`, notes "GI-0034"), orchestration rows stamped approved_at; backups `/root/backup_gi0034_20261013024703_*.db`. Correction 03:15Z: the moved rows first carried source `orch:*`, which slipped past the wave's per-source bounce block; re-labelled to their real class (osm:* -> openstreetmap, blocked at 10% bounce; bing -> bing). publish_sendable now reads **96 sendable in 25 cities** (bing only). E2E 13 Oct: two QA letters sent (Chicago, Cape Town) -> inbox; Chicago Quick link -> plumber listing -> Save -> sign-in letter -> code sign-in -> Hub draft #541 all work; the publish click was refused by the session safety layer, not walked. Fixed: services letter headline 'Keep Every dollars You Earn' -> 'Keep 100% of What You Earn' (server + CityLauncher laptop copy).
@@ -72,6 +65,7 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 | id | date | change | evidence | expected effect / how we'd know | size | status |
 |----|------|--------|----------|---------------------------------|------|--------|
+| GI-0042 | 15 Oct | **GATE-WORDS-3 + SIGNIN-DRAFT-FIND-1 + DRAFT-SAVE-PUBLISH-1** (RG-0990): Quick's draft/saved/fast-lane screens no longer say a driver, nanny or casual worker "shows in searches once …" checked (RUL-234 — nothing hides) — the draft line now says "People see it as soon as you publish. Uploading your licence / police clearance later raises your Trust Score." (15 languages); a Google/Apple sign-in without `?draft=` asks /listings/mine and opens a waiting draft in the Hub; a draft saved from Edit gets a card "still a draft — nobody can see it yet" with **Publish my listing** / Not yet, not a 6-s toast | SMS 15 Oct: #557/#558 driver signed in and searched his profile/ID pages after the licence line; #556 gardener landed on Home after Google; #559 cleaner added photo + signed Terms in Edit, read the toast, stopped (docs/E2E_2026-10-15.md) | signed-in strangers' drafts → live; watch eula_accepted_at with listing still draft (should drop to ~0) and published_at within minutes of sign-in | several | **SHIPPED** fb6a00f + 00eac12 — live 16:23Z / 16:35Z: driver's draft line reads the new sentence; cookies-only `/?signedin=1` → Hub on the draft with Publish my listing; Edit → Save → Terms → the publish card |
 | GI-0040 | 14 Oct | **DRAFT-CLAIM-1** (RG-0985): a Quick draft follows her to the account she signs in with — POST /listings/{id}/claim-draft (same phone via ts_draft, draft only, never-proven address); first Google/Apple sign-in lands the draft; sign-in screen names the address; Google login_hint | SMS b2: #543 saved under one Gmail, Google signed her in under another, passkey, left; #544 landed on Home after Google | stranded-at-key drafts recover; watch claim moves in the log (`DRAFT-CLAIM-1`) and drafts→live | several | **SHIPPED** 8de3a0c — live 21:33Z: draft 553 moved +qa-g39g → +qa-g39h, Hub showed Publish |
 | GI-0038 | 13 Oct | **ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 + EXPERIENCE-YEARS-1** (RG-0983): `--accent-bright` defined in ms.css :root (used 13×, defined nowhere); the photo read's "should be confirmed" notes dropped from the story box; a bare years number reads "9 years" (render-side, so #542 is fixed without touching her row; server-side for new ones); Quick's English line "Experienced, no formal certificate." | Walk (docs/E2E_2026-10-13.md): Local Market's selected "Any seller" chip was a blank pill (also the wishlist's Add / Enable pings buttons); a Johannesburg craft draft ended "…prices should be confirmed for each item."; the first stranger's listing #542 read "**Experience:** 9" and "Experience, no certificate." | the selected chip and wishlist buttons visible; no notes-to-self in drafted stories; buyers read "9 years" | several | **SHIPPED** b4170a7 + 697ac28 — live 21:31Z (ms.css v=906, ms.js v=1042, fresh phone in Pretoria): `--accent-bright` = #2563eb; Local Market "Any seller" chip white on rgb(37,99,235); #542 reads "Experience: 9 years"; /quick/ carries "Experienced, no formal certificate." |
 | GI-0037 | 12 Oct | **BROWSE-EMPTY-SELL-1** (RG-0970): Browse on an empty category with no filter set says "No Collectors listings in <city> yet" with **List yours here →** (straight into that category's guided Sell Step 1) and **Look in another city** (city picker); "No listings match your filters / Clear filters" only when a filter is set. | Walk (docs/E2E_2026-10-12.md): a Gqeberha stamp collector tapped Collectors (0) on Home; Browse said "No listings match your filters. Clear filters" though she had set none — a dead end with only the back arrow. Property and Cars (0 in Gqeberha) showed the same. | browse → sell-flow starts from the category page once strangers arrive; no "match your filters" with no filter set | small | **SHIPPED** 05c8174 — live 21:20Z (ms.js v=1033, fresh phone in Gqeberha): Collectors tile → "No Collectors listings in Gqeberha (Port Elizabeth) yet." + List yours here → / Look in another city; "List yours here →" opens "STEP 1 OF 6 · COLLECTORS · Photos" |
