@@ -38815,6 +38815,9 @@ def rg_no_vouch_gate():
     body = py[i:i + 4000]
     if "_GATE_CLEARANCE_SIGNALS" not in body or "_GATE_LICENCE_SIGNALS" not in body:
         return [(FAIL, "the clearance or licence gate disappeared with the vouch gate (RUL-233(c) keeps them)")]
+    if '" + ("1" if CASUAL_VOUCH_GATE' in body:
+        return [(FAIL, "the gate switch is spliced in with '+' inside a '%'-formatted string -- every gated query crashes "
+                       "(15 Oct: QA Bot rolled the release back on a 500 from /wishlist/feed)")]
     return [(INFO, "casual vouch gate off; clearance and licence gates intact")]
 
 if __name__ == "__main__":

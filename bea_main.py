@@ -3664,13 +3664,14 @@ def _stranger_hidden_sql(p: str = "l.") -> str:
             "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN %s IN (%s) THEN (CASE WHEN %s THEN 0 ELSE 1 END) "
             "WHEN LOWER(COALESCE(%sservice_class,'')) = 'casuals' OR %s IN (%s) "
-            "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE " + ("1" if CASUAL_VOUCH_GATE else "0") + " END) "
+            "THEN (CASE WHEN %s OR %s OR %s THEN 0 ELSE %s END) "
             "ELSE 0 END) = 1)" % (
                 p, ",".join(_sql_lit(c) for c in _GATE_CATEGORIES), p, p, p,
                 st, clr_in, _has(_GATE_CLEARANCE_SIGNALS),
                 st, lic_in, _has(_GATE_LICENCE_SIGNALS),
                 p, st, cas_in,
-                _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file))
+                _has(_GATE_VOUCH_SIGNALS), _has(_GATE_ID_SIGNALS), _id_on_file,
+                "1" if CASUAL_VOUCH_GATE else "0"))   # NO-VOUCH-GATE-1 (an operand, not a '+': '%' binds tighter)
 
 
 def _stranger_visible_sql(p: str = "l.", viewer: str = "") -> str:
