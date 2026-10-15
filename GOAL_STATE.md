@@ -5,6 +5,29 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 39 — Wed 14 Oct 2026, 20:55–21:45 UTC (Opus 5.5); records written 15 Oct 04:50Z
+
+- **Acting:** folder mounted and writable; SSH via `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w39`, shipped
+  `claude/goal-run39` 8de3a0c via CLOUD-SHIP-1 (21:26Z SHIPPED). **The device bridge dropped at ~21:35Z** (laptop offline)
+  and stayed down through the 22:22Z follow-up, so these records were written the next morning.
+- **THE NUMBER: 2 by a stranger's hand.** #544 "English — Primary" (Pretoria, user 1801 midymamoe1985@), SMS b5, live
+  14 Oct 07:18:03Z. Live = 132 `*@trustsquare.co` + family 8 + strangers 2 (#542, #544).
+- **SMS 14 Oct 07:10Z:** 199 texts across b2–b8 (RUL-228/229 lanes). ~6 real sessions, **4 saved drafts, 1 published**.
+  All three who stopped stopped AFTER saving, at the account key: #543 (Google signed her in under a different Gmail),
+  #545 and #546 (typed an email, never opened the letter).
+- **Walk (casual/services, `docs/E2E_2026-10-14.md`):** cold Home → Sell → SMS door → nanny (Jhb) and cleaner (Pta) →
+  Save → app sign-in; stopped at Publish. Break: the sign-in screen named the draft's address only in a 7-s toast, with
+  Google on top.
+- **Shipped (8de3a0c, RG-0985, GI-0040 DRAFT-CLAIM-1):** claim-draft (same phone, draft only, never-proven address);
+  first Google sign-in lands the draft; sign-in note names the address; Google `login_hint`. Carried PHOTO-WAIT-1
+  (laptop 8e4db13) into origin/main. Prover 17/17 on a DB copy; live proof 21:33Z.
+- **Ledger:** new tree 1 !!!! (RG-0436, live /q/ vs /quick/ drift) vs base 6 !!!! (same + 5 base-checkout reds).
+- **Measurement note:** 25 "q_door" sessions on austin-services-20261013 came from 2 desktop UAs (one X11 Linux) over 11 h —
+  link scanners, not people.
+- **REVIEW NOW:** GI-0041 (move #543 to her Google account; way-back note to the 3 stranded drafts — sent in your name).
+- **QA data:** drafts 547–553 and five `+qa-g39*` users deleted.
+- **Not reached:** delivery/bounce of the way-back letters for #543/#545/#546; the 14 Oct 22:10Z email wave.
+
 ## RUN 38 — Tue 13 Oct 2026, 20:56–21:45 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe `.wtest` left in the laptop repo root). Device VM disk has
