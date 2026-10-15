@@ -6604,6 +6604,28 @@ function msClaimDraft(id){
     })
     .catch(giveUp);
 }
+/* DRAFT-SAVE-PUBLISH-1 (Goal run 40): after a draft is saved from Edit -- 'still a draft, nobody can see it yet' and the
+   Publish button in the same card (dashPublish: Terms if needed, then live). Fixed words, no seller text. */
+function msDraftSavedPrompt(id){
+  id = Number(id) || 0; if(!id) return;
+  var old = document.getElementById('ms-draft-saved'); if(old) old.parentNode.removeChild(old);
+  var ov = document.createElement('div'); ov.id = 'ms-draft-saved';
+  ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-label','Your changes are saved');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center;';
+  ov.innerHTML = '<div style="background:#fff;color:#0f172a;width:100%;max-width:440px;border-radius:18px 18px 0 0;padding:20px 18px 22px;box-sizing:border-box;font-family:Inter,Arial,sans-serif;">'
+    + '<div style="font-size:17px;font-weight:800;margin-bottom:6px;">\u2713 Your changes are saved</div>'
+    + '<div style="font-size:14px;line-height:1.5;color:#334155;margin-bottom:16px;">Your listing is still a <b>draft</b> \u2014 nobody can see it yet. Publish it now and people can find it straight away.</div>'
+    + '<button type="button" id="ms-ds-pub" style="display:block;width:100%;padding:14px;border:0;border-radius:12px;background:#1e3a5f;color:#fff;font-size:15px;font-weight:800;cursor:pointer;">Publish my listing</button>'
+    + '<button type="button" id="ms-ds-later" style="display:block;width:100%;padding:12px;margin-top:8px;border:0;background:none;color:#475569;font-size:14px;font-weight:600;cursor:pointer;">Not yet \u2014 keep it as a draft</button>'
+    + '</div>';
+  function close(){ try{ ov.parentNode.removeChild(ov); }catch(_){} }
+  document.body.appendChild(ov);
+  ov.querySelector('#ms-ds-later').onclick = close;
+  ov.onclick = function(e){ if(e.target === ov) close(); };
+  ov.querySelector('#ms-ds-pub').onclick = function(){ close(); try{ goTo('dashboard'); }catch(_){} dashPublish(id); };
+  try{ ov.querySelector('#ms-ds-pub').focus({preventScroll:true}); }catch(_){}
+}
+
 function msLandDraft(){
   var id=0; try{ id=parseInt(sessionStorage.getItem('ts_land_draft')||'',10)||0; }catch(e){}
   if(!id) return;
@@ -14679,8 +14701,12 @@ async function saveEditedListing(_termsJustAccepted) {
     let _elSt = String((elCurrentRaw && elCurrentRaw.listing_status) || 'live').toLowerCase();
     try { const _g = await fetch(BEA_URL + '/listings/' + elCurrentId, { credentials: 'include' });
           if (_g.ok) { const _gj = await _g.json(); if (_gj && _gj.listing_status) _elSt = String(_gj.listing_status).toLowerCase(); } } catch(_) {}
-    showToast(_elSt === 'live' ? '✓ Listing updated — changes are live'
-                               : '✓ Changes saved — this listing is still a draft, so tap Publish to put it live', 6000);
+    /* DRAFT-SAVE-PUBLISH-1 (Goal run 40, 15 Oct 2026): a draft's save said 'tap Publish to put it live' in a 6-second toast
+       and went back to the Hub. SMS lister #559 (home cleaner, Pretoria) added her photo, signed the Terms the save asked for,
+       saw the toast -- and went back into Edit and stopped, her listing still a draft with everything done. A draft's save
+       now asks, in a card that stays until she answers: publish it now, or later. */
+    if (_elSt === 'live') showToast('✓ Listing updated — changes are live', 6000);
+    else setTimeout(function(){ try{ msDraftSavedPrompt(elCurrentId); }catch(_){ showToast('✓ Changes saved — this listing is still a draft, so tap Publish to put it live', 6000); } }, 400);
     const _wpSellEmail=(SELLERS[0]&&SELLERS[0]._email)||localStorage.getItem('ms_aa_email')||'';
     if(window._currentEditBeaId&&_wpSellEmail)wpSave(window._currentEditBeaId,_wpSellEmail);
     // Refresh both dashboard and buyer-side listing cache

@@ -38841,9 +38841,9 @@ def rg_show_all_1():
         return [(FAIL, "the Browse card no longer paints the waiting chip")]
     return [(INFO, "all three gates off; pending_check attached and painted")]
 
-@entry("RG-0990", "GATE-WORDS-3 + SIGNIN-DRAFT-FIND-1 (Goal run 40): Quick no longer tells a driver, nanny or casual worker her "
+@entry("RG-0990", "GATE-WORDS-3 + SIGNIN-DRAFT-FIND-1 + DRAFT-SAVE-PUBLISH-1 (Goal run 40): Quick no longer tells a driver, nanny or casual worker her "
        "advert is hidden until a check (RUL-234), and a Google/Apple sign-in with a draft waiting opens that draft in the Hub "
-       "instead of Home",
+       "instead of Home, and a draft saved from Edit offers Publish in a card instead of a 6-second toast",
        LOCKED, fixed_on="2026-10-15",
        scope="quick.html (= genie/HARNESS.html) draft gate line, celebrate() live line, fast-lane liveLine; roles/quick_i18n.json "
              "two phrases; ms.js ?signedin=1 branch",
@@ -38867,7 +38867,11 @@ def rg_gate_words_3():
     i = js.find("SIGNIN-DRAFT-FIND-1")
     if i < 0 or "listing_status" not in js[i:i + 1600] or "msLandDraft()" not in js[i:i + 1600]:
         bad.append("a Google sign-in with a waiting draft lands on Home again (SIGNIN-DRAFT-FIND-1 gone)")
-    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "no hidden-until-checked words in Quick; signed-in drafts open in the Hub")]
+    # DRAFT-SAVE-PUBLISH-1 (same run): a draft saved from Edit asks 'publish it now?' in a card that waits for her answer
+    if "function msDraftSavedPrompt(" not in js or "msDraftSavedPrompt(elCurrentId)" not in js or "dashPublish(id)" not in js:
+        bad.append("a draft saved from Edit is back to a 6-second 'tap Publish' toast (DRAFT-SAVE-PUBLISH-1 gone)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "no hidden-until-checked words in Quick; signed-in drafts open in the Hub; "
+                                                        "a saved draft offers Publish")]
 
 if __name__ == "__main__":
     sys.exit(main())
