@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super PA Ideas</title>
+<style>
+:root{--bg:#0f1420;--card:#171e2e;--ink:#e8edf6;--mut:#93a0b8;--line:#26304a;
+--built:#3b82f6;--new:#22c55e;--guard:#f59e0b;--ai:#a855f7;--uk:#06b6d4;--za:#f43f5e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:24px 16px}
+.wrap{max-width:1100px;margin:0 auto}h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:34px 0 10px}
+.sub{color:var(--mut);margin:0 0 18px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--mut);margin-bottom:8px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.dir{background:var(--card);border-left:4px solid var(--ai);padding:12px 16px;border-radius:8px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.t{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;color:#0b0f18}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.c{background:var(--card);border-radius:10px;padding:14px;border-top:4px solid var(--line)}
+.c b{display:block;margin-bottom:4px}.c span{color:var(--mut);font-size:14px}
+.c .tag{margin-top:8px;font-size:12px;font-weight:700}
+.scroll{overflow-x:auto}
+.note{color:var(--mut);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Super PA — ideas to mull</h1>
+<p class="sub">14 Oct 2026 · suggestions for David's review · nothing here is a rule</p>
+
+<div class="dir"><b>Your direction (14 Oct):</b> go far without expensive paid feeds. Use stronger AI models on the free feeds to make fuller reports, and never charge for a report that isn't worth its Tuppence.</div>
+
+<h2>1 · "Worth it" — suggested minimum evidence before a report is charged</h2>
+<div class="legend"><span><i style="background:var(--uk)"></i>Free feed strong in the UK</span><span><i style="background:var(--za)"></i>Thin in South Africa today</span></div>
+<div class="scroll"><table>
+<tr><th>Report</th><th>Price</th><th>Charge only if…</th><th>Free data behind it</th><th>Below the bar</th></tr>
+<tr><td><b>Is this a Fair Price</b></td><td>1T</td><td>At least 3 comparable prices from 2+ sources, from the last 90 days</td><td>Scryfall, MTGJSON, Numista, BrickLink, our own sales, web comparables</td><td>Shown free, labelled "not enough evidence"</td></tr>
+<tr><td><b>AI Yield Estimate</b></td><td>1T</td><td>3+ rent figures (or an official rent table) and 3+ sale figures for the area</td><td><span class="t" style="background:var(--uk)">UK</span> Land Registry, ONS rents · <span class="t" style="background:var(--za)">ZA</span> PayProp rents, our comparables, SARB rate</td><td>Free, with the gap named</td></tr>
+<tr><td><b>Collectables + market report</b></td><td>5T</td><td>90%+ of items identified, each with a price and a 30-day trend</td><td>Scryfall, MTGJSON, JustTCG free tier, Numista, BrickLink</td><td>Charge only for the items that meet the bar, rounded up to whole Tuppence</td></tr>
+<tr><td><b>Property Area Dossier</b></td><td>3T</td><td>5+ sales in the last 12 months nearby, plus at least 2 of crime / flood / energy rating</td><td><span class="t" style="background:var(--uk)">UK</span> Land Registry, police, flood, EPC · <span class="t" style="background:var(--za)">ZA</span> our comparables + web only</td><td>Free; ZA dossiers will often fall here until a SA feed exists</td></tr>
+<tr><td><b>Car Purchase Dossier</b></td><td>3T</td><td>5+ comparable adverts: same model, year ±1, similar mileage</td><td>Web comparables, our own listings</td><td>Free, labelled thin</td></tr>
+<tr><td><b>Collection Liquidation Plan</b></td><td>5T</td><td>Every item priced, and 80%+ with a recent sale behind the price</td><td>Same as the collectables report</td><td>Free with the priced part only</td></tr>
+</table></div>
+<p class="note">The stronger model improves how the data is read and explained. It never fills in a missing price.</p>
+
+<h2>2 · Super PA feature ideas</h2>
+<div class="legend"><span><i style="background:var(--built)"></i>Already built, switched off</span><span><i style="background:var(--new)"></i>New idea</span><span><i style="background:var(--guard)"></i>Protects the user's Tuppence</span><span><i style="background:var(--ai)"></i>Needs the stronger model</span></div>
+<div class="grid">
+<div class="c" style="border-top-color:var(--guard)"><b>Evidence meter</b><span>Before paying, she sees how strong the report will be (weak / fair / strong) and chooses whether to buy it.</span><div class="tag" style="color:var(--guard)">New · protects Tuppence</div></div>
+<div class="c" style="border-top-color:var(--ai)"><b>Second opinion</b><span>A second model checks the report against the data and flags any line it disagrees with, so she sees where the advice is less sure.</span><div class="tag" style="color:var(--ai)">New · stronger model, paid reports only</div></div>
+<div class="c" style="border-top-color:var(--new)"><b>Negotiation brief</b><span>An opening offer, a fair middle and a walk-away price, each backed by the comparables.</span><div class="tag" style="color:var(--new)">New</div></div>
+<div class="c" style="border-top-color:var(--new)"><b>Collection value tracker</b><span>A collector's holdings valued every month from the free card, coin and LEGO feeds, with the movers named.</span><div class="tag" style="color:var(--new)">New</div></div>
+<div class="c" style="border-top-color:var(--new)"><b>Suburb watch</b><span>A monthly note on her chosen area: new listings, price moves and rate changes.</span><div class="tag" style="color:var(--new)">New</div></div>
+<div class="c" style="border-top-color:var(--new)"><b>Seller pricing coach</b><span>Tells a seller where her asking price sits against the market and why, before she lists.</span><div class="tag" style="color:var(--new)">New</div></div>
+<div class="c" style="border-top-color:var(--built)"><b>First-in alerts</b><span>A new listing that matches her brief reaches her within a minute.</span><div class="tag" style="color:var(--built)">Built · off</div></div>
+<div class="c" style="border-top-color:var(--built)"><b>Sell-side alerts</b><span>Tells a seller when someone's want-list matches what she holds, anonymous on both sides.</span><div class="tag" style="color:var(--built)">Built · off</div></div>
+<div class="c" style="border-top-color:var(--built)"><b>Reality check</b><span>After 90 days with no matches, says so plainly and offers the nearest realistic alternative.</span><div class="tag" style="color:var(--built)">Built · off</div></div>
+<div class="c" style="border-top-color:var(--built)"><b>Learns from "no"</b><span>"Too far" or "not that suburb" adjusts her brief so the same miss isn't repeated.</span><div class="tag" style="color:var(--built)">Built · off</div></div>
+<div class="c" style="border-top-color:var(--built)"><b>Monthly report</b><span>Close calls, near-misses and market movement, sent even in a month with no matches.</span><div class="tag" style="color:var(--built)">Built · off</div></div>
+<div class="c" style="border-top-color:var(--new)"><b>Report in her language</b><span>Every report in the language she uses the app in, through the existing language layer.</span><div class="tag" style="color:var(--new)">New · small</div></div>
+</div>
+</div></body></html>
