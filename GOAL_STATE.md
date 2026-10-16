@@ -5,6 +5,31 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 40 — Thu 15 Oct 2026, 15:56–16:45 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe `.goal_write_test` left in the laptop repo root). SSH via
+  `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w40` (removed at the end), shipped `claude/goal-run40`
+  fb6a00f (16:18Z) and 00eac12 (16:28Z) via CLOUD-SHIP-1. Ran earlier than usual (15:56Z) — David was live in another session
+  (RUL-233/234 at 15:13–15:38Z); no collision.
+- **THE NUMBER: 3 by a stranger's hand.** #542, #544, and new **#554 "Seamstress / tailor — Sunnyside"** (Pretoria, Eric,
+  gyebi.eric@yahoo.com, SMS b11, live 07:33:17Z — first hidden by the casual gate, shown after RUL-233). Live = 132
+  `*@trustsquare.co` + family 8 + strangers 3.
+- **SMS 15 Oct:** 400 texts (b9–b15, RUL-232's new cap). 18 SMS sessions → 8 drafts on screen → 5 saved → 1 published. **New stop
+  point: after the key.** Three of the four who saved and stopped signed in with Google and still did not publish (#556, #557/558,
+  #559 — see GI-0041 / E2E). #555 never opened the letter.
+- **Walk:** Collectors first minutes (Cape Town) — fine, GI-0037 holds. Then the SMS strangers' own path (Code 10 driver, Jhb):
+  reproduced the false licence line and the Google-to-Home landing. `docs/E2E_2026-10-15.md`.
+- **Shipped (GI-0042, RG-0990):** GATE-WORDS-3 (Quick stops saying "hidden until checked" — RUL-234 left that copy behind),
+  SIGNIN-DRAFT-FIND-1 (Google sign-in opens a waiting draft), DRAFT-SAVE-PUBLISH-1 (Edit-save of a draft offers Publish in a
+  card). Plus SESSION_COUNTER refreshed (RG-0154). All proven live 16:23–16:35Z.
+- **Ledger:** new tree 0 !!!! (31 NOT EVALUATED, vantage); base `/opt/marketsquare-src` eb6e858 7 !!!! (RG-0154 + six
+  CityLauncher/vantage reds: RG-0229, 0230, 0247, 0276, 0403, 0987 — not this run's).
+- **REVIEW NOW:** GI-0041 (widened: eight waiting drafts, one note + move #543). GI-0039 closed by RUL-232.
+- **Seen, not changed:** a Code 10 driver's first price shape is "Call-out + per hour … plus parts"; "List something else" after a
+  save made #558 a near-duplicate of #557; #559's first photo upload answered 422.
+- **QA data:** drafts 560, 561 and users `+qa-g40a/b` deleted (backups `/root/backup_goal40_preclean*.db`).
+- **Not reached:** the 15 Oct 22:10Z e-mail wave (runs after this); whether #559 comes back to publish.
+
 ## RUN 39 — Wed 14 Oct 2026, 20:55–21:45 UTC (Opus 5.5); records written 15 Oct 04:50Z
 
 - **Acting:** folder mounted and writable; SSH via `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w39`, shipped

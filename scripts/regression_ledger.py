@@ -33595,7 +33595,8 @@ def rg_licence_gate_1():
         bad.append("/listings/mine no longer tells the Hub the licence holds the advert")
     if "raw.gate === 'licence'" not in js or "['category.services_tech.coc', 'Licence to practise" not in js:
         bad.append("the Hub card / Edit no longer ask for the licence")
-    if "once your licence is checked in TrustSquare." not in q or (h is not None and h != q):
+    # GATE-WORDS-3 (Goal run 40, RUL-234): the licence no longer hides the advert; Quick's line says she shows at once
+    if "Uploading your licence later raises your Trust Score." not in q or (h is not None and h != q):
         bad.append("Quick's draft screen lost the licence line (or HARNESS differs)")
     if bad:
         return [(FAIL, "; ".join(bad))]
@@ -36936,9 +36937,11 @@ def rg_gate_words_2():
     q = repo_file("quick.html")
     if q is None:
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    if "GATE-WORDS-2" not in q or "_gr.gate==='licence'" not in q:
-        return [(FAIL, "the saved screen no longer checks the licence gate before the Casuals wording")]
-    return [(INFO, "licence-gated roles are told their licence is checked")]
+    # GATE-WORDS-3 (Goal run 40, RUL-234): nothing hides a live advert for a missing check, so the saved screen must not
+    # tell anyone it is hidden -- the rule this entry guards (never say the wrong gate) now means: say no gate at all.
+    if "GATE-WORDS-2" not in q or "GATE-WORDS-3" not in q or "gate='It shows in searches once" in q:
+        return [(FAIL, "the saved screen tells a live lister her advert is hidden until a check (RUL-234: it is not)")]
+    return [(INFO, "a live advert is 'People can find it now' for every role (RUL-234)")]
 
 
 @entry("RG-0900", "LOGO-LIGHT-1 (6 Oct 2026, casuals audit F6 / L16): the app logo is a 17 KB SVG, not the 183 KB PNG that "
@@ -38837,6 +38840,38 @@ def rg_show_all_1():
     if "function msPendingCheckChip(" not in js or "${msPendingCheckChip(l)}" not in js or "pending_check: l.pending_check" not in js:
         return [(FAIL, "the Browse card no longer paints the waiting chip")]
     return [(INFO, "all three gates off; pending_check attached and painted")]
+
+@entry("RG-0990", "GATE-WORDS-3 + SIGNIN-DRAFT-FIND-1 + DRAFT-SAVE-PUBLISH-1 (Goal run 40): Quick no longer tells a driver, nanny or casual worker her "
+       "advert is hidden until a check (RUL-234), and a Google/Apple sign-in with a draft waiting opens that draft in the Hub "
+       "instead of Home, and a draft saved from Edit offers Publish in a card instead of a 6-second toast",
+       LOCKED, fixed_on="2026-10-15",
+       scope="quick.html (= genie/HARNESS.html) draft gate line, celebrate() live line, fast-lane liveLine; roles/quick_i18n.json "
+             "two phrases; ms.js ?signedin=1 branch",
+       ref="SMS listers 15 Oct: #557/#558 Code 10 driver signed in with Google, spent 4 min in his profile/ID pages, never "
+           "published; #556 gardener signed in with Google, landed on Home, left. docs/E2E_2026-10-15.md")
+def rg_gate_words_3():
+    q, h, js = repo_file("quick.html"), repo_file("genie/HARNESS.html"), repo_file("ms.js")
+    if q is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    code = q.split("var QI18N")[0] + (q.split("/* QUICK-I18N:END */")[1] if "/* QUICK-I18N:END */" in q else "")
+    for old in ("='It shows in searches once", "<span>It shows in searches once"):
+        if old in code:
+            bad.append("Quick tells a lister she is hidden until a check again (%s...)" % old)
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    for p in ("People see it as soon as you publish. Uploading your licence later raises your Trust Score.",
+              "People see it as soon as you publish. Uploading your police clearance later raises your Trust Score."):
+        if code.count(p) < 1 or q.count(p) < 2:
+            bad.append("phrase missing on screen or in QI18N: " + p[:60])
+    i = js.find("SIGNIN-DRAFT-FIND-1")
+    if i < 0 or "listing_status" not in js[i:i + 1600] or "msLandDraft()" not in js[i:i + 1600]:
+        bad.append("a Google sign-in with a waiting draft lands on Home again (SIGNIN-DRAFT-FIND-1 gone)")
+    # DRAFT-SAVE-PUBLISH-1 (same run): a draft saved from Edit asks 'publish it now?' in a card that waits for her answer
+    if "function msDraftSavedPrompt(" not in js or "msDraftSavedPrompt(elCurrentId)" not in js or "dashPublish(id)" not in js:
+        bad.append("a draft saved from Edit is back to a 6-second 'tap Publish' toast (DRAFT-SAVE-PUBLISH-1 gone)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "no hidden-until-checked words in Quick; signed-in drafts open in the Hub; "
+                                                        "a saved draft offers Publish")]
 
 if __name__ == "__main__":
     sys.exit(main())
