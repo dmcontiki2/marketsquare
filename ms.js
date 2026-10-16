@@ -2792,7 +2792,10 @@ function _freshShow(v){
     try{ if(sessionStorage.getItem('ts_fresh_dismissed')===String(v)) return; }catch(_){}
     _freshShownV=v;
     var d=document.createElement('div'); d.id='ts-fresh-bar'; d.setAttribute('role','status');
-    d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top, 0px) + 8px);z-index:99999;max-width:calc(100% - 24px);box-sizing:border-box;background:#0c1a2e;color:#fff;border-radius:50px;padding:5px 5px 5px 14px;font:700 12.5px/1.3 Syne,system-ui,sans-serif;box-shadow:0 6px 24px rgba(12,26,46,.35);display:flex;gap:8px;align-items:center;';
+    /* FRESH-BAR-WIDTH-1 (16 Oct 2026 bug audit, BA-009): a fixed box pushed right by left:50% shrinks to the half of the screen
+       that is left of it, so the bar wrapped 'A new version is ready' onto four lines over the header. width:max-content keeps
+       it one line, still capped by max-width on a narrow phone. */
+    d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top, 0px) + 8px);z-index:99999;width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;background:#0c1a2e;color:#fff;border-radius:50px;padding:5px 5px 5px 14px;font:700 12.5px/1.3 Syne,system-ui,sans-serif;box-shadow:0 6px 24px rgba(12,26,46,.35);display:flex;gap:8px;align-items:center;';
     d.innerHTML='<span>✨ A new version is ready</span>'
       +'<button type="button" id="ts-fresh-go" style="background:#C8873A;color:#fff;border:0;border-radius:50px;padding:6px 12px;font:inherit;cursor:pointer;">Refresh</button>'
       +'<button type="button" id="ts-fresh-x" aria-label="Close" style="background:transparent;color:#fff;border:0;font:700 18px/1 system-ui,sans-serif;padding:4px 9px;cursor:pointer;">×</button>';

@@ -39127,5 +39127,22 @@ def rg_audit1016_tour_one():
     bad = _audit1016_tour_one(js)
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "funnel rows keep the tour consolidation; Adventures page = tile")]
 
+
+
+@entry("RG-1015", "FRESH-BAR-WIDTH-1 (16 Oct 2026 bug audit, BA-009): the 'A new version is ready' bar is one line on a phone, "
+       "not a four-line block over the header",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js _freshShow() bar style: width:max-content under the max-width cap",
+       ref="Rendered 16 Oct 2026 at 360 and 390 px: the bar measured 192x91 px with the text broken over four lines across the "
+           "logo and city badge (a fixed box pushed right by left:50% shrinks to the half screen left of it). Patched: 312x38 px, one line.")
+def rg_audit1016_fresh_bar():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    body = fn_body(js, "function _freshShow(")
+    if "width:max-content;max-width:calc(100% - 24px)" not in body:
+        return [(FAIL, "the update bar lost width:max-content -- it shrinks to half the screen and wraps over the header again")]
+    return [(INFO, "update bar sizes to its one line, capped by the screen")]
+
 if __name__ == "__main__":
     sys.exit(main())
