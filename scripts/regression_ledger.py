@@ -39102,5 +39102,30 @@ def rg_audit1016_quick_sw():
     bad = _audit1016_quick_sw(q) + ([] if h is None or h == q else ["genie/HARNESS.html differs from quick.html"])
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Quick catches a refused service worker; promise errors carry their name and origin")]
 
+
+
+def _audit1016_tour_one(js):
+    zf = fn_body(js, "async function zoomFetch(")
+    if not zf:
+        return ["zoomFetch() is gone"]
+    if "TOUR-ONE-1" not in zf or "tourKeyOf(m)) return;" not in zf:
+        return ["the funnel's rows bring a tour's accommodation super-example back as its own card -- Adventures 10 under a tile of 9 (TOUR-ONE-1)"]
+    return []
+
+
+@entry("RG-1014", "TOUR-ONE-1 (16 Oct 2026 bug audit, BA-005): rows the funnel adds obey the same tour consolidation as the city "
+       "feed, so a tour's accommodation super-example never comes back as its own Adventures card",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js zoomFetch() res.rows injection (mirrors loadLiveListings' tour consolidation)",
+       ref="Walked live 16 Oct 2026, Pretoria: Home said Adventures 9, the Adventures page showed 10 -- #307, the Cape-to-Cairo "
+           "stays, which loadLiveListings deliberately skips (shown as priced extensions on the journey) re-entered through "
+           "/zoom/next rows. Patched ms.js in the same walk: 9 cards under a tile of 9.")
+def rg_audit1016_tour_one():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_tour_one(js)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "funnel rows keep the tour consolidation; Adventures page = tile")]
+
 if __name__ == "__main__":
     sys.exit(main())

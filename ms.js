@@ -3733,7 +3733,14 @@ async function zoomFetch(){
     if(Array.isArray(res.rows)){
       res.rows.forEach(row => {
         const fid = 'bea_' + row.id;
-        if(!LISTINGS.find(e => e.id === fid)){ try{ LISTINGS.push(_msMapBeaListing(row)); }catch(e){} }
+        if(!LISTINGS.find(e => e.id === fid)){ try{
+          const m = _msMapBeaListing(row);
+          // TOUR-ONE-1 (16 Oct 2026 bug audit, BA-005): the tour consolidation loadLiveListings applies holds here too -- a
+          // tour's accommodation super-example is shown as priced extensions on its journey, never as its own card. The
+          // Adventures page showed 10 cards under a Home tile of 9: the Cape-to-Cairo stays (#307) came back as a funnel row.
+          if (m.super_example && String(m.advType||'').indexOf('accommodation') > -1 && tourKeyOf(m)) return;
+          LISTINGS.push(m);
+        }catch(e){} }
       });
     }
     _zoomIds = new Set((res.ids||[]).map(i => 'bea_' + i));
