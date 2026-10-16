@@ -1237,7 +1237,10 @@ try{
     _qErr('q_error', String((ev&&ev.message)||'error')+' @'+String((ev&&ev.filename)||'').split('/').pop()+':'+((ev&&ev.lineno)||0));
   });
   window.addEventListener('unhandledrejection', function(ev){
-    var r=ev&&ev.reason; _qErr('q_error', 'promise: '+String((r&&(r.message||r))||''));
+    /* QUICK-ERR-BEACON-2 (BA-007): name and first stack line too -- 'promise: Rejected' alone could not say where it came from */
+    var r=ev&&ev.reason, nm=(r&&r.name&&r.name!=='Error')?(r.name+': '):'', at='';
+    try{ at=(r&&r.stack)?(' @'+String(r.stack).split('\n').slice(1,2).join('').replace(/^\s*at\s*/,'').split('/').pop().slice(0,60)):''; }catch(_e){}
+    _qErr('q_error', 'promise: '+nm+String((r&&(r.message||r))||'')+at);
   });
   if(window.fetch && _QF_BASE){
     var _qF=window.fetch;
@@ -4460,7 +4463,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   function standalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
   window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); _bip=e; });
   window.addEventListener('appinstalled', function(){ ls('ts_q_tile','1'); try{ qTrack('q_tile_installed'); }catch(e){} });
-  if(LIVE && 'serviceWorker' in navigator){ try{ navigator.serviceWorker.register('/service-worker.js'); }catch(e){} }
+  /* QUICK-SW-CATCH-1 (16 Oct 2026 bug audit, BA-007): register() answers with a promise, so the try/catch never saw a refusal --
+     a phone that will not take a service worker threw an unhandled rejection at the door (q_error 'promise: Rejected', 15 + 16 Oct). */
+  if(LIVE && 'serviceWorker' in navigator){ try{ navigator.serviceWorker.register('/service-worker.js').catch(function(){}); }catch(e){} }
   function installInto(slot){
     if(!slot || standalone() || ls('ts_q_tile')==='1') return;
     var ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'');

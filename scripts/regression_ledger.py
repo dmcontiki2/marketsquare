@@ -39074,5 +39074,33 @@ def rg_audit1016_myspace_signedout():
     bad = _audit1016_myspace_signedout(js)
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "signed-out My Space says so and offers the sign-in; Squire waits for an account")]
 
+
+
+def _audit1016_quick_sw(q):
+    bad = []
+    if "navigator.serviceWorker.register('/service-worker.js');" in q:
+        bad.append("Quick registers its service worker without catching the refusal again -- an unhandled rejection at the door (QUICK-SW-CATCH-1)")
+    if "navigator.serviceWorker.register('/service-worker.js').catch(function(){})" not in q:
+        bad.append("Quick's service-worker registration is gone or changed shape (QUICK-SW-CATCH-1)")
+    if "QUICK-ERR-BEACON-2" not in q or "nm=(r&&r.name&&r.name!=='Error')" not in q:
+        bad.append("the promise beacon no longer carries the error's name and first stack line (QUICK-ERR-BEACON-2)")
+    return bad
+
+
+@entry("RG-1013", "QUICK-SW-CATCH-1 + QUICK-ERR-BEACON-2 (16 Oct 2026 bug audit, BA-007): a phone that refuses Quick's service "
+       "worker no longer throws an unhandled rejection at the door, and a promise error reports its name and where it came from",
+       LOCKED, fixed_on="2026-10-16",
+       scope="quick.html (= genie/HARNESS.html): the service-worker register() call and the unhandledrejection beacon",
+       ref="Funnel 15 + 16 Oct 2026: two strangers from SMS waves (Chrome 138, Android) logged only q_door then q_error "
+           "'promise: Rejected'. Reproduced in a headless phone with register() refused: the live page sent exactly "
+           "{m:'promise: Rejected', at:'q_door', n:1}; the patched page sent nothing.")
+def rg_audit1016_quick_sw():
+    q = repo_file("quick.html")
+    h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_quick_sw(q) + ([] if h is None or h == q else ["genie/HARNESS.html differs from quick.html"])
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Quick catches a refused service worker; promise errors carry their name and origin")]
+
 if __name__ == "__main__":
     sys.exit(main())
