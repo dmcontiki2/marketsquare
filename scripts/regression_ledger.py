@@ -33398,6 +33398,19 @@ def _fb28_need(files_snips):
     return None
 
 
+def _pk_off_check():
+    """PASSKEY-OFF-1 (David, 16 Oct 2026): Face ID / fingerprint sign-in is removed and must stay removed."""
+    for f, snips in (("ms.js", ["window.msPasskeySignIn", "msPasskeyAdd", "id=\"pk-offer\"", "auth/passkey/"]),
+                     ("bea_main.py", ['@app.post("/auth/passkey/', '@app.get("/auth/passkey/', 'out["passkey"]'])):
+        h = repo_file(f)
+        if h is None:
+            return [(INFO, "NOT EVALUATED - repo not readable from here")]
+        for sn in snips:
+            if sn in h:
+                return [(FAIL, f + ": Face ID / fingerprint sign-in is back (" + sn + ") -- removed by PASSKEY-OFF-1")]
+    return None
+
+
 @entry("RG-0794", "HUB-SIGNIN-TRUTH-1: a Seller Hub whose sign-in the server refuses (401) says 'sign in again' with her email "
        "filled in -- never an empty list and 'First time here' over adverts she has",
        OPEN, fixed_on="2026-10-03", scope="ms.js loadLiveDash /listings/mine; msSessionEnded('hub')",
@@ -33462,15 +33475,9 @@ def rg_quick_google_1():
        OPEN, fixed_on="2026-10-03", scope="bea_main.py PASSKEY-1 block + /auth/passkey/*; migrations/064_passkeys.py; ms.js PASSKEY-1, OWNER-CTA-1",
        ref="David, 3 Oct 2026: 'I would like to test 10 first'; owner saw the buyer's Join queue on his own advert (OWNER-BAR-1 screenshot).")
 def rg_passkey_1():
-    bad = _fb28_need([("bea_main.py", [('if cd.get("origin") not in _PK_ORIGINS:', "a passkey from another site would be accepted"),
-                                       ('if not flags & 0x04:', "a passkey without Face ID / fingerprint would be accepted"),
-                                       ('raise _PasskeyError("signature counter went backwards")', "a cloned passkey would be accepted"),
-                                       ('if p["ch"] in _pk_used:', "a passkey challenge could be used twice"),
-                                       ('out["passkey"] = _pk_on()', "the app cannot tell whether passkeys are switched on")]),
-                      ("migrations/064_passkeys.py", [("CREATE TABLE IF NOT EXISTS passkeys", "the passkey migration is gone")]),
-                      ("ms.js", [("window.msPasskeySignIn = async function(){", "no Face ID button on the sign-in screen"),
-                                 ("oc.className = 'sticky-cta owner-cta';", "the owner sees the buyer's Join queue again")])])
-    return bad or [(INFO, "passkeys checked and held for approval; owners see Edit/Share")]
+    # PASSKEY-OFF-1 (David, 16 Oct 2026): the passkey half of this entry is RETIRED -- Face ID sign-in was removed.
+    bad = _pk_off_check() or _fb28_need([("ms.js", [("oc.className = 'sticky-cta owner-cta';", "the owner sees the buyer's Join queue again")])])
+    return bad or [(INFO, "Face ID sign-in stays removed (PASSKEY-OFF-1); owners see Edit/Share")]
 
 
 @entry("RG-0790", "QUICK-ONE-TAB-1: Quick's key step no longer draws a one-tab bar -- with e-mail the only key (RUL-192) the "
@@ -35091,12 +35098,8 @@ def rg_resend_plan_truth_1():
            "true with the browser's mobile flag set; offline: iPhone, Android-phone Chrome and Firefox true, Windows, Mac, iPad and "
            "an Android tablet false. His 'Not now' put back.")
 def rg_passkey_phone_1():
-    bad = _fb28_need([("ms.js", [("function pkPhone(){", "the phone test is gone"),
-                                 ("if(d && typeof d.mobile==='boolean') return d.mobile;", "the browser's own mobile flag is no longer read"),
-                                 ("return /iPhone|iPod|Android.+Mobile|Windows Phone|Mobi/i.test(navigator.userAgent||'');",
-                                  "the phone user-agent fallback changed"),
-                                 ("_on = (pkPhone() && window.PublicKeyCredential", "Face ID is offered on laptops and desktops again")])])
-    return bad or [(INFO, "Face ID / fingerprint is offered on phones only")]
+    # RETIRED by PASSKEY-OFF-1 (David, 16 Oct 2026): Face ID is offered nowhere now, phones included.
+    return _pk_off_check() or [(INFO, "Face ID / fingerprint is offered nowhere (PASSKEY-OFF-1)")]
 
 
 @entry("RG-0808", "HUB-GHOST-1: the Seller Hub never keeps a card for an advert the server no longer has -- every good "
@@ -37369,11 +37372,8 @@ def rg_prewave_1():
        ref="David, 7 Oct 2026: 'i hope Maroushka wont again (or anyone else for that matter) have to first log in with a code "
            "send to them?' then 'Please build that Claude, i prefer that method always.'")
 def rg_passkey_always_1():
-    bad = _fb28_need([("ms.js", [("PASSKEY-ALWAYS-1", "the always-offer block is gone"),
-                                 ("localStorage.getItem('ts_pk_snooze')===pkToday()", "'Not now' is no longer a one-day snooze"),
-                                 ("else setTimeout(hubOffer, 1200);", "the offer waits for the Seller Hub again"),
-                                 ("document.body.insertAdjacentHTML('beforeend','<div id=\"pk-offer\"", "the offer is no longer drawn on every screen")])])
-    return bad or [(INFO, "Face ID is offered after every sign-in on a phone until it is set up")]
+    # RETIRED by PASSKEY-OFF-1 (David, 16 Oct 2026): "Then we stick with what we have" -- no Face ID offer on any screen.
+    return _pk_off_check() or [(INFO, "no Face ID offer on any screen (PASSKEY-OFF-1)")]
 
 
 @entry("RG-0932", "PHOTO-EMPTY-1 + PHOTO-CAP-3 (7 Oct 2026): removing the LAST photo in Edit leaves no photos -- the removed "
