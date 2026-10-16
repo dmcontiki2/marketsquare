@@ -114,7 +114,8 @@ def db_path():
 
 
 def _connect(path=None):
-    conn = sqlite3.connect(path or db_path())
+    # SCOREBOARD-LOCK-1 (16 Oct 2026 bug audit): wait for the app's writers instead of failing them.
+    conn = sqlite3.connect(path or db_path(), timeout=30)
     conn.executescript(SCHEMA)
     return conn
 
@@ -207,17 +208,22 @@ def run_probe_round(conn, log=print):
     """Probe every provider x task in TASK_MODEL. Stores every outcome, including
     'unconfigured' (needed for the DISABLED display; excluded from availability)."""
     rows = []
+    # SCOREBOARD-LOCK-1 (16 Oct 2026 bug audit): every network probe runs FIRST, with no
+    # transaction open. The old loop INSERTed after the first probe -- which opened a write
+    # transaction -- and then kept making AI calls (up to 45 s each) before the one commit, so
+    # the whole app could not write for the length of the round: nightly 01:33 UTC, presence
+    # pings and wishlist reads answered 500 'database is locked' on 10/11/12/13/14/16 Oct.
     for provider in ADAPTERS:
         for task in TASKS:
             if not TASK_MODEL.get(provider, {}).get(task):
                 continue
-            row = probe_once(provider, task)
-            rows.append(row)
-            conn.execute(
-                "INSERT INTO ai_scoreboard_probes VALUES (?,?,?,?,?,?,?,?,?,?)",
-                (row["ts"], row["provider"], row["task"], row["ok"], row["sane"],
-                 row["error_kind"], row["latency_ms"], row["in_tokens"],
-                 row["out_tokens"], row["est_cost_usd"]))
+            rows.append(probe_once(provider, task))
+    if rows:
+        conn.executemany(
+            "INSERT INTO ai_scoreboard_probes VALUES (?,?,?,?,?,?,?,?,?,?)",
+            [(row["ts"], row["provider"], row["task"], row["ok"], row["sane"],
+              row["error_kind"], row["latency_ms"], row["in_tokens"],
+              row["out_tokens"], row["est_cost_usd"]) for row in rows])
     conn.commit()
     spent = sum(r["est_cost_usd"] for r in rows)
     log(f"scoreboard: probe round done — {len(rows)} probes, est ${spent:.5f}")

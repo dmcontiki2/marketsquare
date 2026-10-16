@@ -13780,10 +13780,17 @@ def _signal_expiry_iso() -> str:
 
 def _purge_expired_signals(conn):
     """Lazy purge — called on signal reads. Keeps the table small without a cron."""
-    conn.execute(
-        "DELETE FROM wishlist_signals WHERE expires_at < ?",
-        (datetime.now(timezone.utc).isoformat(),)
-    )
+    # PURGE-BUSY-1 (16 Oct 2026 bug audit): housekeeping must never fail the read it rides on.
+    # A busy database (another writer mid-transaction) skips this purge; the next read purges.
+    import sqlite3 as _sq_busy
+    try:
+        conn.execute(
+            "DELETE FROM wishlist_signals WHERE expires_at < ?",
+            (datetime.now(timezone.utc).isoformat(),)
+        )
+    except _sq_busy.OperationalError as _pe:
+        if "locked" not in str(_pe).lower() and "busy" not in str(_pe).lower():
+            raise
 
 
 @app.post("/buyer-token")
@@ -19857,6 +19864,9 @@ def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key),
         # PING-QUIET-1 (25 Sep 2026 inspection, qa-13): nothing was recorded, so the answer claims nothing either.
         return {"recorded": False}
     conn = database.get_db()
+    # PING-BUSY-1 (16 Oct 2026 bug audit): a heartbeat that meets a busy database records
+    # nothing and says so -- it never answers 500 (10-16 Oct: 12 x 500 at 01:33 UTC).
+    import sqlite3 as _sq_busy
     try:
         conn.execute(
             "UPDATE users SET last_seen = strftime('%Y-%m-%dT%H:%M:%SZ','now'), "
@@ -19864,6 +19874,10 @@ def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key),
             (p.city, email),
         )
         conn.commit()
+    except _sq_busy.OperationalError as _pe:
+        if "locked" not in str(_pe).lower() and "busy" not in str(_pe).lower():
+            raise
+        return {"recorded": False}
     finally:
         conn.close()
     return {"ok": True}

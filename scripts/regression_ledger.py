@@ -38950,5 +38950,45 @@ def rg_gate_words_3():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "no hidden-until-checked words in Quick; signed-in drafts open in the Hub; "
                                                         "a saved draft offers Publish")]
 
+
+# ── BUG-AUDIT-1016 (16 Oct 2026 overnight bug audit, log: Projects\Audits\BUG_AUDIT_2026-10-16) ──
+# RG-1010..RG-1049 are reserved for this audit's entries so they can never collide with a goal run's
+# next number (goal runs count up from RG-0993 the same night).
+def _audit1016_scoreboard_lock(sb, py):
+    bad = []
+    body = fn_body(sb, "def run_probe_round(")
+    if not body:
+        return ["run_probe_round is gone from ai_scoreboard.py"]
+    i_probe = body.find("probe_once(")
+    i_ins = body.find("INSERT INTO ai_scoreboard_probes")
+    if i_probe < 0 or i_ins < i_probe or "executemany(" not in body or "conn.execute(" in body:
+        bad.append("the scoreboard writes inside its probe loop again -- the write lock is held across AI calls (SCOREBOARD-LOCK-1)")
+    if "timeout=" not in fn_body(sb, "def _connect("):
+        bad.append("the scoreboard connection has no busy timeout, so it fails the app's writers instead of waiting (SCOREBOARD-LOCK-1)")
+    ping = fn_body(py, "def presence_ping(")
+    if "OperationalError" not in ping or '"recorded": False' not in ping.split("OperationalError", 1)[-1]:
+        bad.append("a presence ping that meets a busy database answers 500 again (PING-BUSY-1)")
+    if "OperationalError" not in fn_body(py, "def _purge_expired_signals("):
+        bad.append("the lazy wishlist purge can fail the signals read it rides on again (PURGE-BUSY-1)")
+    return bad
+
+
+@entry("RG-1010", "SCOREBOARD-LOCK-1 + PING-BUSY-1 + PURGE-BUSY-1 (16 Oct 2026 bug audit, BA-001): the nightly AI scoreboard "
+       "never holds the database write lock across its AI calls, and a busy database never turns a presence ping or a "
+       "wishlist read into a 500",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ai_scoreboard.py run_probe_round + _connect; bea_main.py presence_ping + _purge_expired_signals",
+       ref="Production log 10-16 Oct 2026: 20 x sqlite3.OperationalError 'database is locked', every one at 01:33-01:34 UTC, "
+           "the minute _ts_scoreboard_nightly fires; POST /presence/ping and GET /wishlist/signals answered 500 on six nights. "
+           "Proven on a scratch database: old round -> an app write during the round FAILED 'database is locked'; new round -> "
+           "the write succeeds and every probe row is still stored.")
+def rg_audit1016_scoreboard_lock():
+    sb = repo_file("ai_scoreboard.py")
+    py = repo_file("bea_main.py")
+    if sb is None or py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_scoreboard_lock(sb, py)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "probes run first, rows land in one short write; ping and purge ride out a busy database")]
+
 if __name__ == "__main__":
     sys.exit(main())
