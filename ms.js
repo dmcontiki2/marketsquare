@@ -304,14 +304,25 @@ function normCat(raw) {
 }
 
 // ── API HELPERS ───────────────────────────────────────────
+/* RESTART-RETRY-1 (16 Oct 2026 bug audit, BA-010): every release restarts the server for about two seconds, and a read
+   that landed in that gap came back 502 and was simply dropped -- caught live: choosing South Africa in the location
+   picker during a release got 502 for /geo/regions and /geo/cities and the picker silently did nothing. A GET is safe to
+   repeat, so a 502/503/504 or a dropped connection is asked again after 1.2 s and 2.5 s (online only), then given up. */
+function _apiGetRetryable(status){ return status === 502 || status === 503 || status === 504; }
 async function apiGet(path) {
-  try {
-    const res = await fetch(BEA_URL + path, {headers:{'X-Api-Key':API_KEY}});
-    if (!res.ok) throw new Error('API error ' + res.status);
-    return await res.json();
-  } catch(e) {
-    console.warn('BEA GET failed:', path, e);
-    return null;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(BEA_URL + path, {headers:{'X-Api-Key':API_KEY}});
+      if (!res.ok) {
+        if (_apiGetRetryable(res.status) && attempt < 2 && navigator.onLine !== false) { await new Promise(r => setTimeout(r, attempt ? 2500 : 1200)); continue; }
+        throw new Error('API error ' + res.status);
+      }
+      return await res.json();
+    } catch(e) {
+      if (e && e.name === 'TypeError' && attempt < 2 && navigator.onLine !== false) { await new Promise(r => setTimeout(r, attempt ? 2500 : 1200)); continue; }
+      console.warn('BEA GET failed:', path, e);
+      return null;
+    }
   }
 }
 

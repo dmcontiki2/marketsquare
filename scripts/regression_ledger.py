@@ -39144,5 +39144,28 @@ def rg_audit1016_fresh_bar():
         return [(FAIL, "the update bar lost width:max-content -- it shrinks to half the screen and wraps over the header again")]
     return [(INFO, "update bar sizes to its one line, capped by the screen")]
 
+
+
+@entry("RG-1016", "RESTART-RETRY-1 (16 Oct 2026 bug audit, BA-010): a read that lands in a release restart (502/503/504 or a "
+       "dropped connection) is asked again twice before the app gives up on it",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js apiGet() + _apiGetRetryable()",
+       ref="Caught live 16 Oct 2026 23:04:41 UTC: choosing South Africa in the location picker while a release restarted the "
+           "server got 502 for /geo/cities and /geo/regions and the picker came up empty. Replayed with two forced 502s: "
+           "live code -> 0 cities; patched -> 14 cities after the retries.")
+def rg_audit1016_restart_retry():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    body = fn_body(js, "async function apiGet(")
+    bad = []
+    if "_apiGetRetryable(res.status) && attempt < 2" not in body:
+        bad.append("apiGet drops a 502/503/504 at once again -- every release restart blanks whatever was being read")
+    if "e.name === 'TypeError' && attempt < 2" not in body:
+        bad.append("apiGet no longer retries a dropped connection")
+    if "function _apiGetRetryable(status){ return status === 502 || status === 503 || status === 504; }" not in js:
+        bad.append("_apiGetRetryable() changed or is gone")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "reads ride out a release restart: two retries, 1.2 s and 2.5 s")]
+
 if __name__ == "__main__":
     sys.exit(main())
