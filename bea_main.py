@@ -8723,6 +8723,7 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
         raise HTTPException(status_code=400, detail=_photo_decode_msg(raw)) from exc
 
     img, _anote = _anon_profile_photo(img, email)   # TEXT-ANON-1: plates + identifying text blurred, never blocking
+    _face_ok = _profile_face_ok(img, email)          # PROFILE-FACE-1 (RUL-235): may buyers see it sharp?
     # Square-crop to centre, then resize to 400×400
     w, h = img.size
     side = min(w, h)
@@ -8737,10 +8738,10 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
 
     # Upload to R2 or local fallback
     if _S3_CONFIGURED:
-        key = f"profiles/{uuid.uuid4().hex}_profile.jpg"
+        key = f"profiles/{uuid.uuid4().hex}_profile{PROFILE_FACE_OK_MARK if _face_ok else ''}.jpg"
         photo_url = _s3_upload(photo_bytes, key, "image/jpeg")
     else:
-        fname = f"profile_{uuid.uuid4().hex}.jpg"
+        fname = f"profile_{uuid.uuid4().hex}{PROFILE_FACE_OK_MARK if _face_ok else ''}.jpg"
         local_path = f"/var/www/marketsquare/media/{fname}"
         try:
             with open(local_path, "wb") as fh:
@@ -8758,7 +8759,7 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
     )
     conn.commit()
     conn.close()
-    return {"photo_url": photo_url}
+    return {"photo_url": photo_url, "face_ok": bool(_face_ok)}
 
 
 @app.post("/users/{email}/upload-id")
@@ -23873,6 +23874,33 @@ def _anon_text_apply(img, scan, items):
         _log.warning("text apply failed: %r", _e)
         return img, []
 
+
+# PROFILE-FACE-1 (RUL-235, David 16 Oct 2026: "Remove the blurring for faces which comply with our new relaxation"). Buyers
+# used to see every profile photo blurred until an introduction. A profile photo that the same anonymity scan passes as CLEAN
+# under RUL-235 -- an adult's face is fine; no child, no background bystander, no name, number, logo, sign or plate -- is
+# stored with this mark in its file name, and the app shows it sharp. Anything the scan does not pass (or cannot read) stays
+# blurred exactly as before: the upload itself is never refused. No schema: the mark travels with the URL everywhere.
+PROFILE_FACE_OK_MARK = "_fok235"
+
+def _profile_face_ok(img, who):
+    try:
+        import base64 as _b64
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                                 _ts_active_provider(), "profile photo", first=True, who=who)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(who, "/users/photo#face-ok", "vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
+        ok = bool(scan and scan.get("verdict") == "clean" and float(scan.get("confidence") or 0) >= _ANON_PHOTO_CONF
+                  and scan.get("flag") != "inappropriate")
+        if not ok:
+            _log.info("PROFILE-FACE-1: %s profile photo stays blurred (%s)", who,
+                      (scan or {}).get("verdict", "no scan") if scan else "no scan")
+        return ok
+    except Exception as _e:
+        _log.warning("PROFILE-FACE-1 check failed (stays blurred): %r", _e)
+        return False
 
 def _anon_profile_photo(img, who):
     """TEXT-ANON-1 for the profile-photo door: the same local plate + text pass and the same LLM

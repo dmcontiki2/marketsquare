@@ -6266,6 +6266,9 @@ function _msLmSavedCard(c){   // a saved Local Market item, drawn like its Local
     + `<div class="cloc">📍 ${_lmEsc(c.suburb||c.city||'')}</div><div class="cbot"><div class="cprice">${price}</div>${tbadge(c.trust_score||0)}</div></div></div>`;
 }
 
+// PROFILE-FACE-1 (RUL-235, David 16 Oct 2026): a profile photo the anonymity scan passed (an adult's face, nothing that
+// identifies how to reach her) carries _fok235 in its address and is shown sharp; every other photo stays blurred.
+function msFaceOk(u){ return /_fok235\.jpg(\?|$)/.test(String(u||'')); }
 // ── SELLER AVATAR HELPER ─────────────────────────────────
 // isOwner: true = seller viewing their own (sharp)
 // isRevealed: true = intro accepted (sharp)
@@ -6281,7 +6284,7 @@ function cvAvatarHtml(sellerIdx, listingId, isOwner){
     return `${CATS[s.cat].icon}${!isOwner?'<div class="cv-mask">🔒</div>':''}`;
   }
 
-  if(isRevealed){
+  if(isRevealed || msFaceOk(photo)){
     return `<img src="${photo}" class="revealed" alt="Seller photo">`;
   } else {
     return `<img src="${photo}" class="blurred" alt="Seller photo"><div class="cv-mask">🔒</div>`;
@@ -6325,7 +6328,7 @@ function openBEASellerProfile(l) {
   document.getElementById('screen-seller-cv').innerHTML = `
     <div class="cv-hero" style="background:${catBg}">
       <button class="cv-back" aria-label="Back" onclick="msBack('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${_lmEsc(l.photo)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);filter:blur(6px);" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
+      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${_lmEsc(l.photo)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);${msFaceOk(l.photo)?'':'filter:blur(6px);'}" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
       <div class="cv-headline">${l.cat} Seller</div>
       <div class="cv-cat">${scBadge}${_lmEsc(l.area)} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
@@ -8107,7 +8110,7 @@ function renderProfilePreview(){
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${s.headline}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.5);">${s.cat} · Your profile is anonymous to buyers</div>
-        ${photo?'<div style="font-size:10px;color:rgba(200,135,58,.8);margin-top:3px;font-weight:600;">📷 Photo uploaded · blurred for buyers</div>':'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">No photo yet · tap Edit to add one</div>'}
+        ${photo?'<div style="font-size:10px;color:rgba(200,135,58,.8);margin-top:3px;font-weight:600;">'+((msFaceOk(photo)||(function(){try{return msFaceOk(localStorage.getItem('ms_seller_photo_url'));}catch(_){return false;}})())?'📷 Photo checked · buyers see it':'📷 Photo uploaded · blurred for buyers')+'</div>':'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">No photo yet · tap Edit to add one</div>'}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -8192,7 +8195,7 @@ function renderCVEditForm(){
         </div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px;">Anonymous profile photo</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.55;font-weight:400;">Buyers see a blurred version — your face is never revealed until introduction is accepted. Adds trust without compromising anonymity.</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.55;font-weight:400;">Your face is welcome — buyers see it once we have checked the photo shows no name, number, sign, logo, number plate or child. If it does, buyers see a blurred version until an introduction is accepted.</div>
           ${SELLER_PHOTOS[0]?`<button onclick="removeCVPhoto()" style="margin-top:8px;background:none;border:1px solid #fca5a5;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:var(--red);font-family:'Inter',sans-serif;">Remove photo</button>`:''}
         </div>
       </div>
@@ -8333,7 +8336,7 @@ async function handleCVPhoto(e){
 
   // Upload to BEA so photo persists across devices and browser cache clears
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
-  let _upSaved = false, _upWhy = 'signin';   // PHOTO-SAVED-TRUTH-1 (25 Sep 2026 inspection, ts2-20)
+  let _upSaved = false, _upWhy = 'signin', _upFaceOk = false;   // PHOTO-SAVED-TRUTH-1 (25 Sep 2026 inspection, ts2-20)
   if (BEA_ENABLED && sellerEmail) {
     try {
       // Convert base64 dataURL back to a Blob for upload.
@@ -8350,7 +8353,7 @@ async function handleCVPhoto(e){
         const data = await up.json();
         // Store the permanent URL alongside the local copy so we can restore from BEA next time
         try { localStorage.setItem('ms_seller_photo_url', data.photo_url); } catch(_){}
-        _upSaved = true;
+        _upSaved = true; _upFaceOk = !!data.face_ok;
       } else if (up.status !== 401 && up.status !== 403) { _upWhy = 'refused'; }
     } catch(_) { _upWhy = 'net'; /* the local copy is already set */ }
   }
@@ -8369,7 +8372,7 @@ async function handleCVPhoto(e){
   }
   prev.src = result;
   // PHOTO-SAVED-TRUTH-1: 'uploaded' only when the account really has it; otherwise say where it lives.
-  if (_upSaved) showToast('✓ Photo uploaded — blurred for buyers');
+  if (_upSaved) showToast(_upFaceOk ? '✓ Photo uploaded — buyers see it' : '✓ Photo uploaded — blurred for buyers (it shows a name, number, sign or child)', 6000);
   else showToast(_upWhy === 'net' ? 'Saved on this phone only \u2014 could not reach TrustSquare. Try again.'
                : _upWhy === 'refused' ? 'Saved on this phone only \u2014 TrustSquare did not take this photo. Try another one.'
                : 'Saved on this phone only \u2014 sign in to save it to your account.', 6000);

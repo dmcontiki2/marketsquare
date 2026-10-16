@@ -38663,6 +38663,28 @@ def rg_faces_ok():
     return [(FAIL, x) for x in bad] if bad else [(INFO, "adult faces pass, children and bystanders boxed, refusals logged by reason")]
 
 
+
+@entry("RG-0994", "PROFILE-FACE-1 (RUL-235(e), David 16 Oct 2026): a profile photo the anonymity scan passes as clean is stored with "
+       "_fok235 in its name and shown sharp to buyers; any other stays blurred until an introduction; the upload is never refused",
+       LOCKED, fixed_on="2026-10-16",
+       scope="bea_main.py upload_user_photo + _profile_face_ok + PROFILE_FACE_OK_MARK; ms.js msFaceOk, cvAvatarHtml, openBEASellerProfile, profile copy",
+       ref="RUL-235(e). Before: every profile photo blurred for buyers (filter:blur / .blurred) whatever it showed.")
+def rg_profile_face_ok():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'PROFILE_FACE_OK_MARK = "_fok235"' not in b or "_face_ok = _profile_face_ok(img, email)" not in b:
+        bad.append("profile photos are no longer checked for a clean adult face (PROFILE-FACE-1)")
+    if 'scan.get("verdict") == "clean"' not in b[b.find("def _profile_face_ok"):b.find("def _anon_profile_photo")]:
+        bad.append("a profile photo can be shown sharp without a CLEAN scan")
+    if "function msFaceOk(u)" not in js or "if(isRevealed || msFaceOk(photo))" not in js or "msFaceOk(l.photo)?'':'filter:blur(6px);'" not in js:
+        bad.append("the app no longer shows a checked profile photo sharp (or blurs nothing at all)")
+    if "class=\"blurred\"" not in js:
+        bad.append("an unchecked profile photo is no longer blurred for buyers")
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "checked adult profile photos sharp, others blurred")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
