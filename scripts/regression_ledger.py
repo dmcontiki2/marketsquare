@@ -39167,5 +39167,28 @@ def rg_audit1016_restart_retry():
         bad.append("_apiGetRetryable() changed or is gone")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "reads ride out a release restart: two retries, 1.2 s and 2.5 s")]
 
+
+
+@entry("RG-1017", "NARROW-FIT-1 (16 Oct 2026 bug audit, BA-013): Home, My Space and Adventures fit a 320/360 px phone -- no page "
+       "wider than the screen",
+       LOCKED, fixed_on="2026-10-16",
+       scope="marketsquare.html Nearby-landmarks sec-head (flex-wrap); ms.css .ms-tabs (scroll inside the bar), .adv-hero-top (wrap)",
+       ref="Measured live 16 Oct 2026: Home scrollWidth 366 at 360 px and 365 at 320 px (landmark filters cut off), My Space "
+           "342 at 320 px (five tabs), Adventures 338 at 320 px (country pill). Patched page + stylesheet in the same walk: "
+           "320 and 360 px, all three screens exactly screen-wide.")
+def rg_audit1016_narrow_fit():
+    h = repo_file("marketsquare.html")
+    c = repo_file("ms.css")
+    if h is None or c is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'justify-content:space-between;flex-wrap:wrap;gap:6px;">\n      <h2>🌍 Nearby landmarks</h2>' not in h:
+        bad.append("the Nearby-landmarks filters no longer wrap -- Home is wider than a 360 px phone again")
+    if "overflow-x:auto;scrollbar-width:none;" not in c.split(".ms-tabs{", 1)[-1].split("}", 1)[0]:
+        bad.append("My Space tabs widen the page at 320 px again")
+    if "flex-wrap:wrap;row-gap:8px;" not in c.split(".adv-hero-top{", 1)[-1].split("}", 1)[0]:
+        bad.append("the Adventures title row no longer wraps -- the country pill hangs off a 320 px screen")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Home, My Space and Adventures fit 320 and 360 px")]
+
 if __name__ == "__main__":
     sys.exit(main())

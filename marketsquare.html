@@ -696,7 +696,9 @@ const acceptedIntros = new Set(); // key format: "sellerIdx-listingId"
 
   <!-- ══ WORLD WONDERS STRIP ═══════════════════════════════════ -->
   <div id="home-wonders-section" style="display:none;margin-top:14px;">
-    <div class="sec-head" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+    <!-- NARROW-FIT-1 (16 Oct 2026 bug audit, BA-013): the two filters wrap under the heading when a 360 px phone has no room
+         beside it; they used to push the whole Home page 6 px (360) to 45 px (320) wider than the screen. -->
+    <div class="sec-head" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
       <h2>🌍 Nearby landmarks</h2>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
         <select id="wf-country-select" onchange="setWonderFilter('country',this.value)" style="font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;background:var(--surface);color:var(--text-2);cursor:pointer;outline:none;font-family:'Inter',sans-serif;">

@@ -735,7 +735,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .filter-pill.has-value{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
 /* ── ADVENTURES SCREEN ────────────────────────────────── */
 .adv-hero{background:linear-gradient(160deg,#064e3b,#065f46);padding:20px 16px 16px;position:relative;}
-.adv-hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.adv-hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;row-gap:8px;}.adv-hero-top .adv-country-pill{flex-shrink:0;}/* NARROW-FIT-1 (BA-013): on a 320 px phone the country pill drops under the title */
 .adv-back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;}
 .adv-hero h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin:0;}
 .adv-country-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:6px 12px;cursor:pointer;color:#fff;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;}
@@ -1085,7 +1085,7 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .ms-name{color:#fff;font-size:17px;font-weight:700;font-family:'Syne',sans-serif;}
 .ms-sub{color:#90c9a7;font-size:12px;margin-top:2px;}
 .ms-tn-pill{background:var(--accent);color:#1a1209;font-size:12px;font-weight:700;padding:5px 14px;border-radius:50px;cursor:pointer;}
-.ms-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.12);margin:0 -20px;padding:0 20px;}
+.ms-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.12);margin:0 -20px;padding:0 20px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}/* NARROW-FIT-1 (BA-013): five tabs scroll inside the bar at 320 px instead of widening the page */.ms-tabs::-webkit-scrollbar{display:none;}
 .ms-tab{padding:10px 14px;font-size:13px;color:rgba(255,255,255,.5);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;}
 .ms-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
 .ms-body{padding:16px 16px 100px;}
