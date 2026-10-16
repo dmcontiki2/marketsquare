@@ -6337,12 +6337,14 @@ function openBEASellerProfile(l) {
   const catBg   = catCfg(l) ? catCfg(l).bg : 'var(--navy)';
   const catIcon = catCfg(l) ? catCfg(l).icon : '📦';
   const scBadge = l.service_class ? `<span style="font-size:11px;background:rgba(255,255,255,.12);border-radius:50px;padding:3px 9px;">${l.service_class === 'Technical' ? '🔧 Technical' : '🤝 Casuals'}</span> · ` : '';
+  // PROFILE-FACE-1 (RUL-235(e), 16 Oct 2026): the round picture on this page is the LISTING's cover (l.photo = thumb_url), a
+  // photo the anonymity gate already passed and the card already shows sharp -- the old blur(6px) hid nothing; it is gone.
   // SELLER-TEXT-ESC-1 (25 Sep 2026 inspection, ts1-01): the seller's photo address, area and evidence labels are escaped.
   // BACK-NAV-1 (ts1-08): the arrow steps back like the phone's Back; shell-08: it is named for screen readers.
   document.getElementById('screen-seller-cv').innerHTML = `
     <div class="cv-hero" style="background:${catBg}">
       <button class="cv-back" aria-label="Back" onclick="msBack('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${_lmEsc(l.photo)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);${msFaceOk(l.photo)?'':'filter:blur(6px);'}" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
+      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${_lmEsc(l.photo)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);" data-hero-photo="listing-cover" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
       <div class="cv-headline">${l.cat} Seller</div>
       <div class="cv-cat">${scBadge}${_lmEsc(l.area)} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">

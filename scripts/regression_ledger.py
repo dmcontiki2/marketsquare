@@ -38678,7 +38678,7 @@ def rg_profile_face_ok():
         bad.append("profile photos are no longer checked for a clean adult face (PROFILE-FACE-1)")
     if 'scan.get("verdict") == "clean"' not in b[b.find("def _profile_face_ok"):b.find("def _anon_profile_photo")]:
         bad.append("a profile photo can be shown sharp without a CLEAN scan")
-    if "function msFaceOk(u)" not in js or "if(isRevealed || msFaceOk(photo))" not in js or "msFaceOk(l.photo)?'':'filter:blur(6px);'" not in js:
+    if "function msFaceOk(u)" not in js or "if(isRevealed || msFaceOk(photo))" not in js or 'data-hero-photo="listing-cover"' not in js:
         bad.append("the app no longer shows a checked profile photo sharp (or blurs nothing at all)")
     if "class=\"blurred\"" not in js:
         bad.append("an unchecked profile photo is no longer blurred for buyers")
