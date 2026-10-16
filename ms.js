@@ -3650,12 +3650,17 @@ let _zoomOrder = null;    // Map FEA id -> rank position (server order = Ranking
 let _zoomScores = null;   // Map FEA id -> ranking score, painted on the card
 
 function zoomActiveFor(cat){ return !!(zoomState.active && msBaselineOn() && zoomState.cat===cat); }
-// GX-ZOOM-1 (BA-004): has SHE narrowed the funnel? A chip the server set by itself (auto-collapse) does not count.
-function _zoomNarrowed(){
+// GX-ZOOM-1/2 (BA-004): does a made-in-the-app example fit every chip SHE picked? A chip the server set by itself
+// (auto-collapse) never hides it; a facet the example does not carry hides it once she picks a value for it.
+function _zoomGenericFits(l){
   try{
     const rc = (zoomState.res && zoomState.res.chips) || [];
-    return Object.keys(zoomState.chips || {}).some(k => !rc.find(c => c.facet === k && c.auto));
-  }catch(_){ return true; }
+    return Object.keys(zoomState.chips || {}).every(k => {
+      if (rc.find(c => c.facet === k && c.auto)) return true;
+      const have = l ? l[k] : null;
+      return have != null && String(have).toLowerCase() === String(zoomState.chips[k] || '').toLowerCase();
+    });
+  }catch(_){ return false; }
 }
 function _zoomEl(){
   let el = document.getElementById('zoom-sheet');
@@ -5889,9 +5894,9 @@ function renderGrid(){
     // set its counts were computed from, so the count and the list can never disagree.
     // GX-ZOOM-1 (16 Oct 2026 bug audit, BA-004): the funnel's ids come from the server and the role/trainer AI examples
     // (RUL-216/RUL-217) are made in the app, so the funnel dropped every one of them -- Pretoria Services showed 11 cards
-    // under a Home tile of 53, Tutors 6 under 51. An example still shows while she has not narrowed the funnel herself
-    // (it stays last, EXAMPLES-LAST-1); once she picks a chip, only the funnel's own rows remain.
-    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && !_zoomNarrowed())) return false;
+    // under a Home tile of 53, Tutors 6 under 51. An example shows while it fits every chip she picked herself -- picking
+    // 'Casuals' keeps the casual-role examples, picking 'Technical' drops them (GX-ZOOM-2); it stays last (EXAMPLES-LAST-1).
+    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && _zoomGenericFits(l))) return false;
     if(activeFilter!=='All' && normCat(l.cat)!==activeFilter) return false;
     // Placeholders always show — they are paused but intentionally visible
     const isPlaceholder = String(l.id).startsWith('ph_');

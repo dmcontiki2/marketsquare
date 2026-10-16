@@ -13535,7 +13535,7 @@ def rg_zoom_funnel():
                 ("function msBaselineOn()", "the one flag gate"),
                 ("if(typeof zoomOpen==='function' && zoomOpen(cat)) return;", "the pre-Zoom sheet surviving when the flag is off (acceptance 8)"),
                 ("if(!msBaselineOn()) return false;", "zoomOpen refusing when dark"),
-                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && !_zoomNarrowed())) return false;", "renderGrid showing only the counted set (plus, while she has not narrowed it, the RUL-216/217 role examples -- RG-1011)"),   # ASSERTION CORRECTED 16 Oct 2026 (bug audit BA-004 / RG-1011): the role and trainer AI examples are made in the app, so the strict id test hid all of them under Home tiles that count them (RUL-216 amended); they now pass only an unnarrowed funnel, last
+                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && _zoomGenericFits(l))) return false;", "renderGrid showing only the counted set (plus the RUL-216/217 role examples that fit her chips -- RG-1011)"),   # ASSERTION CORRECTED 16 Oct 2026 (bug audit BA-004 / RG-1011): the role and trainer AI examples are made in the app, so the strict id test hid all of them under Home tiles that count them (RUL-216 amended); they now pass only an unnarrowed funnel, last
                 ("if(_zoomOrder && zoomActiveFor(activeFilter)){", "the server's ranking order on the grid"),
                 ("function _msMapBeaListing(l){", "the shared BEA->FEA mapper (rows the feed never loaded)"),
                 ("zoomActiveFor('Adventures')", "the Adventures screen honouring the funnel")):
@@ -39017,10 +39017,10 @@ def rg_audit1016_scoreboard_lock():
 def _audit1016_gx_zoom(js):
     bad = []
     body = fn_body(js, "function renderGrid(")
-    if "!(l.generic && !_zoomNarrowed())" not in body:
+    if "!(l.generic && _zoomGenericFits(l))" not in body:   # GX-ZOOM-2 (16 Oct 2026): fits her chips, not merely unnarrowed
         bad.append("the Services/Tutors funnel drops the role and trainer AI examples again -- a Home tile of 53 over a page of 11 (GX-ZOOM-1)")
-    if "function _zoomNarrowed(" not in js:
-        bad.append("_zoomNarrowed() is gone, so the funnel cannot tell her own chip from the server's auto-collapse (GX-ZOOM-1)")
+    if "function _zoomGenericFits(" not in js:
+        bad.append("_zoomGenericFits() is gone, so an example cannot be matched to the chips she picked (GX-ZOOM-2)")
     if "const _natHere = l.reach === 'national'" not in js or "lCity !== aCity && !_natHere" not in js:
         bad.append("a Nationwide advert shows on the category page but is no longer counted on its Home tile (NATIONWIDE-TILE-1)")
     return bad
