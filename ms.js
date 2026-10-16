@@ -3650,6 +3650,13 @@ let _zoomOrder = null;    // Map FEA id -> rank position (server order = Ranking
 let _zoomScores = null;   // Map FEA id -> ranking score, painted on the card
 
 function zoomActiveFor(cat){ return !!(zoomState.active && msBaselineOn() && zoomState.cat===cat); }
+// GX-ZOOM-1 (BA-004): has SHE narrowed the funnel? A chip the server set by itself (auto-collapse) does not count.
+function _zoomNarrowed(){
+  try{
+    const rc = (zoomState.res && zoomState.res.chips) || [];
+    return Object.keys(zoomState.chips || {}).some(k => !rc.find(c => c.facet === k && c.auto));
+  }catch(_){ return true; }
+}
 function _zoomEl(){
   let el = document.getElementById('zoom-sheet');
   if(el) return el;
@@ -5505,7 +5512,10 @@ function renderCatCounts() {
     if (l.isLive) {
       const lCity = l.city || l.area || '';
       const aCity = activeCity.name || '';
-      if (lCity && aCity && lCity !== aCity) return false;
+      // NATIONWIDE-TILE-1 (16 Oct 2026 bug audit, BA-004): a Nationwide advert (RUL-220) is on the category page in every
+      // city of her own country, so the tile counts it there too -- the tile says what the page shows.
+      const _natHere = l.reach === 'national' && String(l.country || 'ZA').toUpperCase() === String((activeCountry && activeCountry.iso2) || 'ZA').toUpperCase();
+      if (lCity && aCity && lCity !== aCity && !_natHere) return false;
     }
     return true;
   }).forEach(l => {
@@ -5877,7 +5887,11 @@ function renderGrid(){
     if(_msSearchIds && !_msSearchIds.has(String(l.id))) return false;
     // ZOOM-HMI-1: while the funnel is open only the ids it returned survive -- the same row
     // set its counts were computed from, so the count and the list can never disagree.
-    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id))) return false;
+    // GX-ZOOM-1 (16 Oct 2026 bug audit, BA-004): the funnel's ids come from the server and the role/trainer AI examples
+    // (RUL-216/RUL-217) are made in the app, so the funnel dropped every one of them -- Pretoria Services showed 11 cards
+    // under a Home tile of 53, Tutors 6 under 51. An example still shows while she has not narrowed the funnel herself
+    // (it stays last, EXAMPLES-LAST-1); once she picks a chip, only the funnel's own rows remain.
+    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && !_zoomNarrowed())) return false;
     if(activeFilter!=='All' && normCat(l.cat)!==activeFilter) return false;
     // Placeholders always show — they are paused but intentionally visible
     const isPlaceholder = String(l.id).startsWith('ph_');

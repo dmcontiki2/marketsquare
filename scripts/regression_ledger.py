@@ -13535,7 +13535,7 @@ def rg_zoom_funnel():
                 ("function msBaselineOn()", "the one flag gate"),
                 ("if(typeof zoomOpen==='function' && zoomOpen(cat)) return;", "the pre-Zoom sheet surviving when the flag is off (acceptance 8)"),
                 ("if(!msBaselineOn()) return false;", "zoomOpen refusing when dark"),
-                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id))) return false;", "renderGrid showing only the counted set"),
+                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && !_zoomNarrowed())) return false;", "renderGrid showing only the counted set (plus, while she has not narrowed it, the RUL-216/217 role examples -- RG-1011)"),   # ASSERTION CORRECTED 16 Oct 2026 (bug audit BA-004 / RG-1011): the role and trainer AI examples are made in the app, so the strict id test hid all of them under Home tiles that count them (RUL-216 amended); they now pass only an unnarrowed funnel, last
                 ("if(_zoomOrder && zoomActiveFor(activeFilter)){", "the server's ranking order on the grid"),
                 ("function _msMapBeaListing(l){", "the shared BEA->FEA mapper (rows the feed never loaded)"),
                 ("zoomActiveFor('Adventures')", "the Adventures screen honouring the funnel")):
@@ -39011,6 +39011,36 @@ def rg_audit1016_scoreboard_lock():
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = _audit1016_scoreboard_lock(sb, py)
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "probes run first, rows land in one short write; ping and purge ride out a busy database")]
+
+
+
+def _audit1016_gx_zoom(js):
+    bad = []
+    body = fn_body(js, "function renderGrid(")
+    if "!(l.generic && !_zoomNarrowed())" not in body:
+        bad.append("the Services/Tutors funnel drops the role and trainer AI examples again -- a Home tile of 53 over a page of 11 (GX-ZOOM-1)")
+    if "function _zoomNarrowed(" not in js:
+        bad.append("_zoomNarrowed() is gone, so the funnel cannot tell her own chip from the server's auto-collapse (GX-ZOOM-1)")
+    if "const _natHere = l.reach === 'national'" not in js or "lCity !== aCity && !_natHere" not in js:
+        bad.append("a Nationwide advert shows on the category page but is no longer counted on its Home tile (NATIONWIDE-TILE-1)")
+    return bad
+
+
+@entry("RG-1011", "GX-ZOOM-1 + NATIONWIDE-TILE-1 (16 Oct 2026 bug audit, BA-004): with the funnel on, the Services and Tutors "
+       "pages show the role and trainer AI examples their Home tiles count (RUL-216/RUL-217), and a Nationwide advert is "
+       "counted on the tile of every city whose page shows it (RUL-220)",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js renderGrid() zoom filter + _zoomNarrowed(); renderCatCounts() live-listing city filter",
+       ref="Walked live 16 Oct 2026 at 390 px, Pretoria, AI examples on: Home said Services 53 / Tutors 51, the pages showed "
+           "11 and 6 cards -- the /zoom/next id set (baseline_q4 on) holds only server rows, so all 43 casual-role and 47 "
+           "trainer examples were filtered out; the Bee Lady's Nationwide advert (#538) was on the page but not on the tile. "
+           "Patched ms.js served to the same walk: tiles 54/53 over pages of 54/53 cards, no console errors.")
+def rg_audit1016_gx_zoom():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_gx_zoom(js)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "role and trainer examples pass the unnarrowed funnel; Nationwide adverts count on every city's tile")]
 
 if __name__ == "__main__":
     sys.exit(main())
