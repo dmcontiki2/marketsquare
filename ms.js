@@ -18945,6 +18945,23 @@ function msInit(){
   const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
   const name  = localStorage.getItem('ms_user_name') || '';
   try{ msRenderSquireCard(); msRenderSquireInbox(); }catch(e){}   // SQUIRE (flag-gated inside)
+  /* MYSPACE-SIGNEDOUT-1 (16 Oct 2026 bug audit, BA-006): a visitor with no account on this phone saw a member's page --
+     'TrustSquare member', a Trust score, 'Squire is not available' -- and no way in on the first screen. She is now told
+     plainly and offered the one sign-in, at the top of Overview; the card goes the moment an account is on the phone. */
+  try{
+    var _soHost = document.getElementById('ms-tab-overview'), _so = document.getElementById('ms-signedout-card');
+    if(!email && _soHost){
+      if(!_so){ _so = document.createElement('div'); _so.id = 'ms-signedout-card'; _so.className = 'ms-card'; _so.style.marginBottom = '12px';
+        _so.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px;">You are not signed in</div>'
+          + '<div style="font-size:13px;color:var(--text-3);margin-bottom:10px;">Sign in with your email to see your introductions, your Tuppence and Squire, your agent.</div>'
+          + '<button type="button" onclick="goTo(\'signin\')" style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Sign in</button>';
+      }
+      if(_soHost.firstChild !== _so) _soHost.insertBefore(_so, _soHost.firstChild);   // always first, above Squire
+      _so.style.display = '';
+      /* a sign-in held only in the session cookie is adopted at start-up (SESSION-ADOPT-1): if it lands, look again */
+      setTimeout(function(){ try{ if(localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email')) msInit(); }catch(_){} }, 1500);
+    } else if(_so){ _so.style.display = 'none'; }
+  }catch(_){}
   const city  = (typeof activeCity !== 'undefined' && activeCity.name) ? activeCity.name
                : localStorage.getItem('ms_user_city') || '–';
 
@@ -18998,7 +19015,7 @@ function msInit(){
   if(dispName) dispName.textContent = _shownNm || (_shownEm ? _shownEm.split('@')[0] : (email ? 'Your account' : 'My Space'));
 
   const dispSub = document.getElementById('ms-display-sub');
-  if(dispSub) dispSub.textContent = _shownEm || 'TrustSquare member';
+  if(dispSub) dispSub.textContent = _shownEm || (email ? 'TrustSquare member' : 'Not signed in');   // MYSPACE-SIGNEDOUT-1
   /* STORY-WALK-FIX-1 (29 Sep 2026): signed in by an email link, this phone had no stored name, so My Space showed the
      address's first part. The account's name (asked in Quick) comes from the session instead. */
   if(!name && email){ fetch('/quick/me',{credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
@@ -19813,6 +19830,9 @@ function msRenderSquireCard(){
 async function sqLoad(){
   var card = document.getElementById('ms-squire-card'); if(!card) return;
   var em = _sqEmail();
+  /* MYSPACE-SIGNEDOUT-1 (16 Oct 2026 bug audit, BA-006): with no account on this phone the status call can only answer
+     401, and the card then said 'Squire is not available right now' -- untrue, she is simply not signed in. */
+  if(!em){ card.innerHTML='<div class="ms-cred-msg">Sign in to meet Squire, your agent. <span style="color:var(--accent);cursor:pointer;font-weight:700;" onclick="goTo(\'signin\')">Sign in</span></div>'; return; }
   try{
     var r = await fetch(BEA_URL+'/squire/status?email='+encodeURIComponent(em), {credentials:'include'});
     if(!r.ok){ card.innerHTML='<div class="ms-cred-msg">Squire is not available right now.</div>'; return; }

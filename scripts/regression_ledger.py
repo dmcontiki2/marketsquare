@@ -39042,5 +39042,37 @@ def rg_audit1016_gx_zoom():
     bad = _audit1016_gx_zoom(js)
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "role and trainer examples pass the unnarrowed funnel; Nationwide adverts count on every city's tile")]
 
+
+
+def _audit1016_myspace_signedout(js):
+    bad = []
+    init = fn_body(js, "function msInit(")
+    if "ms-signedout-card" not in init or "goTo(\\'signin\\')" not in init:
+        bad.append("My Space greets a signed-out visitor as a member again, with no sign-in on the first screen (MYSPACE-SIGNEDOUT-1)")
+    if "(email ? 'TrustSquare member' : 'Not signed in')" not in init:
+        bad.append("a signed-out visitor is labelled 'TrustSquare member' again (MYSPACE-SIGNEDOUT-1)")
+    sq = fn_body(js, "async function sqLoad(")
+    i_guard, i_fetch = sq.find("if(!em)"), sq.find("/squire/status")
+    if i_guard < 0 or i_fetch < 0 or i_guard > i_fetch:
+        bad.append("Squire asks /squire/status with no account and says 'not available' to a signed-out visitor again (MYSPACE-SIGNEDOUT-1)")
+    return bad
+
+
+@entry("RG-1012", "MYSPACE-SIGNEDOUT-1 (16 Oct 2026 bug audit, BA-006): a visitor with no account on the phone is told on My "
+       "Space that she is not signed in and offered the sign-in at the top, never shown as a 'TrustSquare member' with "
+       "'Squire is not available right now'",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js msInit() signed-out card + header subtitle; sqLoad() signed-out guard before /squire/status",
+       ref="Walked live 16 Oct 2026 at 390 px as a stranger: My Space read 'TrustSquare member', 'Squire is not available "
+           "right now' (GET /squire/status?email= -> 401 in the console), a 15% Trust score, and no sign-in on the first "
+           "screen. Patched ms.js served to the same walk: 'Not signed in', a sign-in card on top that opens the sign-in "
+           "screen, no 401.")
+def rg_audit1016_myspace_signedout():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_myspace_signedout(js)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "signed-out My Space says so and offers the sign-in; Squire waits for an account")]
+
 if __name__ == "__main__":
     sys.exit(main())
