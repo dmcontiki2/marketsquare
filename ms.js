@@ -4044,10 +4044,10 @@ function msBrowseFiltersActive(cat){
     return Object.keys(f).some(function(k){ var v=f[k]; return Array.isArray(v) ? v.length>0 : (v!=='' && v!=null); });
   }catch(_){ return true; }
 }
-function msBrowseEmptyHtml(cat){
+function msBrowseEmptyHtml(cat, lbl){   /* lbl: LM-EMPTY-SELL-1 (Goal run 41) -- Local Market's guided key is local_market */
   var c = String(cat||''), where = (activeCity && activeCity.name) ? activeCity.name : ((activeCountry && activeCountry.name) || '');
   var guided = (typeof SF_CATS!=='undefined' && SF_CATS[c]) ? c : '';
-  var label = (c && c!=='All') ? c+' listings' : 'listings';
+  var label = lbl ? lbl : ((c && c!=='All') ? c+' listings' : 'listings');
   var esc = (typeof _wlEsc==='function') ? _wlEsc : function(x){ return String(x); };
   var h = '<div class="no-res" id="ms-browse-empty" style="grid-column:1/-1;text-align:left;line-height:1.45;max-width:420px;">'+
     '<div style="font-weight:700;font-size:15px;margin-bottom:4px;">No '+esc(label)+(where ? ' in '+esc(where) : '')+' yet.</div>'+
@@ -18543,7 +18543,12 @@ async function lmLoadGrid() {
         }).join('');
         return;
       }
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:36px 12px;color:var(--text-3);font-size:13px;">No Local Market listings here yet — check back soon.</div>';
+      /* LM-EMPTY-SELL-1 (Goal run 41, 16 Oct 2026): a stranger who taps the Local Market tile in a city with none (every city
+         but six) met "No Local Market listings here yet -- check back soon." and nothing to tap -- the dead end GI-0037 closed
+         for the other categories. Same answer now: say it is empty here, offer to list (straight into Local Market's guided
+         flow), or look in another city. */
+      grid.innerHTML = (typeof msBrowseEmptyHtml==='function') ? msBrowseEmptyHtml('local_market', 'Local Market listings')
+        : '<div style="grid-column:1/-1;text-align:center;padding:36px 12px;color:var(--text-3);font-size:13px;">No Local Market listings here yet.</div>';
       return;
     }
     // A11Y-NAMES-1 (25 Sep 2026 inspection, shell-08): each heart says 'Save advert' / 'Remove from saved' and whether it is on

@@ -5,6 +5,31 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 41 — Fri 16 Oct 2026, 15:55–16:50 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe `.goalrun_write_test` and candidate copies
+  `_to_delete/goalrun41_{quick.html,ms.js}` left on the laptop). SSH via `load_sandbox_ssh.sh` worked. Built in server worktree
+  `/root/w41` (removed at the end), shipped `claude/goal-run41` a427119 (16:16Z SHIPPED, live 16:18Z) + the LM fix and records.
+- **THE NUMBER: 5 by a stranger's hand.** New since run 40: **#562 "Fire Extinguisher Maintenance — Gauteng"** (Pretoria,
+  jletwala@, SMS b11, Google, published in the app 15 Oct 17:41Z, no photo — his hub photo got the anonymity 422) and **#565
+  "Umsebenzi wasegaraji" — petrol attendant, Durban** (lindokuhleljay@, SMS b9 isiZulu lane, Google, live 16 Oct 05:39Z).
+  Live = 132 `*@trustsquare.co` + family 8 + strangers 5 (#542, #544, #554, #562, #565).
+- **SMS — OUT OF CREDIT (GI-0044).** 16 Oct 07:10Z: 16 sent, then BulkSMS 403 Insufficient Credits. ~1,300 queued (b19 26,
+  b20 310 casuals, b21 983 services, all outside Pta/Jhb; Pta/Jhb pools fully texted within 60 days). Failed = `failed`, retried.
+- **Where people stop (15 Oct 16:45Z → 16 Oct 16:00Z, bot=0, ~9 sessions):** 6 saves → 2 live. Stops: one Save lost to the
+  network (q_api_fail, never retried); #563/#564 twin drafts then tile-offer taps; #566 WhatsApp → Pass Quick on → closed onto a
+  fresh door. A Huawei-browser visitor browsed four door categories and left (no break seen).
+- **Walk:** Quick services Durban (en + zu) to Save and back; cold Local Market tile. `docs/E2E_2026-10-16.md`.
+- **Shipped (GI-0043, RG-0991/0992):** ARRIVE-DRAFT-FOCUS-1, SAVED-DRAFT-DOOR-1 (draft-only exception to David's DOOR-DECLUTTER-1
+  — say so if he objects), QUICK-DUP-2, LM-EMPTY-SELL-1. All proven live 16:21–16:4xZ.
+- **Ledger:** new tree 0 !!!!; base `/opt/marketsquare-src` 9371169 6 !!!! (RG-0229, 0230, 0247, 0276, 0403, 0987 — same six as run 40,
+  CityLauncher/vantage, not this run's).
+- **REVIEW NOW:** GI-0044 (top up SMS), GI-0041 (ten waiting drafts: one note, move #543, archive twins #564/#558).
+- **Seen, not changed:** 3 of 5 hub photo uploads by strangers since 13 Oct got 422 from the anonymity gate (#542, #559, #562) —
+  fire extinguishers carry printed labels; worth a look at what the 422 says to a casual worker.
+- **QA data:** drafts 567–573 and users `+qa-g41a…g` deleted (backups `/root/backup_goal41_preclean*.db`).
+- **Not reached:** whether #563/#566 come back; tonight's e-mail wave.
+
 ## RUN 40 — Thu 15 Oct 2026, 15:56–16:45 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe `.goal_write_test` left in the laptop repo root). SSH via

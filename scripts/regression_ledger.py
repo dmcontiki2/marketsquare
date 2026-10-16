@@ -38121,7 +38121,7 @@ def rg_browse_empty_sell():
     if j < 0 or i < 0 or i - j > 1500:
         return [(FAIL, "renderGrid no longer asks whether a filter is set before saying 'No listings match your filters'")]
     for needle, why in (("function msBrowseFiltersActive(cat){", "the filter test is gone"),
-                        ("function msBrowseEmptyHtml(cat){", "the empty-category message is gone"),
+                        ("function msBrowseEmptyHtml(cat", "the empty-category message is gone"),   # ASSERTION CORRECTED 16 Oct 2026 (Goal run 41, LM-EMPTY-SELL-1 / RG-0992): it now takes an optional label, (cat, lbl)
                         ("function msBrowseSellCat(cat){", "the 'List yours here' action is gone"),
                         ("sfStartCat(cat)", "'List yours here' no longer opens the category's guided flow"),
                         ("Look in another city", "the other-city way out is gone"),
@@ -38615,6 +38615,26 @@ def rg_arrive_draft_focus():
     if bad:
         return [(FAIL, x) for x in bad]
     return [(INFO, "draft arrival focused, door remembers the draft, re-sent save answers with the same draft")]
+
+
+
+@entry("RG-0992", "LM-EMPTY-SELL-1 (Goal run 41): Local Market in a city with no listings offers 'List yours here' (straight into Local "
+       "Market's guided flow) and 'Look in another city' instead of a dead-end 'check back soon'",
+       LOCKED, fixed_on="2026-10-16", scope="ms.js renderLocalMarket empty state, msBrowseEmptyHtml(cat, lbl)",
+       ref="Goal run 41 walk: cold Home -> Local Market tile (New York, 0 listings) -> 'No Local Market listings here yet -- check back "
+           "soon.' with nothing to tap. Local Market has live listings in six cities only. GI-0037 closed the same dead end elsewhere.")
+def rg_lm_empty_sell():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "check back soon.</div>';\n      return;" in js or "No Local Market listings here yet — check back soon.</div>';\n      return;" in js:
+        bad.append("Local Market's empty state is a dead end again ('check back soon')")
+    if "msBrowseEmptyHtml('local_market', 'Local Market listings')" not in js:
+        bad.append("Local Market's empty state no longer offers to list there")
+    if "function msBrowseEmptyHtml(cat, lbl)" not in js:
+        bad.append("msBrowseEmptyHtml lost its label parameter")
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "an empty Local Market offers List yours here and another city")]
 
 
 def _server_vantage_wrap():

@@ -5,21 +5,32 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 15 Oct 2026 (run 40). GI-0041 widened (8 stranded drafts now). GI-0039 answered by you in RUL-232
-(15 Oct: 400 texts a day, 60-day re-text, every-city services lane) — closed below.*
+*Open actions only — updated 16 Oct 2026 (run 41). New: GI-0044 (the SMS account is out of credits). GI-0041 widened again.*
 
-### GI-0041 — eight SMS drafts are saved and waiting; one short "tap to finish" note (mail in your name: yours)
-- **What I found:** 14–15 Oct, 599 texts → 10 saved drafts → 2 published (#544, #554). Eight wait, every one with nothing
-  left to do but sign and publish: #543 Pretoria cleaner (her draft is on bekezelansingo@, Google signed her in as
-  bekezelansingo23@), #545 Jhb tutor, #546 Jhb nanny, #555 Jhb carpenter (never opened the letter); and three who signed in
-  with Google and still stopped — #556 Jhb gardener (landed on Home), #557/#558 Jhb Code 10 driver (Quick told him his
-  licence had to be checked first), #559 Pta cleaner (photo added, Terms signed, left on a toast). Run 40 fixed all three
-  of those causes live (GI-0042) — so a note that brings them back now lands them on their draft with Publish in reach.
-- **Why it is yours:** it goes out in TrustSquare's name to real people; moving #543 changes a real seller's record.
-- **What I would do:** (a) one plain letter to the eight, today's wording: "Your listing is saved — one tap to put it
-  live" with their own sign-in link (the existing ONE-TAP letter template, re-sent once; #558 left out as #557's
-  duplicate); (b) move #543 to bekezelansingo23@gmail.com.
-- **Recommend:** yes to both, now — these are the warmest people we have; every day the link gets colder (it lapses at 3 days).
+### GI-0044 — the SMS account ran out of credits this morning; ~700 texts are queued and waiting (spend: yours)
+- **What I found:** today's 07:10Z run sent **16** texts (b19, B&Bs), then BulkSMS answered **403 Insufficient Credits** for
+  every other one. Queued and unsent: 26 B&Bs, **310 casuals** (b20: Cape Town 131, Durban 73, Gqeberha 66, Pietermaritzburg 33 —
+  in isiZulu/isiXhosa/Afrikaans) and **983 service providers** in the other SA cities (b21). The Pretoria/Jhb pools are fully
+  texted (every number inside its 60 days), so these new-city lanes are where all the remaining reach is. Failed texts are
+  recorded as `failed`, not `sent`, so nothing is lost — they go the moment there is credit (400 a day, R0.20 a part, most are
+  2 parts: ~R100–R120 a day).
+- **What the lanes earned:** Durban isiZulu lane b9 (40 texts, 15 Oct) → 3 drafts → **#565 live**; Pretoria b11 → **#562 live**.
+- **Why it is yours:** money.
+- **Recommend:** top up enough for at least three days (~R350) before 07:10Z tomorrow (09:10 SAST, Mon–Sat). Nothing else to do —
+  the run picks the queue up on its own.
+
+### GI-0041 — ten SMS drafts are saved and waiting; one short "tap to finish" note (mail in your name: yours)
+- **What I found (updated run 41):** the eight from run 40 still wait (#543, #545, #546, #555, #556, #557, #559; #558 = #557's
+  duplicate), plus two since: **#563 Durban housekeeper** (Cyprian, isiZulu; **#564 is the same advert twice** — his phone changed
+  network mid-save; run 41 stops that happening again, QUICK-DUP-2) and **#566 Pretoria nanny** (Gugulethu, own photo added; tapped
+  WhatsApp, then Pass Quick on, then closed onto a fresh door). Run 41 fixed that screen and the door now shows her listing
+  (GI-0043) — but only on her phone, and only if she opens Quick again.
+- **Why it is yours:** it goes out in TrustSquare's name to real people; moving #543 changes a real seller's record; archiving
+  #564/#558 changes real sellers' records.
+- **What I would do:** (a) one plain letter to the ten people, today's wording "Your listing is saved — one tap to put it live"
+  with their own sign-in link (the existing ONE-TAP letter, re-sent once); (b) move #543 to bekezelansingo23@gmail.com;
+  (c) archive the duplicates #564 and #558.
+- **Recommend:** yes to all three. Two of these (#563, #566) are from the Durban/Pretoria lanes that just produced live listings.
 
 
 ### GI-0039 — CLOSED 15 Oct by RUL-232 (your words: 400 texts a day, a number re-texted after 60 days, service providers in every
@@ -65,6 +76,7 @@ city get a lane, the e-mail re-send waits for each address's 60 days). 15 Oct: 4
 
 | id | date | change | evidence | expected effect / how we'd know | size | status |
 |----|------|--------|----------|---------------------------------|------|--------|
+| GI-0043 | 16 Oct | **ARRIVE-DRAFT-FOCUS-1 + SAVED-DRAFT-DOOR-1 + QUICK-DUP-2** (RG-0991) and **LM-EMPTY-SELL-1** (RG-0992): a Quick listing saved but not live shows only the way to finish it (no home-screen tile, no Pass Quick on); the door remembers an unfinished draft from this phone for 7 days (one yellow line → `/?draft=<id>`, her language, gone once live) — a deliberate, draft-only exception to DOOR-DECLUTTER-1; a re-sent save within 30 min answers with the same draft (no duplicate, no second letter); an empty Local Market offers List yours here / another city instead of 'check back soon' | #563/#564 identical drafts 46 s apart from two IPs, then tile-offer taps, left; #566 WhatsApp → Pass Quick on → closed → fresh door → left; cold Local Market tile in New York: dead end (docs/E2E_2026-10-16.md) | drafts → live for email savers; `q_wait_card_tap` rows appear; no more same-minute twin drafts; `q_tile_offer_tap`/`q_pass_open` only after `publish_ok` | several | **SHIPPED** a427119 — live 16:21–16:22Z: draft arrival without tile/Pass; door card after × and in a fresh tab (en + zu); same save re-sent → same #573. LM-EMPTY-SELL-1 in the second ship (see GOAL_STATE run 41) |
 | GI-0042 | 15 Oct | **GATE-WORDS-3 + SIGNIN-DRAFT-FIND-1 + DRAFT-SAVE-PUBLISH-1** (RG-0990): Quick's draft/saved/fast-lane screens no longer say a driver, nanny or casual worker "shows in searches once …" checked (RUL-234 — nothing hides) — the draft line now says "People see it as soon as you publish. Uploading your licence / police clearance later raises your Trust Score." (15 languages); a Google/Apple sign-in without `?draft=` asks /listings/mine and opens a waiting draft in the Hub; a draft saved from Edit gets a card "still a draft — nobody can see it yet" with **Publish my listing** / Not yet, not a 6-s toast | SMS 15 Oct: #557/#558 driver signed in and searched his profile/ID pages after the licence line; #556 gardener landed on Home after Google; #559 cleaner added photo + signed Terms in Edit, read the toast, stopped (docs/E2E_2026-10-15.md) | signed-in strangers' drafts → live; watch eula_accepted_at with listing still draft (should drop to ~0) and published_at within minutes of sign-in | several | **SHIPPED** fb6a00f + 00eac12 — live 16:23Z / 16:35Z: driver's draft line reads the new sentence; cookies-only `/?signedin=1` → Hub on the draft with Publish my listing; Edit → Save → Terms → the publish card |
 | GI-0040 | 14 Oct | **DRAFT-CLAIM-1** (RG-0985): a Quick draft follows her to the account she signs in with — POST /listings/{id}/claim-draft (same phone via ts_draft, draft only, never-proven address); first Google/Apple sign-in lands the draft; sign-in screen names the address; Google login_hint | SMS b2: #543 saved under one Gmail, Google signed her in under another, passkey, left; #544 landed on Home after Google | stranded-at-key drafts recover; watch claim moves in the log (`DRAFT-CLAIM-1`) and drafts→live | several | **SHIPPED** 8de3a0c — live 21:33Z: draft 553 moved +qa-g39g → +qa-g39h, Hub showed Publish |
 | GI-0038 | 13 Oct | **ACCENT-BRIGHT-1 + AI-META-CONFIRM-1 + EXPERIENCE-YEARS-1** (RG-0983): `--accent-bright` defined in ms.css :root (used 13×, defined nowhere); the photo read's "should be confirmed" notes dropped from the story box; a bare years number reads "9 years" (render-side, so #542 is fixed without touching her row; server-side for new ones); Quick's English line "Experienced, no formal certificate." | Walk (docs/E2E_2026-10-13.md): Local Market's selected "Any seller" chip was a blank pill (also the wishlist's Add / Enable pings buttons); a Johannesburg craft draft ended "…prices should be confirmed for each item."; the first stranger's listing #542 read "**Experience:** 9" and "Experience, no certificate." | the selected chip and wishlist buttons visible; no notes-to-self in drafted stories; buyers read "9 years" | several | **SHIPPED** b4170a7 + 697ac28 — live 21:31Z (ms.css v=906, ms.js v=1042, fresh phone in Pretoria): `--accent-bright` = #2563eb; Local Market "Any seller" chip white on rgb(37,99,235); #542 reads "Experience: 9 years"; /quick/ carries "Experienced, no formal certificate." |
