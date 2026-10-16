@@ -39190,5 +39190,20 @@ def rg_audit1016_narrow_fit():
         bad.append("the Adventures title row no longer wraps -- the country pill hangs off a 320 px screen")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Home, My Space and Adventures fit 320 and 360 px")]
 
+
+
+@entry("RG-1018", "PLAN-WORDS-1 (16 Oct 2026 bug audit, BA-017): no internal ruling number is printed on the Plans page -- the "
+       "Free plan's Nationwide bullet read '... a free switch on every listing (RUL-220)' to every visitor",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js plan cards: every bullets:[...] list",
+       ref="Seen live 16 Oct 2026 on the Plans screen at 390 px.")
+def rg_audit1016_plan_words():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = [m.group(0)[:80] for m in _re.finditer(r"bullets:\[[^\]]*\((?:RUL|RG|CC)-\d+\)[^\]]*\]", js)]
+    return [(FAIL, "a plan bullet shows an internal ruling number again: " + bad[0])] if bad else [(INFO, "plan bullets carry no internal ruling numbers")]
+
 if __name__ == "__main__":
     sys.exit(main())
