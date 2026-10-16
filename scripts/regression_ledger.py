@@ -38637,6 +38637,32 @@ def rg_lm_empty_sell():
     return [(FAIL, x) for x in bad] if bad else [(INFO, "an empty Local Market offers List yours here and another city")]
 
 
+
+@entry("RG-0993", "FACES-OK-1 (RUL-235, David 16 Oct 2026): the photo anonymity scan treats the seller's own adult face as fine in every "
+       "category -- only children's faces and background bystanders are boxed -- every refusal is logged with its reason, and the sell "
+       "flow no longer promises to blur adult faces",
+       LOCKED, fixed_on="2026-10-16",
+       scope="bea_main.py _ANON_SCAN_PROMPT + _ANON_SCAN_PROMPT_TOURS (FACES clause), _anon_422 in _seller_photo_anon_gate; ms.js SF_CATS aiCap",
+       ref="RUL-235. Goal run 41: 3 of 5 strangers' hub photo uploads since 13 Oct refused (422) with no recorded reason (#542, #559, #562).")
+def rg_faces_ok():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if b.count("FACES (RUL-235, David 16 Oct 2026): an ADULT'S FACE IS NOT IDENTIFYING CONTENT") < 2:
+        bad.append("a photo scan prompt lost the RUL-235 faces clause (both the general and the tours prompt must carry it)")
+    if "CHILD'S face" not in b:
+        bad.append("children's faces are no longer protected in the photo scan")
+    i = b.find("def _seller_photo_anon_gate(")
+    j = b.find("\ndef ", i + 10)
+    if i < 0 or "raise HTTPException(status_code=422," in b[i:j] or "PHOTO-REFUSED" not in b:
+        bad.append("a photo refusal is no longer logged with its reason (PHOTO-REASON-LOG-1)")
+    for old in ("aiCap:'street numbers, signage and faces'", "aiCap:'faces and contact details'", "aiCap:'faces and vehicle plates'"):
+        if old in js:
+            bad.append("the sell flow promises to blur adult faces again: " + old)
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "adult faces pass, children and bystanders boxed, refusals logged by reason")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
