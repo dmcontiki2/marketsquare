@@ -5113,14 +5113,48 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             return {"id": int(_dup["id"]), "live": True, "duplicate": True, "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, int(_dup["id"]), 60),   # QUICK-HANDOFF-1
                     "detail": "This listing is already live — nothing new was made."}
-    _promo_stamp(request, em)   # PROMOTER-TRACK-1
-    created = create_listing(listing, background_tasks, "quick-door")
+    # QUICK-DUP-2 (Goal run 41, 16 Oct 2026): a save whose answer never reached the phone. SMS b9, Durban, 15 Oct: the
+    # housekeeper's first Save landed at 17:39:32 (200), her phone changed network before the answer came back, she
+    # tapped again at 17:40:18 from another address -- and got #563 AND #564, identical, two way-back letters. A signed-out
+    # save that matches a DRAFT on the same address made in the last 30 minutes (same title, category, price, place) is
+    # that draft: nothing new is made, no second letter, the same draft comes back. Different words or price = new draft.
+    _dup_draft = None
+    if not signed_member and not key_secret:
+        conn = database.get_db()
+        try:
+            _dup_draft = conn.execute(
+                "SELECT id FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft' AND published_at IS NULL "
+                "AND created_at > ? AND title IS ? AND category IS ? AND IFNULL(price,'')=? AND IFNULL(city,'')=? "
+                "AND IFNULL(suburb,'')=? ORDER BY id DESC LIMIT 1",
+                (em, _sql_since(hours=0.5), listing.title, listing.category, str(listing.price or ""),
+                 str(getattr(listing, "city", "") or ""), str(getattr(listing, "suburb", "") or ""))).fetchone()
+        except Exception as exc:   # never let the guard stop a save
+            _log.warning("QUICK-DUP-2 check skipped: %s", exc); _dup_draft = None
+        finally:
+            conn.close()
+    if _dup_draft and existing_account:
+        # the account was made by the FIRST tap a moment ago and nobody has proven it since -- this is still her, not
+        # "somebody who already exists" (AUDIT-Q1), so she gets the same answer and cookie her first tap would have had.
+        conn = database.get_db()
+        try:
+            _pu = conn.execute("SELECT auth_provider, eula_accepted_at, key_hash, last_seen FROM users WHERE LOWER(email)=?",
+                               (em,)).fetchone()
+        finally:
+            conn.close()
+        if _pu and not (_pu["auth_provider"] or _pu["eula_accepted_at"] or _pu["key_hash"] or _pu["last_seen"]):
+            existing_account = False
+    if _dup_draft:
+        _log.info("QUICK-DUP-2: %s re-sent the same draft -- answering with %s, nothing new made", em, _dup_draft["id"])
+        created = {"id": int(_dup_draft["id"]), "draft_token": _purpose_token("draft", int(_dup_draft["id"]), days=7)}
+    else:
+        _promo_stamp(request, em)   # PROMOTER-TRACK-1
+        created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
     # QUICK-OWN-PHOTO-1 (David, 9 Oct 2026): the photo she took on the draft card follows the save. The draft's own token
     # (the same one POST /listings hands its composer, SEC-GATE-1) goes back to the phone that made it -- never when the
     # address belongs to somebody else's account (AUDIT-Q1 below), so nobody adds pictures to another person's draft.
     _qdt = created.get("draft_token") if isinstance(created, dict) else None
-    if not sess:
+    if not sess and not _dup_draft:
         # QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): only a signed-out save that created an advert counts.
         hits.append(now_t); _QP_IP_LOG[ip] = hits
     if not existing_account and _qdt and response is not None:

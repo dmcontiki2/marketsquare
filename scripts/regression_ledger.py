@@ -38586,6 +38586,37 @@ def rg_signin_balance_1():
     return out or [(INFO, "every code sign-in reads her own balance at once")]
 
 
+
+@entry("RG-0991", "ARRIVE-DRAFT-FOCUS-1 + SAVED-DRAFT-DOOR-1 + QUICK-DUP-2 (Goal run 41): a Quick listing saved but not live offers only "
+       "the way to finish it (no home-screen tile, no Pass it on), the door remembers an unfinished draft from this phone, and a "
+       "re-sent save (lost answer, new network) answers with the same draft instead of a duplicate",
+       LOCKED, fixed_on="2026-10-16",
+       scope="quick.html (= genie/HARNESS.html) celebrate(), qSeamArrived, door wrapper; bea_main.py quick_publish",
+       ref="SMS listers 15-16 Oct: #563/#564 Durban housekeeper (two identical drafts 46 s apart from two IPs, tapped the tile "
+           "offer, left); #566 Pretoria nanny (WhatsApp, Pass Quick on, closed onto a fresh door, left). docs/E2E_2026-10-16.md")
+def rg_arrive_draft_focus():
+    q, h, b = repo_file("quick.html"), repo_file("genie/HARNESS.html"), repo_file("bea_main.py")
+    if q is None or b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if "(live ? \x27<button class=\"ar-pass\"" not in q:
+        bad.append("the arrival screen offers Pass Quick on before the listing is live")
+    if "if(r && r.live) installInto(ov.querySelector(\x27#ar-inst\x27))" not in q:
+        bad.append("the arrival screen offers the home-screen tile before the listing is live")
+    if "ts_q_draft_wait" not in q or "id=\"qswait\"" not in q:
+        bad.append("the door no longer remembers an unfinished draft (SAVED-DRAFT-DOOR-1)")
+    for ph in ("Your listing is saved.", "Next: open it in TrustSquare, sign the terms and publish.", "Sign the terms and publish"):
+        if ("\"" + ph + "\"") not in q.split("/* QUICK-I18N:END */")[0]:
+            bad.append("door line not translatable any more: " + ph)
+    if "QUICK-DUP-2" not in b or "_dup_draft = conn.execute(" not in b or "if not sess and not _dup_draft:" not in b:
+        bad.append("a re-sent Quick save makes a second draft again (QUICK-DUP-2)")
+    if bad:
+        return [(FAIL, x) for x in bad]
+    return [(INFO, "draft arrival focused, door remembers the draft, re-sent save answers with the same draft")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
