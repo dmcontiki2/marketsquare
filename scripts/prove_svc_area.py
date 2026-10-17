@@ -39,7 +39,7 @@ WH = [[-25.87377, 28.18948], [-25.87241, 28.18842], [-25.87375, 28.18236], [-25.
       [-25.88968, 28.17405]]
 PLACES = {"technopark, centurion": (-25.8721, 28.1852), "witch hazel avenue 75, pretoria": (-25.8740, 28.1830),
           "irene village mall, pretoria": (-25.8836, 28.2196)}
-def _geo(q, cc="ZA"):
+def _geo(q, cc="ZA", near=None):
     k = (q or "").strip().lower()
     for name, pt in PLACES.items():
         if k.startswith(name) or k == name:

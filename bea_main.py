@@ -4383,14 +4383,17 @@ class svc_area:
 
 
     @staticmethod
-    def geocode(q, country_iso2="ZA"):
-        """Nominatim. -> (lat, lng, display_name) or (None, None, '')."""
+    def geocode(q, country_iso2="ZA", near=None):
+        """Nominatim. -> (lat, lng, display_name) or (None, None, ''). near=(lat, lng) prefers results round there."""
         q = (q or "").strip()
         if not q:
             return None, None, ""
         params = {"q": q, "format": "json", "limit": "1", "addressdetails": "0"}
         if country_iso2:
             params["countrycodes"] = country_iso2.lower()
+        if near:
+            params["viewbox"] = "%.4f,%.4f,%.4f,%.4f" % (near[1] - 0.25, near[0] + 0.25, near[1] + 0.25, near[0] - 0.25)
+            params["bounded"] = "0"
         try:
             res = svc_area._fetch("https://nominatim.openstreetmap.org/search?" + _sa_urlparse.urlencode(params))
         except Exception:
@@ -4401,19 +4404,21 @@ class svc_area:
 
 
     @staticmethod
-    def geocode_addr(address, city, country_iso2="ZA"):
+    def geocode_addr(address, city, country_iso2="ZA", near=None):
         """A typed job address: as typed with the city, as typed, then without house numbers (OpenStreetMap often knows
         the street but not the number). -> (lat, lng, display) or (None, None, '')."""
         a = (address or "").strip()[:160]
         if not a:
             return None, None, ""
         bare = " ".join(w for w in a.replace(",", " , ").split() if not any(ch.isdigit() for ch in w)).replace(" ,", ",").strip(" ,")
+        first = bare.split(",")[0].strip()
         tries = []
-        for q in (", ".join(x for x in (a, city) if x), a, ", ".join(x for x in (bare, city) if x), bare):
+        for q in (", ".join(x for x in (a, city) if x), a, ", ".join(x for x in (bare, city) if x), bare,
+                  ", ".join(x for x in (first, city) if x), first):
             if q and q not in tries:
                 tries.append(q)
         for q in tries:
-            r = svc_area.geocode(q, country_iso2)
+            r = svc_area.geocode(q, country_iso2, near)
             if r[0] is not None:
                 return r
         return None, None, ""
@@ -4695,7 +4700,7 @@ def service_area_check(listing_id: int, lat: Optional[float] = None, lng: Option
     lock = bool(row["area_lock"])
     out = {"area": True, "lock": lock, "label": a.get("label"), "kind": a.get("kind")}
     if (lat is None or lng is None) and (address or "").strip():
-        lat, lng, _ = svc_area.geocode_addr(address, row["city"] or "", (row.get("country") or "ZA"))
+        lat, lng, _ = svc_area.geocode_addr(address, row["city"] or "", (row.get("country") or "ZA"), (a["lat"], a["lng"]))
     if lat is None or lng is None:
         out["found"] = False
         return out
@@ -10173,7 +10178,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
         _sa_lock = bool(listing["area_lock"])
         _jl, _jg = intro.job_lat, intro.job_lng
         if (_jl is None or _jg is None) and (intro.job_address or "").strip():
-            _jl, _jg, _ = svc_area.geocode_addr(intro.job_address, listing["city"] or "", _lcc or "ZA")
+            _jl, _jg, _ = svc_area.geocode_addr(intro.job_address, listing["city"] or "", _lcc or "ZA", (_sa["lat"], _sa["lng"]))
         if _jl is None or _jg is None:
             if _sa_lock:
                 conn.close()
