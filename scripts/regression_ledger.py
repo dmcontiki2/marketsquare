@@ -39205,5 +39205,71 @@ def rg_audit1016_plan_words():
     bad = [m.group(0)[:80] for m in _re.finditer(r"bullets:\[[^\]]*\((?:RUL|RG|CC)-\d+\)[^\]]*\]", js)]
     return [(FAIL, "a plan bullet shows an internal ruling number again: " + bad[0])] if bad else [(INFO, "plan bullets carry no internal ruling numbers")]
 
+
+
+def _jsfn_1016(js, marker):
+    """The body of the ms.js function `marker` opens: up to the next top-level function (fn_body stops at Python defs only)."""
+    if marker not in js:
+        return ""
+    seg = js.split(marker, 1)[1]
+    ends = [i for i in (seg.find("\nfunction "), seg.find("\nasync function "), seg.find("\nvar ")) if i != -1]
+    return seg[:min(ends)] if ends else seg
+
+
+@entry("RG-1019", "AGENT-ARTICLE-1 (16 Oct 2026 bug audit, BA-019): the sell flow's agent card reads 'Why sellers use an "
+       "estate agent' -- it printed 'a estate agent' to every Property seller",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js sfAgentsLoad: the 'Why sellers use ...' heading",
+       ref="Seen live 16 Oct 2026 on Sell > Property > Boost your sale? at 390 px.")
+def rg_audit1016_agent_article():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if _re.search(r"Why sellers use an? '\s*\+", js):
+        return [(FAIL, "the agent card hard-codes its article again -- 'Why sellers use a estate agent'")]
+    if "Why sellers use '+(/^[aeiou]/i.test(_who)?'an ':'a ')+_who" not in js:
+        return [(FAIL, "the agent card heading no longer picks a/an from the label")]
+    return [(INFO, "the agent card picks a/an from the label")]
+
+
+@entry("RG-1020", "AGENT-SIGNIN-1 (16 Oct 2026 bug audit, BA-020): the Agent Hub offers a signed-out agent the sign-in button "
+       "on both tabs -- it said 'Sign in first' with no way to do it",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js _asProfileLoad, _asLeadsLoad, _asSignInBtn",
+       ref="Seen live 16 Oct 2026: Sell > Services > Professional Agents as a stranger.")
+def rg_audit1016_agent_signin():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "goTo(\\'signin\\')" not in _jsfn_1016(js, "function _asSignInBtn("):
+        bad.append("_asSignInBtn no longer opens the sign-in screen")
+    for fn in ("async function _asProfileLoad(", "async function _asLeadsLoad("):
+        body = _jsfn_1016(js, fn)
+        first = body.split("if(!_asState.email)", 1)[-1].split("return;", 1)[0] if "if(!_asState.email)" in body else ""
+        if "_asSignInBtn()" not in first:
+            bad.append(fn.split("function ")[1].rstrip("(") + " shows a signed-out agent no sign-in button")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "both Agent Hub tabs offer a signed-out agent the sign-in button")]
+
+
+@entry("RG-1021", "SELL-STEPS-1 (16 Oct 2026 bug audit, BA-021): the sell-flow step counter matches the steps the flow has -- "
+       "Local Market ended on 'Step 5 of 6'",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js sell-flow headers (Photos, section steps, Features) and sfStepTot",
+       ref="Seen live 16 Oct 2026: Sell > Local Market goes from 'Step 5 of 6' straight to the score.")
+def rg_audit1016_sell_steps():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    hard = _re.findall(r"Step (?:[1-5]|'\+stepNo\+') of 6 · '\+f\.label", js)
+    if hard:
+        bad.append("%d sell-flow header(s) hard-code 'of 6' again" % len(hard))
+    if "sfLegalCard() ? 6 : 5" not in _jsfn_1016(js, "function sfStepTot("):
+        bad.append("sfStepTot no longer counts the legal step from sfLegalCard()")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "sell-flow headers count 5 or 6 steps from the legal-card test")]
+
 if __name__ == "__main__":
     sys.exit(main())

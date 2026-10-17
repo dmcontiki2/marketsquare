@@ -23180,7 +23180,7 @@ function sfMagicHello(){
 function sfPhotosS(){
   if(sfDcbOn()) return sfDcbPhotosS();   // DCB-001 under the flag: batch upload, then order
   var f=sfFlow();
-  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMagicHello()+sfMeter()+
+  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of '+sfStepTot()+' · '+f.label+'</div><h2>Photos</h2></div>'+sfMagicHello()+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Start with your main photo, or continue and add it later.</b> I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
   if(sfState.mainPhase===1){
     h+='<div class="sf-aipanel">'+(sfState.previews.main?'<img src="'+sfState.previews.main+'">':'')+
@@ -23251,7 +23251,7 @@ function sfDcbOn(){ return typeof msBaselineOn==='function' && msBaselineOn(); }
 function sfDcb(){ if(!sfState.dcb) sfState.dcb={items:[], cover:null, assign:{}, method:'', busy:false, note:''}; return sfState.dcb; }
 function sfDcbPhotosS(){
   var f=sfFlow(), d=sfDcb(), n=d.items.length, max=sfMaxPhotos();
-  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of 6 · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
+  var h='<div class="sf-hdr"><div class="sf-step">Step 1 of '+sfStepTot()+' · '+f.label+'</div><h2>Photos</h2></div>'+sfMeter()+
     '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Add your photos in any order.</b> Then tap the one that should be the cover — I\'ll put the rest in the order buyers expect, and you can drag to change it. I check every photo and blur '+f.aiCap+' before anyone sees it.</div></div>';
   if(sfState.mainPhase===1){
     h+='<div class="sf-aipanel"><div class="sf-cap"><span class="sf-spin"></span>AI is reading your cover photo — checking for '+f.aiCap+'…</div></div>';
@@ -23779,7 +23779,7 @@ function sfSpecS(secKey){
   var prev = idx===0?'photos':(idx===1?'secA':'secB');
   var next = idx===0?'secB':(idx===1?'secC':'features');
   var nextLabel = idx===0?f.sections[1].title:(idx===1?f.sections[2].title:'Features');
-  var h='<div class="sf-hdr"><div class="sf-step">Step '+stepNo+' of 6 · '+f.label+'</div><h2>'+sec.title+'</h2></div>'+sfMeter()+
+  var h='<div class="sf-hdr"><div class="sf-step">Step '+stepNo+' of '+sfStepTot()+' · '+f.label+'</div><h2>'+sec.title+'</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div>'+sec.coach+'</div></div><div class="sf-card"><div class="sf-title">'+sec.title+'</div>';
   var rows=sec.rows.slice();
   if(secKey==='A'){
@@ -23838,9 +23838,13 @@ function sfUpd(scope,id,v){
   sfMeterUpdate();      // ONE-SCORE-1: the server's number follows as soon as it answers
   sfDraftSaveSoon();    // SF-DRAFT-KEEP-1
 }
+/* SELL-STEPS-1 (16 Oct 2026 bug audit, BA-021): a flow with no legal must-haves card (Local Market, car hire) ends after
+   Features, so its header counted 'Step 5 of 6' and then jumped to the score. The total now comes from the same test the
+   Features button uses to choose between 'One last thing' and 'See my score'. */
+function sfStepTot(){ try{ return sfLegalCard() ? 6 : 5; }catch(_){ return 6; } }
 function sfFeatS(){
   var f=sfFlow();
-  var h='<div class="sf-hdr"><div class="sf-step">Step 5 of 6 · '+f.label+'</div><h2>Features</h2></div>'+sfMeter()+
+  var h='<div class="sf-hdr"><div class="sf-step">Step 5 of '+sfStepTot()+' · '+f.label+'</div><h2>Features</h2></div>'+sfMeter()+
   '<div class="sf-coach"><div class="sf-av">'+SF_COACH_AV+'</div><div><b>Tap everything that applies.</b> Features don\'t affect the score — they just make your listing richer.</div></div>'+
   '<div class="sf-card"><div class="sf-title">Features & extras</div><div class="sf-chips">';
   f.feats.forEach(function(ft){
@@ -24204,7 +24208,8 @@ async function sfAgentsLoad(){
   var mut='var(--text-3,#8b93a7)';
   var h='';
   if(pitch && pitch.advantages){
-    h+='<div class="sf-card"><div class="sf-title">Why sellers use a '+((pitch&&pitch.label)?pitch.label.toLowerCase():'local '+sfAgentNoun())+'</div>';
+    var _who=(pitch&&pitch.label)?pitch.label.toLowerCase():'local '+sfAgentNoun();   // AGENT-ARTICLE-1 (16 Oct 2026 bug audit, BA-019): 'an estate agent', never 'a estate agent'
+    h+='<div class="sf-card"><div class="sf-title">Why sellers use '+(/^[aeiou]/i.test(_who)?'an ':'a ')+_who+'</div>';
     pitch.advantages.forEach(function(a){
       h+='<div style="display:flex;gap:9px;padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:13px;line-height:1.4;"><span style="color:#34d399;font-weight:800;">✓</span><span>'+a+'</span></div>';
     });
@@ -24275,6 +24280,9 @@ var _asState={tab:'profile', template:null, profile:null, vertical:'property'};
 /* AUD-045 (4 Oct 2026 audit): every vertical the agency consoles onboard has an entry; an unknown one falls back. */
 var AS_VERT={property:{label:'Estate agent',certs:'PPRA (15 pts, <b>upload needed to go live</b>) · FFC (10 pts, <b>checked by us before you go live</b> — the legal minimum to trade) · NQF4/5/6+ (6/+6/+8) · professional body (5).'},cars:{label:'Car sales agent',certs:'MIRA dealer/trader registration (8 pts, <b>required to go live</b> — the professional minimum to trade) · independent inspection partner (5 pts). NATIS ownership, RWC and service history score per vehicle listing.'},travel:{label:'Tour agent',certs:'ASATA membership (10 pts, <b>required to go live</b> — the professional minimum to trade) · IATA accreditation (10 pts) · CIPC company registration (6 pts, must be submitted) · financial bonding / client payment guarantee (5 pts).'},collector:{label:'Collector dealer',certs:'SAPS Second-Hand Goods dealer registration (<b>required to go live</b>) · CIPC company registration · dealer association (SAADA / SAAND / NAADA) · grading partner (SANGS / NGC / PCGS).'},institution:{label:'Tutor',certs:'Safety clearances — SAPS police clearance, Child Protection Register and Sexual Offenders Register (<b>required to go live</b>) · SACE registration · SAQA-verified qualification.'},service_company:{label:'Technician',certs:'Trade licence — PIRB / DoEL installation electrician / class-statutory (<b>required to go live</b>) · CIPC company registration · public liability insurance · CIDB grading (construction).'},placement:{label:'Placement consultant',certs:'DEL private employment agency registration (<b>required to go live</b>) · CIPC company registration.'}};
 function _asV(){ return AS_VERT[_asState.vertical] || {label:'Professional agent', certs:''}; }   // AUD-045
+/* AGENT-SIGNIN-1 (16 Oct 2026 bug audit, BA-020): an agent who opened the Agent Hub before signing in read 'Sign in first'
+   with no way to do it -- a dead end on the one door estate and car agents use. Both tabs now carry the sign-in button. */
+function _asSignInBtn(){ return '<div style="margin-top:14px;"><button onclick="goTo(\'signin\')" style="background:var(--navy,#0c1a2e);color:#fff;border:none;border-radius:10px;padding:11px 26px;font-weight:700;font-size:14px;cursor:pointer;">Sign in</button></div>'; }
 function agentSuiteInit(){
   var email=localStorage.getItem('ms_aa_email')||(typeof magicLink!=='undefined'&&magicLink.email)||'';
   _asState.email=email;
@@ -24293,7 +24301,7 @@ function agentSuiteTab(t){
 }
 async function _asProfileLoad(){
   var pane=document.getElementById('as-pane'); if(!pane) return;
-  if(!_asState.email){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Sign in first — your agent profile hangs off your seller account.</div>'; return; }
+  if(!_asState.email){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Sign in first — your agent profile hangs off your seller account.'+_asSignInBtn()+'</div>'; return; }
   try{
     if(!_asState.template){ var rt=await fetch(BEA_URL+'/agents/template'); if(rt.ok) _asState.template=await rt.json(); }
     var rp=await fetch(BEA_URL+'/agents/profile?email='+encodeURIComponent(_asState.email));
@@ -24477,7 +24485,7 @@ async function asProfilePublish(){
 }
 async function _asLeadsLoad(){
   var pane=document.getElementById('as-pane'); if(!pane) return;
-  if(!_asState.email){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Sign in first.</div>'; return; }
+  if(!_asState.email){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">Sign in first to see the sellers who picked you.'+_asSignInBtn()+'</div>'; return; }
   var rows=[];
   try{ var r=await fetch(BEA_URL+'/agents/intros?email='+encodeURIComponent(_asState.email)+'&status=all'); if(r.ok) rows=await r.json(); }catch(e){}
   if(!rows.length){ pane.innerHTML='<div style="padding:26px;text-align:center;color:var(--text-3);">No seller leads yet. When a private seller picks you, the introduction lands here — you accept at 1T or decline free.</div>'; return; }
