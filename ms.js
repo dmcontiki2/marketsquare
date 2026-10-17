@@ -17582,29 +17582,74 @@ async function bzMyLink(btn, again){
 // ════════════════════════════════════════════════════════════
 let _bbTab = 'people', _bbBoard = null, _bbSend = {target:'all', pair:null, line:null};
 function _bbCss(){
+  /* BUZZ-LOOK-1 (David, 17 Oct 2026 10:57 SAST: "why don't the app look like you are showing it here. I like the HMI
+     interface you are showing me."): the Board is drawn like mockups/BUZZ_BOARD_MOCKUP_2026-10-17.html -- one phone-width
+     column on a dark panel, and the same colour meaning: green one person, amber a group, blue specials, red remove,
+     grey limits. Presentation only; every gate is still on the server. */
   if(document.getElementById('bb-css')) return;
   const st = document.createElement('style'); st.id = 'bb-css';
-  st.textContent = '.bb-tabs{display:flex;background:#f1f5f9;border-radius:12px;padding:3px;margin:4px 0 12px}'
-   + '.bb-tabs button{flex:1;border:0;background:none;padding:9px 0;border-radius:9px;font:600 13.5px inherit;color:#64748b;cursor:pointer}'
-   + '.bb-tabs button.on{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.08)}'
+  st.textContent = ':root{--bb-bg:#04100c;--bb-panel:#0a1a14;--bb-line:#163128;--bb-ink:#eaf3ee;--bb-dim:#84a396;'
+   + '--bb-one:#16A97C;--bb-grp:#E8A33D;--bb-spec:#4AA8FF;--bb-stop:#E5534B;--bb-cap:#9AA7A1}'
+   + '#screen-buzz.bb-dark{background:var(--bb-bg)}'
+   + '#screen-buzz.bb-dark .page-hdr{background:var(--bb-bg);color:var(--bb-ink);border-bottom:1px solid var(--bb-line)}'
+   + '#screen-buzz.bb-dark .page-hdr h1,#screen-buzz.bb-dark .page-hdr .sub{color:var(--bb-ink)}'
+   + '#screen-buzz.bb-dark .page-hdr .back-btn{background:var(--bb-panel);color:var(--bb-ink);border-color:var(--bb-line)}'
+   + '#bz-content.bb-look{max-width:420px;margin:12px auto 110px;background:var(--bb-panel);border:1px solid var(--bb-line);border-radius:22px;padding:14px 12px 18px;color:var(--bb-ink);box-sizing:border-box}'
+   + '@media (max-width:460px){#bz-content.bb-look{margin:8px 8px 110px;border-radius:18px}}'
+   + '.bb-look a{color:#8ff0c8}'
+   + '.bb-top{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 10px}'
+   + '.bb-top b{font-size:19px;color:var(--bb-ink)}'
+   + '.bb-count{font-size:12px;color:var(--bb-cap);border:1px solid var(--bb-line);border-radius:20px;padding:2px 10px}'
+   + '.bb-tabs{display:flex;background:#06120e;border-radius:12px;padding:3px;margin:0 0 12px}'
+   + '.bb-tabs button{flex:1;border:0;background:none;padding:8px 0;border-radius:9px;font:600 13.5px inherit;color:var(--bb-dim);cursor:pointer}'
+   + '.bb-tabs button.on{background:var(--bb-line);color:var(--bb-ink);font-weight:700}'
    + '.bb-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}'
-   + '.bb-chip{font-size:13px;padding:6px 11px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#0f172a;cursor:pointer}'
-   + '.bb-chip.one{border-color:#16a34a;color:#15803d}.bb-chip.one.on{background:#16a34a;color:#fff}'
-   + '.bb-chip.grp{border-color:#d97706;color:#b45309}.bb-chip.grp.on{background:#f59e0b;color:#1a1000}'
-   + '.bb-chip.spec{border-color:#2563eb;color:#1d4ed8}.bb-chip.line.on{border-color:#0f172a;background:#0f172a;color:#fff}'
-   + '.bb-lock{opacity:.45;filter:grayscale(1)}span.bb-lock:after{content:" \\1F512";font-size:11px}'
-   + '.bb-lbl{font-size:12px;color:#64748b;margin:10px 0 4px}'
-   + '.bb-note{font-size:12px;color:#64748b;border-left:3px solid #94a3b8;padding-left:8px;margin-top:8px}'
-   + '.bb-note.grp{border-color:#f59e0b}.bb-note.spec{border-color:#2563eb}'
-   + '.bb-need{background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:10px 12px;font-size:13px;color:#78350f;margin-top:10px}'
-   + '.bb-btn{display:block;width:100%;border:0;border-radius:12px;padding:12px;font:800 14px inherit;cursor:pointer;margin-top:10px}'
-   + '.bb-btn.grp{background:#f59e0b;color:#1a1000}.bb-btn.one{background:#16a34a;color:#fff}.bb-btn.spec{background:#2563eb;color:#fff}'
-   + '.bb-btn:disabled{opacity:.45;cursor:default}'
-   + '.bb-tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:#f1f5f9;color:#475569;margin:2px 4px 0 0}'
-   + '.bb-edit{font-size:12.5px;color:#15803d;cursor:pointer;text-decoration:underline;margin-left:6px}'
-   + '.bb-spec-badge{font-size:10.5px;font-weight:800;color:#fff;background:#2563eb;border-radius:6px;padding:2px 7px;margin-right:6px}'
-   + '.bb-field{width:100%;padding:10px;border:1.5px solid #d1d5db;border-radius:10px;font:14px inherit;box-sizing:border-box}'
-   + '.bb-said{font-size:13px;margin-top:8px;padding:8px 10px;border-radius:9px;background:#f0fdf4;color:#14532d}.bb-said.bad{background:#fef2f2;color:#991b1b}';
+   + '.bb-chip{font-size:12.5px;padding:5px 10px;border-radius:20px;border:1px solid var(--bb-line);background:#06120e;color:var(--bb-ink);cursor:pointer;line-height:1.3}'
+   + '.bb-chip.one{border-color:var(--bb-one);color:#8ff0c8}.bb-chip.one.on{background:var(--bb-one);color:#04140e;font-weight:700}'
+   + '.bb-chip.grp{border-color:var(--bb-grp);color:#ffd28a}.bb-chip.grp.on{background:var(--bb-grp);color:#1a1000;font-weight:700}'
+   + '.bb-chip.spec{border-color:var(--bb-spec);color:#a9d6ff}.bb-chip.line.on{border-color:var(--bb-grp);background:#2a2110;color:#ffd28a}'
+   + '.bb-lock{opacity:.4;filter:grayscale(1)}span.bb-lock:after,button.bb-lockt:after{content:" \\1F512";font-size:11px}'
+   + '.bb-lbl{font-size:12px;color:var(--bb-dim);margin:9px 0 5px}'
+   + '.bb-note{font-size:11.5px;color:var(--bb-dim);border-left:3px solid var(--bb-cap);padding-left:8px;margin-top:8px;line-height:1.4}'
+   + '.bb-note.grp{border-color:var(--bb-grp)}.bb-note.spec{border-color:var(--bb-spec)}.bb-note.one{border-color:var(--bb-one)}'
+   + '.bb-need{background:#2a2110;border:1px solid var(--bb-grp);border-radius:12px;padding:9px 11px;font-size:12.5px;color:#ffd28a;margin-top:10px;line-height:1.4}'
+   + '.bb-need b{color:#fff}.bb-need a{color:#ffd28a}'
+   + '.bb-btn{display:block;width:100%;border:0;border-radius:13px;padding:11px;font:800 14px inherit;cursor:pointer;margin-top:10px;text-align:center;box-sizing:border-box}'
+   + '.bb-btn.grp{background:var(--bb-grp);color:#1a1000}.bb-btn.one{background:var(--bb-one);color:#04140e}.bb-btn.spec{background:var(--bb-spec);color:#021222}'
+   + '.bb-btn.ghost{background:transparent;border:1px dashed var(--bb-one);color:#8ff0c8}'
+   + '.bb-btn:disabled{opacity:.4;cursor:default}'
+   + '.bb-field{width:100%;padding:9px 10px;border:1px solid var(--bb-line);border-radius:11px;font:14px inherit;box-sizing:border-box;background:#06120e;color:var(--bb-ink)}'
+   + '.bb-field::placeholder{color:#5f7a6f}select.bb-field option{background:#06120e;color:var(--bb-ink)}input[type=date].bb-field{color-scheme:dark}'
+   + '.bb-ctr{text-align:right;font-size:11.5px;color:var(--bb-cap);margin-top:3px;min-height:14px}'
+   + '.bb-said{font-size:12.5px;margin-top:8px;padding:8px 10px;border-radius:10px;background:#0d2a1f;color:#8ff0c8}.bb-said.bad{background:#2a1212;color:#ffb4ae}'
+   + '.bb-lede{font-size:12.5px;color:var(--bb-dim);margin:0 2px 8px;line-height:1.45}'
+   + '.bb-terms{font-size:11.5px;color:var(--bb-dim);display:flex;align-items:center;gap:8px;margin:0 2px 10px}'
+   + '.bb-terms span{flex:1}.bb-terms .bz-terms{display:none}'
+   + '.bb-termsfull{display:none;margin:0 0 10px}.bb-termsfull.on{display:block}'
+   + '.bb-termsfull .bz-terms{background:#06120e;border:1px solid var(--bb-line);color:var(--bb-ink);border-radius:12px;padding:10px;font-size:12px;line-height:1.5}'
+   + '.bb-mini{position:relative;width:34px;height:20px;border-radius:12px;background:#24443a;border:0;cursor:pointer;flex:0 0 auto}'
+   + '.bb-mini:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#84a396;transition:left .15s}'
+   + '.bb-mini.on{background:var(--bb-one)}.bb-mini.on:after{left:17px;background:#fff}'
+   + '.bb-row{display:flex;align-items:center;gap:9px;padding:8px 3px;border-bottom:1px solid var(--bb-line)}'
+   + '.bb-av{width:34px;height:34px;border-radius:50%;background:#123326;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#8ff0c8;flex:0 0 auto}'
+   + '.bb-nm{flex:1;min-width:0;font-size:14px;color:var(--bb-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+   + '.bb-nm small{display:block;color:var(--bb-dim);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+   + '.bb-pill{font-size:10.5px;padding:1px 7px;border-radius:10px;background:#11261e;color:var(--bb-dim);margin-left:5px}'
+   + '.bb-acts{display:flex;gap:4px;flex:0 0 auto}'
+   + '.bb-acts button{font:700 11px inherit;padding:6px 7px;border-radius:7px;border:0;cursor:pointer}'
+   + '.bb-ed{background:#1b3a2e;color:#8ff0c8}.bb-mu{background:#3a2b10;color:#ffd28a}.bb-mu.on{background:#5a4214;color:#fff}.bb-rm{background:var(--bb-stop);color:#fff}.bb-rm.wait{background:#5a1d1a}'
+   + '.bb-edit{background:#06120e;border:1px solid var(--bb-line);border-radius:12px;padding:8px 10px 10px;margin:4px 0 8px}'
+   + '.bb-sw{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-top:8px}.bb-sw span{flex:1}'
+   + '.bb-card{border:1px solid var(--bb-spec);border-radius:12px;padding:9px;display:flex;gap:9px;align-items:center;background:#071827;margin-top:4px}'
+   + '.bb-thumb{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#1d4f7a,#0d2a44);flex:0 0 auto}'
+   + '.bb-card small{display:block;color:#a9d6ff;font-size:11.5px}'
+   + '.bb-spec-badge{font-size:10.5px;font-weight:800;color:#021222;background:var(--bb-spec);border-radius:6px;padding:1px 6px;margin-right:5px}'
+   + '.bb-bubble{background:#0d2016;border-radius:14px 14px 14px 4px;padding:9px 11px;font-size:13px;margin-top:4px;color:var(--bb-ink)}.bb-bubble u{color:#a9d6ff}'
+   + '.bb-look .ms-card{background:#06120e;border:1px solid var(--bb-line);color:var(--bb-ink)}'
+   + '.bb-look .bz-note,.bb-look .ms-section-lbl{color:var(--bb-dim)}.bb-look .mla-btn.accent{background:var(--bb-one);color:#04140e}'
+   + '#bz-mylink-box div,#bz-mylink-box button{background:#06120e!important;color:var(--bb-ink)!important;border-color:var(--bb-line)!important}'
+   + '#bz-mylink-box a[href^="https://wa.me"]{background:#25D366!important;color:#fff!important}'
+   + '.bb-look #bz-qr-img{background:#fff!important}';
   document.head.appendChild(st);
 }
 function _bbMeta(pid){
@@ -17642,6 +17687,78 @@ function _bbCardExtras(p0, i){
     + '<input class="bb-field" id="bb-tags-'+i+'" maxlength="140" value="'+_lmEsc((m.tags||[]).join(', '))+'">'
     + '<button class="bb-btn one" data-bbsave="'+i+'">Save</button></div>';
 }
+/* BUZZ-LOOK-1: the header row, the one-line terms, and compact People rows (Edit / Mute / Remove on the row) */
+function _bbWhen(at){
+  if(!at) return 'no buzz yet';
+  const t = Date.parse(String(at).replace(' ', 'T') + (String(at).indexOf('Z') < 0 && String(at).indexOf('+') < 0 ? 'Z' : ''));
+  if(isNaN(t)) return 'no buzz yet';
+  const days = Math.floor((Date.now() - t) / 864e5);
+  if(days <= 0) return 'last buzz: today';
+  if(days === 1) return 'last buzz: yesterday';
+  if(days < 7) return 'last buzz: ' + new Date(t).toLocaleDateString('en-ZA', {weekday:'short'});
+  if(days < 30) return 'last buzz: ' + Math.round(days / 7) + (Math.round(days / 7) === 1 ? ' week' : ' weeks');
+  return 'last buzz: a while ago';
+}
+function _bbHeader(c){
+  let pill = '';
+  if(c && c.used != null){
+    if(c.on){ const cap = c.allowance || c.limit, act = c.used - (c.resting || 0); pill = act + ' of ' + cap + ' regulars'; }
+    else pill = 'Your regulars: ' + c.used;   // RUL-179(b): with the limits switch off the app shows only a count
+  }
+  return '<div class="bb-top"><b>Buzz</b>' + (pill ? '<span class="bb-count">' + pill + '</span>' : '') + '</div>';
+}
+function _bbPeoplePane(c){
+  /* The terms are SHORTENED ON SCREEN, never cut: "Terms 3.8" opens the full on-screen copy (bzTermsCopy) in one tap,
+     and the switch that gives consent for one person sits inside Edit with its own line naming section 3.8. */
+  let h = '<div class="bb-terms"><span>Buzz is a convenience, not a guarantee — if it matters, phone. '
+        + '<a href="#" id="bb-terms-open">Terms 3.8</a></span>'
+        + '<span style="flex:0 0 auto">Notifications</span><button type="button" class="bb-mini' + (bzPushOn()?' on':'') + '" id="bz-push-sw" role="switch" aria-checked="' + (bzPushOn()?'true':'false') + '" aria-label="Let TrustSquare buzz this phone"></button></div>'
+        + '<div class="bb-termsfull" id="bb-termsfull">' + bzTermsCopy() + '</div>'
+        + '<div id="bz-namecard"></div>';
+  if(c && c.on && c.full && !c.resting) h += '<div class="bb-note">Your plan is full. Remove someone you no longer need, or move up a plan. Nobody already connected is affected.</div>';
+  if(c && c.resting) h += '<div class="bb-note">' + c.resting + ' resting because your plan holds ' + c.allowance + '. They can still buzz you. Choose who stays active below.</div>';
+  h += _bbTagFilter();
+  if(!_bzPairs.length){
+    h += '<div class="bb-note one">Nobody yet. A connection is made only when somebody you deal with joins from your own link, so a stranger can never add themselves here.</div>';
+  }
+  const last = (_bbBoard && _bbBoard.last) || {};
+  _bzPairs.forEach(function(p, i){
+    const m = _bbMeta(p.pair_id), nm = m.nickname || p.other_name || 'Somebody';
+    const tag = (m.tags && m.tags[0]) ? '<span class="bb-pill">' + _lmEsc(m.tags[0]) + (m.tags.length > 1 ? ' +' + (m.tags.length - 1) : '') + '</span>' : '';
+    let sub = _bbWhen(last[String(p.pair_id)]);
+    if(p.closed) sub = 'Buzz closed' + (p.closed_by_me ? ' by you' : ' by them');
+    else if(p.resting || p.paused) sub = 'resting — your plan holds ' + ((c && c.allowance) || '') + ' regulars';
+    else if(!p.they_allow_me) sub = 'has not switched buzzes on for you yet';
+    else if(!p.i_allow_them) sub = 'muted — their buzzes do not reach you';
+    h += '<div id="bz-card-' + i + '" data-row="' + i + '"><div class="bb-row">'
+       + '<span class="bb-av">' + _lmEsc(bzInitials(nm)) + '</span>'
+       + '<span class="bb-nm">' + _lmEsc(nm) + tag + '<small>' + _lmEsc(sub) + '</small></span>'
+       + '<span class="bb-acts">';
+    if(p.closed){
+      h += p.closed_by_me ? '<button type="button" class="bb-ed" data-open="' + i + '">Open again</button>' : '';
+    } else {
+      h += '<button type="button" class="bb-ed" data-bbedit="' + i + '">Edit</button>'
+         + '<button type="button" class="bb-mu' + (p.i_allow_them ? '' : ' on') + '" data-allow="' + i + '">' + (p.i_allow_them ? 'Mute' : 'Unmute') + '</button>'
+         + '<button type="button" class="bb-rm" data-close="' + i + '" aria-label="Remove ' + _lmEsc(nm) + '">Remove</button>';
+    }
+    h += '</span></div>';
+    if(!p.closed){
+      h += '<div class="bb-edit" id="bb-ed-' + i + '" style="display:none">'
+         + '<div class="bb-lbl">Your own name for them (only you see it)</div>'
+         + '<input class="bb-field" id="bb-nick-' + i + '" maxlength="30" value="' + _lmEsc(m.nickname || '') + '" placeholder="' + _lmEsc(p.other_name || '') + '">'
+         + '<div class="bb-lbl">Tags, separated by commas (for example: Hair, Thursdays)</div>'
+         + '<input class="bb-field" id="bb-tags-' + i + '" maxlength="140" value="' + _lmEsc((m.tags || []).join(', ')) + '">'
+         + '<div class="bb-sw"><span>Let <b>' + _lmEsc(p.other_name || 'them') + '</b> buzz me<br><small style="color:var(--bb-dim)">Switching this on accepts the Buzz terms (section 3.8) for this person only.</small></span>'
+         + '<button type="button" class="bb-mini' + (p.i_allow_them ? ' on' : '') + '" data-allow="' + i + '" role="switch" aria-checked="' + (p.i_allow_them ? 'true' : 'false') + '" aria-label="Let ' + _lmEsc(p.other_name || 'them') + ' buzz me"></button></div>'
+         + '<button class="bb-btn one" data-bbsave="' + i + '">Save</button></div>';
+    }
+    h += '</div>';
+  });
+  h += _bzChooseCard(c, _bzPairs);   // KEEP-CHOICE-1
+  h += '<div id="bz-mylink" style="margin-top:12px"><button type="button" class="bb-btn ghost" onclick="bzMyLink(this,0)">+ Add people — share my Buzz link</button>'
+     + '<div class="bb-note one">They tap your link, sign in and you are connected. Nobody types or stores a phone number.</div></div>';
+  return h;
+}
 function _bbOnePeople(){
   return _bzPairs.map(function(p, i){ return {p:p, i:i}; }).filter(function(x){
     return !x.p.closed && !x.p.resting && !x.p.paused && x.p.they_allow_me; });
@@ -17652,7 +17769,7 @@ function _bbSendPane(){
   const ones = _bbOnePeople();
   const S = _bbSend;
   const isGroup = S.target !== 'one';
-  let h = '<div class="bz-lede">A short line to one person, a tag, or everyone. Each person gets their own buzz — nobody sees who else got it.</div>';
+  let h = '<div class="bb-lede">A short line to one person, a tag, or everyone. Each person gets their own buzz — nobody sees who else got it.</div>';
   h += '<div class="bb-lbl">To</div><div class="bb-chips">'
      + '<span class="bb-chip one'+(S.target==='one'?' on':'')+'" data-bbto="one">One person</span>'
      + (B.tags||[]).map(function(t){ const k='tag:'+t.tag; return '<span class="bb-chip grp'+(S.target===k?' on':'')+'" data-bbto="'+_lmEsc(k)+'">'+_lmEsc(t.tag)+' '+t.n+'</span>'; }).join('')
@@ -17669,18 +17786,18 @@ function _bbSendPane(){
   h += '<div class="bb-lbl">Message</div>'
      + '<input class="bb-field'+(lockText?' bb-lock':'')+'" id="bb-text" maxlength="'+((B.caps&&B.caps.chars)||120)+'" autocomplete="off" '
      + (lockText ? 'readonly ' : '') + 'placeholder="'+(lockText?'Your own words to a group need a subscription':'Say it in one line')+'">'
-     + '<div style="text-align:right;font-size:11.5px;color:#94a3b8;margin-top:3px" id="bb-count"></div>'
+     + '<div class="bb-ctr" id="bb-count"></div>'
      + '<div id="bb-needslot"></div>'
      + '<button class="bb-btn '+(isGroup?'grp':'one')+'" id="bb-go" disabled>Send</button>'
      + '<div id="bb-sent"></div>'
-     + '<div class="bb-note grp">'+(isGroup ? 'Sent by push only — no SMS, no email, no cost per message. Replies come back to you one by one.'
+     + '<div class="bb-note '+(isGroup?'grp':'one')+'">'+(isGroup ? 'Sent by push only — no SMS, no email, no cost per message. Replies come back to you one by one.'
                                          : 'One buzz to one person, with your name on it.')+'</div>'
      + '<div class="bb-note">Today: '+(L.all_left_today||0)+' message to everyone left · '+(L.tag_left_today||0)+' tag messages left.</div>';
   return h;
 }
 function _bbSpecialsPane(){
   const B = _bbBoard;
-  let h = '<div class="bz-lede">Put a special on one of your listings with an end date. Your people get a short buzz that points to it; the special drops off by itself on the end day.</div>';
+  let h = '<div class="bb-lede">Put a special on one of your listings with an end date. Your people get a short buzz that points to it; the special drops off by itself on the end day.</div>';
   if(!B.paid){
     return h + '<div class="bb-lock" aria-hidden="true" style="pointer-events:none"><div class="bb-lbl">Which listing</div><div class="bb-field">Your listing</div>'
       + '<div class="bb-lbl">Special</div><div class="bb-field">20% off</div></div>' + _bbNeedSub('Specials');
@@ -17689,9 +17806,9 @@ function _bbSpecialsPane(){
   if(!ls.length) return h + '<div class="bb-note">Publish a listing first — a special lives on your listing.</div>';
   const on = ls.filter(function(l){ return l.special_label; });
   on.forEach(function(l){
-    h += '<div class="ms-card" style="border:1.5px solid #2563eb"><span class="bb-spec-badge">SPECIAL</span><b>'+_lmEsc(l.title)+'</b>'
-       + '<div style="font-size:12.5px;color:#1d4ed8;margin-top:4px">'+_lmEsc(l.special_label)+' · until '+_lmEsc(l.special_until)+'</div>'
-       + '<a href="#" data-bbclear="'+l.id+'" style="font-size:12.5px;color:#b91c1c">Take it off now</a></div>';
+    h += '<div class="bb-card" style="margin-bottom:8px"><span class="bb-thumb"></span><div style="flex:1;min-width:0"><span class="bb-spec-badge">SPECIAL</span>'+_lmEsc(l.title)
+       + '<small>'+_lmEsc(l.special_label)+' · until '+_lmEsc(l.special_until)+'</small>'
+       + '<a href="#" data-bbclear="'+l.id+'" style="font-size:12px;color:#ff9b94">Take it off now</a></div></div>';
   });
   const today = B.today, max = new Date(Date.parse(today + 'T12:00:00Z') + ((B.caps&&B.caps.max_days)||14) * 864e5).toISOString().slice(0,10);
   const left = (B.limits||{}).specials_left_week || 0;
@@ -17701,7 +17818,8 @@ function _bbSpecialsPane(){
      + '<input class="bb-field" id="bb-slab" maxlength="'+((B.caps&&B.caps.label)||40)+'" placeholder="20% off"></div>'
      + '<div style="flex:2"><div class="bb-lbl">Ends</div><input class="bb-field" type="date" id="bb-suntil" min="'+today+'" max="'+max+'"></div></div>'
      + '<label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:10px"><input type="checkbox" id="bb-snotify"'+(left?' checked':' disabled')+'> Buzz my people about it ('+(B.reach_all||0)+')</label>'
-     + '<div class="bb-lbl">The buzz they get</div><div class="ms-card" id="bb-sprev" style="font-size:13.5px;background:#eff6ff">…</div>'
+     + '<div class="bb-lbl">How it shows on your listing</div><div class="bb-card"><span class="bb-thumb"></span><div style="min-width:0"><span class="bb-spec-badge">SPECIAL</span><span id="bb-scard-t"></span><small id="bb-scard-s"></small></div></div>'
+     + '<div class="bb-lbl">The buzz they get</div><div class="bb-bubble" id="bb-sprev">…</div>'
      + '<button class="bb-btn spec" id="bb-sgo">Save special</button><div id="bb-ssaid"></div>'
      + '<div class="bb-note spec">'+left+' of 3 specials left this week. The detail lives on your listing; the buzz is only a pointer, sent by push only.</div>';
   return h;
@@ -17793,9 +17911,14 @@ function _bbWire(box){
     if(!sp) return;
     const nm = (localStorage.getItem('ms_user_name')||'You');
     let d = su.value ? new Date(su.value + 'T12:00:00Z').toLocaleDateString('en-ZA',{weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}) : '…';
-    sp.innerHTML = '<b>' + _lmEsc(nm) + ':</b> Special on — ' + _lmEsc(slab.value||'…') + ' until ' + _lmEsc(d) + '. <u style="color:#1d4ed8">Tap to see</u>';
+    sp.innerHTML = '<b>' + _lmEsc(nm) + ':</b> Special on — ' + _lmEsc(slab.value||'…') + ' until ' + _lmEsc(d) + '. <u>Tap to see</u>';
+    const ct = document.getElementById('bb-scard-t'), cs = document.getElementById('bb-scard-s');
+    if(ct) ct.textContent = (sl.options[sl.selectedIndex] || {}).text || '';
+    if(cs) cs.textContent = (slab.value || '…') + ' · until ' + d;
   }
-  if(sp){ slab.oninput = sprev; su.onchange = sprev; sprev(); }
+  if(sp){ slab.oninput = sprev; su.onchange = sprev; sl.onchange = sprev; sprev(); }
+  const tOpen = document.getElementById('bb-terms-open');
+  if(tOpen) tOpen.onclick = function(e){ e.preventDefault(); const f = document.getElementById('bb-termsfull'); if(f) f.classList.toggle('on'); };
   const sg = document.getElementById('bb-sgo');
   if(sg) sg.onclick = async function(){
     const said = document.getElementById('bb-ssaid');
@@ -17945,9 +18068,11 @@ async function buzzRender(){
     });
   }
   h += _bzChooseCard(_bzCircle, _bzPairs);   // KEEP-CHOICE-1
-  if(_bbBoard){   // BUZZ-BOARD-1: three tabs -- People (this page as it was), Send, Specials
-    h = _bbTabsBar()
-      + '<div data-bbpane="people">' + _bbTagFilter() + h + '</div>'
+  const _bbScr = document.getElementById('screen-buzz');
+  box.classList.toggle('bb-look', !!_bbBoard); if(_bbScr) _bbScr.classList.toggle('bb-dark', !!_bbBoard);   // BUZZ-LOOK-1
+  if(_bbBoard){   // BUZZ-BOARD-1 + BUZZ-LOOK-1: the mock-up's phone-width dark panel -- header, three tabs, compact People rows
+    h = _bbHeader(_bzCircle) + _bbTabsBar()
+      + '<div data-bbpane="people">' + _bbPeoplePane(_bzCircle) + '</div>'
       + '<div data-bbpane="send">' + _bbSendPane() + '</div>'
       + '<div data-bbpane="specials">' + _bbSpecialsPane() + '</div>';
   }
@@ -17993,8 +18118,8 @@ async function buzzRender(){
       const p = _bzPairs[+el.getAttribute('data-close')];
       /* BUZZ-BOARD-1 (RUL-238): Remove waits 10 seconds with an Undo, so a slip costs nothing -- nobody is told
          until the 10 seconds are up. */
-      if(el.getAttribute('data-wait')==='1'){ clearTimeout(el._bbT); el.removeAttribute('data-wait'); el.textContent = 'Close Buzz with ' + p.other_name; showToast('Kept'); return; }
-      el.setAttribute('data-wait','1'); let left = 10;
+      if(el.getAttribute('data-wait')==='1'){ clearTimeout(el._bbT); el.removeAttribute('data-wait'); el.classList.remove('wait'); el.textContent = el.classList.contains('bb-rm') ? 'Remove' : 'Close Buzz with ' + p.other_name; showToast('Kept'); return; }
+      el.setAttribute('data-wait','1'); el.classList.add('wait'); let left = 10;
       el.textContent = 'Closing in 10 s \u2014 tap to undo';
       const tick = function(){ left--; if(el.getAttribute('data-wait')!=='1') return;
         if(left > 0){ el.textContent = 'Closing in ' + left + ' s \u2014 tap to undo'; el._bbT = setTimeout(tick, 1000); return; }

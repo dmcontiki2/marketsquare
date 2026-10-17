@@ -33013,7 +33013,11 @@ def buzz_board(_key: str = Depends(auth.require_api_key), ts_user: str = Cookie(
                         "special_label": d["special_label"] if live else "",
                         "special_until": d["special_until"] if live else ""})
         tier = _seller_tier_of(conn, me)
-        return {"tier": tier, "paid": tier in BUZZ_PAID_TIERS,
+        # BUZZ-LOOK-1: 'last buzz: <when>' on each People row -- the newest buzz either way, per pair (operational log only)
+        last = {r["pair_id"]: r["at"] for r in conn.execute(
+            "SELECT pair_id, MAX(created_at) AS at FROM buzz_log WHERE from_email=? OR to_email=? GROUP BY pair_id",
+            (me, me)).fetchall()}
+        return {"tier": tier, "paid": tier in BUZZ_PAID_TIERS, "last": last,
                 "service_lines": [{"id": i, "text": t} for i, t in BUZZ_SERVICE_LINES],
                 "people": [{"pair_id": k, "nickname": v["nickname"], "tags": v["tags"]} for k, v in meta.items()],
                 "tags": [{"tag": t, "n": n} for t, n in sorted(tags.items(), key=lambda x: x[0].lower())],

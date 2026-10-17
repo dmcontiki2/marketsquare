@@ -39583,6 +39583,37 @@ def rg_svc_area_lock():
     return out or [(INFO, "locked areas hide on the feed and the funnel, and refuse outside work before the hold")]
 
 
+@entry("RG-1056", "BUZZ-LOOK-1 (David, 17 Oct 2026 10:57 SAST): the live Buzz screen looks like the mock-up -- one phone-width "
+       "dark column, the colour tokens with their meaning (green one person, amber group, blue special, red remove), compact "
+       "People rows with Edit / Mute / Remove, and the terms shortened on screen but one tap away in full",
+       LOCKED, fixed_on="2026-10-17",
+       scope="ms.js _bbCss / _bbHeader / _bbPeoplePane / buzzRender (My Space > Buzz, every market and plan).",
+       ref="David, 17 Oct 2026: 'why don't the app look like you are showing it here. I like the HMI interface you are showing "
+           "me.' Matches mockups/BUZZ_BOARD_MOCKUP_2026-10-17.html; live screenshots mockups/BUZZ_BOARD_LIVE_2026-10-17.png. "
+           "The terms copy itself is untouched (RUL-133(e) / RG for SS3.8 still guard it); only its display is collapsed behind "
+           "'Terms 3.8', and the per-person consent switch carries its own section-3.8 line.")
+def rg_buzz_look():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for needle, why in (("#bz-content.bb-look{max-width:420px", "the phone-width column"),
+                        ("--bb-bg:#04100c", "the dark background token"), ("--bb-one:#16A97C", "green = one person"),
+                        ("--bb-grp:#E8A33D", "amber = a group"), ("--bb-spec:#4AA8FF", "blue = specials"),
+                        ("--bb-stop:#E5534B", "red = remove"), ("function _bbPeoplePane(", "the compact People rows"),
+                        ('class="bb-rm" data-close=', "Remove on the row"), ('data-allow="\' + i + \'">\' + (p.i_allow_them ? \'Mute\'', "Mute on the row"),
+                        ("Terms 3.8", "the one-tap terms link")):
+        if needle not in js:
+            out.append((FAIL, "ms.js lost %s" % why))
+    i = js.find("function _bbPeoplePane(")
+    body = js[i:i + 6000] if i > -1 else ""
+    if "bzTermsCopy()" not in body:
+        out.append((FAIL, "the People pane no longer carries the full on-screen terms behind 'Terms 3.8'"))
+    if "accepts the Buzz terms (section 3.8) for this person only" not in body:
+        out.append((FAIL, "the per-person consent switch lost its section-3.8 line"))
+    return out or [(INFO, "phone-width dark column, colour tokens, compact rows and one-tap terms all present")]
+
+
 @entry("RG-1050", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
        "links, each a server-side 302 through our own /go/partner/<slug>, and still not one byte of partner script on any page",
        LOCKED, fixed_on="2026-10-17",
