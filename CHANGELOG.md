@@ -1,3 +1,61 @@
+## 2026-10-17 -- LINKOUT-ON-1 ledger id corrected: RG-1026 -> RG-1050
+
+The LINKOUT-ON-1 entry above was first filed as RG-1026, but RG-1010..RG-1049 is reserved for BUG-AUDIT-1016 and the
+cloud lane had already used RG-1026 for FARES-TOKEN-1 (commit 21f9fe1). The switch-on assertion is now **RG-1050**
+(regression_ledger.py, rulings_check.py RUL-236, RULINGS.md RUL-236). Where the entry above says RG-1026, read RG-1050.
+
+## 2026-10-17 — BUZZ-BOARD-1 (RUL-238): the Buzz Board — People, Send and Specials on one screen
+
+David, 17 Oct 2026 09:20 SAST, on mockups/BUZZ_BOARD_MOCKUP_2026-10-17.html: *"the basic service for free and the
+marketing for paid subscriptions ... greyed out and when pressed saying they require a subscription ... not to pay for
+any emails or SMS's as far as this Buzz comms is applicable."*
+
+- **My Space > Buzz now has three tabs.** People (the page as it was, plus her own nickname and tags per person, a tag
+  filter, "+ Add people" = her existing Buzz link by WhatsApp with no number, plus a QR code drawn on our own server,
+  and Remove with a 10-second undo before anyone is told). Send (one person / a tag / everyone; six ready-made service
+  lines; 120 characters). Specials (label + end date on her own listing, a pointer buzz, a SPECIAL line on the card and
+  detail that drops off by itself after the end day).
+- **Free vs paid (RUL-238(b)(c)):** Free sends the service lines to a tag or everyone; free text to a group and Specials
+  are Starter/Pro/Agency — greyed with a lock on Free, tapping says "Needs a subscription" and names Starter. Enforced
+  server-side (402).
+- **No per-message cost (RUL-238(d)):** a group send is separate one-to-one buzzes, run off the request path, PUSH ONLY
+  (no email, no SMS). The one-to-one email backup now has a daily ceiling (BUZZ_EMAIL_DAILY_CAP=500, inside the flat
+  Resend plan); past it the sender is told "held".
+- **Limits (Claude's technical call, David may veto):** 1 send to everyone a day, 3 tag sends a day, 3 special buzzes a
+  week, a special ends within 14 days. Group sends no longer count against the one-to-one hourly cap.
+- "Today's bookings" from the mock-up is NOT built: there is no bookings data yet, so it was omitted rather than invented.
+- New routes declared in route_policy.json (stranger test PASS, 351 routes). Schema: buzz_people, buzz_group_log,
+  listings.special_label/special_until (migration 083 + created on first use). Ledger RG-1051 (live routes, OPEN until
+  deployed) and RG-1052..1054 (LOCKED). 24 functional checks passed on a scratch database.
+
+Cost model impact: none (push is free; email stays inside the flat plan). Schema: additive only.
+
+## 2026-10-17 -- BUG-AUDIT-1016 follow-up: the two mail hand-offs (cloud lane, with David)
+
+- **MAIL-HANDOFF-1** (server nginx /etc/nginx/conf.d/ts_origin.conf; BA-031) -- since ORIGIN-LOCK-1 (24 Sep) nginx answered 403
+  to every request without the Cloudflare transform-rule header, and the two Cloudflare mail workers' hand-offs never carry it:
+  every reply through an introduction relay address and every e-mail to support@ bounced back to its sender ("This introduction
+  channel is not available" / "support intake is temporarily unavailable"). Proven 17 Oct with two test mails: ts_origin.log shows
+  ok=0 403 on /intro/relay and /email/inbound at the exact seconds. The lock now exempts exactly those two paths -- each already
+  demands its own secret (X-Relay-Secret / X-Inbound-Secret, both rotated the same morning) -- and every other path stays locked
+  (direct-to-origin /terms, /listings, /health still 403). Re-test: the relay hand-off passed the new secret (404 for a made-up
+  alias, as it should), support mail was accepted (200) and the triage reply was delivered. David approved amending the 24 Sep
+  ruling. The nginx file is not in the repo: this entry and the comment inside that file are the record -- do not remove the
+  exemption without moving the mail workers onto the stamp first.
+- **ROTATE-HELPER-1** (scripts/close_selfissued_secrets.py; BA-032) -- the helper's relay/support-mail sections deleted the key from
+  .env and the drop-ins and appended it to .env only, so /etc/environment (an EnvironmentFile, which outranks Environment=) kept the
+  OLD EMAIL_INBOUND_SECRET live -- and that key, read with os.getenv only, never reads .env anyway. It now rewrites the value in
+  place wherever it is defined, sends it over stdin (never on a command line), refreshes .secrets/relay_inbound_secret.txt and
+  email_inbound_secret.txt (the relay file had been holding the support-mail secret), and proves the running app by fingerprint.
+
+## 2026-10-17 -- BUG-AUDIT-1016 (continued from the cloud lane, merged by LINKOUT-ON-1)
+
+- **FARES-TOKEN-1** (data_flights.py, scripts/regression_ledger.py; BA-030, RG-1026) -- the daily fare refresh (root cron, 06:20 UTC)
+  never had the Travelpayouts token: the token lives only in the app service's systemd drop-in, which cron does not read, so
+  every run since 25 Aug fetched nothing (ok 0, none 10) while the cache aged. Harmless while the flights flag is off; the
+  fares would have been empty the day it is switched on. The refresh now reads the token from that drop-in when its own
+  environment lacks it (root-only file, never printed).
+
 ## 2026-10-17 -- LINKOUT-ON-1: Travelpayouts partner links switched on, server-side only (RUL-236)
 
 David, 17 Oct 2026 07:56 SAST: "Please switch it on", then "yes, create the links".

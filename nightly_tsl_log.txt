@@ -2623,3 +2623,4 @@ sync-origin [MarketSquare]: STOP -- 1 commit(s) on origin/main could not be take
   [LOCK] released.
 Press any key to continue . . . 
 Sat 10/17/2026  8:15:21.48  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
+Sat 10/17/2026 10:02:37.43  SHIPPING - DEPLOY DRIFT: 5 files differ from live - LIVE IS AHEAD by 5 commits not on this laptop yet - the next ship takes them in first [SYNC-ORIGIN-1]: assets/service-worker.js, bea_main.py, ms.js, ripple_features.py, route_policy.json | gate green, releasing unattended

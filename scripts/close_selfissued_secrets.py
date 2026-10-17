@@ -6,6 +6,9 @@ Runs on David's PC (needs ssh). PRINTS NO SECRET VALUES - fingerprints only.
   MS_DEPLOY_TOKEN      - mint fresh server-side, update the local copy
   RELAY_INBOUND_SECRET - rotate; the Cloudflare Worker half needs David to paste
   EMAIL_INBOUND_SECRET - rotate; same
+
+BA-032 (17 Oct 2026): sections 3+4 rewrite each value in place wherever it is defined (.env,
+/etc/environment, every service drop-in) and prove the running app by fingerprint afterwards.
 """
 import hashlib, os, re, secrets, subprocess, sys
 
@@ -24,6 +27,40 @@ def live(var):
     rc, o = ssh("p=$(systemctl show -p MainPID --value marketsquare); "
                 "tr '\\0' '\\n' < /proc/$p/environ | grep '^%s=' | cut -d= -f2-" % var)
     return o.strip()
+
+# BA-032: run a Python script on the server over stdin, so a new value never sits on a command line.
+def ssh_py(script):
+    r = subprocess.run(["ssh", "-o", "ConnectTimeout=20", SERVER, "python3 -"],
+                       input=script, capture_output=True, text=True)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+# BA-032 (17 Oct 2026): rewrite VAR's value wherever it is defined - .env, /etc/environment and every
+# service drop-in - keeping each file's owner and mode. Prints file names and counts only, never values.
+_REPLACE_IN_PLACE = r'''
+import glob, os, re, tempfile
+VAR, NEW = %r, %r
+files = ["/var/www/marketsquare/.env", "/etc/environment"] + sorted(glob.glob("/etc/systemd/system/marketsquare.service.d/*.conf"))
+rx = re.compile(r'(?<![A-Za-z0-9_])(' + re.escape(VAR) + r'=)(["\']?)[^"\'\s]*')
+total = 0
+for p in files:
+    if not os.path.isfile(p):
+        continue
+    lines, n = [], 0
+    for line in open(p, encoding="utf-8").read().split("\n"):
+        if not line.lstrip().startswith("#"):
+            line, k = rx.subn(lambda m: m.group(1) + m.group(2) + NEW, line)
+            n += k
+        lines.append(line)
+    if n:
+        st = os.stat(p)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=".rot-")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+        os.chown(tmp, st.st_uid, st.st_gid); os.chmod(tmp, st.st_mode & 0o7777); os.replace(tmp, p)
+        total += n
+        print("updated", p, n)
+print("DONE" if total else "NOT DEFINED ANYWHERE")
+'''
 
 print("=" * 66)
 print("  Closing the last four self-issued credentials")
@@ -96,11 +133,13 @@ for var, prefix in (("RELAY_INBOUND_SECRET", "rls_"), ("EMAIL_INBOUND_SECRET", "
         print("      [--] %s is not set on the server - skipping" % var)
         continue
     new = prefix + secrets.token_urlsafe(32)
-    rc, o = ssh("sed -i '/^%s=/d' /var/www/marketsquare/.env 2>/dev/null; "
-                "printf '%s=%s\\n' >> /var/www/marketsquare/.env; "
-                "cd /etc/systemd/system/marketsquare.service.d && "
-                "for f in *.conf; do sed -i '/^\\s*Environment=\"\\?%s=/d' \"$f\"; done; "
-                "echo DONE" % (var, var, new, var))
+    # BA-032: the old version deleted the key from .env and the drop-ins and appended it to .env only.
+    # That left /etc/environment holding the OLD value (systemd ranks EnvironmentFile= above Environment=,
+    # so the app kept running on it), and EMAIL_INBOUND_SECRET - read with os.getenv only - never reads .env.
+    rc, o = ssh_py(_REPLACE_IN_PLACE % (var, new))
+    if "DONE" not in o:
+        print("      [!!] %s NOT rotated - %s" % (var, (o.strip().splitlines() or ["no output"])[-1][:160]))
+        continue
     pairs[var] = new
     print("      [OK] %s rotated on the server (was %s, now %s)" % (var, fp(before), fp(new)))
 
@@ -115,8 +154,20 @@ if pairs:
             f.write("%s\n  where: %s\n  value: %s\n\n" % (k, where, v))
     print("\n      >>> OPEN .secrets\\worker_secrets_to_paste.txt and paste each value")
     print("      >>> into its Worker. DELETE the file afterwards.")
+    # BA-032: keep the per-secret files current - relay_secret_install.py reuses relay_inbound_secret.txt,
+    # and on 17 Oct that file was found holding the support-mail secret instead of the relay one.
+    for k, v in pairs.items():
+        name = "relay_inbound_secret.txt" if k.startswith("RELAY") else "email_inbound_secret.txt"
+        with open(os.path.join(SEC, name), "w") as f:
+            f.write(v)
+        print("      [OK] .secrets\\%s updated to match" % name)
 
 rc, o = ssh("systemctl daemon-reload && systemctl restart marketsquare && sleep 4 && "
             "echo SVC=$(systemctl is-active marketsquare) "
             "HEALTH=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health)")
 print("\n  final: %s" % (o.strip().splitlines()[-1] if o.strip() else "no output"))
+
+# BA-032: prove the running app took each new value (fingerprints only).
+for k, v in pairs.items():
+    got = live(k)
+    print("  %s %s on the running app: %s (expected %s)" % ("[OK]" if got == v else "[!!] MISMATCH -", k, fp(got), fp(v)))
