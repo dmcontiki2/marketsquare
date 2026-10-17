@@ -17594,6 +17594,8 @@ function _bbCss(){
    + '#screen-buzz.bb-dark .page-hdr{background:var(--bb-bg);color:var(--bb-ink);border-bottom:1px solid var(--bb-line)}'
    + '#screen-buzz.bb-dark .page-hdr h1,#screen-buzz.bb-dark .page-hdr .sub{color:var(--bb-ink)}'
    + '#screen-buzz.bb-dark .page-hdr .back-btn{background:var(--bb-panel);color:var(--bb-ink);border-color:var(--bb-line)}'
+   + '#screen-buzz.bb-dark .page-hdr .back-btn svg{stroke:var(--bb-ink)!important}#screen-buzz.bb-dark .page-hdr h1,#screen-buzz.bb-dark .page-hdr .sub{visibility:hidden}'
+   + '.bb-card{font-size:13.5px;line-height:1.35;color:var(--bb-ink)}'
    + '#bz-content.bb-look{max-width:420px;margin:12px auto 110px;background:var(--bb-panel);border:1px solid var(--bb-line);border-radius:22px;padding:14px 12px 18px;color:var(--bb-ink);box-sizing:border-box}'
    + '@media (max-width:460px){#bz-content.bb-look{margin:8px 8px 110px;border-radius:18px}}'
    + '.bb-look a{color:#8ff0c8}'
