@@ -39645,6 +39645,8 @@ def rg_ai_voice_lm_fill():
         return [(FAIL, "the brand fill is no longer limited to instruments / general -- a handmade maker's name could land in her advert")]
     if '"material": null,' not in bm or "never a small business, studio, farm or person's name" not in bm:
         return [(FAIL, "the vision-draft prompt no longer asks for material, or no longer forbids a seller's business name as brand")]
+    if r"\b(is|are) (also )?included\b" not in js[i:i + 1600] or "Never say anything is included" not in bm:
+        return [(FAIL, "the read may again tell buyers a prop 'is included with the dresser' -- only she knows what comes with it (AI-INCLUDED-1)")]
     if "never camera words such as 'visible'" not in bm:
         return [(FAIL, "the vision-draft prompt no longer asks for the seller's own voice")]
     return [(INFO, "story in the seller's voice; Local Market material / brand blanks filled from the read")]

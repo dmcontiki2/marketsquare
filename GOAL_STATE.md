@@ -5,6 +5,24 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 42 — Sat 17 Oct 2026, 15:56–16:45 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun42_write_test`). SSH via
+  `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w42` (removed at the end), shipped `claude/goal-run42` via CLOUD-SHIP-1.
+- **THE NUMBER: still 5 by a stranger's hand** (#542, #544, #554, #562, #565). Live 146 = 132 `*@trustsquare.co` + family/David 9
+  (#574 Petrus car wash, 16 Oct 21:34Z, is on dmcontiki2@ — not a stranger) + strangers 5. No new stranger listing or draft.
+- **ALL OUTREACH STOPPED (GI-0044):** SMS 17 Oct 07:10Z sent 0 of 400 — BulkSMS 0.0 credits; e-mail wave 0 sendable (Maine 344
+  held). Nothing has gone out since 16 Oct 07:10Z. Pushed to David 15:58Z. Next SMS run Mon 19 Oct 07:10Z.
+- **Where people stop (16 Oct 16:00Z → 17 Oct 16:00Z, bot=0):** nobody came — one iPhone dwell row. Nothing to read; no PHOTO-REFUSED lines.
+- **Walk:** Local Market · Furniture & Home, Cape Town, cold Home → Sell → LM → dresser photo (read 6.1 s, score 70) → score card;
+  stopped at Publish. No errors. `docs/E2E_2026-10-17.md`.
+- **Shipped (GI-0045, RG-1057):** AI-VOICE-1 + LM-DRAFT-FILL-1 (9c49d5f, live 16:14Z, proven: Material "Oak", story in her voice);
+  AI-INCLUDED-1 in a second ship after the live proof showed the new prompt claiming a prop radio "is included with the dresser".
+- **Ledger:** new tree 0 !!!!; base `/opt/marketsquare-src` 688fc99 6 !!!! (RG-0229, 0230, 0247, 0276, 0403, 0987 — same six as runs 40–41).
+- **REVIEW NOW:** GI-0044 (top up SMS — now the only blocker), GI-0041 (ten waiting drafts; none came back on their own).
+- **QA data:** none created (nothing saved, no account).
+- **Not reached:** nothing.
+
 ## RUN 41 — Fri 16 Oct 2026, 15:55–16:50 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe `.goalrun_write_test` and candidate copies
