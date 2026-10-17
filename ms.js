@@ -24152,6 +24152,11 @@ function sfApplyDraft(d){
     if(d.level && !A.levels) A.levels=d.level;
   }
   if(cat==='local_market' && d.title && !A.title) A.title=d.title;
+  if(cat==='local_market'){   // LM-DRAFT-FILL-1 (Goal run 42): what the read already names fills her blanks -- only blanks
+    var _lt=sfState.lmType||'general', _mt=d.material?String(d.material).trim().slice(0,80):'', _br=d.brand?String(d.brand).trim().slice(0,80):'';
+    if(_mt && !/^(null|none|unknown|n\/a)$/i.test(_mt)){ if(_lt==='furniture' && !A.material) A.material=_mt; if(_lt==='handmade' && !A.materials) A.materials=_mt; }
+    if(_br && !/^(null|none|unknown|n\/a)$/i.test(_br) && (_lt==='instruments'||_lt==='general') && !A.brand) A.brand=_br;   // never handmade/food: the maker IS the seller
+  }
   if(cat==='Collectors'){
     if(d.title && !A.name) A.name=d.title;
     /* COL-DRAFT-1 (Goal run 28, 4 Oct 2026): the photo read named a stranger's coin "1947 Vintage Coin" and then left
@@ -24181,9 +24186,21 @@ function sfAiDescRow(){ var f=sfFlow(); if(!f) return ''; for(var i=0;i<f.sectio
 /* AI-DESC-SHOWN-1: drop the read's notes-to-self -- what it could not see, the props and styling around the item */
 function sfCleanAiDesc(t){
   t=String(t||'').trim(); if(!t) return '';
+  t=sfAiVoice(t);   // AI-VOICE-1 (Goal run 42)
   var parts=t.match(/[^.!?]+[.!?]*(\s+|$)/g)||[t];
-  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b|\b(may|might|probably|possibly) not be (included|part of)|\bnot (be )?included\b|\b(is|are) (positioned|placed|displayed|arranged|propped) (on top|beside|next to|alongside|in front|behind|around)\b|\b(should|must|need to|needs to|would need to) be (confirmed|checked|verified|clarified)\b|\bto be confirmed\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34) + AI-PROPS-1 (Goal run 35) + AI-META-CONFIRM-1 (Goal run 38)
+  var bad=/\b(not (clearly )?(visible|shown|legible|readable|stated|confirmed)|cannot be (seen|confirmed|determined|verified)|can(?:no|')t be (seen|confirmed|determined)|unclear from the photo|from the photo alone|no .{0,40} (are|is) visible|props?\b|styling|staged with|serving props|as decoration|\b(legible|illegible|readable|discernible)\b|\b(in|from|on) (the|this) (photo|photograph|image|picture)\b|\b(may|might|probably|possibly) not be (included|part of)|\bnot (be )?included\b|\b(is|are) (positioned|placed|displayed|arranged|propped) (on top|beside|next to|alongside|in front|behind|around)\b|\b(should|must|need to|needs to|would need to) be (confirmed|checked|verified|clarified)\b|\bto be confirmed\b|\b(is|are) (also )?included\b|\bincluded (with|in the sale)\b)/i;   // AI-DESC-CLEAN-2 (Goal run 34) + AI-PROPS-1 (Goal run 35) + AI-META-CONFIRM-1 (Goal run 38) + AI-INCLUDED-1 (Goal run 42: only she knows what comes with it)
   return parts.filter(function(x){ return !bad.test(x); }).join('').trim();
+}
+/* AI-VOICE-1 (Goal run 42, 17 Oct 2026): the same Cape Town dresser's story read "A solid-looking oak chest of drawers with
+   three visible drawers ... some visible surface marks consistent with used furniture" -- a camera describing a photo, not a
+   seller describing her dresser. Camera words go; the sentence stays. No lookbehind (older Safari cannot parse it). */
+function sfAiVoice(t){
+  t=String(t||'');
+  t=t.replace(/\b(solid|sturdy|heavy|clean|neat|good)-looking\b/gi,'$1');
+  t=t.replace(/(\b[A-Za-z]+\s+)visible\s+(?=[a-z])/g,function(m,pre){ return /^(is|are|was|were|be|been|clearly|not|barely|still|also|only)\s+$/i.test(pre)?m:pre; });
+  t=t.replace(/,?\s+consistent with (?:normal |general |regular |light |its |previous |everyday )?(age and use|use and age|age|use|wear|used [a-z]+|a used [a-z]+|previous use|everyday use)\b/gi,function(m,w){ return /^age$/i.test(w)?' from age':' from use'; });
+  t=t.replace(/\b(appears|seems) to be\b/gi,function(m,v){ return /^A/.test(v)?'Is':'is'; }).replace(/\b(appear|seem) to be\b/gi,function(m,v){ return /^A/.test(v)?'Are':'are'; });
+  return t.replace(/\s{2,}/g,' ');
 }
 /* AI-PROPS-1 (Goal run 35, 10 Oct 2026): a Cape Town dresser photo with a radio and books standing on it came back titled
    "Oak Dresser With Vintage Radio", and its draft said the radio and books "may not be included". The title names only the

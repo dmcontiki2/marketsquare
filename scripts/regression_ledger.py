@@ -39621,6 +39621,44 @@ def rg_buzz_look():
     return out or [(INFO, "phone-width dark column, colour tokens, compact rows and one-tap terms all present")]
 
 
+@entry("RG-1057", "AI-VOICE-1 + LM-DRAFT-FILL-1 (Goal run 42, 17 Oct 2026): the photo read's story reads like the seller "
+       "talking about her own item, not a camera describing a photo ('solid-looking', 'three visible drawers', 'consistent with "
+       "used furniture' are rewritten client-side and forbidden in the prompt); a Local Market read names the material "
+       "(furniture Material / handmade Materials) and a factory brand (instruments / general Brand) and fills only her blanks -- "
+       "never a brand on handmade or food, where the maker is the seller",
+       LOCKED, fixed_on="2026-10-17",
+       scope="ms.js sfAiVoice + sfCleanAiDesc + sfApplyDraft (local_market); bea_main.py vision-draft prompt (local_market "
+             "material/brand, description_draft seller voice)",
+       ref="Goal run 42 walk (docs/E2E_2026-10-17.md): a Cape Town stranger selling a dresser got 'A solid-looking oak chest of "
+           "drawers with three visible drawers ... some visible surface marks consistent with used furniture' as her story, "
+           "and an empty Material box under a read that had just said 'oak'.")
+def rg_ai_voice_lm_fill():
+    js = repo_file("ms.js"); bm = repo_file("bea_main.py")
+    if js is None or bm is None:
+        return [(INFO, "NOT EVALUATED - ms.js / bea_main.py not readable from here")]
+    i = js.find("function sfCleanAiDesc(t){")
+    if i < 0 or "sfAiVoice(t)" not in js[i:i + 200] or "function sfAiVoice(t){" not in js:
+        return [(FAIL, "sfCleanAiDesc no longer rewrites the read's camera words -- 'solid-looking ... visible ... consistent with' is back in her story")]
+    v = js[js.find("function sfAiVoice(t){"):][:1400]
+    if "(?<" in v:
+        return [(FAIL, "sfAiVoice uses a regex lookbehind -- older iPhone Safari cannot parse it and ms.js stops loading")]
+    for need in ("-looking", "visible", "consistent with", "appears|seems"):
+        if need not in v:
+            return [(FAIL, "sfAiVoice lost its '%s' rewrite" % need)]
+    a = js.find("LM-DRAFT-FILL-1 (Goal run 42)")
+    if a < 0 or "A.material=" not in js[a:a + 700] or "A.materials=" not in js[a:a + 700] or "A.brand=" not in js[a:a + 700]:
+        return [(FAIL, "a Local Market read no longer fills Material / Materials / Brand blanks")]
+    if "'handmade'" in js[a:a + 700].split("A.brand=")[1][:10] or "(_lt==='instruments'||_lt==='general') && !A.brand" not in js[a:a + 700]:
+        return [(FAIL, "the brand fill is no longer limited to instruments / general -- a handmade maker's name could land in her advert")]
+    if '"material": null,' not in bm or "never a small business, studio, farm or person's name" not in bm:
+        return [(FAIL, "the vision-draft prompt no longer asks for material, or no longer forbids a seller's business name as brand")]
+    if r"\b(is|are) (also )?included\b" not in js[i:i + 1600] or "Never say anything is included" not in bm:
+        return [(FAIL, "the read may again tell buyers a prop 'is included with the dresser' -- only she knows what comes with it (AI-INCLUDED-1)")]
+    if "never camera words such as 'visible'" not in bm:
+        return [(FAIL, "the vision-draft prompt no longer asks for the seller's own voice")]
+    return [(INFO, "story in the seller's voice; Local Market material / brand blanks filled from the read")]
+
+
 @entry("RG-1050", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
        "links, each a server-side 302 through our own /go/partner/<slug>, and still not one byte of partner script on any page",
        LOCKED, fixed_on="2026-10-17",
