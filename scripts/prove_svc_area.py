@@ -154,6 +154,8 @@ c1 = C.get("/listings/%d/area-check" % LID, params={"lat": INSIDE[0], "lng": INS
 c2 = C.get("/listings/%d/area-check" % LID, params={"lat": DOWN[0], "lng": DOWN[1]}, headers=H).json()
 c3 = C.get("/listings/%d/area-check" % LID, params={"address": "Irene Village Mall"}, headers=H).json()
 c4 = C.get("/listings/%d/area-check" % LID, params={"address": "somewhere unknown"}, headers=H).json()
+c5 = C.get("/listings/%d/area-check" % LID, params={"address": "Technopark, Centurion 12"}, headers=H).json()
+check(c5.get("found") is True, "an address with a house number OSM does not know falls back to the street")
 check(c1.get("inside") is True, "office on the street: inside")
 check(c2.get("inside") is False and "km" in (c2.get("outside") or ""), "2 km down the street: outside by %s" % c2.get("outside"))
 check(c3.get("inside") is False, "an address in Irene: outside by %s" % c3.get("outside"))

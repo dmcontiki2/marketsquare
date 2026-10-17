@@ -4401,6 +4401,24 @@ class svc_area:
 
 
     @staticmethod
+    def geocode_addr(address, city, country_iso2="ZA"):
+        """A typed job address: as typed with the city, as typed, then without house numbers (OpenStreetMap often knows
+        the street but not the number). -> (lat, lng, display) or (None, None, '')."""
+        a = (address or "").strip()[:160]
+        if not a:
+            return None, None, ""
+        bare = " ".join(w for w in a.replace(",", " , ").split() if not any(ch.isdigit() for ch in w)).replace(" ,", ",").strip(" ,")
+        tries = []
+        for q in (", ".join(x for x in (a, city) if x), a, ", ".join(x for x in (bare, city) if x), bare):
+            if q and q not in tries:
+                tries.append(q)
+        for q in tries:
+            r = svc_area.geocode(q, country_iso2)
+            if r[0] is not None:
+                return r
+        return None, None, ""
+
+    @staticmethod
     def street_lines(street, lat, lng, radius_m):
         """Every OSM way carrying this street name near the centre, cut to the stretch (radius_m + a margin), as
         [[lat, lng], ...] lines rounded to ~1 m. [] when the street is not found there; None when the map service did
@@ -4677,8 +4695,7 @@ def service_area_check(listing_id: int, lat: Optional[float] = None, lng: Option
     lock = bool(row["area_lock"])
     out = {"area": True, "lock": lock, "label": a.get("label"), "kind": a.get("kind")}
     if (lat is None or lng is None) and (address or "").strip():
-        lat, lng, _ = svc_area.geocode(", ".join(x for x in ((address or "").strip()[:160], row["city"] or "") if x),
-                                       (row.get("country") or "ZA"))
+        lat, lng, _ = svc_area.geocode_addr(address, row["city"] or "", (row.get("country") or "ZA"))
     if lat is None or lng is None:
         out["found"] = False
         return out
@@ -10156,8 +10173,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
         _sa_lock = bool(listing["area_lock"])
         _jl, _jg = intro.job_lat, intro.job_lng
         if (_jl is None or _jg is None) and (intro.job_address or "").strip():
-            _jl, _jg, _ = svc_area.geocode(", ".join(x for x in ((intro.job_address or "").strip()[:160], listing["city"] or "") if x),
-                                           _lcc or "ZA")
+            _jl, _jg, _ = svc_area.geocode_addr(intro.job_address, listing["city"] or "", _lcc or "ZA")
         if _jl is None or _jg is None:
             if _sa_lock:
                 conn.close()
