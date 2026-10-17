@@ -26592,6 +26592,10 @@ def _build_vision_prompt(category_hint: str, city: str, country_iso2: str, photo
             "This is a LOCAL MARKET listing — handmade, homegrown, or artisanal goods. "
             "Identify the product type, quantity/size if visible, and any unique features. "
             "suggested_price is the per-item or per-unit price. "
+            # LM-DRAFT-FILL-1 (Goal run 42, 17 Oct 2026): the read said 'oak' in the story and left the Material box empty
+            "Set material to the main material(s) if you can tell from the photo (e.g. 'Oak', 'Leather and brass', 'Stoneware'), else null. "
+            "Set brand to the manufacturer's brand (and model) ONLY for a factory-made product whose brand is printed on it or "
+            "unmistakable (e.g. 'Yamaha F310', 'Giant'); never a small business, studio, farm or person's name, which would name the seller; else null. "
             "Set category to 'local_market' in the response."
         ),
         "tutors": (
@@ -26619,7 +26623,7 @@ TASK: Return a single JSON object with exactly these fields:
 {{
   "category": "property|services|adventures|cars|collectors|local_market",
   "title": "4–8 word title in Title Case, specific not generic, naming only the item being sold -- never an object, ornament or prop standing on, in or beside it",
-  "description_draft": "2–6 honest sentences describing what is visible, following the ADVERT SHAPE for the category if one is given above. Be specific. No hype. This is the advert text a BUYER reads: describe only the item being sold, never the props, styling or background around it (do not mention them at all, not even to say they may not be included), and never say what you cannot see or confirm (put that in coach_tips).",
+  "description_draft": "2–6 honest sentences describing what is visible, following the ADVERT SHAPE for the category if one is given above. Be specific. No hype. This is the advert text a BUYER reads: describe only the item being sold, never the props, styling or background around it (do not mention them at all, not even to say they may not be included), and never say what you cannot see or confirm (put that in coach_tips). Write it the way the seller would say it about their own item, in plain statements (e.g. 'Solid oak chest of drawers with three drawers and brass handles. A few marks from use.') -- never camera words such as 'visible', 'appears to be', 'solid-looking', 'consistent with', 'the photo shows'.",
   "suggested_price": <number — monthly rent, per-session rate, per-person price, or sale price>,
   "currency_prefix": "{currency}",
   "tags": ["3 to 6 relevant keyword strings"],
@@ -26643,6 +26647,8 @@ TASK: Return a single JSON object with exactly these fields:
   "vehicle_specs": null,
   "collectible_type": null,
   "maker": null,
+  "material": null,
+  "brand": null,
   "missing_shots": [],
   "coach_tips": [],
   "warnings": [],
