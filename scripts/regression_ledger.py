@@ -39326,5 +39326,29 @@ def rg_audit1017_wonder_selfhost():
         bad.append("%d self-hosted photo(s) lost their licence or source (e.g. %s)" % (len(bare), ", ".join(bare[:3])))
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "all %d landmark photos are self-hosted with attribution" % len(cat))]
 
+
+
+@entry("RG-1024", "WONDER-PICKS-1 (17 Oct 2026 bug audit, BA-028): five landmark cards no longer show a picture of something "
+       "else -- Daintree was a gas mask, Manu National Park a man's portrait, the Smithsonian and the Cradle of Humankind maps",
+       LOCKED, fixed_on="2026-10-17",
+       scope="repo root wonders.json: np_018, np_026, nm_005, un_042, nm_016 photo_source",
+       ref="Content check of the 53 pictures self-hosted 17 Oct (contact sheets): these five had been picked by guessing a "
+           "Commons file name from the landmark's name (File:Daintree.jpg is a gas mask, File:Manu.jpg a man called Manu). "
+           "Replaced with each place's own Wikipedia lead picture (or, where that is a map, the visitor centre), checked by eye.")
+def rg_audit1017_wonder_picks():
+    import json as _json
+    w = repo_file("wonders.json")
+    if w is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    try:
+        cat = {x.get("id"): x for x in _json.loads(w)}
+    except ValueError as e:
+        return [(FAIL, "wonders.json unparseable: %s" % e)]
+    wrong = {"np_018": "File:Daintree.jpg", "np_026": "File:Manu.jpg", "nm_005": "File:Smithsonian.jpg",
+             "un_042": "File:Cradle_of_Humankind_in_Gauteng_map.jpg", "nm_016": "File:Acropolis_Museum.jpg"}
+    back = [i for i, f in wrong.items() if i in cat and (cat[i].get("photo_source") or "").endswith(f)]
+    return [(FAIL, "landmark card(s) %s show the wrong picture again" % ", ".join(back))] if back else \
+           [(INFO, "the five corrected landmark pictures hold")]
+
 if __name__ == "__main__":
     sys.exit(main())
