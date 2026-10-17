@@ -2475,6 +2475,21 @@
   {
    "key": "POST /admin/promoters/{code}/active",
    "level": "admin"
+  },
+  {
+   "key": "POST /listings/{listing_id}/service-area",
+   "level": "user",
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/{listing_id}/area-check",
+   "level": "public"
   }
  ]
 }

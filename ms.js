@@ -500,6 +500,7 @@ function _msMapBeaListing(l){
           advType: String(l.category||'').toLowerCase(),   // ADV-FIX-4: raw subtype survives normCat
           country: (l.country||'ZA').toString().toUpperCase(),   // MAP+CURRENCY FIX (25 Jul): country must survive normalization, else detail view treats every adventure as ZA (Dinokeng map + rands)
           reach: (l.reach==='national') ? 'national' : 'local',   // REACH-NATIONAL-1
+          svc_area: (l.svc_area && typeof l.svc_area === 'object' && l.svc_area.lat != null) ? l.svc_area : null,   // SVC-AREA-1 (RUL-237)
           tour: (l.tour||'').toString().toLowerCase(),   // TOUR-MAP FIX (26 Jul): tour code must survive normalization too, else ADV_TOUR_MAP never resolves and a multi-country tour (Cape-to-Cairo) falls back to the ZA reserve map
           feat: false,
           title: l.title,
@@ -596,7 +597,7 @@ async function loadLiveListings(retryCount) {
   try {
     const suburbParam = nearbyMode ? '' : (activeSuburb ? '&suburb=' + encodeURIComponent(activeSuburb.name) : '');
     const demoParam = DEMO_MODE ? '&demo=1' : '';
-    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam + demoParam);
+    const live = await apiGet('/listings?city=' + encodeURIComponent(activeCity.name) + suburbParam + demoParam + _msNearQS());   // SVC-AREA-1: a worker who only serves one street shows to people there
     if (seq !== _msListSeq) return;   // LIST-SWAP-1: a newer request (another city, a later refresh) owns the list now
     if (!live) {
       if (attempt < 3) {
@@ -3734,6 +3735,8 @@ async function zoomFetch(){
     const em = _zoomEmail(); if(em) p.set('email', em);
     if(DEMO_MODE) p.set('demo','1');
     p.set('rows','1');
+    try{ if(!nearbyMode && activeSuburb && activeSuburb.name) p.set('suburb', activeSuburb.name);   // SVC-AREA-1 (RUL-237)
+         const _nq = _msNearQS(); if(_nq) p.set('near', _nq.slice(6)); }catch(_){}
     const r = await fetch(BEA_URL + '/zoom/next?' + p.toString());
     if(seq !== zoomState.seq) return;               // a newer tap superseded this answer
     if(!r.ok) throw new Error('zoom ' + r.status);
@@ -5294,6 +5297,8 @@ function _detectLocation(){
   navigator.geolocation.getCurrentPosition(async pos=>{
     buyerLat=pos.coords.latitude; buyerLng=pos.coords.longitude;
     try{ msGeoFromGps(buyerLat, buyerLng); }catch(_){}   // GEO-AUTO-1: the phone's own location beats the network's (VPNs)
+    // SVC-AREA-1 (RUL-237): a worker who only serves this street is shown once we know the phone is on it -- read the list once more
+    if(!window._msNearRead){ window._msNearRead = 1; try{ loadLiveListings(); }catch(_){} }
     // Re-render cards with distance badges
     renderGrid();
     renderFeatured();
@@ -5845,7 +5850,7 @@ async function msRunSearch(explicit){
     const base = '/listings?city=' + encodeURIComponent(activeCity.name || '') + '&page_size=200' +
       (parsed.category ? '&category=' + encodeURIComponent(parsed.category) : '') +
       (parsed.price_min != null ? '&price_min=' + parsed.price_min : '') +
-      (parsed.price_max != null ? '&price_max=' + parsed.price_max : '');
+      (parsed.price_max != null ? '&price_max=' + parsed.price_max : '') + _msNearQS();   // SVC-AREA-1
     { const _rc = document.getElementById('results-count'); if (_rc) _rc.textContent = 'Searching…'; }   // SEARCH-SEQ-1
     let rows = await apiGet(base + (parsed.terms.length ? '&q=' + encodeURIComponent(parsed.terms.join(' ')) : ''));
     if (_stale()) return;
@@ -5872,7 +5877,7 @@ async function msRunSearch(explicit){
             filterState.property.listingType = p.listingType;
             if (typeof renderActiveFilterTags === 'function') renderActiveFilterTags();
           }
-          let u = '/listings?city=' + encodeURIComponent(activeCity.name || '') + '&page_size=200';
+          let u = '/listings?city=' + encodeURIComponent(activeCity.name || '') + '&page_size=200' + _msNearQS();   // SVC-AREA-1
           if (p.category) u += '&category=' + encodeURIComponent(p.category);
           if (p.terms && p.terms.length) u += '&q=' + encodeURIComponent(p.terms.join(' '));
           if (p.price_min != null) u += '&price_min=' + p.price_min;
@@ -8019,12 +8024,18 @@ function submitIntro(){
       // LISTING id; and the toast now reports what the server actually did.
       (async () => {
         try{
+          // SVC-AREA-1 (RUL-237): work outside a locked area is stopped here, before the terms or the 1T (the server checks too)
+          if(l.svc_area && l.svc_area.lock && _msJob && _msJob.ok === false){
+            showToast('That address is outside the area this worker serves \u2014 the request was not sent and nothing was charged.', 6000); return; }
+          if(l.svc_area && l.svc_area.lock && !_msJob){
+            showToast('Say where the work is first \u2014 they only work ' + _msSvcWhere(l.svc_area) + '.', 6000);
+            try{ document.getElementById('m-jobaddr').focus(); }catch(_){} return; }
           const ok = await msUnverifiedGate('', l.category, beaId);
           if(!ok){ _msIntroClose(false); return; }   // E2E-HMI-1: the gate itself says why
           const r = await _tsWithTerms(email, function(){ return fetch(BEA_URL + '/intros', { method:'POST', credentials:'include',
             headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
-            body: JSON.stringify({ listing_id: beaId, buyer_email: email, buyer_name: name,
-                                   message: msg || null, unverified_ack: true }) }); });   // BUYER-TERMS-1
+            body: JSON.stringify(Object.assign({ listing_id: beaId, buyer_email: email, buyer_name: name,
+                                   message: msg || null, unverified_ack: true }, _msJobFields())) }); });   // BUYER-TERMS-1; SVC-AREA-1 job place
           if(!r){ _msIntroClose(false); showToast('Introduction not sent — the Terms were not accepted. Your message is still here.', 5000); return; }
           if(!r.ok){
             const j = await r.json().catch(function(){ return {}; });
@@ -25722,3 +25733,245 @@ async function msQuickIconsOpen(forceOpen){
   });
 }
 
+/* ── SVC-AREA-1 (RUL-237, David 17 Oct 2026) ─────────────────────────────────────────────────────────────────────────
+   "link a casual workers service to a small area on the map, for housecleaners it may be a street or a suburb, for
+   Petrus it is a street ... a flag for him to toggle so that he doesn't get visibility outside of that area ... Even if
+   someone wants to use him in another company too far down the street then he wont be able to accept it."
+   The advert shows the street / small area on a little map; the request form asks where the work is and says at once
+   whether it is inside; the owner sets the area and the lock from the bar on their own advert. The server enforces
+   both halves (bea_main.py, class svc_area): a locked advert is hidden from people we do not know to be inside, and a request for work
+   outside is refused before anything is held. */
+function _msNearQS(){
+  try{ if(typeof buyerLat==='number' && typeof buyerLng==='number') return '&near=' + buyerLat.toFixed(3) + ',' + buyerLng.toFixed(3); }catch(_){}
+  return '';
+}
+function _msSvcDist(m){ m = Math.max(0, Math.round(m||0)); return m < 1000 ? (Math.round(m/10)*10) + ' m' : (m/1000).toFixed(1) + ' km'; }
+function _msSvcWhere(a){ return (a && a.kind==='street' ? 'on ' : 'in ') + ((a && a.label) || 'their area'); }
+function _msSvcDraw(el, a, opts){
+  opts = opts || {};
+  return _msMapLib().then(function(){
+    if(!el || !window.L) return null;
+    if(el._msMap){ try{ el._msMap.remove(); }catch(_){} el._msMap = null; }
+    var m = L.map(el, {zoomControl: !!opts.edit, attributionControl: true, scrollWheelZoom: false, dragging: true, tap: !!opts.edit});
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(m);
+    var c = L.circle([a.lat, a.lng], {radius: a.radius_m || 500, color: '#C8873A', weight: 1.5, fillColor: '#C8873A', fillOpacity: a.kind==='street' ? 0.06 : 0.16}).addTo(m);
+    var group = [c];
+    (a.lines || []).forEach(function(ln){ if(ln && ln.length > 1) group.push(L.polyline(ln, {color: '#1e1b4b', weight: 7, opacity: 0.85}).addTo(m)); });
+    try{ m.fitBounds(L.featureGroup(group).getBounds(), {padding: [14, 14]}); }catch(_){ m.setView([a.lat, a.lng], 15); }
+    el._msMap = m;
+    setTimeout(function(){ try{ m.invalidateSize(); }catch(_){} }, 80);
+    return m;
+  });
+}
+/* the card on the advert */
+function msSvcAreaCard(id){
+  try{
+    var l = findListing(id) || (id != null && !String(id).startsWith('bea_') ? findListing('bea_' + id) : null);
+    var scr = document.getElementById('screen-detail'); if(!scr) return;
+    var old = document.getElementById('ms-svcarea'); if(old) old.remove();
+    var a = l && l.svc_area; if(!a || a.lat == null) return;
+    var anchor = scr.querySelector('.dmeta'); if(!anchor) return;
+    var box = document.createElement('div'); box.id = 'ms-svcarea';
+    box.style.cssText = 'margin:4px 0 16px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)';
+    var head = document.createElement('div');
+    head.style.cssText = 'padding:11px 14px 9px;display:flex;align-items:flex-start;gap:10px';
+    var txt = document.createElement('div'); txt.style.cssText = 'flex:1;min-width:0';
+    var t1 = document.createElement('div'); t1.style.cssText = 'font:700 13.5px Inter,system-ui,sans-serif;color:var(--text)';
+    t1.textContent = (a.kind === 'street' ? '🛣️ Works on ' : '📍 Works in ') + (a.label || '');
+    var t2 = document.createElement('div'); t2.style.cssText = 'font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.45';
+    t2.textContent = a.lock
+      ? 'Only takes work here' + (a.kind === 'street' ? ' — this stretch of the street, about ' + _msSvcDist(a.radius_m) + ' either way.' : '.') + ' The request form checks your address first, so you are never charged for work outside it.'
+      : 'Usually works here' + (a.kind === 'street' ? ', on this stretch of the street.' : '.') + ' Further away? Ask — they may say no.';
+    txt.appendChild(t1); txt.appendChild(t2);
+    var tag = document.createElement('span');
+    tag.style.cssText = 'flex:none;border-radius:999px;padding:3px 10px;font:700 11px Inter,system-ui,sans-serif;' + (a.lock ? 'background:#1e1b4b;color:#fff' : 'background:#fff7e6;color:#5c3d00;border:1px solid #f0c36d');
+    tag.textContent = a.lock ? 'Only here' : 'Mostly here';
+    head.appendChild(txt); head.appendChild(tag);
+    var mapEl = document.createElement('div'); mapEl.style.cssText = 'height:170px;background:#e9eef3';
+    box.appendChild(head); box.appendChild(mapEl);
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    _msSvcDraw(mapEl, a).catch(function(){ mapEl.style.display = 'none'; });
+  }catch(_){}
+}
+(function(){
+  var _od = window.openDetail;
+  if(typeof _od === 'function' && !_od._msSvc){
+    var w = function(id){ var r = _od.apply(this, arguments); try{ setTimeout(function(){ msSvcAreaCard(id); }, 0); }catch(e){} return r; };
+    w._msSvc = 1; window.openDetail = w;
+  }
+})();
+/* the request form: where is the work? */
+var _msJob = null;
+function _msJobFields(){ return _msJob ? {job_lat: _msJob.lat != null ? _msJob.lat : null, job_lng: _msJob.lng != null ? _msJob.lng : null, job_address: _msJob.address || null} : {}; }
+function _introAreaField(id){
+  try{
+    var old = document.getElementById('m-jobwrap'); if(old) old.remove();
+    _msJob = null;
+    var l = findListing(id); var a = l && l.svc_area; if(!a || a.lat == null) return;
+    var msg = document.getElementById('m-msg'); var fld = msg && msg.closest('.field'); if(!fld) return;
+    var beaId = String(l.id).replace(/^bea_/, '');
+    var w = document.createElement('div'); w.id = 'm-jobwrap'; w.className = 'field';
+    var lab = document.createElement('label'); lab.setAttribute('for', 'm-jobaddr');
+    lab.textContent = 'Where is the work?' + (a.lock ? '' : ' (optional)');
+    var note = document.createElement('div'); note.style.cssText = 'font-size:12px;color:var(--text-2);margin:-2px 0 6px;line-height:1.4';
+    note.textContent = 'They ' + (a.lock ? 'only' : 'usually') + ' work ' + _msSvcWhere(a) + '.';
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px';
+    var inp = document.createElement('input'); inp.id = 'm-jobaddr'; inp.type = 'text'; inp.autocomplete = 'street-address';
+    inp.placeholder = a.kind === 'street' ? 'Street number or company on ' + (a.street || 'the street') : 'Your street address';
+    inp.style.cssText = 'flex:1;min-width:0';
+    var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = '📍 Here';
+    btn.title = 'Use where I am now';
+    btn.style.cssText = 'flex:none;border:1.5px solid var(--border);background:var(--surface);border-radius:10px;padding:0 12px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;color:var(--text)';
+    var out = document.createElement('div'); out.id = 'm-jobchk'; out.style.cssText = 'font-size:12.5px;margin-top:6px;line-height:1.4;min-height:1em';
+    row.appendChild(inp); row.appendChild(btn);
+    w.appendChild(lab); w.appendChild(note); w.appendChild(row); w.appendChild(out);
+    fld.parentNode.insertBefore(w, fld);
+    var seq = 0;
+    var show = function(j){
+      if(!j || !j.area){ out.textContent = ''; return; }
+      if(j.found === false){ out.style.color = 'var(--text-2)'; out.textContent = 'We could not find that address — try the street and number, or tap 📍 Here.'; return; }
+      if(j.inside){ out.style.color = '#166534'; out.textContent = '✓ Inside the area they work in.'; if(_msJob) _msJob.ok = true; }
+      else { out.style.color = a.lock ? '#b42318' : '#8a5a00'; if(_msJob) _msJob.ok = false;
+        out.textContent = '✗ About ' + (j.outside || '') + ' outside their area' + (a.lock ? ' — they cannot take this work, so the request will not be sent and nothing is charged.' : ' — you can still ask; they will see how far it is.'); }
+    };
+    var ask = function(qs){
+      var my = ++seq; out.style.color = 'var(--text-2)'; out.textContent = 'Checking…';
+      fetch(BEA_URL + '/listings/' + beaId + '/area-check?' + qs, {credentials: 'include'}).then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ if(my === seq) show(j); }).catch(function(){ if(my === seq) out.textContent = ''; });
+    };
+    inp.addEventListener('change', function(){
+      var v = inp.value.trim(); if(!v){ _msJob = null; out.textContent = ''; return; }
+      _msJob = {address: v}; ask('address=' + encodeURIComponent(v));
+    });
+    btn.onclick = function(){
+      if(!navigator.geolocation){ out.textContent = 'This phone cannot share its location — type the address instead.'; return; }
+      out.style.color = 'var(--text-2)'; out.textContent = 'Finding where you are…';
+      navigator.geolocation.getCurrentPosition(function(p){
+        _msJob = {lat: +p.coords.latitude.toFixed(5), lng: +p.coords.longitude.toFixed(5)};
+        inp.value = 'Where I am now';
+        ask('lat=' + _msJob.lat + '&lng=' + _msJob.lng);
+      }, function(){ out.textContent = 'Location was not shared — type the address instead.'; }, {timeout: 9000, enableHighAccuracy: true});
+    };
+  }catch(_){}
+}
+(function(){
+  var _om = window.openModal;
+  if(typeof _om === 'function' && !_om._msSvc){
+    var w = function(id){ var r = _om.apply(this, arguments); try{ setTimeout(function(){ if(document.getElementById('m-msg')) _introAreaField(id); }, 250); }catch(e){} return r; };
+    w._msSvc = 1; window.openModal = w;
+  }
+})();
+/* the owner: where I work + the lock */
+function msSvcAreaEditor(n){
+  n = String(n).replace(/^bea_/, '');
+  var l = findListing('bea_' + n) || findListing(n);
+  var cur = (l && l.svc_area) || null;
+  var old = document.getElementById('ms-svced'); if(old) old.remove();
+  var ov = document.createElement('div'); ov.id = 'ms-svced';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center';
+  var sh = document.createElement('div');
+  sh.style.cssText = 'background:var(--surface,#fff);color:var(--text);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px 20px;font:14px Inter,system-ui,sans-serif;box-sizing:border-box';
+  sh.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b style="font-size:17px;flex:1">Where you work</b>'
+    + '<button type="button" id="svx" aria-label="Close" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--text-2)">×</button></div>'
+    + '<div style="font-size:12.5px;color:var(--text-2);line-height:1.45;margin-bottom:12px">Pick the one street you work on, or the small area. Then people there find you, and you do not waste a trip.</div>'
+    + '<label style="font:600 12.5px Inter,system-ui,sans-serif">Street <span style="font-weight:400;color:var(--text-2)">(leave empty for a small area)</span></label>'
+    + '<input id="svst" type="text" placeholder="e.g. Witch-Hazel Avenue" style="width:100%;box-sizing:border-box;margin:4px 0 10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font:15px Inter,system-ui,sans-serif;background:var(--surface);color:var(--text)">'
+    + '<label style="font:600 12.5px Inter,system-ui,sans-serif">Suburb, business park or landmark</label>'
+    + '<input id="svpl" type="text" placeholder="e.g. Technopark, Centurion" style="width:100%;box-sizing:border-box;margin:4px 0 10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font:15px Inter,system-ui,sans-serif;background:var(--surface);color:var(--text)">'
+    + '<button type="button" id="svfind" style="width:100%;background:#1e1b4b;color:#fff;border:none;border-radius:999px;padding:11px;font:700 14px Inter,system-ui,sans-serif;cursor:pointer">Show it on the map</button>'
+    + '<div id="svmsg" style="font-size:12.5px;min-height:1.2em;margin:8px 0 4px;line-height:1.4"></div>'
+    + '<div id="svmap" style="height:230px;border-radius:12px;overflow:hidden;background:#e9eef3;display:none"></div>'
+    + '<div id="svtapnote" style="font-size:11.5px;color:var(--text-2);margin:5px 0 10px;display:none">Not quite right? Tap the map where you work.</div>'
+    + '<label id="svrlab" style="font:600 12.5px Inter,system-ui,sans-serif;display:block;margin-top:6px"></label>'
+    + '<input id="svrad" type="range" min="100" max="5000" step="50" style="width:100%">'
+    + '<label style="display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;padding:11px 12px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer">'
+    + '<input id="svlock" type="checkbox" style="width:20px;height:20px;flex:none;margin-top:1px">'
+    + '<span><b>Only here</b><br><span style="font-size:12.5px;color:var(--text-2);line-height:1.45">Show my listing only to people in this area, and turn away requests for work outside it. They are told before they pay anything.</span></span></label>'
+    + '<button type="button" id="svclear" style="margin-top:10px;background:none;border:none;color:#b42318;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;padding:6px 0">Remove the area</button>';
+  ov.appendChild(sh); document.body.appendChild(ov);
+  var $ = function(i){ return document.getElementById(i); };
+  var st = $('svst'), pl = $('svpl'), rad = $('svrad'), lock = $('svlock'), msg = $('svmsg'), mapEl = $('svmap');
+  var state = {lat: cur ? cur.lat : null, lng: cur ? cur.lng : null};
+  st.value = (cur && cur.street) || ''; pl.value = (cur && cur.place) || '';
+  rad.value = (cur && cur.radius_m) || 700; lock.checked = !!(cur && cur.lock);
+  var rl = function(){ $('svrlab').textContent = (st.value.trim() ? 'How far along the street: ' : 'How big the area: ') + _msSvcDist(+rad.value) + (st.value.trim() ? ' either way' : ' round the middle'); };
+  rl(); st.addEventListener('input', rl); rad.addEventListener('input', rl);
+  var close = function(){ ov.remove(); };
+  $('svx').onclick = close; ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  var applied = function(area){
+    cur = area;
+    if(l){ l.svc_area = area; }
+    try{ _msMine.at = 0; }catch(_){}
+    try{ if(String(window._msLastDetail || '').replace(/^bea_/, '') === n) msSvcAreaCard('bea_' + n); }catch(_){}
+  };
+  var draw = function(area){
+    mapEl.style.display = 'block'; $('svtapnote').style.display = 'block';
+    _msSvcDraw(mapEl, area, {edit: true}).then(function(m){
+      if(!m) return;
+      m.on('click', function(e){ state.lat = +e.latlng.lat.toFixed(6); state.lng = +e.latlng.lng.toFixed(6); save({tap: true}); });
+    }).catch(function(){ msg.textContent = 'The map did not load — your area is saved anyway.'; });
+  };
+  var busy = false;
+  var save = function(o){
+    o = o || {};
+    if(busy) return; busy = true;
+    var body = {radius_m: +rad.value, lock: lock.checked};
+    if(o.lockOnly){ body = {lock: lock.checked}; }
+    else {
+      body.street = st.value.trim(); body.place = pl.value.trim();
+      if((o.tap || o.keepPoint) && state.lat != null){ body.lat = state.lat; body.lng = state.lng; }
+      if(!body.street && !body.place && body.lat == null){ busy = false; msg.style.color = '#b42318'; msg.textContent = 'Type the street or the suburb first.'; return; }
+    }
+    msg.style.color = 'var(--text-2)'; msg.textContent = 'Saving…';
+    fetch(BEA_URL + '/listings/' + n + '/service-area', {method: 'POST', credentials: 'include',
+      headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY}, body: JSON.stringify(body)})
+      .then(function(r){ return r.json().then(function(j){ return {ok: r.ok, j: j}; }).catch(function(){ return {ok: r.ok, j: {}}; }); })
+      .then(function(res){
+        busy = false;
+        if(!res.ok){ msg.style.color = '#b42318'; msg.textContent = (res.j && typeof res.j.detail === 'string') ? res.j.detail : 'Not saved — please try again.';
+          if(o.lockOnly) lock.checked = !lock.checked; return; }
+        var area = res.j.area; applied(area);
+        if(!area){ msg.style.color = 'var(--text-2)'; msg.textContent = 'Area removed. Your listing shows across the city again.'; mapEl.style.display = 'none'; return; }
+        state.lat = area.lat; state.lng = area.lng;
+        msg.style.color = '#166534';
+        msg.textContent = '✓ Saved: ' + area.label + '. ' + (area.lock ? 'Only people in this area see you.' : 'People across the city still see you; the area is shown on your listing.');
+        if(!o.lockOnly) draw(area);
+      }).catch(function(){ busy = false; msg.style.color = '#b42318'; msg.textContent = 'Could not reach TrustSquare — nothing changed.'; });
+  };
+  $('svfind').onclick = function(){ state.lat = null; save({}); };
+  rad.addEventListener('change', function(){ if(cur) save({keepPoint: true}); });
+  lock.addEventListener('change', function(){ if(cur) save({lockOnly: true}); else { lock.checked = false; msg.style.color = '#b42318'; msg.textContent = 'Show the area on the map first, then switch this on.'; } });
+  $('svclear').onclick = function(){
+    if(!cur){ close(); return; }
+    if($('svclear').getAttribute('data-sure') !== '1'){ $('svclear').setAttribute('data-sure', '1'); $('svclear').textContent = 'Tap again to remove the area'; return; }
+    busy = true;
+    fetch(BEA_URL + '/listings/' + n + '/service-area', {method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json', 'X-Api-Key': API_KEY}, body: JSON.stringify({clear: true})})
+      .then(function(r){ busy = false; if(r.ok){ applied(null); close(); showToast('Area removed — your listing shows across the city again.'); } })
+      .catch(function(){ busy = false; });
+  };
+  if(cur) draw(cur);
+}
+(function(){
+  var _ob = window.msOwnerBar;
+  if(typeof _ob !== 'function' || _ob._msSvc) return;
+  var w = function(id){
+    var r = _ob.apply(this, arguments);
+    var n = String(id == null ? '' : id).replace(/^bea_/, '');
+    var tries = 0;
+    (function add(){
+      var bar = document.getElementById('ms-owner-bar');
+      if(!bar){ if(++tries < 20) setTimeout(add, 250); return; }
+      if(document.getElementById('ms-owner-area')) return;
+      var l = findListing('bea_' + n) || findListing(n);
+      if(!l || (l.cat !== 'Services' && l.cat !== 'Tutors')) return;
+      var b = document.createElement('button'); b.type = 'button'; b.id = 'ms-owner-area';
+      b.style.cssText = 'background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:999px;padding:7px 14px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;';
+      b.textContent = '📍 Where I work';
+      b.onclick = function(){ msSvcAreaEditor(n); };
+      var ed = document.getElementById('ms-owner-edit');
+      if(ed && ed.parentNode === bar) bar.insertBefore(b, ed.nextSibling); else bar.appendChild(b);
+    })();
+    return r;
+  };
+  w._msSvc = 1; window.msOwnerBar = w;
+})();
