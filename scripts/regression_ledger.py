@@ -39394,7 +39394,7 @@ def rg_audit1017_credit_line():
     return [(INFO, "the landmark photo credit has its own line-height")]
 
 
-@entry("RG-1026", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
+@entry("RG-1050", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
        "links, each a server-side 302 through our own /go/partner/<slug>, and still not one byte of partner script on any page",
        LOCKED, fixed_on="2026-10-17",
        scope="travelpayouts_partners.py registry + switch; ts_partners.js; all 15 adventures_*_map.html + scripts/journey_template.html; "

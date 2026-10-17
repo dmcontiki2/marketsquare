@@ -1540,7 +1540,7 @@ REFLECTIONS = {
    ("travelpayouts_partners.py", ["LINKOUT_ON_BY_RULING = True", "RUL-236"], []),
    ("ts_partners.js", ["RUL-236", "/go/partners"], []),
    ("ops/autodeploy/deploy_manifest.txt", ["static/ts_partners.js"], []),
-   ("scripts/regression_ledger.py", ["RG-1026", "LINKOUT-ON-1"], []),
+   ("scripts/regression_ledger.py", ["RG-1050", "LINKOUT-ON-1"], []),
  ],
  "RUL-227": [
    # David, 13 Oct 2026: "I asked for an auto renew, why did you place a 12 month expire clause to it? ... Please remove that"

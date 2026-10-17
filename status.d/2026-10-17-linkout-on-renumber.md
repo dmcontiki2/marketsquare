@@ -1,0 +1,1 @@
+- 17 Oct 2026 — LINKOUT-ON-1 ledger id is RG-1050 (not RG-1026, which belongs to the bug audit's FARES-TOKEN-1).
