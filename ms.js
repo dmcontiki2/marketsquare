@@ -304,14 +304,25 @@ function normCat(raw) {
 }
 
 // ── API HELPERS ───────────────────────────────────────────
+/* RESTART-RETRY-1 (16 Oct 2026 bug audit, BA-010): every release restarts the server for about two seconds, and a read
+   that landed in that gap came back 502 and was simply dropped -- caught live: choosing South Africa in the location
+   picker during a release got 502 for /geo/regions and /geo/cities and the picker silently did nothing. A GET is safe to
+   repeat, so a 502/503/504 or a dropped connection is asked again after 1.2 s and 2.5 s (online only), then given up. */
+function _apiGetRetryable(status){ return status === 502 || status === 503 || status === 504; }
 async function apiGet(path) {
-  try {
-    const res = await fetch(BEA_URL + path, {headers:{'X-Api-Key':API_KEY}});
-    if (!res.ok) throw new Error('API error ' + res.status);
-    return await res.json();
-  } catch(e) {
-    console.warn('BEA GET failed:', path, e);
-    return null;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(BEA_URL + path, {headers:{'X-Api-Key':API_KEY}});
+      if (!res.ok) {
+        if (_apiGetRetryable(res.status) && attempt < 2 && navigator.onLine !== false) { await new Promise(r => setTimeout(r, attempt ? 2500 : 1200)); continue; }
+        throw new Error('API error ' + res.status);
+      }
+      return await res.json();
+    } catch(e) {
+      if (e && e.name === 'TypeError' && attempt < 2 && navigator.onLine !== false) { await new Promise(r => setTimeout(r, attempt ? 2500 : 1200)); continue; }
+      console.warn('BEA GET failed:', path, e);
+      return null;
+    }
   }
 }
 
@@ -2792,7 +2803,10 @@ function _freshShow(v){
     try{ if(sessionStorage.getItem('ts_fresh_dismissed')===String(v)) return; }catch(_){}
     _freshShownV=v;
     var d=document.createElement('div'); d.id='ts-fresh-bar'; d.setAttribute('role','status');
-    d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top, 0px) + 8px);z-index:99999;max-width:calc(100% - 24px);box-sizing:border-box;background:#0c1a2e;color:#fff;border-radius:50px;padding:5px 5px 5px 14px;font:700 12.5px/1.3 Syne,system-ui,sans-serif;box-shadow:0 6px 24px rgba(12,26,46,.35);display:flex;gap:8px;align-items:center;';
+    /* FRESH-BAR-WIDTH-1 (16 Oct 2026 bug audit, BA-009): a fixed box pushed right by left:50% shrinks to the half of the screen
+       that is left of it, so the bar wrapped 'A new version is ready' onto four lines over the header. width:max-content keeps
+       it one line, still capped by max-width on a narrow phone. */
+    d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top, 0px) + 8px);z-index:99999;width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;background:#0c1a2e;color:#fff;border-radius:50px;padding:5px 5px 5px 14px;font:700 12.5px/1.3 Syne,system-ui,sans-serif;box-shadow:0 6px 24px rgba(12,26,46,.35);display:flex;gap:8px;align-items:center;';
     d.innerHTML='<span>✨ A new version is ready</span>'
       +'<button type="button" id="ts-fresh-go" style="background:#C8873A;color:#fff;border:0;border-radius:50px;padding:6px 12px;font:inherit;cursor:pointer;">Refresh</button>'
       +'<button type="button" id="ts-fresh-x" aria-label="Close" style="background:transparent;color:#fff;border:0;font:700 18px/1 system-ui,sans-serif;padding:4px 9px;cursor:pointer;">×</button>';
@@ -3062,7 +3076,7 @@ const AI_PRO_ONLY = new Set(['heritage_tour','expedition_dossier','weekend_itine
 
 const _SUB_TIERS = [
   { id:'free',    label:'Free',    usd:0,  slots:2,  zar:0,   tup:0,  color:'#64748b', desc:'no card needed',   /* CARD-WORDS-2 (26 Sep 2026): no card is ever taken (langt-04). CARD-WORDS-3: the plan card already says 'Free forever' before the description -- the 26 Sep line read 'Free forever · Free forever · no card needed' */
-    bullets:['2 listing slots','Nationwide in your own country — a free switch on every listing (RUL-220)','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
+    bullets:['2 listing slots','Nationwide in your own country — a free switch on every listing','Free AI Coach on every listing','Browse, free examples & free tools — all open'] },
   { id:'starter', label:'Starter', usd:5,  slots:10, zar:90,  tup:2,  color:'#4f46e5', desc:'The regular individual seller',
     bullets:['10 listing slots','2 Tuppence granted every month — runs your Offer Strategy brief monthly','Everything in Free'] },
   { id:'pro',     label:'Pro',     usd:20, slots:30, zar:360, tup:10, color:'#7c3aed', desc:'The power seller',
@@ -3650,6 +3664,18 @@ let _zoomOrder = null;    // Map FEA id -> rank position (server order = Ranking
 let _zoomScores = null;   // Map FEA id -> ranking score, painted on the card
 
 function zoomActiveFor(cat){ return !!(zoomState.active && msBaselineOn() && zoomState.cat===cat); }
+// GX-ZOOM-1/2 (BA-004): does a made-in-the-app example fit every chip SHE picked? A chip the server set by itself
+// (auto-collapse) never hides it; a facet the example does not carry hides it once she picks a value for it.
+function _zoomGenericFits(l){
+  try{
+    const rc = (zoomState.res && zoomState.res.chips) || [];
+    return Object.keys(zoomState.chips || {}).every(k => {
+      if (rc.find(c => c.facet === k && c.auto)) return true;
+      const have = l ? l[k] : null;
+      return have != null && String(have).toLowerCase() === String(zoomState.chips[k] || '').toLowerCase();
+    });
+  }catch(_){ return false; }
+}
 function _zoomEl(){
   let el = document.getElementById('zoom-sheet');
   if(el) return el;
@@ -3721,7 +3747,14 @@ async function zoomFetch(){
     if(Array.isArray(res.rows)){
       res.rows.forEach(row => {
         const fid = 'bea_' + row.id;
-        if(!LISTINGS.find(e => e.id === fid)){ try{ LISTINGS.push(_msMapBeaListing(row)); }catch(e){} }
+        if(!LISTINGS.find(e => e.id === fid)){ try{
+          const m = _msMapBeaListing(row);
+          // TOUR-ONE-1 (16 Oct 2026 bug audit, BA-005): the tour consolidation loadLiveListings applies holds here too -- a
+          // tour's accommodation super-example is shown as priced extensions on its journey, never as its own card. The
+          // Adventures page showed 10 cards under a Home tile of 9: the Cape-to-Cairo stays (#307) came back as a funnel row.
+          if (m.super_example && String(m.advType||'').indexOf('accommodation') > -1 && tourKeyOf(m)) return;
+          LISTINGS.push(m);
+        }catch(e){} }
       });
     }
     _zoomIds = new Set((res.ids||[]).map(i => 'bea_' + i));
@@ -4044,10 +4077,10 @@ function msBrowseFiltersActive(cat){
     return Object.keys(f).some(function(k){ var v=f[k]; return Array.isArray(v) ? v.length>0 : (v!=='' && v!=null); });
   }catch(_){ return true; }
 }
-function msBrowseEmptyHtml(cat){
+function msBrowseEmptyHtml(cat, lbl){   /* lbl: LM-EMPTY-SELL-1 (Goal run 41) -- Local Market's guided key is local_market */
   var c = String(cat||''), where = (activeCity && activeCity.name) ? activeCity.name : ((activeCountry && activeCountry.name) || '');
   var guided = (typeof SF_CATS!=='undefined' && SF_CATS[c]) ? c : '';
-  var label = (c && c!=='All') ? c+' listings' : 'listings';
+  var label = lbl ? lbl : ((c && c!=='All') ? c+' listings' : 'listings');
   var esc = (typeof _wlEsc==='function') ? _wlEsc : function(x){ return String(x); };
   var h = '<div class="no-res" id="ms-browse-empty" style="grid-column:1/-1;text-align:left;line-height:1.45;max-width:420px;">'+
     '<div style="font-weight:700;font-size:15px;margin-bottom:4px;">No '+esc(label)+(where ? ' in '+esc(where) : '')+' yet.</div>'+
@@ -5505,7 +5538,10 @@ function renderCatCounts() {
     if (l.isLive) {
       const lCity = l.city || l.area || '';
       const aCity = activeCity.name || '';
-      if (lCity && aCity && lCity !== aCity) return false;
+      // NATIONWIDE-TILE-1 (16 Oct 2026 bug audit, BA-004): a Nationwide advert (RUL-220) is on the category page in every
+      // city of her own country, so the tile counts it there too -- the tile says what the page shows.
+      const _natHere = l.reach === 'national' && String(l.country || 'ZA').toUpperCase() === String((activeCountry && activeCountry.iso2) || 'ZA').toUpperCase();
+      if (lCity && aCity && lCity !== aCity && !_natHere) return false;
     }
     return true;
   }).forEach(l => {
@@ -5877,7 +5913,11 @@ function renderGrid(){
     if(_msSearchIds && !_msSearchIds.has(String(l.id))) return false;
     // ZOOM-HMI-1: while the funnel is open only the ids it returned survive -- the same row
     // set its counts were computed from, so the count and the list can never disagree.
-    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id))) return false;
+    // GX-ZOOM-1 (16 Oct 2026 bug audit, BA-004): the funnel's ids come from the server and the role/trainer AI examples
+    // (RUL-216/RUL-217) are made in the app, so the funnel dropped every one of them -- Pretoria Services showed 11 cards
+    // under a Home tile of 53, Tutors 6 under 51. An example shows while it fits every chip she picked herself -- picking
+    // 'Casuals' keeps the casual-role examples, picking 'Technical' drops them (GX-ZOOM-2); it stays last (EXAMPLES-LAST-1).
+    if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && _zoomGenericFits(l))) return false;
     if(activeFilter!=='All' && normCat(l.cat)!==activeFilter) return false;
     // Placeholders always show — they are paused but intentionally visible
     const isPlaceholder = String(l.id).startsWith('ph_');
@@ -6266,6 +6306,9 @@ function _msLmSavedCard(c){   // a saved Local Market item, drawn like its Local
     + `<div class="cloc">📍 ${_lmEsc(c.suburb||c.city||'')}</div><div class="cbot"><div class="cprice">${price}</div>${tbadge(c.trust_score||0)}</div></div></div>`;
 }
 
+// PROFILE-FACE-1 (RUL-235, David 16 Oct 2026): a profile photo the anonymity scan passed (an adult's face, nothing that
+// identifies how to reach her) carries _fok235 in its address and is shown sharp; every other photo stays blurred.
+function msFaceOk(u){ return /_fok235\.jpg(\?|$)/.test(String(u||'')); }
 // ── SELLER AVATAR HELPER ─────────────────────────────────
 // isOwner: true = seller viewing their own (sharp)
 // isRevealed: true = intro accepted (sharp)
@@ -6281,7 +6324,7 @@ function cvAvatarHtml(sellerIdx, listingId, isOwner){
     return `${CATS[s.cat].icon}${!isOwner?'<div class="cv-mask">🔒</div>':''}`;
   }
 
-  if(isRevealed){
+  if(isRevealed || msFaceOk(photo)){
     return `<img src="${photo}" class="revealed" alt="Seller photo">`;
   } else {
     return `<img src="${photo}" class="blurred" alt="Seller photo"><div class="cv-mask">🔒</div>`;
@@ -6320,12 +6363,14 @@ function openBEASellerProfile(l) {
   const catBg   = catCfg(l) ? catCfg(l).bg : 'var(--navy)';
   const catIcon = catCfg(l) ? catCfg(l).icon : '📦';
   const scBadge = l.service_class ? `<span style="font-size:11px;background:rgba(255,255,255,.12);border-radius:50px;padding:3px 9px;">${l.service_class === 'Technical' ? '🔧 Technical' : '🤝 Casuals'}</span> · ` : '';
+  // PROFILE-FACE-1 (RUL-235(e), 16 Oct 2026): the round picture on this page is the LISTING's cover (l.photo = thumb_url), a
+  // photo the anonymity gate already passed and the card already shows sharp -- the old blur(6px) hid nothing; it is gone.
   // SELLER-TEXT-ESC-1 (25 Sep 2026 inspection, ts1-01): the seller's photo address, area and evidence labels are escaped.
   // BACK-NAV-1 (ts1-08): the arrow steps back like the phone's Back; shell-08: it is named for screen readers.
   document.getElementById('screen-seller-cv').innerHTML = `
     <div class="cv-hero" style="background:${catBg}">
       <button class="cv-back" aria-label="Back" onclick="msBack('${prevScreen}')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${_lmEsc(l.photo)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);filter:blur(6px);" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
+      <div class="cv-avatar" style="margin-top:8px;">${l.photo ? `<img src="${_lmEsc(l.photo)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);" data-hero-photo="listing-cover" onerror="r2Fallback(this);if(this.dataset.r2tried&&this.src.includes('/media/')){this.style.display='none'}">` : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:30px;">${catIcon}</div>`}</div>
       <div class="cv-headline">${l.cat} Seller</div>
       <div class="cv-cat">${scBadge}${_lmEsc(l.area)} · 🔒 Anonymous until introduction</div>
       <div class="cv-trust-row">
@@ -8107,7 +8152,7 @@ function renderProfilePreview(){
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">${s.headline}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.5);">${s.cat} · Your profile is anonymous to buyers</div>
-        ${photo?'<div style="font-size:10px;color:rgba(200,135,58,.8);margin-top:3px;font-weight:600;">📷 Photo uploaded · blurred for buyers</div>':'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">No photo yet · tap Edit to add one</div>'}
+        ${photo?'<div style="font-size:10px;color:rgba(200,135,58,.8);margin-top:3px;font-weight:600;">'+((msFaceOk(photo)||(function(){try{return msFaceOk(localStorage.getItem('ms_seller_photo_url'));}catch(_){return false;}})())?'📷 Photo checked · buyers see it':'📷 Photo uploaded · blurred for buyers')+'</div>':'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">No photo yet · tap Edit to add one</div>'}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -8192,7 +8237,7 @@ function renderCVEditForm(){
         </div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px;">Anonymous profile photo</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.55;font-weight:400;">Buyers see a blurred version — your face is never revealed until introduction is accepted. Adds trust without compromising anonymity.</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.55;font-weight:400;">Your face is welcome — buyers see it once we have checked the photo shows no name, number, sign, logo, number plate or child. If it does, buyers see a blurred version until an introduction is accepted.</div>
           ${SELLER_PHOTOS[0]?`<button onclick="removeCVPhoto()" style="margin-top:8px;background:none;border:1px solid #fca5a5;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:var(--red);font-family:'Inter',sans-serif;">Remove photo</button>`:''}
         </div>
       </div>
@@ -8333,7 +8378,7 @@ async function handleCVPhoto(e){
 
   // Upload to BEA so photo persists across devices and browser cache clears
   const sellerEmail = (SELLERS[0] && SELLERS[0]._email) || localStorage.getItem('ms_aa_email') || '';
-  let _upSaved = false, _upWhy = 'signin';   // PHOTO-SAVED-TRUTH-1 (25 Sep 2026 inspection, ts2-20)
+  let _upSaved = false, _upWhy = 'signin', _upFaceOk = false;   // PHOTO-SAVED-TRUTH-1 (25 Sep 2026 inspection, ts2-20)
   if (BEA_ENABLED && sellerEmail) {
     try {
       // Convert base64 dataURL back to a Blob for upload.
@@ -8350,7 +8395,7 @@ async function handleCVPhoto(e){
         const data = await up.json();
         // Store the permanent URL alongside the local copy so we can restore from BEA next time
         try { localStorage.setItem('ms_seller_photo_url', data.photo_url); } catch(_){}
-        _upSaved = true;
+        _upSaved = true; _upFaceOk = !!data.face_ok;
       } else if (up.status !== 401 && up.status !== 403) { _upWhy = 'refused'; }
     } catch(_) { _upWhy = 'net'; /* the local copy is already set */ }
   }
@@ -8369,7 +8414,7 @@ async function handleCVPhoto(e){
   }
   prev.src = result;
   // PHOTO-SAVED-TRUTH-1: 'uploaded' only when the account really has it; otherwise say where it lives.
-  if (_upSaved) showToast('✓ Photo uploaded — blurred for buyers');
+  if (_upSaved) showToast(_upFaceOk ? '✓ Photo uploaded — buyers see it' : '✓ Photo uploaded — blurred for buyers (it shows a name, number, sign or child)', 6000);
   else showToast(_upWhy === 'net' ? 'Saved on this phone only \u2014 could not reach TrustSquare. Try again.'
                : _upWhy === 'refused' ? 'Saved on this phone only \u2014 TrustSquare did not take this photo. Try another one.'
                : 'Saved on this phone only \u2014 sign in to save it to your account.', 6000);
@@ -18543,7 +18588,12 @@ async function lmLoadGrid() {
         }).join('');
         return;
       }
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:36px 12px;color:var(--text-3);font-size:13px;">No Local Market listings here yet — check back soon.</div>';
+      /* LM-EMPTY-SELL-1 (Goal run 41, 16 Oct 2026): a stranger who taps the Local Market tile in a city with none (every city
+         but six) met "No Local Market listings here yet -- check back soon." and nothing to tap -- the dead end GI-0037 closed
+         for the other categories. Same answer now: say it is empty here, offer to list (straight into Local Market's guided
+         flow), or look in another city. */
+      grid.innerHTML = (typeof msBrowseEmptyHtml==='function') ? msBrowseEmptyHtml('local_market', 'Local Market listings')
+        : '<div style="grid-column:1/-1;text-align:center;padding:36px 12px;color:var(--text-3);font-size:13px;">No Local Market listings here yet.</div>';
       return;
     }
     // A11Y-NAMES-1 (25 Sep 2026 inspection, shell-08): each heart says 'Save advert' / 'Remove from saved' and whether it is on
@@ -18921,6 +18971,23 @@ function msInit(){
   const email = localStorage.getItem('ms_user_email') || localStorage.getItem('ms_aa_email') || '';
   const name  = localStorage.getItem('ms_user_name') || '';
   try{ msRenderSquireCard(); msRenderSquireInbox(); }catch(e){}   // SQUIRE (flag-gated inside)
+  /* MYSPACE-SIGNEDOUT-1 (16 Oct 2026 bug audit, BA-006): a visitor with no account on this phone saw a member's page --
+     'TrustSquare member', a Trust score, 'Squire is not available' -- and no way in on the first screen. She is now told
+     plainly and offered the one sign-in, at the top of Overview; the card goes the moment an account is on the phone. */
+  try{
+    var _soHost = document.getElementById('ms-tab-overview'), _so = document.getElementById('ms-signedout-card');
+    if(!email && _soHost){
+      if(!_so){ _so = document.createElement('div'); _so.id = 'ms-signedout-card'; _so.className = 'ms-card'; _so.style.marginBottom = '12px';
+        _so.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px;">You are not signed in</div>'
+          + '<div style="font-size:13px;color:var(--text-3);margin-bottom:10px;">Sign in with your email to see your introductions, your Tuppence and Squire, your agent.</div>'
+          + '<button type="button" onclick="goTo(\'signin\')" style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Sign in</button>';
+      }
+      if(_soHost.firstChild !== _so) _soHost.insertBefore(_so, _soHost.firstChild);   // always first, above Squire
+      _so.style.display = '';
+      /* a sign-in held only in the session cookie is adopted at start-up (SESSION-ADOPT-1): if it lands, look again */
+      setTimeout(function(){ try{ if(localStorage.getItem('ms_aa_email') || localStorage.getItem('ms_user_email')) msInit(); }catch(_){} }, 1500);
+    } else if(_so){ _so.style.display = 'none'; }
+  }catch(_){}
   const city  = (typeof activeCity !== 'undefined' && activeCity.name) ? activeCity.name
                : localStorage.getItem('ms_user_city') || '–';
 
@@ -18974,7 +19041,7 @@ function msInit(){
   if(dispName) dispName.textContent = _shownNm || (_shownEm ? _shownEm.split('@')[0] : (email ? 'Your account' : 'My Space'));
 
   const dispSub = document.getElementById('ms-display-sub');
-  if(dispSub) dispSub.textContent = _shownEm || 'TrustSquare member';
+  if(dispSub) dispSub.textContent = _shownEm || (email ? 'TrustSquare member' : 'Not signed in');   // MYSPACE-SIGNEDOUT-1
   /* STORY-WALK-FIX-1 (29 Sep 2026): signed in by an email link, this phone had no stored name, so My Space showed the
      address's first part. The account's name (asked in Quick) comes from the session instead. */
   if(!name && email){ fetch('/quick/me',{credentials:'include'}).then(function(r){ return r.json(); }).then(function(j){
@@ -19789,6 +19856,9 @@ function msRenderSquireCard(){
 async function sqLoad(){
   var card = document.getElementById('ms-squire-card'); if(!card) return;
   var em = _sqEmail();
+  /* MYSPACE-SIGNEDOUT-1 (16 Oct 2026 bug audit, BA-006): with no account on this phone the status call can only answer
+     401, and the card then said 'Squire is not available right now' -- untrue, she is simply not signed in. */
+  if(!em){ card.innerHTML='<div class="ms-cred-msg">Sign in to meet Squire, your agent. <span style="color:var(--accent);cursor:pointer;font-weight:700;" onclick="goTo(\'signin\')">Sign in</span></div>'; return; }
   try{
     var r = await fetch(BEA_URL+'/squire/status?email='+encodeURIComponent(em), {credentials:'include'});
     if(!r.ok){ card.innerHTML='<div class="ms-cred-msg">Squire is not available right now.</div>'; return; }
@@ -21907,7 +21977,7 @@ Cars: { label:'Cars', aiCap:'number plates and contact details', priceLabel:'Ask
     ['transmission','Transmission','select','Automatic|Manual'],['fuel','Fuel type','select','Petrol|Diesel|Hybrid|Electric'],
     ['cc','Engine capacity (cc)','number','e.g. 1995'],['kw','Power (kW)','number','e.g. 110'],['gears','Gears','number','e.g. 8']]}],
   feats:['Auto stop-start','Aircon','Leather seats','Cruise control','Park sensors','Reverse camera','Bluetooth','Nav','Sunroof','Tow bar','New tyres','Under warranty']},
-Property: { label:'Property', aiCap:'street numbers, signage and faces', priceLabel:'Asking price / rent',
+Property: { label:'Property', aiCap:'street numbers and signage', priceLabel:'Asking price / rent',
   slots:[['main','Front of the property','Whole facade, golden light if you can','🏡'],
          ['lounge','Lounge','Curtains open, lights on','🛋️'],['kitchen','Kitchen','Counters clear','🍳'],
          ['mainbed','Main bedroom','Bed made','🛏️'],['bath','Bathroom','Clean and bright','🛁'],
@@ -21968,7 +22038,7 @@ Services: { label:'Services',
       ['hours','Working hours','text','e.g. 07:00–17:00'],['weekends','Weekends','select','Yes|No'],
       ['response','Typical response','select','Same day|Within 24h|This week']]}],
     feats:['COC certificates','Free quotes','Workmanship guarantee','Card payments','After-hours','Maintenance contracts']},
-  casual:{ label:'Services · Casual', aiCap:'faces and contact details', priceLabel:'Rate', priceUnit:'/ hour',
+  casual:{ label:'Services · Casual', aiCap:"children's faces and contact details", priceLabel:'Rate', priceUnit:'/ hour',
     slots:[['main','You at work','Honest and real beats posed','🧹'],
            ['ex1','Work example 1','Before / after works well','🌿'],['ex2','Work example 2','Another job','🎨']],
     sections:[
@@ -22020,7 +22090,7 @@ Adventures: { label:'Adventures',
     ['experiences','🧗','Experiences','Hikes, tours, water, wildlife — things people do'],
     ['accommodation','🛖','Accommodation','Guest houses, bush camps, self-catering — places people stay']]},
   sub:{
-  experiences:{ label:'Adventures · Experience', aiCap:'faces and vehicle plates', priceLabel:'Price per person', priceUnit:'/ person',
+  experiences:{ label:'Adventures · Experience', aiCap:"children's faces and vehicle plates", priceLabel:'Price per person', priceUnit:'/ person',
     slots:[['main','The experience in action','Your money shot — people doing the thing','🧗'],
            ['view','The view / setting',"Why they'll remember it",'🏔️'],
            ['group','Guests enjoying it','Real moments beat staged ones','😄'],

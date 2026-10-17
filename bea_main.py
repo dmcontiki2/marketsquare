@@ -5113,14 +5113,48 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             return {"id": int(_dup["id"]), "live": True, "duplicate": True, "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, int(_dup["id"]), 60),   # QUICK-HANDOFF-1
                     "detail": "This listing is already live — nothing new was made."}
-    _promo_stamp(request, em)   # PROMOTER-TRACK-1
-    created = create_listing(listing, background_tasks, "quick-door")
+    # QUICK-DUP-2 (Goal run 41, 16 Oct 2026): a save whose answer never reached the phone. SMS b9, Durban, 15 Oct: the
+    # housekeeper's first Save landed at 17:39:32 (200), her phone changed network before the answer came back, she
+    # tapped again at 17:40:18 from another address -- and got #563 AND #564, identical, two way-back letters. A signed-out
+    # save that matches a DRAFT on the same address made in the last 30 minutes (same title, category, price, place) is
+    # that draft: nothing new is made, no second letter, the same draft comes back. Different words or price = new draft.
+    _dup_draft = None
+    if not signed_member and not key_secret:
+        conn = database.get_db()
+        try:
+            _dup_draft = conn.execute(
+                "SELECT id FROM listings WHERE LOWER(seller_email)=? AND listing_status='draft' AND published_at IS NULL "
+                "AND created_at > ? AND title IS ? AND category IS ? AND IFNULL(price,'')=? AND IFNULL(city,'')=? "
+                "AND IFNULL(suburb,'')=? ORDER BY id DESC LIMIT 1",
+                (em, _sql_since(hours=0.5), listing.title, listing.category, str(listing.price or ""),
+                 str(getattr(listing, "city", "") or ""), str(getattr(listing, "suburb", "") or ""))).fetchone()
+        except Exception as exc:   # never let the guard stop a save
+            _log.warning("QUICK-DUP-2 check skipped: %s", exc); _dup_draft = None
+        finally:
+            conn.close()
+    if _dup_draft and existing_account:
+        # the account was made by the FIRST tap a moment ago and nobody has proven it since -- this is still her, not
+        # "somebody who already exists" (AUDIT-Q1), so she gets the same answer and cookie her first tap would have had.
+        conn = database.get_db()
+        try:
+            _pu = conn.execute("SELECT auth_provider, eula_accepted_at, key_hash, last_seen FROM users WHERE LOWER(email)=?",
+                               (em,)).fetchone()
+        finally:
+            conn.close()
+        if _pu and not (_pu["auth_provider"] or _pu["eula_accepted_at"] or _pu["key_hash"] or _pu["last_seen"]):
+            existing_account = False
+    if _dup_draft:
+        _log.info("QUICK-DUP-2: %s re-sent the same draft -- answering with %s, nothing new made", em, _dup_draft["id"])
+        created = {"id": int(_dup_draft["id"]), "draft_token": _purpose_token("draft", int(_dup_draft["id"]), days=7)}
+    else:
+        _promo_stamp(request, em)   # PROMOTER-TRACK-1
+        created = create_listing(listing, background_tasks, "quick-door")
     lid = int(created["id"])
     # QUICK-OWN-PHOTO-1 (David, 9 Oct 2026): the photo she took on the draft card follows the save. The draft's own token
     # (the same one POST /listings hands its composer, SEC-GATE-1) goes back to the phone that made it -- never when the
     # address belongs to somebody else's account (AUDIT-Q1 below), so nobody adds pictures to another person's draft.
     _qdt = created.get("draft_token") if isinstance(created, dict) else None
-    if not sess:
+    if not sess and not _dup_draft:
         # QUICK-LIMIT-1 (25 Sep 2026 inspection, backend-01): only a signed-out save that created an advert counts.
         hits.append(now_t); _QP_IP_LOG[ip] = hits
     if not existing_account and _qdt and response is not None:
@@ -6985,6 +7019,15 @@ _SUBJECT_HINTS = {
     "adventures": (),
 }
 
+def _anon_422(category, who, detail=""):
+    """PHOTO-REASON-LOG-1 (Goal run 41, 16 Oct 2026, RUL-235): every photo the anonymity gate refuses says WHY in the log
+    (journalctl -u marketsquare | grep PHOTO-REFUSED), so how many blocks are faces, plates or labels is counted, not guessed."""
+    try:
+        _log.warning("PHOTO-REFUSED cat=%s who=%s detail=%s", (category or "-")[:30], (who or "-")[:60], str(detail)[:240])
+    except Exception:
+        pass
+    return HTTPException(status_code=422, detail=detail)
+
 def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool = False):
     """Fail-closed anonymity gate for ONE seller-uploaded photo. PIL image in,
     PIL image out (blurred where needed). Raises HTTPException when the photo
@@ -7013,7 +7056,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     # MODERATION-1 (15 Jul 2026, David): photos of people in degrading states,
     # nudity, violence etc. are rejected outright — listings are for items.
     if scan.get("flag") == "inappropriate":
-        raise HTTPException(status_code=422,
+        raise _anon_422(category, spend_who,
             detail="This photo isn't appropriate for a listing — please use "
                    "photos of what you are selling.")
     # WRONG-TYPE-1 (16 Jul 2026, David: a boat listed as a Cars main photo was
@@ -7029,7 +7072,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     _mismatch = ""
     if _fits is False:
         if is_primary:
-            raise HTTPException(status_code=422,
+            raise _anon_422(category, spend_who,
                 detail="This photo doesn't look like what this listing is selling"
                        + (" (it shows: %s)" % _subj if _subj else "")
                        + ". The main listing photo must show the item itself - "
@@ -7049,22 +7092,22 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     _retake = ("TrustSquare listings are anonymous — please retake the photo "
                "avoiding number plates, signage and contact details.")
     if scan["verdict"] == "reject":
-        raise HTTPException(status_code=422,
+        raise _anon_422(category, spend_who,
             detail="Photo blocked to protect your anonymity"
                    + (" (%s)" % labels if labels else "") + ". " + _retake)
     if scan["confidence"] < _ANON_PHOTO_CONF:
-        raise HTTPException(status_code=422,
+        raise _anon_422(category, spend_who,
             detail="Could not confirm this photo is anonymous. " + _retake)
     if scan["verdict"] == "redact":
         # PHOTO-REJECT-1 (RUL-033): no blur attempts while the canary is dark.
         if _anon_reject_only():
-            raise HTTPException(status_code=422,
+            raise _anon_422(category, spend_who,
                 detail="This photo is not anonymous"
                        + (" — it shows: %s" % labels if labels else "")
                        + ". Please replace it or leave it out. A photo without "
                          "number plates, signage or contact details works best.")
         if not scan["regions"]:
-            raise HTTPException(status_code=422,
+            raise _anon_422(category, spend_who,
                 detail="Photo blocked to protect your anonymity. " + _retake)
         img2, _lbls = _anon_blur_until_clean(
             img, scan, _ts_active_provider(), category or "", spend_who,
@@ -7074,13 +7117,13 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
             # hide it" and "hiding it would spoil the picture" need different
             # answers from the seller, and the old copy gave the same one to both.
             if _ANON_REPLACE_TAG in (_lbls or []):
-                raise HTTPException(status_code=422,
+                raise _anon_422(category, spend_who,
                     detail="We could not hide the identifying details in this photo "
                            "without blurring so much of it that the picture no longer "
                            "shows your listing properly. Please use a different photo "
                            "- one without number plates, signage or contact details in "
                            "shot works best.")
-            raise HTTPException(status_code=422,
+            raise _anon_422(category, spend_who,
                 detail="Could not verifiably blur the identifying content. " + _retake)
         return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
     if _plate_done:
@@ -8680,6 +8723,7 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
         raise HTTPException(status_code=400, detail=_photo_decode_msg(raw)) from exc
 
     img, _anote = _anon_profile_photo(img, email)   # TEXT-ANON-1: plates + identifying text blurred, never blocking
+    _face_ok = _profile_face_ok(img, email)          # PROFILE-FACE-1 (RUL-235): may buyers see it sharp?
     # Square-crop to centre, then resize to 400×400
     w, h = img.size
     side = min(w, h)
@@ -8694,10 +8738,10 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
 
     # Upload to R2 or local fallback
     if _S3_CONFIGURED:
-        key = f"profiles/{uuid.uuid4().hex}_profile.jpg"
+        key = f"profiles/{uuid.uuid4().hex}_profile{PROFILE_FACE_OK_MARK if _face_ok else ''}.jpg"
         photo_url = _s3_upload(photo_bytes, key, "image/jpeg")
     else:
-        fname = f"profile_{uuid.uuid4().hex}.jpg"
+        fname = f"profile_{uuid.uuid4().hex}{PROFILE_FACE_OK_MARK if _face_ok else ''}.jpg"
         local_path = f"/var/www/marketsquare/media/{fname}"
         try:
             with open(local_path, "wb") as fh:
@@ -8715,7 +8759,7 @@ def upload_user_photo(email: str, file: UploadFile = File(...),
     )
     conn.commit()
     conn.close()
-    return {"photo_url": photo_url}
+    return {"photo_url": photo_url, "face_ok": bool(_face_ok)}
 
 
 @app.post("/users/{email}/upload-id")
@@ -13737,10 +13781,17 @@ def _signal_expiry_iso() -> str:
 
 def _purge_expired_signals(conn):
     """Lazy purge — called on signal reads. Keeps the table small without a cron."""
-    conn.execute(
-        "DELETE FROM wishlist_signals WHERE expires_at < ?",
-        (datetime.now(timezone.utc).isoformat(),)
-    )
+    # PURGE-BUSY-1 (16 Oct 2026 bug audit): housekeeping must never fail the read it rides on.
+    # A busy database (another writer mid-transaction) skips this purge; the next read purges.
+    import sqlite3 as _sq_busy
+    try:
+        conn.execute(
+            "DELETE FROM wishlist_signals WHERE expires_at < ?",
+            (datetime.now(timezone.utc).isoformat(),)
+        )
+    except _sq_busy.OperationalError as _pe:
+        if "locked" not in str(_pe).lower() and "busy" not in str(_pe).lower():
+            raise
 
 
 @app.post("/buyer-token")
@@ -19814,6 +19865,9 @@ def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key),
         # PING-QUIET-1 (25 Sep 2026 inspection, qa-13): nothing was recorded, so the answer claims nothing either.
         return {"recorded": False}
     conn = database.get_db()
+    # PING-BUSY-1 (16 Oct 2026 bug audit): a heartbeat that meets a busy database records
+    # nothing and says so -- it never answers 500 (10-16 Oct: 12 x 500 at 01:33 UTC).
+    import sqlite3 as _sq_busy
     try:
         conn.execute(
             "UPDATE users SET last_seen = strftime('%Y-%m-%dT%H:%M:%SZ','now'), "
@@ -19821,6 +19875,10 @@ def presence_ping(p: PresencePing, _key: str = Depends(auth.require_api_key),
             (p.city, email),
         )
         conn.commit()
+    except _sq_busy.OperationalError as _pe:
+        if "locked" not in str(_pe).lower() and "busy" not in str(_pe).lower():
+            raise
+        return {"recorded": False}
     finally:
         conn.close()
     return {"ok": True}
@@ -22704,7 +22762,15 @@ _ANON_SCAN_PROMPT_TOURS = (
     "trailers, boats or aircraft; phone numbers or web addresses painted/wrapped on "
     "vehicles; branded flags, banners, gazebos, uniforms or kit; booking-desk or office "
     "signage; vehicle number plates; watermarks or contact overlays; branded flyers or "
-    "collages. Scenery, wildlife, guests and unbranded equipment are FINE and must not be "
+    "collages. " "FACES (RUL-235, David 16 Oct 2026): an ADULT'S FACE IS NOT IDENTIFYING CONTENT on TrustSquare. "
+    "The adult or adults who are the subject of the photo - the seller's own selfie or portrait, the seller at work, "
+    "posing with what they sell, beside their vehicle, tools or stall, a team or a group of guests at the activity - "
+    "are FINE: never box them, never redact or reject a photo because a face is visible or recognisable. "
+    "Box a face ONLY when it is (a) a CHILD'S face (anyone who looks under 18) or (b) a clearly recognisable "
+    "BYSTANDER in the background who is not part of the subject. What still identifies the seller is what lets a "
+    "buyer find or contact them outside TrustSquare - a name, phone number, website, social handle, logo or business "
+    "name (also when printed on clothing, uniforms or vehicles), signage, number plates, house numbers. "
+    "Scenery, wildlife, guests and unbranded equipment are FINE and must not be "
     "flagged. Already-blurred or pixelated patches are already-redacted content — "
     "never flag them. Reply with ONLY a JSON object: {\"verdict\": \"clean\"|\"redact\"|\"reject\", "
     "\"confidence\": 0.0-1.0, \"subject\": \"2-4 words - what the photo mainly shows\", \"flag\": \"none\"|\"inappropriate\" (inappropriate ONLY for nudity or sexual content, graphic violence or injury, weapons brandished at people, people in clearly degrading or intoxicated states, or hate symbols - ordinary people, parties and drinks in hand are none), \"regions\": [{\"x0\":0-1000,\"y0\":0-1000,\"x1\":0-1000,"
@@ -22922,7 +22988,16 @@ _ANON_SPOTCHECK_N = 10     # first N adverts per agency flagged spot_check
 
 _ANON_SCAN_PROMPT = (
     "You are the photo anonymiser for TrustSquare, an anonymity-first marketplace: "
-    "sellers and agents must be unidentifiable from listing photos. Inspect this "
+    "sellers and agents must be unidentifiable from listing photos. "
+    "FACES (RUL-235, David 16 Oct 2026): an ADULT'S FACE IS NOT IDENTIFYING CONTENT on TrustSquare. "
+    "The adult or adults who are the subject of the photo - the seller's own selfie or portrait, the seller at work, "
+    "posing with what they sell, beside their vehicle, tools or stall, a team or a group of guests at the activity - "
+    "are FINE: never box them, never redact or reject a photo because a face is visible or recognisable. "
+    "Box a face ONLY when it is (a) a CHILD'S face (anyone who looks under 18) or (b) a clearly recognisable "
+    "BYSTANDER in the background who is not part of the subject. What still identifies the seller is what lets a "
+    "buyer find or contact them outside TrustSquare - a name, phone number, website, social handle, logo or business "
+    "name (also when printed on clothing, uniforms or vehicles), signage, number plates, house numbers. "
+    "Inspect this "
     "photo for ANY identifying content: phone numbers or contact-detail text/overlay "
     "bars, agency logos or watermarks, estate-agent boards or For-Sale signage, "
     "branded flyers/collages, agent portrait/headshot promo overlays, "
@@ -23799,6 +23874,33 @@ def _anon_text_apply(img, scan, items):
         _log.warning("text apply failed: %r", _e)
         return img, []
 
+
+# PROFILE-FACE-1 (RUL-235, David 16 Oct 2026: "Remove the blurring for faces which comply with our new relaxation"). Buyers
+# used to see every profile photo blurred until an introduction. A profile photo that the same anonymity scan passes as CLEAN
+# under RUL-235 -- an adult's face is fine; no child, no background bystander, no name, number, logo, sign or plate -- is
+# stored with this mark in its file name, and the app shows it sharp. Anything the scan does not pass (or cannot read) stays
+# blurred exactly as before: the upload itself is never refused. No schema: the mark travels with the URL everywhere.
+PROFILE_FACE_OK_MARK = "_fok235"
+
+def _profile_face_ok(img, who):
+    try:
+        import base64 as _b64
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        scan, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(),
+                                                 _ts_active_provider(), "profile photo", first=True, who=who)
+        if _it is not None or _ot is not None:
+            _log_ai_spend(who, "/users/photo#face-ok", "vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
+        ok = bool(scan and scan.get("verdict") == "clean" and float(scan.get("confidence") or 0) >= _ANON_PHOTO_CONF
+                  and scan.get("flag") != "inappropriate")
+        if not ok:
+            _log.info("PROFILE-FACE-1: %s profile photo stays blurred (%s)", who,
+                      (scan or {}).get("verdict", "no scan") if scan else "no scan")
+        return ok
+    except Exception as _e:
+        _log.warning("PROFILE-FACE-1 check failed (stays blurred): %r", _e)
+        return False
 
 def _anon_profile_photo(img, who):
     """TEXT-ANON-1 for the profile-photo door: the same local plate + text pass and the same LLM

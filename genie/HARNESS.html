@@ -1237,7 +1237,10 @@ try{
     _qErr('q_error', String((ev&&ev.message)||'error')+' @'+String((ev&&ev.filename)||'').split('/').pop()+':'+((ev&&ev.lineno)||0));
   });
   window.addEventListener('unhandledrejection', function(ev){
-    var r=ev&&ev.reason; _qErr('q_error', 'promise: '+String((r&&(r.message||r))||''));
+    /* QUICK-ERR-BEACON-2 (BA-007): name and first stack line too -- 'promise: Rejected' alone could not say where it came from */
+    var r=ev&&ev.reason, nm=(r&&r.name&&r.name!=='Error')?(r.name+': '):'', at='';
+    try{ at=(r&&r.stack)?(' @'+String(r.stack).split('\n').slice(1,2).join('').replace(/^\s*at\s*/,'').split('/').pop().slice(0,60)):''; }catch(_e){}
+    _qErr('q_error', 'promise: '+nm+String((r&&(r.message||r))||'')+at);
   });
   if(window.fetch && _QF_BASE){
     var _qF=window.fetch;
@@ -3518,7 +3521,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       +'<div class="ar-inst" id="ar-inst"></div>'   /* QUICK-TILE-2 (SEAM-1): the Quick tile, at her first save */
       +small
       +'<button class="ar-again" type="button">'+qTr('List something else')+'</button>'
-      +'<button class="ar-pass" type="button">'+qTr('Pass Quick on to someone')+'</button></div>'   /* QUICK-PASS-1 (SEAM-1) */
+      +(live ? '<button class="ar-pass" type="button">'+qTr('Pass Quick on to someone')+'</button>' : '')+'</div>'   /* QUICK-PASS-1 (SEAM-1); ARRIVE-DRAFT-FOCUS-1: only once it is live */
       +'<button class="ar-x" type="button" aria-label="'+qTr('Close')+'">&times;</button>';
     /* ARRIVE-EXIT-1 (David, 25 Sep 2026: "There is no go back button from this screen"). The arrival
        screen had only its two ways home, so anyone who wanted to stay in Quick was stuck. The way out goes
@@ -4460,7 +4463,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   function standalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
   window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); _bip=e; });
   window.addEventListener('appinstalled', function(){ ls('ts_q_tile','1'); try{ qTrack('q_tile_installed'); }catch(e){} });
-  if(LIVE && 'serviceWorker' in navigator){ try{ navigator.serviceWorker.register('/service-worker.js'); }catch(e){} }
+  /* QUICK-SW-CATCH-1 (16 Oct 2026 bug audit, BA-007): register() answers with a promise, so the try/catch never saw a refusal --
+     a phone that will not take a service worker threw an unhandled rejection at the door (q_error 'promise: Rejected', 15 + 16 Oct). */
+  if(LIVE && 'serviceWorker' in navigator){ try{ navigator.serviceWorker.register('/service-worker.js').catch(function(){}); }catch(e){} }
   function installInto(slot){
     if(!slot || standalone() || ls('ts_q_tile')==='1') return;
     var ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
@@ -4521,6 +4526,26 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
          the arrival screen already hands her the listing and her key. */
       scr.insertAdjacentHTML('beforeend','<div class="qs-foot" id="qsfoot"><button class="qs-passlink" id="qspass" type="button" aria-label="'+E(T('Pass Quick on to someone'))+'">'+E(T('Share'))+'<span class="qs-qi" aria-hidden="true"><img src="'+E(iconSrc())+'" alt=""></span></button></div>');   /* DOOR-SHARE-1 (27 Sep 2026, David): "Share" + the small violet Quick icon */
       $('qspass').onclick=function(){ openPass(); };
+      /* SAVED-DRAFT-DOOR-1 (Goal run 41, 16 Oct 2026). DOOR-DECLUTTER-1 (27 Sep) took the saved-listing card off the door
+         because the arrival screen hands her the listing -- true for a LIVE listing. A draft is unfinished: #566 closed the
+         arrival screen, met a fresh "Get seen for work" door and left with her listing one step from live. So only an
+         unfinished draft from this phone shows here, one line, and it goes the moment the listing is live (or after 7 days). */
+      var _dw=null; try{ _dw=JSON.parse(ls('ts_q_draft_wait')||'null'); }catch(_){ _dw=null; }
+      if(_dw && +_dw.id>0 && (Date.now()-(+_dw.at||0)) < 7*864e5){
+        if(!$('qswaitst')){ var _ws=document.createElement('style'); _ws.id='qswaitst';
+          _ws.textContent='.qs-wait{display:block;margin:4px 14px 8px;padding:10px 12px;border-radius:12px;background:#fff6dc;color:#33270a;'
+            +'text-decoration:none;font:500 13px/1.35 system-ui,sans-serif;border:1px solid #e8b93a;position:relative;z-index:5}'
+            +'.qs-wait b{display:block;font-size:14px;margin-bottom:2px}.qs-wait i{display:block;font-style:normal;font-weight:800;color:#8a4600;margin-top:5px}';
+          document.head.appendChild(_ws); }
+        scr.insertAdjacentHTML('afterbegin','<a class="qs-wait" id="qswait" href="/?draft='+(+_dw.id)+'"><b>'+E(_dw.title||('#'+(+_dw.id)))+'</b>'
+          +'<span>'+E(T('Your listing is saved.'))+'</span> <span>'+E(T('Next: open it in TrustSquare, sign the terms and publish.'))+'</span>'
+          +'<i>'+E(T('Sign the terms and publish'))+' &rsaquo;</i></a>');
+        try{ qTrack('q_wait_card'); }catch(_){}
+        $('qswait').onclick=function(){ try{ qTrack('q_wait_card_tap'); }catch(_){} };
+        /* a listing published since (in the app) answers 200 on the public read -- then the line goes for good */
+        try{ fetch('/listings/'+(+_dw.id),{credentials:'omit'}).then(function(x){ if(x && x.status===200){
+          try{ localStorage.removeItem('ts_q_draft_wait'); }catch(_){} var w=$('qswait'); if(w) w.parentNode.removeChild(w); } }).catch(function(){}); }catch(_){}
+      }
       try{ qTranslate(scr); }catch(e){}
     }catch(e){}
   };
@@ -4529,8 +4554,17 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   window.qSeamArrived=function(ov, r, title){
     /* SAVED-LINK-1 (quick-17): the door's saved card remembers her key link and how she is reached */
     try{ ss('ts_q_saved', JSON.stringify({id:r.id, live:!!r.live, title:title||'', key:r.key_url||'', ident:r.identity||''})); }catch(e){}
+    /* SAVED-DRAFT-DOOR-1 (Goal run 41, 16 Oct 2026): a listing saved but NOT live is remembered on this phone (localStorage,
+       so the SMS link opened again in a new tab still knows it) until it is live or a week old -- the door shows it. */
+    try{ if(r && r.id && !r.live) ls('ts_q_draft_wait', JSON.stringify({id:+r.id, title:title||'', at:Date.now()}));
+         else if(r && r.live) localStorage.removeItem('ts_q_draft_wait'); }catch(e){}
     carryLang();
-    try{ installInto(ov.querySelector('#ar-inst')); }catch(e){}
+    /* ARRIVE-DRAFT-FOCUS-1 (Goal run 41, 16 Oct 2026). SMS strangers who saved a draft and then tapped a side door on this
+       screen never came back to publish: #563/#564 (Durban, b9) tapped "Add Quick to your home screen" twice and left;
+       #566 (Pretoria nanny, b2) tapped WhatsApp, then "Pass Quick on to someone", then closed -- onto a fresh door with no
+       sign of her listing -- and left. Until the listing is live the screen offers only the way to finish it (and the
+       WhatsApp note that keeps it); the home-screen tile and Pass it on wait for a live listing. */
+    try{ if(r && r.live) installInto(ov.querySelector('#ar-inst')); }catch(e){}
     try{ var pb=ov.querySelector('.ar-pass'); if(pb) pb.onclick=function(){ openPass(); }; }catch(e){}
   };
 

@@ -13535,7 +13535,7 @@ def rg_zoom_funnel():
                 ("function msBaselineOn()", "the one flag gate"),
                 ("if(typeof zoomOpen==='function' && zoomOpen(cat)) return;", "the pre-Zoom sheet surviving when the flag is off (acceptance 8)"),
                 ("if(!msBaselineOn()) return false;", "zoomOpen refusing when dark"),
-                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id))) return false;", "renderGrid showing only the counted set"),
+                ("if(_zoomIds && zoomActiveFor(activeFilter) && !_zoomIds.has(String(l.id)) && !(l.generic && _zoomGenericFits(l))) return false;", "renderGrid showing only the counted set (plus the RUL-216/217 role examples that fit her chips -- RG-1011)"),   # ASSERTION CORRECTED 16 Oct 2026 (bug audit BA-004 / RG-1011): the role and trainer AI examples are made in the app, so the strict id test hid all of them under Home tiles that count them (RUL-216 amended); they now pass only an unnarrowed funnel, last
                 ("if(_zoomOrder && zoomActiveFor(activeFilter)){", "the server's ranking order on the grid"),
                 ("function _msMapBeaListing(l){", "the shared BEA->FEA mapper (rows the feed never loaded)"),
                 ("zoomActiveFor('Adventures')", "the Adventures screen honouring the funnel")):
@@ -38121,7 +38121,7 @@ def rg_browse_empty_sell():
     if j < 0 or i < 0 or i - j > 1500:
         return [(FAIL, "renderGrid no longer asks whether a filter is set before saying 'No listings match your filters'")]
     for needle, why in (("function msBrowseFiltersActive(cat){", "the filter test is gone"),
-                        ("function msBrowseEmptyHtml(cat){", "the empty-category message is gone"),
+                        ("function msBrowseEmptyHtml(cat", "the empty-category message is gone"),   # ASSERTION CORRECTED 16 Oct 2026 (Goal run 41, LM-EMPTY-SELL-1 / RG-0992): it now takes an optional label, (cat, lbl)
                         ("function msBrowseSellCat(cat){", "the 'List yours here' action is gone"),
                         ("sfStartCat(cat)", "'List yours here' no longer opens the category's guided flow"),
                         ("Look in another city", "the other-city way out is gone"),
@@ -38586,6 +38586,105 @@ def rg_signin_balance_1():
     return out or [(INFO, "every code sign-in reads her own balance at once")]
 
 
+
+@entry("RG-0991", "ARRIVE-DRAFT-FOCUS-1 + SAVED-DRAFT-DOOR-1 + QUICK-DUP-2 (Goal run 41): a Quick listing saved but not live offers only "
+       "the way to finish it (no home-screen tile, no Pass it on), the door remembers an unfinished draft from this phone, and a "
+       "re-sent save (lost answer, new network) answers with the same draft instead of a duplicate",
+       LOCKED, fixed_on="2026-10-16",
+       scope="quick.html (= genie/HARNESS.html) celebrate(), qSeamArrived, door wrapper; bea_main.py quick_publish",
+       ref="SMS listers 15-16 Oct: #563/#564 Durban housekeeper (two identical drafts 46 s apart from two IPs, tapped the tile "
+           "offer, left); #566 Pretoria nanny (WhatsApp, Pass Quick on, closed onto a fresh door, left). docs/E2E_2026-10-16.md")
+def rg_arrive_draft_focus():
+    q, h, b = repo_file("quick.html"), repo_file("genie/HARNESS.html"), repo_file("bea_main.py")
+    if q is None or b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if h is not None and h != q:
+        bad.append("genie/HARNESS.html differs from quick.html")
+    if "(live ? \x27<button class=\"ar-pass\"" not in q:
+        bad.append("the arrival screen offers Pass Quick on before the listing is live")
+    if "if(r && r.live) installInto(ov.querySelector(\x27#ar-inst\x27))" not in q:
+        bad.append("the arrival screen offers the home-screen tile before the listing is live")
+    if "ts_q_draft_wait" not in q or "id=\"qswait\"" not in q:
+        bad.append("the door no longer remembers an unfinished draft (SAVED-DRAFT-DOOR-1)")
+    for ph in ("Your listing is saved.", "Next: open it in TrustSquare, sign the terms and publish.", "Sign the terms and publish"):
+        if ("\"" + ph + "\"") not in q.split("/* QUICK-I18N:END */")[0]:
+            bad.append("door line not translatable any more: " + ph)
+    if "QUICK-DUP-2" not in b or "_dup_draft = conn.execute(" not in b or "if not sess and not _dup_draft:" not in b:
+        bad.append("a re-sent Quick save makes a second draft again (QUICK-DUP-2)")
+    if bad:
+        return [(FAIL, x) for x in bad]
+    return [(INFO, "draft arrival focused, door remembers the draft, re-sent save answers with the same draft")]
+
+
+
+@entry("RG-0992", "LM-EMPTY-SELL-1 (Goal run 41): Local Market in a city with no listings offers 'List yours here' (straight into Local "
+       "Market's guided flow) and 'Look in another city' instead of a dead-end 'check back soon'",
+       LOCKED, fixed_on="2026-10-16", scope="ms.js renderLocalMarket empty state, msBrowseEmptyHtml(cat, lbl)",
+       ref="Goal run 41 walk: cold Home -> Local Market tile (New York, 0 listings) -> 'No Local Market listings here yet -- check back "
+           "soon.' with nothing to tap. Local Market has live listings in six cities only. GI-0037 closed the same dead end elsewhere.")
+def rg_lm_empty_sell():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "check back soon.</div>';\n      return;" in js or "No Local Market listings here yet — check back soon.</div>';\n      return;" in js:
+        bad.append("Local Market's empty state is a dead end again ('check back soon')")
+    if "msBrowseEmptyHtml('local_market', 'Local Market listings')" not in js:
+        bad.append("Local Market's empty state no longer offers to list there")
+    if "function msBrowseEmptyHtml(cat, lbl)" not in js:
+        bad.append("msBrowseEmptyHtml lost its label parameter")
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "an empty Local Market offers List yours here and another city")]
+
+
+
+@entry("RG-0993", "FACES-OK-1 (RUL-235, David 16 Oct 2026): the photo anonymity scan treats the seller's own adult face as fine in every "
+       "category -- only children's faces and background bystanders are boxed -- every refusal is logged with its reason, and the sell "
+       "flow no longer promises to blur adult faces",
+       LOCKED, fixed_on="2026-10-16",
+       scope="bea_main.py _ANON_SCAN_PROMPT + _ANON_SCAN_PROMPT_TOURS (FACES clause), _anon_422 in _seller_photo_anon_gate; ms.js SF_CATS aiCap",
+       ref="RUL-235. Goal run 41: 3 of 5 strangers' hub photo uploads since 13 Oct refused (422) with no recorded reason (#542, #559, #562).")
+def rg_faces_ok():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if b.count("FACES (RUL-235, David 16 Oct 2026): an ADULT'S FACE IS NOT IDENTIFYING CONTENT") < 2:
+        bad.append("a photo scan prompt lost the RUL-235 faces clause (both the general and the tours prompt must carry it)")
+    if "CHILD'S face" not in b:
+        bad.append("children's faces are no longer protected in the photo scan")
+    i = b.find("def _seller_photo_anon_gate(")
+    j = b.find("\ndef ", i + 10)
+    if i < 0 or "raise HTTPException(status_code=422," in b[i:j] or "PHOTO-REFUSED" not in b:
+        bad.append("a photo refusal is no longer logged with its reason (PHOTO-REASON-LOG-1)")
+    for old in ("aiCap:'street numbers, signage and faces'", "aiCap:'faces and contact details'", "aiCap:'faces and vehicle plates'"):
+        if old in js:
+            bad.append("the sell flow promises to blur adult faces again: " + old)
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "adult faces pass, children and bystanders boxed, refusals logged by reason")]
+
+
+
+@entry("RG-0994", "PROFILE-FACE-1 (RUL-235(e), David 16 Oct 2026): a profile photo the anonymity scan passes as clean is stored with "
+       "_fok235 in its name and shown sharp to buyers; any other stays blurred until an introduction; the upload is never refused",
+       LOCKED, fixed_on="2026-10-16",
+       scope="bea_main.py upload_user_photo + _profile_face_ok + PROFILE_FACE_OK_MARK; ms.js msFaceOk, cvAvatarHtml, openBEASellerProfile, profile copy",
+       ref="RUL-235(e). Before: every profile photo blurred for buyers (filter:blur / .blurred) whatever it showed.")
+def rg_profile_face_ok():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'PROFILE_FACE_OK_MARK = "_fok235"' not in b or "_face_ok = _profile_face_ok(img, email)" not in b:
+        bad.append("profile photos are no longer checked for a clean adult face (PROFILE-FACE-1)")
+    if 'scan.get("verdict") == "clean"' not in b[b.find("def _profile_face_ok"):b.find("def _anon_profile_photo")]:
+        bad.append("a profile photo can be shown sharp without a CLEAN scan")
+    if "function msFaceOk(u)" not in js or "if(isRevealed || msFaceOk(photo))" not in js or 'data-hero-photo="listing-cover"' not in js:
+        bad.append("the app no longer shows a checked profile photo sharp (or blurs nothing at all)")
+    if "class=\"blurred\"" not in js:
+        bad.append("an unchecked profile photo is no longer blurred for buyers")
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "checked adult profile photos sharp, others blurred")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
@@ -38872,6 +38971,239 @@ def rg_gate_words_3():
         bad.append("a draft saved from Edit is back to a 6-second 'tap Publish' toast (DRAFT-SAVE-PUBLISH-1 gone)")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "no hidden-until-checked words in Quick; signed-in drafts open in the Hub; "
                                                         "a saved draft offers Publish")]
+
+
+# ── BUG-AUDIT-1016 (16 Oct 2026 overnight bug audit, log: Projects\Audits\BUG_AUDIT_2026-10-16) ──
+# RG-1010..RG-1049 are reserved for this audit's entries so they can never collide with a goal run's
+# next number (goal runs count up from RG-0993 the same night).
+def _audit1016_scoreboard_lock(sb, py):
+    bad = []
+    body = fn_body(sb, "def run_probe_round(")
+    if not body:
+        return ["run_probe_round is gone from ai_scoreboard.py"]
+    i_probe = body.find("probe_once(")
+    i_ins = body.find("INSERT INTO ai_scoreboard_probes")
+    if i_probe < 0 or i_ins < i_probe or "executemany(" not in body or "conn.execute(" in body:
+        bad.append("the scoreboard writes inside its probe loop again -- the write lock is held across AI calls (SCOREBOARD-LOCK-1)")
+    if "timeout=" not in fn_body(sb, "def _connect("):
+        bad.append("the scoreboard connection has no busy timeout, so it fails the app's writers instead of waiting (SCOREBOARD-LOCK-1)")
+    ping = fn_body(py, "def presence_ping(")
+    if "OperationalError" not in ping or '"recorded": False' not in ping.split("OperationalError", 1)[-1]:
+        bad.append("a presence ping that meets a busy database answers 500 again (PING-BUSY-1)")
+    if "OperationalError" not in fn_body(py, "def _purge_expired_signals("):
+        bad.append("the lazy wishlist purge can fail the signals read it rides on again (PURGE-BUSY-1)")
+    return bad
+
+
+@entry("RG-1010", "SCOREBOARD-LOCK-1 + PING-BUSY-1 + PURGE-BUSY-1 (16 Oct 2026 bug audit, BA-001): the nightly AI scoreboard "
+       "never holds the database write lock across its AI calls, and a busy database never turns a presence ping or a "
+       "wishlist read into a 500",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ai_scoreboard.py run_probe_round + _connect; bea_main.py presence_ping + _purge_expired_signals",
+       ref="Production log 10-16 Oct 2026: 20 x sqlite3.OperationalError 'database is locked', every one at 01:33-01:34 UTC, "
+           "the minute _ts_scoreboard_nightly fires; POST /presence/ping and GET /wishlist/signals answered 500 on six nights. "
+           "Proven on a scratch database: old round -> an app write during the round FAILED 'database is locked'; new round -> "
+           "the write succeeds and every probe row is still stored.")
+def rg_audit1016_scoreboard_lock():
+    sb = repo_file("ai_scoreboard.py")
+    py = repo_file("bea_main.py")
+    if sb is None or py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_scoreboard_lock(sb, py)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "probes run first, rows land in one short write; ping and purge ride out a busy database")]
+
+
+
+def _audit1016_gx_zoom(js):
+    bad = []
+    body = fn_body(js, "function renderGrid(")
+    if "!(l.generic && _zoomGenericFits(l))" not in body:   # GX-ZOOM-2 (16 Oct 2026): fits her chips, not merely unnarrowed
+        bad.append("the Services/Tutors funnel drops the role and trainer AI examples again -- a Home tile of 53 over a page of 11 (GX-ZOOM-1)")
+    if "function _zoomGenericFits(" not in js:
+        bad.append("_zoomGenericFits() is gone, so an example cannot be matched to the chips she picked (GX-ZOOM-2)")
+    if "const _natHere = l.reach === 'national'" not in js or "lCity !== aCity && !_natHere" not in js:
+        bad.append("a Nationwide advert shows on the category page but is no longer counted on its Home tile (NATIONWIDE-TILE-1)")
+    return bad
+
+
+@entry("RG-1011", "GX-ZOOM-1 + NATIONWIDE-TILE-1 (16 Oct 2026 bug audit, BA-004): with the funnel on, the Services and Tutors "
+       "pages show the role and trainer AI examples their Home tiles count (RUL-216/RUL-217), and a Nationwide advert is "
+       "counted on the tile of every city whose page shows it (RUL-220)",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js renderGrid() zoom filter + _zoomNarrowed(); renderCatCounts() live-listing city filter",
+       ref="Walked live 16 Oct 2026 at 390 px, Pretoria, AI examples on: Home said Services 53 / Tutors 51, the pages showed "
+           "11 and 6 cards -- the /zoom/next id set (baseline_q4 on) holds only server rows, so all 43 casual-role and 47 "
+           "trainer examples were filtered out; the Bee Lady's Nationwide advert (#538) was on the page but not on the tile. "
+           "Patched ms.js served to the same walk: tiles 54/53 over pages of 54/53 cards, no console errors.")
+def rg_audit1016_gx_zoom():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_gx_zoom(js)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "role and trainer examples pass the unnarrowed funnel; Nationwide adverts count on every city's tile")]
+
+
+
+def _audit1016_myspace_signedout(js):
+    bad = []
+    init = fn_body(js, "function msInit(")
+    if "ms-signedout-card" not in init or "goTo(\\'signin\\')" not in init:
+        bad.append("My Space greets a signed-out visitor as a member again, with no sign-in on the first screen (MYSPACE-SIGNEDOUT-1)")
+    if "(email ? 'TrustSquare member' : 'Not signed in')" not in init:
+        bad.append("a signed-out visitor is labelled 'TrustSquare member' again (MYSPACE-SIGNEDOUT-1)")
+    sq = fn_body(js, "async function sqLoad(")
+    i_guard, i_fetch = sq.find("if(!em)"), sq.find("/squire/status")
+    if i_guard < 0 or i_fetch < 0 or i_guard > i_fetch:
+        bad.append("Squire asks /squire/status with no account and says 'not available' to a signed-out visitor again (MYSPACE-SIGNEDOUT-1)")
+    return bad
+
+
+@entry("RG-1012", "MYSPACE-SIGNEDOUT-1 (16 Oct 2026 bug audit, BA-006): a visitor with no account on the phone is told on My "
+       "Space that she is not signed in and offered the sign-in at the top, never shown as a 'TrustSquare member' with "
+       "'Squire is not available right now'",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js msInit() signed-out card + header subtitle; sqLoad() signed-out guard before /squire/status",
+       ref="Walked live 16 Oct 2026 at 390 px as a stranger: My Space read 'TrustSquare member', 'Squire is not available "
+           "right now' (GET /squire/status?email= -> 401 in the console), a 15% Trust score, and no sign-in on the first "
+           "screen. Patched ms.js served to the same walk: 'Not signed in', a sign-in card on top that opens the sign-in "
+           "screen, no 401.")
+def rg_audit1016_myspace_signedout():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_myspace_signedout(js)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "signed-out My Space says so and offers the sign-in; Squire waits for an account")]
+
+
+
+def _audit1016_quick_sw(q):
+    bad = []
+    if "navigator.serviceWorker.register('/service-worker.js');" in q:
+        bad.append("Quick registers its service worker without catching the refusal again -- an unhandled rejection at the door (QUICK-SW-CATCH-1)")
+    if "navigator.serviceWorker.register('/service-worker.js').catch(function(){})" not in q:
+        bad.append("Quick's service-worker registration is gone or changed shape (QUICK-SW-CATCH-1)")
+    if "QUICK-ERR-BEACON-2" not in q or "nm=(r&&r.name&&r.name!=='Error')" not in q:
+        bad.append("the promise beacon no longer carries the error's name and first stack line (QUICK-ERR-BEACON-2)")
+    return bad
+
+
+@entry("RG-1013", "QUICK-SW-CATCH-1 + QUICK-ERR-BEACON-2 (16 Oct 2026 bug audit, BA-007): a phone that refuses Quick's service "
+       "worker no longer throws an unhandled rejection at the door, and a promise error reports its name and where it came from",
+       LOCKED, fixed_on="2026-10-16",
+       scope="quick.html (= genie/HARNESS.html): the service-worker register() call and the unhandledrejection beacon",
+       ref="Funnel 15 + 16 Oct 2026: two strangers from SMS waves (Chrome 138, Android) logged only q_door then q_error "
+           "'promise: Rejected'. Reproduced in a headless phone with register() refused: the live page sent exactly "
+           "{m:'promise: Rejected', at:'q_door', n:1}; the patched page sent nothing.")
+def rg_audit1016_quick_sw():
+    q = repo_file("quick.html")
+    h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_quick_sw(q) + ([] if h is None or h == q else ["genie/HARNESS.html differs from quick.html"])
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Quick catches a refused service worker; promise errors carry their name and origin")]
+
+
+
+def _audit1016_tour_one(js):
+    zf = fn_body(js, "async function zoomFetch(")
+    if not zf:
+        return ["zoomFetch() is gone"]
+    if "TOUR-ONE-1" not in zf or "tourKeyOf(m)) return;" not in zf:
+        return ["the funnel's rows bring a tour's accommodation super-example back as its own card -- Adventures 10 under a tile of 9 (TOUR-ONE-1)"]
+    return []
+
+
+@entry("RG-1014", "TOUR-ONE-1 (16 Oct 2026 bug audit, BA-005): rows the funnel adds obey the same tour consolidation as the city "
+       "feed, so a tour's accommodation super-example never comes back as its own Adventures card",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js zoomFetch() res.rows injection (mirrors loadLiveListings' tour consolidation)",
+       ref="Walked live 16 Oct 2026, Pretoria: Home said Adventures 9, the Adventures page showed 10 -- #307, the Cape-to-Cairo "
+           "stays, which loadLiveListings deliberately skips (shown as priced extensions on the journey) re-entered through "
+           "/zoom/next rows. Patched ms.js in the same walk: 9 cards under a tile of 9.")
+def rg_audit1016_tour_one():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = _audit1016_tour_one(js)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "funnel rows keep the tour consolidation; Adventures page = tile")]
+
+
+
+@entry("RG-1015", "FRESH-BAR-WIDTH-1 (16 Oct 2026 bug audit, BA-009): the 'A new version is ready' bar is one line on a phone, "
+       "not a four-line block over the header",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js _freshShow() bar style: width:max-content under the max-width cap",
+       ref="Rendered 16 Oct 2026 at 360 and 390 px: the bar measured 192x91 px with the text broken over four lines across the "
+           "logo and city badge (a fixed box pushed right by left:50% shrinks to the half screen left of it). Patched: 312x38 px, one line.")
+def rg_audit1016_fresh_bar():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    body = fn_body(js, "function _freshShow(")
+    if "width:max-content;max-width:calc(100% - 24px)" not in body:
+        return [(FAIL, "the update bar lost width:max-content -- it shrinks to half the screen and wraps over the header again")]
+    return [(INFO, "update bar sizes to its one line, capped by the screen")]
+
+
+
+@entry("RG-1016", "RESTART-RETRY-1 (16 Oct 2026 bug audit, BA-010): a read that lands in a release restart (502/503/504 or a "
+       "dropped connection) is asked again twice before the app gives up on it",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js apiGet() + _apiGetRetryable()",
+       ref="Caught live 16 Oct 2026 23:04:41 UTC: choosing South Africa in the location picker while a release restarted the "
+           "server got 502 for /geo/cities and /geo/regions and the picker came up empty. Replayed with two forced 502s: "
+           "live code -> 0 cities; patched -> 14 cities after the retries.")
+def rg_audit1016_restart_retry():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    body = fn_body(js, "async function apiGet(")
+    bad = []
+    if "_apiGetRetryable(res.status) && attempt < 2" not in body:
+        bad.append("apiGet drops a 502/503/504 at once again -- every release restart blanks whatever was being read")
+    if "e.name === 'TypeError' && attempt < 2" not in body:
+        bad.append("apiGet no longer retries a dropped connection")
+    if "function _apiGetRetryable(status){ return status === 502 || status === 503 || status === 504; }" not in js:
+        bad.append("_apiGetRetryable() changed or is gone")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "reads ride out a release restart: two retries, 1.2 s and 2.5 s")]
+
+
+
+@entry("RG-1017", "NARROW-FIT-1 (16 Oct 2026 bug audit, BA-013): Home, My Space and Adventures fit a 320/360 px phone -- no page "
+       "wider than the screen",
+       LOCKED, fixed_on="2026-10-16",
+       scope="marketsquare.html Nearby-landmarks sec-head (flex-wrap); ms.css .ms-tabs (scroll inside the bar), .adv-hero-top (wrap)",
+       ref="Measured live 16 Oct 2026: Home scrollWidth 366 at 360 px and 365 at 320 px (landmark filters cut off), My Space "
+           "342 at 320 px (five tabs), Adventures 338 at 320 px (country pill). Patched page + stylesheet in the same walk: "
+           "320 and 360 px, all three screens exactly screen-wide.")
+def rg_audit1016_narrow_fit():
+    h = repo_file("marketsquare.html")
+    c = repo_file("ms.css")
+    if h is None or c is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'justify-content:space-between;flex-wrap:wrap;gap:6px;">\n      <h2>🌍 Nearby landmarks</h2>' not in h:
+        bad.append("the Nearby-landmarks filters no longer wrap -- Home is wider than a 360 px phone again")
+    if "overflow-x:auto;scrollbar-width:none;" not in c.split(".ms-tabs{", 1)[-1].split("}", 1)[0]:
+        bad.append("My Space tabs widen the page at 320 px again")
+    if "flex-wrap:wrap;row-gap:8px;" not in c.split(".adv-hero-top{", 1)[-1].split("}", 1)[0]:
+        bad.append("the Adventures title row no longer wraps -- the country pill hangs off a 320 px screen")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "Home, My Space and Adventures fit 320 and 360 px")]
+
+
+
+@entry("RG-1018", "PLAN-WORDS-1 (16 Oct 2026 bug audit, BA-017): no internal ruling number is printed on the Plans page -- the "
+       "Free plan's Nationwide bullet read '... a free switch on every listing (RUL-220)' to every visitor",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js plan cards: every bullets:[...] list",
+       ref="Seen live 16 Oct 2026 on the Plans screen at 390 px.")
+def rg_audit1016_plan_words():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = [m.group(0)[:80] for m in _re.finditer(r"bullets:\[[^\]]*\((?:RUL|RG|CC)-\d+\)[^\]]*\]", js)]
+    return [(FAIL, "a plan bullet shows an internal ruling number again: " + bad[0])] if bad else [(INFO, "plan bullets carry no internal ruling numbers")]
 
 if __name__ == "__main__":
     sys.exit(main())
