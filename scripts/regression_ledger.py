@@ -38685,6 +38685,25 @@ def rg_profile_face_ok():
     return [(FAIL, x) for x in bad] if bad else [(INFO, "checked adult profile photos sharp, others blurred")]
 
 
+
+@entry("RG-0995", "SELLER-FACE-1 (RUL-235(e)): the seller page shows her profile photo to buyers ONLY when the anonymity scan passed it "
+       "(PROFILE-FACE-1 mark); an unmarked profile photo never leaves /sellers/summary", LOCKED, fixed_on="2026-10-17",
+       scope="bea_main.py seller_summary_for_listing 'face'; ms.js openBEASellerProfile summary callback",
+       ref="David 16 Oct 2026: 'That would be good' -- buyers had never been sent any profile photo.")
+def rg_seller_face():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = b.find("def seller_summary_for_listing(")
+    seg = b[i:b.find("\n@app.", i + 10)]
+    bad = []
+    if 'out["face"] = _pu' not in seg or '(PROFILE_FACE_OK_MARK + ".jpg") in _pu' not in seg:
+        bad.append("/sellers/summary sends a profile photo without the checked mark, or none at all")
+    if "s.face && msFaceOk(s.face)" not in js:
+        bad.append("the seller page no longer shows the checked face")
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "only checked faces reach buyers, on the seller page")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture
@@ -39204,6 +39223,172 @@ def rg_audit1016_plan_words():
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     bad = [m.group(0)[:80] for m in _re.finditer(r"bullets:\[[^\]]*\((?:RUL|RG|CC)-\d+\)[^\]]*\]", js)]
     return [(FAIL, "a plan bullet shows an internal ruling number again: " + bad[0])] if bad else [(INFO, "plan bullets carry no internal ruling numbers")]
+
+
+
+def _jsfn_1016(js, marker):
+    """The body of the ms.js function `marker` opens: up to the next top-level function (fn_body stops at Python defs only)."""
+    if marker not in js:
+        return ""
+    seg = js.split(marker, 1)[1]
+    ends = [i for i in (seg.find("\nfunction "), seg.find("\nasync function "), seg.find("\nvar ")) if i != -1]
+    return seg[:min(ends)] if ends else seg
+
+
+@entry("RG-1019", "AGENT-ARTICLE-1 (16 Oct 2026 bug audit, BA-019): the sell flow's agent card reads 'Why sellers use an "
+       "estate agent' -- it printed 'a estate agent' to every Property seller",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js sfAgentsLoad: the 'Why sellers use ...' heading",
+       ref="Seen live 16 Oct 2026 on Sell > Property > Boost your sale? at 390 px.")
+def rg_audit1016_agent_article():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    if _re.search(r"Why sellers use an? '\s*\+", js):
+        return [(FAIL, "the agent card hard-codes its article again -- 'Why sellers use a estate agent'")]
+    if "Why sellers use '+(/^[aeiou]/i.test(_who)?'an ':'a ')+_who" not in js:
+        return [(FAIL, "the agent card heading no longer picks a/an from the label")]
+    return [(INFO, "the agent card picks a/an from the label")]
+
+
+@entry("RG-1020", "AGENT-SIGNIN-1 (16 Oct 2026 bug audit, BA-020): the Agent Hub offers a signed-out agent the sign-in button "
+       "on both tabs -- it said 'Sign in first' with no way to do it",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js _asProfileLoad, _asLeadsLoad, _asSignInBtn",
+       ref="Seen live 16 Oct 2026: Sell > Services > Professional Agents as a stranger.")
+def rg_audit1016_agent_signin():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "goTo(\\'signin\\')" not in _jsfn_1016(js, "function _asSignInBtn("):
+        bad.append("_asSignInBtn no longer opens the sign-in screen")
+    for fn in ("async function _asProfileLoad(", "async function _asLeadsLoad("):
+        body = _jsfn_1016(js, fn)
+        first = body.split("if(!_asState.email)", 1)[-1].split("return;", 1)[0] if "if(!_asState.email)" in body else ""
+        if "_asSignInBtn()" not in first:
+            bad.append(fn.split("function ")[1].rstrip("(") + " shows a signed-out agent no sign-in button")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "both Agent Hub tabs offer a signed-out agent the sign-in button")]
+
+
+@entry("RG-1021", "SELL-STEPS-1 (16 Oct 2026 bug audit, BA-021): the sell-flow step counter matches the steps the flow has -- "
+       "Local Market ended on 'Step 5 of 6'",
+       LOCKED, fixed_on="2026-10-16",
+       scope="ms.js sell-flow headers (Photos, section steps, Features) and sfStepTot",
+       ref="Seen live 16 Oct 2026: Sell > Local Market goes from 'Step 5 of 6' straight to the score.")
+def rg_audit1016_sell_steps():
+    import re as _re
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    hard = _re.findall(r"Step (?:[1-5]|'\+stepNo\+') of 6 · '\+f\.label", js)
+    if hard:
+        bad.append("%d sell-flow header(s) hard-code 'of 6' again" % len(hard))
+    if "sfLegalCard() ? 6 : 5" not in _jsfn_1016(js, "function sfStepTot("):
+        bad.append("sfStepTot no longer counts the legal step from sfLegalCard()")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "sell-flow headers count 5 or 6 steps from the legal-card test")]
+
+
+
+@entry("RG-1022", "DB-ANCHOR-1 (17 Oct 2026 bug audit, BA-016): the app holds one connection to the live database open for "
+       "its whole life, so a root process can never re-create the -wal/-shm side files under it",
+       LOCKED, fixed_on="2026-10-17",
+       scope="database.py get_db, _anchor_start, _anchor_open",
+       ref="Production: 5 'unable to open database file' and 2 'attempt to write a readonly database' 500s since 30 Sep "
+           "2026, every one inside a release-gate window (the gate opens the live database as root). Reproduced on a copy "
+           "17 Oct: app threads as msdeploy beside a root reader/writer -> 8 refusals plus a read-only spell (4,316 failed "
+           "writes in 10 s); with the anchor 0 errors in 3 x 10 s.")
+def rg_audit1017_db_anchor():
+    src = repo_file("database.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    body = fn_body(src, "def get_db(")
+    if "_anchor_start()" not in body:
+        bad.append("get_db no longer starts the anchor connection")
+    if '"unable to open database file" not in str(e)' not in body:
+        bad.append("get_db no longer retries the side-file window")
+    if 'BEGIN IMMEDIATE' not in fn_body(src, "def _anchor_open("):
+        bad.append("the anchor no longer proves its shared memory is writable before it is kept")
+    st = fn_body(src, "def _anchor_start(")
+    if "geteuid" not in st or "DB_PATH != _LIVE_PATH" not in st:
+        bad.append("the anchor can be held by a root process or a script on another database file")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the app anchors the live database; root never re-creates its side files")]
+
+
+
+@entry("RG-1023", "WONDER-SELFHOST-2 (17 Oct 2026 bug audit, BA-018): no landmark card loads its picture from Wikimedia -- "
+       "every photo is served from trustsquare.co and keeps its licence and source",
+       LOCKED, fixed_on="2026-10-17",
+       scope="repo root wonders.json: every entry's photo / photo_author / photo_licence / photo_source",
+       ref="16 Oct 2026: 53 of 319 cards hotlinked commons.wikimedia.org Special:FilePath at 1280 px; Wikimedia answered "
+           "429 after four quick loads from one address and a refused picture left an empty navy card. 17 Oct: the same 53 "
+           "pictures self-hosted under /media/wonders (12.7 MB), attribution fields kept.")
+def rg_audit1017_wonder_selfhost():
+    import json as _json
+    w = repo_file("wonders.json")
+    if w is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    try:
+        cat = _json.loads(w)
+    except ValueError as e:
+        return [(FAIL, "wonders.json unparseable: %s" % e)]
+    hot = [x.get("id") for x in cat if "wikimedia.org" in (x.get("photo") or "")]
+    bare = [x.get("id") for x in cat if "/media/wonders/" in (x.get("photo") or "")
+            and not (x.get("photo_licence") and x.get("photo_source"))]
+    bad = []
+    if hot:
+        bad.append("%d landmark photo(s) hotlink Wikimedia again (e.g. %s)" % (len(hot), ", ".join(hot[:3])))
+    if bare:
+        bad.append("%d self-hosted photo(s) lost their licence or source (e.g. %s)" % (len(bare), ", ".join(bare[:3])))
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "all %d landmark photos are self-hosted with attribution" % len(cat))]
+
+
+
+@entry("RG-1024", "WONDER-PICKS-1 (17 Oct 2026 bug audit, BA-028): five landmark cards no longer show a picture of something "
+       "else -- Daintree was a gas mask, Manu National Park a man's portrait, the Smithsonian and the Cradle of Humankind maps",
+       LOCKED, fixed_on="2026-10-17",
+       scope="repo root wonders.json: np_018, np_026, nm_005, un_042, nm_016 photo_source",
+       ref="Content check of the 53 pictures self-hosted 17 Oct (contact sheets): these five had been picked by guessing a "
+           "Commons file name from the landmark's name (File:Daintree.jpg is a gas mask, File:Manu.jpg a man called Manu). "
+           "Replaced with each place's own Wikipedia lead picture (or, where that is a map, the visitor centre), checked by eye.")
+def rg_audit1017_wonder_picks():
+    import json as _json
+    w = repo_file("wonders.json")
+    if w is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    try:
+        cat = {x.get("id"): x for x in _json.loads(w)}
+    except ValueError as e:
+        return [(FAIL, "wonders.json unparseable: %s" % e)]
+    wrong = {"np_018": "File:Daintree.jpg", "np_026": "File:Manu.jpg", "nm_005": "File:Smithsonian.jpg",
+             "un_042": "File:Cradle_of_Humankind_in_Gauteng_map.jpg", "nm_016": "File:Acropolis_Museum.jpg"}
+    back = [i for i, f in wrong.items() if i in cat and (cat[i].get("photo_source") or "").endswith(f)]
+    return [(FAIL, "landmark card(s) %s show the wrong picture again" % ", ".join(back))] if back else \
+           [(INFO, "the five corrected landmark pictures hold")]
+
+
+
+@entry("RG-1025", "CREDIT-LINE-1 (17 Oct 2026 bug audit, BA-029): the photo licence on a landmark page is underlined, not "
+       "crossed out -- the credit box keeps its own line-height inside the hero's line-height:0",
+       LOCKED, fixed_on="2026-10-17",
+       scope="ms.css .wd-photo-credit",
+       ref="Measured live 17 Oct 2026 (Yellowstone, Daintree): the licence link's box was 1 px tall in the middle of its "
+           "12 px text, so its border-bottom read as a strike-through on every one of the 319 landmark pages.")
+def rg_audit1017_credit_line():
+    import re as _re
+    c = repo_file("ms.css")
+    if c is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"\.wd-photo-credit\{([^}]*)\}", c)
+    if not m:
+        return [(FAIL, ".wd-photo-credit rule is gone")]
+    lh = _re.search(r"line-height:\s*([0-9.]+)", m.group(1))
+    if not lh or float(lh.group(1)) <= 0:
+        return [(FAIL, "the landmark photo credit inherits line-height:0 again -- its licence link looks crossed out")]
+    return [(INFO, "the landmark photo credit has its own line-height")]
 
 if __name__ == "__main__":
     sys.exit(main())
