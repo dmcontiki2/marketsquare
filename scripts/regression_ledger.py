@@ -38685,6 +38685,25 @@ def rg_profile_face_ok():
     return [(FAIL, x) for x in bad] if bad else [(INFO, "checked adult profile photos sharp, others blurred")]
 
 
+
+@entry("RG-0995", "SELLER-FACE-1 (RUL-235(e)): the seller page shows her profile photo to buyers ONLY when the anonymity scan passed it "
+       "(PROFILE-FACE-1 mark); an unmarked profile photo never leaves /sellers/summary", LOCKED, fixed_on="2026-10-17",
+       scope="bea_main.py seller_summary_for_listing 'face'; ms.js openBEASellerProfile summary callback",
+       ref="David 16 Oct 2026: 'That would be good' -- buyers had never been sent any profile photo.")
+def rg_seller_face():
+    b, js = repo_file("bea_main.py"), repo_file("ms.js")
+    if b is None or js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = b.find("def seller_summary_for_listing(")
+    seg = b[i:b.find("\n@app.", i + 10)]
+    bad = []
+    if 'out["face"] = _pu' not in seg or '(PROFILE_FACE_OK_MARK + ".jpg") in _pu' not in seg:
+        bad.append("/sellers/summary sends a profile photo without the checked mark, or none at all")
+    if "s.face && msFaceOk(s.face)" not in js:
+        bad.append("the seller page no longer shows the checked face")
+    return [(FAIL, x) for x in bad] if bad else [(INFO, "only checked faces reach buyers, on the seller page")]
+
+
 def _server_vantage_wrap():
     """LEDGER-VANTAGE-SERVER-1: on the server clone, a FAIL that is only 'this PC-only file is not here' reads NOT EVALUATED.
     Any other FAIL from the same entry still fails. RG-0491's repo-side picture check is spared only when the picture

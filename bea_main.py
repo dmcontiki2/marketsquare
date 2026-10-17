@@ -6166,10 +6166,16 @@ def seller_summary_for_listing(listing_id: int, ts_user: str = Cookie(default=No
         import json as _sj
         _c2 = database.get_db()
         try:
-            _pr = _c2.execute("SELECT profile_json FROM users WHERE LOWER(email)=LOWER(?)",
+            _pr = _c2.execute("SELECT profile_json, photo_url FROM users WHERE LOWER(email)=LOWER(?)",
                               (row["seller_email"],)).fetchone()
         finally:
             _c2.close()
+        # SELLER-FACE-1 (RUL-235(e), David 16 Oct 2026: "That would be good"): her profile photo reaches buyers ONLY when the
+        # anonymity scan passed it as clean (PROFILE-FACE-1 mark) -- an adult face, no name, number, sign, logo, plate or child.
+        # An unmarked photo never leaves this endpoint. The address is a random storage key: no name or email in it.
+        _pu = (_pr["photo_url"] or "").strip() if _pr else ""
+        if _pu and (PROFILE_FACE_OK_MARK + ".jpg") in _pu:
+            out["face"] = _pu
         _p = _sj.loads(_pr["profile_json"]) if _pr and _pr["profile_json"] else {}
         for _k in ("headline", "about", "tags"):
             if _p.get(_k):

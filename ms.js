@@ -6444,6 +6444,11 @@ function openBEASellerProfile(l) {
       } }catch(_e){}
     }).catch(function(){});
     fetch(BEA_URL+'/sellers/summary/'+bid).then(function(r){return r.ok?r.json():null;}).then(function(s){
+      /* SELLER-FACE-1 (RUL-235(e)): a checked profile photo (an adult face, nothing that identifies how to reach her) replaces
+         the listing cover in the round picture, so the buyer sees who she is about to contact. Unchecked photos never arrive. */
+      try{ if(s && s.face && msFaceOk(s.face)){ var _sc2=document.getElementById('screen-seller-cv'); var _hi=_sc2&&_sc2.querySelector('img[data-hero-photo]');
+        if(_hi){ _hi.src=s.face; _hi.setAttribute('data-hero-photo','seller-face'); _hi.alt='The seller'; }
+        else { var _av=_sc2&&_sc2.querySelector('.cv-avatar'); if(_av) _av.innerHTML='<img src="'+_lmEsc(s.face)+'" alt="The seller" data-hero-photo="seller-face" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);">'; } } }catch(_){}
       const el=document.getElementById('bea-sellersum-'+l.id); if(!el) return;
       if(!s||!s.found){ el.textContent='This seller\u2019s overview builds as they trade on TrustSquare.'; return; }
       const MO={'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'};
