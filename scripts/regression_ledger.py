@@ -39350,5 +39350,26 @@ def rg_audit1017_wonder_picks():
     return [(FAIL, "landmark card(s) %s show the wrong picture again" % ", ".join(back))] if back else \
            [(INFO, "the five corrected landmark pictures hold")]
 
+
+
+@entry("RG-1025", "CREDIT-LINE-1 (17 Oct 2026 bug audit, BA-029): the photo licence on a landmark page is underlined, not "
+       "crossed out -- the credit box keeps its own line-height inside the hero's line-height:0",
+       LOCKED, fixed_on="2026-10-17",
+       scope="ms.css .wd-photo-credit",
+       ref="Measured live 17 Oct 2026 (Yellowstone, Daintree): the licence link's box was 1 px tall in the middle of its "
+           "12 px text, so its border-bottom read as a strike-through on every one of the 319 landmark pages.")
+def rg_audit1017_credit_line():
+    import re as _re
+    c = repo_file("ms.css")
+    if c is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"\.wd-photo-credit\{([^}]*)\}", c)
+    if not m:
+        return [(FAIL, ".wd-photo-credit rule is gone")]
+    lh = _re.search(r"line-height:\s*([0-9.]+)", m.group(1))
+    if not lh or float(lh.group(1)) <= 0:
+        return [(FAIL, "the landmark photo credit inherits line-height:0 again -- its licence link looks crossed out")]
+    return [(INFO, "the landmark photo credit has its own line-height")]
+
 if __name__ == "__main__":
     sys.exit(main())
