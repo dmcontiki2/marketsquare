@@ -54,7 +54,27 @@ HONESTY RULES BAKED IN, NOT LEFT TO THE COPY
 import json, os, sqlite3, time, urllib.parse, urllib.request
 from datetime import datetime, timezone
 
-TOKEN = os.environ.get("TRAVELPAYOUTS_TOKEN", "")
+def _token_from_service():
+    """FARES-TOKEN-1 (17 Oct 2026 bug audit, BA-030). The daily refresh runs from root's cron
+    (/etc/cron.d/marketsquare-fares), and cron never sees the app service's environment: the token
+    lives only in the service's systemd drop-in. So every run since 25 Aug found TOKEN empty and
+    fetched nothing ("ok": 0, "none": 10 in /var/log/fares_refresh.log). When the environment lacks
+    the token, read it from that drop-in. Root-only file; the value is never printed or logged."""
+    path = "/etc/systemd/system/marketsquare.service.d/travelpayouts.conf"
+    try:
+        for line in open(path, encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if not line.startswith("Environment="):
+                continue
+            kv = line[len("Environment="):].strip().strip('"').strip("'")
+            if kv.startswith("TRAVELPAYOUTS_TOKEN="):
+                return kv.split("=", 1)[1].strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return ""
+
+
+TOKEN = os.environ.get("TRAVELPAYOUTS_TOKEN", "") or _token_from_service()
 MARKER = os.environ.get("TRAVELPAYOUTS_MARKER", "758984")
 ACTIVE = os.environ.get("FARES_ADAPTER", "travelpayouts")
 DEFAULT_CURRENCY = "zar"

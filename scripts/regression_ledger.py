@@ -39466,5 +39466,28 @@ def rg_linkout_on_live():
         out.append((INFO, "partner link-out live: 26 programs listed, click-out 302s to the partner short link"))
     return out
 
+
+
+@entry("RG-1026", "FARES-TOKEN-1 (17 Oct 2026 bug audit, BA-030): the daily fare refresh finds the Travelpayouts token -- "
+       "root's cron never sees the service environment, so since 25 Aug every run fetched nothing",
+       LOCKED, fixed_on="2026-10-17",
+       scope="data_flights.py TOKEN / _token_from_service; migrations/032 cron line (root, data_flights.py --refresh)",
+       ref="/var/log/fares_refresh.log on 17 Oct 2026: every run since the cron was installed reads ok 0, none 10, "
+           "failed 0 -- the adapter returns None at once when TOKEN is empty. The same call with the token "
+           "returned a fare (JNB-CPT) the same morning.")
+def rg_audit1017_fares_token():
+    src = repo_file("data_flights.py")
+    mig = repo_file("migrations/032_fares_refresh_cron.py")
+    if src is None or mig is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if 'TOKEN = os.environ.get("TRAVELPAYOUTS_TOKEN", "") or _token_from_service()' not in src:
+        bad.append("data_flights.py no longer falls back to the service drop-in -- the cron refresh runs tokenless again")
+    if "marketsquare.service.d/travelpayouts.conf" not in fn_body(src, "def _token_from_service("):
+        bad.append("_token_from_service no longer reads the travelpayouts drop-in")
+    if "root cd /var/www/marketsquare && " not in mig or "python3 data_flights.py --refresh" not in mig:
+        bad.append("the fares cron line changed -- re-check that it still runs as root (the drop-in is root-only)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the daily fare refresh can find the Travelpayouts token")]
+
 if __name__ == "__main__":
     sys.exit(main())
