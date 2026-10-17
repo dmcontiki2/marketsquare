@@ -1552,7 +1552,8 @@ REFLECTIONS = {
    # David, 12 Oct 2026: "G5 pilot go - approved", "Agreed" (cap 40 -> 200 after a clean 48 h read), "Make 'Reply STOP' true".
    ("RULINGS.md", ["THE SMS WAVE RUNS ITSELF FROM THE SERVER", "AMENDS [[RUL-192]](d)"], []),
    ("sms_provider.py", ["SMS-REPLY-1", 'body["from"] = {"type": "REPLIABLE"}', "def received("], []),
-   ("../CityLauncher/sms_arm.py", ["SMS-ARM-1", "CAP_CEILING = 200", "def cmd_read("], []),
+   # CAP_CEILING 200 -> 400: RUL-232 (David, 15 Oct 2026, "400 a day + top up") raised the ceiling; RUL-226 check updated 17 Oct.
+   ("../CityLauncher/sms_arm.py", ["SMS-ARM-1", "CAP_CEILING = 400", "def cmd_read("], []),
    ("../CityLauncher/sms_wave.py", ["def poll_inbound(", "poll_inbound(conn, sp)   # SMS-REPLY-1", "WAVE_RUNS_ON_SERVER"], []),
    ("../CityLauncher/nightly_wave.sh", ["sms_arm.py read"], []),
  ],
