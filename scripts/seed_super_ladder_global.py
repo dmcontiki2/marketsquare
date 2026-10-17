@@ -26,7 +26,8 @@ Other categories' b/c targets are stored estimates from the signal catalog;
 the server-side recompute on first profile view is authoritative (same as
 supers_ladder_seed) — confirm with diag at deploy (SUPER-TRUST-1).
 
-SAFE BY DESIGN: dry-run default; --apply backs up the DB first; idempotent
+SAFE BY DESIGN: dry-run default; --apply backs up the DB first (only when it
+changes something, outside the web folder — SEED-BAK-1); idempotent
 (skips existing titles; INSERT OR IGNORE users; upsert credentials).
 
 Run ON THE SERVER:
@@ -218,6 +219,27 @@ def photos_for(cc, catkey, tier):
     hits.sort(key=idx)
     return [STATIC_PREFIX + os.path.basename(p) for p in hits]
 
+def backup_db(db, tag):
+    """SEED-BAK-1 (17 Oct 2026): consistent copy via SQLite's backup API (a plain file
+    copy of a WAL database misses writes still in the -wal file), written OUTSIDE the
+    web folder. Called only when the seed is about to change something. Never deletes."""
+    d = os.environ.get("MS_SEED_BACKUP_DIR", "/var/backups/marketsquare/seed-copies")
+    try:
+        os.makedirs(d, exist_ok=True)
+        if not os.access(d, os.W_OK):
+            raise OSError
+    except OSError:
+        d = os.path.dirname(os.path.abspath(db))
+    path = os.path.join(d, os.path.basename(db) + ".bak-" +
+                        datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + tag)
+    src, dst = sqlite3.connect(db), sqlite3.connect(path)
+    try:
+        src.backup(dst)
+    finally:
+        dst.close(); src.close()
+    return path
+
+
 def ensure_geo_city(conn, iso2, cname, region_label, region_name, city, lat, lng):
     conn.execute("INSERT OR IGNORE INTO geo_countries (iso2,name,region_label,active) VALUES (?,?,?,1)",
                  (iso2, cname, region_label))
@@ -316,9 +338,7 @@ if not APPLY:
     print("\nDRY-RUN only — rerun with --apply to back up, seed geo, insert, create personas.")
     conn.close(); sys.exit(0)
 
-bak = DB + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S") + "-superladder"
-shutil.copy2(DB, bak); print(f"DB backed up -> {bak}")
-
+changes_before = conn.total_changes   # SEED-BAK-1: back up only if this run changes something
 city_id = {}
 for cc, iso2, cname, city, rlabel, rname, lat, lng, cur in COUNTRIES:
     city_id[iso2] = ensure_geo_city(conn, iso2, cname, rlabel, rname, city, lat, lng)
@@ -353,12 +373,16 @@ for (cc, iso2, cname, city, rl, rn, lat, lng, cat, tcode, title, price, nph, pem
                  [row[c] for c in cols])
     ins += 1
 
-conn.commit()
 bf = conn.execute(
     "UPDATE listings SET country = (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id) "
     "WHERE geo_city_id IS NOT NULL AND (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id) IS NOT NULL "
     "AND COALESCE(country,'') <> (SELECT gc.country_iso2 FROM geo_cities gc WHERE gc.id = listings.geo_city_id)").rowcount
-conn.commit()
+if conn.total_changes == changes_before:
+    conn.rollback(); print("No-op: nothing to change -- no backup taken.")
+else:
+    # Still uncommitted, so the backup sees the pre-change DB; inserts + backfill commit together.
+    print(f"DB backed up -> {backup_db(DB, 'superladder')}")
+    conn.commit()
 print(f"Inserted {ins} ladder listings; personas created/kept {len(seen_personas)}; country backfilled on {bf}.")
 try:
     conn.execute("INSERT INTO listings_fts(listings_fts) VALUES('rebuild')"); conn.commit()

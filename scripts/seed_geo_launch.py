@@ -15,7 +15,7 @@ Rules applied to the live geo_* tables:
 Nothing is deleted; listings.geo_city_id is never touched. Reverse = flip active.
 
   python3 seed_geo_launch.py            dry run (prints the plan)
-  python3 seed_geo_launch.py --apply    apply (backs the DB up first)
+  python3 seed_geo_launch.py --apply    apply (backs the DB up first, only if something changes)
 """
 import json, os, sys, shutil, sqlite3, datetime
 
@@ -27,6 +27,27 @@ DATA = os.path.join(HERE, "geo_launch_cities.json")
 APPLY = "--apply" in sys.argv
 
 
+def backup_db(db, tag):
+    """SEED-BAK-1 (17 Oct 2026): consistent copy via SQLite's backup API (a plain file
+    copy of a WAL database misses writes still in the -wal file), written OUTSIDE the
+    web folder. Called only when the seed is about to change something. Never deletes."""
+    d = os.environ.get("MS_SEED_BACKUP_DIR", "/var/backups/marketsquare/seed-copies")
+    try:
+        os.makedirs(d, exist_ok=True)
+        if not os.access(d, os.W_OK):
+            raise OSError
+    except OSError:
+        d = os.path.dirname(os.path.abspath(db))
+    path = os.path.join(d, "%s.bak-%s-%s" % (os.path.basename(db),
+                        datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), tag))
+    src, dst = sqlite3.connect(db), sqlite3.connect(path)
+    try:
+        src.backup(dst)
+    finally:
+        dst.close(); src.close()
+    return path
+
+
 def region_id(conn, iso2, name):
     r = conn.execute("SELECT id FROM geo_regions WHERE country_iso2=? AND name=?", (iso2, name)).fetchone()
     return r[0] if r else None
@@ -36,10 +57,6 @@ def main():
     cities = json.load(open(DATA, encoding="utf-8"))["cities"]
     if not os.path.exists(DB):
         sys.exit("seed_geo_launch: DB not found at %s" % DB)
-    if APPLY:
-        stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        bak = "%s.bak-%s-geolaunch" % (DB, stamp)
-        shutil.copy2(DB, bak); print("[backup]", bak)
     conn = sqlite3.connect(DB)
     conn.execute("BEGIN")
     n = {"country+": 0, "region+": 0, "city+": 0, "city_on": 0, "city_off": 0,
@@ -87,7 +104,11 @@ def main():
             print("[%s country] %s" % ("show" if want else "hide", iso))
 
     summary = " ".join("%s=%d" % kv for kv in n.items())
-    if APPLY:
+    if APPLY and conn.total_changes == 0:
+        conn.rollback(); print("[no-op] nothing to change -- no backup taken", summary)
+    elif APPLY:
+        # The open transaction is uncommitted, so the backup sees the pre-change DB.
+        print("[backup]", backup_db(DB, "geolaunch"))
         conn.commit(); print("[applied]", summary)
     else:
         conn.rollback(); print("[dry-run]", summary, "-- re-run with --apply")

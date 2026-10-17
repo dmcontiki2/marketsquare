@@ -28963,3 +28963,20 @@ Boards: pre-work 526 entries / 499 holding / 0 REGRESSED / 22 open / 5 ready to 
 reverted tree (`git show HEAD:`) and pass on this one. The 5 ready-to-lock are the parallel
 Ripple lane's own entries from 27 Sep and were left to their owner (SO-5).
 Cost model impact: none.
+
+## 17 Oct 2026 — SEED-BAK-1: housekeeping (archive, never delete) + seed copies fixed at source (BA-027)
+
+**Server.** The two post-release seeds (`seed_geo_launch.py`, `seed_super_ladder_global.py`) copied the whole
+live DB into `/var/www/marketsquare/` on every release even when they changed nothing. 36 DB copies (422 MB) and
+145 old code copies (`main.py.bak*`, `index.html.bak*` …, 58 MB) were MOVED to
+`/var/backups/marketsquare/webroot-archive-2026-10-17/` with a RESTORE_MANIFEST (none were publicly served —
+checked, 404). Both seeds now back up only when they are about to change something, via SQLite's backup API
+(a plain copy of a WAL database can miss writes still in the -wal file), into
+`/var/backups/marketsquare/seed-copies/`. Nothing auto-deletes. Proven on a throwaway copy of the live DB:
+unchanged DB → no-op, no copy; one city flipped → one copy taken, integrity ok, change applied.
+
+**Laptop.** 1,893 gitignored root clutter files (920 MB: `.bak` copies whose original still exists + 99
+`.work_lock.released` receipts) moved to `_CLEANUP_REVIEW_2026-10-17/` with RESTORE_MANIFEST.txt; 45 Projects-root
+`.bak` files likewise. Kept in place: 13 orphan `.bak` files (original gone — may be the only copy, listed in
+ORPHANS_LEFT_IN_PLACE.txt), anything touched in the last 24 h, the 32 git-tracked `.bak` files, both live
+worktrees, `.git`. Cost model impact: none.
