@@ -201,7 +201,7 @@ def build_router(g):
         tok = jwt.encode({"purpose": "buzz_join", "n": nonce}, SECRET, algorithm=ALGO)
         return {"url": APP_URL + "/join/" + tok, "name": name}
 
-    # ── BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the same link as a QR code, for a customer standing in front of her ──
+    # ── BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the same link as a QR code, for a customer standing in front of her ──
     # Drawn HERE, on our own server (the qrcode library in the BEA venv) -- never by a third-party QR service, which
     # would see her link. Only her CURRENT link; it never makes a new one.
     @r.get("/buzz/my-link/qr.svg")

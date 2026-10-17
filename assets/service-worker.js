@@ -127,7 +127,7 @@ self.addEventListener('push', (event) => {
     badge: '/static/brand/icon-192.png',
     tag:   data.match_id ? ('match-' + data.match_id) : 'match',
     renotify: false,
-    // BUZZ-BOARD-1 (RUL-237): a special's buzz carries a same-site path (/?listing=<id>) to open on tap
+    // BUZZ-BOARD-1 (RUL-238): a special's buzz carries a same-site path (/?listing=<id>) to open on tap
     data: { match_id: data.match_id || null, url: (typeof data.url === 'string' && data.url.charAt(0) === '/' && data.url.charAt(1) !== '/') ? data.url : null },
   };
   event.waitUntil(self.registration.showNotification(data.title || 'TrustSquare', opts));

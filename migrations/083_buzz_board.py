@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""083_buzz_board.py -- BUZZ-BOARD-1 (RUL-237, David 17 Oct 2026).
+"""083_buzz_board.py -- BUZZ-BOARD-1 (RUL-238, David 17 Oct 2026).
 
 The Buzz Board: her own nicknames and tags for her connections (buzz_people), a log of group sends for the
 daily/weekly limits (buzz_group_log), and a special with an end date on a listing (listings.special_label,

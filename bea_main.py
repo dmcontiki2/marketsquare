@@ -32276,7 +32276,7 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
     elif not devices and conn.execute(
             "SELECT COUNT(*) AS n FROM buzz_log WHERE channel='email' AND created_at >= ?",
             (_sql_since(hours=24),)).fetchone()["n"] >= BUZZ_EMAIL_DAILY_CAP:
-        # BUZZ-BOARD-1 (RUL-237(d)): the email backup has a daily ceiling inside the flat Resend plan, so Buzz can
+        # BUZZ-BOARD-1 (RUL-238(d)): the email backup has a daily ceiling inside the flat Resend plan, so Buzz can
         # never cause an email overage. Past it the sender is told plainly ('held') -- never a silent drop.
         channel = "held"
     elif not devices:
@@ -32309,7 +32309,7 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
             "delivered": channel or "none", "devices": devices}
 
 
-# ══ BUZZ-BOARD-1 (RUL-237, David 17 Oct 2026) — People, Send and Specials on one Buzz screen ══
+# ══ BUZZ-BOARD-1 (RUL-238, David 17 Oct 2026) — People, Send and Specials on one Buzz screen ══
 # David, 17 Oct 2026: "the basic service for free and the marketing for paid subscriptions ... greyed out and
 # when pressed saying they require a subscription ... not to pay for any emails or SMS's as far as this Buzz
 # comms is applicable." So:
@@ -32318,7 +32318,7 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
 #   * Free may send the ready-made SERVICE lines to a tag or to all; free text to a group and SPECIALS are
 #     paid (Starter / Pro / Agency), refused server-side with the plan named;
 #   * a special lives ON THE LISTING with an end date and drops off by itself; the buzz is only a pointer.
-# The limits below are CLAUDE'S TECHNICAL CALL under RUL-237 (David may veto): a doorbell everyone can lean on
+# The limits below are CLAUDE'S TECHNICAL CALL under RUL-238 (David may veto): a doorbell everyone can lean on
 # makes her customers mute her, which hurts her more than it hurts us.
 BUZZ_SERVICE_LINES = [
     ("on_my_way",    "On my way"),
@@ -32447,7 +32447,7 @@ def _bb_limits(conn, me: str) -> dict:
 
 def _bb_fanout(sender: str, name: str, text: str, recipients: list, url: str = None):
     """The group send, OFF the request path (BackgroundTasks). Each recipient gets an ordinary one-to-one buzz.
-    PUSH ONLY (RUL-237(d)): someone with no push device simply does not get this one -- no email, no SMS."""
+    PUSH ONLY (RUL-238(d)): someone with no push device simply does not get this one -- no email, no SMS."""
     conn = database.get_db()
     try:
         for pair_id, other in recipients:

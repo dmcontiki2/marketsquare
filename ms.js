@@ -502,7 +502,7 @@ function _msMapBeaListing(l){
           reach: (l.reach==='national') ? 'national' : 'local',   // REACH-NATIONAL-1
           tour: (l.tour||'').toString().toLowerCase(),   // TOUR-MAP FIX (26 Jul): tour code must survive normalization too, else ADV_TOUR_MAP never resolves and a multi-country tour (Cape-to-Cairo) falls back to the ZA reserve map
           feat: false,
-          /* BUZZ-BOARD-1 (RUL-237): her special, only while its end date is today or later (SAST) */
+          /* BUZZ-BOARD-1 (RUL-238): her special, only while its end date is today or later (SAST) */
           special: (l.special_label && String(l.special_until||'').slice(0,10) >= new Date(Date.now()+72e5).toISOString().slice(0,10))
                      ? {label: String(l.special_label), until: String(l.special_until).slice(0,10)} : null,
           title: l.title,
@@ -6118,7 +6118,7 @@ function msPendingCheckChip(l){
            + 'font-size:10.5px;font-weight:700;background:#fff4e0;color:#8a5a00;border:1px solid #f0d49a">' + t + '</div>' : '';
 }
 
-/* BUZZ-BOARD-1 (RUL-237): the blue SPECIAL line a seller puts on her listing from Buzz; drops off by itself on the end day */
+/* BUZZ-BOARD-1 (RUL-238): the blue SPECIAL line a seller puts on her listing from Buzz; drops off by itself on the end day */
 function _bbSpecialChip(l){
   if(!l || !l.special || !l.special.label) return '';
   let d = l.special.until; try{ d = new Date(l.special.until + 'T12:00:00Z').toLocaleDateString('en-ZA',{weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}); }catch(_){}
@@ -17542,7 +17542,7 @@ async function bzMyLink(btn, again){
       +   '<button id="bz-mylink-copy" style="flex:1;padding:11px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;">Copy</button>'
       + '</div>'
       + '<div style="font-size:12px;color:#6b7280;margin-top:8px;">Link sent to the wrong person? <a href="#" onclick="bzMyLink(null,1);return false;">Make a new link</a> — the old one stops working.</div>'
-      /* BUZZ-BOARD-1 (RUL-237): the same link as a QR code for someone standing in front of her -- drawn by our own server */
+      /* BUZZ-BOARD-1 (RUL-238): the same link as a QR code for someone standing in front of her -- drawn by our own server */
       + '<div style="margin-top:8px;"><a href="#" id="bz-qr-show" style="font-size:12.5px;">Show it as a QR code</a>'
       + '<div id="bz-qr-box" style="display:none;margin-top:8px;text-align:center;"><img id="bz-qr-img" alt="QR code of your Buzz link" style="width:180px;height:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:6px;"><div style="font-size:11.5px;color:#6b7280;">They scan it with their phone camera and tap the link.</div></div></div>';
     host.appendChild(box);
@@ -17563,7 +17563,7 @@ async function bzMyLink(btn, again){
   }
 }
 // ════════════════════════════════════════════════════════════
-// ■ BUZZ-BOARD-1 (RUL-237, David 17 Oct 2026) — People · Send · Specials on the one Buzz screen
+// ■ BUZZ-BOARD-1 (RUL-238, David 17 Oct 2026) — People · Send · Specials on the one Buzz screen
 // "the basic service for free and the marketing for paid subscriptions ... greyed out and when pressed
 // saying they require a subscription ... not to pay for any emails or SMS's". Colours carry meaning:
 // green = one person, amber = a group, blue = a special on her listing, red = remove, grey = limits.
@@ -17980,7 +17980,7 @@ async function buzzRender(){
   box.querySelectorAll('[data-close]').forEach(function(el){
     el.onclick = async function(){
       const p = _bzPairs[+el.getAttribute('data-close')];
-      /* BUZZ-BOARD-1 (RUL-237): Remove waits 10 seconds with an Undo, so a slip costs nothing -- nobody is told
+      /* BUZZ-BOARD-1 (RUL-238): Remove waits 10 seconds with an Undo, so a slip costs nothing -- nobody is told
          until the 10 seconds are up. */
       if(el.getAttribute('data-wait')==='1'){ clearTimeout(el._bbT); el.removeAttribute('data-wait'); el.textContent = 'Close Buzz with ' + p.other_name; showToast('Kept'); return; }
       el.setAttribute('data-wait','1'); let left = 10;

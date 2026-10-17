@@ -2479,32 +2479,32 @@
   {
    "key": "GET /buzz/board",
    "level": "user",
-   "note": "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
+   "note": "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
   },
   {
    "key": "POST /buzz/people",
    "level": "user",
-   "note": "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
+   "note": "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
   },
   {
    "key": "POST /buzz/group",
    "level": "user",
-   "note": "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
+   "note": "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
   },
   {
    "key": "POST /buzz/special",
    "level": "user",
-   "note": "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
+   "note": "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
   },
   {
    "key": "POST /buzz/special/clear",
    "level": "user",
-   "note": "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
+   "note": "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"
   },
   {
    "key": "GET /buzz/my-link/qr.svg",
    "level": "user",
-   "note": "BUZZ-BOARD-1 (RUL-237): her own Buzz link as a QR code, drawn on our server; session-bound"
+   "note": "BUZZ-BOARD-1 (RUL-238): her own Buzz link as a QR code, drawn on our server; session-bound"
   }
  ]
 }

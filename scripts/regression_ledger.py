@@ -39394,11 +39394,11 @@ def rg_audit1017_credit_line():
     return [(INFO, "the landmark photo credit has its own line-height")]
 
 
-@entry("RG-1051", "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board routes are LIVE and closed to strangers -- /buzz/board, "
+@entry("RG-1051", "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board routes are LIVE and closed to strangers -- /buzz/board, "
        "/buzz/people, /buzz/group, /buzz/special, /buzz/special/clear and /buzz/my-link/qr.svg answer 401/403 anonymously, never 404",
        OPEN,
        scope="live trustsquare.co, all six Board routes; one server serves every market, so this is the whole class.",
-       ref="David, 17 Oct 2026 09:20 SAST (RUL-237). OPEN until the release carrying BUZZ-BOARD-1 is live; promoted to LOCKED "
+       ref="David, 17 Oct 2026 09:20 SAST (RUL-238). OPEN until the release carrying BUZZ-BOARD-1 is live; promoted to LOCKED "
            "in the same session once probed. A 404 means the code is not deployed; a 200 to an anonymous caller would be a hole.")
 def rg_buzz_board_live():
     import urllib.request as _ur, urllib.error as _ue
@@ -39421,7 +39421,7 @@ def rg_buzz_board_live():
     return out or [(INFO, "all six Board routes exist and refuse an anonymous caller")]
 
 
-@entry("RG-1052", "BUZZ-BOARD-1 (RUL-237): service lines free, marketing paid, push only -- the server gates Specials and free-text "
+@entry("RG-1052", "BUZZ-BOARD-1 (RUL-238): service lines free, marketing paid, push only -- the server gates Specials and free-text "
        "group sends behind a paid plan, sends every group buzz by push with no email or SMS path, and keeps the daily limits",
        LOCKED, fixed_on="2026-10-17",
        scope="bea_main.py Board block (every group send and every special, all markets).",
@@ -39443,7 +39443,7 @@ def rg_buzz_board_server():
     else:
         for bad in ("_send_html_email(", "send_sms", "bulksms", "_sms_", "background_tasks"):
             if bad in fan.lower():
-                out.append((FAIL, "the group fan-out mentions %r -- group sends must be push only (RUL-237(d))" % bad))
+                out.append((FAIL, "the group fan-out mentions %r -- group sends must be push only (RUL-238(d))" % bad))
         if "_push_to_seller(" not in fan:
             out.append((FAIL, "the group fan-out no longer pushes"))
     g = src[src.find("def buzz_group("):src.find("def buzz_special(")]
@@ -39459,7 +39459,7 @@ def rg_buzz_board_server():
         if not m:
             out.append((FAIL, "%s is gone" % k))
         elif int(m.group(1)) > v * 3:
-            out.append((INFO, "%s raised to %s -- RUL-237 wants a doorbell, not a mailing list" % (k, m.group(1))))
+            out.append((INFO, "%s raised to %s -- RUL-238 wants a doorbell, not a mailing list" % (k, m.group(1))))
     if 'AND channel NOT LIKE \'group%\'' not in src:
         out.append((FAIL, "the one-to-one hourly cap counts group sends again -- one send to everyone would block her for an hour"))
     if "_bb_special_scrub(_d)" not in src:
@@ -39467,7 +39467,7 @@ def rg_buzz_board_server():
     return out or [(INFO, "paid gates, push-only fan-out, limits and special expiry all present")]
 
 
-@entry("RG-1053", "BUZZ-BOARD-1 (RUL-237(d)): the one-to-one email backup has a daily ceiling inside the flat Resend plan -- past it the "
+@entry("RG-1053", "BUZZ-BOARD-1 (RUL-238(d)): the one-to-one email backup has a daily ceiling inside the flat Resend plan -- past it the "
        "sender is told 'held', Buzz never causes an email overage",
        LOCKED, fixed_on="2026-10-17",
        scope="bea_main.py POST /buzz (every one-to-one buzz that falls back to email).",
@@ -39495,7 +39495,7 @@ def rg_buzz_email_ceiling():
     return out or [(INFO, "ceiling %s a day, checked before the email backup, sender told" % m.group(1))]
 
 
-@entry("RG-1054", "BUZZ-BOARD-1 (RUL-237): the Board screen -- People / Send / Specials tabs, paid parts greyed with 'Needs a "
+@entry("RG-1054", "BUZZ-BOARD-1 (RUL-238): the Board screen -- People / Send / Specials tabs, paid parts greyed with 'Needs a "
        "subscription' (never hidden), Remove with a 10-second undo, QR of her own link drawn on our server, SPECIAL line on the card",
        LOCKED, fixed_on="2026-10-17",
        scope="ms.js (My Space > Buzz + listing card + detail), ripple_features.py QR route, route_policy.json, migration 083, "
