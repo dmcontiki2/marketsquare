@@ -39271,5 +39271,32 @@ def rg_audit1016_sell_steps():
         bad.append("sfStepTot no longer counts the legal step from sfLegalCard()")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "sell-flow headers count 5 or 6 steps from the legal-card test")]
 
+
+
+@entry("RG-1022", "DB-ANCHOR-1 (17 Oct 2026 bug audit, BA-016): the app holds one connection to the live database open for "
+       "its whole life, so a root process can never re-create the -wal/-shm side files under it",
+       LOCKED, fixed_on="2026-10-17",
+       scope="database.py get_db, _anchor_start, _anchor_open",
+       ref="Production: 5 'unable to open database file' and 2 'attempt to write a readonly database' 500s since 30 Sep "
+           "2026, every one inside a release-gate window (the gate opens the live database as root). Reproduced on a copy "
+           "17 Oct: app threads as msdeploy beside a root reader/writer -> 8 refusals plus a read-only spell (4,316 failed "
+           "writes in 10 s); with the anchor 0 errors in 3 x 10 s.")
+def rg_audit1017_db_anchor():
+    src = repo_file("database.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    body = fn_body(src, "def get_db(")
+    if "_anchor_start()" not in body:
+        bad.append("get_db no longer starts the anchor connection")
+    if '"unable to open database file" not in str(e)' not in body:
+        bad.append("get_db no longer retries the side-file window")
+    if 'BEGIN IMMEDIATE' not in fn_body(src, "def _anchor_open("):
+        bad.append("the anchor no longer proves its shared memory is writable before it is kept")
+    st = fn_body(src, "def _anchor_start(")
+    if "geteuid" not in st or "DB_PATH != _LIVE_PATH" not in st:
+        bad.append("the anchor can be held by a root process or a script on another database file")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the app anchors the live database; root never re-creates its side files")]
+
 if __name__ == "__main__":
     sys.exit(main())
