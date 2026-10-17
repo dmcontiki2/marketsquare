@@ -2541,3 +2541,4 @@ sync-origin [MarketSquare]: STOP -- 3 commit(s) on origin/main could not be take
   [LOCK] released.
 Press any key to continue . . . 
 Fri 10/16/2026  5:45:17.72  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
+Fri 10/16/2026  7:35:12.82  IN SYNC - DEPLOY DRIFT: clean - all 338 tracked files match live

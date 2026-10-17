@@ -1,3 +1,24 @@
+## 2026-10-16 -- PASSKEY-OFF-1: Face ID / fingerprint sign-in removed
+
+- **PASSKEY-OFF-1** (ms.js, bea_main.py, route_policy.json, scripts/regression_ledger.py) -- David, 16 Oct 2026: on Android the
+  browser passkey sent him through Google Password Manager set-up screens and ended nowhere; "Then we stick with what we have."
+  Removed: the "Sign in with Face ID or fingerprint" button, the "Next time, sign in with Face ID" offer, and the five
+  `/auth/passkey/*` routes with their policy rows. Kept: the `passkeys` table (unread, no data destroyed). Unchanged: email
+  sign-in once per phone, then the 180-day sliding session (SESSION-SLIDE-1) and SESSION-ADOPT-1 keep her in until she signs
+  out, which ends every device (SESSION-END-1). RG-0799 / RG-0807 / RG-0931 now check that Face ID stays removed.
+
+- **Goal run 40 (15 Oct 2026) -- GATE-WORDS-3 + SIGNIN-DRAFT-FIND-1 (RG-0990).** Quick no longer tells a driver, nanny or
+  casual worker that her listing shows only once a licence, police clearance or employer confirms her -- since RUL-233/234
+  nothing is hidden for a missing check. The draft screen now says "People see it as soon as you publish. Uploading your
+  licence (police clearance) later raises your Trust Score." (15 languages); the saved and fast-lane screens say "People can
+  find it now". A Google/Apple sign-in that arrives without ?draft= now asks /listings/mine and opens a waiting draft in the
+  Hub with Publish in reach, instead of Home. Evidence: 15 Oct SMS listers #556 (gardener) and #557/#558 (Code 10 driver)
+  signed in with Google and never published.
+- **DRAFT-SAVE-PUBLISH-1 (same run, RG-0990).** Saving a draft from Edit no longer ends in a 6-second "tap Publish" toast:
+  a card says the listing is still a draft that nobody can see and offers **Publish my listing** (dashPublish -- Terms if
+  needed, then live) or "Not yet". Evidence: SMS lister #559 (home cleaner, Pretoria, 16:01Z) added her photo, accepted the
+  Terms the save asked for, and stopped with everything done and the listing still a draft.
+
 ## 2026-10-15 — SHOW-ALL-1: every published advert shows; missing checks become a card chip (RUL-234)
 - bea_main.py: CLEARANCE_GATE / LICENCE_GATE = False (with CASUAL_VOUCH_GATE); _pending_check_sql labels an advert
   'referral' / 'clearance' / 'licence'; get_listings attaches pending_check (one query per page).
