@@ -1552,6 +1552,13 @@ REFLECTIONS = {
    ("ops/autodeploy/deploy_manifest.txt", ["static/ts_partners.js"], []),
    ("scripts/regression_ledger.py", ["RG-1050", "LINKOUT-ON-1"], []),
  ],
+ "RUL-237": [
+   # David, 17 Oct 2026: a casual worker's one street / small area, and the lock (Petrus, Witch-Hazel Avenue).
+   ("RULINGS.md", ["A CASUAL WORKER CAN TIE THE ADVERT TO ONE STREET OR ONE SMALL AREA"], []),
+   ("bea_main.py", ["class svc_area:", "def set_service_area(", "outside the area this worker serves"], []),
+   ("ms.js", ["SVC-AREA-1 (RUL-237", "function _introAreaField(", "function msSvcAreaEditor("], []),
+   ("scripts/regression_ledger.py", ["RG-1055", "SVC-AREA-1"], []),
+ ],
  "RUL-227": [
    # David, 13 Oct 2026: "I asked for an auto renew, why did you place a 12 month expire clause to it? ... Please remove that"
    ("RULINGS.md", ["AUTO-RENEW HAS NO END DATE -- IT RENEWS UNTIL THE SELLER CANCELS", "CONFIRMS RUL-224"], []),

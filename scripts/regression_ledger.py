@@ -39535,6 +39535,54 @@ def rg_buzz_board_screen():
     return out or [(INFO, "tabs, greyed paid parts, undo, QR, SPECIAL line, routes, migration and SW all present")]
 
 
+@entry("RG-1055", "SVC-AREA-1 (RUL-237, 17 Oct 2026): a casual worker can tie the advert to ONE street (or one small area) and "
+       "lock it -- shown only to people inside, and a request for work outside is refused before the 1T is held",
+       LOCKED, fixed_on="2026-10-17",
+       scope="bea_main.py: listings.svc_area / area_lock, the svc_area geometry class, _svc_area_shown on /listings AND the Zoom "
+             "funnel's one candidate door, POST /listings/{id}/service-area (owner only), GET /listings/{id}/area-check, the gate in "
+             "POST /intros; route_policy.json; ms.js: the advert's area card + map, the request form's 'Where is the work?', the "
+             "owner's 'Where I work' sheet, &near= on the feed / search / Zoom. Executed proof: scripts/prove_svc_area.py (A-E).",
+       ref="David, 17 Oct 2026, on Petrus's car-wash advert: 'link a casual workers service to a small area on the map, for "
+           "housecleaners it may be a street or a suburb, for Petrus it is a street, a specific street - Witch-Hazel avenue, "
+           "Technopark, Centurion. And we may need a flag for him to toggle so that he doesn't gets visibility outside of that "
+           "area ... Even if someone wants to use him in another company too far down the street then he wont be able to accept "
+           "it.' This entry guards that the lock still hides AND still refuses before money, on every door.")
+def rg_svc_area_lock():
+    out = []
+    bea = repo_file("bea_main.py"); js = repo_file("ms.js"); rp = repo_file("route_policy.json")
+    if bea is None or js is None or rp is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    need_bea = [("class svc_area:", "the svc_area geometry class is gone"),
+                ("def set_service_area(", "POST /listings/{id}/service-area is gone"),
+                ("def service_area_check(", "GET /listings/{id}/area-check is gone"),
+                ("if not _svc_area_shown(_d, _sa_loc, _gate_viewer):", "the /listings feed no longer hides a locked area"),
+                ("rows = [r for r in rows if _svc_area_shown(r, loc or {}, _vw)]", "the Zoom funnel's candidate door no longer hides a locked area"),
+                ("job_lat: Optional[float] = None", "IntroRequest lost the job place"),
+                ("outside the area this worker serves", "POST /intros no longer refuses work outside a locked area")]
+    for needle, why in need_bea:
+        if needle not in bea:
+            out.append((FAIL, why))
+    gi = bea.find("def create_intro(")
+    g_area = bea.find("_sa_lock = bool(listing[\"area_lock\"])", gi)
+    g_hold = bea.find("_wallet_lock(conn)", gi)
+    g_terms = bea.find("if _terms_missing(conn, intro.buyer_email):", gi)
+    if gi < 0 or g_area < 0 or g_hold < 0 or not (g_area < g_terms < g_hold):
+        out.append((FAIL, "the area gate must run BEFORE the terms and the 1T hold in create_intro"))
+    for k in ("POST /listings/{listing_id}/service-area", "GET /listings/{listing_id}/area-check"):
+        if '"%s"' % k not in rp:
+            out.append((FAIL, "route_policy.json does not declare " + k))
+    for needle, why in (("function _introAreaField(", "the request form lost 'Where is the work?'"),
+                        ("}, _msJobFields())) }); });", "submitIntro no longer sends the job place"),
+                        ("+ demoParam + _msNearQS());", "the feed no longer sends the phone's area"),
+                        ("function msSvcAreaEditor(", "the owner's 'Where I work' sheet is gone"),
+                        ("function msSvcAreaCard(", "the advert's area card is gone")):
+        if needle not in js:
+            out.append((FAIL, why))
+    if repo_file("scripts/prove_svc_area.py") is None:
+        out.append((FAIL, "scripts/prove_svc_area.py (the executed proof) is missing"))
+    return out or [(INFO, "locked areas hide on the feed and the funnel, and refuse outside work before the hold")]
+
+
 @entry("RG-1050", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
        "links, each a server-side 302 through our own /go/partner/<slug>, and still not one byte of partner script on any page",
        LOCKED, fixed_on="2026-10-17",

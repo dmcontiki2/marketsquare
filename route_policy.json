@@ -2477,6 +2477,21 @@
    "level": "admin"
   },
   {
+   "key": "POST /listings/{listing_id}/service-area",
+   "level": "user",
+   "own": [
+    {
+     "name": "listing_id",
+     "in": "path",
+     "resource": "listing"
+    }
+   ]
+  },
+  {
+   "key": "GET /listings/{listing_id}/area-check",
+   "level": "public"
+  },
+  {
    "key": "GET /buzz/board",
    "level": "user",
    "note": "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board; the handler binds to the session (_buzz_who) and checks the pair/listing belongs to her"

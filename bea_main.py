@@ -1589,6 +1589,13 @@ def run_migrations(conn):
     # in every city of HER country, on every plan, free. NULL / 'local' = her own city only (the old behaviour).
     if "reach" not in listing_cols_sm:
         conn.execute("ALTER TABLE listings ADD COLUMN reach TEXT")
+    # SVC-AREA-1 (RUL-237, David 17 Oct 2026): svc_area = the street or small area a casual worker serves (JSON, public --
+    # where they WORK, never where they live); area_lock = their toggle: shown only to people inside, and work outside
+    # is refused before anything is held. See class svc_area below.
+    if "svc_area" not in listing_cols_sm:
+        conn.execute("ALTER TABLE listings ADD COLUMN svc_area TEXT")
+    if "area_lock" not in listing_cols_sm:
+        conn.execute("ALTER TABLE listings ADD COLUMN area_lock INTEGER DEFAULT 0")
     # AUTO-RENEW-1 (RUL-224, 12 Oct 2026): a paid plan renews automatically as the standard.
     # auto_renew        1 = renew (the default, the tick box); 0 = she cancelled renewal or paid month-by-month.
     #                   It only means something while paystack_subscription_code is set.
@@ -2899,6 +2906,11 @@ class IntroRequest(BaseModel):
     # Recorded for evidence. It is NEVER a gate — a buyer who does not send
     # it still gets their introduction; we simply have not logged consent.
     unverified_ack: Optional[bool] = None
+    # SVC-AREA-1 (RUL-237): where the work is, for a worker who serves one street or one small area. A point (her phone
+    # or a tapped map) or an address we look up; never stored -- it is only checked against the worker's area.
+    job_lat: Optional[float] = None
+    job_lng: Optional[float] = None
+    job_address: Optional[str] = None
 
 # ── HEALTH ───────────────────────────────────────────────────
 
@@ -3834,8 +3846,9 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
                  make: Optional[str] = None, model: Optional[str] = None,
                  year_min: Optional[int] = None, year_max: Optional[int] = None,
                  facets: int = 0, request: Request = None, response: Response = None,
-                 ts_user: str = Cookie(default=None)):
+                 ts_user: str = Cookie(default=None), near: Optional[str] = None):
     conn = database.get_db()
+    _sa_loc = {"suburb": suburb, "near": svc_area.parse_near(near)}   # SVC-AREA-1: who is looking, from where
     # M0 pagination: default page_size=200 preserves prior behaviour; FEA passes page/page_size for infinite scroll
     page = max(1, page)
     page_size = max(1, min(page_size, 200))
@@ -4065,6 +4078,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
             _d["availability_label"] = _rental_availability(_d.get("rental_status"), _d.get("available_from"))
         _scrub_vehicle_specs(_d)   # CARS-SPEC-1 D1: unconfirmed vehicle specs never public
         _area_only_coords(_d)      # AREA-ONLY-1: the feed locates a listing to its suburb, never to the house
+        if not _svc_area_shown(_d, _sa_loc, _gate_viewer):   # SVC-AREA-1 (RUL-237): a locked area shows only inside it
+            continue
         # LANG-LAYER-1: the public list carries a second language only once she has approved it;
         # the back-translation and the English search layer are working data, never shown.
         _d.pop("extra_back", None); _d.pop("search_en", None)
@@ -4169,11 +4184,13 @@ _ZOOM_PRIVATE_COLS = ("street_address", "listing_lat", "listing_lng", "seller_em
                       "seller_phone", "phone", "contact_email", "contact_phone")
 
 
-def _zoom_candidates(conn, cat_norm: str, city: str, demo: int, tier: str, viewer: str = ""):
+def _zoom_candidates(conn, cat_norm: str, city: str, demo: int, tier: str, viewer: str = "", loc=None):
     """AUD-023 (4 Oct 2026 audit): the ONE door every Zoom / Squire caller reads candidates through. Private columns
     never reach the engine (so no facet, chip or label can carry them), and unconfirmed vehicle specs are scrubbed
     exactly as on every other public read."""
     rows, locked = _zoom_candidates_raw(conn, cat_norm, city, demo, tier, viewer)
+    _vw = (viewer or "").strip().lower()
+    rows = [r for r in rows if _svc_area_shown(r, loc or {}, _vw)]   # SVC-AREA-1 (RUL-237)
     for r in rows:
         _em = str(r.get("seller_email") or "").strip().lower()
         if _em.endswith("@trustsquare.co") or _em.endswith("@example.com"):
@@ -4226,6 +4243,472 @@ def _zoom_candidates_raw(conn, cat_norm: str, city: str, demo: int, tier: str, v
     locked = [{"v": r["c"], "n": r["n"]} for r in lk if r["c"]]
     return rows, locked
 
+
+# ── SVC-AREA-1 geometry + OpenStreetMap lookups (kept inside main.py: a new module would need a deploy-manifest line) ──
+import math as _sa_math
+import time as _sa_time
+import threading as _sa_threading
+import urllib.parse as _sa_urlparse
+import urllib.request as _sa_urlreq
+
+
+class svc_area:
+    """SVC-AREA-1 (RUL-237, David 17 Oct 2026) -- a casual worker's service area: the street or the small area they work in.
+    
+    David: "link a casual workers service to a small area on the map, for housecleaners it may be a street or a suburb, for
+    Petrus it is a street, a specific street - Witch-Hazel avenue, Technopark, Centurion. And we may need a flag for him to
+    toggle so that he doesn't get visibility outside of that area ... Even if someone wants to use him in another company too
+    far down the street then he wont be able to accept it. These casuals operate normally on a minimal budget."
+    
+    An area is stored on the listing as JSON (listings.svc_area) and is PUBLIC -- it is where the person works, never where
+    they live (RUL-115(c)). Two kinds:
+      street  -- a named street, only the stretch within radius_m of a centre point ("too far down the street" is outside);
+                 a job point counts when it is within LINE_SLACK_M of the street AND within the stretch.
+      radius  -- a small area round a point (a suburb, a complex, a block): within radius_m of the centre.
+    listings.area_lock = 1 is the worker's toggle: the advert shows only to people we know are inside (their chosen suburb is
+    one the area touches, or their phone's location is inside) and a request for work outside is refused before anything is
+    held. With the toggle off the advert shows city-wide as before and an outside request reaches the worker marked as such.
+    
+    Geocoding is OpenStreetMap (Nominatim for places and addresses, Overpass for the street's own line), throttled to one
+    request a second as their policy asks, with a small in-process cache (reads tolerate staleness; nothing here is money).
+    """
+
+
+    UA = {"User-Agent": "TrustSquare-geo/1.0 (+https://trustsquare.co/support)"}
+    LINE_SLACK_M = 150        # a business sits back from the road; its address geocodes onto the road or near it
+    CENTRE_SLACK_M = 60       # the end of the stretch is not a knife edge
+    NEAR_SLACK_M = 400        # a buyer's own phone location (she may be across the car park, GPS drifts)
+    RADIUS_MIN, RADIUS_MAX = 100, 5000
+    SUBURB_REACH_M = 1200     # a suburb whose centre is this far beyond the area still "touches" it
+    _lock = threading.Lock()
+    _last = [0.0]
+    _cache = {}
+
+
+    @staticmethod
+    def _fetch(url, data=None, timeout=25):
+        key = url + "|" + (data or "")
+        hit = svc_area._cache.get(key)
+        if hit and _sa_time.time() - hit[0] < 6 * 3600:
+            return hit[1]
+        with svc_area._lock:
+            wait = 1.05 - (_sa_time.time() - svc_area._last[0])
+            if wait > 0:
+                _sa_time.sleep(wait)
+            svc_area._last[0] = _sa_time.time()
+        req = _sa_urlreq.Request(url, data=data.encode() if data else None, headers=svc_area.UA)
+        with _sa_urlreq.urlopen(req, timeout=timeout) as r:
+            out = json.loads(r.read().decode("utf-8"))
+        if len(svc_area._cache) > 500:
+            svc_area._cache.clear()
+        svc_area._cache[key] = (_sa_time.time(), out)
+        return out
+
+
+    @staticmethod
+    def haversine_m(lat1, lng1, lat2, lng2):
+        R = 6371000.0
+        p1, p2 = _sa_math.radians(lat1), _sa_math.radians(lat2)
+        dp, dl = p2 - p1, _sa_math.radians(lng2 - lng1)
+        a = _sa_math.sin(dp / 2) ** 2 + _sa_math.cos(p1) * _sa_math.cos(p2) * _sa_math.sin(dl / 2) ** 2
+        return 2 * R * _sa_math.asin(min(1.0, _sa_math.sqrt(a)))
+
+
+    @staticmethod
+    def _seg_m(lat, lng, a, b):
+        """Distance in metres from a point to segment a-b (local flat projection -- fine at street scale)."""
+        kx = 111320.0 * _sa_math.cos(_sa_math.radians(lat))
+        ky = 110540.0
+        ax, ay = (a[1] - lng) * kx, (a[0] - lat) * ky
+        bx, by = (b[1] - lng) * kx, (b[0] - lat) * ky
+        dx, dy = bx - ax, by - ay
+        L = dx * dx + dy * dy
+        t = 0.0 if L == 0 else max(0.0, min(1.0, -(ax * dx + ay * dy) / L))
+        px, py = ax + t * dx, ay + t * dy
+        return _sa_math.hypot(px, py)
+
+
+    @staticmethod
+    def line_m(lat, lng, lines):
+        best = None
+        for ln in lines or []:
+            if len(ln) == 1:
+                d = svc_area.haversine_m(lat, lng, ln[0][0], ln[0][1])
+                best = d if best is None else min(best, d)
+            for a, b in zip(ln, ln[1:]):
+                d = svc_area._seg_m(lat, lng, a, b)
+                best = d if best is None else min(best, d)
+        return best
+
+
+    @staticmethod
+    def parse(raw):
+        if not raw:
+            return None
+        try:
+            a = json.loads(raw) if isinstance(raw, str) else dict(raw)
+        except Exception:
+            return None
+        if not isinstance(a, dict) or a.get("lat") is None or a.get("lng") is None:
+            return None
+        return a
+
+
+    @staticmethod
+    def check(area, lat, lng, slack_m=0):
+        """-> (inside: bool, metres_outside: int). slack_m widens the area (a phone location, not a job address)."""
+        if not area or lat is None or lng is None:
+            return False, None
+        lat, lng = float(lat), float(lng)
+        r = float(area.get("radius_m") or 0)
+        dc = svc_area.haversine_m(lat, lng, float(area["lat"]), float(area["lng"]))
+        over_c = dc - (r + svc_area.CENTRE_SLACK_M + slack_m)
+        if area.get("kind") == "street" and area.get("lines"):
+            dl = svc_area.line_m(lat, lng, area["lines"])
+            over_l = (dl if dl is not None else 1e9) - (svc_area.LINE_SLACK_M + slack_m)
+            over = max(over_c, over_l)
+        else:
+            over = over_c
+        return over <= 0, int(max(0, round(over)))
+
+
+    @staticmethod
+    def public(area, lock=False):
+        """What the apps get: everything in the area is public (where they WORK); only the shape is trimmed."""
+        if not area:
+            return None
+        out = {k: area.get(k) for k in ("v", "kind", "label", "street", "place", "lat", "lng", "radius_m", "suburbs")}
+        out["lines"] = area.get("lines") or []
+        out["lock"] = bool(lock)
+        return out
+
+
+    @staticmethod
+    def geocode(q, country_iso2="ZA", near=None):
+        """Nominatim. -> (lat, lng, display_name) or (None, None, ''). near=(lat, lng) prefers results round there."""
+        q = (q or "").strip()
+        if not q:
+            return None, None, ""
+        params = {"q": q, "format": "json", "limit": "1", "addressdetails": "0"}
+        if country_iso2:
+            params["countrycodes"] = country_iso2.lower()
+        if near:
+            params["viewbox"] = "%.4f,%.4f,%.4f,%.4f" % (near[1] - 0.25, near[0] + 0.25, near[1] + 0.25, near[0] - 0.25)
+            params["bounded"] = "0"
+        try:
+            res = svc_area._fetch("https://nominatim.openstreetmap.org/search?" + _sa_urlparse.urlencode(params))
+        except Exception:
+            return None, None, ""
+        if not res:
+            return None, None, ""
+        return float(res[0]["lat"]), float(res[0]["lon"]), res[0].get("display_name") or ""
+
+
+    @staticmethod
+    def geocode_addr(address, city, country_iso2="ZA", near=None):
+        """A typed job address: as typed with the city, as typed, then without house numbers (OpenStreetMap often knows
+        the street but not the number). -> (lat, lng, display) or (None, None, '')."""
+        a = (address or "").strip()[:160]
+        if not a:
+            return None, None, ""
+        bare = " ".join(w for w in a.replace(",", " , ").split() if not any(ch.isdigit() for ch in w)).replace(" ,", ",").strip(" ,")
+        first = bare.split(",")[0].strip()
+        tries = []
+        for q in (", ".join(x for x in (a, city) if x), a, ", ".join(x for x in (bare, city) if x), bare,
+                  ", ".join(x for x in (first, city) if x), first):
+            if q and q not in tries:
+                tries.append(q)
+        for q in tries:
+            r = svc_area.geocode(q, country_iso2, near)
+            if r[0] is not None:
+                return r
+        return None, None, ""
+
+    @staticmethod
+    def street_lines(street, lat, lng, radius_m):
+        """Every OSM way carrying this street name near the centre, cut to the stretch (radius_m + a margin), as
+        [[lat, lng], ...] lines rounded to ~1 m. [] when the street is not found there; None when the map service did
+        not answer."""
+        street = (street or "").strip()
+        if not street:
+            return []
+        pad = (radius_m + 400) / 111000.0
+        padx = pad / max(0.2, _sa_math.cos(_sa_math.radians(lat)))
+        s, w, n, e = lat - pad, lng - padx, lat + pad, lng + padx
+        # name match tolerant of "Witch-Hazel" / "Witch Hazel" / "Witchhazel": every word, any separator
+        words = [x for x in "".join(c if c.isalnum() else " " for c in street.lower()).split() if x]
+        rx = "[-_ ]?".join(words) if words else street
+        ql = '[out:json][timeout:25];way["highway"]["name"~"%s",i](%f,%f,%f,%f);out geom;' % (rx.replace('"', ""), s, w, n, e)
+        d = None
+        for _try in (0, 1, 2):   # Overpass sheds load with a 429/504 now and then -- a short wait and it answers
+            try:
+                d = svc_area._fetch("https://overpass-api.de/api/interpreter", data="data=" + _sa_urlparse.quote(ql), timeout=40)
+                break
+            except Exception:
+                _sa_time.sleep(2 + 3 * _try)
+        if d is None:
+            return None
+        keep_m = radius_m + svc_area.CENTRE_SLACK_M + 40
+        lines = []
+        for way in d.get("elements", []):
+            cur = []
+            for p in way.get("geometry") or []:
+                pt = [round(p["lat"], 5), round(p["lon"], 5)]
+                if svc_area.haversine_m(pt[0], pt[1], lat, lng) <= keep_m:
+                    cur.append(pt)
+                else:
+                    if len(cur) >= 1:
+                        lines.append(cur)
+                    cur = []
+            if cur:
+                lines.append(cur)
+        return lines
+
+
+    @staticmethod
+    def snap_to_lines(lat, lng, lines):
+        """The centre a person gives ('Technopark') may sit off the street -- move it onto the nearest street point."""
+        best = None
+        for ln in lines:
+            for p in ln:
+                d = svc_area.haversine_m(lat, lng, p[0], p[1])
+                if best is None or d < best[0]:
+                    best = (d, p)
+        return (best[1][0], best[1][1]) if best else (lat, lng)
+
+
+    @staticmethod
+    def suburbs_touching(conn, lat, lng, radius_m, city_id=None, limit=6):
+        """Suburb names (geo_suburbs) the area touches, nearest first -- the advert files under these, and a buyer who has
+        picked one of them counts as inside for visibility."""
+        try:
+            if city_id:
+                rows = conn.execute("SELECT name, lat, lng FROM geo_suburbs WHERE city_id = ? AND lat IS NOT NULL", (city_id,)).fetchall()
+            else:
+                d = 0.12
+                rows = conn.execute("SELECT name, lat, lng FROM geo_suburbs WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?",
+                                    (lat - d, lat + d, lng - d, lng + d)).fetchall()
+        except Exception:
+            return []
+        got = []
+        for r in rows:
+            try:
+                dist = svc_area.haversine_m(lat, lng, float(r["lat"]), float(r["lng"]))
+            except Exception:
+                continue
+            got.append((dist, r["name"]))
+        got.sort()
+        names = [n for dist, n in got if dist <= radius_m + svc_area.SUBURB_REACH_M]
+        if not names and got:
+            names = [got[0][1]]
+        out = []
+        for n in names:
+            if n not in out:
+                out.append(n)
+        return out[:limit]
+
+
+    @staticmethod
+    def build(conn, street, place, city, country_iso2, radius_m, lat=None, lng=None, city_id=None):
+        """-> (area dict, error str). Street given: the street's own line near the place, cut to the stretch."""
+        street = (street or "").strip()[:80]
+        place = (place or "").strip()[:80]
+        try:
+            radius_m = int(radius_m or 0)
+        except Exception:
+            radius_m = 0
+        radius_m = max(svc_area.RADIUS_MIN, min(svc_area.RADIUS_MAX, radius_m or (700 if street else 1500)))
+        if lat is None or lng is None:
+            tries = []
+            pl = [x.strip() for x in place.split(",") if x.strip()]
+            for parts in [(place, city), (place,), (street, place, city)] + [(street, x) for x in pl] + [(street, city), (street,)]:
+                q = ", ".join(x for x in parts if x)
+                if q and q not in tries:
+                    tries.append(q)
+            for q in tries:
+                lat, lng, _disp = svc_area.geocode(q, country_iso2)
+                if lat is not None:
+                    break
+            if lat is None:
+                return None, "We could not find %s on the map. Tap the map where you work instead." % (place or street or "that place")
+        lat, lng = float(lat), float(lng)
+        area = {"v": 1, "kind": "street" if street else "radius", "street": street or None, "place": place or None,
+                "radius_m": radius_m}
+        if street:
+            lines = svc_area.street_lines(street, lat, lng, radius_m)
+            if lines is None:
+                return None, "The map service did not answer just now. Nothing was changed — please try again in a minute."
+            if not lines:
+                return None, "We could not find %s within %s of %s. Check the street name, or make the stretch longer." % (
+                    street, ("%d m" % radius_m) if radius_m < 1000 else ("%.1f km" % (radius_m / 1000.0)), place or "that point")
+            lat, lng = svc_area.snap_to_lines(lat, lng, lines)
+            lines = svc_area.street_lines(street, lat, lng, radius_m) or lines   # re-cut round the snapped centre
+            area["lines"] = lines
+        area["lat"], area["lng"] = round(lat, 6), round(lng, 6)
+        area["suburbs"] = svc_area.suburbs_touching(conn, lat, lng, radius_m, city_id)
+        bits = [street] if street else []
+        if place:
+            bits.append(place)
+        elif area["suburbs"]:
+            bits.append(area["suburbs"][0])
+        if city and not place:
+            bits.append(city)
+        area["label"] = ", ".join(b for b in bits if b)
+        return area, ""
+
+
+    @staticmethod
+    def visible(area, lock, loc):
+        """Feed visibility. loc = {'suburb': str|None, 'near': (lat, lng)|None}. Unlocked areas never hide anything."""
+        if not area or not lock:
+            return True
+        sub = (loc or {}).get("suburb")
+        if sub and sub.strip().lower() in [str(s).lower() for s in (area.get("suburbs") or [])]:
+            return True
+        near = (loc or {}).get("near")
+        if near:
+            ok, _ = svc_area.check(area, near[0], near[1], slack_m=svc_area.NEAR_SLACK_M)
+            return ok
+        return False
+
+
+    @staticmethod
+    def parse_near(s):
+        try:
+            a, b = [float(x) for x in str(s or "").split(",")[:2]]
+            if -90 <= a <= 90 and -180 <= b <= 180:
+                return (a, b)
+        except Exception:
+            pass
+        return None
+
+
+
+# ── SVC-AREA-1 (RUL-237, David 17 Oct 2026) ─────────────────────────────────────────────────────────────────────────
+# "link a casual workers service to a small area on the map ... for Petrus it is a street, a specific street - Witch-Hazel
+# avenue, Technopark, Centurion. And we may need a flag for him to toggle so that he doesn't get visibility outside of
+# that area ... Even if someone wants to use him in another company too far down the street then he wont be able to
+# accept it." The area is public (where they work); the lock hides the advert from people we do not know to be inside,
+# and refuses a request for work outside BEFORE the 1T is held. A direct link to the advert always opens (their own
+# customers). The owner always sees their own advert.
+def _svc_area_shown(d, loc, viewer=""):
+    try:
+        raw = d.get("svc_area")
+        if not raw:
+            return True
+        a = svc_area.parse(raw)
+        lock = bool(d.get("area_lock"))
+        if a and lock and not svc_area.visible(a, True, loc or {}):
+            own = (d.get("seller_email") or "").strip().lower()
+            if not (viewer and own and viewer.strip().lower() == own):
+                return False
+        d["svc_area"] = svc_area.public(a, lock) if a else None
+        return True
+    except Exception as _e:
+        _log.warning("SVC-AREA-1: visibility check skipped (%s)", _e)
+        return True
+
+
+def _svc_area_out(d):
+    try:
+        if d.get("svc_area"):
+            a = svc_area.parse(d.get("svc_area"))
+            d["svc_area"] = svc_area.public(a, bool(d.get("area_lock"))) if a else None
+    except Exception:
+        d["svc_area"] = None
+    return d
+
+
+def _svc_dist(m):
+    m = int(m or 0)
+    return ("%d m" % (round(m / 10.0) * 10)) if m < 1000 else ("%.1f km" % (m / 1000.0))
+
+
+def _svc_where(a):
+    return ("on " if a.get("kind") == "street" else "in ") + (a.get("label") or "their area")
+
+
+class _SvcAreaIn(BaseModel):
+    street: Optional[str] = None     # "Witch-Hazel Avenue" -- empty for a small area round a point
+    place: Optional[str] = None      # "Technopark, Centurion" -- a suburb, park or landmark beside it
+    lat: Optional[float] = None      # a point tapped on the map beats the typed place
+    lng: Optional[float] = None
+    radius_m: Optional[int] = None   # the stretch of street / the size of the area (100 m .. 5 km)
+    lock: Optional[bool] = None      # the worker's toggle
+    clear: Optional[bool] = None
+
+
+@app.post("/listings/{listing_id}/service-area")
+def set_service_area(listing_id: int, body: _SvcAreaIn, ts_user: str = Cookie(default=None)):
+    """SVC-AREA-1: the owner sets (or clears) the street / small area they work in, and the lock."""
+    me = (_session_email(ts_user) or "").strip().lower()
+    if not me:
+        raise HTTPException(status_code=401, detail="Sign in to change where you work.")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        row = dict(row) if row else None
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        if (row["seller_email"] or "").strip().lower() != me:
+            raise HTTPException(status_code=403, detail="Only the person who listed this can change where they work.")
+        if body.clear:
+            conn.execute("UPDATE listings SET svc_area = NULL, area_lock = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (listing_id,))
+            conn.commit()
+            return {"ok": True, "area": None}
+        cur = svc_area.parse(row["svc_area"])
+        lock = bool(body.lock) if body.lock is not None else bool(row["area_lock"])
+        lock_only = body.street is None and body.place is None and body.lat is None and body.radius_m is None
+        if lock_only:
+            if not cur:
+                raise HTTPException(status_code=422, detail="Set where you work first, then switch this on.")
+            area = cur
+        else:
+            cid = row["geo_city_id"]
+            if not cid:
+                _c = conn.execute("SELECT id FROM geo_cities WHERE LOWER(name)=LOWER(?) LIMIT 1", (row["city"] or "",)).fetchone()
+                cid = _c["id"] if _c else None
+            cc = (row.get("country") or _reach_country_for_city(conn, row["city"]) or "ZA").upper()
+            area, err = svc_area.build(conn, body.street, body.place, row["city"] or "", cc, body.radius_m, body.lat, body.lng, cid)
+            if err:
+                raise HTTPException(status_code=422, detail=err)
+        subs = area.get("suburbs") or []
+        conn.execute("UPDATE listings SET svc_area = ?, area_lock = ?, suburb = COALESCE(?, suburb), area = COALESCE(?, area), "
+                     "updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                     (json.dumps(area, separators=(",", ":")), 1 if lock else 0, subs[0] if subs else None,
+                      ", ".join(subs) if subs else None, listing_id))
+        conn.commit()
+        return {"ok": True, "area": svc_area.public(area, lock)}
+    finally:
+        conn.close()
+
+
+@app.get("/listings/{listing_id}/area-check")
+def service_area_check(listing_id: int, lat: Optional[float] = None, lng: Optional[float] = None,
+                       address: Optional[str] = None):
+    """SVC-AREA-1: is this point / address inside the worker's area? Answers before anything is asked or held."""
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        row = dict(row) if row else None
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    a = svc_area.parse(row["svc_area"])
+    if not a:
+        return {"area": False}
+    lock = bool(row["area_lock"])
+    out = {"area": True, "lock": lock, "label": a.get("label"), "kind": a.get("kind")}
+    if (lat is None or lng is None) and (address or "").strip():
+        lat, lng, _ = svc_area.geocode_addr(address, row["city"] or "", (row.get("country") or "ZA"), (a["lat"], a["lng"]))
+    if lat is None or lng is None:
+        out["found"] = False
+        return out
+    inside, over = svc_area.check(a, lat, lng)
+    out.update({"found": True, "inside": inside, "outside_m": over, "outside": None if inside else _svc_dist(over)})
+    return out
+
 def _zoom_public_row(d):
     d = dict(d)
     if (d.get("category") or "").lower() == "property":
@@ -4236,7 +4719,7 @@ def _zoom_public_row(d):
 @app.get("/zoom/next")
 def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q: Optional[str] = None,
               email: Optional[str] = None, demo: int = 0, rows: int = 1,
-              ts_user: str = Cookie(default=None)):
+              ts_user: str = Cookie(default=None), suburb: Optional[str] = None, near: Optional[str] = None):
     """One call per tap. `f` = chosen chips as `facet:value|facet:value` (values URL-encoded by
     the client, decoded here); `q` = a typed shortcut (rule 4). Returns the sheet's whole state:
     total, chips (with auto chips flagged), the ONE question (options with true counts, tail
@@ -4255,7 +4738,8 @@ def zoom_next(category: str, city: str = "Pretoria", f: Optional[str] = None, q:
     try:
         # SEC-GATE-1 (24 Sep 2026): reach tier comes from the proven session, never the typed ?email= (which let anyone borrow a Pro account's global reach).
         tier = _buyer_reach_tier(conn, _session_email(ts_user) or "")
-        cands, locked = _zoom_candidates(conn, cat_norm, city, demo, tier, _session_email(ts_user) or "")
+        cands, locked = _zoom_candidates(conn, cat_norm, city, demo, tier, _session_email(ts_user) or "",
+                                         loc={"suburb": suburb, "near": svc_area.parse_near(near)})   # SVC-AREA-1
         # quality: the stored column; a row stamped before the column existed is scored live
         def _qf(r):
             return _import_quality_score(r)[0]
@@ -6127,6 +6611,7 @@ def get_listing(listing_id: int, ts_user: str = Cookie(default=None),
         pass
     if _is_demo_example(_d):           # DEMO-INACTIVE-1
         _d["demo_example"] = True
+    _svc_area_out(_d)                  # SVC-AREA-1: the area as the apps draw it (a direct link always opens)
     if not _me or _me != (_d.get("seller_email") or "").strip().lower():
         for _k in ("seller_email", "attested_email"):
             _d.pop(_k, None)
@@ -9686,6 +10171,28 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
     if listing["seller_email"] and intro.buyer_email and        listing["seller_email"].lower() == intro.buyer_email.lower():
         conn.close()
         raise HTTPException(status_code=409, detail="You cannot request an introduction to your own listing")
+    # SVC-AREA-1 (RUL-237): a worker who serves one street or one small area. Locked: work outside it (or nowhere said)
+    # is refused here, before the terms, the wallet or the hold -- nothing is charged. Unlocked: it goes through, and the
+    # worker is told how far outside the job is.
+    _sa = svc_area.parse(listing["svc_area"]) if "svc_area" in listing.keys() else None
+    if _sa:
+        _sa_lock = bool(listing["area_lock"])
+        _jl, _jg = intro.job_lat, intro.job_lng
+        if (_jl is None or _jg is None) and (intro.job_address or "").strip():
+            _jl, _jg, _ = svc_area.geocode_addr(intro.job_address, listing["city"] or "", _lcc or "ZA", (_sa["lat"], _sa["lng"]))
+        if _jl is None or _jg is None:
+            if _sa_lock:
+                conn.close()
+                raise HTTPException(status_code=409, detail="This worker only works %s. Say where the work is so we can check "
+                                                            "it is inside — nothing was charged." % _svc_where(_sa))
+        else:
+            _sa_in, _sa_over = svc_area.check(_sa, _jl, _jg)
+            if not _sa_in:
+                if _sa_lock:
+                    conn.close()
+                    raise HTTPException(status_code=409, detail="That is about %s outside the area this worker serves — "
+                                                                "they only work %s. Nothing was charged." % (_svc_dist(_sa_over), _svc_where(_sa)))
+                intro.message = ((intro.message or "") + "\n[TrustSquare: this job is about %s outside your area.]" % _svc_dist(_sa_over)).strip()
     # Seller ID-verification gate (23 Jul 2026) — see _seller_intro_gate above.
     _gate = _seller_intro_gate(conn, listing["seller_email"])
     if _gate:
