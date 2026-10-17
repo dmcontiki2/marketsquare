@@ -11083,7 +11083,10 @@ def rg_fares_lane_cache_only():
             body = _json.loads(_get("/flights/indicative?map=za"))
         except Exception:
             body = {}
-        if body.get("available") and not body.get("age_days"):
+        # AGE-ZERO-1 (17 Oct 2026): a fare refreshed TODAY has age_days == 0.0, which is falsy --
+        # the old `not body.get("age_days")` read a FRESH fare as "no age" and printed a false
+        # FAIL (measured 17 Oct, za fare age 0.0). The assertion means "age missing", so test None.
+        if body.get("available") and body.get("age_days") is None:
             out.append((FAIL, "a fare is served with NO age -- the card cannot label it honestly"))
         if body.get("available") and "Indicative" not in (body.get("disclaimer") or ""):
             out.append((FAIL, "a fare is served without its indicative disclaimer"))
@@ -39389,6 +39392,79 @@ def rg_audit1017_credit_line():
     if not lh or float(lh.group(1)) <= 0:
         return [(FAIL, "the landmark photo credit inherits line-height:0 again -- its licence link looks crossed out")]
     return [(INFO, "the landmark photo credit has its own line-height")]
+
+
+@entry("RG-1026", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
+       "links, each a server-side 302 through our own /go/partner/<slug>, and still not one byte of partner script on any page",
+       LOCKED, fixed_on="2026-10-17",
+       scope="travelpayouts_partners.py registry + switch; ts_partners.js; all 15 adventures_*_map.html + scripts/journey_template.html; "
+             "deploy_manifest row; live /go/partners and /go/partner/klook. Scope is the WHOLE link-out lane, every map, not one market.",
+       ref="David, 17 Oct 2026 07:56 SAST: 'Please switch it on' then 'yes, create the links'. 23 links made with the Travelpayouts "
+           "'Generate link' tool and 2 (Kiwi.com, GigSky) from 'Ready-made by brands'; every one probed the same morning to 302 to the "
+           "brand carrying partner ID 758984. RG-0181 still guards the invariant (fails closed, allowlist, no script); THIS entry "
+           "guards the switch-on: the lane answers, the links are real, the maps carry the first-party card, and the card itself "
+           "loads nothing from anyone else. Kill switch, if ever needed: TP_LINKOUT_ENABLED=0 in the server .env (read by the module "
+           "because systemd does not export .env), or LINKOUT_ON_BY_RULING = False -- either makes every /go route 404 again.")
+def rg_linkout_on_live():
+    import glob as _glob, json as _json, os as _os, re as _re
+    import urllib.request as _ur, urllib.error as _ue
+    out = []
+    src = repo_file("travelpayouts_partners.py")
+    if src is None:
+        out.append((INFO, "NOT EVALUATED (repo half) - repo not readable from here"))
+    else:
+        if "LINKOUT_ON_BY_RULING = True" not in src:
+            out.append((FAIL, "the RUL-236 switch is no longer True in travelpayouts_partners.py -- the lane would deploy dark"))
+        if src.count(", None),"):
+            out.append((FAIL, "%d program(s) lost their real link in the registry" % src.count(", None),")))
+        js = repo_file("ts_partners.js")
+        if js is None:
+            out.append((FAIL, "ts_partners.js is gone -- the maps have nothing to show the partner list with"))
+        else:
+            hosts = set(_re.findall(r"https?://([a-z0-9.-]+)", js))
+            if hosts:
+                out.append((FAIL, "ts_partners.js names outside hosts %r -- the card must only call our own /go routes" % sorted(hosts)))
+            if "/go/partners" not in js or "nofollow sponsored" not in js:
+                out.append((FAIL, "ts_partners.js no longer reads /go/partners or lost rel=nofollow sponsored"))
+        man = repo_file("ops/autodeploy/deploy_manifest.txt") or ""
+        if "static/ts_partners.js" not in man:
+            out.append((FAIL, "ts_partners.js is not in the deploy manifest -- the maps would 404 on it"))
+        maps = sorted(_glob.glob(_os.path.join(REPO, "adventures_*_map.html")))
+        missing = [_os.path.basename(m) for m in maps
+                   if "ts_fares.js" in open(m, encoding="utf-8", errors="replace").read()
+                   and "/static/ts_partners.js" not in open(m, encoding="utf-8", errors="replace").read()]
+        if missing:
+            out.append((FAIL, "journey map(s) without the partner card: %s" % ", ".join(missing)))
+    # live half
+    try:
+        body = _json.loads(_get("/go/partners"))
+        n = len(body.get("programs") or [])
+        if n < 26:
+            out.append((FAIL, "/go/partners lists %d linkable programs, expected 26" % n))
+        if "commission" not in (body.get("disclosure") or ""):
+            out.append((FAIL, "/go/partners lost its commission disclosure"))
+    except ProbeOffline as ex:
+        out.append((INFO, "NOT EVALUATED (live half): %s" % ex))
+        return out
+    except Exception as ex:
+        out.append((FAIL, "/go/partners does not answer with the partner list (lane dark or broken): %r" % (ex,)))
+        return out
+
+    class _NoFollow(_ur.HTTPRedirectHandler):
+        def redirect_request(self, *a, **k):
+            return None
+    try:
+        _ur.build_opener(_NoFollow).open(_ur.Request(BASE + "/go/partner/klook", headers=UA), timeout=TIMEOUT)
+        out.append((FAIL, "/go/partner/klook did not redirect"))
+    except _ue.HTTPError as e:
+        loc = e.headers.get("Location", "") if e.headers else ""
+        if e.code != 302 or not loc.startswith("https://klook.tpx.lv/"):
+            out.append((FAIL, "/go/partner/klook answered %s -> %r, expected 302 to klook.tpx.lv" % (e.code, loc[:80])))
+    except Exception as ex:
+        out.append((INFO, "NOT EVALUATED (click-out probe): %r" % (ex,)))
+    if not any(l == FAIL for l, _ in out):
+        out.append((INFO, "partner link-out live: 26 programs listed, click-out 302s to the partner short link"))
+    return out
 
 if __name__ == "__main__":
     sys.exit(main())

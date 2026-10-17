@@ -52,7 +52,32 @@ from fastapi.responses import RedirectResponse, JSONResponse
 router = APIRouter(prefix="/go", tags=["partners"])
 
 MARKER = os.environ.get("TRAVELPAYOUTS_MARKER", "758984")   # partner ID 758984
-ENABLED = str(os.environ.get("TP_LINKOUT_ENABLED", "")).strip().lower() in ("1", "true", "yes", "on")
+
+# RUL-236 (David, 17 Oct 2026, "Please switch it on"): the lane is LIVE by ruling.
+# TP_LINKOUT_ENABLED stays as the KILL SWITCH. The systemd unit does not export the
+# app's .env, so the switch is read from the process env first and then from the
+# app's own .env file. Set TP_LINKOUT_ENABLED=0 in either place and every route
+# 404s again on the next restart; leave it unset and the ruling decides.
+LINKOUT_ON_BY_RULING = True
+
+
+def _env_flag(name):
+    v = os.environ.get(name)
+    if v is not None:
+        return v
+    for path in ("/var/www/marketsquare/.env", ".env"):
+        try:
+            for line in open(path, encoding="utf-8", errors="replace"):
+                if line.strip().startswith(name + "="):
+                    return line.split("=", 1)[1].strip().strip("\"'")
+        except Exception:
+            continue
+    return None
+
+
+_FLAG = _env_flag("TP_LINKOUT_ENABLED")
+ENABLED = (LINKOUT_ON_BY_RULING if _FLAG in (None, "")
+           else str(_FLAG).strip().lower() in ("1", "true", "yes", "on"))
 
 # Every host any deeplink is allowed to point at. A host not here is refused
 # even from inside our own registry. tp.media is Travelpayouts' own redirector,
@@ -67,7 +92,23 @@ ALLOWED_HOSTS = {
     "www.kkday.com", "kkday.com",
     "gocity.com", "www.gocity.com",
     "welcomepickups.com", "www.welcomepickups.com",
+    # LINKOUT-ON-1 (17 Oct 2026): Travelpayouts' own SHORT-LINK redirector, one
+    # exact host per brand. These are LINKS (an HTTP 302 to the brand, carrying
+    # partner ID 758984), never scripts. Each host is listed exactly -- no
+    # wildcard -- so a link to a brand we did not generate is still refused.
+    "tpx.lv",
+    "klook.tpx.lv", "tiqets.tpx.lv", "wegotrip.tpx.lv", "kkday.tpx.lv", "gocity.tpx.lv",
+    "kiwitaxi.tpx.lv", "gettransfer.tpx.lv", "intui.tpx.lv", "localrent.tpx.lv",
+    "getrentacar.tpx.lv", "economybookings.tpx.lv", "qeeq.tpx.lv", "autoeurope.tpx.lv",
+    "bikesbooking.tpx.lv", "radicalstorage.tpx.lv", "airhelp.tpx.lv", "compensair.tpx.lv",
+    "ektatraveling.tpx.lv", "airalo.tpx.lv", "yesim.tpx.lv", "gigsky.tpx.lv",
+    "saily.tpx.lv", "drimsim.tpx.lv", "kiwi.tpx.lv",
 }
+
+# Short links carry the partner ID INSIDE the link (Travelpayouts resolves it to
+# the brand with marker 758984 attached). We pass them through untouched: adding
+# ?marker= or ?u= to a short link is meaningless at best and breaks it at worst.
+SHORTLINK_HOSTS = {h for h in ALLOWED_HOSTS if h == "tpx.lv" or h.endswith(".tpx.lv")}
 
 # ---------------------------------------------------------------------------
 # THE REGISTRY. Brand facts PROBED from app.travelpayouts.com on 24 Aug 2026,
@@ -81,32 +122,37 @@ PROGRAMS = {
     # v3 prices_for_dates returns a relative `link` such as /search/JNB1309CPT1?t=...
     # which is the program's own search URL; prefixed with the brand host and carrying
     # our marker it is a valid affiliate deep link. Probed JNB-CPT R1,187 the same day.
+    # LINKOUT-ON-1 (17 Oct 2026): the other 25 deeplinks were GENERATED in the
+    # Travelpayouts link tool (project Trustsquare, partner 758984) -- 23 with
+    # "Generate link", Kiwi.com and GigSky from "Ready-made by brands" (UK main
+    # page / Main page). Each was PROBED the same day: the short link 302s to the
+    # brand with 758984 in the tracking parameter. Not typed from memory (RG-0181).
     "aviasales":       ("Aviasales",        "Flights",             "40%",         "30 days", "https://www.aviasales.com/"),
-    "kiwi":            ("Kiwi.com",         "Flights",             "3%",          "30 days", None),
-    "klook":           ("Klook",            "Tours & Activities",  "2–5%",        "7–30 days", None),
-    "tiqets":          ("Tiqets",           "Tours & Activities",  "3.5–8%",      "30 days", None),
-    "wegotrip":        ("WeGoTrip",         "Tours & Activities",  "6.64–41.5%",  "30 days", None),
-    "kkday":           ("KKday",            "Tours & Activities",  "1–5%",        "30 days", None),
-    "gocity":          ("Go City",          "Tours & Activities",  "3.4–6%",      "90 days", None),
-    "welcomepickups":  ("Welcome Pickups",  "Transfers",           "8–9%",        "45 days", None),
-    "kiwitaxi":        ("Kiwitaxi",         "Transfers",           "9–11%",       "30 days", None),
-    "gettransfer":     ("GetTransfer.com",  "Transfers",           "4–25%",       "30 days", None),
-    "intui":           ("intui.travel",     "Transfers",           "10%",         "35 days", None),
-    "localrent":       ("Localrent.com",    "Car rental",          "7.5–12%",     "30 days", None),
-    "getrentacar":     ("GetRentacar.com",  "Car rental",          "10%",         "90 days", None),
-    "economybookings": ("Economybookings",  "Car rental",          "3–8%",        "30 days", None),
-    "qeeq":            ("QEEQ",             "Car rental",          "5–10%",       "30 days", None),
-    "autoeurope":      ("AutoEurope (EU/UK)", "Car rental",        "4.4–8%",      "30 days", None),
-    "bikesbooking":    ("BikesBooking.com", "Bike rental",         "4%",          "30 days", None),
-    "radicalstorage":  ("Radical Storage",  "Luggage storage",     "8%",          "30 days", None),
-    "airhelp":         ("AirHelp",          "Flight compensation", "15–16.6%",    "45 days", None),
-    "compensair":      ("Compensair",       "Flight compensation", "€5–12 fixed", "30 days", None),
-    "ekta":            ("EKTA",             "Travel insurance",    "25%",         "30 days", None),
-    "airalo":          ("Airalo",           "eSIM",                "12%",         "30 days", None),
-    "yesim":           ("Yesim",            "eSIM",                "18%",         "90 days", None),
-    "gigsky":          ("GigSky",           "eSIM",                "20%",         "30 days", None),
-    "saily":           ("Saily",            "eSIM",                "15%",         "30 days", None),
-    "drimsim":         ("Drimsim",          "eSIM",                "€8 fixed",    "90 days", None),
+    "kiwi":            ("Kiwi.com",         "Flights",             "3%",          "30 days", "https://kiwi.tpx.lv/50VBvgTq"),
+    "klook":           ("Klook",            "Tours & Activities",  "2–5%",        "7–30 days", "https://klook.tpx.lv/4Lo80fpa"),
+    "tiqets":          ("Tiqets",           "Tours & Activities",  "3.5–8%",      "30 days", "https://tiqets.tpx.lv/alspsYmN"),
+    "wegotrip":        ("WeGoTrip",         "Tours & Activities",  "6.64–41.5%",  "30 days", "https://wegotrip.tpx.lv/sgnKxmxt"),
+    "kkday":           ("KKday",            "Tours & Activities",  "1–5%",        "30 days", "https://kkday.tpx.lv/s3NXelwz"),
+    "gocity":          ("Go City",          "Tours & Activities",  "3.4–6%",      "90 days", "https://gocity.tpx.lv/yZHNXGaw"),
+    "welcomepickups":  ("Welcome Pickups",  "Transfers",           "8–9%",        "45 days", "https://tpx.lv/4FS1Xc0U"),
+    "kiwitaxi":        ("Kiwitaxi",         "Transfers",           "9–11%",       "30 days", "https://kiwitaxi.tpx.lv/92Cr68RL"),
+    "gettransfer":     ("GetTransfer.com",  "Transfers",           "4–25%",       "30 days", "https://gettransfer.tpx.lv/fszaw9cC"),
+    "intui":           ("intui.travel",     "Transfers",           "10%",         "35 days", "https://intui.tpx.lv/m1jzvydp"),
+    "localrent":       ("Localrent.com",    "Car rental",          "7.5–12%",     "30 days", "https://localrent.tpx.lv/4ZE8BS8U"),
+    "getrentacar":     ("GetRentacar.com",  "Car rental",          "10%",         "90 days", "https://getrentacar.tpx.lv/Oz8FkMQf"),
+    "economybookings": ("Economybookings",  "Car rental",          "3–8%",        "30 days", "https://economybookings.tpx.lv/jhezSf5S"),
+    "qeeq":            ("QEEQ",             "Car rental",          "5–10%",       "30 days", "https://qeeq.tpx.lv/Xh2V87kP"),
+    "autoeurope":      ("AutoEurope (EU/UK)", "Car rental",        "4.4–8%",      "30 days", "https://autoeurope.tpx.lv/voa3RuXX"),
+    "bikesbooking":    ("BikesBooking.com", "Bike rental",         "4%",          "30 days", "https://bikesbooking.tpx.lv/ZWFC3rqi"),
+    "radicalstorage":  ("Radical Storage",  "Luggage storage",     "8%",          "30 days", "https://radicalstorage.tpx.lv/nNddPAoB"),
+    "airhelp":         ("AirHelp",          "Flight compensation", "15–16.6%",    "45 days", "https://airhelp.tpx.lv/PWhiQezv"),
+    "compensair":      ("Compensair",       "Flight compensation", "€5–12 fixed", "30 days", "https://compensair.tpx.lv/NDw8yPrH"),
+    "ekta":            ("EKTA",             "Travel insurance",    "25%",         "30 days", "https://ektatraveling.tpx.lv/TDk3BqJw"),
+    "airalo":          ("Airalo",           "eSIM",                "12%",         "30 days", "https://airalo.tpx.lv/q018JQHi"),
+    "yesim":           ("Yesim",            "eSIM",                "18%",         "90 days", "https://yesim.tpx.lv/5bIGEPRO"),
+    "gigsky":          ("GigSky",           "eSIM",                "20%",         "30 days", "https://gigsky.tpx.lv/QQvSu1kS"),
+    "saily":           ("Saily",            "eSIM",                "15%",         "30 days", "https://saily.tpx.lv/LRj6vkLN"),
+    "drimsim":         ("Drimsim",          "eSIM",                "€8 fixed",    "90 days", "https://drimsim.tpx.lv/5cshdXOn"),
 }
 
 # Programs Travelpayouts still BLOCKS for this project as at 24 Aug 2026, with
@@ -158,6 +204,8 @@ def build_url(slug, target=None):
     parts = urlsplit(deeplink if "//" in deeplink else "https://" + deeplink)
     if parts.scheme != "https" or parts.netloc.lower() not in ALLOWED_HOSTS:
         return None                      # refuses even our own registry if it drifts
+    if parts.netloc.lower() in SHORTLINK_HOSTS:
+        return urlunsplit(parts)         # partner ID is inside the short link; pass through untouched
     q = dict(parse_qsl(parts.query, keep_blank_values=True))
     q.setdefault("marker", MARKER)
     if target:
@@ -176,6 +224,10 @@ def list_partners():
         "marker": MARKER,
         "disclosure": DISCLOSURE,
         "linkable": sorted(s for s in PROGRAMS if PROGRAMS[s][4]),
+        # LINKOUT-ON-1: what a page needs to draw an honest list -- brand and
+        # category only. Reward rates are deliberately NOT exposed to customers.
+        "programs": [{"slug": s, "brand": PROGRAMS[s][0], "category": PROGRAMS[s][1]}
+                     for s in sorted(PROGRAMS) if build_url(s)],
         "awaiting_deeplink": sorted(s for s in PROGRAMS if not PROGRAMS[s][4]),
         "blocked_by_partner": list(BLOCKED),
         "note": "no third-party script is served by this lane, by design (RG-0025)",
@@ -220,12 +272,23 @@ def build_fare_url(path):
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), ""))
 
 
+def _probe_none_refused():
+    PROGRAMS["__none"] = ("Probe", "test", "", "", None)
+    try:
+        return build_url("__none") is None
+    finally:
+        del PROGRAMS["__none"]
+
+
 def selftest():
     """Prove the refusals actually refuse. Run: python3 travelpayouts_partners.py"""
     ok = True
     checks = [
         ("unknown slug refused",            build_url("not-a-partner") is None),
-        ("no-deeplink program refused",     build_url("klook") is None),
+        ("no-deeplink program refused",     _probe_none_refused()),
+        ("every one of the 26 programs now builds a safe link", all(build_url(s) for s in PROGRAMS)),
+        ("a short link passes through untouched (no marker/u appended)",
+         build_url("klook", "https://www.klook.com/x") == "https://klook.tpx.lv/4Lo80fpa"),
         ("every registry deeplink is None or allowlisted", all(
             (not r[4]) or urlsplit("https://" + r[4].split("//")[-1]).netloc.lower() in ALLOWED_HOSTS
             for r in PROGRAMS.values())),

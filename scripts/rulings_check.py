@@ -1534,6 +1534,14 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-236": [
+   # David, 17 Oct 2026: "Please switch it on" / "yes, create the links" -- Travelpayouts link-out live, server-side only.
+   ("RULINGS.md", ["THE TRAVELPAYOUTS PARTNER LINKS ARE SWITCHED ON"], []),
+   ("travelpayouts_partners.py", ["LINKOUT_ON_BY_RULING = True", "RUL-236"], []),
+   ("ts_partners.js", ["RUL-236", "/go/partners"], []),
+   ("ops/autodeploy/deploy_manifest.txt", ["static/ts_partners.js"], []),
+   ("scripts/regression_ledger.py", ["RG-1026", "LINKOUT-ON-1"], []),
+ ],
  "RUL-227": [
    # David, 13 Oct 2026: "I asked for an auto renew, why did you place a 12 month expire clause to it? ... Please remove that"
    ("RULINGS.md", ["AUTO-RENEW HAS NO END DATE -- IT RENEWS UNTIL THE SELLER CANCELS", "CONFIRMS RUL-224"], []),

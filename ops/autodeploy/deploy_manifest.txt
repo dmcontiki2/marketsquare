@@ -58,6 +58,7 @@ ts_demo_banner.js          | static/ts_demo_banner.js
 # maps. First-party only -- its ONLY network call is our own /flights/indicative,
 # which reads our own cache. Renders nothing while data_flights is off.
 ts_fares.js                | static/ts_fares.js
+ts_partners.js             | static/ts_partners.js
 
 # ── Service worker (served from web root, not /static/) ──────────────────────
 assets/service-worker.js   | service-worker.js
