@@ -29821,7 +29821,11 @@ async def support_message(
                                    "and try again - nothing you typed is lost.")
 
     message = _fault_text.clean_detail(message)   # FAULT-TEXT-1 (27 Sep 2026, DW-162)
-    if len(message) < 10:
+    # REPORT-EMPTY-1 (17 Oct 2026, BA-034): the listing Report link pre-fills "Complaint about listing
+    # #N (link):" -- that line alone passed this check, so TS-0041 reached us with no words at all and
+    # the reporter waited for a reply nobody could give. Count only what the person wrote themselves.
+    _own_words = re.sub(r"^\s*Complaint(?: about listing #\d+ \([^)]*\))?:\s*", "", message)
+    if len(_own_words.strip()) < 10:
         raise HTTPException(status_code=400,
                             detail="Please tell us a little more about what went wrong.")
     email = (email or "").strip().lower()[:200]

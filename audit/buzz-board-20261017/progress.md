@@ -10,3 +10,5 @@
 - 2026-10-17T08:16:19Z RG-1051 promoted LOCKED; lock-icon CSS fix; fragments written; committing + redeploy
 - 2026-10-17T08:59:44Z post-deploy host ledger: 4 regressions reported (names cut off); ledger_host.bat queued for full report. rulings_check: 196 checked, 2 FAIL (pre-existing RUL-169, RUL-211). NEW TASK: restyle Buzz to mock-up look (David 10:57 SAST).
 - 2026-10-17T09:03:45Z BUZZ-LOOK-1 restyle written (ms.js node --check ok; bea_main last-buzz; RG-1056 pass; SS3.8 entry pass); committing
+- 2026-10-17T09:23:54Z BUZZ-LOOK-1 live at 688fc99 (deploy log DEPLOY OK 09:18Z; live ms.js carries the new CSS). Verified in David's Chrome: desktop (420px column) + 390px iframe: People/Send/Specials, Edit panel, Free view (board answered as Free in the page only). Screenshot pair mockups/BUZZ_BOARD_LIVE_2026-10-17.png indexed in Visuals. Host ledger 09:15Z: 4 REGRESSIONS, none Buzz: RG-0189 secrets .bak (other lane), RG-0264 adventures outreach anonymity copy, RG-0344 email templates page stale, RG-0403 CityLauncher stats board. RG-1051..1054,1056 ok.
+DONE

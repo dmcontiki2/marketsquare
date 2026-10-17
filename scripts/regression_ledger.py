@@ -39717,6 +39717,24 @@ def rg_audit1017_fares_token():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the daily fare refresh can find the Travelpayouts token")]
 
 
+@entry("RG-1027", "REPORT-EMPTY-1 (17 Oct 2026 bug audit follow-up, BA-034): a listing report must carry the reporter's own "
+       "words -- the pre-filled 'Complaint about listing #N (link):' line alone passed the length check",
+       LOCKED, fixed_on="2026-10-17",
+       scope="bea_main.py support_message (POST /support/message) length check; support.html topic=report pre-fill",
+       ref="TS-0041, 15 Oct 2026: a visitor's report of listing #482 stored exactly the pre-filled line; the support agent "
+           "could only draft 'your message does not include details', and that draft sat unsent for two days.")
+def rg_audit1017_report_empty():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    body = fn_body(src, "async def support_message(")
+    if not body:
+        return [(FAIL, "POST /support/message (support_message) not found")]
+    if "_own_words" not in body or "Complaint(?: about listing" not in body:
+        return [(FAIL, "the support form counts the pre-filled report line as the message -- an empty listing report gets through again")]
+    return [(INFO, "a listing report must carry the reporter's own words")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",

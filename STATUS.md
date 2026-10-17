@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-17 - linkout on renumber)
+## Last Completed (2026-10-17 - svc area 1)
 
-- 17 Oct 2026 — LINKOUT-ON-1 ledger id is RG-1050 (not RG-1026, which belongs to the bug audit's FARES-TOKEN-1).
+- 17 Oct 2026 -- SVC-AREA-1 (RUL-237): casual workers can tie an advert to one street / small area and lock it (shown only there; work outside refused before the 1T hold). Verified by: scripts/prove_svc_area.py PASS + RG-1055; live walk after ship.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,10 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 17 Oct 2026 -- SVC-AREA-1 (RUL-237): casual workers can tie an advert to one street / small area and lock it (shown only there; work outside refused before the 1T hold). Verified by: scripts/prove_svc_area.py PASS + RG-1055; live walk after ship.
+
+- 17 Oct 2026 — BUZZ-BOARD-1 LIVE (ac84034). Buzz Board ruling is RUL-238 (RUL-237 = SVC-AREA-1). RG-1051 locked.
 
 - 17 Oct 2026 — LINKOUT-ON-1 ledger id is RG-1050 (not RG-1026, which belongs to the bug audit's FARES-TOKEN-1).
 

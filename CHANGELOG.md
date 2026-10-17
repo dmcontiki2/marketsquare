@@ -1,3 +1,69 @@
+## 2026-10-17 -- SVC-AREA-1 (RUL-237): a casual worker's one street, and the "only here" switch
+
+David, on Petrus's car-wash advert: a casual worker should be tied to a small area on the map -- for Petrus one street,
+Witch-Hazel Avenue in Technopark, Centurion -- with a switch so he is not shown outside it and cannot be booked too far
+down the street. Built:
+- **Where I work** (owner bar on the worker's own advert): street + suburb/park/landmark, "Show it on the map", tap the map
+  to move the middle, a slider for how far along the street (100 m-5 km), and **Only here**. Saved per change.
+- **The advert** carries a card: "Works on Witch-Hazel Avenue, Technopark, Centurion", Only here / Mostly here, and a small
+  map with the street stretch drawn on it.
+- **Only here on:** the feed, search and the Zoom funnel show the advert only to people who picked a suburb the area touches
+  or whose phone is inside it (the app now sends its rounded location as &near=); a direct link always opens.
+- **The request form** asks "Where is the work?" (an address, or the phone's location) and says at once whether it is
+  inside. Locked: work outside, or no place given, is refused by the server before the terms, the wallet or the 1T hold.
+  Unlocked: it goes through and the worker is told how far outside it is. The place is checked, never stored.
+- Maps: OpenStreetMap (Nominatim + Overpass, one request a second, cached), no paid service.
+Proof: scripts/prove_svc_area.py runs the real bea_main.py on a throwaway database -- owner-only, suburbs touched, hidden/
+shown for stranger/suburb/phone/owner/funnel, direct link, area check, refusals before any hold (no intro row), unlock.
+Ledger RG-1055. Cost model impact: none (OpenStreetMap is free; no AI calls).
+
+## 2026-10-17 — BUZZ-WHY-1 + the four ledger reds cleared (RG-0189, RG-0264, RG-0344, RG-0403)
+
+David, 19:54 SAST: "we do need to explain it to the users so that understand why they are limited? Please fix all 4 of the failed checks Claude."
+
+- **BUZZ-WHY-1 (RG-1058, LOCKED; first written as RG-1057, renumbered because goal run 42 took RG-1057 on main the same evening):** the Send and Specials panes each carry a one-tap "Why the limits?" line; the Needs-a-subscription note says why service lines are free and specials are paid; every Buzz Board refusal from the server now names its reason (spam leads to muting; specials stay worth opening; an old price never looks current; Buzz is a doorbell, not a chat). Limits themselves unchanged.
+- **RG-0189:** `.secrets/deploy_keys.txt.bak-20261017-0345` held three credentials at rest (two duplicated the live file, the third was the retired deploy token). Neutralized in place with a dated note and pre-wipe fingerprint, as RG-0190 did on 2 Sep. Source closed: `rotate_keys.ps1` no longer copies deploy_keys.txt to a local .bak; RG-0189 now also fails if it ever does again.
+- **RG-0264:** the 15 LETTER-V2 outreach letters (built 15 Oct) never stated the anonymity. Fixed at the source: `CityLauncher/emailer/build_letters_v2.py` shared layout now carries "You stay anonymous. People see your advert, never your name, number or address, until you decide to accept their introduction." All 15 .v2 letters and previews rebuilt; each differs from before by exactly that line. Nothing was sent.
+- **RG-0344:** Email Templates page rebuilt (`scripts/build_email_templates_page.py`); the services_technical_outreach mirror was stale.
+- **RG-0403:** CHANNELS-1 (14 Oct) dropped the raw-count label and the funnel's stage chooser. `CityLauncher/dashboard/citylauncher.html` again shows the raw opened/clicked counts as "incl. scanners" chips, and the funnel bars choose their figure through `stageVal()` (graded people for opened/clicked). The assertion was not changed.
+
+Cost model impact: none. Schema: none.
+
+## 2026-10-17 — BUZZ-LOOK-1: the live Buzz screen now looks like the mock-up
+
+David, 17 Oct 2026 10:57 SAST, on the live My Space > Buzz: *"why don't the app look like you are showing it here. I like
+the HMI interface you are showing me."*
+
+- One phone-width column (max 420px, centred even on desktop) on the mock-up's dark panel; "Buzz" header with the count
+  pill ("N of L regulars", or "Your regulars: N" while the limits switch is off, RUL-179(b)); the three tabs as a segmented control.
+- Colour meaning as in the mock-up: green one person, amber a tag/everyone (and the Send button for a group), blue specials,
+  red remove, grey limits.
+- People: amber tag chips, compact rows (initials, name, tag pill, "last buzz: <when>"), Edit / Mute / Remove on the row; the
+  per-person "let X buzz me" switch sits inside Edit with its own section-3.8 consent line; dashed green "+ Add people".
+- Terms: the long box and the "this phone" explainer collapse to one dim line with "Terms 3.8" (opens the full on-screen copy
+  in one tap) and a small notifications toggle. The wording is unchanged; only its display is shorter.
+- Specials: listing preview card with the blue SPECIAL badge and a chat-bubble preview of the buzz; blue Save.
+- /buzz/board now also returns each pair's newest buzz time (for "last buzz"). Ledger RG-1056. Presentation only otherwise.
+
+## 2026-10-17 — BUZZ-BOARD-1 live (RUL-238); ruling renumbered; RG-1051 locked
+
+- The Buzz Board ruling is **RUL-238**, not RUL-237: SVC-AREA-1 took RUL-237 on main the same morning. Both kept; merged as ac84034.
+- Release ac84034 is live (stranger test PASS 380 routes, migration 083 ran). Probed: all six Board routes answer 401 to an
+  anonymous caller -> RG-1051 promoted OPEN -> LOCKED.
+- Rendered in David's Chrome on his paid account: People/Send/Specials tabs, quick line fills the box, QR code loads from our
+  server, Remove's 10-second undo makes no close call, tags show as filter and Send chips. The Free view was checked by
+  switching the screen to Free in that browser only (display, not a real Free login); the Free refusals themselves are proven
+  server-side by the 24 functional checks.
+- Cosmetic: the lock icon now only follows inline items (it sat alone under the greyed Specials preview).
+
+## 2026-10-17 -- BUG-AUDIT-1016 follow-up: empty listing reports (cloud lane, with David)
+
+- **REPORT-EMPTY-1** (bea_main.py support_message, scripts/regression_ledger.py; BA-034, RG-1027) -- the Report link on a listing
+  opens /support with "Complaint about listing #N (link):" already in the box, and that line alone passed the 10-character check.
+  On 15 Oct a visitor sent exactly that for listing #482 (TS-0041): the support agent could only draft "your message does not
+  include details", and the draft sat unsent for two days. The check now counts only the words the person typed after the
+  pre-filled line; an empty report gets the form's usual "Please tell us a little more" and keeps the text in the box.
+
 ## 2026-10-17 -- LINKOUT-ON-1 ledger id corrected: RG-1026 -> RG-1050
 
 The LINKOUT-ON-1 entry above was first filed as RG-1026, but RG-1010..RG-1049 is reserved for BUG-AUDIT-1016 and the

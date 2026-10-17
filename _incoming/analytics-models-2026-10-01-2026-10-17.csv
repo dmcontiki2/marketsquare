@@ -1,0 +1,2 @@
+start_date,end_date,timezone,model_key,model_slug,display_name,provider_slug,operation_labels,total_requests,spend_usd,spend_share
+2026-10-01,2026-10-17,UTC,xai/grok-imagine-image-2.0,xai/grok-imagine-image-2.0,Grok Imagine 2.0,xai,image_edit|text2image,70,4.34,100.0
