@@ -1,3 +1,118 @@
+## 2026-10-17 -- LINKOUT-ON-1: Travelpayouts partner links switched on, server-side only (RUL-236)
+
+David, 17 Oct 2026 07:56 SAST: "Please switch it on", then "yes, create the links".
+
+- **Panel check first (PROBED 07:50 SAST):** Drive shows "not working" with all five features Off; the live index and
+  quick.html carry zero Travelpayouts script; no repo page loads one (RG-0025 clean, 139 files). 26 programs Available,
+  20 locked behind "stable monthly traffic for at least three consecutive months" plus "site under development".
+- **25 real links made** in the Travelpayouts link tool (project Trustsquare, partner 758984): 23 via "Generate link",
+  Kiwi.com and GigSky via "Ready-made by brands" (their generic generator refuses them). Every one probed to 302 to the
+  brand with 758984 in the tracking parameter. Aviasales keeps its marker deeplink. Registry now has 0 of 26 at None.
+- **travelpayouts_partners.py:** `LINKOUT_ON_BY_RULING = True`; `TP_LINKOUT_ENABLED` kept as the kill switch, now read
+  from the process env and then the app's .env (systemd does not export .env); exact `*.tpx.lv` short-link hosts added to
+  the allowlist (no wildcard) and passed through untouched (no marker/u appended); `/go/partners` returns brand+category
+  for drawing (reward rates not exposed). Selftest 11/11.
+- **ts_partners.js (new, first-party):** "Plan the rest of your trip" pill + panel on every journey map, grouped and
+  colour-coded (flights, transfers, car & bike hire, tours, eSIM, insurance, delayed-flight claims, luggage storage);
+  only ever calls our own /go routes; disclosure + "not a travel agency" in the card; silent when the lane is off.
+  Added to all 15 adventures maps + scripts/journey_template.html + deploy manifest.
+- **QA bot:** OpenAI's server-side policy already rules GET /go/partners and GET /go/partner/{slug} public, so the
+  deploy gate does not treat the switch-on as a newly opened route.
+- **Ledger:** RG-1026 LOCKED (switch, registry, card, manifest, live list of 26, click-out 302s to klook.tpx.lv).
+  AGE-ZERO-1: RG-0182 printed a false FAIL for a fare refreshed today (age_days 0.0 is falsy); the assertion now tests
+  for a missing age (`is None`), which is what it always meant.
+
+## 2026-10-16 -- BUG-AUDIT-1016: overnight bug audit of TrustSquare + Quick (David: "fix as you go")
+
+Audit log of record: `Projects\Audits\BUG_AUDIT_2026-10-16\BUG_AUDIT_LOG.html` (findings.jsonl is the source). Ledger block RG-1010..RG-1049 reserved for this audit.
+
+- **SCOREBOARD-LOCK-1 + PING-BUSY-1 + PURGE-BUSY-1** (ai_scoreboard.py, bea_main.py, scripts/regression_ledger.py; BA-001, RG-1010) --
+  every night at 01:33 UTC (03:33 SAST) the app refused writes for one to two minutes: 20 x `database is locked` in seven days,
+  POST /presence/ping and GET /wishlist/signals answering 500 on six nights. Cause: the in-process nightly AI scoreboard inserted
+  its first probe row (opening a write transaction) and then made every remaining AI call over the network before committing, so
+  the write lock was held for the whole round -- any listing save or introduction in that window would have failed the same way.
+  Now every probe runs first and the rows land in one short write; the scoreboard connection waits (30 s busy timeout) instead of
+  failing the app's writers; and the two background calls that met the lock answer without a 500 (the ping records nothing and
+  says so, the lazy purge skips one turn). Proven on a scratch database: old round -> an app write FAILED; new round -> it succeeds
+  and all probe rows are stored.
+- **GX-ZOOM-1 + NATIONWIDE-TILE-1** (ms.js, scripts/regression_ledger.py; BA-004, RG-1011) -- walked live at 390 px in Pretoria with
+  AI examples on: Home said Services 53 and Tutors 51, but the pages showed 11 and 6 cards. With baseline_q4 on, the browse grid
+  keeps only the ids the server's funnel (/zoom/next) returns, and the 43 casual-role and 47 trainer AI examples (RUL-216/RUL-217)
+  are made in the app, so every one of them was filtered out. They now pass the funnel while she has not narrowed it herself
+  (still last, EXAMPLES-LAST-1); once she picks a chip only the funnel's rows remain. Second half of the same mismatch: the Bee
+  Lady's Nationwide advert (#538, RUL-220) showed on Pretoria's Services page but was not counted on its tile; the tile now counts
+  a Nationwide advert in every city of its own country. Proven by serving the patched ms.js to the same walk: tiles 54/53 over
+  pages of 54/53 cards, no console errors.
+- **MYSPACE-SIGNEDOUT-1** (ms.js, scripts/regression_ledger.py; BA-006, RG-1012) -- a stranger who tapped My Space was shown a
+  member's page: "TrustSquare member", "Squire is not available right now" (the app asked /squire/status with no account and got
+  401), a 15% Trust score, and no way to sign in on the first screen. My Space now says "Not signed in", puts a sign-in card at the
+  top of Overview (it opens the sign-in screen, and goes away the moment an account is on the phone -- including one adopted from
+  the session cookie a moment later), and Squire's card says "Sign in to meet Squire, your agent" without calling the server.
+- **QUICK-SW-CATCH-1 + QUICK-ERR-BEACON-2** (quick.html = genie/HARNESS.html, scripts/regression_ledger.py; BA-007, RG-1013) -- two
+  strangers who arrived from SMS waves on 15 and 16 Oct logged only "q_door" and then "q_error: promise: Rejected" in Quick's own
+  error beacon. Quick registers its service worker inside a try/catch, but register() answers with a promise, so a phone that refuses
+  service workers (an in-app browser, a locked-down Chrome) raised an unhandled rejection at the door. Reproduced headless with the
+  refusal forced: the live page sent exactly that beacon; the patched page sends nothing. The refusal is now caught, and a promise
+  error reports its name and first stack line, so the next unknown one says where it came from.
+- **GX-ZOOM-2** (ms.js, scripts/regression_ledger.py; BA-004 follow-up, RG-1011 + RG-0221 needles) -- the first cut hid the role
+  examples the moment she picked any chip, so choosing "Casuals" in Narrow your search emptied the 43 casual-role examples it
+  should have kept. An example now stays while it fits every chip she picked herself (Casuals keeps them: 49 cards; Technical
+  drops them: 5 cards; the server's own auto-collapse never hides one). Proven in the rendered app at 390 px, Pretoria.
+- **TOUR-ONE-1** (ms.js, scripts/regression_ledger.py; BA-005, RG-1014) -- Pretoria's Home said Adventures 9, the Adventures page
+  showed 10. The extra card was #307, the Cape-to-Cairo stays: the city feed deliberately drops a tour's accommodation
+  super-example (its stays are priced extensions on the journey listing), but the funnel's rows (/zoom/next) pushed it back into
+  the list. The funnel's rows now obey the same consolidation; proven in the rendered app (9 cards under a tile of 9).
+- **FRESH-BAR-WIDTH-1** (ms.js, scripts/regression_ledger.py; BA-009, RG-1015) -- after every release the "A new version is ready"
+  bar appeared as a 91 px block with its words broken over four lines across the logo and the city badge (a fixed box pushed
+  right by left:50% shrinks to the half of the screen left of it). It now sizes to its one line (width:max-content, still capped by
+  the screen width): 312 x 38 px at 360 and 390 px.
+- **RESTART-RETRY-1** (ms.js, scripts/regression_ledger.py; BA-010, RG-1016) -- every release restarts the server for about two
+  seconds, and apiGet() dropped any read that landed in that gap. Caught live during this audit (23:04:41 UTC): choosing South
+  Africa in the location picker got 502 for /geo/cities and /geo/regions and the picker came up empty. A GET is safe to repeat, so a
+  502/503/504 or a dropped connection is now asked again after 1.2 s and 2.5 s (only while online), then given up as before.
+  Replayed with two forced 502s: the live code showed 0 cities, the patched code 14.
+- **NARROW-FIT-1** (marketsquare.html, ms.css, scripts/regression_ledger.py; BA-013, RG-1017) -- on a 360 px phone (the most
+  common Android width) Home was 366 px wide: the two Nearby-landmarks filters sat beside the heading and the second one was cut
+  off, so the whole page wobbled sideways; at 320 px Home was 45 px too wide, My Space's five tabs 22 px and the Adventures
+  country pill 18 px. The filters now wrap under the heading, the tabs scroll inside their bar, and the Adventures country pill
+  drops under the title when there is no room. Measured in the rendered app: every screen exactly screen-wide at 320 and 360 px.
+- **PLAN-WORDS-1** (ms.js, scripts/regression_ledger.py; BA-017, RG-1018) -- the Plans screen showed every visitor an internal ruling
+  number: the Free plan's bullet read "Nationwide in your own country -- a free switch on every listing (RUL-220)". The number is
+  gone; the ledger now refuses any ruling, ledger or change-control number inside a plan's bullet list.
+- **AGENT-ARTICLE-1** (ms.js, scripts/regression_ledger.py; BA-019, RG-1019) -- every Property seller who reached the optional
+  "Boost your sale?" step read "WHY SELLERS USE A ESTATE AGENT". The heading now picks "a" or "an" from the label the server sends.
+- **AGENT-SIGNIN-1** (ms.js, scripts/regression_ledger.py; BA-020, RG-1020) -- an estate or car agent who tapped Sell > Services >
+  Professional Agents before signing in reached the Agent Hub and read "Sign in first" on both tabs, with no button: a dead end on
+  the agents' own door. Both tabs now carry a Sign in button that opens the sign-in screen.
+- **SELL-STEPS-1** (ms.js, scripts/regression_ledger.py; BA-021, RG-1021) -- Local Market (and car hire) have no legal must-haves
+  step, so their sellers finished on "Step 5 of 6" and jumped to the score. The headers now count 5 or 6 steps from the same test
+  the Features button already uses.
+- **DB-ANCHOR-1** (database.py, scripts/regression_ledger.py; BA-016, RG-1022) -- rare 500s ("unable to open database file",
+  "attempt to write a readonly database") came from root processes touching the live database (the release safety gate opens
+  it as root). Because the app opened one connection per request, the database's -wal/-shm side files were deleted whenever
+  the app went quiet and re-created by whoever came next; a root process re-creates them as root for an instant, and an app
+  connection opening them in that instant was refused or got a read-only view that failed every write in the process. The app
+  now holds one connection open for its whole life (never as root, never on another database file), proven writable before it
+  is kept, so the side files stay present and writable; it checkpoints the WAL every 30 s. get_db also retries the side-file
+  window twice. Reproduced on a copy of the database: 8 refusals and a read-only spell in 10 s before, none in 30 s after.
+- **WONDER-SELFHOST-2** (wonders.json, scripts/regression_ledger.py; BA-018, RG-1023) -- 53 of the 319 landmark cards (including
+  Sterkfontein, Border Cave, Wonderwerk, Ditsong and other South African cards near the front of the Home strip) still loaded
+  their picture straight from Wikimedia at 1280 px. Wikimedia rate-limits such hotlinking (it answered 429 after four quick loads
+  from one address), which leaves an empty card, and every load told Wikimedia the visitor's address. The same 53 pictures are
+  now served from trustsquare.co (12.7 MB; the heaviest re-saved at 82% JPEG), with author, licence and source unchanged -- and
+  the one card that carried placeholder credits (Tijuca National Park) now names its photographer and licence from Commons.
+- **WONDER-PICKS-1** (wonders.json, scripts/regression_ledger.py; BA-028, RG-1024) -- five landmark cards on Home showed a picture
+  of something else, because their picture had been picked by guessing a Commons file name from the landmark's name: Daintree
+  National Park showed a gas mask (File:Daintree.jpg), Manu National Park a man's portrait (File:Manu.jpg), the Smithsonian's
+  Natural History museum a street map, the Cradle of Humankind a location map and the Acropolis Museum an archive photo of a
+  frieze. Each now shows its place -- the article's own lead picture, or the Maropeng visitor centre for the Cradle -- checked
+  by eye, credited from Commons and self-hosted. Wonderwerk Cave still shows a street in Kuruman: Commons has no photo of the
+  cave, so it needs a licensed picture from the site's custodians.
+- **CREDIT-LINE-1** (ms.css, scripts/regression_ledger.py; BA-029, RG-1025) -- on every landmark page the photo licence in the
+  credit ("Pixabay Content License", "CC BY-SA 2.5") looked crossed out: the picture wrapper's line-height:0 collapsed the licence
+  link to a 1 px box in the middle of its text, so the link's underline ran through the words. The credit box now sets its own
+  line-height and the line sits under the licence again.
+
 ## 2026-10-16 -- PASSKEY-OFF-1: Face ID / fingerprint sign-in removed
 
 - **PASSKEY-OFF-1** (ms.js, bea_main.py, route_policy.json, scripts/regression_ledger.py) -- David, 16 Oct 2026: on Android the

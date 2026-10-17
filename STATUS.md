@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-10 - squire2 phase1)
+## Last Completed (2026-10-17 - linkout on)
 
-- 10 Oct 2026 — SQUIRE-2 Phase 1 built by the scheduled run, HELD under the IP hold: worktree `_squire2_wt`, local branch `squire2`, not pushed, not deployed (provisional-2 submitted at CIPC 10 Oct, Record Id 1670607; no application number yet, so no FILED.md). Flag-dark behind baseline_q4; new switch squire_pro_pa OFF. Verified by: test_squire2.py 13/13 and verify_squire2.py all 10 acceptance items PASS on the real BEA with a throwaway database (EXECUTED, not live). Open: EPC registration key (free) — report shows "not available" until it exists. Next step: merge `squire2` into main the day FILED.md carries the application number, then one commit + one deploy.
+- 17 Oct 2026 — LINKOUT-ON-1 (RUL-236): Travelpayouts partner link-out SWITCHED ON, server-side only. 26 real partner links (25 generated in the Travelpayouts link tool that morning, each probed to carry partner 758984), "Plan the rest of your trip" card on all 15 journey maps, every click through our own /go/partner route. Drive stays off and no partner script on any page (RG-0025 clean). 20 locked programs stay locked — resubmit no earlier than early Dec 2026 (three months of traffic after the 1 Sep launch). Verified by: selftest 11/11; RG-0025/0181 pass from the working tree; RG-1026 + rendered check on the live map after deploy (see changelog fragment).
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 17 Oct 2026 — LINKOUT-ON-1 (RUL-236): Travelpayouts partner link-out SWITCHED ON, server-side only. 26 real partner links (25 generated in the Travelpayouts link tool that morning, each probed to carry partner 758984), "Plan the rest of your trip" card on all 15 journey maps, every click through our own /go/partner route. Drive stays off and no partner script on any page (RG-0025 clean). 20 locked programs stay locked — resubmit no earlier than early Dec 2026 (three months of traffic after the 1 Sep launch). Verified by: selftest 11/11; RG-0025/0181 pass from the working tree; RG-1026 + rendered check on the live map after deploy (see changelog fragment).
 
 - 10 Oct 2026 — SQUIRE-2 Phase 1 built by the scheduled run, HELD under the IP hold: worktree `_squire2_wt`, local branch `squire2`, not pushed, not deployed (provisional-2 submitted at CIPC 10 Oct, Record Id 1670607; no application number yet, so no FILED.md). Flag-dark behind baseline_q4; new switch squire_pro_pa OFF. Verified by: test_squire2.py 13/13 and verify_squire2.py all 10 acceptance items PASS on the real BEA with a throwaway database (EXECUTED, not live). Open: EPC registration key (free) — report shows "not available" until it exists. Next step: merge `squire2` into main the day FILED.md carries the application number, then one commit + one deploy.
 
