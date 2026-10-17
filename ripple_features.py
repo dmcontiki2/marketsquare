@@ -201,6 +201,33 @@ def build_router(g):
         tok = jwt.encode({"purpose": "buzz_join", "n": nonce}, SECRET, algorithm=ALGO)
         return {"url": APP_URL + "/join/" + tok, "name": name}
 
+    # ── BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the same link as a QR code, for a customer standing in front of her ──
+    # Drawn HERE, on our own server (the qrcode library in the BEA venv) -- never by a third-party QR service, which
+    # would see her link. Only her CURRENT link; it never makes a new one.
+    @r.get("/buzz/my-link/qr.svg")
+    def buzz_my_link_qr(ts_user: str = Cookie(default=None)):
+        from fastapi.responses import Response
+        me = (session_email(ts_user) or "").strip().lower()
+        if "@" not in me:
+            raise HTTPException(status_code=401, detail="Please sign in first.")
+        conn = database.get_db()
+        try:
+            _ensure(conn)
+            row = conn.execute("SELECT nonce FROM buzz_links WHERE email=?", (me,)).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            raise HTTPException(status_code=404, detail="Get your link first.")
+        try:
+            import io as _io, qrcode as _qr, qrcode.image.svg as _qsvg
+            tok = jwt.encode({"purpose": "buzz_join", "n": row["nonce"]}, SECRET, algorithm=ALGO)
+            img = _qr.make(APP_URL + "/join/" + tok, image_factory=_qsvg.SvgPathImage, border=2)
+            buf = _io.BytesIO(); img.save(buf)
+        except Exception:
+            raise HTTPException(status_code=503, detail="The QR code is not available just now - send the link instead.")
+        return Response(content=buf.getvalue(), media_type="image/svg+xml",
+                        headers={"Cache-Control": "private, no-store"})
+
     # ── shared page: who is asking, and what the link does ───────────────────
     @r.get("/trust/join-who")
     def join_who(token: str):

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Buzz Board Mock-up</title>
+<style>
+:root{
+  --bg:#04100c;--panel:#0a1a14;--line:#163128;--ink:#eaf3ee;--dim:#84a396;
+  --one:#16A97C;      /* green  = one-to-one buzz */
+  --bulk:#E8A33D;     /* amber  = send to a group / all */
+  --spec:#4AA8FF;     /* blue   = special, lives on the listing */
+  --stop:#E5534B;     /* red    = remove / mute / close */
+  --cap:#9AA7A1;      /* grey   = caps and limits */
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:24px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--dim);margin:0 0 18px;max-width:900px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin:0 0 22px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.phones{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.phone{width:310px;max-width:100%;background:#020806;border:2px solid #1d3a30;border-radius:34px;padding:14px 12px 16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.cap-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);text-align:center;margin:0 0 8px}
+.scr{background:var(--panel);border-radius:22px;padding:14px 12px;min-height:560px;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.top b{font-size:18px}
+.count{font-size:12px;color:var(--cap);border:1px solid var(--line);border-radius:20px;padding:2px 9px}
+.tabs{display:flex;background:#06120e;border-radius:12px;padding:3px;margin-bottom:12px}
+.tabs div{flex:1;text-align:center;font-size:13px;padding:7px 0;border-radius:9px;color:var(--dim)}
+.tabs .on{background:var(--line);color:var(--ink);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font-size:12.5px;padding:5px 10px;border-radius:20px;border:1px solid var(--line);color:var(--ink);background:#06120e}
+.chip.one{border-color:var(--one);color:#8ff0c8}
+.chip.bulk{border-color:var(--bulk);color:#ffd28a}
+.chip.bulk.on{background:var(--bulk);color:#1a1000;font-weight:700}
+.chip.spec{border-color:var(--spec);color:#a9d6ff}
+.row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}
+.av{width:34px;height:34px;border-radius:50%;background:#123326;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#8ff0c8;flex:0 0 auto}
+.nm{flex:1;min-width:0}
+.nm small{display:block;color:var(--dim);font-size:11.5px}
+.tag{font-size:10.5px;padding:1px 7px;border-radius:10px;background:#11261e;color:var(--dim);margin-left:4px}
+.swipe{display:flex;gap:4px}
+.swipe span{font-size:11px;padding:6px 7px;border-radius:7px;font-weight:700}
+.ed{background:#1b3a2e;color:#8ff0c8}
+.mu{background:#3a2b10;color:#ffd28a}
+.rm{background:var(--stop);color:#fff}
+.btn{display:block;width:100%;text-align:center;border-radius:13px;padding:11px;font-weight:800;margin-top:10px;border:0}
+.btn.one{background:var(--one);color:#04140e}
+.btn.bulk{background:var(--bulk);color:#1a1000}
+.btn.spec{background:var(--spec);color:#021222}
+.btn.ghost{background:transparent;border:1px dashed var(--one);color:#8ff0c8}
+.lbl{font-size:12px;color:var(--dim);margin:8px 0 6px}
+.box{background:#06120e;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:14px;min-height:54px}
+.ctr{text-align:right;font-size:11.5px;color:var(--cap);margin-top:4px}
+.note{font-size:11.5px;color:var(--dim);margin-top:8px;border-left:3px solid var(--cap);padding-left:8px}
+.note.bulk{border-color:var(--bulk)}
+.note.spec{border-color:var(--spec)}
+.card{border:1px solid var(--spec);border-radius:12px;padding:9px;display:flex;gap:9px;align-items:center;background:#071827;margin-top:8px}
+.thumb{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,#1d4f7a,#0d2a44);flex:0 0 auto}
+.card small{display:block;color:#a9d6ff;font-size:11.5px}
+.badge{font-size:10.5px;font-weight:800;color:#021222;background:var(--spec);border-radius:6px;padding:1px 6px;margin-right:4px}
+.preview{background:#0d2016;border-radius:14px 14px 14px 4px;padding:9px 11px;font-size:13.5px;margin-top:6px}
+.preview u{color:#a9d6ff}
+.spacer{flex:1}
+.row2{display:flex;gap:8px}
+.row2>div{flex:1}
+.sel{background:#06120e;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px}
+h2{font-size:18px;margin:34px 0 10px}
+.sugg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;max-width:1000px}
+.s{background:var(--panel);border-radius:12px;padding:10px 12px;border-left:5px solid var(--one);font-size:14px}
+.s.bulk{border-color:var(--bulk)}.s.spec{border-color:var(--spec)}.s.stop{border-color:var(--stop)}.s.cap{border-color:var(--cap)}
+.decide{max-width:1000px;background:#1a1405;border:2px solid var(--bulk);border-radius:14px;padding:14px 16px;margin-top:28px}
+.decide h3{margin:0 0 8px;color:#ffd28a;font-size:17px}
+.decide p{margin:6px 0}
+.ex{font-size:12px;color:var(--dim);margin-top:18px}
+.grey{opacity:.38;filter:grayscale(1)}
+.lock{font-size:10px;margin-left:3px}
+.toast{background:#2a2110;border:1px solid var(--bulk);color:#ffd28a;border-radius:12px;padding:9px 11px;font-size:12.5px;margin-top:10px}
+.toast b{color:#fff}
+.decide.done{background:#06170f;border-color:var(--one)}
+.decide.done h3{color:#8ff0c8}
+</style>
+</head>
+<body>
+<h1>Buzz Board — mock-up</h1>
+<p class="sub">One screen, three tabs, for a seller to manage her people and send short buzzes. Example seller: Annatjie, a home hairdresser on the Starter plan. Names are examples; in the app she only ever sees people who joined through her own link.</p>
+
+<div class="legend">
+  <span><i style="background:var(--one)"></i>One person (one-to-one buzz)</span>
+  <span><i style="background:var(--bulk)"></i>A group or everyone</span>
+  <span><i style="background:var(--spec)"></i>Special — lives on her listing</span>
+  <span><i style="background:var(--stop)"></i>Remove / close</span>
+  <span><i style="background:var(--cap)"></i>Caps and limits</span>
+</div>
+
+<div class="phones">
+
+<!-- 1. PEOPLE -->
+<div class="phone">
+  <p class="cap-title">1 · My people — add, edit, remove</p>
+  <div class="scr">
+    <div class="top"><b>Buzz</b><span class="count">23 of 50 regulars</span></div>
+    <div class="tabs"><div class="on">People</div><div>Send</div><div>Specials</div></div>
+    <div class="chips">
+      <span class="chip bulk on">All 23</span><span class="chip bulk">Hair 14</span><span class="chip bulk">Nails 6</span><span class="chip bulk">Thursdays 3</span>
+    </div>
+    <div class="row"><span class="av">MF</span><span class="nm">Marie Fourie<span class="tag">Hair</span><small>last buzz: Tue</small></span></div>
+    <div class="row"><span class="av">AP</span><span class="nm">Anna Pretorius<span class="tag">Nails</span><small>last buzz: 3 weeks</small></span></div>
+    <div class="row" style="background:#0f241b;border-radius:8px">
+      <span class="av">EJ</span><span class="nm" style="white-space:nowrap">Elsa J.<small>swiped</small></span>
+      <span class="swipe"><span class="ed">Edit</span><span class="mu">Mute</span><span class="rm">Remove</span></span>
+    </div>
+    <div class="row"><span class="av">JW</span><span class="nm">Johan de Wet<span class="tag">Hair</span><small>last buzz: today</small></span></div>
+    <div class="row"><span class="av">PN</span><span class="nm">Pieter Nel<span class="tag">Thursdays</span><small>last buzz: Fri</small></span></div>
+    <div class="spacer"></div>
+    <div class="btn ghost">+ Add people — share my Buzz link</div>
+    <div class="note">Adding = she sends her own link by WhatsApp or QR; they tap, join, done. Nobody types or stores a phone number.</div>
+  </div>
+</div>
+
+<!-- 2. SEND -->
+<div class="phone">
+  <p class="cap-title">2 · Send — two taps for "I'll be late"</p>
+  <div class="scr">
+    <div class="top"><b>Buzz</b><span class="count">23 of 50 regulars</span></div>
+    <div class="tabs"><div>People</div><div class="on">Send</div><div>Specials</div></div>
+    <div class="lbl">To</div>
+    <div class="chips"><span class="chip one">One person</span><span class="chip bulk">Hair 14</span><span class="chip bulk on">Today's bookings 4</span><span class="chip bulk">All 23</span></div>
+    <div class="lbl">Quick lines — tap one</div>
+    <div class="chips">
+      <span class="chip">On my way</span><span class="chip" style="border-color:var(--bulk)">Running late ·15 min</span>
+      <span class="chip">Can't make it — I'll rebook you</span><span class="chip">Done, thank you</span>
+      <span class="chip spec">Special on — see my listing</span>
+    </div>
+    <div class="box">Running late, about 15 min. Sorry!</div>
+    <div class="ctr">34 / 120</div>
+    <div class="spacer"></div>
+    <div class="btn bulk">Send to 4 people</div>
+    <div class="note bulk">Goes as 4 separate buzzes. Nobody sees who else got it. Replies come back to her one by one.</div>
+  </div>
+</div>
+
+<!-- 3. SPECIALS -->
+<div class="phone">
+  <p class="cap-title">3 · Specials — put it on the listing, buzz a pointer</p>
+  <div class="scr">
+    <div class="top"><b>Buzz</b><span class="count">1 of 3 specials this week</span></div>
+    <div class="tabs"><div>People</div><div>Send</div><div class="on">Specials</div></div>
+    <div class="lbl">Which listing</div>
+    <div class="sel">Cut &amp; blow-dry at your home ▾</div>
+    <div class="row2" style="margin-top:8px">
+      <div><div class="lbl">Special (short)</div><div class="sel">20% off</div></div>
+      <div><div class="lbl">Ends</div><div class="sel">Sat 24 Oct ▾</div></div>
+    </div>
+    <div class="lbl">How it shows on her listing</div>
+    <div class="card"><span class="thumb"></span><div><span class="badge">SPECIAL</span>Cut &amp; blow-dry<small>20% off · until Sat 24 Oct</small></div></div>
+    <div class="lbl">The buzz they get</div>
+    <div class="preview">Annatjie: Special on — 20% off cut &amp; blow-dry until Sat. <u>Tap to see</u></div>
+    <div class="spacer"></div>
+    <div class="btn spec">Save special + buzz All 23</div>
+    <div class="note spec">The detail lives on the listing and drops off by itself on the end date. The buzz is only a pointer.</div>
+  </div>
+</div>
+
+<!-- 4. FREE PLAN VIEW -->
+<div class="phone">
+  <p class="cap-title">4 · Free plan — paid parts greyed, never hidden</p>
+  <div class="scr">
+    <div class="top"><b>Buzz</b><span class="count">7 of 10 regulars</span></div>
+    <div class="tabs"><div>People</div><div class="on">Send</div><div class="grey">Specials<span class="lock">🔒</span></div></div>
+    <div class="lbl">To</div>
+    <div class="chips"><span class="chip one">One person</span><span class="chip bulk on">All 7</span></div>
+    <div class="lbl">Quick lines — free to send to everyone</div>
+    <div class="chips">
+      <span class="chip">On my way</span><span class="chip" style="border-color:var(--bulk)">Running late ·15 min</span>
+      <span class="chip">Can't make it — I'll rebook you</span><span class="chip">Done, thank you</span>
+      <span class="chip spec grey">Special on — see my listing<span class="lock">🔒</span></span>
+    </div>
+    <div class="box grey">Type your own message to everyone…<span class="lock">🔒</span></div>
+    <div class="toast"><b>Needs a subscription.</b> Specials and your own words to a group open on Starter ($5). Your quick lines and one-to-one buzzes stay free.</div>
+    <div class="spacer"></div>
+    <div class="btn bulk">Send "Running late" to 7</div>
+    <div class="note bulk">Sent by push only: no SMS, no email, no cost per message.</div>
+  </div>
+</div>
+
+</div>
+
+<h2>My suggestions, one line each</h2>
+<div class="sugg">
+  <div class="s">Keep it to one screen with three tabs — People, Send, Specials — nothing else.</div>
+  <div class="s">Adding someone means sharing her own Buzz link, which is how joining already works and keeps phone numbers out of the app.</div>
+  <div class="s">Edit is only a nickname and a tag, because tags are what make group sends useful.</div>
+  <div class="s stop">Remove closes the connection with a 10-second undo, and the customer can always mute or leave on their side.</div>
+  <div class="s">Ready-made quick lines cover most sends, so "I'll be late" is two taps: pick the line, press Send.</div>
+  <div class="s bulk">A "Today's bookings" group sends a late message only to the people actually affected, not to everyone.</div>
+  <div class="s bulk">A group send is many separate one-to-one buzzes, so there is no group chat to moderate and nobody sees the other customers.</div>
+  <div class="s spec">A special is saved on the listing with an end date and the buzz just says what it is and "tap to see".</div>
+  <div class="s cap">Keep the 120-character limit the server already enforces.</div>
+  <div class="s cap">Limit sends to everyone to about one a day and three specials a week, so her customers don't feel spammed and mute her.</div>
+</div>
+
+<div class="decide done">
+  <h3>Decided — David, 17 Oct 2026</h3>
+  <p><b>Free:</b> one-to-one buzzes, plus the ready-made service lines (on my way, late, can't make it, done) to a group or everyone.</p>
+  <p><b>Paid (Starter and Pro):</b> Specials, and your own words to a group; on Free these show greyed, and tapping says "Needs a subscription".</p>
+  <p><b>No cost per message:</b> Buzz never uses SMS, and a group send goes by push only; the one-to-one email backup stays inside the flat email plan already paid, under a daily ceiling.</p>
+</div>
+
+<p class="ex">Mock-up 17 Oct 2026. Based on: 120-character limit and 30 buzzes an hour (server today) · one Buzz link per seller · no phone numbers held · Buzz is free · regulars limits Free 10 / Starter 50 / Pro 200, behind the switch on the +1 page.</p>
+</body>
+</html>

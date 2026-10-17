@@ -4068,6 +4068,7 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         # LANG-LAYER-1: the public list carries a second language only once she has approved it;
         # the back-translation and the English search layer are working data, never shown.
         _d.pop("extra_back", None); _d.pop("search_en", None)
+        _bb_special_scrub(_d)      # BUZZ-BOARD-1: a special shows only until its end date
         if _d.get("extra_status") != "approved":
             _d.pop("title_extra", None); _d.pop("desc_extra", None)
         # SELLER-ANON-1 (8 Aug 2026): strip seller identity LAST, after the founders
@@ -31285,7 +31286,7 @@ INTRO_B3_WINDOW_DAYS = 30
 INTRO_B3_WARN_AT = 2          # warn at 2 ignored; the EULA blocks at 3
 
 
-def _push_to_seller(conn, seller_email: str, title: str, body: str, timeout: int = 8) -> int:
+def _push_to_seller(conn, seller_email: str, title: str, body: str, timeout: int = 8, url: str = None) -> int:
     """Web push to every enabled device registered under the seller's buyer_token.
     Returns devices delivered (0 when no subscription / push unavailable). Never raises.
 
@@ -31305,7 +31306,7 @@ def _push_to_seller(conn, seller_email: str, title: str, body: str, timeout: int
                             "WHERE buyer_token=? AND enabled=1", (u["buyer_token"],)).fetchall()
         if not rows:
             return 0
-        payload = json.dumps({"title": title, "body": body})
+        payload = json.dumps({"title": title, "body": body, "url": url} if url else {"title": title, "body": body})   # BUZZ-BOARD-1: a special opens its listing
         n = 0
         for r in rows:
             try:
@@ -32251,8 +32252,8 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
                             detail="they have not switched buzzes on for you yet")
     n_recent = conn.execute(
         """SELECT COUNT(*) AS n FROM buzz_log
-           WHERE from_email=? AND created_at >= ?""",
-        (sender, _sql_since(hours=1))).fetchone()["n"]
+           WHERE from_email=? AND created_at >= ? AND channel NOT LIKE 'group%'""",
+        (sender, _sql_since(hours=1))).fetchone()["n"]   # BUZZ-BOARD-1: a group send has its own limits
     if n_recent >= BUZZ_MAX_PER_HOUR:
         conn.close()
         raise HTTPException(status_code=429,
@@ -32272,6 +32273,12 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
         # device there is nothing that can carry the buzz. The sender is told so ('none') instead of 'it went to
         # their email' -- _send_html_email skips key identities, so that answer was never true.
         channel = ""
+    elif not devices and conn.execute(
+            "SELECT COUNT(*) AS n FROM buzz_log WHERE channel='email' AND created_at >= ?",
+            (_sql_since(hours=24),)).fetchone()["n"] >= BUZZ_EMAIL_DAILY_CAP:
+        # BUZZ-BOARD-1 (RUL-237(d)): the email backup has a daily ceiling inside the flat Resend plan, so Buzz can
+        # never cause an email overage. Past it the sender is told plainly ('held') -- never a silent drop.
+        channel = "held"
     elif not devices:
         # RUL-122's backup. Never SMS. Queued, not awaited: the sender is told it is
         # going by email and the request returns without waiting for a mail provider.
@@ -32300,6 +32307,346 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
     conn.close()
     return {"id": bid, "from_name": name, "text": text,
             "delivered": channel or "none", "devices": devices}
+
+
+# ══ BUZZ-BOARD-1 (RUL-237, David 17 Oct 2026) — People, Send and Specials on one Buzz screen ══
+# David, 17 Oct 2026: "the basic service for free and the marketing for paid subscriptions ... greyed out and
+# when pressed saying they require a subscription ... not to pay for any emails or SMS's as far as this Buzz
+# comms is applicable." So:
+#   * a GROUP send is many separate one-to-one buzzes (no group thread, nobody sees the others), PUSH ONLY --
+#     never email, never SMS -- run off the request path;
+#   * Free may send the ready-made SERVICE lines to a tag or to all; free text to a group and SPECIALS are
+#     paid (Starter / Pro / Agency), refused server-side with the plan named;
+#   * a special lives ON THE LISTING with an end date and drops off by itself; the buzz is only a pointer.
+# The limits below are CLAUDE'S TECHNICAL CALL under RUL-237 (David may veto): a doorbell everyone can lean on
+# makes her customers mute her, which hurts her more than it hurts us.
+BUZZ_SERVICE_LINES = [
+    ("on_my_way",    "On my way"),
+    ("late_10",      "Running late, about 10 min. Sorry!"),
+    ("late_15",      "Running late, about 15 min. Sorry!"),
+    ("late_30",      "Running late, about 30 min. Sorry!"),
+    ("cant_make_it", "Can't make it today. I'll rebook you."),
+    ("done",         "Done, thank you!"),
+]
+BUZZ_GROUP_ALL_PER_DAY = 1      # sends to everyone, rolling 24 h
+BUZZ_GROUP_TAG_PER_DAY = 3      # sends to a tag, rolling 24 h
+BUZZ_SPECIALS_PER_WEEK = 3      # specials buzzed, rolling 7 days
+BUZZ_SPECIAL_MAX_DAYS  = 14     # a special must end within two weeks
+BUZZ_SPECIAL_LABEL_MAX = 40
+BUZZ_NICK_MAX, BUZZ_TAG_MAX, BUZZ_TAGS_PER_PERSON = 30, 20, 6
+BUZZ_EMAIL_DAILY_CAP   = 500    # one-to-one email backup ceiling, all senders, rolling 24 h -- inside the flat
+                                # Resend plan (50k a month), so Buzz can never cause an email overage
+BUZZ_PAID_TIERS = ("starter", "pro", "agency")
+_BB_SAST = timezone(timedelta(hours=2))
+_bb_ready = False
+
+
+def _bb_ensure(conn):
+    """Schema for the Board, created on first use (migration 083 makes it exist before the first request)."""
+    global _bb_ready
+    if _bb_ready:
+        return
+    conn.execute("""CREATE TABLE IF NOT EXISTS buzz_people (
+        owner_email TEXT NOT NULL, pair_id INTEGER NOT NULL, nickname TEXT NOT NULL DEFAULT '',
+        tags TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (owner_email, pair_id))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS buzz_group_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, owner_email TEXT NOT NULL, kind TEXT NOT NULL,
+        target TEXT NOT NULL, n_sent INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_buzz_group_owner ON buzz_group_log(owner_email, created_at)")
+    for _c in ("ALTER TABLE listings ADD COLUMN special_label TEXT",
+               "ALTER TABLE listings ADD COLUMN special_until TEXT"):
+        try:
+            conn.execute(_c)
+        except Exception:
+            pass   # column already exists
+    conn.commit()
+    _bb_ready = True
+
+
+def _bb_today() -> str:
+    return datetime.now(_BB_SAST).date().isoformat()
+
+
+def _bb_special_live(d: dict) -> bool:
+    """A special shows only while its end date is today or later (SAST). Expiry needs no job: it is read-time."""
+    until = str(d.get("special_until") or "")
+    return bool((d.get("special_label") or "").strip()) and len(until) >= 10 and until[:10] >= _bb_today()
+
+
+def _bb_special_scrub(d: dict) -> dict:
+    """Public listing views carry a special only while it is live."""
+    if not _bb_special_live(d):
+        d.pop("special_label", None); d.pop("special_until", None)
+    return d
+
+
+def _bb_paid(conn, me: str) -> bool:
+    return _seller_tier_of(conn, me) in BUZZ_PAID_TIERS
+
+
+def _bb_need_sub(what: str):
+    raise HTTPException(status_code=402,
+                        detail="Needs a subscription. " + what + " open on Starter ($5 a month). "
+                               "Your quick lines and one-to-one buzzes stay free.")
+
+
+def _bb_tags(raw) -> list:
+    out = []
+    for t in (raw or []):
+        t = " ".join(str(t or "").split())[:BUZZ_TAG_MAX].strip()
+        if t and t.lower() not in [x.lower() for x in out]:
+            out.append(t)
+    return out[:BUZZ_TAGS_PER_PERSON]
+
+
+def _bb_people_meta(conn, me: str) -> dict:
+    _bb_ensure(conn)
+    return {r["pair_id"]: {"nickname": r["nickname"] or "",
+                           "tags": [t for t in (r["tags"] or "").split("|") if t]}
+            for r in conn.execute("SELECT * FROM buzz_people WHERE owner_email=?", (me,)).fetchall()}
+
+
+def _bb_recipients(conn, me: str, target: str) -> list:
+    """Pairs a group send may reach: open, the other side lets her buzz them, and not resting.
+    target = 'all' or 'tag:<name>'. Returns [(pair_id, other_email)]."""
+    rows = conn.execute("SELECT * FROM buzz_pairs WHERE (a_email=? OR b_email=?) AND COALESCE(closed_by,'')=''",
+                        (me, me)).fetchall()
+    try:
+        resting = set(_circle_status(conn, me)["resting_ids"]) if _circle_on() else set()
+    except Exception:
+        resting = set()
+    want_tag = target[4:].strip().lower() if target.startswith("tag:") else None
+    meta = _bb_people_meta(conn, me) if want_tag else {}
+    out = []
+    for r in rows:
+        if r["id"] in resting and _circle_owner(r) == me:
+            continue
+        other = _buzz_other(r, me)
+        they_allow = r["b_allows"] if r["a_email"] == me else r["a_allows"]
+        if not they_allow:
+            continue
+        if want_tag is not None and want_tag not in [t.lower() for t in meta.get(r["id"], {}).get("tags", [])]:
+            continue
+        out.append((r["id"], other))
+    return out
+
+
+def _bb_count(conn, me: str, kinds, target_like: str, hours: float) -> int:
+    q = ("SELECT COUNT(*) AS n FROM buzz_group_log WHERE owner_email=? AND created_at >= ? AND target LIKE ? "
+         "AND kind IN (%s)" % ",".join("?" * len(kinds)))
+    return int(conn.execute(q, (me, _sql_since(hours=hours), target_like) + tuple(kinds)).fetchone()["n"] or 0)
+
+
+def _bb_limits(conn, me: str) -> dict:
+    _bb_ensure(conn)
+    return {"all_left_today": max(0, BUZZ_GROUP_ALL_PER_DAY - _bb_count(conn, me, ("service", "free"), "all", 24)),
+            "tag_left_today": max(0, BUZZ_GROUP_TAG_PER_DAY - _bb_count(conn, me, ("service", "free"), "tag:%", 24)),
+            "specials_left_week": max(0, BUZZ_SPECIALS_PER_WEEK - _bb_count(conn, me, ("special",), "%", 24 * 7))}
+
+
+def _bb_fanout(sender: str, name: str, text: str, recipients: list, url: str = None):
+    """The group send, OFF the request path (BackgroundTasks). Each recipient gets an ordinary one-to-one buzz.
+    PUSH ONLY (RUL-237(d)): someone with no push device simply does not get this one -- no email, no SMS."""
+    conn = database.get_db()
+    try:
+        for pair_id, other in recipients:
+            try:
+                n = _push_to_seller(conn, other, name, text, timeout=BUZZ_PUSH_TIMEOUT, url=url)
+            except Exception as exc:
+                _log.warning("BUZZ-BOARD-1 push failed: %s", exc); n = 0
+            conn.execute("INSERT INTO buzz_log (pair_id, from_email, to_email, body, channel, devices) "
+                         "VALUES (?, ?, ?, ?, ?, ?)",
+                         (pair_id, sender, other, text, "group-push" if n else "group-none", n))
+        conn.commit()
+    except Exception as exc:
+        _log.warning("BUZZ-BOARD-1 fan-out failed: %s", exc)
+    finally:
+        conn.close()
+
+
+class BuzzPeopleReq(BaseModel):
+    pair_id: int
+    nickname: Optional[str] = ""
+    tags: list = []
+
+
+class BuzzGroupReq(BaseModel):
+    target: str                       # 'all' | 'tag:<name>'
+    line_id: Optional[str] = None     # a ready-made service line (free on every plan)
+    text: Optional[str] = None        # her own words to a group (paid)
+
+
+class BuzzSpecialReq(BaseModel):
+    listing_id: int
+    label: Optional[str] = ""
+    until: Optional[str] = ""         # YYYY-MM-DD
+    notify: bool = True
+
+
+@app.get("/buzz/board")
+def buzz_board(_key: str = Depends(auth.require_api_key), ts_user: str = Cookie(default=None)):
+    """Everything the Board needs beyond /buzz/pairs: her plan, the quick lines, her nicknames and tags,
+    what is left of today's limits, and her own listings with any special on them."""
+    me = _buzz_who(ts_user, None, "board")
+    conn = database.get_db()
+    try:
+        _bb_ensure(conn)
+        meta = _bb_people_meta(conn, me)
+        tags = {}
+        for v in meta.values():
+            for t in v["tags"]:
+                tags[t] = tags.get(t, 0) + 1
+        lst = []
+        for r in conn.execute("SELECT id, title, special_label, special_until FROM listings "
+                              "WHERE LOWER(seller_email)=? AND listing_status IN ('live','paused') "
+                              "ORDER BY id DESC LIMIT 50", (me,)).fetchall():
+            d = dict(r); live = _bb_special_live(d)
+            lst.append({"id": d["id"], "title": d["title"] or "",
+                        "special_label": d["special_label"] if live else "",
+                        "special_until": d["special_until"] if live else ""})
+        tier = _seller_tier_of(conn, me)
+        return {"tier": tier, "paid": tier in BUZZ_PAID_TIERS,
+                "service_lines": [{"id": i, "text": t} for i, t in BUZZ_SERVICE_LINES],
+                "people": [{"pair_id": k, "nickname": v["nickname"], "tags": v["tags"]} for k, v in meta.items()],
+                "tags": [{"tag": t, "n": n} for t, n in sorted(tags.items(), key=lambda x: x[0].lower())],
+                "reach_all": len(_bb_recipients(conn, me, "all")),
+                "limits": _bb_limits(conn, me), "listings": lst,
+                "caps": {"chars": BUZZ_MAX_CHARS, "label": BUZZ_SPECIAL_LABEL_MAX, "max_days": BUZZ_SPECIAL_MAX_DAYS},
+                "today": _bb_today()}
+    finally:
+        conn.close()
+
+
+@app.post("/buzz/people")
+def buzz_people_edit(req: BuzzPeopleReq, _key: str = Depends(auth.require_api_key),
+                     ts_user: str = Cookie(default=None)):
+    """Her own nickname and tags for one of her connections. Private to her; the other person never sees them."""
+    me = _buzz_who(ts_user, None, "people")
+    conn = database.get_db()
+    try:
+        _bb_ensure(conn)
+        if not _buzz_pair_by_id(conn, req.pair_id, me):
+            raise HTTPException(status_code=404, detail="you are not connected to this person")
+        nick = " ".join(str(req.nickname or "").split())[:BUZZ_NICK_MAX]
+        tags = _bb_tags(req.tags)
+        conn.execute("INSERT INTO buzz_people (owner_email, pair_id, nickname, tags, updated_at) VALUES (?,?,?,?,?) "
+                     "ON CONFLICT(owner_email, pair_id) DO UPDATE SET nickname=excluded.nickname, "
+                     "tags=excluded.tags, updated_at=excluded.updated_at",
+                     (me, req.pair_id, nick, "|".join(tags), datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+        return {"pair_id": req.pair_id, "nickname": nick, "tags": tags}
+    finally:
+        conn.close()
+
+
+@app.post("/buzz/group")
+def buzz_group(req: BuzzGroupReq, background_tasks: BackgroundTasks,
+               _key: str = Depends(auth.require_api_key), ts_user: str = Cookie(default=None)):
+    """One line to a tag or to everyone, as separate one-to-one buzzes, push only."""
+    me = _buzz_who(ts_user, None, "group")
+    target = (req.target or "").strip()
+    if not (target == "all" or (target.startswith("tag:") and target[4:].strip())):
+        raise HTTPException(status_code=400, detail="choose a group: everyone, or one of your tags")
+    lines = dict(BUZZ_SERVICE_LINES)
+    conn = database.get_db()
+    try:
+        _bb_ensure(conn)
+        if req.line_id:
+            if req.line_id not in lines:
+                raise HTTPException(status_code=400, detail="that quick line does not exist")
+            text, kind = lines[req.line_id], "service"
+        else:
+            text, kind = _buzz_norm(req.text), "free"
+            if not text:
+                raise HTTPException(status_code=400, detail="a buzz needs one line of text")
+            if not _bb_paid(conn, me):
+                _bb_need_sub("Your own words to a group")
+        if target == "all":
+            if _bb_count(conn, me, ("service", "free"), "all", 24) >= BUZZ_GROUP_ALL_PER_DAY:
+                raise HTTPException(status_code=429, detail="You have already sent one message to everyone today. "
+                                    "Send to one person or a tag, or try again tomorrow.")
+        elif _bb_count(conn, me, ("service", "free"), "tag:%", 24) >= BUZZ_GROUP_TAG_PER_DAY:
+            raise HTTPException(status_code=429, detail="That is %d group messages today. Send to one person, "
+                                "or try again tomorrow." % BUZZ_GROUP_TAG_PER_DAY)
+        rec = _bb_recipients(conn, me, target)
+        if not rec:
+            raise HTTPException(status_code=400, detail="Nobody in that group can receive your buzzes yet.")
+        conn.execute("INSERT INTO buzz_group_log (owner_email, kind, target, n_sent) VALUES (?,?,?,?)",
+                     (me, kind, target, len(rec)))
+        conn.commit()
+        name = _buzz_name(conn, me)
+    finally:
+        conn.close()
+    background_tasks.add_task(_bb_fanout, me, name, text, rec)
+    return {"queued": len(rec), "kind": kind, "target": target, "text": text, "channel": "push"}
+
+
+@app.post("/buzz/special")
+def buzz_special(req: BuzzSpecialReq, background_tasks: BackgroundTasks,
+                 _key: str = Depends(auth.require_api_key), ts_user: str = Cookie(default=None)):
+    """Put a special on one of HER listings (label + end date) and, by default, buzz everyone a pointer to it."""
+    me = _buzz_who(ts_user, None, "special")
+    label = " ".join(str(req.label or "").split())[:BUZZ_SPECIAL_LABEL_MAX].strip()
+    until = str(req.until or "")[:10]
+    conn = database.get_db()
+    try:
+        _bb_ensure(conn)
+        if not _bb_paid(conn, me):
+            _bb_need_sub("Specials")
+        row = conn.execute("SELECT id, title FROM listings WHERE id=? AND LOWER(seller_email)=? "
+                           "AND listing_status IN ('live','paused')", (req.listing_id, me)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Only your own live listing can carry a special.")
+        if not label:
+            raise HTTPException(status_code=400, detail="Say what the special is, in a few words.")
+        try:
+            d_until = datetime.strptime(until, "%Y-%m-%d").date()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Choose the day the special ends.")
+        today = datetime.now(_BB_SAST).date()
+        if d_until < today or d_until > today + timedelta(days=BUZZ_SPECIAL_MAX_DAYS):
+            raise HTTPException(status_code=400, detail="A special ends between today and %d days from now."
+                                % BUZZ_SPECIAL_MAX_DAYS)
+        if req.notify and _bb_count(conn, me, ("special",), "%", 24 * 7) >= BUZZ_SPECIALS_PER_WEEK:
+            raise HTTPException(status_code=429, detail="That is %d specials this week. Save it without a buzz, "
+                                "or buzz it next week." % BUZZ_SPECIALS_PER_WEEK)
+        conn.execute("UPDATE listings SET special_label=?, special_until=? WHERE id=?",
+                     (label, d_until.isoformat(), row["id"]))
+        rec, text = [], ""
+        if req.notify:
+            rec = _bb_recipients(conn, me, "all")
+            day = d_until.strftime("%a %d %b").replace(" 0", " ")
+            tail = " until " + day + ". Tap to see"
+            text = ("Special on — " + label)[:BUZZ_MAX_CHARS - len(tail)] + tail
+            conn.execute("INSERT INTO buzz_group_log (owner_email, kind, target, n_sent) VALUES (?,?,?,?)",
+                         (me, "special", "all:listing:%d" % row["id"], len(rec)))
+        conn.commit()
+        name = _buzz_name(conn, me)
+    finally:
+        conn.close()
+    if rec:
+        background_tasks.add_task(_bb_fanout, me, name, text, rec, "/?listing=%d" % req.listing_id)
+    return {"listing_id": req.listing_id, "special_label": label, "special_until": d_until.isoformat(),
+            "queued": len(rec), "text": text, "channel": "push"}
+
+
+@app.post("/buzz/special/clear")
+def buzz_special_clear(req: BuzzSpecialReq, _key: str = Depends(auth.require_api_key),
+                       ts_user: str = Cookie(default=None)):
+    """Take a special off her listing early. Any plan may remove one."""
+    me = _buzz_who(ts_user, None, "special-clear")
+    conn = database.get_db()
+    try:
+        _bb_ensure(conn)
+        n = conn.execute("UPDATE listings SET special_label=NULL, special_until=NULL WHERE id=? AND LOWER(seller_email)=?",
+                         (req.listing_id, me)).rowcount
+        conn.commit()
+        if not n:
+            raise HTTPException(status_code=404, detail="Only your own listing.")
+        return {"listing_id": req.listing_id, "cleared": True}
+    finally:
+        conn.close()
 
 
 def _b3_ignored_count(conn, seller_email: str) -> int:

@@ -1534,6 +1534,16 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-237": [
+   # David, 17 Oct 2026: "basic service for free and the marketing for paid subscriptions ... greyed out ... not to pay for any emails or SMS's"
+   ("RULINGS.md", ["THE BUZZ BOARD: THE SERVICE LINES ARE FREE, THE MARKETING IS PAID", "AMENDS [[RUL-173]](a)", "AMENDS RUL-175(a)"], []),
+   ("mockups/BUZZ_BOARD_MOCKUP_2026-10-17.html", ["Needs a subscription", "push only"], []),
+   # BUZZ-BOARD-1 build, 17 Oct 2026: free service lines, paid marketing, push-only group sends, email ceiling
+   ("bea_main.py", ["BUZZ-BOARD-1 (RUL-237", "BUZZ_EMAIL_DAILY_CAP", '_bb_need_sub("Specials")', "def _bb_fanout("], []),
+   ("ms.js", ["BUZZ-BOARD-1 (RUL-237", "Needs a subscription.</b>", "function _bbSpecialChip("], []),
+   ("route_policy.json", ["GET /buzz/board", "POST /buzz/group", "POST /buzz/special"], []),
+   ("scripts/regression_ledger.py", ["RG-1051", "RG-1052", "RG-1053", "RG-1054"], []),
+ ],
  "RUL-236": [
    # David, 17 Oct 2026: "Please switch it on" / "yes, create the links" -- Travelpayouts link-out live, server-side only.
    ("RULINGS.md", ["THE TRAVELPAYOUTS PARTNER LINKS ARE SWITCHED ON"], []),

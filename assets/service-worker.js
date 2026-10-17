@@ -127,7 +127,8 @@ self.addEventListener('push', (event) => {
     badge: '/static/brand/icon-192.png',
     tag:   data.match_id ? ('match-' + data.match_id) : 'match',
     renotify: false,
-    data: { match_id: data.match_id || null },
+    // BUZZ-BOARD-1 (RUL-237): a special's buzz carries a same-site path (/?listing=<id>) to open on tap
+    data: { match_id: data.match_id || null, url: (typeof data.url === 'string' && data.url.charAt(0) === '/' && data.url.charAt(1) !== '/') ? data.url : null },
   };
   event.waitUntil(self.registration.showNotification(data.title || 'TrustSquare', opts));
 });
@@ -135,6 +136,8 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const matchId = (event.notification.data && event.notification.data.match_id) || null;
+  const openUrl = (event.notification.data && event.notification.data.url) || null;   // BUZZ-BOARD-1
+  if (openUrl) { event.waitUntil(clients.openWindow ? clients.openWindow(openUrl) : Promise.resolve()); return; }
   event.waitUntil((async () => {
     const all = await clients.matchAll({ type: 'window', includeUncontrolled: true });
     // PUSH-TO-APP-1 (SEAM-1, 25 Sep 2026): the Quick door lives on this origin too (/quick/, /q/), so the

@@ -39394,6 +39394,147 @@ def rg_audit1017_credit_line():
     return [(INFO, "the landmark photo credit has its own line-height")]
 
 
+@entry("RG-1051", "BUZZ-BOARD-1 (RUL-237, 17 Oct 2026): the Buzz Board routes are LIVE and closed to strangers -- /buzz/board, "
+       "/buzz/people, /buzz/group, /buzz/special, /buzz/special/clear and /buzz/my-link/qr.svg answer 401/403 anonymously, never 404",
+       OPEN,
+       scope="live trustsquare.co, all six Board routes; one server serves every market, so this is the whole class.",
+       ref="David, 17 Oct 2026 09:20 SAST (RUL-237). OPEN until the release carrying BUZZ-BOARD-1 is live; promoted to LOCKED "
+           "in the same session once probed. A 404 means the code is not deployed; a 200 to an anonymous caller would be a hole.")
+def rg_buzz_board_live():
+    import urllib.request as _ur, urllib.error as _ue
+    _require_net()
+    out = []
+    for method, path in (("GET", "/buzz/board"), ("GET", "/buzz/my-link/qr.svg"), ("POST", "/buzz/people"),
+                         ("POST", "/buzz/group"), ("POST", "/buzz/special"), ("POST", "/buzz/special/clear")):
+        req = _ur.Request(BASE + path, method=method, headers=dict(UA, **{"Content-Type": "application/json"}),
+                          data=(b"{}" if method == "POST" else None))
+        try:
+            code = _ur.urlopen(req, timeout=TIMEOUT).getcode()
+        except _ue.HTTPError as e:
+            code = e.code
+        except Exception as e:
+            return [(INFO, "NOT EVALUATED - network: %s" % e)]
+        if code == 404:
+            out.append((FAIL, "%s %s answers 404 -- the Buzz Board is not deployed" % (method, path)))
+        elif code < 400:
+            out.append((FAIL, "%s %s answered %s to an anonymous caller -- it must be closed" % (method, path, code)))
+    return out or [(INFO, "all six Board routes exist and refuse an anonymous caller")]
+
+
+@entry("RG-1052", "BUZZ-BOARD-1 (RUL-237): service lines free, marketing paid, push only -- the server gates Specials and free-text "
+       "group sends behind a paid plan, sends every group buzz by push with no email or SMS path, and keeps the daily limits",
+       LOCKED, fixed_on="2026-10-17",
+       scope="bea_main.py Board block (every group send and every special, all markets).",
+       ref="David, 17 Oct 2026: 'the basic service for free and the marketing for paid subscriptions ... not to pay for any emails "
+           "or SMS's'. 24 functional checks passed against the shipped code on a scratch database the same day "
+           "(audit/buzz-board-20261017/progress.md). Never weaken: removing a paid gate gives marketing away free; adding an "
+           "email call to the fan-out makes group sends cost money.")
+def rg_buzz_board_server():
+    import re as _re
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    i = src.find("def _bb_fanout(")
+    j = src.find("\nclass BuzzPeopleReq", i)
+    fan = src[i:j] if i > -1 and j > i else ""
+    if not fan:
+        out.append((FAIL, "_bb_fanout is gone -- group sends have no push-only fan-out"))
+    else:
+        for bad in ("_send_html_email(", "send_sms", "bulksms", "_sms_", "background_tasks"):
+            if bad in fan.lower():
+                out.append((FAIL, "the group fan-out mentions %r -- group sends must be push only (RUL-237(d))" % bad))
+        if "_push_to_seller(" not in fan:
+            out.append((FAIL, "the group fan-out no longer pushes"))
+    g = src[src.find("def buzz_group("):src.find("def buzz_special(")]
+    if '_bb_need_sub("Your own words to a group")' not in g or "_bb_paid(conn, me)" not in g:
+        out.append((FAIL, "/buzz/group no longer refuses free text to a group on the Free plan"))
+    if "background_tasks.add_task(_bb_fanout" not in g:
+        out.append((FAIL, "/buzz/group no longer sends off the request path"))
+    sp = src[src.find("def buzz_special("):src.find("def buzz_special_clear(")]
+    if '_bb_need_sub("Specials")' not in sp:
+        out.append((FAIL, "/buzz/special no longer requires a paid plan"))
+    for k, v in (("BUZZ_GROUP_ALL_PER_DAY", 1), ("BUZZ_SPECIALS_PER_WEEK", 3)):
+        m = _re.search(r"^%s\s*=\s*(\d+)" % k, src, _re.M)
+        if not m:
+            out.append((FAIL, "%s is gone" % k))
+        elif int(m.group(1)) > v * 3:
+            out.append((INFO, "%s raised to %s -- RUL-237 wants a doorbell, not a mailing list" % (k, m.group(1))))
+    if 'AND channel NOT LIKE \'group%\'' not in src:
+        out.append((FAIL, "the one-to-one hourly cap counts group sends again -- one send to everyone would block her for an hour"))
+    if "_bb_special_scrub(_d)" not in src:
+        out.append((FAIL, "the public /listings no longer drops an expired special"))
+    return out or [(INFO, "paid gates, push-only fan-out, limits and special expiry all present")]
+
+
+@entry("RG-1053", "BUZZ-BOARD-1 (RUL-237(d)): the one-to-one email backup has a daily ceiling inside the flat Resend plan -- past it the "
+       "sender is told 'held', Buzz never causes an email overage",
+       LOCKED, fixed_on="2026-10-17",
+       scope="bea_main.py POST /buzz (every one-to-one buzz that falls back to email).",
+       ref="David, 17 Oct 2026: 'not to pay for any emails or SMS's as far as this Buzz comms is applicable'. The Resend plan is a "
+           "flat $20 for 50k a month (activated 31 Aug); BUZZ_EMAIL_DAILY_CAP keeps Buzz inside it. Proven on a scratch DB: cap 0 "
+           "-> delivered 'held', cap 500 -> 'email' as before.")
+def rg_buzz_email_ceiling():
+    import re as _re
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    m = _re.search(r"^BUZZ_EMAIL_DAILY_CAP\s*=\s*(\d+)", src, _re.M)
+    if not m:
+        return [(FAIL, "BUZZ_EMAIL_DAILY_CAP is gone -- Buzz email has no ceiling")]
+    out = []
+    if int(m.group(1)) > 1600:
+        out.append((FAIL, "BUZZ_EMAIL_DAILY_CAP=%s is above the plan's ~1,600 a day -- Buzz alone could cause overage" % m.group(1)))
+    b = src[src.find("def buzz_send("):src.find("def _b3_ignored_count(")]
+    k1, k2 = b.find(">= BUZZ_EMAIL_DAILY_CAP"), b.find('channel = "email"')
+    if k1 < 0 or k2 < 0 or k1 > k2:
+        out.append((FAIL, "the ceiling is no longer checked BEFORE the email backup in POST /buzz"))
+    js = repo_file("ms.js") or ""
+    if "j.delivered==='held'" not in js:
+        out.append((FAIL, "ms.js no longer tells the sender a 'held' buzz did not go"))
+    return out or [(INFO, "ceiling %s a day, checked before the email backup, sender told" % m.group(1))]
+
+
+@entry("RG-1054", "BUZZ-BOARD-1 (RUL-237): the Board screen -- People / Send / Specials tabs, paid parts greyed with 'Needs a "
+       "subscription' (never hidden), Remove with a 10-second undo, QR of her own link drawn on our server, SPECIAL line on the card",
+       LOCKED, fixed_on="2026-10-17",
+       scope="ms.js (My Space > Buzz + listing card + detail), ripple_features.py QR route, route_policy.json, migration 083, "
+             "assets/service-worker.js same-site tap-to-open.",
+       ref="David, 17 Oct 2026, on mockups/BUZZ_BOARD_MOCKUP_2026-10-17.html: 'This looks good ... With those services greyed out "
+           "and when pressed saying they require a subscription'.")
+def rg_buzz_board_screen():
+    import json as _json
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for needle, why in (('data-bbpane="send"', "the Send tab"), ('data-bbpane="specials"', "the Specials tab"),
+                        ("Needs a subscription.</b>", "the 'Needs a subscription' message"),
+                        ("bb-lock", "the greyed (locked) styling"), ("Closing in ' + left", "Remove's 10-second undo"),
+                        ("/buzz/my-link/qr.svg", "the QR code"), ("function _bbSpecialChip(", "the SPECIAL line"),
+                        ("${_bbSpecialChip(l)}", "the SPECIAL line on the card/detail")):
+        if needle not in js:
+            out.append((FAIL, "ms.js lost %s" % why))
+    if "api.qrserver" in js or "chart.googleapis" in js or "quickchart" in js:
+        out.append((FAIL, "a third-party QR service is in ms.js -- it would see her link"))
+    rf = repo_file("ripple_features.py") or ""
+    if '"/buzz/my-link/qr.svg"' not in rf or "qrcode" not in rf:
+        out.append((FAIL, "the server-side QR route is gone"))
+    pol = repo_file("route_policy.json")
+    if pol:
+        keys = {r.get("key") for r in _json.loads(pol).get("routes", [])}
+        for k in ("GET /buzz/board", "POST /buzz/people", "POST /buzz/group", "POST /buzz/special",
+                  "POST /buzz/special/clear", "GET /buzz/my-link/qr.svg"):
+            if k not in keys:
+                out.append((FAIL, "route_policy.json does not declare %s" % k))
+    if repo_file("migrations/083_buzz_board.py") is None:
+        out.append((FAIL, "migration 083_buzz_board.py is gone"))
+    sw = repo_file("assets/service-worker.js") or ""
+    if "data.url.charAt(1) !== '/'" not in sw:
+        out.append((FAIL, "the service worker no longer limits tap-to-open to same-site paths"))
+    return out or [(INFO, "tabs, greyed paid parts, undo, QR, SPECIAL line, routes, migration and SW all present")]
+
+
 @entry("RG-1050", "LINKOUT-ON-1 (RUL-236, 17 Oct 2026): the Travelpayouts partner link-out is LIVE on the journey maps -- 26 real "
        "links, each a server-side 302 through our own /go/partner/<slug>, and still not one byte of partner script on any page",
        LOCKED, fixed_on="2026-10-17",
