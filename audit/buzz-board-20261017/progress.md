@@ -4,3 +4,7 @@
 - 2026-10-17T07:37:46Z server block inserted in bea_main.py (BUZZ-BOARD-1), compiles. backup bea_main.py.bak-buzzboard-20261017-073737
 - 2026-10-17T07:43:06Z ms.js Board helpers + buzzRender tabs + close-undo + QR written (node --check ok); SW url-open; ripple_features QR endpoint; route_policy +6; migration 083
 - 2026-10-17T07:58:33Z local functional test 24/24 PASS (scratch DB); stranger test PASS 351 routes; ledger RG-1051 (OPEN) RG-1052..1054 (LOCKED, pass); rulings_check RUL-238 reflected; changelog/status fragments written
+- 2026-10-17T08:05:48Z commits a7d55c3 + 4bf6683 (renumber RUL-237->RUL-238: SVC-AREA-1 took RUL-237 on main) + merge ac84034 (kept both). First deploy request FAILED on the sync conflict; re-requested.
+- 2026-10-17T08:11:57Z DEPLOY OK live at ac84034 (stranger test PASS 380 routes; migration 083 ran). Live /buzz/board 401 anon.
+- 2026-10-17T08:15:56Z RENDERED in David's Chrome (his agency=paid account): 3 tabs, quick line fills + Send enables (nothing sent), Specials form; Free view simulated display-only (paid=false in-page): Specials locked, chip+text greyed, Needs a subscription shown; SPECIAL line on a card (in-page sample); QR loads from server; Remove undo: no /buzz/close call; tag save shows chips, reverted.
+- 2026-10-17T08:16:19Z RG-1051 promoted LOCKED; lock-icon CSS fix; fragments written; committing + redeploy

@@ -17592,7 +17592,7 @@ function _bbCss(){
    + '.bb-chip.one{border-color:#16a34a;color:#15803d}.bb-chip.one.on{background:#16a34a;color:#fff}'
    + '.bb-chip.grp{border-color:#d97706;color:#b45309}.bb-chip.grp.on{background:#f59e0b;color:#1a1000}'
    + '.bb-chip.spec{border-color:#2563eb;color:#1d4ed8}.bb-chip.line.on{border-color:#0f172a;background:#0f172a;color:#fff}'
-   + '.bb-lock{opacity:.45;filter:grayscale(1)}.bb-lock:after{content:" \\1F512";font-size:11px}'
+   + '.bb-lock{opacity:.45;filter:grayscale(1)}span.bb-lock:after{content:" \\1F512";font-size:11px}'
    + '.bb-lbl{font-size:12px;color:#64748b;margin:10px 0 4px}'
    + '.bb-note{font-size:12px;color:#64748b;border-left:3px solid #94a3b8;padding-left:8px;margin-top:8px}'
    + '.bb-note.grp{border-color:#f59e0b}.bb-note.spec{border-color:#2563eb}'

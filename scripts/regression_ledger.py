@@ -39396,10 +39396,10 @@ def rg_audit1017_credit_line():
 
 @entry("RG-1051", "BUZZ-BOARD-1 (RUL-238, 17 Oct 2026): the Buzz Board routes are LIVE and closed to strangers -- /buzz/board, "
        "/buzz/people, /buzz/group, /buzz/special, /buzz/special/clear and /buzz/my-link/qr.svg answer 401/403 anonymously, never 404",
-       OPEN,
+       LOCKED, fixed_on="2026-10-17",
        scope="live trustsquare.co, all six Board routes; one server serves every market, so this is the whole class.",
-       ref="David, 17 Oct 2026 09:20 SAST (RUL-238). OPEN until the release carrying BUZZ-BOARD-1 is live; promoted to LOCKED "
-           "in the same session once probed. A 404 means the code is not deployed; a 200 to an anonymous caller would be a hole.")
+       ref="David, 17 Oct 2026 09:20 SAST (RUL-238). Promoted OPEN -> LOCKED 17 Oct 2026 after release ac84034 went live "
+           "and all six routes probed 401 anonymously. A 404 means the code is not deployed; a 200 to an anonymous caller would be a hole.")
 def rg_buzz_board_live():
     import urllib.request as _ur, urllib.error as _ue
     _require_net()
