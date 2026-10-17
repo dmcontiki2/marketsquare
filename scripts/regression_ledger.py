@@ -39717,7 +39717,7 @@ def rg_audit1017_fares_token():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the daily fare refresh can find the Travelpayouts token")]
 
 
-@entry("RG-1057", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
+@entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",
        scope="ms.js _bbSendPane / _bbSpecialsPane / _bbNeedSub and bea_main.py's Buzz Board refusals (everyone-per-day, "
