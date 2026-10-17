@@ -83,12 +83,12 @@ Say "server says: $result"
 
 # ── 4. only write the new values locally once the server is proven healthy ──
 if ($result -match "ROTATE_OK") {
-    if (Test-Path .secrets\deploy_keys.txt) {
-        Copy-Item .secrets\deploy_keys.txt ".secrets\deploy_keys.txt.bak-$stamp"
-    }
+    # RG-0189 (17 Oct 2026): NO local .bak of deploy_keys.txt. The old values are dead the moment the
+    # server says ROTATE_OK, and the server keeps its own rollback copy; a local backup only left a
+    # combined credentials file at rest beside the live one (it happened on 17 Oct, 03:45).
     "MS_ADMIN_KEY=$admin`nMS_DEPLOY_KEY=$deploy" | Out-File -Encoding ascii .secrets\deploy_keys.txt
     $maint | Out-File -Encoding ascii -NoNewline .secrets\ms_maint_key.txt
-    Say "local .secrets updated (old copy kept as .bak-$stamp)"
+    Say "local .secrets updated (no local copy of the old values is kept)"
 
     $k = $maint
     $probe = curl.exe -s -o NUL -w "%{http_code}" -H "X-Maint-Key: $k" "https://trustsquare.co/admin/faults?limit=1"

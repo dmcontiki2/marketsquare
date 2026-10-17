@@ -32764,7 +32764,7 @@ def buzz_send(req: BuzzSendReq, background_tasks: BackgroundTasks,
     if n_recent >= BUZZ_MAX_PER_HOUR:
         conn.close()
         raise HTTPException(status_code=429,
-                            detail="that is a lot of buzzes in an hour — try again shortly")
+                            detail="That is a lot of buzzes in an hour. Buzz is a doorbell, not a chat, so it slows down here. Try again shortly.")
     name = _buzz_name(conn, sender)
     # CAPACITY, and it is the whole story for this endpoint. Bandwidth and storage are
     # rounding errors at any volume this app will see; THREADS are the ceiling. A sync
@@ -33075,11 +33075,11 @@ def buzz_group(req: BuzzGroupReq, background_tasks: BackgroundTasks,
                 _bb_need_sub("Your own words to a group")
         if target == "all":
             if _bb_count(conn, me, ("service", "free"), "all", 24) >= BUZZ_GROUP_ALL_PER_DAY:
-                raise HTTPException(status_code=429, detail="You have already sent one message to everyone today. "
-                                    "Send to one person or a tag, or try again tomorrow.")
+                raise HTTPException(status_code=429, detail="You have already sent one message to everyone today. One a day keeps your people from "
+                                    "feeling spammed and muting you. Send to one person or a tag, or try again tomorrow.")
         elif _bb_count(conn, me, ("service", "free"), "tag:%", 24) >= BUZZ_GROUP_TAG_PER_DAY:
-            raise HTTPException(status_code=429, detail="That is %d group messages today. Send to one person, "
-                                "or try again tomorrow." % BUZZ_GROUP_TAG_PER_DAY)
+            raise HTTPException(status_code=429, detail="That is %d group messages today. The limit keeps your people from feeling spammed "
+                                "and muting you. Send to one person, or try again tomorrow." % BUZZ_GROUP_TAG_PER_DAY)
         rec = _bb_recipients(conn, me, target)
         if not rec:
             raise HTTPException(status_code=400, detail="Nobody in that group can receive your buzzes yet.")
@@ -33117,11 +33117,11 @@ def buzz_special(req: BuzzSpecialReq, background_tasks: BackgroundTasks,
             raise HTTPException(status_code=400, detail="Choose the day the special ends.")
         today = datetime.now(_BB_SAST).date()
         if d_until < today or d_until > today + timedelta(days=BUZZ_SPECIAL_MAX_DAYS):
-            raise HTTPException(status_code=400, detail="A special ends between today and %d days from now."
+            raise HTTPException(status_code=400, detail="A special ends between today and %d days from now, so your listing never shows an old price as current."
                                 % BUZZ_SPECIAL_MAX_DAYS)
         if req.notify and _bb_count(conn, me, ("special",), "%", 24 * 7) >= BUZZ_SPECIALS_PER_WEEK:
-            raise HTTPException(status_code=429, detail="That is %d specials this week. Save it without a buzz, "
-                                "or buzz it next week." % BUZZ_SPECIALS_PER_WEEK)
+            raise HTTPException(status_code=429, detail="That is %d specials this week. Keeping them few keeps each one worth opening. Save it "
+                                "without a buzz, or buzz it next week." % BUZZ_SPECIALS_PER_WEEK)
         conn.execute("UPDATE listings SET special_label=?, special_until=? WHERE id=?",
                      (label, d_until.isoformat(), row["id"]))
         rec, text = [], ""

@@ -17614,6 +17614,8 @@ function _bbCss(){
    + '.bb-lbl{font-size:12px;color:var(--bb-dim);margin:9px 0 5px}'
    + '.bb-note{font-size:11.5px;color:var(--bb-dim);border-left:3px solid var(--bb-cap);padding-left:8px;margin-top:8px;line-height:1.4}'
    + '.bb-note.grp{border-color:var(--bb-grp)}.bb-note.spec{border-color:var(--bb-spec)}.bb-note.one{border-color:var(--bb-one)}'
+   /* BUZZ-WHY-1 (David, 17 Oct 2026: "we do need to explain it to the users so that they understand why they are limited") */
+   + '.bb-why{font-size:11.5px;color:var(--bb-dim);margin-top:6px;line-height:1.45}.bb-why summary{cursor:pointer;color:#8ff0c8;list-style:none}.bb-why summary::-webkit-details-marker{display:none}.bb-why[open] summary{margin-bottom:4px}'
    + '.bb-need{background:#2a2110;border:1px solid var(--bb-grp);border-radius:12px;padding:9px 11px;font-size:12.5px;color:#ffd28a;margin-top:10px;line-height:1.4}'
    + '.bb-need b{color:#fff}.bb-need a{color:#ffd28a}'
    + '.bb-btn{display:block;width:100%;border:0;border-radius:13px;padding:11px;font:800 14px inherit;cursor:pointer;margin-top:10px;text-align:center;box-sizing:border-box}'
@@ -17660,7 +17662,7 @@ function _bbMeta(pid){
 }
 function _bbNeedSub(what){
   return '<div class="bb-need"><b>Needs a subscription.</b> ' + what + ' open on Starter ($5 a month). '
-       + 'Your quick lines and one-to-one buzzes stay free. '
+       + 'Your quick lines and one-to-one buzzes stay free: being late is service, specials are marketing. '
        + '<a href="#" onclick="openPlans(\'buzz\');return false;">See the plans</a></div>';
 }
 function _bbTabsBar(){
@@ -17794,7 +17796,8 @@ function _bbSendPane(){
      + '<div id="bb-sent"></div>'
      + '<div class="bb-note '+(isGroup?'grp':'one')+'">'+(isGroup ? 'Sent by push only — no SMS, no email, no cost per message. Replies come back to you one by one.'
                                          : 'One buzz to one person, with your name on it.')+'</div>'
-     + '<div class="bb-note">Today: '+(L.all_left_today||0)+' message to everyone left · '+(L.tag_left_today||0)+' tag messages left.</div>';
+     + '<div class="bb-note">Today: '+(L.all_left_today||0)+' message to everyone left · '+(L.tag_left_today||0)+' tag messages left.</div>'
+     + '<details class="bb-why"><summary>Why the limits?</summary>One message to everyone a day, and three to a tag, keeps your people from feeling spammed. People who feel spammed mute you, and then even your \u201crunning late\u201d stops reaching them. Buzzing one person has no daily limit.</details>';
   return h;
 }
 function _bbSpecialsPane(){
@@ -17823,7 +17826,8 @@ function _bbSpecialsPane(){
      + '<div class="bb-lbl">How it shows on your listing</div><div class="bb-card"><span class="bb-thumb"></span><div style="min-width:0"><span class="bb-spec-badge">SPECIAL</span><span id="bb-scard-t"></span><small id="bb-scard-s"></small></div></div>'
      + '<div class="bb-lbl">The buzz they get</div><div class="bb-bubble" id="bb-sprev">…</div>'
      + '<button class="bb-btn spec" id="bb-sgo">Save special</button><div id="bb-ssaid"></div>'
-     + '<div class="bb-note spec">'+left+' of 3 specials left this week. The detail lives on your listing; the buzz is only a pointer, sent by push only.</div>';
+     + '<div class="bb-note spec">'+left+' of 3 specials left this week. The detail lives on your listing; the buzz is only a pointer, sent by push only.</div>'
+     + '<details class="bb-why"><summary>Why the limits?</summary>Three specials a week keeps each one worth opening. A special ends within 14 days, so your listing never shows an old price as if it were today\u2019s.</details>';
   return h;
 }
 function _bbWire(box){

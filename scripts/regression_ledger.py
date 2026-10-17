@@ -11636,6 +11636,13 @@ def rg_no_secret_dump_at_rest():
                           "is small; it becomes one when a rotation leaves the previous set lying "
                           "beside the live one." % len(baks)))
 
+    # (5) RG-0189 strengthened 17 Oct 2026: rotate_keys.ps1 copied the whole deploy_keys.txt to a .bak at
+    #     03:45 that morning -- the source of a combined dump, closed at the source, not only swept.
+    rk = repo_file("rotate_keys.ps1")
+    if rk is not None and _re.search(r"Copy-Item\s+\.secrets\\deploy_keys\.txt", rk, _re.I):
+        out.append((FAIL, "rotate_keys.ps1 copies deploy_keys.txt to a local .bak again -- every rotation "
+                          "would leave a combined credentials file at rest"))
+
     if not [o for o in out if o[0] == FAIL]:
         out.append((INFO, "no combined secrets file at rest; no-GUI entry path present"))
     return out
@@ -39708,6 +39715,34 @@ def rg_audit1017_fares_token():
     if "root cd /var/www/marketsquare && " not in mig or "python3 data_flights.py --refresh" not in mig:
         bad.append("the fares cron line changed -- re-check that it still runs as root (the drop-in is root-only)")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the daily fare refresh can find the Travelpayouts token")]
+
+
+@entry("RG-1057", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
+       "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
+       LOCKED, fixed_on="2026-10-17",
+       scope="ms.js _bbSendPane / _bbSpecialsPane / _bbNeedSub and bea_main.py's Buzz Board refusals (everyone-per-day, "
+             "tag-per-day, specials-per-week, special end date, buzzes-per-hour). CLASS: a limit a person meets without a "
+             "reason reads as the app being broken or mean; a new Buzz limit added without its reason trips this.",
+       ref="David, 17 Oct 2026: 'All good judgement, but we do need to explain it to the users so that understand why they "
+           "are limited?' The reasons are the ones given to him the same evening: spam leads to muting, specials stay worth "
+           "opening, an old price must never look current, Buzz is a doorbell not a chat. RUL-238.")
+def rg_buzz_why():
+    js, bea = repo_file("ms.js"), repo_file("bea_main.py")
+    if js is None or bea is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if js.count('<details class="bb-why"><summary>Why the limits?</summary>') < 2:
+        out.append((FAIL, "the Send and Specials panes no longer both explain their limits ('Why the limits?')"))
+    if "being late is service, specials are marketing" not in js:
+        out.append((FAIL, "the Needs-a-subscription note no longer says why the service lines are free and specials are paid"))
+    for needle, why in (("feeling spammed and muting you", "the everyone-per-day refusal"),
+                        ("The limit keeps your people from feeling spammed", "the tag-per-day refusal"),
+                        ("Keeping them few keeps each one worth opening", "the specials-per-week refusal"),
+                        ("never shows an old price as current", "the special end-date refusal"),
+                        ("Buzz is a doorbell, not a chat", "the buzzes-per-hour refusal")):
+        if needle not in bea:
+            out.append((FAIL, "%s no longer gives its reason" % why))
+    return out or [(INFO, "every Buzz limit explains itself on screen and in the server's refusal")]
 
 if __name__ == "__main__":
     sys.exit(main())
