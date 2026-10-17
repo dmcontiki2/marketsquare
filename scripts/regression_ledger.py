@@ -39298,5 +39298,33 @@ def rg_audit1017_db_anchor():
         bad.append("the anchor can be held by a root process or a script on another database file")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the app anchors the live database; root never re-creates its side files")]
 
+
+
+@entry("RG-1023", "WONDER-SELFHOST-2 (17 Oct 2026 bug audit, BA-018): no landmark card loads its picture from Wikimedia -- "
+       "every photo is served from trustsquare.co and keeps its licence and source",
+       LOCKED, fixed_on="2026-10-17",
+       scope="repo root wonders.json: every entry's photo / photo_author / photo_licence / photo_source",
+       ref="16 Oct 2026: 53 of 319 cards hotlinked commons.wikimedia.org Special:FilePath at 1280 px; Wikimedia answered "
+           "429 after four quick loads from one address and a refused picture left an empty navy card. 17 Oct: the same 53 "
+           "pictures self-hosted under /media/wonders (12.7 MB), attribution fields kept.")
+def rg_audit1017_wonder_selfhost():
+    import json as _json
+    w = repo_file("wonders.json")
+    if w is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    try:
+        cat = _json.loads(w)
+    except ValueError as e:
+        return [(FAIL, "wonders.json unparseable: %s" % e)]
+    hot = [x.get("id") for x in cat if "wikimedia.org" in (x.get("photo") or "")]
+    bare = [x.get("id") for x in cat if "/media/wonders/" in (x.get("photo") or "")
+            and not (x.get("photo_licence") and x.get("photo_source"))]
+    bad = []
+    if hot:
+        bad.append("%d landmark photo(s) hotlink Wikimedia again (e.g. %s)" % (len(hot), ", ".join(hot[:3])))
+    if bare:
+        bad.append("%d self-hosted photo(s) lost their licence or source (e.g. %s)" % (len(bare), ", ".join(bare[:3])))
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "all %d landmark photos are self-hosted with attribution" % len(cat))]
+
 if __name__ == "__main__":
     sys.exit(main())

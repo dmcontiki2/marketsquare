@@ -938,7 +938,7 @@
   "type": "National Park",
   "country": "Democratic Republic of Congo",
   "region": "Africa",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Nyiragongo.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_017_w_825844bca3.jpg",
   "description": "Africa's oldest national park, Virunga spans 7,800 km² in eastern DRC along the borders with Rwanda and Uganda. It shelters the critically endangered mountain gorilla, the rare okapi, and hundreds of hippos. The park contains five volcano massifs including the active Nyiragongo, whose lava lake is one of the world's largest. Despite decades of armed conflict, Virunga remains one of the continent's most ecologically important protected areas and a symbol of conservation under extraordinary adversity.",
   "history": "Founded as Albert National Park by King Albert I of Belgium in 1925, making it Africa's first national park. Renamed Virunga after Congolese independence in 1960. UNESCO listed it as a World Heritage Site in 1979 and added it to the danger list in 1994. Over 200 rangers have been killed protecting its wildlife in recent decades — the park's conservation story is one of extraordinary human courage in the face of conflict and resource exploitation.",
   "wikipedia": "Virunga_National_Park",
@@ -950,7 +950,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Nyiragongo.jpg?width=1280",
   "photo_author_orig": "Global voyager Nick Hobgood",
   "photo_licence_orig": "CC BY 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Nyiragongo.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Nyiragongo.jpg",
+  "photo_w": "800",
+  "photo_h": "600",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_018",
@@ -958,7 +962,7 @@
   "type": "National Park",
   "country": "Australia",
   "region": "Oceania",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Daintree.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_018_w_e80c663321.jpg",
   "description": "The Daintree is the world's oldest continuously surviving tropical rainforest at an estimated 180 million years old, located in Queensland, Australia. Covering over 1,200 km², it is a UNESCO World Heritage Site sheltering over 430 bird species, 12,000 insect species, and rare primitive flowering plants that predate the separation of Gondwana. Mossman Gorge and Cape Tribulation draw visitors to pristine rivers, beaches and ancient canopy walks through the oldest living forest on Earth.",
   "history": "The Daintree was logged commercially until the 1980s when a landmark conservation campaign led to its protection. After years of conflict between timber interests and conservationists, the Wet Tropics was listed as a UNESCO World Heritage Site in 1988. The traditional custodians, the Kuku Yalanji people, have lived in the rainforest for tens of thousands of years and continue to co-manage cultural sites within the park boundaries as recognised traditional owners.",
   "wikipedia": "Daintree_National_Park",
@@ -970,7 +974,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Daintree.jpg?width=1280",
   "photo_author_orig": "Daintree76",
   "photo_licence_orig": "CC BY-SA 4.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Daintree.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Daintree.jpg",
+  "photo_w": "788",
+  "photo_h": "788",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_019",
@@ -1004,7 +1012,7 @@
   "type": "National Park",
   "country": "United States",
   "region": "North America",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Olympic_National_Park.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_020_w_64c284f6af.jpg",
   "description": "Olympic National Park in Washington State encompasses three distinct ecosystems: glacier-capped mountains, temperate rainforest, and 100 km of wild Pacific coastline. The Hoh Rain Forest receives up to 4 metres of rainfall annually, creating cathedral groves of Sitka spruce and Douglas fir draped in moss. Olympic shelters several species found nowhere else on Earth, including the Olympic marmot, in a landscape of extraordinary ecological isolation and diversity preserved intact for future generations.",
   "history": "First protected as Olympic Forest Reserve in 1897, upgraded to a national monument in 1909 to protect Roosevelt elk, and elevated to a national park in 1938. Designated a UNESCO World Heritage Site in 1981. The Quinault, Quileute, Hoh and Makah tribes have maintained connections to this land throughout its modern conservation history, and their treaty rights — including fishing rights on park rivers — remain legally protected and actively exercised within the park boundaries.",
   "wikipedia": "Olympic_National_Park",
@@ -1016,7 +1024,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Olympic_National_Park.jpg?width=1280",
   "photo_author_orig": "Jason Pratt (FishSpeaker) from Pittsburgh, PA",
   "photo_licence_orig": "CC BY 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Olympic_National_Park.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Olympic_National_Park.jpg",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_021",
@@ -1100,7 +1112,7 @@
   "type": "National Park",
   "country": "India",
   "region": "Asia",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Sundarban_Tiger.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_024_w_de4b29fc82.jpg",
   "description": "The Sundarbans is the world's largest mangrove forest, shared between India and Bangladesh. The Indian national park covers 1,330 km² and shelters the Bengal tiger, fishing cats, Irrawaddy dolphins, estuarine crocodiles and over 260 bird species. The mangrove ecosystem provides critical coastal protection for tens of millions of people in the Ganges–Brahmaputra delta — making it as important for human survival as for wildlife conservation and demonstrating the indivisibility of ecological and human wellbeing.",
   "history": "Declared a wildlife sanctuary in 1977 and a national park in 1984. UNESCO inscribed it as a World Heritage Site in 1987. Fishing and honey-gathering communities have inhabited the forest for centuries. Climate change is the park's most pressing threat as rising sea levels reduce mangrove area and saltwater intrusion alters vegetation communities — the Sundarbans is one of the most climate-vulnerable UNESCO sites in the world.",
   "wikipedia": "Sundarbans_National_Park",
@@ -1112,7 +1124,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Sundarban_Tiger.jpg?width=1280",
   "photo_author_orig": "Soumyajit Nandy",
   "photo_licence_orig": "CC BY-SA 4.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Sundarban_Tiger.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Sundarban_Tiger.jpg",
+  "photo_w": "1280",
+  "photo_h": "854",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_025",
@@ -1145,7 +1161,7 @@
   "type": "National Park",
   "country": "Peru",
   "region": "South America",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Manu.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_026_w_ae28b501a5.jpg",
   "description": "Manu National Park in the Amazon basin of southeastern Peru is one of the most biodiverse protected areas on Earth, sheltering over 1,000 bird species, 200 mammal species and an estimated 15,000 plant species within its 17,163 km². The park spans five altitude zones from Andean grassland at 4,200 m to lowland Amazonian rainforest. Voluntary-isolation indigenous communities maintain no contact with the outside world, and the park's core zone has never been commercially exploited in recorded history.",
   "history": "Established as a national park in 1973 and inscribed as a UNESCO World Heritage Site in 1987. Its core zone has never been logged, making it a critical scientific baseline for Amazonian biodiversity research and carbon accounting. The park's remoteness — accessible only by river or a single mountain road — has protected it from the agricultural expansion devastating surrounding Amazon forests across Peru and Brazil.",
   "wikipedia": "Manú_National_Park",
@@ -1157,7 +1173,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Manu.jpg?width=1280",
   "photo_author_orig": "Stemoc",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Manu.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Manu.jpg",
+  "photo_w": "200",
+  "photo_h": "201",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_027",
@@ -1500,7 +1520,7 @@
   "type": "UNESCO Site",
   "country": "Mali",
   "region": "Africa",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Djenne_Mosque.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_022_w_f5c2820fdb.jpg",
   "description": "Timbuktu in Mali was for centuries the intellectual and spiritual capital of Islamic Africa, home to three great mosques and over 150 Quranic schools at its 15th-century peak. The Sankore mosque served as a university with up to 25,000 students studying astronomy, mathematics and theology. The city's 700,000 surviving manuscripts represent one of the world's great collections of medieval scholarship, preserved in family libraries that continued to guard them through centuries of invasion and political upheaval.",
   "history": "At its peak under the Mali and Songhai Empires in the 14th–16th centuries, Timbuktu had a population of around 100,000. UNESCO inscribed it as a World Heritage Site in 1988. In 2012 Islamist militants deliberately destroyed ancient mausoleums and shrines — an act prosecuted by the International Criminal Court as a war crime, the first successful prosecution for deliberate destruction of cultural heritage in the history of international law.",
   "wikipedia": "Timbuktu",
@@ -1512,7 +1532,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Djenne_Mosque.jpg?width=1280",
   "photo_author_orig": "Keri Long",
   "photo_licence_orig": "CC BY 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Djenne_Mosque.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Djenne_Mosque.jpg",
+  "photo_w": "360",
+  "photo_h": "273",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_023",
@@ -1984,7 +2008,7 @@
   "type": "National Museum",
   "country": "United States",
   "region": "North America",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Smithsonian.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_005_w_76687d6407.jpg",
   "description": "The Smithsonian National Museum of Natural History on Washington D.C.'s National Mall is one of the world's largest natural history museums with over 145 million specimens. The Hope Diamond — the world's largest blue diamond at 45.52 carats — is its most famous exhibit. Its Ocean Hall, fossil halls and human origins exhibits draw 7 million visitors annually at no charge. The museum's scientific research programme employs hundreds of researchers across biology, geology, anthropology and palaeontology.",
   "history": "The Smithsonian Institution was founded in 1846 with a bequest from British scientist James Smithson to create an institution for 'the increase and diffusion of knowledge.' The Natural History Museum opened in its current building in 1910. The Hope Diamond was donated by jeweller Harry Winston in 1958, who famously mailed it to the museum in a plain brown paper package via ordinary post. The museum's collection grows by approximately 500,000 new specimens annually through field research worldwide.",
   "wikipedia": "National_Museum_of_Natural_History",
@@ -1996,7 +2020,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Smithsonian.jpg?width=1280",
   "photo_author_orig": "Museedesfossilesdetourtour",
   "photo_licence_orig": "CC BY-SA 4.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Smithsonian.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Smithsonian.jpg",
+  "photo_w": "1166",
+  "photo_h": "606",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_006",
@@ -2055,7 +2083,7 @@
   "type": "National Museum",
   "country": "Spain",
   "region": "Europe",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Prado_Museum.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_008_w_a314748e4b.jpg",
   "description": "The Museo del Prado in Madrid is Spain's national art museum and one of the world's greatest painting collections, displaying over 7,600 paintings. Its unrivalled holdings include Velázquez's Las Meninas (considered by many the world's greatest painting), Goya's disturbing Black Paintings, and Bosch's Garden of Earthly Delights. Flemish and Italian masterpieces from the Habsburg royal collection round out a gathering of Old Masters without equal in any single collection anywhere in the world.",
   "history": "The Prado opened as a public museum in 1819, displaying the Spanish royal collection accumulated over three centuries. During the Spanish Civil War, the Republican government arranged for the Prado's masterpieces to be evacuated to Valencia, Barcelona and then Geneva — a remarkable logistical operation that saved the collection from potential destruction in a conflict that devastated much of Spain's cultural infrastructure. Today it receives nearly 4 million visitors annually.",
   "wikipedia": "Museo_del_Prado",
@@ -2067,7 +2095,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Prado_Museum.jpg?width=1280",
   "photo_author_orig": "Angel  de los Rios from Valladolid, Spain",
   "photo_licence_orig": "CC BY-SA 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Prado_Museum.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Prado_Museum.jpg",
+  "photo_w": "1280",
+  "photo_h": "909",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_009",
@@ -2255,7 +2287,7 @@
   "type": "National Museum",
   "country": "Greece",
   "region": "Europe",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Acropolis_Museum.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_016_w_0fc9773f23.jpg",
   "description": "The Acropolis Museum at the foot of the Athenian Acropolis was designed specifically to house the sculptures and artefacts of the Acropolis. The building by Bernard Tschumi, opened in 2009, places the Parthenon Gallery on the top floor aligned precisely with the Parthenon visible through floor-to-ceiling glass — a deliberate architectural argument for reuniting the sculptures. Original Caryatid porch figures, Nike temple frieze blocks and surviving Parthenon sculptures are displayed in their original ceremonial sequence.",
   "history": "The Acropolis Museum was designed to demonstrate that Greece has a world-class facility capable of housing the Elgin Marbles — addressing the British Museum's long-standing argument that Athens lacked adequate infrastructure for their return. Construction was delayed repeatedly by archaeological discoveries during excavation; the foundations were redesigned to span over the revealed ancient city beneath the site. The museum's opening reignited global debate about the repatriation of cultural heritage acquired during the colonial era.",
   "wikipedia": "Acropolis_Museum",
@@ -2267,7 +2299,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Acropolis_Museum.jpg?width=1280",
   "photo_author_orig": "William Vaughn Tupper\n\nFlickr uploader Boston Public Library",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Acropolis_Museum.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Acropolis_Museum.jpg",
+  "photo_w": "1280",
+  "photo_h": "1112",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_017",
@@ -2325,7 +2361,7 @@
   "type": "National Museum",
   "country": "Germany",
   "region": "Europe",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Pergamon_Museum.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_019_w_8ff917f19c.jpg",
   "description": "The Pergamon Museum on Berlin's Museum Island houses some of antiquity's greatest architectural monuments — reconstructed at full scale inside its vast halls. The Pergamon Altar (2nd century BC), the Market Gate of Miletus (2nd century AD) and the Ishtar Gate of Babylon (6th century BC) were excavated from their original sites in Turkey and Iraq and painstakingly reassembled block by block in Berlin, creating a museum experience of architectural immersion unlike anything else in the world.",
   "history": "The Pergamon Museum opened in 1930. The Ishtar Gate was excavated by Robert Koldewey between 1899 and 1914 and shipped to Berlin in 900 crates. During World War II the collection was stored in bunkers; some pieces were seized by Soviet forces and held in Russian museums until returned to East Germany in 1958. The museum is undergoing major renovation with its main wing closed until 2037 — the longest planned museum closure in modern history — raising profound questions about the future of these extraordinary reconstructed installations.",
   "wikipedia": "Pergamon_Museum",
@@ -2337,7 +2373,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Pergamon_Museum.jpg?width=1280",
   "photo_author_orig": "Pouyana",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Pergamon_Museum.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Pergamon_Museum.jpg",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_020",
@@ -2727,7 +2767,7 @@
   "type": "UNESCO Site",
   "country": "South Africa",
   "region": "Gauteng",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Cradle_of_Humankind_in_Gauteng_map.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_042_w_4434098766.jpg",
   "description": "The Cradle of Humankind is a 47,000-hectare complex of limestone caves north-west of Johannesburg that has yielded some of the richest evidence of human origins anywhere on Earth. The Sterkfontein, Swartkrans and Kromdraai caves have produced hundreds of hominin fossils spanning more than three million years. The Maropeng visitor centre and the Sterkfontein Caves are both open to the public, offering underground tours and immersive exhibitions on human evolution. It is one of the most accessible and information-rich palaeoanthropological landscapes in the world.",
   "history": "The area's scientific fame began in 1936 when Robert Broom recovered the first adult Australopithecus fossil at Sterkfontein. In 1947 the near-complete skull nicknamed 'Mrs Ples' was found there, and in 1994 the remarkably complete 'Little Foot' skeleton was identified in the same cave system. Swartkrans preserves some of the earliest evidence of the controlled use of fire by hominins. UNESCO inscribed the Cradle of Humankind in 1999, recognising its unparalleled contribution to understanding where humanity came from.",
   "wikipedia": "https://en.wikipedia.org/wiki/Cradle_of_Humankind",
@@ -2739,7 +2779,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Cradle_of_Humankind_in_Gauteng_map.jpg?width=1280",
   "photo_author_orig": "Pavia, Marco; Braga, José; Delfino, Massimo; Kgasi, Lazarus; Manegold, Albrecht; Steininger, Christine; Zipfel, Bernhard; Val, Aurore",
   "photo_licence_orig": "CC BY 4.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Cradle_of_Humankind_in_Gauteng_map.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Cradle_of_Humankind_in_Gauteng_map.jpg",
+  "photo_w": "1280",
+  "photo_h": "1324",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_043",
@@ -2772,7 +2816,7 @@
   "type": "UNESCO Site",
   "country": "South Africa",
   "region": "Northern Cape",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Richtersveld_World_Heritage_Site%2C_Matjieshuts_at_Glybank_near_Kuboes.JPG?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_044_w_a37e42f81a.jpg",
   "description": "The Richtersveld is a mountainous desert in the far north-west of South Africa, a stark and beautiful terrain of jagged peaks and dry riverbeds near the Orange River. It is one of the few places where the Nama people still practise their traditional semi-nomadic pastoralism, moving livestock between seasonal grazing grounds. The portable domed 'matjieshuis' reed houses of the Nama are emblematic of this living culture. The region is also a botanical wonder, part of the Succulent Karoo biodiversity hotspot with an extraordinary concentration of desert-adapted plants.",
   "history": "The Nama and their ancestors have herded in this arid landscape for thousands of years, developing a sustainable system finely tuned to its scarce water and grazing. The communal Richtersveld lands were the subject of a landmark South African land-rights case that recognised the community's ownership in 2003. UNESCO inscribed the Cultural and Botanical Landscape in 2007 as a rare surviving example of transhumant pastoralism. The community itself co-manages the World Heritage Site, a model of conservation rooted in indigenous knowledge.",
   "wikipedia": "https://en.wikipedia.org/wiki/Richtersveld",
@@ -2784,7 +2828,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Richtersveld_World_Heritage_Site%2C_Matjieshuts_at_Glybank_near_Kuboes.JPG?width=1280",
   "photo_author_orig": "Andrew Hall",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Richtersveld_World_Heritage_Site,_Matjieshuts_at_Glybank_near_Kuboes.JPG"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Richtersveld_World_Heritage_Site,_Matjieshuts_at_Glybank_near_Kuboes.JPG",
+  "photo_w": "1280",
+  "photo_h": "928",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_045",
@@ -2792,7 +2840,7 @@
   "type": "UNESCO Site",
   "country": "South Africa",
   "region": "Free State / North West",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Vredefort_Crater%2C_South_Africa%2C_OLI_satellite_image%2C_27_June_2018_cropped.png?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_045_w_77ee9974ee.jpg",
   "description": "The Vredefort Dome is the eroded remnant of the largest verified meteorite impact structure on Earth, lying south-west of Johannesburg. The original crater is estimated to have been up to 300 kilometres across, dwarfing any other known impact site. What remains today is a circular range of hills and concentric ridges where the deep crust was forced upward by the blast. The Vaal River winds through the dome, and the area offers hiking, rafting and geology tours.",
   "history": "The impact occurred roughly two billion years ago, when an asteroid several kilometres wide struck what is now the Free State. The colossal energy released melted rock and overturned the geological strata, leaving a record of one of the most violent events in the planet's history. Geologists confirmed the impact origin through shatter cones and shocked quartz found across the structure. UNESCO inscribed the Vredefort Dome in 2005 as the oldest and largest clearly visible meteorite impact site on Earth.",
   "wikipedia": "https://en.wikipedia.org/wiki/Vredefort_impact_structure",
@@ -2804,7 +2852,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Vredefort_Crater%2C_South_Africa%2C_OLI_satellite_image%2C_27_June_2018_cropped.png?width=1280",
   "photo_author_orig": "NASA Earth Observatory image created by Lauren Dauphin, using Operational Land Imager (OLI) on Landsat 8; data provided courtesy of the U.S. Geological Survey team.",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Vredefort_Crater,_South_Africa,_OLI_satellite_image,_27_June_2018_cropped.png"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Vredefort_Crater,_South_Africa,_OLI_satellite_image,_27_June_2018_cropped.png",
+  "photo_w": "1280",
+  "photo_h": "1537",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_046",
@@ -2888,7 +2940,7 @@
   "type": "National Park",
   "country": "South Africa",
   "region": "Eastern Cape",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Elephant_Addo.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_041_w_abc16ca38c.jpg",
   "description": "Addo Elephant National Park in the Eastern Cape is South Africa's third-largest national park and a conservation success story. Once reduced to a handful of survivors, its elephant population now numbers well over 600 in the main game area. The park has expanded to embrace five of South Africa's biomes and even a marine protected area, making it the only park where visitors might encounter the 'Big Seven' — the Big Five plus southern right whales and great white sharks. Dense thicket vegetation gives close, intimate elephant sightings on self-drive routes.",
   "history": "Addo was proclaimed in 1931 to save the last 11 elephants of the region, which had been hunted almost to extinction by farmers and ivory traders. A famous elephant-proof fence built from tram rails and lift cables in the 1950s finally kept the herds within the reserve. Decades of careful management allowed the population to recover dramatically. The park has since grown through land additions into one of the most ecologically diverse protected areas in the country.",
   "wikipedia": "https://en.wikipedia.org/wiki/Addo_Elephant_National_Park",
@@ -2900,7 +2952,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Elephant_Addo.jpg?width=1280",
   "photo_author_orig": "Brian Snelson",
   "photo_licence_orig": "CC BY 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Elephant_Addo.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Elephant_Addo.jpg",
+  "photo_w": "1280",
+  "photo_h": "983",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_042",
@@ -2933,7 +2989,7 @@
   "type": "National Park",
   "country": "South Africa",
   "region": "Western Cape",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Karoo_National_Park_%2827088584151%29.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_043_w_0f598b117f.jpg",
   "description": "Karoo National Park lies near Beaufort West in the vast semi-desert that covers much of South Africa's interior. It protects a sweeping landscape of flat-topped koppies, plains and the Nuweveld mountains, with a clarity of light and silence that defines the Karoo. The park shelters black rhino, Cape mountain zebra, kudu, and a wealth of reptiles and tortoises — including an exceptional density of tortoise species. Its dark skies make it a superb spot for stargazing.",
   "history": "The Karoo's exposed sedimentary rocks preserve a globally important fossil record of mammal-like reptiles from before the age of the dinosaurs. The park was established in 1979 to conserve a representative sample of this unique arid ecosystem. Over the decades several locally extinct species, including black rhino, have been successfully reintroduced. The Karoo's fossil heritage and stark beauty continue to draw scientists and travellers alike.",
   "wikipedia": "https://en.wikipedia.org/wiki/Karoo_National_Park",
@@ -2945,7 +3001,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Karoo_National_Park_%2827088584151%29.jpg?width=1280",
   "photo_author_orig": "yakovlev.alexey from Moscow, Russia",
   "photo_licence_orig": "CC BY-SA 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Karoo_National_Park_(27088584151).jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Karoo_National_Park_(27088584151).jpg",
+  "photo_w": "1280",
+  "photo_h": "853",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_044",
@@ -3004,7 +3064,7 @@
   "type": "National Park",
   "country": "South Africa",
   "region": "Western Cape",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Langebaan_lagoon%2C_West_Coast_National_Park.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_046_w_4758dd346b.jpg",
   "description": "West Coast National Park surrounds the sheltered turquoise lagoon of Langebaan, about an hour north of Cape Town. It is best known for the dazzling spring wildflower displays in the Postberg section, when fields of daisies and other annuals erupt across the landscape in August and September. The wetlands are internationally important for migratory shorebirds, drawing tens of thousands of waders each summer. Visitors enjoy birdwatching hides, kayaking on the lagoon and coastal walks among fynbos and strandveld.",
   "history": "The Langebaan lagoon preserves some of the oldest known fossilised human footprints, dated to around 117,000 years ago and nicknamed 'Eve's footprints'. The area's rich shellfish and birdlife sustained Khoekhoe communities for millennia. The park was proclaimed in 1985 to protect the lagoon and its surrounding wetlands and islands. Today it balances conservation, scientific research and seasonal tourism on a fragile stretch of coast.",
   "wikipedia": "https://en.wikipedia.org/wiki/West_Coast_National_Park",
@@ -3016,7 +3076,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Langebaan_lagoon%2C_West_Coast_National_Park.jpg?width=1280",
   "photo_author_orig": "Winfried Bruenken (Amrum)",
   "photo_licence_orig": "CC BY-SA 2.5",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Langebaan_lagoon,_West_Coast_National_Park.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Langebaan_lagoon,_West_Coast_National_Park.jpg",
+  "photo_w": "1280",
+  "photo_h": "958",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_047",
@@ -3049,7 +3113,7 @@
   "type": "National Museum",
   "country": "South Africa",
   "region": "Gauteng",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/9_2_258_0100-Transvaal_Museum_-_Pretoria-s.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_021_w_c5077e97a9.jpg",
   "description": "The Ditsong National Museum of Natural History in Pretoria, long known as the Transvaal Museum, is South Africa's premier natural-history institution. Its galleries cover geology, palaeontology, mammals, birds and the story of human evolution, drawing on collections built over more than a century. The museum houses the original 'Mrs Ples' fossil skull and other landmark hominin specimens from the nearby Cradle of Humankind. Its Austin Roberts Bird Hall is a celebrated reference point for southern African ornithology.",
   "history": "Founded in 1892, the museum became the scientific home of the fossils that reshaped understanding of human origins in the 20th century. Robert Broom worked here while making his famous Sterkfontein discoveries. The institution was renamed Ditsong, a Setswana word meaning 'heritage' or 'legacy', as part of a broader reorganisation of South Africa's national museums. It remains a centre of research as well as public education.",
   "wikipedia": "https://en.wikipedia.org/wiki/Ditsong_National_Museum_of_Natural_History",
@@ -3061,7 +3125,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/9_2_258_0100-Transvaal_Museum_-_Pretoria-s.jpg?width=1280",
   "photo_author_orig": "Janek Szymanowski",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:9_2_258_0100-Transvaal_Museum_-_Pretoria-s.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:9_2_258_0100-Transvaal_Museum_-_Pretoria-s.jpg",
+  "photo_w": "1280",
+  "photo_h": "911",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_022",
@@ -3169,7 +3237,7 @@
   "type": "Archaeological Site",
   "country": "South Africa",
   "region": "Gauteng",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/SterkfonteinCave.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_021_w_b3dda85b28.jpg",
   "description": "The Sterkfontein Caves are the single most productive hominin fossil site in the world, lying at the heart of the Cradle of Humankind. Guided tours descend into a dramatic system of chambers and underground lakes where some of humanity's most important ancestors were discovered. The caves continue to yield fossils that push back and refine the human story. An adjacent visitor centre interprets the finds and the painstaking science of their excavation.",
   "history": "Lime miners first exposed the rich fossil deposits, and scientific excavation began in earnest in the 1930s. The 'Mrs Ples' Australopithecus skull was found here in 1947, and the near-complete 'Little Foot' skeleton, more than three million years old, was painstakingly extracted from the breccia over two decades. The site has produced hundreds of specimens spanning millions of years. Sterkfontein was central to the Cradle of Humankind's UNESCO inscription in 1999.",
   "wikipedia": "https://en.wikipedia.org/wiki/Sterkfontein",
@@ -3181,7 +3249,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/SterkfonteinCave.jpg?width=1280",
   "photo_author_orig": "english Wikipedia user",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:SterkfonteinCave.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:SterkfonteinCave.jpg",
+  "photo_w": "685",
+  "photo_h": "723",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_022",
@@ -3214,7 +3286,7 @@
   "type": "Archaeological Site",
   "country": "South Africa",
   "region": "KwaZulu-Natal",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Border_Cave00.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_023_w_81a74bcfd7.jpg",
   "description": "Border Cave sits high in the Lebombo Mountains on the boundary between South Africa and Eswatini, commanding sweeping views over the surrounding lowveld. Its deep sequence of deposits records human occupation stretching back hundreds of thousands of years. Excavations have revealed early burials, organic artefacts and rare evidence of plant and grass bedding. The cave is one of the key sites for understanding the long arc of human existence in southern Africa.",
   "history": "Among the most significant finds is the deliberate burial of an infant with a perforated shell ornament, dated to around 74,000 years ago. The famous Lebombo bone, a baboon fibula marked with notches and sometimes interpreted as an early tally stick, was recovered here. Layers of fossilised bedding show that people were managing their living spaces with surprising sophistication tens of thousands of years ago. The site continues to inform research into early modern human behaviour.",
   "wikipedia": "https://en.wikipedia.org/wiki/Border_Cave",
@@ -3226,7 +3298,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Border_Cave00.jpg?width=1280",
   "photo_author_orig": "Androstachys",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Border_Cave00.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Border_Cave00.jpg",
+  "photo_w": "1280",
+  "photo_h": "856",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_024",
@@ -3234,7 +3310,7 @@
   "type": "Archaeological Site",
   "country": "South Africa",
   "region": "Northern Cape",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Residential_street_Kuruman.JPG?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_024_w_2c3171405d.jpg",
   "description": "Wonderwerk Cave, near Kuruman in the Northern Cape, is a vast horizontal cavern extending some 140 metres into a hillside on the edge of the Kalahari. Its name means 'miracle' in Afrikaans, fitting for a site that preserves one of the longest continuous records of human occupation known anywhere. The cave's deep floor deposits span almost two million years. Rock engravings and paintings adorn parts of the interior, adding to its layered human story.",
   "history": "Excavations have revealed what may be the earliest controlled use of fire by human ancestors, dated to roughly one million years ago, in the form of ash and burnt bone deep inside the cave. The deposits document the entire Stone Age sequence in southern Africa. Hunter-gatherers, and later herders, used the cave over an immense span of time. Its remarkable preservation makes Wonderwerk a touchstone for research into early human behaviour.",
   "wikipedia": "https://en.wikipedia.org/wiki/Wonderwerk_Cave",
@@ -3246,7 +3322,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Residential_street_Kuruman.JPG?width=1280",
   "photo_author_orig": "Brian Dell Bdell555",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Residential_street_Kuruman.JPG"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Residential_street_Kuruman.JPG",
+  "photo_w": "1035",
+  "photo_h": "629",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_025",
@@ -3407,7 +3487,7 @@
   "type": "UNESCO Site",
   "country": "Botswana",
   "region": "North-West",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Tsodilo_rock_paintings_1.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_051_w_54fc898ea9.jpg",
   "description": "The Tsodilo Hills rise abruptly from the flat Kalahari sands of north-western Botswana, four quartzite outcrops that the San revere as a sacred place. They hold one of the highest concentrations of rock art in the world, with more than 4,500 paintings preserved across the hills. Local communities call the formations the Male, the Female, the Child and an unnamed elder, reflecting deep spiritual associations. Visitors hike marked trails to view the paintings and absorb the powerful atmosphere of the site.",
   "history": "People have lived around the Tsodilo Hills for at least 100,000 years, leaving traces of mining, settlement and ritual. The paintings, made over many millennia, depict animals, human figures and geometric forms believed to be linked to San and later Bantu-speaking spiritual practice. The San regard the hills as a resting place of ancestral spirits and the site of creation. UNESCO inscribed Tsodilo in 2001 as the 'Louvre of the Desert'.",
   "wikipedia": "https://en.wikipedia.org/wiki/Tsodilo",
@@ -3419,7 +3499,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Tsodilo_rock_paintings_1.jpg?width=1280",
   "photo_author_orig": "cj Huo",
   "photo_licence_orig": "CC BY-SA 1.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Tsodilo_rock_paintings_1.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Tsodilo_rock_paintings_1.jpg",
+  "photo_w": "380",
+  "photo_h": "438",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_051",
@@ -4081,7 +4165,7 @@
   "type": "National Park",
   "country": "Uganda",
   "region": "Western",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Crater_lake_in_Queen_Elizabeth_National_Park.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_069_w_290268f634.jpg",
   "description": "Queen Elizabeth National Park in western Uganda spreads across savanna, wetlands, crater lakes and forest beneath the snow-capped Rwenzori Mountains. The Kazinga Channel linking lakes George and Edward teems with hippos, elephants and waterbirds, best seen on a boat cruise. The park is famous for the tree-climbing lions of its remote Ishasha sector. Its extraordinary range of habitats supports nearly 100 mammal species and a remarkable diversity of birds.",
   "history": "The park was established in 1952 and renamed two years later to mark a visit by Queen Elizabeth II. It sits within a region shaped by ancient volcanic activity, dotted with explosion craters. Decades of conflict and poaching in the late 20th century reduced its wildlife, which has since recovered. Today it is one of Uganda's most popular and biodiverse protected areas.",
   "wikipedia": "https://en.wikipedia.org/wiki/Queen_Elizabeth_National_Park",
@@ -4093,7 +4177,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Crater_lake_in_Queen_Elizabeth_National_Park.jpg?width=1280",
   "photo_author_orig": "Robert Weinkove using Minolta Dynax 4 camera",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Crater_lake_in_Queen_Elizabeth_National_Park.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Crater_lake_in_Queen_Elizabeth_National_Park.jpg",
+  "photo_w": "1280",
+  "photo_h": "666",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_070",
@@ -4126,7 +4214,7 @@
   "type": "National Park",
   "country": "Rwanda",
   "region": "Eastern",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Parc_National_d%27Akagera.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_071_w_32b58f3936.jpg",
   "description": "Akagera National Park protects a swathe of savanna, wetland and lakes in eastern Rwanda along the border with Tanzania. It is the country's only big-game park and, following an ambitious restoration, once again hosts the Big Five. Rolling acacia woodland gives way to a string of papyrus-fringed lakes that draw elephants, hippos and a spectacular array of birds. Boat safaris and game drives reveal a landscape very different from Rwanda's famous misty highlands.",
   "history": "The park was established in 1934 but suffered greatly after the 1994 genocide, when returning refugees settled within its boundaries and wildlife was decimated. A management partnership begun in 2010 transformed its fortunes, reintroducing lions in 2015 and rhinos in 2017. Community engagement and effective anti-poaching turned Akagera into a conservation success story. It now generates significant revenue that supports both the park and neighbouring communities.",
   "wikipedia": "https://en.wikipedia.org/wiki/Akagera_National_Park",
@@ -4138,7 +4226,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Parc_National_d%27Akagera.jpg?width=1280",
   "photo_author_orig": "Louis Dewame",
   "photo_licence_orig": "CC BY 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Parc_National_d%27Akagera.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Parc_National_d%27Akagera.jpg",
+  "photo_w": "1280",
+  "photo_h": "850",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_061",
@@ -4146,7 +4238,7 @@
   "type": "UNESCO Site",
   "country": "Ethiopia",
   "region": "Amhara",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Semien_Mountains_9.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_061_w_0e3a509543.jpg",
   "description": "The Simien Mountains in northern Ethiopia form one of the most dramatic landscapes in Africa, a high plateau dissected by sheer escarpments and pinnacles often described as a 'chess game of the gods'. The park protects rare wildlife found nowhere else, including the gelada with its distinctive chest patch, the endangered Ethiopian wolf and the walia ibex. Trekking routes follow the edge of vertiginous cliffs with views plunging thousands of metres. The thin mountain air and vast horizons create an unforgettable highland wilderness.",
   "history": "The Simiens were shaped over millions of years by erosion of a vast volcanic massif, leaving the jagged escarpments seen today. The mountains have long been home to highland farming communities cultivating the steep slopes. The park was established in 1969 to protect its unique fauna, and was among the first sites inscribed by UNESCO in 1978. Conservation now works to balance the needs of local people with the protection of the endemic wildlife.",
   "wikipedia": "https://en.wikipedia.org/wiki/Simien_Mountains_National_Park",
@@ -4158,7 +4250,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Semien_Mountains_9.jpg?width=1280",
   "photo_author_orig": "Hulivili",
   "photo_licence_orig": "CC BY 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Semien_Mountains_9.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Semien_Mountains_9.jpg",
+  "photo_w": "1280",
+  "photo_h": "854",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_062",
@@ -4191,7 +4287,7 @@
   "type": "UNESCO Site",
   "country": "Ethiopia",
   "region": "Harari",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/City_Gate%2C_Harar_Jugol_%2814464345823%29.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_063_w_6ed10a59a0.jpg",
   "description": "Harar Jugol is the walled old city of Harar in eastern Ethiopia, considered by many Muslims to be the fourth-holiest city of Islam. Within its ancient defensive walls lie a dense maze of alleyways, distinctive multicoloured houses and dozens of mosques and shrines. The city is famous for its tradition of feeding wild hyenas by hand at night, a practice that has become a celebrated local custom. Its markets and crafts reflect a vibrant blend of African and Islamic culture.",
   "history": "Harar emerged as an important Islamic centre and trading hub from the medieval period and was an independent emirate for several centuries. Its protective walls, built between the 13th and 16th centuries, contain five historic gates. The French poet Arthur Rimbaud spent his final years here as a trader. UNESCO inscribed Harar Jugol in 2006 for its unique urban fabric and its standing as a centre of Islamic learning and culture in the Horn of Africa.",
   "wikipedia": "https://en.wikipedia.org/wiki/Harar",
@@ -4203,7 +4299,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/City_Gate%2C_Harar_Jugol_%2814464345823%29.jpg?width=1280",
   "photo_author_orig": "Rod Waddington from Kergunyah, Australia",
   "photo_licence_orig": "CC BY-SA 2.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:City_Gate,_Harar_Jugol_(14464345823).jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:City_Gate,_Harar_Jugol_(14464345823).jpg",
+  "photo_w": "840",
+  "photo_h": "1024",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_026",
@@ -4856,7 +4956,7 @@
   "type": "National Park",
   "country": "United Kingdom",
   "region": "Scotland",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Cairngorms_National_Park%2C_Scotland.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_074_w_7a14cc7be7.jpg",
   "description": "The Cairngorms National Park is the largest national park in Britain, protecting a vast highland landscape in the heart of Scotland. It encompasses the high Cairngorm plateau, ancient Caledonian pine forests, moorland and clear rivers. The park shelters rare wildlife including capercaillie, golden eagles, red squirrels and Scotland's only herd of wild reindeer. It is a haven for hill walkers, skiers and lovers of mountain wilderness.",
   "history": "The Cairngorm mountains were shaped by glaciers into rounded plateaux and deep glacial valleys. The surrounding straths have supported farming and the famous whisky distilleries of Speyside for generations. The national park was established in 2003 and later expanded, becoming the largest in the United Kingdom. It balances conservation with the working life of its highland communities.",
   "wikipedia": "https://en.wikipedia.org/wiki/Cairngorms_National_Park",
@@ -4868,7 +4968,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Cairngorms_National_Park%2C_Scotland.jpg?width=1280",
   "photo_author_orig": "Thomas Andy Branson",
   "photo_licence_orig": "CC BY-SA 4.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Cairngorms_National_Park,_Scotland.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Cairngorms_National_Park,_Scotland.jpg",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_075",
@@ -5341,7 +5445,7 @@
   "type": "National Park",
   "country": "India",
   "region": "Uttarakhand",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Bengal-Tiger_Corbett_Uttarakhand_Dec-2013.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_077_w_a2e0cca439.jpg",
   "description": "Jim Corbett National Park in the Himalayan foothills of northern India is the country's oldest national park and a celebrated tiger reserve. Its landscape of grassland, riverine forest and hills along the Ramganga River shelters tigers, elephants, leopards and abundant birdlife. Open-jeep safaris offer the chance to glimpse a wild Bengal tiger in its natural habitat. The dramatic mountain backdrop adds to its appeal.",
   "history": "The park was established in 1936 as Hailey National Park, the first in India, and was later renamed after the hunter-turned-conservationist Jim Corbett. It became the launch site of India's Project Tiger conservation programme in 1973. Corbett's writings did much to raise awareness of the need to protect the tiger. The park remains a flagship of Indian wildlife conservation.",
   "wikipedia": "https://en.wikipedia.org/wiki/Jim_Corbett_National_Park",
@@ -5353,7 +5457,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Bengal-Tiger_Corbett_Uttarakhand_Dec-2013.jpg?width=1280",
   "photo_author_orig": "Soumyajit Nandy",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Bengal-Tiger_Corbett_Uttarakhand_Dec-2013.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Bengal-Tiger_Corbett_Uttarakhand_Dec-2013.jpg",
+  "photo_w": "1024",
+  "photo_h": "683",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_107",
@@ -5851,7 +5959,7 @@
   "type": "UNESCO Site",
   "country": "Georgia",
   "region": "Imereti",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Gelati_Monastery_1.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_122_w_d02c569f0e.jpg",
   "description": "The Gelati Monastery in western Georgia is a masterpiece of medieval Georgian architecture and a centre of Christian learning. Its churches are adorned with brilliant mosaics, frescoes and carved stone of exceptional quality. Set on a wooded hillside, the monastery complex includes an academy that was once a renowned seat of scholarship. The beauty of its decoration and setting make it a highlight of the Caucasus.",
   "history": "The monastery was founded in 1106 by King David the Builder, who is buried at its gate, during a golden age of the Georgian kingdom. Its academy attracted leading scholars and helped make Gelati a centre of Georgian culture and philosophy. The complex preserves outstanding examples of medieval art across several centuries. UNESCO inscribed Gelati in 1994, originally together with the now-delisted Bagrati Cathedral.",
   "wikipedia": "https://en.wikipedia.org/wiki/Gelati_Monastery",
@@ -5863,7 +5971,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Gelati_Monastery_1.jpg?width=1280",
   "photo_author_orig": "Ihor Burliai",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Gelati_Monastery_1.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Gelati_Monastery_1.jpg",
+  "photo_w": "1200",
+  "photo_h": "846",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_123",
@@ -6075,7 +6187,7 @@
   "type": "Archaeological Site",
   "country": "Peru",
   "region": "La Libertad",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Chan_chan_view1.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_030_w_54c4a9b7cc.jpg",
   "description": "Chan Chan on the north coast of Peru is the largest adobe city in the ancient Americas, a vast complex of earthen walls, plazas and palaces. Its great walled compounds are decorated with friezes of fish, birds and geometric patterns moulded into the mud-brick. The scale of the ruined city, spread across many square kilometres of desert, is immense. It is a remarkable testament to a sophisticated pre-Inca civilisation.",
   "history": "Chan Chan was the capital of the Chimú kingdom, which dominated the Peruvian coast from around 900 CE until its conquest by the Inca in the 15th century. At its height it may have housed tens of thousands of people, sustained by advanced irrigation of the desert. Its earthen architecture is vulnerable to the rare but destructive rains brought by El Niño. UNESCO inscribed Chan Chan in 1986 and lists it as in danger.",
   "wikipedia": "https://en.wikipedia.org/wiki/Chan_Chan",
@@ -6087,7 +6199,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Chan_chan_view1.jpg?width=1280",
   "photo_author_orig": "Håkan Svensson",
   "photo_licence_orig": "CC BY-SA 3.0",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Chan_chan_view1.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Chan_chan_view1.jpg",
+  "photo_w": "1280",
+  "photo_h": "856",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_031",
@@ -6404,7 +6520,7 @@
   "type": "National Park",
   "country": "Sweden",
   "region": "Norrbotten",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Pierikpakte_in_Sarek.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_081_w_f6676bb4d1.jpg",
   "description": "Sarek in northern Sweden is one of Europe's oldest national parks and among its wildest and most remote. A roadless wilderness of glaciated peaks, deep valleys and rushing rivers, it has no marked trails or facilities. It is a destination for experienced hikers seeking true Arctic solitude amid dramatic mountain scenery. Reindeer, elk and the occasional bear and wolverine roam its valleys.",
   "history": "The park lies in the homeland of the indigenous Sami people, who have herded reindeer across this region for thousands of years. Sarek was established in 1909 as one of the first national parks in Europe. Its inaccessibility has preserved a near-pristine wilderness. Sarek forms part of the UNESCO-listed Laponian Area inscribed in 1996 for both natural and Sami cultural values.",
   "wikipedia": "https://en.wikipedia.org/wiki/Sarek_National_Park",
@@ -6416,7 +6532,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Pierikpakte_in_Sarek.jpg?width=1280",
   "photo_author_orig": "Grapetonix",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Pierikpakte_in_Sarek.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Pierikpakte_in_Sarek.jpg",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_082",
@@ -6631,7 +6751,7 @@
   "type": "National Park",
   "country": "Costa Rica",
   "region": "Puntarenas",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Manuel_antonio_06_april_2005.jpeg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_090_w_a2c43dc084.jpg",
   "description": "Manuel Antonio on Costa Rica's Pacific coast is a small but spectacular national park where rainforest meets idyllic white-sand beaches. Despite its modest size it teems with wildlife, including sloths, monkeys, iguanas and a brilliant array of birds. Trails wind through the forest to coves of turquoise water fringed by jungle. The combination of accessible beaches and abundant wildlife makes it one of Costa Rica's most popular parks.",
   "history": "Costa Rica became a pioneer of tropical conservation and ecotourism in the late 20th century, setting aside large areas of forest. Manuel Antonio was established as a national park in 1972 to protect this stretch of coastal rainforest. Its popularity has required careful management to limit visitor impact. The park exemplifies the country's commitment to protecting its rich biodiversity.",
   "wikipedia": "https://en.wikipedia.org/wiki/Manuel_Antonio_National_Park",
@@ -6643,7 +6763,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Manuel_antonio_06_april_2005.jpeg?width=1280",
   "photo_author_orig": "No machine-readable author provided. Jakes19 assumed (based on copyright claims).",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Manuel_antonio_06_april_2005.jpeg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Manuel_antonio_06_april_2005.jpeg",
+  "photo_w": "1024",
+  "photo_h": "768",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_036",
@@ -6956,7 +7080,7 @@
   "type": "National Park",
   "country": "Japan",
   "region": "Kagoshima",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Yakushima.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_095_w_3a49758e71.jpg",
   "description": "Yakushima is a mountainous island off southern Japan cloaked in ancient, moss-draped cedar forest. Its most famous inhabitants are the yakusugi, immense cedar trees some thousands of years old, including the legendary Jomon Sugi. Misty trails wind through luxuriant green forest that inspired the landscapes of celebrated animated films. The island's steep peaks, waterfalls and abundant rainfall create a uniquely lush environment.",
   "history": "The island's ancient cedars were heavily logged for centuries, but the oldest and largest survived in the remote high forest. Growing appreciation of their value led to strong protection of the island's interior. Yakushima's near-pristine forests preserve a vertical range of ecosystems from subtropical to cool-temperate. UNESCO inscribed Yakushima in 1993 as one of Japan's first natural World Heritage Sites.",
   "wikipedia": "https://en.wikipedia.org/wiki/Yakushima",
@@ -6968,7 +7092,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Yakushima.jpg?width=1280",
   "photo_author_orig": "NASA",
   "photo_licence_orig": "Public domain",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Yakushima.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Yakushima.jpg",
+  "photo_w": "1244",
+  "photo_h": "1302",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_045",
@@ -7079,7 +7207,7 @@
   "type": "Archaeological Site",
   "country": "Nigeria",
   "region": "Adamawa",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Sukur2.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_044_w_3d6d3031af.jpg",
   "description": "The Sukur Cultural Landscape in north-eastern Nigeria preserves a remarkable traditional society in the Mandara Mountains. A chief's palace crowns a hill above terraced fields, stone-paved ways and sacred sites maintained over centuries. The landscape reflects a way of life little changed and rich in spiritual meaning. It is a rare surviving example of an intact traditional African settlement.",
   "history": "Sukur has been a centre of iron production and a politically organised community for many centuries, with its terraces and shrines reflecting a long-established social order. The hilltop palace and the stone infrastructure embody the authority of its traditional rulers. The landscape continued in use into modern times largely unaltered. UNESCO inscribed the Sukur Cultural Landscape in 1999, the first African cultural landscape to be listed.",
   "wikipedia": "https://en.wikipedia.org/wiki/Sukur",
@@ -7091,7 +7219,11 @@
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Sukur2.jpg?width=1280",
   "photo_author_orig": "Nicholas David",
   "photo_licence_orig": "Attribution",
-  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Sukur2.jpg"
+  "photo_source_orig": "https://commons.wikimedia.org/wiki/File:Sukur2.jpg",
+  "photo_w": "550",
+  "photo_h": "368",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_131",
@@ -7436,19 +7568,23 @@
   "type": "National Park",
   "country": "Brazil",
   "region": "Rio de Janeiro",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Cristo_Redentor_-_Rio_de_Janeiro%2C_Brasil.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_097_w_222b580696.jpg",
   "description": "Tijuca National Park is one of the largest urban forests in the world, a swathe of regrown Atlantic rainforest within the city of Rio de Janeiro. Its lush green slopes are crowned by the Corcovado mountain, atop which stands the famous statue of Christ the Redeemer. Trails wind through the forest past waterfalls and viewpoints overlooking the city and sea. It is a green lung and a beloved escape within a great metropolis.",
   "history": "The forest was largely cleared for coffee plantations in the 19th century, leading to problems with the city's water supply. In a pioneering act of ecological restoration, the area was deliberately replanted with native trees from the 1860s. The reforestation regenerated a thriving Atlantic forest ecosystem in the heart of the city. Tijuca was designated a national park to protect this remarkable urban wilderness.",
   "wikipedia": "https://en.wikipedia.org/wiki/Tijuca_Forest",
   "lat": -22.9519,
   "lon": -43.2106,
-  "photo_author": "Wikimedia Commons",
-  "photo_licence": "See Wikimedia Commons",
-  "photo_source": "",
+  "photo_author": "Nico Kaiser",
+  "photo_licence": "CC BY 2.0",
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Cristo_Redentor_-_Rio_de_Janeiro,_Brasil.jpg",
   "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Cristo_Redentor_-_Rio_de_Janeiro%2C_Brasil.jpg?width=1280",
   "photo_author_orig": "Wikimedia Commons",
   "photo_licence_orig": "See Wikimedia Commons",
-  "photo_source_orig": ""
+  "photo_source_orig": "",
+  "photo_w": "1280",
+  "photo_h": "1921",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_045",
@@ -7506,7 +7642,7 @@
   "type": "National Park",
   "country": "Australia",
   "region": "South Australia",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Razorback_Lookout%2C_Ikara-Flinders_Ranges_NP_20230212_1.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_098_w_6ac594f2c6.jpg",
   "description": "The Flinders Ranges are the eroded stumps of mountains 800 million years in the making, folded into great red ridges that glow at dusk as The Ghan passes on its first evening out of Adelaide. The park's centrepiece is Ikara (Wilpena Pound), a vast natural amphitheatre of quartzite walls 17 kilometres long, visible from space and reachable on foot through a single gap. Yellow-footed rock-wallabies bound along the scree, wedge-tailed eagles ride the thermals, and river red gums line dry creek beds that flood without warning. This is Adnyamathanha country, and their stories of the two serpents whose bodies form the Pound walls are told on ranger-guided walks.",
   "history": "The rocks here record the dawn of animal life: the Ediacaran period — the first new geological period declared in over a century — is named for the Ediacara Hills at the park's edge, where the oldest known complex fossils on Earth were found. Australia lodged the Flinders Ranges for UNESCO World Heritage listing in February 2026, with a decision expected in mid-2027, which would make this one of the newest inscriptions on the list. The Adnyamathanha people have lived among these ranges for tens of thousands of years; pastoralists came and mostly went; the old Ghan railway originally threaded these very ranges before the line moved west.",
   "wikipedia": "https://en.wikipedia.org/wiki/Ikara-Flinders_Ranges_National_Park",
@@ -7514,7 +7650,12 @@
   "lon": 138.6069,
   "photo_author": "DXR",
   "photo_licence": "CC BY-SA 4.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Razorback_Lookout,_Ikara-Flinders_Ranges_NP_20230212_1.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Razorback_Lookout,_Ikara-Flinders_Ranges_NP_20230212_1.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Razorback_Lookout%2C_Ikara-Flinders_Ranges_NP_20230212_1.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "512",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_099",
@@ -7522,7 +7663,7 @@
   "type": "National Park",
   "country": "Australia",
   "region": "Northern Territory",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/West_MacDonnell_National_Park.JPG?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_099_w_92efbb2d95.jpg",
   "description": "West of Alice Springs the MacDonnell Ranges run in parallel red quartzite waves for 161 kilometres, split by gaps and gorges that hold permanent, icy waterholes in the middle of the driest part of the continent. Simpsons Gap — The Ghan's own excursion stop — shelters black-footed rock-wallabies in its boulder piles; Standley Chasm turns molten orange at midday; Ellery Creek Big Hole and Ormiston Gorge are desert swimming holes ringed by ghost gums. The Larapinta Trail, one of the world's great desert walks, follows the spine of the range for 223 kilometres.",
   "history": "To the Arrernte people this is Tjoritja, a landscape made in the Dreaming by the caterpillar beings of Yeperenye and their battles; the gaps in the range mark their passage. The ranges themselves are over 300 million years old, folded and worn down from peaks once Himalayan in scale. The white explorers came through with the Overland Telegraph in the 1870s — the line The Ghan still follows — but it was the Arrernte watercolourist Albert Namatjira, painting these same ghost gums and purple ridges in the 1930s, who fixed the West Macs in the world's imagination.",
   "wikipedia": "https://en.wikipedia.org/wiki/Tjoritja_/_West_MacDonnell_National_Park",
@@ -7530,7 +7671,12 @@
   "lon": 132.95,
   "photo_author": "Boticario (Wikimedia Commons)",
   "photo_licence": "Public domain",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:West_MacDonnell_National_Park.JPG"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:West_MacDonnell_National_Park.JPG",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/West_MacDonnell_National_Park.JPG?width=1280",
+  "photo_w": "1024",
+  "photo_h": "768",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_100",
@@ -7538,7 +7684,7 @@
   "type": "National Park",
   "country": "Australia",
   "region": "Northern Territory",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Nitmiluk_%28Katherine%29_Gorge.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_100_w_ca32f7e494.jpg",
   "description": "The Katherine River has cut thirteen linked sandstone gorges through the Arnhem Land plateau, their sheer orange walls rising from still green water. Cruises and canoes thread the gorges — The Ghan's signature excursion — passing freshwater crocodiles sunning on the banks, colonies of flying-foxes, and rock art high on the walls. The park covers 2,920 square kilometres of escarpment and savanna woodland; at its northern end, Leliyn (Edith Falls) drops through a chain of plunge pools that stay swimmable most of the year. The gorge walls are cut in sandstone laid down 1,650 million years ago.",
   "history": "Nitmiluk is Jawoyn country, named for the song of the cicada — Nitmi — that the creation figure Nabilil heard as he camped at the gorge mouth. After a thirteen-year land claim, the gorge was handed back to the Jawoyn people in 1989 in one of the landmark moments of the land rights era, and the park has been jointly managed ever since — the visitor centre, cruises and much of the tourism operation are Jawoyn-owned. The town of Katherine, ten minutes away, has been the crossing of the river since the Overland Telegraph came through in 1872, and The Ghan's arrival in 2004 finally joined it to Adelaide by rail.",
   "wikipedia": "https://en.wikipedia.org/wiki/Nitmiluk_National_Park",
@@ -7546,7 +7692,12 @@
   "lon": 132.4204,
   "photo_author": "kevleyski",
   "photo_licence": "CC0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Nitmiluk_(Katherine)_Gorge.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Nitmiluk_(Katherine)_Gorge.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Nitmiluk_%28Katherine%29_Gorge.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "629",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_047",
@@ -7554,7 +7705,7 @@
   "type": "Archaeological Site",
   "country": "Australia",
   "region": "Northern Territory",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Devils_Marbles.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_047_w_77a3dea4df.jpg",
   "description": "Across a shallow valley beside the Stuart Highway, thousands of rounded granite boulders — some six metres across — sit stacked and balanced in ways that look impossible, split clean in half or perched on plinths of their own stone. They began as a single mass of 1.5-billion-year-old granite, rounded grain by grain as the layers above them wore away. At dawn and dusk the marbles turn deep amber, and The Ghan's stop nearby makes the spectacle an evening excursion. The reserve covers 1,802 hectares of spinifex country about 100 kilometres south of Tennant Creek.",
   "history": "Karlu Karlu — 'round boulders' — is a registered sacred site of four Aboriginal peoples: the Warumungu, Kaytetye, Alyawarra and Warlpiri, with traditions that include the boulders as eggs of the Rainbow Serpent. In 1953 one boulder was taken to Alice Springs for the John Flynn memorial; after decades of requests it was returned in 1999 in a celebrated act of repatriation, and in 2008 the whole reserve was handed back to its traditional owners, who lease it back as a park jointly managed with the Territory. It remains one of the most photographed places in the outback.",
   "wikipedia": "https://en.wikipedia.org/wiki/Karlu_Karlu_/_Devils_Marbles_Conservation_Reserve",
@@ -7562,7 +7713,12 @@
   "lon": 134.262,
   "photo_author": "Iain Whyte (Iainwhyte)",
   "photo_licence": "CC BY-SA 2.5",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Devils_Marbles.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Devils_Marbles.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Devils_Marbles.jpg?width=1280",
+  "photo_w": "800",
+  "photo_h": "533",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_048",
@@ -7570,7 +7726,7 @@
   "type": "National Museum",
   "country": "Australia",
   "region": "South Australia",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/South_Australian_Museum_on_27_February_2025.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_048_w_24b8660803.jpg",
   "description": "On Adelaide's North Terrace, a short ride from The Ghan's platform, the South Australian Museum holds the largest and most significant collection of Australian Aboriginal cultural material in the world — some 30,000 objects spanning the whole continent, from Arnhem Land bark paintings to Central Desert toas. Its natural history floors run from whale skeletons in the atrium to the opalised plesiosaur known as the Addyman — the finest opal fossil ever found — and Ediacaran fossils from the Flinders Ranges that record the first animals on Earth. Entry is free.",
   "history": "Founded in 1856, twenty years after the colony itself, the museum grew through the great era of inland expeditions — its collections and photographic archives from Central Australia are of world importance and are increasingly curated with, and repatriated to, the communities they came from. The Pacific cultures gallery, opened in 1895, is among the oldest of its kind. For a traveller boarding the Ghan north into Arrernte and Jawoyn country, the museum is the natural first chapter of the journey.",
   "wikipedia": "https://en.wikipedia.org/wiki/South_Australian_Museum",
@@ -7578,7 +7734,12 @@
   "lon": 138.6032,
   "photo_author": "Yu Chu Chin",
   "photo_licence": "CC BY-SA 4.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:South_Australian_Museum_on_27_February_2025.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:South_Australian_Museum_on_27_February_2025.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/South_Australian_Museum_on_27_February_2025.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "853",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_049",
@@ -7586,7 +7747,7 @@
   "type": "National Museum",
   "country": "Australia",
   "region": "Northern Territory",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/MAGNT_Darwin%2C_2023_%2801%29.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_049_w_3155190c15.jpg",
   "description": "At Bullocky Point overlooking the Timor Sea, MAGNT is the Territory's keeping place: Aboriginal art from Arnhem Land, the desert and the Tiwi Islands, maritime galleries of pearling luggers and Indonesian praus, and 'Sweetheart' — a 5.1-metre saltwater crocodile taken from a Darwin waterway in 1979 and preserved whole. Its most affecting room is the Cyclone Tracy gallery, where visitors stand in darkness listening to a recording of the storm that erased the city. For passengers stepping off The Ghan at the end of the continent, it is Darwin explained in one building.",
   "history": "The museum rose with the city itself: its collections survived Cyclone Tracy on Christmas Eve 1974 — the storm that destroyed most of Darwin and scattered its people — and the rebuilt museum opened at Bullocky Point in 1981 with the cyclone at the centre of its story. Since 1984 it has hosted the Telstra National Aboriginal and Torres Strait Islander Art Awards, the country's most important Indigenous art prize, and its August exhibition remains the best single survey of where Australian Indigenous art is going.",
   "wikipedia": "https://en.wikipedia.org/wiki/Museum_and_Art_Gallery_of_the_Northern_Territory",
@@ -7594,7 +7755,12 @@
   "lon": 130.8323,
   "photo_author": "Bahnfrend",
   "photo_licence": "CC BY-SA 4.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:MAGNT_Darwin,_2023_(01).jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:MAGNT_Darwin,_2023_(01).jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/MAGNT_Darwin%2C_2023_%2801%29.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "829",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_143",
@@ -7602,7 +7768,7 @@
   "type": "UNESCO Site",
   "country": "United Kingdom",
   "region": "County Durham, England",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Durham_Cathedral_and_Castle.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_143_w_ccf74e78cf.jpg",
   "description": "Durham Cathedral stands on a rocky peninsula in a tight loop of the River Wear, with the Norman castle facing it across Palace Green — a composition so complete that it was among the first sites in the world inscribed by UNESCO, in 1986. Built between 1093 and 1133, the cathedral is the finest Romanesque building in England, and its ribbed stone vaults — the first of their scale anywhere — quietly invented the engineering that became Gothic. It holds the shrines of St Cuthbert and the Venerable Bede. The view of the ensemble from the railway viaduct, moments after the train leaves Durham station, is one of the great sights of British rail travel.",
   "history": "The cathedral exists because of a journey: when Viking raids made Lindisfarne untenable, the monks carried St Cuthbert's coffin for over a century until, the story says, it grew immovable at Durham in 995. William the Conqueror's prince-bishops ruled the turbulent north from here with powers close to a king's — the castle was their palace, and since 1837 it has housed University College, Durham, whose students still dine in the Norman great hall. Cuthbert's shrine remains a place of pilgrimage nine centuries on.",
   "wikipedia": "https://en.wikipedia.org/wiki/Durham_Castle_and_Cathedral",
@@ -7610,7 +7776,12 @@
   "lon": -1.5758,
   "photo_author": "Vik Walker from Durham, England",
   "photo_licence": "CC BY 2.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Durham_Cathedral_and_Castle.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Durham_Cathedral_and_Castle.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Durham_Cathedral_and_Castle.jpg?width=1280",
+  "photo_w": "983",
+  "photo_h": "638",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_050",
@@ -7618,7 +7789,7 @@
   "type": "National Museum",
   "country": "United Kingdom",
   "region": "York, England",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/National_Railway_Museum.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_050_w_9047fab574.jpg",
   "description": "Beside York station — a five-minute walk from the platform — stands the largest railway museum in the world: over a hundred locomotives and three hundred vehicles, including Mallard, holder of the world speed record for steam at 126 mph since 1938, a Japanese Shinkansen, Queen Victoria's royal carriages, and the great single-wheelers and Pacifics of the East Coast Main Line the journey has just travelled. Station Hall recreates the age when railways carried everything; the warehouse-scale open store holds a million objects. Entry is free.",
   "history": "York has been a railway city since 1839, when the 'Railway King' George Hudson made it the hub of the north–south routes, and the museum opened in 1975 in the working steam sheds of York North depot — engines are still restored in view of visitors. Flying Scotsman, the most famous locomotive on Earth, is based here between excursions. Part of the Science Museum Group, the NRM is, for a rail journey from King's Cross to the Highlands, effectively the story of the line told in steel.",
   "wikipedia": "https://en.wikipedia.org/wiki/National_Railway_Museum",
@@ -7626,7 +7797,12 @@
   "lon": -1.097,
   "photo_author": "webbedduck",
   "photo_licence": "CC BY-SA 4.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:National_Railway_Museum.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:National_Railway_Museum.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/National_Railway_Museum.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_144",
@@ -7634,7 +7810,7 @@
   "type": "UNESCO Site",
   "country": "United Kingdom",
   "region": "Northern England",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Hadrian%27s_Wall_west_of_Housesteads_3.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_144_w_fd8a41129b.jpg",
   "description": "For 73 miles, coast to coast from Wallsend on the Tyne to the Solway Firth, Hadrian's Wall rides the crags of northern England — the most important monument the Romans left in Britain, inscribed by UNESCO in 1987 as part of the Frontiers of the Roman Empire. Milecastles and turrets survive in astonishing sequence along the central crags; Housesteads is the most complete Roman fort in Britain, and at Vindolanda archaeologists are still pulling shoes, letters and tools from the anaerobic mud every summer. The East Coast Main Line crosses the Wall's eastern end at Newcastle, minutes after the Durham viaduct.",
   "history": "The emperor Hadrian ordered the Wall begun in AD 122 to mark, control and tax the empire's north-western edge, and for nearly three centuries it was garrisoned by soldiers from across the Roman world — Syrians, Batavians, Spaniards — whose descendants stayed. The Vindolanda writing tablets, thin wooden postcards preserved in the mud, are the oldest surviving handwritten documents in Britain: birthday invitations, requests for socks, complaints about the roads. The Wall marked the practical end of Rome; everything north of it is the next chapter of this journey.",
   "wikipedia": "https://en.wikipedia.org/wiki/Hadrian's_Wall",
@@ -7642,7 +7818,12 @@
   "lon": -2.331,
   "photo_author": "Steven Fruitsmaak",
   "photo_licence": "Public domain",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Hadrian's_Wall_west_of_Housesteads_3.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Hadrian's_Wall_west_of_Housesteads_3.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Hadrian%27s_Wall_west_of_Housesteads_3.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "851",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "ar_048",
@@ -7650,7 +7831,7 @@
   "type": "Archaeological Site",
   "country": "United Kingdom",
   "region": "Northumberland, England",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Holy_Island_Sunrise_%28again%29_%2815064111624%29.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/ar_048_w_91346e62b9.jpg",
   "description": "Off the Northumberland coast — in clear view from the train windows on the run north to Berwick — the Holy Island of Lindisfarne sits behind a causeway that the tide drowns twice a day. The ruined priory's red sandstone 'rainbow arch' still leaps across its roofless nave; beyond it a tiny castle crowns a crag of dolerite, seals haul out on the sands, and the island village carries on inside the ruins of one of the holiest places in England. Crossing times are a matter of life and death for the unwary — the tide tables are the island's real constitution.",
   "history": "St Aidan came from Iona in 635 to found the monastery that converted the pagan north of England; its greatest bishop, Cuthbert, became the north's patron saint, and around 700 its monks made the Lindisfarne Gospels, the masterpiece of early English art, now in the British Library. In 793 the Vikings sacked Lindisfarne in the raid that traditionally opens the Viking Age — 'never before has such terror appeared in Britain,' wrote Alcuin. The monks eventually fled with Cuthbert's coffin, and where that journey ended — Durham — this rail journey has already been.",
   "wikipedia": "https://en.wikipedia.org/wiki/Lindisfarne",
@@ -7658,7 +7839,12 @@
   "lon": -1.8025,
   "photo_author": "Chris Combe from York, UK",
   "photo_licence": "CC BY 2.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Holy_Island_Sunrise_(again)_(15064111624).jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Holy_Island_Sunrise_(again)_(15064111624).jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Holy_Island_Sunrise_%28again%29_%2815064111624%29.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "854",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_145",
@@ -7666,7 +7852,7 @@
   "type": "UNESCO Site",
   "country": "United Kingdom",
   "region": "Scotland",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Forth_Bridge_2022.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_145_w_ac2c5ad939.jpg",
   "description": "Nine miles west of Edinburgh, three vast red-oxide cantilever towers stride across the Firth of Forth: the Forth Bridge, opened in 1890, 2.5 kilometres long, built from 53,000 tonnes of steel and some 6.5 million rivets — and still carrying around 200 trains a day. It was inscribed by UNESCO in 2015 as a milestone in bridge design and construction, and it remains the most instantly recognised engineering structure in Scotland. For a railway journey, there is no more on-theme heritage site on Earth: it is the railway, monumentalised.",
   "history": "The bridge was engineered by John Fowler and Benjamin Baker in the shadow of the Tay Bridge disaster of 1879, which had thrown a train into the water and killed everyone aboard — which is why the Forth Bridge is so magnificently overbuilt, its strength made deliberately visible to reassure a shaken public. Around 4,600 men built it and at least 57 died. 'Painting the Forth Bridge' entered the language as the job that never ends; the 2011 glass-flake coat finally ended the joke, guaranteed for 25 years.",
   "wikipedia": "https://en.wikipedia.org/wiki/Forth_Bridge",
@@ -7674,7 +7860,12 @@
   "lon": -3.3886,
   "photo_author": "MrMasterKeyboard",
   "photo_licence": "CC BY-SA 4.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Forth_Bridge_2022.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Forth_Bridge_2022.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Forth_Bridge_2022.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "660",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_146",
@@ -7682,7 +7873,7 @@
   "type": "UNESCO Site",
   "country": "United Kingdom",
   "region": "Scotland",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Antonine_Wall_earthworks_at_Rough_Castle_-_geograph.org.uk_-_7031850.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_146_w_6203b659f0.jpg",
   "description": "Across Scotland's narrow waist, from Bo'ness on the Forth to Old Kilpatrick on the Clyde, ran the Antonine Wall: sixty kilometres of turf rampart on a stone base, fronted by a ditch up to twelve metres wide, with a fort roughly every two miles. This was the north-western limit of the entire Roman Empire — nothing Roman ever stood further north for long. The best-preserved stretch is at Rough Castle near Falkirk, where the ramparts, ditch and a field of defensive pits survive in open country. The Edinburgh–Glasgow railway crosses the Wall's line near Falkirk — most passengers never know.",
   "history": "Built from AD 142 under the emperor Antoninus Pius, only twenty years after Hadrian's Wall, the Antonine Wall was Rome's attempt to push the frontier a hundred miles north — and it lasted barely a generation before the legions withdrew to Hadrian's line. The legionaries who built it left carved 'distance slabs' recording their work, the finest collection of Roman sculpture in Scotland, now in Glasgow's Hunterian Museum. UNESCO inscribed the Wall in 2008, joining it to Hadrian's Wall and the German limes as the Frontiers of the Roman Empire.",
   "wikipedia": "https://en.wikipedia.org/wiki/Antonine_Wall",
@@ -7690,7 +7881,12 @@
   "lon": -3.8433,
   "photo_author": "Colin Park",
   "photo_licence": "CC BY-SA 2.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Antonine_Wall_earthworks_at_Rough_Castle_-_geograph.org.uk_-_7031850.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Antonine_Wall_earthworks_at_Rough_Castle_-_geograph.org.uk_-_7031850.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Antonine_Wall_earthworks_at_Rough_Castle_-_geograph.org.uk_-_7031850.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "719",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_101",
@@ -7698,7 +7894,7 @@
   "type": "National Park",
   "country": "United Kingdom",
   "region": "Scotland",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Loch_Katrine.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_101_w_0915c83481.jpg",
   "description": "Scotland's first national park holds the largest lake in Great Britain: Loch Lomond, 36 kilometres long, its islands scattered along the Highland Boundary Fault, which crosses the park and splits Britain's lowlands from its Highlands in a single view. Oak woods and gentle farmland lie south of the line; north of it rise the munros, led by Ben Lomond above the loch's eastern shore. The West Highland Line — this journey's route — runs along the loch through the park and climbs on to the wilderness of Rannoch Moor, and is regularly voted the most scenic railway in the world.",
   "history": "This is Rob Roy MacGregor country — the outlaw's grave lies at Balquhidder inside the park — and it was Walter Scott's 1810 poem 'The Lady of the Lake', set on Loch Katrine, that invented Scottish tourism almost single-handedly; the Victorian steamship on that loch is named for him. 'The Bonnie Banks o' Loch Lomond' carried the landscape into the world's songbook. The park was created in 2002, Scotland's first, covering 1,865 square kilometres of loch, glen and mountain.",
   "wikipedia": "https://en.wikipedia.org/wiki/Loch_Lomond_and_The_Trossachs_National_Park",
@@ -7706,7 +7902,12 @@
   "lon": -4.6,
   "photo_author": "Richard Webb",
   "photo_licence": "CC BY-SA 2.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Loch_Katrine.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Loch_Katrine.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Loch_Katrine.jpg?width=1280",
+  "photo_w": "582",
+  "photo_h": "349",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "un_147",
@@ -7714,7 +7915,7 @@
   "type": "UNESCO Site",
   "country": "United States",
   "region": "Chicago, Illinois",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Frederick_C._Robie_House.JPG?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/un_147_w_79715692f2.jpg",
   "description": "On a corner in Chicago's Hyde Park stands the definitive Prairie house: Frank Lloyd Wright's Robie House of 1910, its long Roman-brick planes and daringly cantilevered roofs stretched low against the flat Midwestern horizon, lit through 174 art-glass windows and doors. Inside, Wright dissolved the Victorian box into one flowing space around a central hearth. In 2019 UNESCO inscribed it — with Fallingwater, the Guggenheim and five others — as 'The 20th-Century Architecture of Frank Lloyd Wright', the first works of modern American architecture on the World Heritage List.",
   "history": "Wright designed the house for Frederick Robie, a 28-year-old bicycle and early-automobile maker who wanted 'a fire-proof house with no doodads'; Robie owned it barely a year before family misfortune forced its sale. The house was twice nearly demolished — in 1941 and 1957 — and the 90-year-old Wright himself came to protest: 'It all goes to show the danger of entrusting anything spiritual to the clergy.' Restored over decades by the Frank Lloyd Wright Trust, it stands a short ride from Chicago Union Station, where the Zephyr's run to the Pacific begins.",
   "wikipedia": "https://en.wikipedia.org/wiki/Robie_House",
@@ -7722,7 +7923,12 @@
   "lon": -87.596,
   "photo_author": "Teemu08",
   "photo_licence": "CC BY-SA 3.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Frederick_C._Robie_House.JPG"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Frederick_C._Robie_House.JPG",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Frederick_C._Robie_House.JPG?width=1280",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_051",
@@ -7730,7 +7936,7 @@
   "type": "National Museum",
   "country": "United States",
   "region": "Chicago, Illinois",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/20070622_Art_Institute_of_Chicago_Front_View.JPG?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_051_w_79f902c350.jpg",
   "description": "Behind the two bronze lions on Michigan Avenue lies one of the great art museums of the world. The Art Institute's million-object collection runs from medieval armour to the Modern Wing, but its heart is unanswerable: Seurat's 'A Sunday on La Grande Jatte', Grant Wood's 'American Gothic', Hopper's 'Nighthawks', Caillebotte's rainy Paris street, and rooms of Monet and Van Gogh that rival anything in Europe. The Thorne Miniature Rooms and the Chagall windows are quieter obsessions. It sits in Grant Park, fifteen minutes' walk from Union Station and the Zephyr's departure board.",
   "history": "Founded in 1879 on the ashes of the Great Chicago Fire era, the museum moved into its Beaux-Arts home built for the World's Columbian Exposition of 1893 — the fair that announced Chicago to the world — and the lions took up their posts in 1894; Chicagoans put wreaths on them at Christmas and team helmets in play-off season. Renzo Piano's Modern Wing of 2009 made it the second-largest art museum in the United States, and it is routinely ranked among the finest museums on Earth.",
   "wikipedia": "https://en.wikipedia.org/wiki/Art_Institute_of_Chicago",
@@ -7738,7 +7944,12 @@
   "lon": -87.6237,
   "photo_author": "TonyTheTiger",
   "photo_licence": "CC BY-SA 3.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:20070622_Art_Institute_of_Chicago_Front_View.JPG"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:20070622_Art_Institute_of_Chicago_Front_View.JPG",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/20070622_Art_Institute_of_Chicago_Front_View.JPG?width=1280",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_102",
@@ -7746,7 +7957,7 @@
   "type": "National Park",
   "country": "United States",
   "region": "Colorado",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Rocky_Mountain_National_Park_in_September_2011_-_Glacier_Gorge_from_Bear_Lake.JPG?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_102_w_dae89eea53.jpg",
   "description": "The roof of the Front Range: 77 peaks over 12,000 feet crowned by Longs Peak at 14,259, with a full third of the park above the treeline in alpine tundra that belongs ecologically to the Arctic. Trail Ridge Road, the highest continuous paved road in the United States, crests at 12,183 feet among the marmots and ptarmigan; elk bugle in the meadows each autumn, and moose browse the willows on the wetter western slope. The California Zephyr skirts that western edge after the Moffat Tunnel — the park rises directly north of the line's high-country run through Granby.",
   "history": "The park was born of one man's campaign: the naturalist and innkeeper Enos Mills, who climbed Longs Peak nearly 300 times and lobbied for a decade until Congress created the park in 1915. The Continental Divide runs through it — rain falling metres apart ends in different oceans — and the headwaters of the Colorado River, which the Zephyr will follow through the canyons for the next day, rise inside the park's western boundary. UNESCO named it a Biosphere Reserve in 1976.",
   "wikipedia": "https://en.wikipedia.org/wiki/Rocky_Mountain_National_Park",
@@ -7754,7 +7965,12 @@
   "lon": -105.6836,
   "photo_author": "Daniel Mayer (Mav)",
   "photo_licence": "CC BY-SA 3.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Rocky_Mountain_National_Park_in_September_2011_-_Glacier_Gorge_from_Bear_Lake.JPG"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Rocky_Mountain_National_Park_in_September_2011_-_Glacier_Gorge_from_Bear_Lake.JPG",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Rocky_Mountain_National_Park_in_September_2011_-_Glacier_Gorge_from_Bear_Lake.JPG?width=1280",
+  "photo_w": "1280",
+  "photo_h": "910",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_103",
@@ -7762,7 +7978,7 @@
   "type": "National Park",
   "country": "United States",
   "region": "Utah",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/Delicate_arch_sunset.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_103_w_96e5340ea6.jpg",
   "description": "More than 2,000 natural stone arches stand in one small tract of high desert above the Colorado River — the greatest density on Earth. Delicate Arch, alone on its sandstone bowl against the La Sal Mountains, is the most famous single rock in America; Landscape Arch spans 88 metres on a ribbon of stone a few feet thick. The arches form where fins of salmon-coloured Entrada sandstone, heaved and cracked by a shifting salt bed beneath, are hollowed by frost and wind. The Zephyr's Ruby Canyon dawn runs just downstream — Moab and the park mouth are about an hour from the line at Green River.",
   "history": "Arches became a national monument in 1929 and a park in 1971, but its truest chronicle is literary: Edward Abbey spent two seasons as a ranger here in the 1950s and wrote 'Desert Solitaire', the desert's angriest and most loved defence. The landscape is not finished — Wall Arch collapsed overnight in 2008, and every arch in the park is partway between forming and falling. Ute rock art near Wolfe Ranch records the people who knew these fins first.",
   "wikipedia": "https://en.wikipedia.org/wiki/Arches_National_Park",
@@ -7770,7 +7986,12 @@
   "lon": -109.5925,
   "photo_author": "Palacemusic",
   "photo_licence": "CC BY-SA 3.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:Delicate_arch_sunset.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:Delicate_arch_sunset.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/Delicate_arch_sunset.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "np_104",
@@ -7778,7 +7999,7 @@
   "type": "National Park",
   "country": "United States",
   "region": "Utah",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/A111%2C_Golden_Spike_National_Historic_Site%2C_Utah%2C_USA%2C_2004.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/np_104_w_8149837992.jpg",
   "description": "At Promontory Summit, in the sagebrush north of the Great Salt Lake, the rails of the Central Pacific and Union Pacific met on 10 May 1869 — and a continent that took months to cross could suddenly be crossed in a week. The park preserves the meeting place: in summer, exact working replicas of the two locomotives that touched pilots that day, Jupiter and No. 119, steam along the original grade, and the last-spike ceremony is re-enacted where it happened. For anyone riding a descendant of that first transcontinental route, this is the journey's founding shrine, about ninety minutes from the Salt Lake City stop.",
   "history": "When the golden spike was driven, the telegraph flashed a single word to both coasts: 'DONE.' Cannon fired in San Francisco; Chicago held a seven-mile parade. The road had been built at brutal speed by Chinese crews on the Central Pacific — whose labour long went unhonoured and is now commemorated at the site — and largely Irish crews on the Union Pacific. The actual golden spike lives at Stanford University; the site became a National Historical Park in 2019, 150 years after the meeting of the rails.",
   "wikipedia": "https://en.wikipedia.org/wiki/Golden_Spike_National_Historical_Park",
@@ -7786,7 +8007,12 @@
   "lon": -112.5502,
   "photo_author": "Brian W. Schaller",
   "photo_licence": "Free Art License (FAL)",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:A111,_Golden_Spike_National_Historic_Site,_Utah,_USA,_2004.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:A111,_Golden_Spike_National_Historic_Site,_Utah,_USA,_2004.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/A111%2C_Golden_Spike_National_Historic_Site%2C_Utah%2C_USA%2C_2004.jpg?width=1280",
+  "photo_w": "800",
+  "photo_h": "400",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  },
  {
   "id": "nm_052",
@@ -7794,7 +8020,7 @@
   "type": "National Museum",
   "country": "United States",
   "region": "Sacramento, California",
-  "photo": "https://commons.wikimedia.org/wiki/Special:FilePath/California_State_Railroad_Museum_in_Sacramento.jpg?width=1280",
+  "photo": "https://trustsquare.co/media/wonders/nm_052_w_3b36e7ffd2.jpg",
   "description": "In Old Sacramento, steps from where the Zephyr's forerunners ended their run, stands the finest railroad museum in North America: 225,000 square feet holding nineteen beautifully restored steam locomotives — from tiny switchers to a million-pound Southern Pacific cab-forward built to breathe in the Sierra snowsheds — plus a rocking, clacking night-train sleeper you walk through, and a Railway Post Office car sorted mid-'journey'. In summer, its excursion steam train runs along the Sacramento River levee. The museum sits fifteen minutes' walk from the Sacramento Amtrak platform where the Zephyr calls.",
   "history": "Sacramento is where the transcontinental railroad physically began: the Central Pacific broke ground at the riverfront in January 1863, financed by the city's 'Big Four' shopkeepers — Stanford, Huntington, Crocker and Hopkins — whose names still cover California. The museum opened in 1976–1981 on the very ground of the railroad's first shops, and its Transcontinental gallery is the other bookend of the story that Golden Spike finishes: begun here, done at Promontory.",
   "wikipedia": "https://en.wikipedia.org/wiki/California_State_Railroad_Museum",
@@ -7802,6 +8028,11 @@
   "lon": -121.5044,
   "photo_author": "Swampyank (English Wikipedia)",
   "photo_licence": "CC BY-SA 3.0",
-  "photo_source": "https://commons.wikimedia.org/wiki/File:California_State_Railroad_Museum_in_Sacramento.jpg"
+  "photo_source": "https://commons.wikimedia.org/wiki/File:California_State_Railroad_Museum_in_Sacramento.jpg",
+  "photo_orig": "https://commons.wikimedia.org/wiki/Special:FilePath/California_State_Railroad_Museum_in_Sacramento.jpg?width=1280",
+  "photo_w": "1280",
+  "photo_h": "960",
+  "photo_acquired": "2026-10-17",
+  "photo_platform": "Wikimedia Commons"
  }
 ]
