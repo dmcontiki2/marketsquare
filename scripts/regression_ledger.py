@@ -39905,6 +39905,25 @@ def rg_audit1018_held_reply_send():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "a held support reply is sent from the dashboard, from the support address")]
 
 
+@entry("RG-1030", "SPEC-NARROW-1 + BACKBAR-WIDTH-1 (18 Oct 2026 bug audit, BA-036): a car's spec panel and the Support page fit a "
+       "360 px phone -- no sideways slide, nothing clipped off the bottom bar",
+       LOCKED, fixed_on="2026-10-18",
+       scope="ms.js vehSpecPanel (spec columns may shrink, values wrap, empty lists drop); support.html sticky back bar (no -18px margins)",
+       ref="Rendered sweep 18 Oct 2026, Chromium at 360x800: listing #318 laid out at 368 px ('My Space' cut off the bottom bar) and "
+           "/support at 378 px; both 360 after the fix (checked in the browser before shipping).")
+def rg_audit1018_narrow_phone():
+    js = repo_file("ms.js"); sup = repo_file("support.html")
+    if js is None or sup is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    body = js[js.find("function vehSpecPanel(l){"):][:3000]
+    if "grid-template-columns:1fr 1fr" in body or "minmax(0,1fr)" not in body:
+        bad.append("vehSpecPanel's columns no longer shrink -- a long spec pushes the page wider than a phone again")
+    if "margin:0 -18px 14px" in sup:
+        bad.append("support.html's back bar has its -18px margins back -- the page slides sideways on a phone")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "spec panel and Support page fit a 360 px phone")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",

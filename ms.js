@@ -1958,6 +1958,9 @@ function vehQuickSpec(l){
     + '</div>';
 }
 function vehSpecPanel(l){
+  /* SPEC-NARROW-1 (18 Oct 2026, bug audit BA-036): the two spec columns were '1fr 1fr', whose floor is the widest word,
+     so a car's Performance card pushed the page to 368 px on a 360 px phone and clipped 'My Space' off the bottom bar.
+     Columns may now shrink (minmax(0,1fr)) and long values wrap. */
   if(!vehHasSpecData(l)) return '';
   const s=vehSpecs(l);
   const val=(k)=>{ const c=l[k]; if(c!==undefined&&c!==null&&c!=='') return c; const j=s[k]; return (j!==undefined&&j!==null&&j!=='')?j:null; };
@@ -1970,16 +1973,16 @@ function vehSpecPanel(l){
   const cards=SEC.map(([label,keys])=>{
     const rows=keys.map(k=>{
       let v=val(k); if(v===null) return '';
-      if(Array.isArray(v)) v=v.join(', ');
+      if(Array.isArray(v)){ if(!v.length) return ''; v=v.join(', '); }   // an empty list is no row (SPEC-NARROW-1)
       v=String(v).replace(/</g,'&lt;');
-      return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px dashed var(--border);"><span style="color:var(--text-3);">'+(VEHICLE_SPEC_LABELS[k]||k)+'</span><span style="color:var(--text);font-weight:600;text-align:right;">'+v+'</span></div>';
+      return '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 8px;font-size:12px;padding:3px 0;border-bottom:1px dashed var(--border);"><span style="color:var(--text-3);min-width:0;">'+(VEHICLE_SPEC_LABELS[k]||k)+'</span><span style="color:var(--text);font-weight:600;text-align:right;min-width:0;overflow-wrap:break-word;margin-left:auto;">'+v+'</span></div>';
     }).filter(Boolean).join('');
     if(!rows) return '';
-    return '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px;">'+label+'</div>'+rows+'</div>';
+    return '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:0;"><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px;">'+label+'</div>'+rows+'</div>';
   }).filter(Boolean);
   if(!cards.length) return '';
   const attest = l.attested_at ? '<div style="font-size:11px;color:var(--text-3);margin-top:8px;">\u2705 Seller-confirmed specifications \u00b7 attested '+String(l.attested_at).slice(0,10)+'</div>' : '';
-  return '<div class="dsec veh-spec-panel"><h3>Vehicle Specs</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+cards.join('')+'</div>'+attest+'</div>';
+  return '<div class="dsec veh-spec-panel"><h3>Vehicle Specs</h3><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">'+cards.join('')+'</div>'+attest+'</div>';
 }
 
 

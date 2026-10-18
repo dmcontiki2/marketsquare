@@ -188,7 +188,9 @@
   </style>
 </head>
 <body>
-<div style="position:sticky;top:0;z-index:999;background:#0c1a2e;margin:0 -18px 14px;padding:10px 18px;">
+<!-- BACKBAR-WIDTH-1 (18 Oct 2026, bug audit BA-036): this page has no 18px body padding, so the shared bar's -18px
+     side margins made it 396 px wide and the whole page slid sideways on a 360 px phone. -->
+<div style="position:sticky;top:0;z-index:999;background:#0c1a2e;margin:0 0 14px;padding:10px 18px;">
 <a href="/" onclick="if(history.length>1){history.back();return false;}" style="color:#fff;text-decoration:none;font-family:system-ui,sans-serif;font-size:14px;font-weight:600;">&larr; Back to TrustSquare</a></div>
 
 
