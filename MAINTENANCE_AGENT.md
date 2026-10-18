@@ -4,7 +4,7 @@
 AUTONOMY, NO VETO. Every fix ships itself immediately through MECHANICAL gates;
 David receives reports only, and his absence never stalls anything. The morning
 "one word per day" design is retired: it made David the single point of failure —
-the exact grinding halt the agent exists to prevent. Engine-agnostic per AGENTS.md.
+the exact grinding halt the agent exists to prevent. Engine-agnostic per AGENTS_ROSTER.md.
 
 **What replaces the human gate (all four are launch-blocking requirements):**
 1. **Gates are tests** — a fix deploys only when the full canon suite + predeploy
@@ -50,7 +50,7 @@ agent did — after it did it. n8n note: inbound triage does NOT run on n8n (mem
 the outreach fleet) — it is Cloudflare Worker + BEA, already live.
 
 ## Role map (N×N review, 29 Jul — Gemini input, adopted as ROLES not runtimes)
-Per the AGENTS.md doctrine these are role stages of ONE pipeline, each separately
+Per the AGENTS_ROSTER.md doctrine these are role stages of ONE pipeline, each separately
 re-bindable — NOT five deployed services (a solo-founder stack earns no microservice
 fleet; the separation lives in the spec so any stage can be re-bound later):
   Ingestion & Translation  = CF Worker + /email/inbound + Haiku classify  (built)
@@ -182,7 +182,7 @@ changes then to be measured against more stringent guidelines with a designer ap
   drift/baseline risk is controlled by the people, not the process. The strict Path A/B
   boundary + designer gate activates AT LAUNCH.
 - **OPEN before launch:** (1) write the stringent design-change guidelines; (2) bind the
-  designer role (AGENTS.md roster discussion still pending) — per doctrine a ROLE with a
+  designer role (AGENTS_ROSTER.md roster discussion still pending) — per doctrine a ROLE with a
   swappable binding (David, a design agent, or both); (3) the Maintenance vs
   Feedback-Triage roster boundary. **David's correction, 5 Aug 2026 (later same day):** do NOT
   assume feedback folds under Maintenance — "it may very well be 2 agents." Boundary review

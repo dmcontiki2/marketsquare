@@ -4,7 +4,7 @@
 House of El: AI, 18:43, https://www.youtube.com/watch?v=Jbh8QteVM5g
 
 Canon companions: `HUMAN_SEAM_REGISTER.json` (the data), `scripts/human_seam_check.py`
-(the assertion), `AGENTS.md` (role-not-AI staffing doctrine), `AI_AUTO_FAILOVER_P2_DESIGN.md`
+(the assertion), `AGENTS_ROSTER.md` (role-not-AI staffing doctrine), `AI_AUTO_FAILOVER_P2_DESIGN.md`
 (the breaker), `ORCHESTRATION_POLICY.md` §12 (escalation).
 
 ---

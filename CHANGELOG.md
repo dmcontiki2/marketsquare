@@ -28980,3 +28980,14 @@ unchanged DB → no-op, no copy; one city flipped → one copy taken, integrity 
 `.bak` files likewise. Kept in place: 13 orphan `.bak` files (original gone — may be the only copy, listed in
 ORPHANS_LEFT_IN_PLACE.txt), anything touched in the last 24 h, the 32 git-tracked `.bak` files, both live
 worktrees, `.git`. Cost model impact: none.
+
+## 18 Oct 2026 — AGENTS-RENAME-1: agent roster renamed so Codex reads the real rules
+
+Codex (and other tools using the AGENTS.md convention) loads any `AGENTS.md` as its instruction file, so an
+OpenAI audit run in this folder would have taken the agent roster as its rulebook. David approved (18 Oct 03:16):
+`AGENTS.md` → `AGENTS_ROSTER.md` (git rename, content unchanged), and a new 7-line `AGENTS.md` that points every
+agent to `CLAUDE.md` for the rules and to `AGENTS_ROSTER.md` for the roster. Links updated in
+`deploy_manifest.txt` (still served at `static/agents_status.md`), `dashboard.server.html`, `OPS_MAP_MOCKUP.html`,
+`MAINTENANCE_AGENT.md`, `AI_ACCOUNTABILITY_PREDESIGN.md`, `AI_FAILURE_PREDESIGN.md`. Historical log lines
+(CHANGELOG, STATUS, OPEN_LOOPS history, folded fragments) left as written. Neither worktree branch (fastlane,
+squire2) touches the file, so their merges are unaffected. Cost model impact: none.

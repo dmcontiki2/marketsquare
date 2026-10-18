@@ -7,7 +7,7 @@ Source: *"Companies Put AI In Charge. Now They're Paying For It"* — House of E
 https://www.youtube.com/watch?v=Jbh8QteVM5g
 
 Canon companions: `AI_ACCOUNTABILITY_REGISTER.json` (data),
-`scripts/ai_accountability_check.py` (assertion), `AGENTS.md` (role-not-AI staffing),
+`scripts/ai_accountability_check.py` (assertion), `AGENTS_ROSTER.md` (role-not-AI staffing),
 `AI_AUTO_FAILOVER_P2_DESIGN.md` (breaker), `AI_SWAP_ARCHITECTURE.md` (the +1 lane).
 
 ---
