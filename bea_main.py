@@ -25269,11 +25269,15 @@ def _photo_holds_ensure(conn):
 
 def _photo_hold_store(h, listing_id, seller_email, is_primary=False, caption=None, source=""):
     """Keep a held photo privately and answer the upload. Returns the JSON body the app shows (200, held=True)."""
-    os.makedirs(PHOTO_HOLD_DIR, mode=0o700, exist_ok=True)
     fname = uuid.uuid4().hex + ".jpg"
-    buf = io.BytesIO(); h.img.convert("RGB").save(buf, format="JPEG", quality=88)   # re-encoded: no EXIF / GPS
-    with open(os.path.join(PHOTO_HOLD_DIR, fname), "wb") as fh:
-        fh.write(buf.getvalue())
+    try:
+        os.makedirs(PHOTO_HOLD_DIR, mode=0o700, exist_ok=True)   # migration 084 makes it (the app user cannot, under /var/lib)
+        buf = io.BytesIO(); h.img.convert("RGB").save(buf, format="JPEG", quality=88)   # re-encoded: no EXIF / GPS
+        with open(os.path.join(PHOTO_HOLD_DIR, fname), "wb") as fh:
+            fh.write(buf.getvalue())
+    except Exception as _se:   # never a 500: say it plainly and keep the fail-closed default (nothing published)
+        _log.error("PHOTO-HELD could not keep the photo (%s): %r", PHOTO_HOLD_DIR, _se)
+        raise HTTPException(status_code=503, detail="Your photo could not be checked just now - please try again in a few minutes.")
     try:
         os.chmod(os.path.join(PHOTO_HOLD_DIR, fname), 0o600)
     except Exception:
