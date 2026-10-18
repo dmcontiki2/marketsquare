@@ -13665,8 +13665,11 @@ def rg_triage_pii():
         if not os.path.exists(pp):
             continue
         ps = open(pp, encoding="utf-8", errors="replace").read()
-        if "/dashboard/email-triage?limit=20" in ps and "X-Admin-Token" not in ps.split(
-                "loadEmailTriage")[-1][:1500]:
+        # AUDIT-1018 (18 Oct 2026, bug audit): read the loader's OWN body. The last mention of the name used to be the
+        # loader; since HELD-REPLY-SEND-1 the Send button's refresh (setTimeout(loadEmailTriage, 1500)) comes after it, so
+        # the old split read the wrong 1500 characters and convicted a page whose loader still sends the token.
+        _lt = ps.split("function loadEmailTriage")[-1] if "function loadEmailTriage" in ps else ps.split("loadEmailTriage")[-1]
+        if "/dashboard/email-triage?limit=20" in ps and "X-Admin-Token" not in _lt[:1500]:
             out.append((FAIL, "%s loads the triage ROWS without X-Admin-Token -- after the "
                               "redaction the card silently shows nothing to its own operator "
                               "(%s)" % (page, "ships" if ships else "local copy")))

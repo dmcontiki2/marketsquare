@@ -22544,8 +22544,8 @@ def auth_oauth_start(provider: str, request: Request, next: str = "/", hint: str
     cfg = _OIDC.get(provider)
     if not cfg:
         # OAUTH-UNKNOWN-404-1 (18 Oct 2026, bug audit BA-045): a provider we have never had is a missing page, not an
-        # outage -- '/auth/oauth/<anything>/start' answered 503, which counts as a server error in /ops/selfcheck and in
-        # the stranger test's 5xx list. A known provider that is not switched on yet (Apple) still answers 503.
+        # outage -- '/auth/oauth/<anything>/start' answered 503, which counts as a server error on the ops self-check
+        # counters and in the stranger test's 5xx list. A known provider that is not switched on yet (Apple) still answers 503.
         raise HTTPException(status_code=404, detail="Not Found")
     if not _oauth_ready(provider):
         raise HTTPException(status_code=503, detail="That sign-in option is not available.")
