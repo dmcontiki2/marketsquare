@@ -30574,7 +30574,8 @@ def dashboard_email_triage(limit: int = 20,
     try:
         rows = conn.execute(
             "SELECT id, from_addr, subject, category, urgency, status, "
-            "       substr(draft_reply,1,600) AS draft_reply, received_at "
+            "       CASE WHEN status IN ('drafted', 'failed') THEN draft_reply "   # HELD-REPLY-SEND-1: whole draft when it can be sent
+            "            ELSE substr(draft_reply,1,600) END AS draft_reply, received_at "
             "FROM email_triage ORDER BY received_at DESC LIMIT ?",
             (limit,),
         ).fetchall()
@@ -30601,6 +30602,59 @@ def dashboard_email_triage(limit: int = 20,
         # no data reads NOT MEASURED, never a guessed value).
         return {**_counts, "items": [], "redacted": "counts"}
     return {**_counts, "items": [dict(r) for r in rows]}
+
+
+class _HeldReplySend(BaseModel):
+    text: str = ""
+
+
+@app.post("/dashboard/email-triage/{tid}/send")
+def dashboard_email_triage_send(tid: int, req: _HeldReplySend,
+                                x_admin_key: str = Header(default=None),
+                                x_admin_token: str = Header(default=None)):
+    """HELD-REPLY-SEND-1 (18 Oct 2026, David, BA-035): send a reply the support agent held back, from
+    the Ops Dashboard. David, 18 Oct: "support should not go through my inbox" -- so the reply leaves
+    from the support address with Reply-To support@, and the sender's answer comes back to the support
+    agent, never to David's mailbox (RUL-069). Admin only (the same credential the page already holds).
+    One send per row: the row is claimed atomically (drafted/failed -> sending), so a double click or a
+    second open dashboard cannot send it twice; a failed send puts it back to 'failed' to try again."""
+    if not _summary_caller_is_admin(x_admin_key, x_admin_token):
+        raise HTTPException(status_code=403, detail="Sign in as admin to send replies.")
+    conn = database.get_db()
+    try:
+        row = conn.execute("SELECT id, from_addr, subject, draft_reply, message_id, status "
+                           "FROM email_triage WHERE id = ?", (tid,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="No such message.")
+        text = ((req.text or "").strip() or (row["draft_reply"] or "").strip())
+        if len(text) < 10:
+            raise HTTPException(status_code=400, detail="The reply is empty.")
+        if len(text) > 20000:
+            raise HTTPException(status_code=400, detail="The reply is too long.")
+        if _is_own_system_mail(row["from_addr"] or ""):
+            raise HTTPException(status_code=400, detail="That message came from our own system and is never answered.")
+        cur = conn.execute("UPDATE email_triage SET status = 'sending' "
+                           "WHERE id = ? AND status IN ('drafted', 'failed')", (tid,))
+        conn.commit()
+        if cur.rowcount != 1:
+            raise HTTPException(status_code=409, detail="This reply was already sent or is no longer waiting.")
+    finally:
+        conn.close()
+    sent = False
+    try:
+        sent = bool(_smtp_send_reply(row["from_addr"], row["subject"] or "your message", text, row["message_id"]))
+    finally:
+        conn = database.get_db()
+        try:
+            conn.execute("UPDATE email_triage SET status = ?, draft_reply = ? WHERE id = ?",
+                         ("sent" if sent else "failed", text, tid))
+            conn.commit()
+        finally:
+            conn.close()
+    _log.info("HELD-REPLY-SEND-1: triage #%s %s from the Ops Dashboard", tid, "sent" if sent else "NOT sent")
+    if not sent:
+        raise HTTPException(status_code=502, detail="The reply could not be sent. It is still waiting; try again.")
+    return {"ok": True, "id": tid, "status": "sent"}
 
 # ── END AI EMAIL TRIAGE — Session 94 ─────────────────────────────────────────
 

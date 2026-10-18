@@ -2947,7 +2947,16 @@ function loadEmailTriage() {
     const rows = (d.items||[]).map(it=>{
       const sStyle = statusStyle[it.status] || 'background:#334155;color:#94a3b8';
       const catCol = catColours[it.category] || '#94a3b8';
-      const draft = it.draft_reply ? '<div style="margin-top:6px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:6px;font-size:12px;color:#cbd5e1;white-space:pre-wrap;line-height:1.5;">'+esc(it.draft_reply)+'</div>' : '';
+      // HELD-REPLY-SEND-1 (18 Oct 2026, David): a reply the agent held back is sent from HERE -- it leaves from the
+      // support address and the answer comes back to the support agent, never through David's inbox (RUL-069).
+      const held = (it.status === 'drafted' || it.status === 'failed') && it.id;
+      const draft = held
+        ? '<textarea id="tri-txt-'+it.id+'" rows="7" style="margin-top:6px;width:100%;box-sizing:border-box;padding:8px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(251,191,36,.35);border-radius:6px;font-size:12px;color:#e2e8f0;line-height:1.5;font-family:inherit;resize:vertical;">'+esc(it.draft_reply||'')+'</textarea>'
+          + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px;">'
+          +   '<button type="button" onclick="sendHeldReply('+it.id+', this)" style="padding:6px 14px;border-radius:6px;border:0;background:#C8873A;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">Send reply</button>'
+          +   '<span id="tri-msg-'+it.id+'" style="font-size:11px;color:#94a3b8;">Edit if needed. It goes from the support address; the answer comes back to the support agent.</span>'
+          + '</div>'
+        : (it.draft_reply ? '<div style="margin-top:6px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:6px;font-size:12px;color:#cbd5e1;white-space:pre-wrap;line-height:1.5;">'+esc(it.draft_reply)+'</div>' : '');
       return '<div style="border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">'
         +   '<div style="font-size:13px;color:#e2e8f0;font-weight:600;">'+esc(it.subject||'(no subject)')+'</div>'
@@ -2968,6 +2977,34 @@ function loadEmailTriage() {
   }).catch(()=>{
     document.getElementById('triage-updated').textContent = 'fetch failed';
   });
+}
+
+// HELD-REPLY-SEND-1 (18 Oct 2026): send one held support reply. The server claims the row first, so a
+// double click cannot send it twice; on failure the box keeps the text and says why.
+function sendHeldReply(id, btn) {
+  const base = window.location.protocol === 'file:' ? 'https://trustsquare.co' : '';
+  const ta = document.getElementById('tri-txt-' + id), msg = document.getElementById('tri-msg-' + id);
+  const text = ta ? ta.value : '';
+  if (text.trim().length < 10) { if (msg) msg.textContent = 'The reply is empty.'; return; }
+  if (!window.confirm('Send this reply now, from the support address?')) return;
+  let tok = ''; try { tok = sessionStorage.getItem('ms_admin_token') || ''; } catch (e) {}
+  btn.disabled = true; btn.textContent = 'Sending…';
+  fetch(base + '/dashboard/email-triage/' + id + '/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': tok },
+    body: JSON.stringify({ text: text })
+  }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+      if (res.ok && res.d && res.d.ok) {
+        btn.textContent = 'Sent ✓'; if (ta) ta.disabled = true;
+        if (msg) msg.textContent = 'Sent from the support address.';
+        setTimeout(loadEmailTriage, 1500);
+      } else {
+        btn.disabled = false; btn.textContent = 'Send reply';
+        if (msg) msg.textContent = (res.d && res.d.detail) || 'Could not send it. The text is still here.';
+      }
+    })
+    .catch(function () { btn.disabled = false; btn.textContent = 'Send reply'; if (msg) msg.textContent = 'Could not reach the server. The text is still here.'; });
 }
 
 function loadAiCost() {

@@ -39797,6 +39797,34 @@ def rg_audit1018_held_reply_alert():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "a held support reply alerts David, with no customer text")]
 
 
+@entry("RG-1029", "HELD-REPLY-SEND-1 (18 Oct 2026, David, BA-035): a reply the support agent held back is sent from the Ops "
+       "Dashboard, from the support address -- 'support should not go through my inbox'",
+       LOCKED, fixed_on="2026-10-18",
+       scope="bea_main.py POST /dashboard/email-triage/{tid}/send (admin, atomic claim, _smtp_send_reply); GET returns the whole "
+             "draft for waiting rows; dashboard.server.html loadEmailTriage + sendHeldReply",
+       ref="TS-0041, 15-18 Oct 2026: the agent's held draft could be read on the dashboard but not sent from anywhere except "
+           "by hand; David, 18 Oct: 'Please add the button Claude, support should not go through my inbox.'")
+def rg_audit1018_held_reply_send():
+    src = repo_file("bea_main.py")
+    page = repo_file("dashboard.server.html")
+    if src is None or page is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    ep = fn_body(src, "def dashboard_email_triage_send(")
+    bad = []
+    if not ep:
+        bad.append("the dashboard send endpoint is gone -- a held reply can only be sent by hand again")
+    else:
+        if "_summary_caller_is_admin" not in ep:
+            bad.append("the send endpoint no longer requires the admin credential")
+        if "status IN ('drafted', 'failed')" not in ep or "rowcount != 1" not in ep:
+            bad.append("the send endpoint lost its one-send-per-row claim (a double click could send twice)")
+        if "_smtp_send_reply(" not in ep:
+            bad.append("the send endpoint no longer sends through the support lane")
+    if "function sendHeldReply(" not in page or "/send'" not in page or "X-Admin-Token" not in page:
+        bad.append("dashboard.server.html lost the Send reply button for held replies")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "a held support reply is sent from the dashboard, from the support address")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",
