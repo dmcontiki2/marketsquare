@@ -39924,6 +39924,22 @@ def rg_audit1018_narrow_phone():
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "spec panel and Support page fit a 360 px phone")]
 
 
+@entry("RG-1031", "GEO-BAR-STALE-1 (18 Oct 2026 bug audit, BA-038): after she picks a city herself, Home no longer keeps the "
+       "'Showing New York, United States -- your country from your internet connection' bar naming the place she left",
+       LOCKED, fixed_on="2026-10-18",
+       scope="ms.js selectCity (her own pick removes #ms-geo-bar; automatic picks re-draw it through msGeoBanner)",
+       ref="Rendered sweep 18 Oct 2026: a US-located visitor who chose South Africa -> Pretoria in the city picker saw the badge say "
+           "'South Africa · Pretoria' under a bar still saying 'Showing New York, United States'; gone with the fix (Chromium, real picker).")
+def rg_audit1018_geo_bar_stale():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    body = js[js.find("async function selectCity(id, name, lat, lng)"):][:2500]
+    if "getElementById('ms-geo-bar')" not in body or "_msGeo._applying" not in body:
+        return [(FAIL, "selectCity no longer clears the location bar on her own pick -- Home names a city she just left")]
+    return [(INFO, "her own city pick clears the stale location bar")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",

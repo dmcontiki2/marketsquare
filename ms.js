@@ -5226,6 +5226,10 @@ async function selectCity(id, name, lat, lng) {
   for (let i = LISTINGS.length - 1; i >= 0; i--) { if (LISTINGS[i].isLive) LISTINGS.splice(i, 1); }
   try{ if (name) localStorage.setItem('ms_user_city', name); }catch(_){}
   try{ if (typeof _msGeo !== 'undefined' && !_msGeo._applying) _msGeo.pickedThisVisit = true; }catch(_){}   // SELLER-HOME-1
+  /* GEO-BAR-STALE-1 (18 Oct 2026, bug audit BA-038): a city she picks herself (badge -> Countries -> city) left the
+     'Showing New York, United States -- your country from your internet connection' bar on Home, now naming a place
+     she just left. Her own pick answers the bar's question, so it goes; an automatic pick re-draws it (msGeoBanner). */
+  try{ if (typeof _msGeo !== 'undefined' && !_msGeo._applying) { const _gb = document.getElementById('ms-geo-bar'); if (_gb) _gb.remove(); } }catch(_){}
   _msSaveCountry();   // GEO-PAIR-1: the country is remembered with the city
   closeCitySelector();
   updateBadgeLabel();
