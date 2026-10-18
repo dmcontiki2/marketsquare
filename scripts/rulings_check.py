@@ -1534,6 +1534,17 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-239": [
+   # David, 18 Oct 2026: "We should not reject such data as violating anonymity ... minimize the new listers being discouraged" -- all 5 approved
+   ("RULINGS.md", ["A SELLER'S PHOTO IS NEVER A DEAD END", "never PUBLISHED unchecked"], []),
+   ("bea_main.py", ["_ANON_LABELS_CLAUSE", "class _PhotoHeld(HTTPException)", "def _photo_hold_store(", "@app.post(\"/admin/photo-holds/{hold_id}/decide\")"], []),
+   ("text_anon.py", ["PHOTO-KIND-1 (RUL-239", "_LABEL_KEY", "_PHONE_SHAPE"], []),
+   ("ms.js", ["PHOTO-KIND-1 (RUL-239", "function msPhotoAfter(", "Publish without this photo"], []),
+   ("quick.html", ["PHOTO-KIND-1 (RUL-239", "Publish without the photo"], []),
+   ("dashboard.server.html", ["PHOTO-KIND-1 (RUL-239", "Photos waiting for your check"], []),
+   ("route_policy.json", ["GET /admin/photo-holds", "POST /admin/photo-holds/{hold_id}/decide"], []),
+   ("scripts/regression_ledger.py", ["RG-1059", "RG-1060"], []),
+ ],
  "RUL-238": [
    # David, 17 Oct 2026: "basic service for free and the marketing for paid subscriptions ... greyed out ... not to pay for any emails or SMS's"
    ("RULINGS.md", ["THE BUZZ BOARD: THE SERVICE LINES ARE FREE, THE MARKETING IS PAID", "AMENDS [[RUL-173]](a)", "AMENDS RUL-175(a)"], []),

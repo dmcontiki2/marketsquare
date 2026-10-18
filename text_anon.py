@@ -90,6 +90,20 @@ _URL = re.compile(r"(?:https?://|www\.)\S+|\b[\w-]+\.(?:co\.za|com|org|net|afric
 # SA registration plate shapes written as text: 'CA 213 456', 'HP 63 CS GP', 'ND 559-128', 'BB77GP', 'MAROUSH GP' (vanity + province)
 _PLATE = re.compile(r"\b(?:[A-Z]{1,3}\s?\d{2,3}\s?\d{3}|[A-Z]{2}\s?\d{2,3}\s?[A-Z]{2}\s?(?:GP|L|MP|NW|ZN|EC|WC|NC|FS)|[A-Z]{2,7}\s?(?:GP|ZN|MP|EC|WC|NC|FS|NW|L))\b")
 _LONGNUM = re.compile(r"(?<!\d)\d{9,}(?!\d)")        # ID numbers, company reg numbers, account numbers
+# PHOTO-KIND-1 (RUL-239, David 18 Oct 2026): "the anonymity regarding what is displayed on a fire extinguisher should not
+# have rejected the photo ... dates, Serial Number, Part number perhaps, a signature with the inspectors name. We should not
+# reject such data." What a product label, rating plate or service tag normally carries is harmless and stays SHARP:
+# dates, serial / part / model / batch numbers, standards marks, specs. A phone needs a PHONE SHAPE (a 9-digit serial is not
+# a phone); a 13-digit run is an SA ID number and is still blurred. A line keyed "Serviced by ..." is a business: not allowed.
+_PHONE_SHAPE = re.compile(r"(?<!\d)(?:\+?27|0)\s?\(?\d{2}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}(?!\d)|(?<!\d)\+\d[\d\s().\-]{8,}\d(?!\d)")
+_SAID = re.compile(r"(?<!\d)\d{13}(?!\d)")
+_LABEL_KEY = re.compile(r"^\s*(?:s\s?/\s?n|serial|ser\.?\s*no|p\s?/\s?n|part|model|mod\.|type|batch|lot|cert|sabs|sans|iso|ce\b|ul\b|en\s?\d|"
+                        r"exp|expiry|expires|mfg|mfd|manufactured|date|serviced|service|next|due|last|tested|test|pressure|hydro|"
+                        r"refill|recharg|capacity|cap\.|weight|gross|tare|empty|class|rating|fire\s*rating|charge|agent|volume|"
+                        r"temp|working|max|min|size|kg\b|year|yr\b|month|code|ref\b|no\.?\s*of)", re.I)
+_DATE = re.compile(r"^\s*(?:\d{1,2}\s?[/.\-]\s?\d{1,2}\s?[/.\-]\s?\d{2,4}|\d{4}\s?[/.\-]\s?\d{1,2}(?:\s?[/.\-]\s?\d{1,2})?|"
+                   r"\d{1,2}\s?[/.\-]\s?\d{4}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{2,4})\s*$", re.I)
+_BY = re.compile(r"\bby\b|\btel\b|\bcell\b|\bcall\b|\bphone\b|\bcontact\b", re.I)
 _PRICE = re.compile(r"^\s*(?:R|ZAR|\$|€|£)\s?\d[\d\s,.]*\s*(?:k|K|m|M|pm|p/m|neg)?\s*$")
 _GENERIC = {"stop", "sale", "for sale", "sold", "open", "closed", "to let", "exit", "entrance", "parking",
             "no entry", "welcome", "push", "pull", "wc", "toilet", "yield", "slow", "ford", "toyota", "vw",
@@ -106,8 +120,12 @@ def rule_class(text):
     digits = sum(ch.isdigit() for ch in t)
     if _EMAIL.search(t) or _URL.search(t):
         return "id"
-    if digits >= 9 and (_PHONE.search(t) or _LONGNUM.search(t.replace(" ", ""))):
+    if digits >= 9 and (_PHONE_SHAPE.search(t) or _SAID.search(t.replace(" ", ""))):   # PHOTO-KIND-1: shape, not count
         return "id"
+    if _LABEL_KEY.match(t) and not _BY.search(t):      # PHOTO-KIND-1: label data ("Serial No: 2044 0917") stays sharp
+        return "allow"
+    if _DATE.match(t):
+        return "allow"
     up = t.upper()
     if _PLATE.search(up) and digits >= 2:
         return "id"

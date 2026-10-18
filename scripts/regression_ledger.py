@@ -38674,6 +38674,82 @@ def rg_faces_ok():
 
 
 
+@entry("RG-1059", "PHOTO-KIND-1 (RUL-239, David 18 Oct 2026): what a product label or service tag normally carries -- dates, serial / "
+       "part / model / batch numbers, standards marks, specs -- stays SHARP and never refuses a photo; a name, signature, company, "
+       "phone or address on it is blurred word by word; a photo whose only identifying content was blurred that way passes",
+       LOCKED, fixed_on="2026-10-18",
+       scope="text_anon.py rule_class (_LABEL_KEY, _DATE, _PHONE_SHAPE, _SAID); bea_main.py _ANON_LABELS_CLAUSE on BOTH scan prompts "
+             "(via _anon_scan_prompt_for), _ANON_OCR_SUFFIX label line, _seller_photo_anon_gate text-only redact -> "
+             "_anon_verify_painted. CLASS: any printed label (extinguisher, appliance plate, gas bottle, battery, meter) in any category.",
+       ref="#562 Fire Extinguisher Maintenance (15 Oct): his photo got 422 for the label. Reproduced 18 Oct on 8 real extinguisher "
+           "photos: 6 refused before, 0 after (6 through, 2 held privately). TEXT-ANON-1 sent every text-only redact (regions [], "
+           "text_ids blurred) to a refusal because the reject-only bridge (RUL-033) never saw the text was already blurred.")
+def rg_photo_label_data():
+    b, ta = repo_file("bea_main.py"), repo_file("text_anon.py")
+    if b is None or ta is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if "_ANON_LABELS_CLAUSE" not in b or "+ _ANON_LABELS_CLAUSE" not in b[b.find("def _anon_scan_prompt_for"):b.find("def _anon_scan_prompt_for") + 400]:
+        out.append((FAIL, "the scan prompts lost the labels clause (dates, serials, part numbers and standards marks are not identifying)"))
+    g = b[b.find("def _seller_photo_anon_gate("):]
+    g = g[:g.find("\ndef ")]
+    if "_anon_verify_painted(" not in g:
+        out.append((FAIL, "a photo whose identifying words were already blurred goes back to a refusal (no verify path in the gate)"))
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import importlib, text_anon as _ta
+        importlib.reload(_ta)
+        for t, want in (("Serial No: 20440917", "allow"), ("Part No: DCP-9KG-ABC", "allow"), ("Next service: 03/2027", "allow"),
+                        ("12/03/2026", "allow"), ("SANS 1475-1", "allow"), ("204409171", None), ("Tel 082 555 1234", "id"),
+                        ("+27 82 555 1234", "id"), ("8001015009087", "id"), ("Serviced by Sure-Fire", None),
+                        ("Inspector: J. Mokoena", None), ("www.surefire.co.za", "id")):
+            got = _ta.rule_class(t)
+            if got != want:
+                out.append((FAIL, "text rule for %r is %r, should be %r" % (t, got, want)))
+    except Exception as e:
+        out.append((FAIL, "text_anon.rule_class could not be run: %r" % e))
+    return out or [(INFO, "label data stays sharp, contact words blur, a text-only redact is verified not refused")]
+
+
+@entry("RG-1060", "PHOTO-KIND-1 (RUL-239, David 18 Oct 2026): a photo the check cannot clear by itself is HELD privately for David's "
+       "one-tap check (Approve / Blur & approve / Decline) -- never thrown away, never published unchecked -- and the seller is told "
+       "what happened at every photo door, with a way past a refusal",
+       LOCKED, fixed_on="2026-10-18",
+       scope="bea_main.py _PhotoHeld, _photo_hold_store / _alert / _attach / _blur, GET /admin/photo-holds, POST /admin/photo-holds/"
+             "{hold_id}/decide, the three gate callers (/listings/photo, /listings/{id}/photo/draft, aa-publish); route_policy.json; "
+             "dashboard.server.html #ph-wrap; ms.js msPhotoAfter / msPhotoAfterMany at five upload sites + Local Market 'Publish "
+             "without this photo'; quick.html own-photo + fast-lane 'Publish without the photo'.",
+       ref="David, 18 Oct 2026: 'We need to somehow minimize the new listers being discouraged with rejected photos or blockers, "
+           "and still stick to anonymity' -- all five proposals approved. Changes the 7 Jul fail-closed rule from 'never stored' to "
+           "'never published unchecked'. Proof: scripts/prove_photo_hold.py (17 checks).")
+def rg_photo_hold():
+    b, js, q = repo_file("bea_main.py"), repo_file("ms.js"), repo_file("quick.html")
+    rp = repo_file("route_policy.json")
+    if None in (b, js, q, rp):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    g = b[b.find("def _seller_photo_anon_gate("):]
+    g = g[:g.find("\ndef ")]
+    for needle, why in (('raise _held("the scan could not clear it', "a 'reject' verdict is refused again instead of held"),
+                        ('raise _held("the scan was unsure', "a low-confidence scan is refused again instead of held"),
+                        ('raise _held("not anonymous', "an un-blurrable spot (reject-only bridge) is refused again instead of held")):
+        if needle not in g:
+            out.append((FAIL, why))
+    if b.count("except _PhotoHeld as") < 3 or b.count("_photo_hold_store(") < 4:
+        out.append((FAIL, "a photo door no longer keeps held photos (all three gate callers must catch _PhotoHeld and store it)"))
+    if 'PHOTO_HOLD_DIR = os.getenv("PHOTO_HOLD_DIR", "/var/lib/' not in b:
+        out.append((FAIL, "held photos are no longer kept outside the web root"))
+    if '"GET /admin/photo-holds"' not in rp or '"POST /admin/photo-holds/{hold_id}/decide"' not in rp:
+        out.append((FAIL, "the photo-hold routes are not declared (admin) in route_policy.json"))
+    if js.count("msPhotoAfter") < 6:
+        out.append((FAIL, "an upload site in ms.js no longer tells the seller what the photo check did"))
+    if "Publish without this photo" not in js or "Publish without the photo" not in q:
+        out.append((FAIL, "a refused photo is a dead end again (no 'publish without the photo' in Local Market / Quick fast lane)"))
+    if "jj.held" not in q:
+        out.append((FAIL, "Quick no longer tells her a photo is waiting for a check"))
+    return out or [(INFO, "held photos kept privately for the one-tap check; every photo door tells the seller what happened")]
+
+
 @entry("RG-0994", "PROFILE-FACE-1 (RUL-235(e), David 16 Oct 2026): a profile photo the anonymity scan passes as clean is stored with "
        "_fok235 in its name and shown sharp to buyers; any other stays blurred until an introduction; the upload is never refused",
        LOCKED, fixed_on="2026-10-16",

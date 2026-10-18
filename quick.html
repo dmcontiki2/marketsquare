@@ -5435,10 +5435,18 @@ drawDoor();
        that would LEAVE the page is held until the photo has landed (then it goes on by itself), the page asks before
        it is closed, and a dropped upload is tried once more. Buttons that stay in Quick are never held. */
     function send(){ return fetch(url, opts); }
-    function done(ok){
+    function done(ok, jj){
       window.QPHOTO_PENDING=null;
       try{ var ov=$('arrive'); if(ov) ov.classList.remove('qphwait'); }catch(_){}
-      setTimeout(function(){ status(ok ? '\u2713 '+qTr('Your photo is on your listing.') : qTr('Your photo did not upload \u2014 add it in TrustSquare before you publish.')); }, 300);
+      /* PHOTO-KIND-1 (RUL-239, 18 Oct 2026): she is told what the photo check did -- blurred, waiting for a check, or not
+         used (with the reason) -- and the listing is saved either way; a photo is never a dead end. */
+      jj = jj || {};
+      var line = ok ? (jj.held ? '\u23f3 '+qTr('Your photo is waiting for a quick check so you stay anonymous. Nothing to do: it is added to your listing once checked.')
+                       : (/^redacted/.test(String(jj.anon||'')) ? '\u2713 '+qTr('Your photo is on your listing. We softly blurred a name or number on it so you stay anonymous.')
+                       : '\u2713 '+qTr('Your photo is on your listing.')))
+                    : (jj.detail ? qTr('Your photo could not be used:')+' '+String(jj.detail)+' '+qTr('Your listing is saved without it - you can add another photo in TrustSquare.')
+                       : qTr('Your photo did not upload \u2014 add it in TrustSquare before you publish.'));
+      setTimeout(function(){ status(line); }, 300);
       var go=window.QPHOTO_GO; window.QPHOTO_GO=null; if(go) setTimeout(function(){ location.href=go; }, ok ? 700 : 1600);
       return ok;
     }
@@ -5446,7 +5454,7 @@ drawDoor();
       return new Promise(function(r){ setTimeout(r, 2500); }).then(send);   /* one retry: phone lines drop */
     }).then(function(r){
       try{ qTrack(r.ok ? 'q_own_photo_ok' : 'q_own_photo_fail', {st:r.status}); }catch(_){}
-      return done(r.ok);
+      return r.json().catch(function(){ return {}; }).then(function(jj){ return done(r.ok, jj); });   /* PHOTO-KIND-1 */
     }, function(){ try{ qTrack('q_own_photo_fail', {st:0}); }catch(_){} return done(false); });
     setTimeout(function(){ try{ var ov=$('arrive'); if(ov && window.QPHOTO_PENDING){ ov.classList.add('qphwait');
       status(qTr('Adding your photo to the listing\u2026 keep this page open.')); } }catch(_){} }, 220);
@@ -5903,10 +5911,26 @@ drawDoor();
     msg(T('Adding your photo…'));
     var fd=new FormData(); fd.append('file', QF.photo.blob, 'quick_photo.jpg'); if(d.token) fd.append('draft_token', d.token);
     return fetch(location.origin+'/listings/'+encodeURIComponent(d.id)+'/photo/draft?email='+encodeURIComponent(em), {method:'POST', credentials:'include', body:fd})
-      .then(function(r){
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(jj){
         if(!r.ok){ track('q_fast_photo_fail', {st:r.status}); btn.disabled=false; btn.textContent=T('Try again');
           btn.onclick=function(){ this.disabled=true; addPhotoThenPublish(this, body); };
-          msg(T('Your photo did not upload, so nothing was published. Please try again.')); return; }
+          /* PHOTO-KIND-1 (RUL-239): the reason is said, and one tap publishes without the photo -- never a dead end */
+          msg((jj && jj.detail ? T('Your photo could not be used:')+' '+String(jj.detail)+' ' : T('Your photo did not upload.')+' ')
+              + T('Nothing was published yet. Try again, or publish without the photo.'));
+          try{ var sk=$('qfnophoto'); if(!sk){ sk=document.createElement('button'); sk.id='qfnophoto'; sk.type='button';
+              sk.style.cssText='display:block;margin:10px auto 0;background:none;border:1px solid currentColor;border-radius:10px;padding:9px 14px;font-weight:700;color:inherit;';
+              btn.parentNode.insertBefore(sk, btn.nextSibling); }
+            sk.textContent=T('Publish without the photo');
+            sk.onclick=function(){ sk.remove(); btn.disabled=true; QF.photo=null; publishDraftNow(btn, body); };
+          }catch(_){}
+          return; }
+        if(jj && jj.held) QF.photoHeld=true;   /* PHOTO-KIND-1: kept for a quick check; publishing carries on */
+        return publishDraftNow(btn, body);
+      }); }).catch(function(){ btn.disabled=false; btn.textContent=T('Try again'); msg(T('No connection — nothing was sent.')); });
+  }
+  function publishDraftNow(btn, body){
+    var d=QF.draft, em=HANDOVER.email||'';
+    {
         msg(T('Publishing…'));
         return api('/listings/'+encodeURIComponent(d.id)+'/publish?email='+encodeURIComponent(em), {method:'PUT'}).then(function(res){
           if(res.st===402){ track('q_fast_fallback', {code:'slots_full'}); return fallback('slots_full', null); }
@@ -5914,8 +5938,9 @@ drawDoor();
           if(!res.ok){ btn.disabled=false; btn.textContent=T('Try again'); btn.onclick=function(){ this.disabled=true; addPhotoThenPublish(this, body); };
             msg(T('Not published — your listing is saved as a draft. Please try again.')); return; }
           done({id:d.id, live:true, open_url:d.open_url}, body);
-        });
-      }).catch(function(){ btn.disabled=false; btn.textContent=T('Try again'); msg(T('No connection — nothing was sent.')); });
+          if(QF.photoHeld){ setTimeout(function(){ try{ msg(T('Your photo is waiting for a quick check so you stay anonymous. It is added to your listing once checked.')); }catch(_){} }, 400); }
+        }).catch(function(){ btn.disabled=false; btn.textContent=T('Try again'); msg(T('No connection — nothing was sent.')); });
+    }
   }
   /* ---------------- screen 3: live ---------------- */
   /* GATE-WORDS-1/2's sentences, exactly as the normal 'saved' card says them: a licensed or cleared role, or a casual
