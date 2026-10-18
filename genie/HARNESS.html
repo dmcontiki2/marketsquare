@@ -4129,12 +4129,27 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
                 'Tools':/\btools?\b|drill|\bsaws?\b|spanner|hammer|wrench|grinder|equipment|workshop/i};
   window.GROUP_RX=GROUP_RX;
   function groupRx(){ return (cat().key==='localmarket' || (window.svcIs && svcIs(cat()))) ? (GROUP_RX[roleLabel()]||null) : null; }   /* SVC-FIND-1 */
+  function qTrainerRx(){
+    if(mode!=='find' || !window.trnOn || !window.trnRole || !trnOn()) return null;
+    var w=pickOf('what'), r=w && w.r && trnRole(w.r); if(!r) return null;
+    var parts=[r.l].concat(r.a||[]).map(function(ph){
+      var ws=String(ph||'').toLowerCase().split(/[^a-z]+/).filter(function(x){ return x.length>=2; }); if(!ws.length) return '';
+      var last=ws[ws.length-1], st=last.replace(/(ers|er|ing|es|s)$/,''); ws[ws.length-1]=st.length>=4?st:last;
+      return ws.join('(?:[^a-z0-9]+(?:and[^a-z0-9]+)?)'); }).filter(Boolean);   /* 'Strength & conditioning' = 'strength and conditioning' */
+    return parts.length ? new RegExp('\\b(?:'+parts.join('|')+')','i') : null;
+  }
+  window.qTrainerRx=qTrainerRx;
   function typeFilter(list){ var g=groupRx(); if(g) return list.filter(function(l){
       /* ROLE-FIND-STRICT-1 (6 Oct 2026, casuals audit): a Services advert that names its own trade (service_type) is
          judged on its title and trade, not its whole text -- "domestic and light commercial work" in an electrician's
          description made him a Home cleaner match. An advert without a trade is still read in full. */
       if(window.svcIs && svcIs(cat()) && String(l.service_type||'').trim()) return g.test((l.title||'')+' '+(l.service_type||''));
       return g.test((l.title||'')+' '+(l.description||'')+' '+(l.service_type||'')); });
+    /* TRAINER-FIND-1 (18 Oct 2026, bug audit BA-041): the trainer door searched the role's LAST word only ('train*',
+       'coach*'), so 'Personal trainer' in Pretoria found two beekeeping courses ('Trained in beginner and advanced
+       beekeeping') and every 'coach' role found every coach. An advert now has to name the sport she picked -- its
+       role or one of the role's other names, as a phrase. A sport she typed herself keeps the word search. */
+    var tr=qTrainerRx(); if(tr) return list.filter(function(l){ return tr.test([l.title, l.subject, l.service_type, l.description].join(' ')); });
     var w=roleLabel(), rx=TYPE_RX[w]; if(!rx || cat().key!=='adventures') return list;
     var want = w==='Game lodge' ? /accommodation/i : /experiences/i;
     /* TRIP-FIND-1 (25 Sep 2026 inspection, quick-04): a trip listed through Quick is filed as 'Adventures' -- it is
@@ -4150,7 +4165,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   var FIND_FROM={
     property:   {what:'prop_type', deal:'deal', where:'area'},
     cars:       {what:'text', price:'price', where:'area'},
-    tutors:     {what:'text', level:'level', where:'area'},
+    tutors:     {what:'text', level:'level', where:'area', tdoor:'text', group:'text'},   /* TRAINER-FIND-1 (BA-041): the trainer door's way in -- its role is the search */
     services:   {group:'text', what:'text', where:'area', when:'ask'},
     homehelp:   {group:'text', what:'text', where:'area', when:'ask', day:'day'},
     collectors: {what:'text', price:'price', rare:'ask'},
@@ -4250,6 +4265,12 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     _anch[city]=p; return p;
   }
   window.qAnchors=qAnchors;
+  /* FIND-OTHER-CITY-1 (18 Oct 2026, bug audit BA-041): a Nationwide advert (RUL-220), or one extended to her city, comes
+     from another city -- it is its own band under that city's name, never 'Nearby', never counted as 'near you', and
+     its suburb is never offered as one of her city's areas (Pretoria's 'Which area?' offered Great Brak River). */
+  function qOtherCity(l){ var mine=keyOf(window.QCITY||window.QCITY_OTHER||LOC.city||''), its=keyOf((l&&l.city)||'');
+    return !!(mine && its && mine!==its); }
+  window.qOtherCity=qOtherCity;
   function qFindHonour(list, A){
     var c=cat(), dec=FIND_FROM[c.key]||{}, tests=[];
     picks.forEach(function(pk){ if(!pk || !pk.key) return; var d=dec[pk.key];
@@ -4265,6 +4286,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     (list||[]).forEach(function(l){ var band=0, miss=null, nm=0;
       for(var i=0;i<tests.length;i++){ if(tests[i][0](l, tests[i][1], c, A)) continue;
         if(tests[i][2]==='area'){ band=1; continue; } nm++; miss=tests[i]; }
+      if(band===1 && qOtherCity(l)) band=2;   /* FIND-OTHER-CITY-1: another city is its own band */
       l._band=band; l._cm=0; l._cmWhat='';
       if(!nm){ out.push(l); return; }
       if(nm===1 && !(l.demo_example || +l.super_example || +l.is_demo)){ l._cm=1; l._cmWhat=qCloseWhat(l, miss[2]); close.push(l); } });
@@ -4342,7 +4364,8 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       _inLive=false;
       var have={}; (s.tiles||[]).forEach(function(t){ have[akey(t.t)]=1; });
       var n={}, name={};
-      ok.forEach(function(l){ var sb=String(l.suburb||'').trim(), k=akey(sb); if(!k || have[k]) return; n[k]=(n[k]||0)+1; if(!name[k]) name[k]=sb; });
+      ok.forEach(function(l){ if(qOtherCity(l)) return;   /* FIND-OTHER-CITY-1 */
+        var sb=String(l.suburb||'').trim(), k=akey(sb); if(!k || have[k]) return; n[k]=(n[k]||0)+1; if(!name[k]) name[k]=sb; });
       var add=Object.keys(n).sort(function(a,b){ return n[b]-n[a]; }).slice(0,4).map(function(k){ return {t:name[k]}; });
       if(!add.length) return s;
       var tiles=(s.tiles||[]).concat(add), pics=tiles.every(function(t){ return !!t.p; });
@@ -4373,15 +4396,16 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
       var nHid=exOn?0:_exAll.length;
       var nEx=five.filter(isEx).length, nReal=five.length-nEx;
       var nCl=five.filter(function(l){ return !isEx(l) && l._cm; }).length;   /* FIND-CLOSE-1 */
-      var n0=five.filter(function(l){ return !isEx(l) && !l._band && !l._cm; }).length, n1=nReal-n0-nCl;   /* FIND-BANDS-1 */
+      var n0=five.filter(function(l){ return !isEx(l) && !l._band && !l._cm; }).length;   /* FIND-BANDS-1 */
+      var n2=five.filter(function(l){ return !isEx(l) && l._band===2 && !l._cm; }).length, n1=nReal-n0-nCl-n2;   /* FIND-OTHER-CITY-1 */
       var lab=function(l,i){
         if(l._cm && !isEx(l)){ if(i>0 && five[i-1]._cm) return '';
           return '<div class="lkband" style="grid-column:1/-1;font:800 11px/1.2 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.85;margin:6px 2px -3px">'
             +E(T('Close matches'))+'<div style="font:500 12px/1.35 system-ui,sans-serif;letter-spacing:0;text-transform:none;opacity:.85;margin-top:3px">'
             +E(T('Not exactly what you asked \u2014 the difference is shown on each.'))+'</div></div>'; }
-        if(!n1 || isEx(l) || (i>0 && !isEx(five[i-1]) && five[i-1]._band===l._band)) return '';
+        if(!(n1||n2) || isEx(l) || (i>0 && !isEx(five[i-1]) && five[i-1]._band===l._band && (l._band!==2 || five[i-1].city===l.city))) return '';
         return '<div class="lkband" style="grid-column:1/-1;font:800 11px/1.2 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin:6px 2px -3px">'
-          +E(l._band ? T('Nearby') : placeName)+'</div>'; };
+          +(l._band===2 ? E(String(l.city||'')) : E(l._band ? T('Nearby') : placeName))+'</div>'; };   /* FIND-OTHER-CITY-1: another city under its own name */
       try{ qTrack('q_find_results', {n:five.length, city:city}); }catch(e){}
       /* FIND-PHOTO-1 (25 Sep 2026 inspection, quick-24): an advert with no photo of its own shows the picture of the
          kind that was searched for (the role's own picture for Services), marked EXAMPLE PHOTO -- never an
@@ -4402,7 +4426,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
           +'<div class="m"><b>'+E(cardPrice(l))+'</b>'+(ts?'<span class="ts" style="color:'+tb.c+';border-color:'+tb.c+'55">&#9733; '+ts+'</span>':'')+'</div></div></div>';
       }).join('');
       var head = failed ? T('No connection right now')
-               : (nReal-nCl ? (n0 ? T('Yes')+' — '+n0+' '+T('on TrustSquare') : T('Yes — '+n1+' near you'))   /* FIND-BANDS-1: 'Yes' counts her area only */
+               : (nReal-nCl ? ((!n0 && !n1 && n2) ? T('Yes')+' — '+n2+' '+T('on TrustSquare') : (n0 ? T('Yes')+' — '+n0+' '+T('on TrustSquare') : T('Yes — '+n1+' near you')))   /* FIND-BANDS-1: 'Yes' counts her area only; FIND-OTHER-CITY-1: another city is never 'near you' */
                  : nCl ? T('Close matches')   /* FIND-CLOSE-1 */
                         : (nEx ? T('Only examples so far') : T('Not listed yet')));
       $('screen').innerHTML='<div class="q" style="font-size:19px">'+E(head)+'</div><div class="trail">'+trail+'</div><div class="body">'
@@ -4977,6 +5001,15 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
     try{ $('qctxt').focus(); }catch(e){}
     try{ qTranslate($('screen')); }catch(e){}
   }
+  /* PRICE-COUNTRY-1 (18 Oct 2026, bug audit BA-040): a price she gave before changing country was in the old country's
+     money -- a US-located visitor who said 'Not in United States? Change country' -> South Africa saved a Pretoria bakkie
+     at 'Under $8k' (and a trainer at '$350 / session'). When the country really changes, the flow goes back to her first
+     money answer and asks it again in the new country's money; every answer before it is kept. */
+  function qRepriceFrom(){
+    for(var j=0;j<picks.length && j<step;j++){ var pk=picks[j];
+      if(pk && (pk.key==='price' || (pk.key==='how' && cat().key==='services'))){ picks.length=j; step=j; return true; } }
+    return false;
+  }
   function drawCountryPick(){
     setNav();
     var list=Object.keys(QPACK);
@@ -4987,7 +5020,7 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
       +'<div class="foot"><button class="btn ghost" id="qkback" style="width:100%">Back</button></div>';
     var b=$('screen').querySelectorAll('[data-k]');
     for(var i=0;i<b.length;i++) b[i].onclick=function(){ var k=this.getAttribute('data-k'); taps++;
-      userCC=true; lsSet('ts_qcc', k); if(k!==QCC){ applyPack(k); localNames(); } window.QCITY=null; window.QCITY_OTHER=null; drawStep(); };
+      userCC=true; lsSet('ts_qcc', k); if(k!==QCC){ applyPack(k); localNames(); qRepriceFrom(); } window.QCITY=null; window.QCITY_OTHER=null; drawStep(); };
     $('qkback').onclick=function(){ drawStep(); };
     try{ qTranslate($('screen')); }catch(e){}
   }

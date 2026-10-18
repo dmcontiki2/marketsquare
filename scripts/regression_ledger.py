@@ -39940,6 +39940,54 @@ def rg_audit1018_geo_bar_stale():
     return [(INFO, "her own city pick clears the stale location bar")]
 
 
+@entry("RG-1032", "PRICE-COUNTRY-1 (18 Oct 2026 bug audit, BA-040): a price given in Quick before she changes country is asked "
+       "again in the new country's money -- a Pretoria bakkie is never saved at 'Under $8k'",
+       LOCKED, fixed_on="2026-10-18",
+       scope="quick.html drawCountryPick -> qRepriceFrom (price / rate / asking-price answers made before a real country change)",
+       ref="Quick walk 18 Oct 2026, Chromium 360 px, visitor located in the US: Sell a car -> Bakkie -> Toyota -> 2020+ -> 'Under $8k' "
+           "-> 'Not in United States? Change country' -> South Africa -> Pretoria; the draft read 'Price: Under $8k' and the hand-over "
+           "carried it (also '$350 / session', 'Under $50', 'Under $100 / room / night', and the Find filters).")
+def rg_audit1018_price_country():
+    qk = repo_file("quick.html")
+    if qk is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = qk.find("function drawCountryPick(){")
+    body = qk[i:i + 2200] if i >= 0 else ""
+    fn = qk[qk.find("function qRepriceFrom(){"):][:500] if "function qRepriceFrom(){" in qk else ""
+    if "applyPack(k); localNames(); qRepriceFrom();" not in body:
+        return [(FAIL, "a country change in Quick no longer re-asks the prices she already gave -- they stay in the old money")]
+    if "pk.key==='price'" not in fn or "picks.length=j; step=j;" not in fn:
+        return [(FAIL, "qRepriceFrom no longer rewinds to her first money answer")]
+    return [(INFO, "a country change re-asks her money answers in the new country's money")]
+
+
+@entry("RG-1033", "TRAINER-FIND-1 + FIND-OTHER-CITY-1 (18 Oct 2026 bug audit, BA-041): Quick's trainer search keeps only adverts "
+       "that name the sport she picked, and an advert from another city is never 'Nearby' / 'near you' or one of her areas",
+       LOCKED, fixed_on="2026-10-18",
+       scope="quick.html qTrainerRx / typeFilter, FIND_FROM.tutors (tdoor, group), qOtherCity in qFindHonour, the area chips and the head",
+       ref="Quick walk 18 Oct 2026: Find a tutor -> Sport & fitness -> Fitness & gym -> Personal trainer -> Pretoria East showed "
+           "'Yes -- 2 near you' with two beekeeping courses in Great Brak River, Mossel Bay (the search word was only 'train*'; "
+           "they are Nationwide); Local Market's Pretoria 'Which area?' offered Great Brak River; the console logged FIND-HONOUR-1 "
+           "for the undeclared 'tdoor' and 'group' steps on every trainer search.")
+def rg_audit1018_trainer_find():
+    qk = repo_file("quick.html")
+    if qk is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    tf = qk[qk.find("function typeFilter(list){"):][:1800]
+    if "var tr=qTrainerRx(); if(tr) return list.filter(" not in tf:
+        out.append((FAIL, "the trainer search no longer filters adverts by the sport she picked -- 'train*' finds beekeeping courses"))
+    if "tutors:     {what:'text', level:'level', where:'area', tdoor:'text', group:'text'}" not in qk:
+        out.append((FAIL, "FIND_FROM.tutors no longer declares the trainer door's 'tdoor' and 'group' steps (FIND-HONOUR-1 trips)"))
+    if "if(band===1 && qOtherCity(l)) band=2;" not in qk:
+        out.append((FAIL, "an advert from another city is back in the 'Nearby' band"))
+    if "ok.forEach(function(l){ if(qOtherCity(l)) return;" not in qk:
+        out.append((FAIL, "another city's suburbs are offered again as her city's areas"))
+    if "((!n0 && !n1 && n2) ? T('Yes')+' — '+n2+' '+T('on TrustSquare')" not in qk or "(l._band===2 ? E(String(l.city||''))" not in qk:
+        out.append((FAIL, "the Find head can again call another city's adverts 'near you'"))
+    return out or [(INFO, "trainer searches name the sport; other cities are labelled, never 'near you'")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",
