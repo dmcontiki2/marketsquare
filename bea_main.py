@@ -7520,6 +7520,47 @@ def _anon_422(category, who, detail=""):
         pass
     return HTTPException(status_code=422, detail=detail)
 
+class _PhotoHeld(HTTPException):
+    """PHOTO-KIND-1 (RUL-239, David 18 Oct 2026: "minimize the new listers being discouraged with rejected photos or
+    blockers, and still stick to anonymity"). A photo the gate cannot clear by itself is no longer thrown away: the caller
+    keeps it PRIVATE on the server (never published, never served to anyone but the admin check) via _photo_hold_store, the
+    advert carries on without it, and David approves / blurs-and-approves / declines it with one tap on the Ops Dashboard.
+    Subclasses HTTPException so any caller that does not know about holds still fails CLOSED (the photo is not stored)."""
+    def __init__(self, img, reason, labels="", regions=None, category=""):
+        super().__init__(status_code=422, detail="Photo held for a check: " + str(reason))
+        self.img = img; self.reason = str(reason)[:200]; self.labels = str(labels or "")[:200]
+        self.regions = list(regions or []); self.category = category or ""
+
+
+def _anon_verify_painted(img, category, spend_who, blurred_boxes):
+    """PHOTO-KIND-1: after the identifying TEXT was blurred word by word (text_ids / rules) and the scan named nothing else,
+    ONE verify read of the painted photo decides: clean -> pass; flags only what is already blurred -> pass; else None."""
+    try:
+        import base64 as _b64
+        probe = img.copy(); probe.thumbnail((1344, 1344), Image.LANCZOS)
+        pbuf = io.BytesIO(); probe.save(pbuf, format="JPEG", quality=80)
+        v, _it, _ot, _svd = _anon_photo_scan(_b64.b64encode(pbuf.getvalue()).decode(), _ts_active_provider(), category or "")
+        if _it is not None or _ot is not None:
+            _log_ai_spend(spend_who, "/listings/photo#text-verify", "vision", _it, _ot,
+                          provider=(_svd[0] if _svd else None), model=(_svd[1] if _svd else None))
+        _anon_verify_painted.last = v
+        if not v or v.get("flag") == "inappropriate":
+            return None
+        if v.get("verdict") == "clean" and float(v.get("confidence") or 0) >= _ANON_PHOTO_CONF:
+            return v
+        if v.get("verdict") == "redact" and float(v.get("confidence") or 0) >= _ANON_PHOTO_CONF:
+            bx = [tuple(float(q) for q in bb[:4]) for bb in (blurred_boxes or [])]
+            def _covered(r):
+                x0, y0, x1, y1 = (float(q) for q in r[:4]); w = max(1.0, x1 - x0); h = max(1.0, y1 - y0)
+                return any(not (bb[2] < x0 - w or bb[0] > x1 + w or bb[3] < y0 - h or bb[1] > y1 + h) for bb in bx)
+            if bx and v.get("regions") and all(_covered(r) for r in v["regions"]):
+                return v
+        return None
+    except Exception as _e:
+        _log.warning("PHOTO-KIND-1 verify failed (photo held): %r", _e)
+        return None
+
+
 def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool = False):
     """Fail-closed anonymity gate for ONE seller-uploaded photo. PIL image in,
     PIL image out (blurred where needed). Raises HTTPException when the photo
@@ -7583,24 +7624,41 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
     labels = ", ".join(sorted(set(scan.get("labels") or []))[:4])
     _retake = ("TrustSquare listings are anonymous — please retake the photo "
                "avoiding number plates, signage and contact details.")
+    # PHOTO-KIND-1 (RUL-239): every outcome the gate cannot settle by itself is a private HOLD for David's one-tap check,
+    # not a refusal. Only inappropriate content, a wrong-item cover and a photo blur would ruin are still refused.
+    def _held(why, regs=None, lbls=None):
+        _l = lbls if lbls is not None else labels
+        _log.warning("PHOTO-HELD cat=%s who=%s why=%s labels=%s", (category or "-")[:30], (spend_who or "-")[:60], why, _l)
+        return _PhotoHeld(img, why, _l, regs if regs is not None else scan.get("regions"), category)
+    _txt_done = list(_pre_txt or []) + list(_txt_boxes or [])
     if scan["verdict"] == "reject":
-        raise _anon_422(category, spend_who,
-            detail="Photo blocked to protect your anonymity"
-                   + (" (%s)" % labels if labels else "") + ". " + _retake)
+        raise _held("the scan could not clear it (%s)" % (labels or "no detail"))
     if scan["confidence"] < _ANON_PHOTO_CONF:
-        raise _anon_422(category, spend_who,
-            detail="Could not confirm this photo is anonymous. " + _retake)
+        raise _held("the scan was unsure (confidence %.2f)" % float(scan["confidence"] or 0))
+    if scan["verdict"] == "redact" and not scan["regions"]:
+        # PHOTO-KIND-1: the identifying words were blurred one by one (text_ids / rules) and nothing else was named.
+        # TEXT-ANON-1 sent this case to a refusal ("not anonymous" / "blocked") although the blur was already done.
+        _anon_verify_painted.last = None
+        _v = _anon_verify_painted(img, category, spend_who, _txt_done + list(_pre or []))
+        _vr = getattr(_anon_verify_painted, "last", None)
+        if _v is None and _vr and _vr.get("verdict") == "redact" and _vr.get("regions") and _vr.get("flag") != "inappropriate":
+            # small print the full-frame read missed (a phone number on a maker's label): ONE zoomed read of exactly those
+            # spots, blurred to the glyph, then the takeover's own verify read -- the same locate-never-guess path as plates.
+            _img2, _v2 = _anon_plate_takeover(img, _vr, _ts_active_provider(), category or "", spend_who,
+                                              "/listings/photo#text-verify2", _pre, _txt_done)
+            if _v2 and _v2.get("verdict") == "clean" and float(_v2.get("confidence") or 0) >= _ANON_PHOTO_CONF:
+                img, _v = _img2, _v2
+        if _v is None:
+            # David's panel shows where the second read still saw something (dashed boxes) and offers Blur & approve there
+            raise _held("the blurred words could not be confirmed",
+                        list((_vr or {}).get("regions") or []) or None,
+                        (", ".join(sorted(set((_vr or {}).get("labels") or []))[:4]) or None))
+        return img, "redacted:" + (", ".join(sorted(set([l for l in (scan.get("labels") or []) if l][:3] + ["text"]))) or "text") + _mismatch
     if scan["verdict"] == "redact":
-        # PHOTO-REJECT-1 (RUL-033): no blur attempts while the canary is dark.
+        # PHOTO-REJECT-1 (RUL-033): no blur attempts while the canary is dark -- what text and plate localisation could
+        # not place (a graphic logo, a sign with no readable words) is held privately for the check instead of refused.
         if _anon_reject_only():
-            raise _anon_422(category, spend_who,
-                detail="This photo is not anonymous"
-                       + (" — it shows: %s" % labels if labels else "")
-                       + ". Please replace it or leave it out. A photo without "
-                         "number plates, signage or contact details works best.")
-        if not scan["regions"]:
-            raise _anon_422(category, spend_who,
-                detail="Photo blocked to protect your anonymity. " + _retake)
+            raise _held("not anonymous - it shows: %s" % (labels or "an identifying detail"))
         img2, _lbls = _anon_blur_until_clean(
             img, scan, _ts_active_provider(), category or "", spend_who,
             "/listings/photo#anon-verify")
@@ -7615,8 +7673,7 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
                            "shows your listing properly. Please use a different photo "
                            "- one without number plates, signage or contact details in "
                            "shot works best.")
-            raise _anon_422(category, spend_who,
-                detail="Could not verifiably blur the identifying content. " + _retake)
+            raise _held("the blur could not be verified")
         return img2, "redacted:" + ", ".join(sorted(set(_lbls))[:4]) + _mismatch
     if _plate_done:
         _what = (["number plate"] if _pre_plates else []) + (["text"] if (_pre_txt or _txt_boxes) else [])
@@ -8290,7 +8347,8 @@ def upload_listing_photo(
     draft_token: Optional[str] = Form(None),
     ts_user: str = Cookie(default=None),
     ts_draft: str = Cookie(default=None),
-    x_admin_key: str = Header(default=None)
+    x_admin_key: str = Header(default=None),
+    hold_listing_id: Optional[int] = Form(None)   # PHOTO-KIND-1: which advert a HELD photo belongs to (Edit adds photos first, saves after)
 ):
     # SEC-GATE-1 (24 Sep 2026): with listing_id this writes the advert's cover and photo strip, and the app
     # key is public -- so only the listing's owner (session), its anonymous composer (draft_token from
@@ -8357,7 +8415,29 @@ def upload_listing_photo(
                 _gate_cat = _r0["category"] or ""
         except Exception:
             pass
-    img, _anon_note = _seller_photo_anon_gate(img, _gate_cat, _anon_who, is_primary=_gate_primary)
+    try:
+        img, _anon_note = _seller_photo_anon_gate(img, _gate_cat, _anon_who, is_primary=_gate_primary)
+    except _PhotoHeld as _h:      # PHOTO-KIND-1 (RUL-239): kept privately for the check, never refused
+        _hold_email = _session_email(ts_user)
+        if not listing_id and hold_listing_id and _hold_email:
+            try:      # only her OWN advert -- a held photo is never tied to someone else's
+                _ch0 = database.get_db()
+                _ro = _ch0.execute("SELECT seller_email FROM listings WHERE id=?", (hold_listing_id,)).fetchone()
+                _ch0.close()
+                if _ro and (_ro["seller_email"] or "").strip().lower() == _hold_email.strip().lower():
+                    listing_id = hold_listing_id
+            except Exception:
+                pass
+        if listing_id:
+            try:
+                _ch = database.get_db()
+                _rh = _ch.execute("SELECT seller_email FROM listings WHERE id=?", (listing_id,)).fetchone()
+                _ch.close()
+                if _rh and _rh["seller_email"]:
+                    _hold_email = _rh["seller_email"]
+            except Exception:
+                pass
+        return _photo_hold_store(_h, listing_id, _hold_email, _gate_primary, caption, "listings/photo")
 
     # ── Thumbnail (~100KB) ──────────────────────────────────
     thumb = img.copy()
@@ -8521,6 +8601,10 @@ def upload_draft_listing_photo(
             ("ops-upload" if (x_admin_key and MS_ADMIN_KEY and x_admin_key == MS_ADMIN_KEY)
              else _photo_bill_who(_sess if (_sess and _sess == _own) else None, _own, listing_id, request)),   # AUD-004
             is_primary=not (row["thumb_url"] or ""))   # WRONG-TYPE-1: first photo = advert cover
+    except _PhotoHeld as _h:      # PHOTO-KIND-1 (RUL-239): kept privately for the check, never refused
+        _hp = not (row["thumb_url"] or "")
+        conn.close()
+        return _photo_hold_store(_h, listing_id, _own or email, _hp, None, "photo/draft")
     except HTTPException:
         conn.close()
         raise
@@ -13698,6 +13782,7 @@ async def aa_publish(
     thumb_url  = None
     medium_url = None
     _anon_notes = []
+    _aa_holds = []  # PHOTO-KIND-1 (RUL-239): photos kept privately for the check, attached to the advert below
     _aa_urls = []   # E2E-HMI-1: every stored photo, in order (only the first was ever kept)
     for idx, photo in enumerate(photos):
         raw_data = await photo.read()
@@ -13713,6 +13798,9 @@ async def aa_publish(
                 img, _anote = _seller_photo_anon_gate(img, category or "", email)
                 if _anote:
                     _anon_notes.append("photo%d:%s" % (idx + 1, _anote))
+            except _PhotoHeld as _ah:
+                _anon_notes.append("photo%d:checking" % (idx + 1)); _aa_holds.append((idx, _ah))
+                continue
             except HTTPException as _aexc:
                 _anon_notes.append("photo%d:held:%s" % (idx + 1, str(_aexc.detail)[:60]))
                 continue
@@ -13836,6 +13924,11 @@ async def aa_publish(
     )
     conn.commit()
     conn.close()
+    for _hidx, _hh in _aa_holds:     # PHOTO-KIND-1: the held photos wait privately, tied to this advert
+        try:
+            _photo_hold_store(_hh, listing_id, email, (_hidx == 0 and not thumb_url), None, "aa-publish")
+        except Exception as _he:
+            _log.error("PHOTO-HELD store failed on aa-publish: %r", _he)
 
     if not _go_live:
         # SEC-GATE-1 (24 Sep 2026): a draft is not matched to buyers; it goes live via publish_listing's EULA gate.
@@ -13849,7 +13942,8 @@ async def aa_publish(
     # Wishlist matching — async, never blocks publish (PR-14)
     background_tasks.add_task(run_match_job, listing_id)
     return {"listing_id": listing_id, "pdf_url": None,   # PDF generation added in Stage 4
-            "photos_held": sum(1 for _n in _anon_notes if ":held:" in _n)}   # E2E-HMI-1
+            "photos_held": sum(1 for _n in _anon_notes if ":held:" in _n),   # E2E-HMI-1
+            "photos_checking": len(_aa_holds)}   # PHOTO-KIND-1
 
 
 # ── TUPPENCE BALANCE (public read) ───────────────────────────
@@ -23313,8 +23407,21 @@ _CATEGORY_EXPECTS = {
                    "similar) or its packaging, grading slab or certificate"),
 }
 
+# PHOTO-KIND-1 (RUL-239, David 18 Oct 2026): a fire-extinguisher maintenance lister's photo was refused for its service tag.
+_ANON_LABELS_CLAUSE = (
+    " PRODUCT LABELS, RATING PLATES AND SERVICE / INSPECTION TAGS (PHOTO-KIND-1, RUL-239): what such a label normally carries "
+    "is NOT identifying and never makes a photo redact or reject - dates (service, expiry, next service, manufacture, pressure "
+    "test), serial, part, model, batch and lot numbers, certificate and standards marks (SABS, SANS, ISO, CE, UL), capacities, "
+    "weights, pressures, ratings, instructions, warnings and barcodes. On a label ONLY the words that let a buyer find a person "
+    "or business outside TrustSquare identify: a person's name or signature (an inspector's or technician's name may be the "
+    "seller's own), a business or service-company name, a phone number, e-mail, website or street address. Those words are "
+    "blurred one by one, so they are NEVER a reason to reject and printed text that can be blurred word by word is never "
+    "'large or scattered'. NEVER box a whole label, tag, sticker or plate as a region: list only its identifying words - in "
+    "text_ids when they are in the OCR list, otherwise as a tight region around just those words - and when they are all "
+    "handled that way the verdict is redact (or clean when there are none).")
+
 def _anon_scan_prompt_for(category):
-    base = _ANON_SCAN_PROMPT_TOURS if _anon_is_travel(category) else _ANON_SCAN_PROMPT
+    base = (_ANON_SCAN_PROMPT_TOURS if _anon_is_travel(category) else _ANON_SCAN_PROMPT) + _ANON_LABELS_CLAUSE
     exp = _CATEGORY_EXPECTS.get((category or "").strip().lower())
     if exp:
         base += (
@@ -24320,9 +24427,12 @@ _ANON_OCR_SUFFIX = (
     ' TEXT READ FROM THIS PHOTO BY OCR (index: "text"): %s. ALSO return "text_ids": a JSON list of the '
     'indices whose text identifies a PERSON, a BUSINESS or an EXACT PLACE - a personal name or surname, a '
     'business / agency / dealership / farm / producer / stall / school name, a street name, a house or '
-    'street number, a full address, or a number plate or phone number the OCR mis-read. NOT identifying '
+    'street number, a full address, or a number plate or phone number the OCR mis-read; a person\'s name or '
+    'signature on a service or inspection tag counts. NOT identifying '
     '(leave out): suburb, city, province and country names; prices; generic words (SOLD, SALE, OPEN, STOP, '
-    'WELCOME); a mass-market manufacturer\'s mark on goods being resold (Ford, Samsung, Nikon). Judge by the '
+    'WELCOME); a mass-market manufacturer\'s mark on goods being resold (Ford, Samsung, Nikon); and on any product '
+    'label or service tag the dates, serial / part / model / batch numbers, standards marks, specs and instructions '
+    '(PHOTO-KIND-1). Text listed in text_ids is blurred word by word - it never makes the verdict reject. Judge by the '
     'photo: "42" on a gate pillar or letterbox is a house number, "42" on a jersey is not. Text already '
     'blurred is handled - never list it. An identifying item you can SEE that is not in the list still goes '
     'in "regions" as before, and text you list in text_ids does NOT also need a region.')
@@ -25121,6 +25231,309 @@ def _require_admin(x_admin_token: str = Header(default=None)):
         raise HTTPException(status_code=401, detail="Token expired.") from exc
     except _pyjwt.InvalidTokenError as exc:
         raise HTTPException(status_code=401, detail="Invalid token.") from exc
+
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# PHOTO-KIND-1 (RUL-239, David 18 Oct 2026) -- the private photo hold and David's one-tap check
+# ═══════════════════════════════════════════════════════════════════════════════════════
+# "We need to somehow minimize the new listers being discouraged with rejected photos or blockers, and still stick to
+# anonymity." A photo the gate cannot clear by itself (_PhotoHeld) is kept here, PRIVATE: a file outside the web root, a
+# row in photo_holds, never published and never served to anyone but the admin check. The advert carries on without it.
+# David sees it on the Ops Dashboard with three buttons -- Approve / Blur the marked spots & approve / Decline -- and the
+# seller gets one short e-mail either way. Changes the 7 Jul fail-closed rule "a photo that is not cleared is never stored"
+# to "never PUBLISHED" (RUL-239). Anonymity holds: nothing in a hold reaches a buyer until a person has looked at it.
+PHOTO_HOLD_DIR = os.getenv("PHOTO_HOLD_DIR", "/var/lib/marketsquare/photo_holds")
+_PHOTO_HOLD_MSG = ("Thank you - your photo is waiting for a quick check so that you stay anonymous. You don't need to do "
+                   "anything: your advert carries on without it, and the photo is added as soon as it has been checked "
+                   "(usually within a day).")
+
+def _ph_now(delta_min=0):
+    """UTC 'YYYY-MM-DD HH:MM:SS' computed in Python (portable SQL -- PG-READINESS)."""
+    return (datetime.now(timezone.utc) + timedelta(minutes=delta_min)).strftime("%Y-%m-%d %H:%M:%S")
+
+def _photo_holds_ensure(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS photo_holds (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        listing_id   INTEGER,
+        seller_email TEXT,
+        category     TEXT,
+        is_primary   INTEGER NOT NULL DEFAULT 0,
+        caption      TEXT,
+        file_name    TEXT    NOT NULL,
+        reason       TEXT,
+        labels       TEXT,
+        regions      TEXT,
+        source       TEXT,
+        status       TEXT    NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','declined')),
+        created_at   TEXT    NOT NULL,
+        alerted_at   TEXT,
+        decided_at   TEXT,
+        decided_how  TEXT,
+        photo_url    TEXT)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_photo_holds_status ON photo_holds(status, created_at)")
+
+def _photo_hold_store(h, listing_id, seller_email, is_primary=False, caption=None, source=""):
+    """Keep a held photo privately and answer the upload. Returns the JSON body the app shows (200, held=True)."""
+    fname = uuid.uuid4().hex + ".jpg"
+    try:
+        os.makedirs(PHOTO_HOLD_DIR, mode=0o700, exist_ok=True)   # migration 084 makes it (the app user cannot, under /var/lib)
+        buf = io.BytesIO(); h.img.convert("RGB").save(buf, format="JPEG", quality=88)   # re-encoded: no EXIF / GPS
+        with open(os.path.join(PHOTO_HOLD_DIR, fname), "wb") as fh:
+            fh.write(buf.getvalue())
+    except Exception as _se:   # never a 500: say it plainly and keep the fail-closed default (nothing published)
+        _log.error("PHOTO-HELD could not keep the photo (%s): %r", PHOTO_HOLD_DIR, _se)
+        raise HTTPException(status_code=503, detail="Your photo could not be checked just now - please try again in a few minutes.")
+    try:
+        os.chmod(os.path.join(PHOTO_HOLD_DIR, fname), 0o600)
+    except Exception:
+        pass
+    conn = database.get_db()
+    try:
+        _photo_holds_ensure(conn)
+        cur = conn.execute(
+            "INSERT INTO photo_holds (listing_id, seller_email, category, is_primary, caption, file_name, reason, labels, regions, source, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (int(listing_id) if listing_id else None, (seller_email or "").strip().lower() or None, h.category or "",
+             1 if is_primary else 0, (caption or "")[:200] or None, fname, h.reason, h.labels,
+             json.dumps([list(r[:4]) + [str(r[4]) if len(r) > 4 else ""] for r in (h.regions or [])][:12]), source[:40], _ph_now()))
+        hid = cur.lastrowid
+        conn.commit()
+    finally:
+        conn.close()
+    _log.warning("PHOTO-HELD stored hold=%s listing=%s source=%s why=%s", hid, listing_id, source, h.reason)
+    try:
+        import threading as _thr
+        _thr.Thread(target=_photo_hold_alert, args=(hid,), name="photo-hold-alert", daemon=True).start()
+    except Exception:
+        pass
+    return {"held": True, "hold_id": hid, "anon": "held", "thumb_url": None, "medium_url": None,
+            "message": _PHOTO_HOLD_MSG}
+
+def _photo_hold_alert(hold_id):
+    """One e-mail to David when photos are waiting -- at most one per 30 minutes; counts only, never the photo."""
+    try:
+        conn = database.get_db()
+        try:
+            _photo_holds_ensure(conn)
+            if conn.execute("SELECT 1 FROM photo_holds WHERE alerted_at >= ? LIMIT 1", (_ph_now(-30),)).fetchone():
+                return
+            n = conn.execute("SELECT COUNT(*) FROM photo_holds WHERE status='pending'").fetchone()[0]
+            to = GMAIL_ADDRESS
+            try:
+                r = conn.execute("SELECT alert_email FROM ai_spend_config WHERE id=1").fetchone()
+                if r and r[0]:
+                    to = r[0]
+            except Exception:
+                pass
+            conn.execute("UPDATE photo_holds SET alerted_at=? WHERE id=?", (_ph_now(), hold_id))
+            conn.commit()
+        finally:
+            conn.close()
+        link = APP_URL + "/dashboard.html"
+        html = ("<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
+                "<h2 style='color:#0c1a2e'>%d seller photo%s waiting for your check</h2>"
+                "<p>The photo check could not clear %s by itself, so %s kept privately - nobody can see %s. "
+                "One tap each on the Ops Dashboard: Approve, Blur the marked spots &amp; approve, or Decline.</p>"
+                "<p><a href='%s' style='display:inline-block;background:#C8873A;color:#fff;text-decoration:none;"
+                "padding:12px 22px;border-radius:8px;font-weight:700'>Open the Ops Dashboard &rarr;</a></p></div>"
+                % (n, "" if n == 1 else "s", "it" if n == 1 else "them", "it is" if n == 1 else "they are",
+                   "it" if n == 1 else "them", link))
+        _log.info("PHOTO-HELD alert to David: %s", _send_system_email(to, "TrustSquare: %d photo%s waiting for your check" % (n, "" if n == 1 else "s"), html))
+    except Exception as exc:
+        _log.error("PHOTO-HELD alert failed: %s", exc)
+
+def _photo_hold_target(conn, row):
+    """The advert a held photo belongs to: its listing, or (an upload made before the advert existed) the seller's
+    newest advert created from 15 minutes before the photo onward, else her newest advert."""
+    if row["listing_id"]:
+        return int(row["listing_id"])
+    em = (row["seller_email"] or "").strip().lower()
+    if not em:
+        return None
+    try:
+        _since = (datetime.strptime(str(row["created_at"])[:19], "%Y-%m-%d %H:%M:%S") - timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        _since = str(row["created_at"] or "")
+    r = conn.execute("SELECT id FROM listings WHERE LOWER(seller_email)=? AND created_at >= ? "
+                     "ORDER BY id ASC LIMIT 1", (em, _since)).fetchone()
+    if not r:
+        r = conn.execute("SELECT id FROM listings WHERE LOWER(seller_email)=? ORDER BY id DESC LIMIT 1", (em,)).fetchone()
+    return int(r[0]) if r else None
+
+def _photo_hold_blur(img, regions):
+    """David's 'Blur the marked spots': a soft blur over each spot the scan marked (0-1000 boxes, +12% margin)."""
+    from PIL import ImageFilter
+    W, H = img.size
+    for rg in regions or []:
+        try:
+            x0, y0, x1, y1 = (float(v) for v in rg[:4])
+            mx = (x1 - x0) * 0.12; my = (y1 - y0) * 0.12
+            X0 = max(0, int((x0 - mx) * W / 1000)); Y0 = max(0, int((y0 - my) * H / 1000))
+            X1 = min(W, int((x1 + mx) * W / 1000) + 1); Y1 = min(H, int((y1 + my) * H / 1000) + 1)
+            if X1 - X0 < 3 or Y1 - Y0 < 3:
+                continue
+            crop = img.crop((X0, Y0, X1, Y1))
+            rad = max(8, int(min(X1 - X0, Y1 - Y0) / 5))
+            img.paste(crop.filter(ImageFilter.GaussianBlur(rad)).filter(ImageFilter.GaussianBlur(max(3, rad // 2))), (X0, Y0))
+        except Exception as e:
+            _log.warning("photo hold blur spot failed: %r", e)
+    return img
+
+def _photo_hold_attach(img, listing_id, is_primary, caption):
+    """Store an approved photo exactly like an upload (thumb + medium) and add it to the advert: cover when it was the
+    cover or the advert has none, otherwise the end of the strip; photo_urls and the [photos:] prefix both kept."""
+    import re as _re
+    thumb = img.copy(); thumb.thumbnail(THUMB_SIZE, Image.LANCZOS)
+    tb = io.BytesIO(); thumb.save(tb, format="JPEG", quality=JPEG_QUALITY_THUMB, optimize=True)
+    medium = img.copy(); medium.thumbnail(MEDIUM_SIZE, Image.LANCZOS)
+    mb = io.BytesIO(); medium.save(mb, format="JPEG", quality=JPEG_QUALITY_MEDIUM, optimize=True)
+    if _S3_CONFIGURED:
+        medium_url = _s3_upload(mb.getvalue(), "media/%s_checked.jpg" % uuid.uuid4().hex, "image/jpeg")
+        thumb_url = medium_url
+    else:
+        base = storage.generate_filename("listing")
+        thumb_url = storage.upload_photo(tb.getvalue(), base.replace(".jpg", "_thumb.jpg"), "image/jpeg")
+        medium_url = storage.upload_photo(mb.getvalue(), base.replace(".jpg", "_medium.jpg"), "image/jpeg")
+    conn = database.get_db()
+    try:
+        _has_pu = any(c[1] == "photo_urls" for c in conn.execute("PRAGMA table_info(listings)").fetchall())
+        row = conn.execute("SELECT thumb_url, description, %s AS photo_urls FROM listings WHERE id=?"
+                           % ("photo_urls" if _has_pu else "NULL"), (listing_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="The advert this photo belongs to no longer exists.")
+        primary = bool(is_primary) or not row["thumb_url"]
+        try:
+            urls = json.loads(row["photo_urls"] or "[]")
+            urls = urls if isinstance(urls, list) else []
+        except Exception:
+            urls = []
+        urls = ([medium_url] + urls) if primary else (urls + [medium_url])
+        cap = (caption or "").replace("|", " ").replace("::", " ").strip()
+        entry = ("%s::%s" % (medium_url, cap)) if cap else medium_url
+        desc = row["description"] or ""
+        if desc.startswith("[photos:"):
+            if primary:
+                desc = _re.sub(r"^\[photos:([^\]]*)\]", lambda m: "[photos:" + "|".join([entry] + [p for p in m.group(1).split("|") if p]) + "]", desc, count=1)
+            else:
+                desc = _re.sub(r"^\[photos:([^\]]*)\]", lambda m: "[photos:" + "|".join([p for p in m.group(1).split("|") if p] + [entry]) + "]", desc, count=1)
+        else:
+            first = [] if (primary or not row["thumb_url"]) else [row["thumb_url"]]
+            desc = "[photos:" + "|".join(([entry] + first) if primary else (first + [entry])) + "]\n" + desc
+        if primary:
+            conn.execute("UPDATE listings SET thumb_url=?, medium_url=? WHERE id=?", (thumb_url, medium_url, listing_id))
+        conn.execute("UPDATE listings SET description=? WHERE id=?", (desc, listing_id))
+        if _has_pu:
+            conn.execute("UPDATE listings SET photo_urls=? WHERE id=?", (json.dumps(urls), listing_id))
+        _stamp_quality_score(conn, listing_id)
+        conn.commit()
+    finally:
+        conn.close()
+    return medium_url
+
+def _photo_hold_seller_mail(email, approved, title):
+    try:
+        em = (email or "").strip().lower()
+        if "@" not in em:
+            return "no-email"
+        safe = (title or "your advert").replace("<", "&lt;").replace(">", "&gt;")
+        if approved:
+            return _send_system_email(em, "Your photo is on your TrustSquare advert", _lc_email_html(
+                "Your photo is on your advert",
+                "We checked the photo you added to <b>%s</b> and it is on your advert now. If a spot needed hiding to keep "
+                "you anonymous, it is softly blurred. You can change your photos any time." % safe, "Open my advert"))
+        return _send_system_email(em, "Please add another photo to your TrustSquare advert", _lc_email_html(
+            "Please add another photo",
+            "To keep you anonymous we could not use the photo you added to <b>%s</b>. Your advert is still live. Please add "
+            "another photo - one without names, phone numbers, signs or number plates in view works best." % safe, "Add a photo"))
+    except Exception as exc:
+        _log.error("PHOTO-HELD seller mail failed: %s", exc)
+        return "failed"
+
+class _PhotoHoldDecide(BaseModel):
+    action: str          # approve | blur | decline
+
+@app.get("/admin/photo-holds")
+def admin_photo_holds(status: str = "pending", limit: int = 40, _admin=Depends(_require_admin)):
+    import base64 as _b64
+    conn = database.get_db()
+    try:
+        _photo_holds_ensure(conn)
+        st = status if status in ("pending", "approved", "declined") else "pending"
+        rows = conn.execute("SELECT * FROM photo_holds WHERE status=? ORDER BY id DESC LIMIT ?",
+                            (st, max(1, min(int(limit or 40), 100)))).fetchall()
+        out = []
+        for r in rows:
+            tid = _photo_hold_target(conn, r)
+            lr = conn.execute("SELECT title, listing_status FROM listings WHERE id=?", (tid,)).fetchone() if tid else None
+            prev = None
+            if st == "pending":
+                try:
+                    im = Image.open(os.path.join(PHOTO_HOLD_DIR, r["file_name"])).convert("RGB")
+                    im.thumbnail((760, 760)); pb = io.BytesIO(); im.save(pb, format="JPEG", quality=78)
+                    prev = "data:image/jpeg;base64," + _b64.b64encode(pb.getvalue()).decode()
+                except Exception:
+                    prev = None
+            try:
+                regs = json.loads(r["regions"] or "[]")
+            except Exception:
+                regs = []
+            out.append({"id": r["id"], "listing_id": tid, "listing_title": (lr["title"] if lr else None),
+                        "listing_status": (lr["listing_status"] if lr else None), "category": r["category"],
+                        "seller": r["seller_email"], "reason": r["reason"], "labels": r["labels"], "regions": regs,
+                        "created_at": r["created_at"], "decided_at": r["decided_at"], "decided_how": r["decided_how"],
+                        "photo_url": r["photo_url"], "preview": prev})
+        pend = conn.execute("SELECT COUNT(*) FROM photo_holds WHERE status='pending'").fetchone()[0]
+        return {"holds": out, "pending": pend}
+    finally:
+        conn.close()
+
+@app.post("/admin/photo-holds/{hold_id}/decide")
+def admin_photo_hold_decide(hold_id: int, body: _PhotoHoldDecide, _admin=Depends(_require_admin)):
+    act = (body.action or "").strip().lower()
+    if act not in ("approve", "blur", "decline"):
+        raise HTTPException(status_code=400, detail="action must be approve, blur or decline")
+    conn = database.get_db()
+    try:
+        _photo_holds_ensure(conn)
+        r = conn.execute("SELECT * FROM photo_holds WHERE id=?", (hold_id,)).fetchone()
+        if not r:
+            raise HTTPException(status_code=404, detail="No such held photo.")
+        if r["status"] != "pending":
+            return {"ok": True, "status": r["status"], "already": True, "photo_url": r["photo_url"]}
+        tid = _photo_hold_target(conn, r)
+        lr = conn.execute("SELECT title FROM listings WHERE id=?", (tid,)).fetchone() if tid else None
+    finally:
+        conn.close()
+    path = os.path.join(PHOTO_HOLD_DIR, r["file_name"])
+    url = None
+    if act == "decline":
+        how = "declined"
+    else:
+        if not tid:
+            raise HTTPException(status_code=409, detail="This photo has no advert to go on yet - decline it or wait until the seller publishes.")
+        img = Image.open(path).convert("RGB")
+        if act == "blur":
+            try:
+                regs = json.loads(r["regions"] or "[]")
+            except Exception:
+                regs = []
+            img = _photo_hold_blur(img, regs)
+        url = _photo_hold_attach(img, tid, bool(r["is_primary"]), r["caption"])
+        how = "approved" if act == "approve" else "blurred+approved"
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE photo_holds SET status=?, decided_at=?, decided_how=?, photo_url=? WHERE id=? AND status='pending'",
+                     ("declined" if act == "decline" else "approved", _ph_now(), how, url, hold_id))
+        conn.commit()
+    finally:
+        conn.close()
+    try:
+        os.remove(path)          # the private original is not kept once decided
+    except Exception:
+        pass
+    mail = _photo_hold_seller_mail(r["seller_email"], act != "decline", (lr["title"] if lr else ""))
+    _log.warning("PHOTO-HELD decided hold=%s how=%s listing=%s seller-mail=%s", hold_id, how, tid, mail)
+    return {"ok": True, "status": ("declined" if act == "decline" else "approved"), "how": how, "listing_id": tid,
+            "photo_url": url, "seller_mail": mail}
 
 
 @app.post("/admin/anon-rescan-listing")

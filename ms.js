@@ -6947,7 +6947,7 @@ function openDetail(id){
       ${l.cat==='Cars' ? vehQuickSpec(l) : catSummary(l)}
       ${l.cat==='Cars' ? carDossierDoor(l) : ''}
       <div class="trust-block" id="trustblk-${l.id}" style="background:${t.bg};border-color:${t.c}30;">
-        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=7" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
+        <div><div class="tscore" id="tscore-${l.id}" style="color:${t.c};">${l.trust}</div><div class="tlabel" id="tlabel-${l.id}" style="color:${t.c};">${t.label}</div><div class="tsub" style="color:${t.c};">Trust Score</div><div onclick="advMapExpand(this)" data-u="/static/ranking_explainer.html?v=8" data-t="How scores &amp; ranking work" style="font-size:9.5px;color:${t.c};opacity:.75;cursor:pointer;text-decoration:underline;margin-top:2px;">how scores work</div></div>
         <div class="tbar-wrap"><div class="tbar"><div class="tbar-fill" id="tbarfill-${l.id}" style="width:${l.trust}%;background:${t.c};"></div></div><div class="tscale" style="color:${t.c};">0 · New · 40 · Some evidence · 70 · Strong evidence · 90 · Fullest evidence</div><div class="tscale-note" style="font-size:11px;color:var(--text-3);margin-top:5px;line-height:1.45;"><span>Trust Score reflects the evidence a seller has supplied and the checks we have completed. It is a score, not a guarantee or an assessment of character.</span> <span>A new seller simply has less evidence — not a mark against them.</span></div></div>
       </div>
 
@@ -8756,7 +8756,7 @@ async function paDoPublish(){
         try{ if(_pr1){ const _j1=await _pr1.json(); _w1=(_j1&&_j1.detail)||''; } }catch(e){}
         showToast('⚠ Your photo could not be added: '+(_w1||'the upload did not complete')+
                   '. The listing is live — re-add the photo from Edit.', 8000);
-      }
+      } else if(_pr1 && _pr1.ok){ try{ msPhotoAfter(await _pr1.json()); }catch(e){} }   // PHOTO-KIND-1
     }
     // 4. Store email for returning seller recognition
     localStorage.setItem('ms_aa_email',email);
@@ -12449,6 +12449,7 @@ async function sbDoPublish(){
       // make it. Declared here (block scope) so it exists for both the loop and the
       // summary toast below.
       const _photoFails=[];
+      const _photoOk=[];   // PHOTO-KIND-1: blurred / held answers, told once after the batch
       for(let pi=0;pi<sbState.photos.length;pi++){
         const pfd=new FormData();
         const pblob=await (await fetch(sbState.photos[pi].dataUrl)).blob();
@@ -12471,10 +12472,13 @@ async function sbDoPublish(){
           let _why='';
           try{ const _sj=await _spr.json(); _why=(_sj&&_sj.detail)||''; }catch(e){}
           _photoFails.push((pi+1)+': '+(_why||('rejected ('+_spr.status+')')));
+        } else {
+          try{ _photoOk.push(await _spr.json()); }catch(e){}
         }
       }
       // TS-0026: one clear summary rather than silence. The advert is live either
       // way — the seller must know which photos did not make it, and why.
+      try{ msPhotoAfterMany(_photoOk); }catch(e){}
       if(_photoFails.length && typeof showToast==='function'){
         showToast('⚠ '+_photoFails.length+' photo'+(_photoFails.length>1?'s':'')+
                   ' could not be added — '+_photoFails.join('; ')+
@@ -13821,11 +13825,13 @@ async function elAddPhoto(event) {
   const leftOut = files.length - take.length;
   const failed = [];
   let added = 0;
+  const _elOk = [];   // PHOTO-KIND-1
   for (let i = 0; i < take.length; i++) {
     const file = take[i];
     showToast(take.length > 1 ? '⏳ Uploading photo ' + (i + 1) + ' of ' + take.length + '…' : '⏳ Uploading photo…');
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('hold_listing_id', String(elCurrentId));   // PHOTO-KIND-1: a held photo knows its advert
     try {
       const res = await fetch(BEA_URL + '/listings/photo', {
         method: 'POST', headers: { 'X-Api-Key': API_KEY }, body: fd
@@ -13839,6 +13845,8 @@ async function elAddPhoto(event) {
         throw new Error(_why);
       }
       const data = await res.json();
+      _elOk.push(data);
+      if (data && data.held) continue;   // PHOTO-KIND-1: kept for a quick check, added to the advert once checked
       const _u = data.medium_url || data.thumb_url;
       if (!_u) throw new Error('no photo address came back');
       _elPhotoUrls.push(_u);
@@ -13848,7 +13856,8 @@ async function elAddPhoto(event) {
     }
   }
   inp.value = '';
-  if (!added) { showToast('Photo upload failed — ' + failed.join(' · '), 7000); return; }
+  const _elHeld = msPhotoAfterMany(_elOk);   // PHOTO-KIND-1
+  if (!added) { if (!_elHeld) showToast('Photo upload failed — ' + failed.join(' · '), 7000); return; }
   if (elCurrentRaw) elCurrentRaw.photo_urls = JSON.stringify(_elPhotoUrls);
   elRenderPhotos(elCurrentRaw || {photo_urls: JSON.stringify(_elPhotoUrls)}, '');
   const _n = added + ' photo' + (added !== 1 ? 's' : '');
@@ -13915,6 +13924,8 @@ async function elReplacePhoto(event) {
       throw new Error(_why);
     }
     const data = await res.json();
+    if (data && data.held) { msPhotoAfter(data); return; }   // PHOTO-KIND-1: kept for a quick check; the old photo stays until then
+    msPhotoAfter(data);
 
     // Update the displayed photo immediately
     const card = document.getElementById('el-pcard-' + _elPhotoReplaceIdx);
@@ -15292,6 +15303,7 @@ async function feaLmSubmit() {
     try { const res = await fetch(pubImg); files = [await res.blob()]; } catch(e) { files = []; }
   }
   const _over = (hasNewFile && photos.length > 5) ? ' (the first 5 are used)' : '';
+  const _lmOk = [];   // PHOTO-KIND-1
   for (let i = 0; i < files.length; i++) {
     status.textContent = (files.length > 1 ? 'Uploading photo ' + (i + 1) + ' of ' + files.length : 'Uploading photo') + _over + '...';
     const fd = new FormData();
@@ -15305,19 +15317,34 @@ async function feaLmSubmit() {
     } catch(e) { pr = null; }
     if (pr && pr.ok) {
       const pd = await pr.json().catch(() => ({}));
+      _lmOk.push(pd);
+      if (pd && pd.held) continue;   // PHOTO-KIND-1: kept for a quick check, added to her advert once checked
       const u = pd.medium_url || pd.thumb_url || null;
       if (u) photoUrls.push(u);
       if (!thumbUrl) { thumbUrl = pd.thumb_url || u; mediumUrl = pd.medium_url || u; }
       continue;
     }
+    if (window._lmSkipBadPhoto) continue;   // PHOTO-KIND-1: she chose to publish without the photo that could not be used
     let why = '';
     if (pr) { try { const pj = await pr.json(); if (pj && typeof pj.detail === 'string') why = pj.detail; } catch(e) {} }
     status.textContent = (files.length > 1 ? 'Photo ' + (i + 1) : 'Your photo') + ' could not be used: '
       + (why || (pr ? 'the upload was refused (' + pr.status + ')' : 'no connection')).replace(/[.\s]+$/, '')
-      + '. Nothing was published — choose other photos and tap Publish again.';
+      + '. Nothing was published yet — choose another photo and tap Publish again, or publish without it.';
+    /* PHOTO-KIND-1 (RUL-239): a refused photo is never a dead end -- one tap publishes the advert without it */
+    try {
+      let sk = document.getElementById('lm-skip-photo');
+      if (!sk) { sk = document.createElement('button'); sk.id = 'lm-skip-photo'; sk.type = 'button';
+        sk.style.cssText = 'display:block;margin:10px auto 0;background:none;border:1px solid currentColor;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;color:inherit;';
+        status.parentNode.insertBefore(sk, status.nextSibling); }
+      sk.textContent = 'Publish without this photo';
+      sk.onclick = function(){ window._lmSkipBadPhoto = true; sk.remove(); btn.click(); };
+    } catch(e) {}
     btn.disabled = false;
     return;
   }
+  window._lmSkipBadPhoto = false;
+  try { const _sk0 = document.getElementById('lm-skip-photo'); if (_sk0) _sk0.remove(); } catch(e) {}
+  try { msPhotoAfterMany(_lmOk); } catch(e) {}
 
   status.textContent = 'Publishing listing…';
   try {
@@ -15391,6 +15418,50 @@ function _feaLmShowSuccess(title, listingId) {
 }
 
 let toastTimer;
+/* PHOTO-KIND-1 (RUL-239, David 18 Oct 2026): "minimize the new listers being discouraged with rejected photos or
+   blockers, and still stick to anonymity." The seller SEES what the check did: a photo whose names or numbers were
+   softly blurred is shown to her as buyers will see it; a photo kept for a quick check says so (her advert carries on
+   without it and the photo is added once checked). One notice per batch, never a stack of them. */
+var MS_PHOTO_HELD_MSG = 'Thank you - your photo is waiting for a quick check so that you stay anonymous. Nothing for you to do: your advert carries on without it and the photo is added once it is checked (usually within a day).';
+function msPhotoWhat(anon){
+  var a = String(anon || '').toLowerCase();
+  if (a.indexOf('plate') >= 0 && a.indexOf('text') >= 0) return 'a number plate and some writing';
+  if (a.indexOf('plate') >= 0) return 'a number plate';
+  return 'a name or number';
+}
+function msPhotoBlurNotice(url, anon){
+  try {
+    if (!url || document.getElementById('ms-pk-sheet')) return;
+    var w = document.createElement('div');
+    w.id = 'ms-pk-sheet';
+    w.setAttribute('role', 'dialog');
+    w.style.cssText = 'position:fixed;inset:0;z-index:10050;background:rgba(5,10,20,.62);display:flex;align-items:flex-end;justify-content:center;';
+    w.innerHTML = '<div style="background:#fff;color:#0c1a2e;max-width:440px;width:100%;border-radius:18px 18px 0 0;padding:18px 16px 20px;box-shadow:0 -8px 30px rgba(0,0,0,.3);">'
+      + '<div style="font-weight:800;font-size:17px;margin-bottom:6px;">We kept you anonymous</div>'
+      + '<div style="font-size:14px;line-height:1.45;margin-bottom:12px;">We softly blurred ' + msPhotoWhat(anon) + ' on your photo. This is how buyers will see it - everything else stays sharp.</div>'
+      + '<img src="' + String(url).replace(/"/g, '&quot;') + '" alt="Your photo as buyers see it" style="display:block;width:100%;max-height:46vh;object-fit:contain;border-radius:12px;background:#f1f3f6;">'
+      + '<div style="font-size:12px;color:#6b7280;margin:10px 0 12px;">Prefer another photo? You can change it any time from Edit.</div>'
+      + '<button type="button" style="width:100%;background:#C8873A;color:#fff;border:0;border-radius:12px;padding:13px;font-weight:800;font-size:15px;">Looks good</button></div>';
+    w.addEventListener('click', function(e){ if (e.target === w || e.target.tagName === 'BUTTON') w.remove(); });
+    document.body.appendChild(w);
+  } catch(e) {}
+}
+/* After a 200 from /listings/photo: 'held' | 'blurred' | '' */
+function msPhotoAfter(j){
+  if (!j) return '';
+  if (j.held) { if (typeof showToast === 'function') showToast('⏳ ' + (j.message || MS_PHOTO_HELD_MSG), 9000); return 'held'; }
+  if (/^redacted/.test(String(j.anon || ''))) { msPhotoBlurNotice(j.medium_url || j.thumb_url, j.anon); return 'blurred'; }
+  return '';
+}
+function msPhotoAfterMany(list){
+  var held = 0, blur = null;
+  (list || []).forEach(function(j){ if (!j) return; if (j.held) held++; else if (!blur && /^redacted/.test(String(j.anon || ''))) blur = j; });
+  if (blur) msPhotoBlurNotice(blur.medium_url || blur.thumb_url, blur.anon);
+  if (held && typeof showToast === 'function')
+    showToast('⏳ ' + (held > 1 ? held + ' of your photos are' : 'Your photo is') + ' waiting for a quick check so that you stay anonymous - your advert carries on, and ' + (held > 1 ? 'they are' : 'it is') + ' added once checked.', 9000);
+  return held;
+}
+
 function showToast(msg, ms){
   // TOAST-DURATION-1 (5 Sep 2026): the second argument was ACCEPTED BY 13 CALL SITES AND
   // SILENTLY IGNORED. Messages written to need reading time got 2.6 s like everything else --

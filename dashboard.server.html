@@ -491,6 +491,62 @@
   <!-- MAIN CONTENT -->
   <div class="content">
 
+    <!-- PHOTO-KIND-1 (RUL-239, David 18 Oct 2026): seller photos the anonymity check kept PRIVATELY, one tap each.
+         Hidden when nothing waits. Nothing here is seen by buyers until David approves it. -->
+    <div id="ph-wrap" style="display:none;margin:0 0 16px;background:rgba(201,132,32,.08);border:1px solid rgba(201,132,32,.45);border-radius:14px;padding:14px 14px 6px;">
+      <style>
+        #ph-wrap .ph-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:12px;margin:0 0 12px;}
+        #ph-wrap .ph-img{position:relative;flex:0 0 auto;max-width:300px;}
+        #ph-wrap .ph-img img{display:block;max-width:300px;max-height:300px;border-radius:9px;}
+        #ph-wrap .ph-box{position:absolute;border:2px dashed #F0B23E;border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.5);pointer-events:none;}
+        #ph-wrap .ph-meta{flex:1 1 220px;font-size:13px;line-height:1.5;}
+        #ph-wrap .ph-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+        #ph-wrap button{border:0;border-radius:8px;padding:9px 13px;font-weight:700;cursor:pointer;font-size:13px;color:#fff;}
+        #ph-wrap .ph-ok{background:#2BB673;} #ph-wrap .ph-blur{background:#C98420;} #ph-wrap .ph-no{background:rgba(224,100,90,.85);}
+        #ph-wrap .ph-chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(240,178,62,.2);color:#F0B23E;margin-right:6px;}
+      </style>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+        <h3 style="margin:0 0 4px;font-size:17px;">📷 Photos waiting for your check <span id="ph-count" class="ph-chip" style="font-size:13px;"></span></h3>
+        <span style="font-size:11.5px;color:rgba(255,255,255,.5);">Kept privately — buyers see nothing until you approve. Dashed boxes = where the check pointed.</span>
+      </div>
+      <div id="ph-body"></div>
+    </div>
+    <script>
+    (function(){
+      function B(){return (typeof BEA!=='undefined'&&BEA)?BEA:'';}
+      function T(){try{return sessionStorage.getItem('ms_admin_token')||'';}catch(e){return '';}}
+      function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+      function row(h){
+        var boxes=(h.regions||[]).map(function(r){return '<div class="ph-box" style="left:'+(r[0]/10)+'%;top:'+(r[1]/10)+'%;width:'+((r[2]-r[0])/10)+'%;height:'+((r[3]-r[1])/10)+'%;" title="'+esc(r[4]||'')+'"></div>';}).join('');
+        var adv=h.listing_id?('#'+h.listing_id+' '+esc(h.listing_title||'')+(h.listing_status?' <span style="color:rgba(255,255,255,.45)">('+esc(h.listing_status)+')</span>':'')):'<i>no advert yet - she has not published</i>';
+        return '<div class="ph-row" id="ph-r'+h.id+'"><div class="ph-img">'+(h.preview?'<img src="'+h.preview+'" alt="held photo">':'<div style="padding:30px;color:rgba(255,255,255,.4)">preview unavailable</div>')+boxes+'</div>'
+          +'<div class="ph-meta"><div><b>Advert:</b> '+adv+'</div><div><b>Category:</b> '+esc(h.category||'-')+'</div>'
+          +'<div><b>Why it waits:</b> '+esc(h.reason||'-')+'</div>'+(h.labels?'<div><b>The check saw:</b> '+esc(h.labels)+'</div>':'')
+          +'<div style="color:rgba(255,255,255,.45);font-size:11.5px;">'+esc(h.created_at||'')+' UTC</div>'
+          +'<div class="ph-btns"><button class="ph-ok" onclick="phDecide('+h.id+',\'approve\')">✓ Approve as it is</button>'
+          +((h.regions&&h.regions.length)?'<button class="ph-blur" onclick="phDecide('+h.id+',\'blur\')">◐ Blur the marked spots &amp; approve</button>':'')
+          +'<button class="ph-no" onclick="phDecide('+h.id+',\'decline\')">✕ Decline (she is asked for another)</button></div>'
+          +'<div id="ph-m'+h.id+'" style="font-size:12px;margin-top:6px;color:rgba(255,255,255,.6);"></div></div></div>';
+      }
+      window.phLoad=function(){
+        var w=document.getElementById('ph-wrap'), box=document.getElementById('ph-body'); if(!w||!box||!T())return;
+        fetch(B()+'/admin/photo-holds',{headers:{'X-Admin-Token':T()}}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+          .then(function(d){
+            var n=d.pending||0; document.getElementById('ph-count').textContent=n;
+            w.style.display=n?'block':'none'; box.innerHTML=(d.holds||[]).map(row).join('');
+          }).catch(function(){});
+      };
+      window.phDecide=function(id,act){
+        var m=document.getElementById('ph-m'+id); if(m)m.textContent='Working…';
+        fetch(B()+'/admin/photo-holds/'+id+'/decide',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':T()},body:JSON.stringify({action:act})})
+          .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.detail||('error '+r.status));return j;});})
+          .then(function(j){if(m)m.textContent=(j.status==='approved'?'Done - on advert #'+j.listing_id:'Declined')+' · seller e-mail: '+(j.seller_mail||'-'); setTimeout(phLoad,900);})
+          .catch(function(e){if(m)m.textContent='Not done: '+e.message;});
+      };
+      setTimeout(phLoad,1500); setInterval(phLoad,120000);
+    })();
+    </script>
+
     <!-- Server Health Panel -->
     <div class="health-panel" id="health-panel">
       <div class="health-title">
