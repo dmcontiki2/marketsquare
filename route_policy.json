@@ -1699,6 +1699,11 @@
    "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-02): the loopback exemption is gone -- the maintenance agent's census now sends the key the running app holds (rows still discarded unread), so a caller on the box needs the admin credential like everyone else."
   },
   {
+   "key": "POST /dashboard/email-triage/{tid}/send",
+   "level": "admin",
+   "note": "HELD-REPLY-SEND-1 (18 Oct 2026, David, BA-035): sends a reply the support agent held back, from the Ops Dashboard, through the support lane (never David's inbox). The handler checks the admin credential again and claims the row once (drafted/failed -> sending)."
+  },
+  {
    "key": "GET /dashboard/cost",
    "level": "admin",
    "note": "ADMIN-KEY-LOCAL-1 (25 Sep 2026 inspection, qa-01): the loopback exemption is gone -- sensor.py now sends the key the running app holds, so a caller on the box needs the admin credential like everyone else."

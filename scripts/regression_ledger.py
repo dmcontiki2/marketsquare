@@ -39898,6 +39898,10 @@ def rg_audit1018_held_reply_send():
             bad.append("the send endpoint no longer sends through the support lane")
     if "function sendHeldReply(" not in page or "/send'" not in page or "X-Admin-Token" not in page:
         bad.append("dashboard.server.html lost the Send reply button for held replies")
+    pol = repo_file("route_policy.json") or ""
+    if '"key": "POST /dashboard/email-triage/{tid}/send"' not in pol:
+        bad.append("route_policy.json does not declare POST /dashboard/email-triage/{tid}/send -- the server's stranger "
+                   "test refuses the whole release (it did, 18 Oct 07:59)")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "a held support reply is sent from the dashboard, from the support address")]
 
 

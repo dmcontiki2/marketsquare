@@ -1,3 +1,32 @@
+## 2026-10-18 -- PHOTO-KIND-1 (RUL-239): label data stays sharp, contact words blur, and no seller photo is a dead end
+
+David, on #562 Fire Extinguisher Maintenance (a stranger from the Pretoria SMS lane, published 15 Oct with no photo because
+the anonymity check refused his): dates, serial and part numbers and an inspector's signature on an extinguisher label are
+not an anonymity breach; change how printed text is handled, and stop new listers being discouraged by refused photos while
+keeping anonymity. All five proposals approved. Root cause found on the way: since 19 Aug the check runs reject-only
+(RUL-033 bridge, meant to end when the Gemini lane armed -- Gemini was later dropped, RUL-203, so it never ended), and since
+7 Oct TEXT-ANON-1 blurred identifying words to the glyph but still sent the photo to that refusal.
+- **Label data stays sharp** (text_anon.py rule_class + _ANON_LABELS_CLAUSE on both scan prompts + the OCR list wording):
+  dates, serial / part / model / batch numbers, SABS / SANS / ISO / CE marks, specs, instructions. A phone needs a phone
+  shape now (a 9-digit serial is not a phone); a 13-digit SA ID number is still blurred.
+- **Contact words blur, the photo goes through:** a name or signature, company, phone, e-mail, website, address on a label
+  is blurred word by word; a text-only redact gets one verify read of the painted photo (and one zoomed read of small print
+  it missed) instead of a refusal.
+- **Held, never thrown away:** what the check cannot clear by itself (unsure scan, a logo with no readable words while
+  RUL-033 holds) is kept privately (/var/lib/marketsquare/photo_holds, mode 600, outside the web root; table photo_holds).
+  The advert carries on. Ops Dashboard top panel "Photos waiting for your check": the photo with dashed boxes where the
+  check pointed, and Approve / Blur the marked spots & approve / Decline. Approve puts it on the advert (cover when it was
+  the cover); the seller gets one e-mail either way; David one alert per 30 minutes, counts only. GET /admin/photo-holds,
+  POST /admin/photo-holds/{hold_id}/decide (admin, declared in route_policy.json). All three photo doors hold
+  (/listings/photo, /listings/{id}/photo/draft, aa-publish); Edit sends hold_listing_id so a held photo knows its advert.
+- **The seller sees what happened:** a blurred photo is shown to her as buyers see it ("We kept you anonymous"); a held one
+  says it is waiting for a quick check; Local Market and the Quick fast lane offer "Publish without this photo" after a
+  refusal (both used to stop the publish); Quick's own-photo step says blurred / waiting / not used and why.
+- Still refused: inappropriate content, a wrong-item cover, a photo blur would ruin (PHOTO-REPLACE-1).
+Proof: scripts/prove_photo_kind.py on 8 real fire-extinguisher photos (Wikimedia Commons) + one service-tag composite --
+before: 6 refused; after: 0 refused, 7 through (3 with words blurred, serial/dates sharp), 1 held. scripts/prove_photo_hold.py
+(17 checks, throwaway DB, no AI spend). Ledger RG-1059, RG-1060; rulings_check RUL-239. Cost model: no new spend.
+
 ## 2026-10-18 -- BUG-AUDIT-1016 follow-up: send a held support reply from the dashboard (cloud lane, with David)
 
 - **HELD-REPLY-SEND-1** (bea_main.py POST /dashboard/email-triage/{tid}/send; dashboard.server.html loadEmailTriage + sendHeldReply;

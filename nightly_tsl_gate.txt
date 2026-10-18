@@ -1,12 +1,12 @@
   ------------------------------------------------------------
-  TSL PRE-DEPLOY GATE   2026-10-18T05:55:12Z   mode=strict
+  TSL PRE-DEPLOY GATE   2026-10-18T06:15:09Z   mode=strict
   [CM] change-management docs
     - STATUS.md            [ok]
     - CHANGELOG.md         [ok]
     - CHANGE_REGISTER.md   [ok]
     - STATUS newest date : 2026-10-17 (1 days ago)
     - CHANGELOG newest    : 2026-10-18
-    - Ship pending        : bea_main.py
+    - Ship pending        : none detected (working tree clean)
   [DB] live databases (read-only, msdeploy@178.104.73.239)
     - primary db        [ok, 13152256 bytes, integrity ok] (cached)
     - redis             [not readable - not gated]
