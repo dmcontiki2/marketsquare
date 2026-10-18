@@ -40118,5 +40118,46 @@ def rg_buzz_why():
             out.append((FAIL, "%s no longer gives its reason" % why))
     return out or [(INFO, "every Buzz limit explains itself on screen and in the server's refusal")]
 
+@entry("RG-1061", "APP-SCRIPT-STALL-1 (18 Oct 2026, David: 'after the audit the Trustsquare app is showing no listings'): the "
+       "one app script the live Home page links (static/ms.js?v=N&m=1) downloads in full, quickly, through Cloudflare",
+       LOCKED, fixed_on="2026-10-18",
+       scope="The exact ms.js URL named in the LIVE index.html, fetched through the public edge from wherever the board runs. "
+             "CLASS: the whole app is one ~1.4 MB script; if the edge copy stalls, Home draws its category tiles with "
+             "'0 listings' and nothing else, while the server and database are perfectly healthy. Measured 18 Oct 2026: "
+             "the Johannesburg edge served a half-filled cached copy at ~30 KB/s (a 20-40 s read got 96-870 KB of 1.4 MB), "
+             "a purge-everything did not evict it, and the same file under any other ?v= came in under 2 s. Cure = a new ?v= "
+             "(any deploy bumps it). Checks only the vantage it runs from -- another edge city can still stall.",
+       ref="DB held 146 live listings and the app answered /listings with all of them the whole time. Chrome: ms.js stuck "
+           "'pending', typeof openDetail === 'undefined', LISTINGS.length 0, no console error -- a silent empty Home.")
+def rg_app_script_stall():
+    import re as _re, time as _t
+    try:
+        html = _get("/")
+    except ProbeOffline as e:
+        return [(INFO, "NOT EVALUATED - %s" % e)]
+    m = _re.search(r'src="(/static/ms\.js\?v=\d+[^"]*)"', html)
+    if not m:
+        return [(FAIL, "the live Home page no longer links /static/ms.js?v=N -- the app script cannot load")]
+    url = BASE + m.group(1).replace("&amp;", "&")
+    t0 = _t.time(); got = 0; total = None
+    try:
+        r = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=15)
+        total = int(r.headers.get("Content-Length") or 0) or None
+        while _t.time() - t0 < 20:
+            b = r.read(65536)
+            if not b:
+                break
+            got += len(b)
+    except Exception as e:
+        return [(INFO, "NOT EVALUATED - could not open the app script (%s)" % str(e)[:120])]
+    secs = _t.time() - t0
+    if total and got < total:
+        return [(FAIL, "the app script %s delivered only %d of %d bytes in %.0f s -- Home shows no listings. "
+                       "Cure: ship a deploy (it bumps ?v=) so the edge fetches a fresh copy" % (m.group(1), got, total, secs))]
+    if secs > 15:
+        return [(FAIL, "the app script took %.0f s to download -- phones will give up and show an empty Home" % secs)]
+    return [(INFO, "the app script downloads in full in %.1f s (%d bytes)" % (secs, got))]
+
+
 if __name__ == "__main__":
     sys.exit(main())
