@@ -2520,6 +2520,16 @@
    "key": "GET /buzz/my-link/qr.svg",
    "level": "user",
    "note": "BUZZ-BOARD-1 (RUL-238): her own Buzz link as a QR code, drawn on our server; session-bound"
+  },
+  {
+   "key": "GET /admin/photo-holds",
+   "level": "admin",
+   "note": "PHOTO-KIND-1 (RUL-239, 18 Oct 2026): David's one-tap check of seller photos the anonymity gate kept privately"
+  },
+  {
+   "key": "POST /admin/photo-holds/{hold_id}/decide",
+   "level": "admin",
+   "note": "PHOTO-KIND-1 (RUL-239, 18 Oct 2026): David's one-tap check of seller photos the anonymity gate kept privately"
   }
  ]
 }
