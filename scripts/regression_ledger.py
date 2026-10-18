@@ -39773,6 +39773,30 @@ def rg_audit1017_report_empty():
     return [(INFO, "a listing report must carry the reporter's own words")]
 
 
+@entry("RG-1028", "HELD-REPLY-ALERT-1 (18 Oct 2026, David, BA-035): a support reply the agent holds back (or fails to send) alerts "
+       "David in one line, with no customer text, instead of waiting unseen",
+       LOCKED, fixed_on="2026-10-18",
+       scope="bea_main.py _triage_message (status drafted/failed) -> _alert_held_reply; address = ai_spend_config.alert_email",
+       ref="TS-0041, 15-17 Oct 2026: the agent's draft sat unsent while the visitor had only the automatic acknowledgement, "
+           "and nothing told David. RUL-069 (30 Aug) keeps customer mail out of his inbox, so the alert names only the reference.")
+def rg_audit1018_held_reply_alert():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    tri = fn_body(src, "async def _triage_message(")
+    alert = fn_body(src, "def _alert_held_reply(")
+    bad = []
+    if "_alert_held_reply" not in tri:
+        bad.append("the support agent no longer alerts David when it holds a reply back")
+    if not alert:
+        bad.append("_alert_held_reply is missing")
+    else:
+        for leak in ("from_addr", "subject_in", "body_in", "draft_reply", "body_preview"):
+            if leak in alert:
+                bad.append("the held-reply alert touches customer text (%s) -- RUL-069 keeps that out of David's inbox" % leak)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "a held support reply alerts David, with no customer text")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",

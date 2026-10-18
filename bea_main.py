@@ -29244,6 +29244,40 @@ def _ref_footer(ref: str, is_report: bool) -> str:
 # ONE-REPLY-1 discipline of one inbound message earning exactly one outbound reply.
 # Duplicating it would have re-created the fault the admin gate spent a month teaching
 # us (GATE-ONESOURCE-1, the same day).
+# HELD-REPLY-ALERT-1 (18 Oct 2026, David, BA-035): a reply the support agent holds back for approval
+# (or fails to send) used to wait unseen -- TS-0041 sat two days while the visitor had only the automatic
+# acknowledgement. Tell David in one line. RUL-069 (30 Aug) keeps customer mail out of his inbox, so the
+# alert names only the reference and the count -- never the sender, subject, message or draft. At most one
+# alert per 30 minutes per worker; each one counts every reply still waiting, so nothing is lost by the cap.
+_HELD_ALERT_LAST = [0.0]
+
+def _alert_held_reply(ref: str) -> None:
+    import time as _t
+    try:
+        if _t.time() - _HELD_ALERT_LAST[0] < 1800:
+            return
+        conn = database.get_db()
+        try:
+            n = conn.execute("SELECT COUNT(*) FROM email_triage WHERE status IN ('drafted', 'failed')").fetchone()[0]
+            to = (conn.execute("SELECT alert_email FROM ai_spend_config WHERE id=1").fetchone() or ["dmcontiki2@gmail.com"])[0]
+        finally:
+            conn.close()
+        if not n:
+            return
+        word = "reply is" if n == 1 else "replies are"
+        html = ("<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
+                "<h2 style='color:#0c1a2e'>%d support %s waiting for you</h2>" % (n, word) +
+                "<p>The support agent held back a reply it would not send on its own (latest: <b>%s</b>). "
+                "Read it in the email-triage panel of your Ops Dashboard.</p>" % (ref or "no reference") +
+                "<p style='color:#64748b;font-size:13px'>This alert carries no customer text.</p>"
+                "<p><a href='" + APP_URL + "/m/dashboard' style='display:inline-block;background:#C8873A;color:#fff;"
+                "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>Open the Ops Dashboard &rarr;</a></p></div>")
+        if _send_system_email(to, "TrustSquare: %d support %s waiting for you" % (n, word), html) == "sent":
+            _HELD_ALERT_LAST[0] = _t.time()
+    except Exception as exc:
+        _log.error("HELD-REPLY-ALERT-1 failed: %s", exc)
+
+
 async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str = "",
                           body_in: str = "", message_id: str = None,
                           ref_override: str = None, source: str = "email",
@@ -29395,6 +29429,12 @@ async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str 
             ack_sent = _smtp_send_reply(from_addr, subject or "your report", _ack, message_id)
         except Exception as exc:
             _log.error("MAINT-B1 ack send failed: %s", exc)
+
+    if status in ("drafted", "failed"):   # HELD-REPLY-ALERT-1: tell David, off the event loop
+        try:
+            asyncio.get_running_loop().run_in_executor(None, _alert_held_reply, ref_override or fault_code or "")
+        except Exception as exc:
+            _log.error("HELD-REPLY-ALERT-1 not scheduled: %s", exc)
 
     return {
         "category": category,
