@@ -243,7 +243,7 @@ _FRIENDLY_404_HTML = """<!doctype html><html lang="en"><head><meta charset="utf-
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>Page not found · TrustSquare</title>
 <style>
-:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--ink:#14213d;--soft:#5b6475;--line:#e3e6ec;--go:#16a97c}
+:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--ink:#14213d;--soft:#5b6475;--line:#e3e6ec;--go:#0e7a59}
 @media (prefers-color-scheme:dark){:root{--bg:#0f1420;--card:#171e2e;--ink:#eef1f6;--soft:#a3acbd;--line:#273046}}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);
 font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}

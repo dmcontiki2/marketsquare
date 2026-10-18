@@ -1,3 +1,6 @@
+- **Accessibility blockers found by an axe WCAG 2 A/AA pass are fixed** (bug audit BA-047; RG-1036).
+  Home's 319 Wonders card photos now carry alt (decorative — the card names the place); the Wonders country and type filters and the support form's "I am a" and "Topic" selects have accessible names; the Wonders country label (3.8:1), the support page's grey text (3.3:1) and footer (2.5:1) and the new 404 page's button (2.9:1) now read at least 4.5:1. Brand-colour contrast items (AI badge, Trust Score gold, the EN chip) are left for David.
+
 - **Home is about 4 MB lighter on a phone** (bug audit BA-046; RG-1035).
   Home downloaded about 5.9 MB, 5 MB of it 1200–1600 px photos drawn in 165–200 px tiles — and the Wonders preload fetched the eight full photos before the strip was even drawn. The category tiles, the Local Market tile, the Wonders strip (and its preload) and Nearby Wonders now ask for a 560 px card copy (about 40 KB) kept beside each original in t560/; a missing copy falls back to the original once. Detail views keep the full photo.
   The copies are made on the server by scripts/make_card_thumbs.py (334 made on 18 Oct: 103 MB of originals → 13 MB); a photo added later shows its original until the script is run again.

@@ -40061,6 +40061,33 @@ def rg_audit1018_perf_thumbs():
     return out or [(INFO, "Home's tiles use card-size copies with a fallback to the original")]
 
 
+@entry("RG-1036", "A11Y-AUDIT-1 (18 Oct 2026 bug audit, BA-047): the axe WCAG 2 A/AA blockers found on Home and /support stay fixed -- "
+       "Wonders card photos carry alt (decorative, the card names the place), the two Wonders filters and the two support selects have "
+       "accessible names, and the grey label texts read at least 4.5:1",
+       LOCKED, fixed_on="2026-10-18",
+       scope="ms.js renderWondersStrip + Nearby Wonders img alt; marketsquare.html #wf-country-select / #wf-type-select aria-label; "
+             "ms.css .wonder-card-country; support.html selects + --text-3 + footer; bea_main.py friendly 404 button green",
+       ref="axe-core 4.10.3 on the live site 18 Oct 2026, Chromium 360 px: Home image-alt x319 + select-name x2 + colour contrast x319 "
+           "(.wonder-card-country 3.81:1); /support select-name x2 + contrast x9 (3.34:1 / 2.52:1); the new 404 page's button 2.9:1.")
+def rg_audit1018_a11y():
+    js, h, css, sp, bea = (repo_file(n) for n in ("ms.js", "marketsquare.html", "ms.css", "support.html", "bea_main.py"))
+    if None in (js, h, css, sp, bea):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for src, needle, why in ((js, '<img class="wonder-card-img" src="${msThumb(w.photo)}" alt=""', "the Wonders strip's photos lost their alt"),
+                             (js, '<img class="wonder-card-img" data-near-src="${w.photo}" alt="" referrerpolicy', "a Nearby Wonders photo lost its alt"),
+                             (h, '<select id="wf-country-select" aria-label=', "the Wonders country filter has no accessible name"),
+                             (h, '<select id="wf-type-select" aria-label=', "the Wonders type filter has no accessible name"),
+                             (css, ".wonder-card-country{font-size:10px;color:rgba(255,255,255,.62);}", "the Wonders country label is back below 4.5:1"),
+                             (sp, '<select name="who" required aria-label=', "the support form's 'I am a' select has no accessible name"),
+                             (sp, '<select name="topic" required aria-label=', "the support form's Topic select has no accessible name"),
+                             (sp, "--text-3:  #8391a7;", "the support page's grey text is back below 4.5:1"),
+                             (bea, "--go:#0e7a59}", "the friendly 404 page's button is back below 4.5:1")):
+        if needle not in src:
+            out.append((FAIL, why))
+    return out or [(INFO, "the axe blockers found on 18 Oct stay fixed")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",

@@ -19,7 +19,7 @@
       --gold-lt: #e8c97a;
       --text:    #e2e8f0;
       --text-2:  #94a3b8;
-      --text-3:  #64748b;
+      --text-3:  #8391a7;   /* A11Y-AUDIT-1 (18 Oct 2026, BA-047): #64748b read 3.3:1 on the cards; 5:1 now */
       --border:  rgba(255,255,255,.08);
       --border-2:rgba(255,255,255,.13);
       --green:   #4ade80;
@@ -414,7 +414,7 @@
       </div>
       <div class="form-field">
         <label>I am a…</label>
-        <select name="who" required>
+        <select name="who" required aria-label="I am a…">
           <option value="">Select one</option>
           <option>Buyer</option>
           <option>Seller</option>
@@ -424,7 +424,7 @@
       </div>
       <div class="form-field">
         <label>Topic</label>
-        <select name="topic" required>
+        <select name="topic" required aria-label="Topic">
           <option value="">Select a topic</option>
           <option>Account access</option>
           <option>Payment or billing</option>
@@ -470,7 +470,7 @@
     <a href="mailto:support@trustsquare.co">support@trustsquare.co</a>
   </p>
   <p>Trustsquare (Pty) Ltd · Reg 2026/340128/07 · Pretoria, South Africa</p>
-  <p style="margin-top:8px;font-size:11px;color:#475569;">
+  <p style="margin-top:8px;font-size:11px;color:#7c8aa0;">
     © 2026 Trustsquare (Pty) Ltd. All rights reserved.
   </p>
 </footer>

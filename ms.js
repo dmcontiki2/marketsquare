@@ -15629,7 +15629,7 @@ function renderWondersStrip() {
   const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
   list.innerHTML = sorted.length ? sorted.map((w,i)=>`
     <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
-      <img class="wonder-card-img" src="${msThumb(w.photo)}" loading="${i<8?'eager':'lazy'}" referrerpolicy="origin-when-cross-origin" onerror="if(!msThumbBack(this))this.style.background='#1e3a5f'">
+      <img class="wonder-card-img" src="${msThumb(w.photo)}" alt="" loading="${i<8?'eager':'lazy'}" referrerpolicy="origin-when-cross-origin" onerror="if(!msThumbBack(this))this.style.background='#1e3a5f'">
       <div class="wonder-card-body">
         <div class="wonder-card-type ${tc2(w.type)}">${w.type}</div>
         <div class="wonder-card-name">${w.name}</div>
@@ -20934,7 +20934,7 @@ async function loadDetailWonders(listing) {
     const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
     list.innerHTML = wonders.map(w=>`
       <div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
-        <img class="wonder-card-img" data-near-src="${w.photo}" referrerpolicy="origin-when-cross-origin" onerror="if(!msThumbBack(this))this.removeAttribute('src')">
+        <img class="wonder-card-img" data-near-src="${w.photo}" alt="" referrerpolicy="origin-when-cross-origin" onerror="if(!msThumbBack(this))this.removeAttribute('src')">
         <div class="wonder-card-body">
           <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
           <div class="wonder-card-name">${w.name}</div>
