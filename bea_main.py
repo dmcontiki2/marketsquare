@@ -7626,9 +7626,10 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
                "avoiding number plates, signage and contact details.")
     # PHOTO-KIND-1 (RUL-239): every outcome the gate cannot settle by itself is a private HOLD for David's one-tap check,
     # not a refusal. Only inappropriate content, a wrong-item cover and a photo blur would ruin are still refused.
-    def _held(why):
-        _log.warning("PHOTO-HELD cat=%s who=%s why=%s labels=%s", (category or "-")[:30], (spend_who or "-")[:60], why, labels)
-        return _PhotoHeld(img, why, labels, scan.get("regions"), category)
+    def _held(why, regs=None, lbls=None):
+        _l = lbls if lbls is not None else labels
+        _log.warning("PHOTO-HELD cat=%s who=%s why=%s labels=%s", (category or "-")[:30], (spend_who or "-")[:60], why, _l)
+        return _PhotoHeld(img, why, _l, regs if regs is not None else scan.get("regions"), category)
     _txt_done = list(_pre_txt or []) + list(_txt_boxes or [])
     if scan["verdict"] == "reject":
         raise _held("the scan could not clear it (%s)" % (labels or "no detail"))
@@ -7648,7 +7649,10 @@ def _seller_photo_anon_gate(img, category: str, spend_who: str, is_primary: bool
             if _v2 and _v2.get("verdict") == "clean" and float(_v2.get("confidence") or 0) >= _ANON_PHOTO_CONF:
                 img, _v = _img2, _v2
         if _v is None:
-            raise _held("the blurred words could not be confirmed")
+            # David's panel shows where the second read still saw something (dashed boxes) and offers Blur & approve there
+            raise _held("the blurred words could not be confirmed",
+                        list((_vr or {}).get("regions") or []) or None,
+                        (", ".join(sorted(set((_vr or {}).get("labels") or []))[:4]) or None))
         return img, "redacted:" + (", ".join(sorted(set([l for l in (scan.get("labels") or []) if l][:3] + ["text"]))) or "text") + _mismatch
     if scan["verdict"] == "redact":
         # PHOTO-REJECT-1 (RUL-033): no blur attempts while the canary is dark -- what text and plate localisation could
