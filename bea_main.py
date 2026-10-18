@@ -25448,7 +25448,7 @@ def _photo_hold_attach(img, listing_id, is_primary, caption):
         row = conn.execute("SELECT thumb_url, description, %s AS photo_urls FROM listings WHERE id=?"
                            % ("photo_urls" if _has_pu else "NULL"), (listing_id,)).fetchone()
         if not row:
-            raise HTTPException(status_code=404, detail="The advert this photo belongs to no longer exists.")
+            raise HTTPException(status_code=404, detail="The listing this photo belongs to no longer exists.")
         primary = bool(is_primary) or not row["thumb_url"]
         try:
             urls = json.loads(row["photo_urls"] or "[]")
@@ -25558,7 +25558,7 @@ def admin_photo_hold_decide(hold_id: int, body: _PhotoHoldDecide, _admin=Depends
         how = "declined"
     else:
         if not tid:
-            raise HTTPException(status_code=409, detail="This photo has no advert to go on yet - decline it or wait until the seller publishes.")
+            raise HTTPException(status_code=409, detail="This photo has no listing to go on yet - decline it or wait until the seller publishes.")
         img = Image.open(path).convert("RGB")
         if act == "blur":
             try:

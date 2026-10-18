@@ -15441,7 +15441,7 @@ let toastTimer;
    blockers, and still stick to anonymity." The seller SEES what the check did: a photo whose names or numbers were
    softly blurred is shown to her as buyers will see it; a photo kept for a quick check says so (her advert carries on
    without it and the photo is added once checked). One notice per batch, never a stack of them. */
-var MS_PHOTO_HELD_MSG = 'Thank you - your photo is waiting for a quick check so that you stay anonymous. Nothing for you to do: your advert carries on without it and the photo is added once it is checked (usually within a day).';
+var MS_PHOTO_HELD_MSG = 'Thank you - your photo is waiting for a quick check so that you stay anonymous. Nothing for you to do: your listing carries on without it and the photo is added once it is checked (usually within a day).';
 function msPhotoWhat(anon){
   var a = String(anon || '').toLowerCase();
   if (a.indexOf('plate') >= 0 && a.indexOf('text') >= 0) return 'a number plate and some writing';
@@ -15477,7 +15477,7 @@ function msPhotoAfterMany(list){
   (list || []).forEach(function(j){ if (!j) return; if (j.held) held++; else if (!blur && /^redacted/.test(String(j.anon || ''))) blur = j; });
   if (blur) msPhotoBlurNotice(blur.medium_url || blur.thumb_url, blur.anon);
   if (held && typeof showToast === 'function')
-    showToast('⏳ ' + (held > 1 ? held + ' of your photos are' : 'Your photo is') + ' waiting for a quick check so that you stay anonymous - your advert carries on, and ' + (held > 1 ? 'they are' : 'it is') + ' added once checked.', 9000);
+    showToast('⏳ ' + (held > 1 ? held + ' of your photos are' : 'Your photo is') + ' waiting for a quick check so that you stay anonymous - your listing carries on, and ' + (held > 1 ? 'they are' : 'it is') + ' added once checked.', 9000);
   return held;
 }
 
