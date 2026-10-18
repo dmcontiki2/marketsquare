@@ -2767,6 +2767,15 @@ function qTr(txt){
   var out=txt;
   QI18N.p.forEach(function(p){ if(p[QLANG]) out=out.split(p.en).join(p[QLANG]); });
   QI18N.r.forEach(function(r){ var re=new RegExp(r.en); if(r[QLANG] && re.test(out)) out=out.replace(re, r[QLANG]); });
+  /* LIST-WORDS-1 (Goal run 43, 18 Oct 2026): her picked days show on her own advert card as one chip, "Mon, Wed, Fri",
+     which no word matched -- an Afrikaans or isiXhosa card said "Mon, Wed, Fri" under "Beskikbaar: Ma, Wo, Vr". A
+     comma list is now translated word by word when a word is known; anything unknown (a suburb) is left as written. */
+  if(out===txt && k.indexOf(', ')>0){ var hit=false, parts=k.split(', ').map(function(x){ var e=QI18N.w[x];
+      if(e && e[QLANG]){ hit=true; return e[QLANG]; } return x; });
+    if(hit) out=txt.replace(k, parts.join(', ')); }
+  /* ...and her price chip "R350 / day" takes the units her advert text already uses ("R350 per dag"). */
+  if(out===txt && /^\S*\d[\d\s.,]*\s\/\s/.test(k) && typeof window.qAdPrice==='function'){
+    var pr=window.qAdPrice(k); if(pr && pr!==k) out=txt.replace(k, pr); }
   return out;
 }
 var _qBusy=false;
@@ -4846,8 +4855,21 @@ var QPACK = {"ZA": {"name": "South Africa", "cur": "R", "tz": ["Africa/Johannesb
   var QP=ZA;
   window.QCC='ZA'; window.QCITY=null; window.QCITY_OTHER=null;
   window.QDEST_PICS={};
+  /* CITY-ALIAS-1 (Goal run 43, 18 Oct 2026): the pack names two cities by both names -- "Gqeberha (Port Elizabeth)",
+     "Mbombela (Nelspruit)" -- but a link, an account or Cloudflare says "Port Elizabeth", "Gqeberha" or "Nelspruit".
+     The exact match failed and a Port Elizabeth worker who tapped her text was asked "Which city?" with Pretoria
+     first. Either name (or the full pack name, any case) now finds the city. */
+  function cityKey(city){
+    if(!city) return null; if(QP.cities[city]) return city;
+    var lc=String(city).trim().toLowerCase();
+    for(var k in QP.cities){ var nm=[k.split(' (')[0]], mm=/\(([^)]+)\)/.exec(k); if(mm) nm.push(mm[1]);
+      if(k.toLowerCase()===lc) return k;
+      for(var i=0;i<nm.length;i++) if(nm[i].trim().toLowerCase()===lc) return k; }
+    return null;
+  }
   function setCity(city, remember){
-    if(!QP.cities[city]) return false;
+    city=cityKey(city);
+    if(!city) return false;
     window.QCITY=city; LOC.city=city; LOC.suburb=QP.cities[city][0];
     NEARBY.length=0; QP.cities[city].slice(1).forEach(function(a){ NEARBY.push(a); });
     FURTHER.length=0; Object.keys(QP.cities).filter(function(x){ return x!==city; }).slice(0,5).forEach(function(x){ FURTHER.push(x); });
