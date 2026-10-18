@@ -229,6 +229,50 @@ app.add_middleware(
 # can grow without moving the needle. Ledger RG-0101 asserts it stays on.
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
+# ── FRIENDLY-404-1 (18 Oct 2026, bug audit BA-045) ──────────────────────────
+# A person who typed or followed a wrong address (/sell, /login, /support/, an old link) got the bare API answer
+# {"detail":"Not Found"} as the whole page. A browser NAVIGATION (Sec-Fetch-Dest: document, GET) to an address nothing
+# answers now gets a small TrustSquare page with the way home -- same 404 status, nothing cached. Every other caller
+# (fetch, curl, the ledger, the stranger test) and every 404 with its own words ('Listing not found') keeps FastAPI's own
+# JSON, unchanged -- and the QA guard's deliberate "Not Found" still looks exactly like any other missing page.
+from starlette.exceptions import HTTPException as _F404StarletteHTTPException       # noqa: E402
+from fastapi.exception_handlers import http_exception_handler as _f404_default     # noqa: E402
+from fastapi.responses import HTMLResponse as _F404HTMLResponse                    # noqa: E402
+
+_FRIENDLY_404_HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Page not found · TrustSquare</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f7f9;--card:#fff;--ink:#14213d;--soft:#5b6475;--line:#e3e6ec;--go:#16a97c}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1420;--card:#171e2e;--ink:#eef1f6;--soft:#a3acbd;--line:#273046}}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);
+font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:420px;margin:24px 16px;padding:28px 24px;background:var(--card);border:1px solid var(--line);border-radius:18px;text-align:center}
+.mark{font-weight:800;font-size:20px;letter-spacing:-.01em}.mark b{color:var(--go)}
+h1{font-size:22px;margin:18px 0 6px}p{color:var(--soft);margin:0 0 20px}
+a.go{display:block;padding:13px 16px;margin:8px 0;border-radius:12px;text-decoration:none;font-weight:700}
+a.main{background:var(--go);color:#fff}a.alt{border:1px solid var(--line);color:var(--ink)}
+</style></head><body><main>
+<div class="mark"><b>&#10003;</b> TrustSquare</div>
+<h1>That page isn&rsquo;t here</h1>
+<p>The address may be mistyped, or the page has moved.</p>
+<a class="go main" href="/">Go to TrustSquare</a>
+<a class="go alt" href="/quick/">Quick &mdash; list in a minute</a>
+<a class="go alt" href="/support">Help &amp; support</a>
+</main></body></html>"""
+
+
+@app.exception_handler(_F404StarletteHTTPException)
+async def _friendly_404(request: Request, exc: _F404StarletteHTTPException):
+    try:
+        if (exc.status_code == 404 and exc.detail == "Not Found" and request.method == "GET"
+                and (request.headers.get("sec-fetch-dest") or "").lower() == "document"):
+            return _F404HTMLResponse(_FRIENDLY_404_HTML, status_code=404,
+                                     headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+    except Exception:
+        pass
+    return await _f404_default(request, exc)
+
 # ── SELFCHECK-1 (David, 7 Aug 2026) ────────────────────────────────────────
 # A session cannot open an SSH tunnel to this box, so every "is that dependency
 # actually installed / is the flag actually on / did the deploy actually land"
@@ -22498,7 +22542,12 @@ def auth_oauth_start(provider: str, request: Request, next: str = "/", hint: str
     from fastapi.responses import RedirectResponse
     from urllib.parse import urlencode as _ue
     cfg = _OIDC.get(provider)
-    if not cfg or not _oauth_ready(provider):
+    if not cfg:
+        # OAUTH-UNKNOWN-404-1 (18 Oct 2026, bug audit BA-045): a provider we have never had is a missing page, not an
+        # outage -- '/auth/oauth/<anything>/start' answered 503, which counts as a server error in /ops/selfcheck and in
+        # the stranger test's 5xx list. A known provider that is not switched on yet (Apple) still answers 503.
+        raise HTTPException(status_code=404, detail="Not Found")
+    if not _oauth_ready(provider):
         raise HTTPException(status_code=503, detail="That sign-in option is not available.")
     import secrets as _sec_local   # local: this block sits ABOVE the module-level
     nonce = _sec_local.token_urlsafe(16)   # `import secrets as _ts_secrets`, so do not lean on it

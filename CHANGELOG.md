@@ -1,3 +1,7 @@
+- **A mistyped address shows a TrustSquare page, not raw JSON; an unknown sign-in provider is a 404** (bug audit BA-045; RG-1034).
+  A browser opening /sell, /login, /support/ or any address nothing answers saw only {"detail":"Not Found"}; it now gets a small page with the way home (still a 404, never cached). Apps, scripts and every 404 with its own words keep the JSON.
+  /auth/oauth/<unknown>/start answered 503 — a server error on the ops counters — and is now a 404; Apple, known but not switched on, still answers 503.
+
 - **Quick: prices follow a country change; trainer search names the sport; other cities are never "near you"** (bug audit BA-040, BA-041; RG-1032, RG-1033).
   A price given before "Change country" was kept in the old money (a Pretoria bakkie saved at "Under $8k"); the flow now asks it again in the new country's money.
   "Personal trainer" in Pretoria found two beekeeping courses in Mossel Bay under "Yes — 2 near you": the trainer search now keeps only adverts that name the sport,

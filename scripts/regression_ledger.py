@@ -39988,6 +39988,48 @@ def rg_audit1018_trainer_find():
     return out or [(INFO, "trainer searches name the sport; other cities are labelled, never 'near you'")]
 
 
+@entry("RG-1034", "FRIENDLY-404-1 + OAUTH-UNKNOWN-404-1 (18 Oct 2026 bug audit, BA-045): a browser that opens an address nothing "
+       "answers gets a TrustSquare page (still 404) instead of the bare {\"detail\":\"Not Found\"}; an unknown sign-in provider "
+       "is a 404, not a 503",
+       LOCKED, fixed_on="2026-10-18",
+       scope="bea_main.py _friendly_404 (GET + Sec-Fetch-Dest: document + FastAPI's own 'Not Found' only; every other caller and "
+             "every 404 with its own words keeps the JSON) and auth_oauth_start (unknown provider 404; known-but-off stays 503)",
+       ref="Security/UX sweep 18 Oct 2026: /sell, /browse, /login, /signin, /about, /contact, /wallet, /pricing, /faq and /support/ "
+           "all showed a browser the raw JSON; /auth/oauth/<anything>/start answered 503 (a server error in /ops/selfcheck).")
+def rg_audit1018_friendly_404():
+    bea = repo_file("bea_main.py")
+    if bea is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    h = bea[bea.find("async def _friendly_404("):][:900] if "async def _friendly_404(" in bea else ""
+    if "@app.exception_handler(_F404StarletteHTTPException)" not in bea or not h:
+        out.append((FAIL, "the friendly 404 handler is gone -- a mistyped address shows the bare API JSON again"))
+    else:
+        for needle, why in (('exc.detail == "Not Found"', "it no longer limits itself to FastAPI's own miss (a 404 with its own words must stay JSON)"),
+                            ('request.method == "GET"', "it no longer limits itself to GET"),
+                            ('"sec-fetch-dest"', "it no longer limits itself to browser navigations (fetch/curl callers must get JSON)"),
+                            ("return await _f404_default(request, exc)", "every other error no longer goes to FastAPI's own handler")):
+            if needle not in h:
+                out.append((FAIL, "friendly 404: " + why))
+    st = bea[bea.find("def auth_oauth_start("):][:900]
+    if 'if not cfg:\n' not in st or 'raise HTTPException(status_code=404, detail="Not Found")' not in st:
+        out.append((FAIL, "an unknown sign-in provider answers a server error again instead of 404"))
+    if out:
+        return out
+    try:
+        _require_net()
+        req = urllib.request.Request(BASE + "/no-such-page-rg1034", headers=dict(UA, **{"Sec-Fetch-Dest": "document", "Accept": "text/html"}))
+        try:
+            urllib.request.urlopen(req, timeout=TIMEOUT); code, body = 200, ""
+        except urllib.error.HTTPError as e:
+            code, body = e.code, (e.read() or b"").decode("utf-8", "replace")
+    except Exception as ex:
+        return [(INFO, "code in place; live probe not possible from here: " + repr(ex)[:60])]
+    if code == 404 and "That page isn" in body:
+        return [(INFO, "a mistyped address shows the TrustSquare page (404) -- live")]
+    return [(INFO, "code in place; live answer %s %r (not deployed yet?)" % (code, body[:40]))]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",
