@@ -1,3 +1,13 @@
+## 2026-10-18 -- BUG-AUDIT-1016 follow-up: held support replies (cloud lane, with David)
+
+- **HELD-REPLY-ALERT-1** (bea_main.py _triage_message / _alert_held_reply, scripts/regression_ledger.py; BA-035, RG-1028) -- when the
+  support agent holds a reply back for approval (or fails to send it), nothing told David: TS-0041's draft sat unsent from 15 to 17 Oct
+  while the visitor had only the automatic acknowledgement. The agent now sends David a one-line alert -- the reference and the number
+  of replies waiting, never the sender, subject, message or draft (RUL-069 keeps customer mail out of his inbox) -- with a button to the
+  Ops Dashboard. At most one alert per 30 minutes per worker; each counts every reply still waiting. Address: ai_spend_config.alert_email.
+  David approved 18 Oct 2026. TS-0041 itself was answered the same night from TrustSquare Support (asked for the missing details and
+  said plainly that listing #482 is a demo example).
+
 ## 2026-10-17 -- SVC-AREA-1 (RUL-237): a casual worker's one street, and the "only here" switch
 
 David, on Petrus's car-wash advert: a casual worker should be tied to a small area on the map -- for Petrus one street,

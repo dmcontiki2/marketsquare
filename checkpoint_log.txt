@@ -520,3 +520,10 @@ Fri 10/16/2026  5:30:05.94  SYNC STOP - see SYNC_CONFLICT.txt; main NOT mirrored
 Sat 10/17/2026  5:30:03.40  committed 1 change(s)
 sync-origin [MarketSquare]: took in 6 commit(s) from origin/main by merge -> 787d40d
 Sat 10/17/2026  5:30:06.50  main mirrored to GitHub 
+[main c500557] Nightly checkpoint Sun 10/18/2026  5:30:02.75 (auto, no deploy)
+ 9 files changed, 241 insertions(+), 3 deletions(-)
+ create mode 100644 TSL_READY.flag
+ create mode 100644 changelog.d/2026-10-18-bug-audit-ba035.md
+Sun 10/18/2026  5:30:02.97  committed 9 change(s)
+sync-origin [MarketSquare]: STOP -- 3 commit(s) on origin/main could not be taken in cleanly (scripts/static_versions.json); nothing pushed, nothing overwritten. See SYNC_CONFLICT.txt
+Sun 10/18/2026  5:30:07.13  SYNC STOP - see SYNC_CONFLICT.txt; main NOT mirrored 
