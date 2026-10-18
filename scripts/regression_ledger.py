@@ -40030,6 +40030,37 @@ def rg_audit1018_friendly_404():
     return [(INFO, "code in place; live answer %s %r (not deployed yet?)" % (code, body[:40]))]
 
 
+@entry("RG-1035", "PERF-THUMBS-1 (18 Oct 2026 bug audit, BA-046): Home's small tiles (categories, Local Market, the Wonders strip and "
+       "its preload, Nearby Wonders) ask for the 560 px card copy in t560/ and fall back to the original once when a copy is missing",
+       LOCKED, fixed_on="2026-10-18",
+       scope="ms.js msThumb / msThumbBack / r2Fallback, renderWondersStrip, _preloadWonders, msNearImgs, LM_SCROLL_IMGS; marketsquare.html "
+             "home tiles + the early r2Fallback; scripts/make_card_thumbs.py (run on the server for new photos)",
+       ref="Measured 18 Oct 2026, Chromium 360 px: Home downloaded 5.9 MB in 9 s, 5.0 MB of it 1200-1600 px photos drawn at 165-200 px "
+           "(the Wonders preload fetched the 8 full photos even before the strip drew); usable at 10.2 s on Fast 3G. With the copies: "
+           "images 5.2 MB -> 1.1 MB, no broken tile, a missing copy falls back to its original.")
+def rg_audit1018_perf_thumbs():
+    js, h = repo_file("ms.js"), repo_file("marketsquare.html")
+    if js is None or h is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for needle, why in (("function msThumb(u) {", "the card-copy helper is gone"),
+                        ("if (msThumbBack(img)) return;   // PERF-THUMBS-1", "r2Fallback no longer falls back from a missing card copy first"),
+                        ('src="${msThumb(w.photo)}"', "the Wonders strip downloads the full photos again"),
+                        ("img.src=msThumb(w.photo);", "the Wonders preload fetches the full photos again (2.7 MB before she scrolls)"),
+                        ("im.src = msThumb(im.getAttribute('data-near-src'));", "Nearby Wonders download the full photos again"),
+                        ("'/static/brand-photos/lm_5_dresser.jpg'].map(msThumb);", "the Local Market tile rotates full-size photos again")):
+        if needle not in js:
+            out.append((FAIL, why))
+    if h.count('<img src="/static/brand-photos/t560/cat_') < 6 or 'id="lm-home-bg-img" src="/static/brand-photos/t560/' not in h:
+        out.append((FAIL, "Home's category / Local Market tiles ask for the full photos again"))
+    if "img.src.indexOf('/t560/')>=0&&!img.dataset.thtried" not in h:
+        out.append((FAIL, "the page's early r2Fallback no longer falls back from a missing card copy (a tile that fails before ms.js stays broken)"))
+    import os as _os
+    if not _os.path.exists(_os.path.join(REPO, "scripts", "make_card_thumbs.py")):
+        out.append((FAIL, "scripts/make_card_thumbs.py is gone -- new photos cannot get their card copy"))
+    return out or [(INFO, "Home's tiles use card-size copies with a fallback to the original")]
+
+
 @entry("RG-1058", "BUZZ-WHY-1 (David, 17 Oct 2026 19:54 SAST): every Buzz limit tells the user WHY -- the Send and Specials "
        "panes each carry a 'Why the limits?' line, and every limit refusal from the server names its reason",
        LOCKED, fixed_on="2026-10-17",

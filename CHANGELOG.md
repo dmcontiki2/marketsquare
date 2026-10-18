@@ -1,3 +1,7 @@
+- **Home is about 4 MB lighter on a phone** (bug audit BA-046; RG-1035).
+  Home downloaded about 5.9 MB, 5 MB of it 1200–1600 px photos drawn in 165–200 px tiles — and the Wonders preload fetched the eight full photos before the strip was even drawn. The category tiles, the Local Market tile, the Wonders strip (and its preload) and Nearby Wonders now ask for a 560 px card copy (about 40 KB) kept beside each original in t560/; a missing copy falls back to the original once. Detail views keep the full photo.
+  The copies are made on the server by scripts/make_card_thumbs.py (334 made on 18 Oct: 103 MB of originals → 13 MB); a photo added later shows its original until the script is run again.
+
 - **A mistyped address shows a TrustSquare page, not raw JSON; an unknown sign-in provider is a 404** (bug audit BA-045; RG-1034).
   A browser opening /sell, /login, /support/ or any address nothing answers saw only {"detail":"Not Found"}; it now gets a small page with the way home (still a 404, never cached). Apps, scripts and every 404 with its own words keep the JSON.
   /auth/oauth/<unknown>/start answered 503 — a server error on the ops counters — and is now a 404; Apple, known but not switched on, still answers 503.

@@ -76,7 +76,19 @@ try{ document.documentElement.setAttribute('data-baseline', msBaselineOn() ? '1'
 // If R2 is unreachable, swap src to /media/<key> served from Hetzner disk.
 // R2 pattern: pub-xxx.r2.dev/path/file.jpg → /media/path/file.jpg
 // Attach via onerror on any img sourced from R2.
+/* PERF-THUMBS-1 (18 Oct 2026, bug audit BA-046): Home downloaded about 5.9 MB on a phone -- 1200-1600 px photos (200-560 KB
+   each) drawn in 165-200 px tiles. A card-size copy (560 px, ~40 KB; scripts/make_card_thumbs.py) sits beside each original
+   in t560/; a tile asks for the copy and, if a copy is missing (a photo added later), falls back to the original once.
+   Detail views keep the full photo. */
+function msThumb(u) {
+  try { return String(u || '').replace(/(\/media\/wonders\/|\/static\/brand-photos\/)(?!t560\/)([^\/?#]+\.(?:jpe?g|png))$/i, '$1t560/$2'); } catch (e) { return u; }
+}
+function msThumbBack(img) {
+  try { if (img && img.src && img.src.indexOf('/t560/') >= 0 && !img.dataset.thtried) { img.dataset.thtried = '1'; img.src = img.src.replace('/t560/', '/'); return true; } } catch (e) {}
+  return false;
+}
 function r2Fallback(img) {
+  if (msThumbBack(img)) return;   // PERF-THUMBS-1: a missing card copy falls back to the original first
   if (img.dataset.r2tried) return; // prevent loop
   img.dataset.r2tried = '1';
   if (/^https?:\/\/[^/]+\.r2\.dev\//.test(img.src)) {
@@ -6773,7 +6785,7 @@ function msPhotoFirstDone(id){
 let _msNearIO = null;
 function msNearImgs(root){
   const ims = (root || document).querySelectorAll('img[data-near-src]');
-  const go = function(im){ if (im.hasAttribute('data-near-src')) { im.src = im.getAttribute('data-near-src'); im.removeAttribute('data-near-src'); } };
+  const go = function(im){ if (im.hasAttribute('data-near-src')) { im.src = msThumb(im.getAttribute('data-near-src')); im.removeAttribute('data-near-src'); } };   // PERF-THUMBS-1: the card-size copy
   if (!('IntersectionObserver' in window)) { ims.forEach(go); return; }
   if (!_msNearIO) _msNearIO = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { _msNearIO.unobserve(e.target); go(e.target); } }); }, {rootMargin: '300px 300px'});
   ims.forEach(function(im){ _msNearIO.observe(im); });
@@ -14832,7 +14844,7 @@ let _wpAllWonders=[];let _wpLinked=[];
         const africa=['South Africa','Zimbabwe','Zambia','Kenya','Tanzania','Namibia','Botswana','Uganda'];
         const af=_wpAllWonders.filter(w=>africa.some(c=>w.country.includes(c)));
         const oth=_wpAllWonders.filter(w=>!af.find(a=>a.id===w.id));
-        [...af,...oth].slice(0,8).forEach(w=>{const img=new Image();img.src=w.photo;});
+        [...af,...oth].slice(0,8).forEach(w=>{const img=new Image();img.src=msThumb(w.photo);});   // PERF-THUMBS-1: the strip's own card-size copies
         if(typeof renderWondersStrip==='function') renderWondersStrip();
       }
     }).catch(()=>{ _wpWondersLoading=false; });   // WONDERS-ONCE-1: a failed preload lets the next Home visit try
@@ -15617,7 +15629,7 @@ function renderWondersStrip() {
   const tc2 = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
   list.innerHTML = sorted.length ? sorted.map((w,i)=>`
     <div class="wonder-card" onclick="openWonderDetail('${w.id}',null)">
-      <img class="wonder-card-img" src="${w.photo}" loading="${i<8?'eager':'lazy'}" referrerpolicy="origin-when-cross-origin" onerror="this.style.background='#1e3a5f'">
+      <img class="wonder-card-img" src="${msThumb(w.photo)}" loading="${i<8?'eager':'lazy'}" referrerpolicy="origin-when-cross-origin" onerror="if(!msThumbBack(this))this.style.background='#1e3a5f'">
       <div class="wonder-card-body">
         <div class="wonder-card-type ${tc2(w.type)}">${w.type}</div>
         <div class="wonder-card-name">${w.name}</div>
@@ -20903,7 +20915,7 @@ async function loadDetailWonders(listing) {
       const w = _wpAllWonders.find(x=>x.id===wId);
       if(!w) return '';
       return `<div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
-        <img class="wonder-card-img" data-near-src="${w.photo}" alt="${w.name}" referrerpolicy="origin-when-cross-origin">
+        <img class="wonder-card-img" data-near-src="${w.photo}" alt="${w.name}" referrerpolicy="origin-when-cross-origin" onerror="msThumbBack(this)">
         <div class="wonder-card-body">
           <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
           <div class="wonder-card-name">${w.name}</div>
@@ -20922,7 +20934,7 @@ async function loadDetailWonders(listing) {
     const tc = t=>t==='National Park'?'wd-type-np':t==='UNESCO Site'?'wd-type-un':t==='National Museum'?'wd-type-nm':'wd-type-ar';
     list.innerHTML = wonders.map(w=>`
       <div class="wonder-card" onclick="openWonderDetail('${w.id}','${listing.id}')">
-        <img class="wonder-card-img" data-near-src="${w.photo}" referrerpolicy="origin-when-cross-origin" onerror="this.removeAttribute('src')">
+        <img class="wonder-card-img" data-near-src="${w.photo}" referrerpolicy="origin-when-cross-origin" onerror="if(!msThumbBack(this))this.removeAttribute('src')">
         <div class="wonder-card-body">
           <div class="wonder-card-type ${tc(w.type)}">${w.type}</div>
           <div class="wonder-card-name">${w.name}</div>
@@ -25516,7 +25528,7 @@ async function agentDirLoad(){
    gently rotates through the five Higgsfield market scenes (crossfade, 4s).
    Pauses when the tab is hidden. Will later rotate REAL listing photos. ── */
 var LM_SCROLL_IMGS = ['/static/brand-photos/lm_1_honey.jpg','/static/brand-photos/lm_2_guitar.jpg',
-  '/static/brand-photos/lm_3_beadwork.jpg','/static/brand-photos/lm_4_produce.jpg','/static/brand-photos/lm_5_dresser.jpg'];
+  '/static/brand-photos/lm_3_beadwork.jpg','/static/brand-photos/lm_4_produce.jpg','/static/brand-photos/lm_5_dresser.jpg'].map(msThumb);   // PERF-THUMBS-1
 var _lmScrollIdx = 0;
 setInterval(function(){
   if (document.hidden) return;
