@@ -3239,10 +3239,11 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
         /* SAVE-NOT-PUBLISH-1 (25 Sep 2026 inspection, langq-04): unless her button really publishes (a signed-in
            member who has signed the terms), the screen says "ready to save" and "before you publish" -- she must not
            read "ready to publish", tap once, and believe the advert is live. */
-        +'<span>'+((QUICK.member&&QUICK.eula) ? 'You can add it in the app after you publish.' : 'You can add it in the app before you publish.')+'</span></div></div>';
+        /* QUICK-SIGN-1 (RUL-240): her button really publishes now for every key but the dormant WhatsApp link */
+        +'<span>'+((QUICK.idMode!=='link') ? 'You can add it in the app after you publish.' : 'You can add it in the app before you publish.')+'</span></div></div>';
       var card=body.querySelector('.card');
       if(card) card.insertAdjacentHTML('afterend', ring);
-      var flag=body.querySelector('.draftflag'); if(flag) flag.innerHTML='<span>&#9998;</span> '+((QUICK.member&&QUICK.eula) ? 'Your listing \u2014 ready to publish' : 'Your listing \u2014 ready to save');
+      var flag=body.querySelector('.draftflag'); if(flag) flag.innerHTML='<span>&#9998;</span> '+((QUICK.idMode!=='link') ? 'Your listing \u2014 ready to publish' : 'Your listing \u2014 ready to save');   /* QUICK-SIGN-1 */
       /* SCORE-WORDS-1 (langq-10): both lists (points, and "Before you publish") fold away together */
       var scoreBits=[body.querySelector('.scores'), body.querySelector('.msline')].concat(Array.prototype.slice.call(body.querySelectorAll('.todolab, .todo'))).filter(Boolean);
       if(scoreBits.length){
@@ -3725,6 +3726,8 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
        someone else's account still gets a draft and a sign-in letter (AUDIT-Q1). */
     pub.textContent=qPubLabel();
     var h=$('pubhint'); if(h) h.innerHTML=(QUICK.member&&QUICK.eula) ? qTr('Free.') : qTermsLine();
+    /* QUICK-SIGN-1 (RUL-240(a)): the acceptance line sits DIRECTLY ABOVE the button that signs it */
+    if(h && !(QUICK.member&&QUICK.eula) && h.parentNode===pub.parentNode && h.previousElementSibling===pub){ pub.parentNode.insertBefore(h, pub); h.style.marginBottom='8px'; }
     pub.onclick=function(){ publishNow(this); };
     try{ qTranslate($('screen')); }catch(e){}
   };
