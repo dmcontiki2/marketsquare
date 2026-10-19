@@ -28242,7 +28242,7 @@ def rg_link_key_1():
     if "eula_accepted_at =" in body or "SET eula_accepted_at" in body:
         out.append((FAIL, "quick_publish writes eula_accepted_at -- the door must never record an acceptance"))
     kb = body.split('key_mode == "link"', 1)[-1]
-    if kb and kb.find("publish_listing(") >= 0 and kb.find("if not signed_member:") > kb.find("publish_listing("):
+    if kb and kb.find("        publish_listing(lid, em") >= 0 and kb.find("if not signed_member:") > kb.find("        publish_listing(lid, em"):   # 19 Oct 2026: the call itself -- a comment naming the gate (QUICK-SIGN-1) is not a call
         out.append((FAIL, "the link-key path can reach publish_listing before the signed-member gate"))
     k = b.find("def key_link_open("); kk = b[k:b.find("\n@app.", k + 10)] if k >= 0 else ""
     if not kk or "_mint_signin_url(" not in kk or "key_hash=?" not in kk:
@@ -37652,7 +37652,7 @@ def rg_quick_fast_1_path():
         return [(INFO, "NOT EVALUATED - repo not readable from here")]
     qp = _qf_fn(py, "quick_publish")
     g, c, h, p = (qp.find("_fast = _qf_publish_gate(sess, int(body.preset_id))"), qp.find('created = create_listing(listing, background_tasks, "quick-door")'),
-                  qp.find('return {"id": lid, "live": False, "hold": True'), qp.find("publish_listing(lid, em)"))
+                  qp.find('return {"id": lid, "live": False, "hold": True'), qp.find("publish_listing(lid, em"))   # 19 Oct 2026: the call carries accepted_terms since QUICK-SIGN-1 (RUL-240); the prefix is the call
     if g < 0 or c < 0 or g > c:
         return [(FAIL, "quick-publish no longer checks the fast-lane gate BEFORE the advert is made")]
     if h < 0 or p < 0 or h > p:
