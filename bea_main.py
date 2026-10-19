@@ -1420,6 +1420,9 @@ def run_migrations(conn):
         # QUICK-FAST-1 (RUL-222, 10 Oct 2026): the Quick fast lane (quick icons). Default OFF = every fast-lane entry
         # point hidden and its routes answer 404 -- the brief's rollback switch. Turned on from the dashboard.
         "ALTER TABLE launch_switches ADD COLUMN quick_fastlane INTEGER NOT NULL DEFAULT 0",
+        # QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, 19 Oct 2026): Snap or Say, then one tap. Default OFF = both doors hidden and
+        # POST /listings/snap-draft answers 404 -- the brief's rollback switch. Armed from the dashboard after the live tap proof.
+        "ALTER TABLE launch_switches ADD COLUMN quick_snap INTEGER NOT NULL DEFAULT 0",
     ):
         try:
             conn.execute(_ddl)
@@ -26168,6 +26171,7 @@ class _FlagsUpdate(BaseModel):
     lang_layer:            Optional[bool] = None  # LANG-LAYER-1: the language layer for everybody (testers always see it)
     circle_caps:           Optional[bool] = None  # CIRCLE-CAPS-1 (RUL-176): regulars limits 10/50/200, David's switch
     auto_renew:            Optional[bool] = None  # AUTO-RENEW-1 (RUL-224): paid plans renew automatically, David's switch
+    quick_snap:            Optional[bool] = None  # QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md): Snap or Say, then one tap, David's switch
     quick_fastlane:        Optional[bool] = None  # QUICK-FAST-1 (RUL-222): the Quick fast lane (quick icons), default OFF
 
 def _flags_payload(d):
@@ -26194,6 +26198,8 @@ def _flags_payload(d):
         "auto_renew_tiers": (_auto_renew_ready_tiers() if b("auto_renew") else []),
         # QUICK-FAST-1 (RUL-222): a row predating the column reads OFF -- the fast lane hidden is the safe side.
         "quick_fastlane": b("quick_fastlane"),
+        # QUICK-SNAP-1: a row predating the column reads OFF -- Snap hidden is the safe side.
+        "quick_snap": b("quick_snap"),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
@@ -26211,6 +26217,7 @@ def _flags_payload(d):
             "circle_caps":         b("circle_caps"),   # CIRCLE-CAPS-1: ms.js + quick.html show limits only when this is on
             "auto_renew":          b("auto_renew"),    # AUTO-RENEW-1: ms.js shows the tick box and the renewal lines only when this is on
             "quick_fastlane":      b("quick_fastlane"),   # QUICK-FAST-1: quick.html + ms.js show the quick icons only when on
+            "quick_snap":          b("quick_snap"),       # QUICK-SNAP-1: quick.html shows "Snap it" / "Say it" only when on
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -38050,6 +38057,502 @@ def admin_quick_fastlane_stats(days: int = 30, admin=Depends(_require_admin)):
     finally:
         conn.close()
 # ══ end QUICK-FAST-1 ══
+
+
+# ══ QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, David 19 Oct 2026 19:36 SAST, "go worktree": "1. A photo, 2. a sentence, 3. Terms
+# acceptance - leading to a live advert"). THE FOURTH STANDARD FLOW: Snap (a photo) or Say (one sentence), then the normal
+# "Here is your listing" screen and the one tap "Publish now -- I accept the Terms" (RUL-240). This route is GLUE, not an
+# engine: the photos go to the existing vision_draft reader (Photo-First, Session 70), the sentence to the existing fast-find
+# splitter (_qf_parse_plain) plus a small mapper (role from roles/role_registry.json, area from the door's tiles + the city's
+# suburbs, days from weekday words, price + basis from "R350 a day"), and the two are merged -- the sentence wins on price,
+# area and days (it names what the photo cannot). It never writes a listing: Quick publishes through POST /listings/quick-
+# publish exactly as every Quick advert does (same gates, same photo check PHOTO-KIND-1, same anonymity). Anything the reader
+# cannot place is returned in `missing` and Quick lands her on that step with one line -- never a dead end, never a guess
+# published (the unresolved-card rule, applied to adverts). Flag-dark: launch_switches.quick_snap (default OFF -> 404).
+# Cost: one photo read per Snap on the allocated lane (vision_draft's own per-IP cap + the C1 daily ceiling); the sentence is
+# read without AI. Schema: none on listings; one small counter table quick_snap_log for the dashboard card.
+_SNAP_MAX_PHOTOS = 3
+_SNAP_MAX_SENTENCE = 240
+_SNAP_DAY_ORDER = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+_SNAP_DAYS = {"mon": "Mon", "monday": "Mon", "mondays": "Mon", "tue": "Tue", "tues": "Tue", "tuesday": "Tue", "tuesdays": "Tue",
+              "wed": "Wed", "wednesday": "Wed", "wednesdays": "Wed", "thu": "Thu", "thur": "Thu", "thurs": "Thu", "thursday": "Thu",
+              "thursdays": "Thu", "fri": "Fri", "friday": "Fri", "fridays": "Fri", "sat": "Sat", "saturday": "Sat", "saturdays": "Sat",
+              "sun": "Sun", "sunday": "Sun", "sundays": "Sun"}
+_SNAP_PRICE_RE = re.compile(r"(?:\b(?:R|ZAR)\s?|\bR)(\d[\d\s,]*(?:\.\d+)?)\s*(k)?(?:\s*(?:/|per|a|an|each|every)\s*(hour|hr|day|visit|job|month|session|night|person|car|callout|call-out))?", re.I)
+_SNAP_BASIS = {"hour": "hour", "hr": "hour", "day": "day", "visit": "visit", "job": "job", "month": "month", "session": "session",
+               "car": "car", "callout": "callout", "call-out": "callout"}
+_SNAP_DOOR_AREAS = ("Pretoria East", "Centurion", "Mamelodi", "Menlyn", "Midrand", "Sandton")
+_SNAP_ROLES = {"rows": None}
+# the door she is on -> the vision reader's hint (vision_draft keeps only property/services/adventures/cars from the
+# reader and overwrites anything else with the hint, so the hint must be the door)
+_SNAP_HINT = {"homehelp": "services", "services": "services", "tutors": "tutors", "property": "property", "cars": "cars",
+              "collectors": "collectors", "adventures": "adventures", "localmarket": "local_market"}
+_SNAP_COL_TYPE = {"coins": "Coins", "stamps": "Stamps", "trading cards": "Cards", "cards": "Cards", "militaria": "Militaria",
+                  "watches": "Watches", "art": "Art"}
+_SNAP_LM_WORDS = (("Food & preserves", r"honey|jam|preserve|chutney|biltong|bread|cake|rusk|biscuit|koeksister|pickle|sauce|food|bake|cheese|egg|jar"),
+                  ("Plants", r"plant|seedling|succulent|tree|shrub|flower|herb|pot plant|cutting"),
+                  ("Furniture", r"furniture|table|chair|dresser|couch|sofa|bed|cabinet|desk|shelf|bench|stool|wardrobe"),
+                  ("Clothes", r"cloth|dress|shirt|jacket|apron|skirt|trouser|jersey|shoe|hat|garment|sew"),
+                  ("Tools", r"tool|drill|saw|hammer|spanner|wrench|grinder|lawnmower|mower"),
+                  ("Crafts", r"craft|handmade|hand-made|beadwork|bead|pottery|ceramic|woven|basket|knit|crochet|candle|soap|leather|wood"))
+_SNAP_CAR_WORDS = (("Double cab", r"double cab|double-cab|d/cab|dc\b"), ("Bakkie", r"bakkie|hilux|ranger|d-max|dmax|navara|amarok|pickup|pick-up|single cab"),
+                   ("SUV", r"\bsuv\b|fortuner|x-trail|tucson|sportage|rav4|prado|land cruiser|everest|crossover"),
+                   ("Hatchback", r"hatch|polo\b|golf\b|i20|i10|swift|yaris|etios|starlet|picanto|figo|fiesta"),
+                   ("Bike", r"motorcycle|motorbike|scooter|\bbike\b|superbike"), ("Sedan", r"sedan|corolla|\b3 series|320i|c-class|c200|jetta|civic|a4\b"))
+_SNAP_CAR_MAKES = ("Toyota", "VW", "Ford", "BMW", "Isuzu")
+_SNAP_ADV_WORDS = (("Game lodge", r"lodge"), ("Safari", r"safari|game drive|big five"), ("Guided tour", r"tour|guided|walk"),
+                   ("Fishing", r"fish"), ("Rail journey", r"rail|train"), ("Self-drive", r"self-drive|self drive|4x4 trail"),
+                   ("Place to stay", r"stay|guest ?house|b&b|cottage|chalet|cabin|room|apartment|villa|camp"))
+_SNAP_PROP_TYPE = {"house": "House", "flat": "Flat", "apartment": "Flat", "townhouse": "Townhouse", "plot": "Plot", "farm": "Farm",
+                   "commercial": "Commercial", "smallholding": "Farm"}
+
+
+def _snap_on() -> bool:
+    """Fail-safe read of launch_switches.quick_snap: on ANY doubt Snap is OFF (the brief's rollback)."""
+    return _bit_flag("quick_snap", False)
+
+
+def _snap_ensure(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS quick_snap_log(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        day TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('snap','say','both')),
+        outcome TEXT NOT NULL,
+        cat TEXT,
+        missing TEXT,
+        created_at TEXT NOT NULL)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_quick_snap_log_day ON quick_snap_log(day)")
+
+
+def _snap_log(kind, outcome, cat="", missing=None):
+    """One row per Snap/Say read -- the dashboard's two counters (snaps, says) and the fallbacks, with provenance."""
+    try:
+        conn = database.get_db()
+        try:
+            _snap_ensure(conn)
+            conn.execute("INSERT INTO quick_snap_log (day, kind, outcome, cat, missing, created_at) VALUES (?,?,?,?,?,?)",
+                         (datetime.now(timezone.utc).date().isoformat(), kind, outcome, cat or "",
+                          ",".join(missing or [])[:200], _utc_now()))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("QUICK-SNAP-1 log row skipped: %s", exc)
+
+
+def _snap_roles():
+    """[(lowercased name, role key, English label, 'C'|'T')] from roles/role_registry.json -- every label in every language
+    and every alias, longest names first, so 'home cleaner' wins over 'cleaner'."""
+    if _SNAP_ROLES["rows"] is None:
+        rows = []
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "roles", "role_registry.json"),
+                      encoding="utf-8") as _fh:
+                for _r in json.load(_fh).get("roles", []):
+                    if (_r.get("status") or "in") == "out":
+                        continue
+                    _en = str((_r.get("label") or {}).get("en") or "").strip()
+                    if not _en:
+                        continue
+                    _cls = "T" if (_r.get("service_class") or "").strip().lower() == "technical" else "C"
+                    _names = {str(v).strip().lower() for v in (_r.get("label") or {}).values() if v}
+                    _names |= {str(a).strip().lower() for a in (_r.get("aliases") or []) if a}
+                    _names.discard("")
+                    for _n in _names:
+                        rows.append((_n, _r.get("key"), _en, _cls))
+        except Exception as _rex:
+            _log.warning("QUICK-SNAP-1: role registry unreadable (%s) -- Say reads no roles", _rex)
+        rows.sort(key=lambda t: -len(t[0]))
+        _SNAP_ROLES["rows"] = rows
+    return _SNAP_ROLES["rows"]
+
+
+def _snap_find_name(text_l, names):
+    """The longest of `names` present in the lowercased text as whole words; (name, start, end) or None."""
+    for n in names:
+        if not n or len(n) < 3:
+            continue
+        m = re.search(r"(?<![\w])" + re.escape(n) + r"(?![\w])", text_l)
+        if m:
+            return n, m.start(), m.end()
+    return None
+
+
+def _snap_money_label(n):
+    try:
+        n = float(n)
+    except Exception:
+        return ""
+    if n <= 0:
+        return ""
+    whole = int(round(n))
+    return "R" + re.sub(r"\B(?=(\d{3})+(?!\d))", " ", str(whole))
+
+
+def _snap_areas(conn, city):
+    """The door's six tiles plus the city's suburbs (geo_suburbs), lowercased -> display name, longest first."""
+    out = {a.lower(): a for a in _SNAP_DOOR_AREAS}
+    try:
+        if conn is not None and city:
+            for r in conn.execute("SELECT s.name FROM geo_suburbs s JOIN geo_cities c ON c.id = s.city_id "
+                                  "WHERE LOWER(c.name) = LOWER(?) AND s.active = 1 LIMIT 20000", (str(city).strip(),)).fetchall():
+                nm = str(r[0] or "").strip()
+                if len(nm) >= 3:
+                    out.setdefault(nm.lower(), nm)
+    except Exception:
+        pass
+    return out
+
+
+def _snap_parse_sentence(sentence, city="", conn=None):
+    """One sentence -> {role, area, days, price, basis, item, parts}. No AI: the fast-find splitter for the parts, then
+    whole-word lookups in the role registry, the area list and the weekday words, and one price pattern ("R350 a day")."""
+    s = re.sub(r"\s+", " ", str(sentence or "")).strip()[:_SNAP_MAX_SENTENCE]
+    out = {"role": None, "area": None, "days": [], "price": None, "basis": None, "item": None, "parts": [], "text": s}
+    if not s:
+        return out
+    low = s.lower()
+    # price + basis ("R350", "R350 a day", "350 rand" as speech writes it)
+    s = re.sub(r"\b(\d[\d\s,]*(?:\.\d+)?)\s*(k)?\s*rand\b", lambda m: "R" + m.group(1).strip() + (m.group(2) or ""), s, flags=re.I)
+    m = _SNAP_PRICE_RE.search(s)
+    if m:
+        try:
+            v = float(re.sub(r"[\s,]", "", m.group(1)))
+            if m.group(2):
+                v *= 1000
+            if v > 0:
+                out["price"] = int(round(v))
+        except Exception:
+            pass
+        if m.group(3):
+            out["basis"] = _SNAP_BASIS.get(m.group(3).lower())
+        low = (low[:m.start()] + " " + low[m.end():]).strip()
+    if out["basis"] is None and out["price"] is not None:
+        if re.search(r"\b(a|per|each|every)\s+day\b|\bdaily\b|/\s*day", s, re.I):
+            out["basis"] = "day"
+        elif re.search(r"\b(an|per)\s+hour\b|hourly|/\s*h(ou)?r\b", s, re.I):
+            out["basis"] = "hour"
+    # days
+    found = []
+    if re.search(r"\b(every ?day|any ?day|all days|daily|7 days|seven days)\b", low):
+        found = list(_SNAP_DAY_ORDER)
+    else:
+        if re.search(r"\bweek ?days\b|mon(day)?\s*(to|-|–)\s*fri(day)?", low):
+            found += ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        if re.search(r"\bweek ?ends?\b", low):
+            found += ["Sat", "Sun"]
+        for w in re.findall(r"[a-z]+", low):
+            d = _SNAP_DAYS.get(w)
+            if d:
+                found.append(d)
+    out["days"] = [d for d in _SNAP_DAY_ORDER if d in found]
+    for w, d in _SNAP_DAYS.items():
+        low = re.sub(r"(?<![\w])" + w + r"(?![\w])", " ", low)
+    low = re.sub(r"\b(every ?day|any ?day|all days|daily|week ?days|week ?ends?|and|&|to|from|on|in|at|around|near|the|i am|i'm|im|available|avail)\b", " ", low)
+    # role (longest name wins)
+    hit = _snap_find_name(low, [r[0] for r in _snap_roles()])
+    if hit:
+        for r in _snap_roles():
+            if r[0] == hit[0]:
+                out["role"] = {"key": r[1], "label": r[2], "cls": r[3]}
+                break
+        low = (low[:hit[1]] + " " + low[hit[2]:]).strip()
+    # area (door tiles + the city's suburbs, longest first)
+    areas = _snap_areas(conn, city)
+    hit = _snap_find_name(low, sorted(areas.keys(), key=lambda k: -len(k)))
+    if hit:
+        out["area"] = areas[hit[0]]
+        low = (low[:hit[1]] + " " + low[hit[2]:]).strip()
+    # what is left: the item / the typed role, as the fast-find splitter would cut it
+    parts, _mx, _mn = _qf_parse_plain(re.sub(r"\s+", " ", low))
+    parts = [p.strip(" ,.;-/") for p in parts if p and p.strip(" ,.;-/") and len(p.strip()) > 1]
+    out["parts"] = parts[:6]
+    had_fact = bool(out["price"] is not None or out["area"] or out["days"])
+    plain_words = len(re.sub(r"\s+", " ", low).strip().split())
+    # the item is what she said first, in her own words and capitalisation -- the first comma part, or the few words left
+    # once a fact was read. A loose sentence with no fact in it names nothing (never a guess published).
+    if parts and not out["role"] and (re.search(r"[,;]", s) or (had_fact and plain_words <= 6)):
+        first = parts[0] if re.search(r"[,;]", s) else " ".join(parts)
+        i = s.lower().find(first.lower())
+        out["item"] = (s[i:i + len(first)] if i >= 0 else first).strip()[:80]
+    return out
+
+
+def _snap_fields_from_vision(d, door):
+    """The vision reader's draft -> Quick's picks for the door it belongs on. Only what the reader actually said becomes a
+    pick; a safe default is used only where the default is not a claim (auth 'Not yet', ship 'Collect')."""
+    d = d or {}
+    text = " ".join(str(d.get(k) or "") for k in ("title", "description_draft", "model", "variant", "prop_type", "service_type",
+                                                   "collectible_type", "subject")).lower()
+    vc = str(d.get("category") or "").lower()
+    f = {}
+    price = d.get("suggested_price")
+    if isinstance(price, (int, float)) and price > 0:
+        f["price"] = int(round(float(price)))
+    key = {"property": "property", "cars": "cars", "adventures": "adventures", "collectors": "collectors",
+           "local_market": "localmarket", "services": "services"}.get(vc, door)
+    if key == "services":
+        key = "tutors" if (door == "tutors" or d.get("subject")) else "services"
+    if key == "collectors":
+        ct = str(d.get("collectible_type") or "").strip()
+        f["what"] = _SNAP_COL_TYPE.get(ct.lower(), ct or None)
+        cond = str(d.get("condition") or "").strip().lower()
+        if re.search(r"\bmint\b", text) and not re.search(r"near mint", text):
+            f["cond"] = "Mint"
+        elif cond in ("excellent",) or "near mint" in text:
+            f["cond"] = "Near mint"
+        elif cond == "good":
+            f["cond"] = "Good"
+        elif cond == "fair":
+            f["cond"] = "Played"
+        f["auth"] = "Graded" if re.search(r"\bgraded\b|\bpsa\b|\bbgs\b|\bcgc\b|\bslab", text) else ("Certificate" if re.search(r"certificate|\bcoa\b", text) else "Not yet")
+        f["item"] = str(d.get("title") or "").strip()[:80] or None
+    elif key == "localmarket":
+        for lab, rx in _SNAP_LM_WORDS:
+            if re.search(rx, text):
+                f["what"] = lab
+                break
+        f["ship"] = "Collect"
+        f["item"] = str(d.get("title") or "").strip()[:80] or None
+    elif key == "cars":
+        for lab, rx in _SNAP_CAR_WORDS:
+            if re.search(rx, text):
+                f["what"] = lab
+                break
+        mk = str(d.get("make") or "").strip()
+        if mk:
+            f["make"] = next((m for m in _SNAP_CAR_MAKES if m.lower() == mk.lower() or (m == "VW" and mk.lower() == "volkswagen")), mk)
+        yr = d.get("year")
+        try:
+            yr = int(str(yr)[:4])
+            if 1950 <= yr <= 2035:
+                f["year"] = str(yr)
+        except Exception:
+            pass
+        f["item"] = " ".join(x for x in (str(d.get("make") or "").strip(), str(d.get("model") or "").strip()) if x)[:80] or None
+    elif key == "property":
+        pt = str(d.get("prop_type") or "").strip()
+        f["what"] = _SNAP_PROP_TYPE.get(pt.lower(), pt or None)
+        lt = str(d.get("listing_type") or "").lower()
+        if re.search(r"rent|let|lease", lt):
+            f["deal"] = "To let"
+        elif re.search(r"sale|sell", lt):
+            f["deal"] = "To sell"
+        for k in ("beds", "baths"):
+            try:
+                v = int(d.get(k))
+                if 0 < v < 30:
+                    f[k] = ("5+" if (k == "beds" and v >= 5) else ("4+" if (k == "baths" and v >= 4) else str(v)))
+            except Exception:
+                pass
+    elif key == "tutors":
+        sub = str(d.get("subject") or "").strip()
+        f["what"] = sub or None
+        lv = str(d.get("level") or "").strip().lower()
+        f["level"] = {"primary": "Primary", "high school": "High school", "secondary": "High school", "matric": "Matric",
+                      "university": "University", "tertiary": "University"}.get(lv)
+        md = str(d.get("mode") or "").strip().lower()
+        f["mode"] = {"online": "Online", "in person": "In person", "in-person": "In person", "both": "Both"}.get(md)
+    elif key == "adventures":
+        for lab, rx in _SNAP_ADV_WORDS:
+            if re.search(rx, text):
+                f["what"] = lab
+                break
+        if d.get("prop_type"):
+            f["kind"] = str(d.get("prop_type")).strip()[:40]
+    elif key == "services":
+        st = str(d.get("service_type") or "").strip().lower()
+        hit = _snap_find_name(st or text, [r[0] for r in _snap_roles()])
+        if hit:
+            for r in _snap_roles():
+                if r[0] == hit[0]:
+                    f["role"] = {"key": r[1], "label": r[2], "cls": r[3]}
+                    break
+    f["words"] = str(d.get("description_draft") or "").strip()[:900] or None
+    return key, {k: v for k, v in f.items() if v not in (None, "", [])}
+
+
+def _snap_merge(door, vis_key, vf, sp):
+    """Photo fields + sentence fields -> the door, the picks and what is missing. The sentence wins on price, area and days;
+    a role in the sentence puts the advert on the Services door whatever the photo looked like."""
+    role = sp.get("role") or vf.get("role")
+    if role:
+        key = "homehelp" if role.get("cls") == "C" else "services"
+    elif vf:
+        key = vis_key
+    else:
+        key = door if door in _SNAP_HINT else "localmarket"
+    f = dict(vf)
+    f.pop("role", None)
+    if role:
+        f["what"] = role["label"]
+        f["r"] = role["key"]
+        f["cls"] = role["cls"]
+    elif sp.get("item") and not f.get("what"):
+        f["what"] = sp["item"]
+        f.setdefault("item", sp["item"])
+    if sp.get("price") is not None:
+        f["price"] = sp["price"]
+    if sp.get("basis"):
+        f["basis"] = sp["basis"]
+    if sp.get("area"):
+        f["where"] = sp["area"]
+    if sp.get("days"):
+        f["days"] = sp["days"]
+    if key == "localmarket":
+        f.setdefault("ship", "Collect")          # the least committing answer to "How do they get it?"
+    if key == "collectors":
+        f.setdefault("auth", "Not yet")          # not a claim
+    if f.get("price") is not None:
+        f["price_label"] = _snap_money_label(f["price"])
+        if key == "services":
+            f["how"] = {"hour": "Per hour", "job": "Per job", "callout": "Per call-out"}.get(f.get("basis"), f.get("how"))
+    # what the door still has to ask (where is left to the phone: Quick fills it from her location, she may change it)
+    need = {"homehelp": ["what", "days", "price"], "services": ["what", "qual", "how"], "tutors": ["what", "level", "mode", "price"],
+            "property": ["what", "deal", "beds", "baths"], "cars": ["what", "make", "year", "price"],
+            "collectors": ["what", "cond", "auth", "price"], "adventures": ["what", "len", "price", "when"],
+            "localmarket": ["what", "price", "ship"]}.get(key, ["what", "price"])
+    if key == "property" and str(f.get("what") or "").lower() == "plot":
+        need = [n for n in need if n != "baths"]
+    missing = [n for n in need if n not in f or f.get(n) in (None, "", [])]
+    if key == "services" and f.get("how") == "Quote first":
+        missing = [m for m in missing if m != "price"]
+    return key, f, missing
+
+
+def _snap_listing(key, f, city, cc):
+    """The quick-publish body shape, for a server-side reader of the answer (Quick itself rebuilds it from the picks, as
+    every Quick advert is built: same title, same words, same price basis)."""
+    cat = {"homehelp": "Services", "services": "Services", "tutors": "Tutors", "property": "Property", "cars": "Cars",
+           "collectors": "Collectors", "adventures": "Adventures", "localmarket": "local_market"}[key]
+    what = f.get("item") or f.get("what") or ""
+    where = f.get("where") or ""
+    body = {"title": ((what or cat) + (" — " + where if where else ""))[:120], "price": f.get("price_label") or "POA",
+            "category": cat, "city": city or "Pretoria", "area": where or None, "suburb": where or None,
+            "description": (f.get("words") or ""), "source": "quick_snap", "country": cc or "ZA"}
+    if key in ("homehelp", "services"):
+        body["service_class"] = "Casuals" if key == "homehelp" else "Technical"
+        body["service_type"] = f.get("what")
+    if key == "collectors":
+        body["collectible_type"] = f.get("what"); body["condition"] = f.get("cond")
+    if key == "cars":
+        body["make"] = f.get("make")
+        try:
+            body["vehicle_year"] = int(f.get("year"))
+        except Exception:
+            pass
+    if key == "property":
+        body["prop_type"] = f.get("what")
+        body["listing_type"] = {"To let": "For Rent", "To sell": "For Sale"}.get(f.get("deal"))
+        for k in ("beds", "baths"):
+            try:
+                body[k] = int(str(f.get(k)).rstrip("+"))
+            except Exception:
+                pass
+    if key == "tutors":
+        body["subject"] = f.get("what"); body["level"] = f.get("level"); body["mode"] = f.get("mode")
+    return {k: v for k, v in body.items() if v is not None}
+
+
+@app.post("/listings/snap-draft")
+async def snap_draft(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    photos: list[UploadFile] = File(default=[]),
+    sentence: str = Form(default=""),
+    category_hint: str = Form(default=""),
+    city: str = Form(default="Pretoria"),
+    country_iso2: str = Form(default="ZA"),
+    seller_email: str = Form(default=""),
+):
+    """QUICK-SNAP-1: up to 3 photos and/or one sentence -> the Quick door, the picks, the quick-publish body, what is still
+    missing, and a confidence. Stateless; no listing is made here. 404 while the switch is OFF."""
+    if not _snap_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    photos = [p for p in (photos or []) if p is not None and getattr(p, "filename", None)]
+    sentence = re.sub(r"\s+", " ", str(sentence or "")).strip()[:_SNAP_MAX_SENTENCE]
+    door = (category_hint or "").strip().lower()
+    if door not in _SNAP_HINT:
+        door = ""
+    if not photos and not sentence:
+        raise HTTPException(status_code=400, detail="Add a photo or say one sentence.")
+    if len(photos) > _SNAP_MAX_PHOTOS:
+        raise HTTPException(status_code=413, detail="Up to %d photos for a Snap advert." % _SNAP_MAX_PHOTOS)
+    kind = "both" if (photos and sentence) else ("snap" if photos else "say")
+    warnings, vis_key, vf, photo_read = [], door or "localmarket", {}, None
+    if photos:
+        try:
+            vd = await vision_draft(request, background_tasks, photos=photos, category_hint=_SNAP_HINT.get(door, "local_market"),
+                                    seller_email=seller_email or "", city=city or "Pretoria", country_iso2=country_iso2 or "ZA")
+            vis_key, vf = _snap_fields_from_vision(vd.get("draft") or {}, door or "localmarket")
+            photo_read = True
+            warnings += [str(w) for w in (vd.get("warnings") or [])][:4]
+            vconf = float((vd.get("draft") or {}).get("category_confidence") or 0.6)
+        except HTTPException as hx:
+            photo_read = False
+            vconf = 0.0
+            warnings.append("The photo could not be read: %s" % str(hx.detail)[:120])
+            _log.info("QUICK-SNAP-1: photo not read (%s %s)", hx.status_code, str(hx.detail)[:80])
+        except Exception as exc:
+            photo_read = False
+            vconf = 0.0
+            warnings.append("The photo could not be read right now.")
+            _log.warning("QUICK-SNAP-1: vision reader failed: %s", exc)
+    else:
+        vconf = 0.0
+    conn = database.get_db()
+    try:
+        sp = _snap_parse_sentence(sentence, city, conn) if sentence else {"role": None, "area": None, "days": [], "price": None,
+                                                                            "basis": None, "item": None, "parts": [], "text": ""}
+    finally:
+        conn.close()
+    key, f, missing = _snap_merge(door, vis_key, vf, sp)
+    # confidence: what the photo reader said about the kind, lifted by every sentence fact that landed
+    hits = sum(1 for k in ("role", "area", "price", "days", "item") if sp.get(k))
+    conf = max(vconf if photo_read else 0.0, 0.0)
+    conf = min(1.0, conf + 0.18 * hits) if (photo_read or hits) else 0.0
+    if not f.get("what"):
+        conf = min(conf, 0.3)
+    outcome = "draft" if not missing else "missing"
+    if photos and photo_read is False and not sentence:
+        outcome = "unread"
+    _snap_log(kind, outcome, key, missing)
+    line = ""
+    if outcome == "unread":
+        line = "We could not read that photo. Carry on the normal way -- your photo stays on the advert."
+    elif missing:
+        line = "Nearly there -- one or two things the photo and your words did not say."
+    return {"ok": True, "kind": kind, "cat": key, "flow": "sell", "fields": f, "missing": missing, "confidence": round(conf, 2),
+            "listing": _snap_listing(key, f, city, country_iso2), "photo_read": photo_read, "sentence": sp.get("text") or "",
+            "parts": sp.get("parts") or [], "warnings": warnings[:6], "line": line}
+
+
+@app.get("/admin/quick-snap/stats")
+def admin_quick_snap_stats(days: int = 30, admin=Depends(_require_admin)):
+    """The dashboard's Snap card: snaps, says, both; how many became a draft, how many landed on a normal step (missing), how
+    many photos could not be read -- from quick_snap_log -- and Quick's own Snap beacons (people only, bot=0)."""
+    days = max(1, min(int(days), 365))
+    conn = database.get_db()
+    try:
+        _snap_ensure(conn)
+        rows = conn.execute("SELECT kind, outcome, COUNT(*) AS n FROM quick_snap_log WHERE created_at > ? GROUP BY kind, outcome",
+                            (_sql_since(days=days),)).fetchall()
+        by = {"snap": 0, "say": 0, "both": 0}
+        outcomes = {"draft": 0, "missing": 0, "unread": 0}
+        for r in rows:
+            by[r["kind"]] = by.get(r["kind"], 0) + int(r["n"])
+            outcomes[r["outcome"]] = outcomes.get(r["outcome"], 0) + int(r["n"])
+        beacons = {}
+        try:
+            for r in conn.execute("SELECT step, COUNT(*) AS n FROM onboard_steps WHERE step LIKE 'q_snap_%' AND bot=0 "
+                                  "AND created_at > ? GROUP BY step", (_sql_since(days=days),)).fetchall():
+                beacons[r["step"]] = int(r["n"])
+        except Exception:
+            beacons = None                      # NOT MEASURED, never a zero (RG-0133)
+        return {"switch_on": _snap_on(), "days": days, "reads": by, "outcomes": outcomes, "beacons": beacons}
+    finally:
+        conn.close()
+# ══ end QUICK-SNAP-1 ══
 
 
 SEC_GATE_UNDECLARED = _sec_gate.install(

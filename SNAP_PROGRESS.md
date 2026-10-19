@@ -31,3 +31,4 @@ git could resolve. `git worktree list` says "locked" -- correct; do not prune.)
 
 ## LOG (one line per unit)
 - U1 DONE 19 Oct 2026 23:45 UTC · read brief, CLAUDE.md, STANDING_ORDERS.md, FASTLANE §5, QF module (quick.html 5681-6337), bea_main quick_publish (5516) / vision_draft (27240) / find-parse (37755-37886) / flags (26173, 26276) · NEXT: U2
+- U2 DONE 19 Oct 2026 23:48 UTC · POST /listings/snap-draft + GET /admin/quick-snap/stats + launch_switches.quick_snap (DDL, /flags, /admin/flags) + route_policy.json · verified: py_compile; scripts/snap_route_proof.py on a throwaway DB copy (backups/2026-10-12 zip) 21/21 PASS (cleaner sentence, card photo one-tap, sentence wins, honey, unread photo, unplaced sentence, 404 when OFF, counters) · NEXT: U3
