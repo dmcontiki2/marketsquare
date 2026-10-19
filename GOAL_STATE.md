@@ -5,6 +5,28 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 43 — Sun 18 Oct 2026, 15:55–16:40 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun43_wtest`, candidate copy
+  `_to_delete/goalrun43_quick.html` left there). SSH via `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w43`
+  (removed at the end), shipped `claude/goal-run43` 26a4af9 via CLOUD-SHIP-1 (16:21Z). CityLauncher edited on the server
+  (`/var/www/citylauncher`, backups `/root/g43cl/`) and the laptop copy (left uncommitted: `sms_wave.py` already carried other lanes' edits).
+- **THE NUMBER: still 5 by a stranger's hand** (#542, #544, #554, #562, #565). Live 146, unchanged. No new user, draft or listing.
+- **Outreach: still none.** BulkSMS balance 0.0 at 16:00Z (profile API). Sunday has no SMS run; next is Mon 19 Oct 07:10Z. The 17 Oct
+  22:10Z e-mail wave completed with nothing sendable. Pushed to David 16:22Z.
+- **Where people stop:** nobody came — zero bot=0 rows since run 42. The nightly SMS-path probes' `q_error` rows are their own
+  "probe-selftest" throw, not a fault.
+- **Walk:** the queued SMS lanes' own links (dry-run built). Afrikaans Cape Town gardener → card, stopped at Save; isiXhosa Gqeberha.
+  `docs/E2E_2026-10-18.md`. **Breaks:** Port Elizabeth / Nelspruit links carry no city (pack says "Gqeberha (Port Elizabeth)") so the
+  door asks "Which city?" with Pretoria first (~330 queued); Afrikaans card chips "Mon, Wed, Fri" / "R350 / day".
+- **Shipped (GI-0046, RG-1062):** CITY-ALIAS-1 (quick.html cityKey + CityLauncher quick_door/sms_wave, no SMS-part cost change) and
+  LIST-WORDS-1 (qTr comma lists + price units). Proven live 16:25Z.
+- **Ledger:** new tree 1 !!!! before the CityLauncher server edit (RG-1062's own CityLauncher check — by design, cleared by the edit);
+  base `/opt/marketsquare-src` 9ced574: RG-0229, 0230, 0246, 0247, 0276, 0344, 0403, 0987 (other lanes'; 0246 and 0344 new since run 42).
+- **REVIEW NOW:** GI-0044 (top up SMS — the only blocker), GI-0041 (ten waiting drafts).
+- **QA data:** none created (nothing saved, no account).
+- **Not reached:** nothing.
+
 ## RUN 42 — Sat 17 Oct 2026, 15:56–16:45 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun42_write_test`). SSH via
@@ -558,6 +580,27 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   deploy (waits for the lock and for the tree to go quiet, SO-5).
 - **FOR RUN 25 (David asked, 30 Sep morning):** under new SO-6, sweep RULINGS.md for every ruling David approved that quietly adds a per-use/monthly cost or contradicts an earlier ruling (the RUL-167 vs RUL-122 SMS case, now corrected by RUL-192); list each in GOAL_IMPROVEMENTS REVIEW NOW with the cost, the ruling it collides with, and a recommendation. Also: BulkSMS account trustsquare_sms is OUTREACH-ONLY (RUL-192); the test texts failed NOT_SENT pending BulkSMS support.
 - **Stray file:** `.goalrun_write_test` (empty, repo root) — my write probe; `rm` is not permitted from this shell.
+
+## SUNDAY SUMMARY — written by run 43, Sunday 18 October 2026
+
+**The number is 5.** Five strangers published by their own hand this week — the first five ever: an appliance repairer, an
+English tutor, a seamstress and a fire-extinguisher technician in Pretoria, and a petrol attendant in Durban whose advert is
+in isiZulu. Every one of them came from a text message; none from e-mail. Thirteen days and fifteen sellers to the
+target of 20 by 31 October.
+
+**What moved.** You turned the SMS pilot into a daily lane (RUL-232: 400 texts a day, every city, a number re-texted after
+60 days) and it worked: about 650 texts brought five published listings, and ten more people who saved an advert and stopped
+at the sign-in. Each day's walk fixed what those people tripped on — the sign-in that lost their draft, a draft that saved twice,
+"hidden until checked" wording, a photo read that sold the props on a dresser.
+
+**What stopped.** On Friday morning the SMS account ran out of credit after 16 texts. Since then nothing has gone out — no
+texts, and no e-mail (the e-mail list has nobody left it may write to) — and for two days not one real person has opened the
+app. The product is waiting on the messages, not the other way round.
+
+**What is next.** Top up the SMS account before 09:10 tomorrow (GI-0044, ~R350 for three days). The next ~1,300 texts go to
+new cities in Afrikaans, isiXhosa and isiZulu; today's walk made sure the Port Elizabeth and Nelspruit ones open on her own
+suburbs and that an Afrikaans advert reads Afrikaans throughout. Then the one letter to the ten people who saved and stopped
+(GI-0041) — they are the cheapest sellers we will ever get.
 
 ## SUNDAY SUMMARY — written by run 36, Sunday 11 October 2026
 

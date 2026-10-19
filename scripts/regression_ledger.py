@@ -40171,5 +40171,44 @@ def rg_app_script_stall():
     return [(INFO, "the app script downloads in full in %.1f s (%d bytes)" % (secs, got))]
 
 
+
+@entry("RG-1062", "CITY-ALIAS-1 + LIST-WORDS-1 (Goal run 43, 18 Oct 2026): the Quick door finds a city by either of its "
+       "names -- ?city=Port Elizabeth / Gqeberha / Nelspruit / Mbombela open 'Gqeberha (Port Elizabeth)' and 'Mbombela "
+       "(Nelspruit)' instead of asking 'Which city?' with Pretoria first; and her own advert card speaks her language in "
+       "its chips -- the days 'Ma, Wo, Vr' (not 'Mon, Wed, Fri') and the price 'R350 per dag' (not 'R350 / day')",
+       LOCKED, fixed_on="2026-10-18",
+       scope="quick.html (= genie/HARNESS.html) cityKey + setCity, qTr comma-list + price units; CityLauncher "
+             "emailer/quick_door.py _pack_city and sms_wave.py link variants (server copy checked when visible)",
+       ref="Goal run 43 walk (docs/E2E_2026-10-18.md): an isiXhosa Gqeberha link and the queued Port Elizabeth / Nelspruit "
+           "SMS links (~330 texts) opened on 'Sesiphi isixeko?'; an Afrikaans gardener's card read 'Mon, Wed, Fri' and 'R350 / day'.")
+def rg_city_alias_list_words():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - quick.html not readable from here")]
+    out = []
+    if h is not None and h != q:
+        out.append((FAIL, "genie/HARNESS.html differs from quick.html"))
+    i = q.find("function cityKey(city){")
+    j = q.find("function setCity(city, remember){")
+    if i < 0 or j < 0 or "city=cityKey(city);" not in q[j:j + 120]:
+        out.append((FAIL, "setCity no longer resolves 'Port Elizabeth' / 'Nelspruit' -- those links ask 'Which city?' again"))
+    elif "split(' (')" not in q[i:i + 500]:
+        out.append((FAIL, "cityKey no longer matches the name before the bracket ('Gqeberha', 'Mbombela')"))
+    k = q.find("function qTr(txt){")
+    body = q[k:k + 2600] if k >= 0 else ""
+    if "LIST-WORDS-1" not in body or "split(', ')" not in body:
+        out.append((FAIL, "qTr no longer translates a comma list -- an Afrikaans card says 'Mon, Wed, Fri' again"))
+    if "window.qAdPrice" not in body:
+        out.append((FAIL, "qTr no longer gives her price chip its units in her language ('R350 / day' on an Afrikaans card)"))
+    cl = "/var/www/citylauncher/emailer/quick_door.py"
+    if os.path.exists(cl):
+        try:
+            t = open(cl, encoding="utf-8").read()
+            if "def _pack_city(" not in t or "pc = _pack_city(cc, city)" not in t:
+                out.append((FAIL, "CityLauncher quick_door.py dropped _pack_city -- Port Elizabeth / Nelspruit links carry no city"))
+        except Exception:
+            pass
+    return out or [(INFO, "either city name opens the right city; day and price chips follow her language")]
+
 if __name__ == "__main__":
     sys.exit(main())
