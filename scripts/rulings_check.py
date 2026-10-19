@@ -1308,7 +1308,8 @@ REFLECTIONS = {
  "RUL-169": [
    ("RULINGS.md", ["AN EXISTING CLIENT FOR THE SELF-EMPLOYED"], []),
    ("quick.html", ["VOUCH-WHO-1", "A parent or student you teach"], ["+'<p>Your employer says <b>one sentence</b>"]),
-   ("confirm.html", ["someone they worked for confirmed them"], ["a previous employer confirmed them"]),
+   # 19 Oct 2026: wording followed RUL-209 (a co-worker's yes counts like an employer's) -- the page now says "someone who knows their work"
+   ("confirm.html", ["someone who knows their work confirmed them"], ["a previous employer confirmed them"]),
  ],
  "RUL-168": [
    ("RULINGS.md", ["QUICK RATES ARE TYPED, NOT PICKED"], []),
@@ -1377,7 +1378,7 @@ REFLECTIONS = {
  "RUL-211": [
    ("RULINGS.md", ["THE APP FOLLOWS WHERE SHE IS -- AUTOMATICALLY -- AND ONLY HER OWN CHOICE OVERRIDES IT", "[AMENDED 7 Oct 2026, David"], []),
    ("bea_main.py", ['("lat", "cf-iplatitude"), ("lng", "cf-iplongitude")'], []),
-   ("ms.js", ["async function msGeoAuto(", "async function msGeoFromGps(", "function msGeoBanner(", "msGeoAuto();   // GEO-AUTO-1", "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');", "LANG-AUTO-1 (RUL-211", "GEO-NET-CITY-1: the network's own position"], ["function msAbroadNudge("]),
+   ("ms.js", ["async function msGeoAuto(", "async function msGeoFromGps(", "function msGeoBanner(", "msGeoAuto();   // GEO-AUTO-1", "localStorage.removeItem('ms_user_city'); localStorage.removeItem('ms_user_country');", "LANG-AUTO-1 (RUL-211", "GEO-CITY-SAFE-1 (David, 7 Oct 2026"], ["function msAbroadNudge(", "GEO-NET-CITY-1: the network's own position"]),   # 19 Oct 2026: GEO-NET-CITY-1 was replaced the same day by GEO-CITY-SAFE-1 (network = country only; Maroushka moved to Johannesburg) -- the old marker must stay gone
  ],
  "RUL-214": [
    ("RULINGS.md", ["A CAR WASHER IS A CASUAL WHO CHARGES PER CAR AND PER KIND OF CLEAN"], []),
