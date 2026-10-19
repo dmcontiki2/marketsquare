@@ -5635,7 +5635,9 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     # got a SECOND live advert, identical to the first (#468 and #469, 12 minutes apart, both in the public grid). If
     # she already has this exact advert live from the last 24 hours, the tap answers with that one -- nothing new is
     # made and nothing is published twice. Different words, price or place is a different advert and goes through.
-    if signed_member:
+    # QUICK-SIGN-1 (RUL-240): a stranger whose tap publishes is in the same position -- her retry must not make a second
+    # live advert either.
+    if signed_member or _quick_signed:
         conn = database.get_db()
         try:
             _dup = conn.execute(
