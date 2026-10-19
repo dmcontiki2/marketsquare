@@ -3256,8 +3256,8 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
           var p2=Math.max(0,Math.min(100,Math.round(d.score))), c2=rg.querySelectorAll('circle')[1], t2=rg.querySelector('text');
           if(c2) c2.setAttribute('stroke-dasharray',(C*p2/100).toFixed(1)+' '+C.toFixed(1)); if(t2) t2.textContent=p2;
           var hb=rg.querySelector('b'); if(hb) hb.textContent='Your listing is '+p2+'% strong'; }).catch(function(){}); }catch(e){}
-      var pub=$('pub'); if(pub) pub.textContent='Save my listing';
-      var h=$('pubhint'); if(h) h.textContent='Free. We send you a link — one tap in the app publishes it.';
+      var pub=$('pub'); if(pub) pub.textContent=qPubLabel();   /* QUICK-SIGN-1: one label, one meaning */
+      var h=$('pubhint'); if(h) h.innerHTML=qTermsLine();
     }catch(e){ console.warn('quick-next draft', e); }
   };
 
@@ -3389,7 +3389,11 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
      the terms, which are one tap away beside it -- and the advert is live when the tap lands.
      A signed-in member sees no box at all: one tap, as herself. */
   function esc(t){ return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function qPubLabel(){ return (QUICK.member&&QUICK.eula) ? qTr('Publish') : qTr('Save my listing'); }
+  /* QUICK-SIGN-1 (RUL-240, David 19 Oct 2026 -- amends RUL-166): 9 of 14 strangers from the SMS waves typed their e-mail
+     and then never came back from the inbox we sent them to. The Terms are signed HERE, on the button that says so, with
+     the acceptance line and the Terms link directly above it -- the same acceptance the fast lane uses -- and the advert
+     is live in the same tap. The server's publish gate records the acceptance; the letter is her way back, not a gate. */
+  function qPubLabel(){ return (QUICK.member&&QUICK.eula) ? qTr('Publish') : qTr('Publish now — I accept the Terms'); }
   /* PHONE-KEY-1 / LINK-KEY-1 (RUL-167, David 24 Sep 2026): her KEY may be an e-mail, a phone number (a
      six-digit code by SMS) or the private link itself. The EULA is still signed in the app before
      anything goes live -- this door only chooses how she gets back in. */
@@ -3413,11 +3417,12 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
     // so leave it where the app's sign-in screen can pre-fill it (this device only, never sent on).
     if(mode==='email' && em){ try{ localStorage.setItem('ts_quick_email', em); }catch(_){} }
     if(mode==='email'){ var _qn=(($('qpname')||{}).value||'').trim(); if(_qn) QUICK.name=_qn.slice(0,40); }   // NAME-ASK-1
-    btn.disabled=true; btn.textContent=(QUICK.member&&QUICK.eula) ? qTr('Publishing…') : qTr('Saving…');
+    btn.disabled=true; btn.textContent=(mode==='link') ? qTr('Saving…') : qTr('Publishing…');   /* QUICK-SIGN-1 */
     var pay=handoverPayload().body; pay.seller_email=(mode==='link'?null:(em||null));
     try{ window.qWipSave && qWipSave(); }catch(_){}   /* WIP-KEEP-1 (quick-16): her answers survive a failed save or a reload */
     fetch('/listings/quick-publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({listing:pay, email:(mode==='link'?'':em), accept_terms:true, key_mode:(mode==='link'?'link':'email'), name:(QUICK.name||'')})})
+      body:JSON.stringify({listing:pay, email:(mode==='link'?'':em), accept_terms:true, key_mode:(mode==='link'?'link':'email'), name:(QUICK.name||''),
+        sign_terms:(mode!=='link')})})   /* QUICK-SIGN-1 (RUL-240): the tap on "Publish now -- I accept the Terms" is her signature */
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok, st:r.status, j:j}; }); })
     .then(function(res){
       if(!res.ok){ btn.disabled=false; btn.textContent=qPubLabel(); var h=$('pubhint');
@@ -3596,10 +3601,19 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
      the terms link where that language puts it ({terms}) -- the three fragments it was built from could not be
      translated into a sentence at all. */
   function qTermsLine(){
-    var tpl=qTr('Free. Before it goes live, you read and sign the {terms} in the app.');
-    var link='<a href="/terms" target="_blank" rel="noopener" style="color:var(--bright)">'+esc(qTr('TrustSquare terms'))+'</a>';
+    /* QUICK-SIGN-1 (RUL-240): the acceptance line sits directly above the button that signs it. Only the dormant
+       WhatsApp-link key still reads the Terms in the app (that lane is unchanged). */
+    if(QUICK.idMode==='link'){
+      var tpl0=qTr('Free. Before it goes live, you read and sign the {terms} in the app.');
+      var link0='<a href="/terms" target="_blank" rel="noopener" style="color:var(--bright)">'+esc(qTr('TrustSquare terms'))+'</a>';
+      var parts0=tpl0.split('{terms}');
+      return esc(parts0[0])+(parts0.length>1 ? link0+esc(parts0.slice(1).join('')) : '');
+    }
+    var tpl=qTr('By tapping Publish now you confirm: I have read and accept the {terms}, and confirm all listing information is accurate.');
+    var link='<a href="/terms" target="_blank" rel="noopener" style="color:var(--bright)">'+esc(qTr('TrustSquare Seller Terms'))+'</a>';
     var parts=tpl.split('{terms}');
-    return esc(parts[0])+(parts.length>1 ? link+esc(parts.slice(1).join('')) : '');
+    return esc(qTr('Free.'))+' '+esc(parts[0])+(parts.length>1 ? link+esc(parts.slice(1).join('')) : '')
+      +' '+esc(qTr('I understand that listings with inappropriate content will be permanently removed.'));
   }
   var _dr1=drawDraft;
   drawDraft=function(){
@@ -3696,9 +3710,10 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
         }catch(e){ try{ drawDraft(); }catch(_){} }
       };
     }
-    /* EULA-SIGNOFF-1 (RUL-166, David 23 Sep 2026): only a signed-in member who has already signed the EULA
-       publishes in one tap. Everyone else SAVES a draft here and publishes in the TrustSquare app, after
-       reading and signing the terms there. This door never claims or records an acceptance. */
+    /* QUICK-SIGN-1 (RUL-240, David 19 Oct 2026, amending RUL-166): a signed-in member who has already signed publishes
+       with "Publish"; everyone else publishes with "Publish now -- I accept the Terms", the acceptance line above it.
+       The server records the acceptance in the same publish gate the app uses. Only an address that already belongs to
+       someone else's account still gets a draft and a sign-in letter (AUDIT-Q1). */
     pub.textContent=qPubLabel();
     var h=$('pubhint'); if(h) h.innerHTML=(QUICK.member&&QUICK.eula) ? qTr('Free.') : qTermsLine();
     pub.onclick=function(){ publishNow(this); };

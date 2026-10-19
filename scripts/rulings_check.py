@@ -1534,6 +1534,14 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-240": [
+   # David, 19 Oct 2026: "that suggestion is the right way forward and it is the way to reduce that last 3.5% ... Please proceed."
+   ("RULINGS.md", ["THE QUICK DOOR TAKES THE SIGNATURE ITSELF", "AMENDED-BY [[RUL-240]]"], []),
+   ("bea_main.py", ["QUICK-SIGN-1 (RUL-240", "sign_terms: bool = False", "_quick_signed = (not signed_member) and bool(body.sign_terms) and (not existing_account)", "accepted_terms=1 if _quick_signed else 0"], []),
+   ("quick.html", ["QUICK-SIGN-1 (RUL-240", "sign_terms:(mode!=='link')", "qTr('Publish now — I accept the Terms')"], ["qTr('Save my listing')"]),
+   ("genie/HARNESS.html", ["QUICK-SIGN-1 (RUL-240", "sign_terms:(mode!=='link')"], ["qTr('Save my listing')"]),
+   ("scripts/regression_ledger.py", ["QUICK-SIGN-1 (was EULA-SIGNOFF-1)"], []),
+ ],
  "RUL-239": [
    # David, 18 Oct 2026: "We should not reject such data as violating anonymity ... minimize the new listers being discouraged" -- all 5 approved
    ("RULINGS.md", ["A SELLER'S PHOTO IS NEVER A DEAD END", "never PUBLISHED unchecked"], []),

@@ -27953,13 +27953,17 @@ def rg_delete_bind_1():
     return out
 
 
-@entry("RG-0446", "EULA-SIGNOFF-1: the Quick door never publishes for anyone who has not signed the EULA -- "
-                  "a new lister gets a draft and signs the terms in the app; only a signed member publishes in one tap",
-       LOCKED, fixed_on="2026-09-23",
-       scope="RUL-166 (David, 23 Sep 2026: 'we dont publish unless we have both his email and his acceptance of "
-             "the EULA'). bea_main.py quick_publish: signed_member = session AND users.eula_accepted_at; everyone "
-             "else gets source 'quick' (draft + way-back letter) and need='eula'; the function never writes "
-             "eula_accepted_at. quick.html: 'Save my advert' for non-signed visitors, no acceptance wording.")
+@entry("RG-0446", "QUICK-SIGN-1 (was EULA-SIGNOFF-1): the Quick door takes the signature itself -- a new e-mail lister "
+                  "signs the Terms on the labelled button and is live in the same tap, through the ONE publish gate; an "
+                  "address that already belongs to someone else still gets a draft and a sign-in letter",
+       LOCKED, fixed_on="2026-10-19",
+       scope="RUL-240 (David, 19 Oct 2026: 'that suggestion is the right way forward ... Please proceed'), amending RUL-166. "
+             "ASSERTION REWRITTEN 19 Oct 2026 -- the old one asserted the inbox hop that 9 of 14 strangers never came back "
+             "from. bea_main.py quick_publish: _quick_signed = not signed_member AND body.sign_terms AND not "
+             "existing_account AND key_mode != 'link'; publish_listing(lid, em, accepted_terms=1 if _quick_signed else 0) "
+             "records the acceptance (the door itself still never writes eula_accepted_at); the existing_account return "
+             "(draft + sign-in letter, AUDIT-Q1) still precedes it. quick.html + genie/HARNESS.html: the button reads "
+             "'Publish now -- I accept the Terms' with the acceptance line above it and sends sign_terms.")
 def rg_eula_signoff_1():
     out = []
     b = repo_file("bea_main.py")
@@ -27971,19 +27975,27 @@ def rg_eula_signoff_1():
     if not body:
         return [(FAIL, "quick_publish not found")]
     if "eula_accepted_at =" in body or "SET eula_accepted_at" in body:
-        out.append((FAIL, "quick_publish writes eula_accepted_at -- the Quick door must never record an acceptance"))
+        out.append((FAIL, "quick_publish writes eula_accepted_at itself -- the acceptance is recorded by publish_listing's gate only"))
     if "signed_member" not in body or 'bool(_u["eula_accepted_at"])' not in body:
         out.append((FAIL, "quick_publish lost the signed-member gate (session AND a signed EULA)"))
-    k = body.find("publish_listing(")
-    g = body.find("if not signed_member:")
+    if "_quick_signed = (not signed_member) and bool(body.sign_terms) and (not existing_account)" not in body:
+        out.append((FAIL, "QUICK-SIGN-1 decision missing or weakened (must need sign_terms AND a new address)"))
+    if "publish_listing(lid, em, accepted_terms=1 if _quick_signed else 0)" not in body:
+        out.append((FAIL, "the signed Quick tap no longer publishes through publish_listing with accepted_terms"))
+    k = body.find("        publish_listing(lid, em")      # the call itself, not the comment that names the gate
+    g = body.find("if existing_account:")
     if k < 0 or g < 0 or g > k:
-        out.append((FAIL, "quick_publish can reach publish_listing before the signed-member gate"))
-    q = repo_file("quick.html")
-    if q is not None:
-        if "qTr('Publishing accepts the')" in q or "<p>Publishing accepts the" in q:
-            out.append((FAIL, "quick.html still tells visitors that publishing accepts the terms"))
-        if "Save my listing" not in q or "QUICK.eula" not in q:
-            out.append((FAIL, "quick.html lost the Save-my-listing path for visitors without a signed EULA"))
+        out.append((FAIL, "quick_publish can reach publish_listing before the existing-account draft return (AUDIT-Q1)"))
+    for fn in ("quick.html", "genie/HARNESS.html"):
+        q = repo_file(fn)
+        if q is None:
+            continue
+        if "sign_terms:(mode!=='link')" not in q:
+            out.append((FAIL, fn + " no longer sends sign_terms with the e-mail publish"))
+        if "qTr('Publish now — I accept the Terms')" not in q or "QUICK.eula" not in q:
+            out.append((FAIL, fn + " lost the 'Publish now -- I accept the Terms' label for a new lister"))
+        if "By tapping Publish now you confirm: I have read and accept the {terms}" not in q:
+            out.append((FAIL, fn + " lost the acceptance line above the button"))
     return out
 
 

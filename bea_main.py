@@ -5481,6 +5481,7 @@ class _QuickPublishIn(BaseModel):
     name: str = ""
     preset_id: int = 0          # QUICK-FAST-1 (RUL-222): a fast publish from her quick icon -- the gate runs first
     hold: bool = False          # QUICK-FAST-1: create the advert as a draft; her photo is added, then the standard publish
+    sign_terms: bool = False    # QUICK-SIGN-1 (RUL-240, David 19 Oct 2026): the tap on the labelled button IS her signature
 
 
 _QP_IP_LOG = {}
@@ -5609,13 +5610,23 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     # signed. Everyone else gets a DRAFT and the way-back letter; publishing happens in the TrustSquare
     # app, behind its scroll-to-the-end EULA gate. The Quick door never records an acceptance.
     signed_member = bool(sess) and bool(_u) and bool(_u["eula_accepted_at"])
+    # QUICK-SIGN-1 (RUL-240, David 19 Oct 2026 -- amends RUL-166): of 14 strangers who built an advert and typed their
+    # e-mail in the SMS waves of 13-16 Oct, 9 stopped at "We emailed you a link -- open it in TrustSquare, read and sign
+    # the Terms, and publish". People reached on their phones do not go to an inbox. So the signature is taken HERE:
+    # the Quick button reads "Publish now -- I accept the Terms" with the acceptance line and the Terms link directly
+    # above it (the same acceptance the fast lane and the app's sell flow use; CPA s49 assent by act), and the tap
+    # publishes through the SAME publish_listing() gate, which records users.eula_accepted_at exactly as the app's
+    # scroll-to-the-end gate does (accepted_terms=1). E-mail stays the anchor; the letter is her way back, not a gate.
+    # What does NOT change: an address that already has an account, typed by someone not signed in as it, still gets a
+    # draft and a sign-in letter (AUDIT-Q1 -- nobody's terms are accepted on their behalf); the key-link lane is unchanged.
+    _quick_signed = (not signed_member) and bool(body.sign_terms) and (not existing_account) and key_mode != "link"
     fields = dict(body.listing or {})
     # AUDIT-Q2: the browser never sets a score, an image path, a spec blob or an attestation.
     for _k in ("trust_score", "thumb_url", "medium_url", "vehicle_specs", "spec_confirmed", "listing_status",
                "published_at", "seller_email", "source"):
         fields.pop(_k, None)
     fields["seller_email"] = em
-    fields["source"] = "quick_live" if signed_member else "quick"   # 'quick' = draft + the way-back letter
+    fields["source"] = "quick_live" if (signed_member or _quick_signed) else "quick"   # 'quick' = draft + the way-back letter
     try:
         listing = Listing(**{k: v for k, v in fields.items() if k in Listing.__fields__})
     except Exception as exc:
@@ -5692,6 +5703,8 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
         _log.info("ONE-TAP-PUBLISH-1: %s already has an account and is not signed in -- draft %s + sign-in letter", em, lid)
         return {"id": lid, "live": False, "verify": True,
                 "detail": "You already have a TrustSquare account. We emailed you a link — open it to publish."}
+    # QUICK-SIGN-1: decided again here -- QUICK-DUP-2 above may have cleared existing_account for her own second tap.
+    _quick_signed = (not signed_member) and bool(body.sign_terms) and (not existing_account) and key_mode != "link"
     if not signed_member:
         conn = database.get_db()
         try:
@@ -5703,30 +5716,37 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             conn.commit()
         finally:
             conn.close()
-        _log.info("EULA-SIGNOFF-1: draft %s for %s -- EULA not yet signed, publish happens in the app", lid, em)
-        if key_secret:
-            # ONE-KEY-1 (25 Sep 2026 inspection, quick-02): this phone stays signed in as the key account it just made,
-            # so 'List something else' saves her next advert under the SAME key and hub instead of minting a second
-            # anonymous account. Only a brand-new account is signed in here -- nobody else's -- and an email save is
-            # never signed in by a typed address (AUDIT-Q1: that needs the inbox to prove it).
-            _establish_user_session(em, response)
-            # the one time the secret travels: back to her, to send to herself on WhatsApp
-            return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "link",
-                    "key_url": APP_URL + "/k/" + key_secret + "?draft=" + str(lid),
-                    "detail": "Your listing is saved. The private link below is your key to it — send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
-        if _is_key_identity(em):
-            # a key-account session (phone code, employer slip or WhatsApp link): hand back a sign-in hop so the app
-            # opens on her draft. SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07): 'phone' only when a number is on file.
-            return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": _qp_identity_kind(em),
-                    "open_url": _mint_signin_url(em, lid, 60),
-                    "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
-        if sess:
-            # QUICK-HANDOFF-1: already proven (signed in here, e.g. with Google) -- straight to the terms, no letter to wait for
+        if _quick_signed:
+            _log.info("QUICK-SIGN-1: %s signed the Terms on the Quick button -- publishing %s in the same tap (RUL-240)", em, lid)
+            if not sess:
+                # a brand-new account, made by this very tap: this phone is her (the ONE-KEY-1 pattern). An address that
+                # already belonged to someone never reaches here (existing_account returned a draft + sign-in letter above).
+                _establish_user_session(em, response)
+        else:
+            _log.info("EULA-SIGNOFF-1: draft %s for %s -- EULA not yet signed, publish happens in the app", lid, em)
+            if key_secret:
+                # ONE-KEY-1 (25 Sep 2026 inspection, quick-02): this phone stays signed in as the key account it just made,
+                # so 'List something else' saves her next advert under the SAME key and hub instead of minting a second
+                # anonymous account. Only a brand-new account is signed in here -- nobody else's -- and an email save is
+                # never signed in by a typed address (AUDIT-Q1: that needs the inbox to prove it).
+                _establish_user_session(em, response)
+                # the one time the secret travels: back to her, to send to herself on WhatsApp
+                return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "link",
+                        "key_url": APP_URL + "/k/" + key_secret + "?draft=" + str(lid),
+                        "detail": "Your listing is saved. The private link below is your key to it — send it to yourself on WhatsApp, then open it to read and sign the Terms and publish."}
+            if _is_key_identity(em):
+                # a key-account session (phone code, employer slip or WhatsApp link): hand back a sign-in hop so the app
+                # opens on her draft. SMS-TRUTH-1 (25 Sep 2026 inspection, backend-07): 'phone' only when a number is on file.
+                return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": _qp_identity_kind(em),
+                        "open_url": _mint_signin_url(em, lid, 60),
+                        "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
+            if sess:
+                # QUICK-HANDOFF-1: already proven (signed in here, e.g. with Google) -- straight to the terms, no letter to wait for
+                return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "email",
+                        "open_url": _mint_signin_url(em, lid, 60),
+                        "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
             return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "email",
-                    "open_url": _mint_signin_url(em, lid, 60),
-                    "detail": "Your listing is saved. Open it in TrustSquare, read and sign the Terms, and publish."}
-        return {"id": lid, "live": False, "draft_token": _qdt, "need": "eula", "identity": "email",
-                "detail": "Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
+                    "detail": "Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."}
     if _fast is not None:
         _qf_count_use(_fast["preset_id"])
         if body.hold:
@@ -5736,9 +5756,10 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
             _log.info("QUICK-FAST-1: draft %s held for her photo (preset %s, %s)", lid, _fast["preset_id"], em)
             return {"id": lid, "live": False, "hold": True, "draft_token": _qdt, "identity": _qp_identity_kind(em),
                     "open_url": _mint_signin_url(em, lid, 60)}
-    _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by signed member %s", lid, em)
+    _log.info("ONE-TAP-PUBLISH-1: listing %s published in one tap by %s %s", lid,
+              "newly signed Quick lister" if _quick_signed else "signed member", em)
     try:
-        publish_listing(lid, em)
+        publish_listing(lid, em, accepted_terms=1 if _quick_signed else 0)   # QUICK-SIGN-1: the gate records her acceptance
     except HTTPException as he:
         background_tasks.add_task(_quick_draft_return, em, lid, listing.title)   # AUDIT-Q3: the way back is real
         return {"id": lid, "live": False, "detail": he.detail, "status": he.status_code,
