@@ -1535,6 +1535,14 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-241": [
+   # David, 19 Oct 2026: "please update the wording to be correct, but hold on the waves ... really ready before we initiate the next WaveSession2"
+   ("RULINGS.md", ["EVERY WAVE -- E-MAIL AND SMS -- IS HELD UNTIL DAVID STARTS WAVESESSION2"], []),
+   ("../CityLauncher/sms_wave.py", ["SMS-WORDS-2", '"adventures_accommodation": "TrustSquare: list your B&B free. No commission:"', '"casuals":    "TrustSquare: let employers find you. List free:"'], ['"TrustSquare: list your work free, with a trust score:"']),
+   ("../CityLauncher/emailer/build_letters_v2.py", ["Your advert is live the moment you tap Publish in Quick."], ["sign the terms and publish"]),
+   ("../CityLauncher/emailer/emailer.py", ["LETTER-V2 POINTED (RUL-232(e), 19 Oct 2026", "services_casuals_outreach.v2.html"], ["TMPL_DIR / 'services_casuals_outreach.html'"]),
+   ("../CityLauncher/CHANGELOG.md", ["WAVESESSION2 HOLD"], []),
+ ],
  "RUL-240": [
    # David, 19 Oct 2026: "that suggestion is the right way forward and it is the way to reduce that last 3.5% ... Please proceed."
    ("RULINGS.md", ["THE QUICK DOOR TAKES THE SIGNATURE ITSELF", "AMENDED-BY [[RUL-240]]"], []),
