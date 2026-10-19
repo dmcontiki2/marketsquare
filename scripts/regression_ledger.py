@@ -40210,5 +40210,32 @@ def rg_city_alias_list_words():
             pass
     return out or [(INFO, "either city name opens the right city; day and price chips follow her language")]
 
+@entry("RG-1063", "MORE-JOBS-1 (Goal run 44, 19 Oct 2026): a job seeker who fills her plan in Quick is told so on the live "
+       "card -- 'Your plan's listing slots are full. More kinds of work? Add them to this listing -- tap See my listing, then "
+       "Edit.' -- before 'List something else' lets her build an advert the server will refuse (402, Free = 2 live, RUL-128); "
+       "and the slots-full card names the third way out: add the work to a live listing",
+       LOCKED, fixed_on="2026-10-19",
+       scope="bea_main.py quick_publish live answer (slots_left via _qp_slots_left) + quick.html (= genie/HARNESS.html) "
+             "celebrate() .ar-jobs line and the slotsFull line; roles/quick_i18n.json carries both phrases (af/zu/xh/nso)",
+       ref="Goal run 44 (docs/E2E_2026-10-19.md): SMS b15 Johannesburg, 19 Oct 07:08-07:12Z -- one stranger built four adverts "
+           "in four minutes (cashier, security guard, hotel porter, waiter, #575-#578); since QUICK-SIGN-1 the third and fourth "
+           "would answer 'slots full' only after she had built them.")
+def rg_more_jobs():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html"); b = repo_file("bea_main.py")
+    if q is None or b is None:
+        return [(INFO, "NOT EVALUATED - quick.html / bea_main.py not readable from here")]
+    out = []
+    if h is not None and h != q:
+        out.append((FAIL, "genie/HARNESS.html differs from quick.html"))
+    if '"slots_left": _qp_slots_left(em)' not in b or "def _qp_slots_left(em):" not in b:
+        out.append((FAIL, "quick_publish's live answer no longer says how many live slots are left -- Quick cannot warn her"))
+    i = q.find("function celebrate(r, ctx){")
+    body = q[i:i + 9000] if i >= 0 else ""
+    if "(live && r.slots_left===0)" not in body or "More kinds of work? Add them to this listing" not in body:
+        out.append((FAIL, "the live card no longer tells a full plan where more kinds of work go"))
+    if "Or add this work to one of your live listings" not in body:
+        out.append((FAIL, "the slots-full card lost its third way out (add the work to a live listing)"))
+    return out or [(INFO, "a full plan is named on the live card, with where more kinds of work go")]
+
 if __name__ == "__main__":
     sys.exit(main())

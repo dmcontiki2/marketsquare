@@ -5,6 +5,30 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 44 — Mon 19 Oct 2026, 15:55–16:30 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun44_wtest`). SSH via
+  `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w44` (removed at the end), shipped `claude/goal-run44` 15569dc via
+  CLOUD-SHIP-1 (16:17Z SHIPPED, BEA restarted 16:20Z). Laptop checkout left at fd8fc7d (behind origin/main by this run's commits).
+- **Today's other lane (David live, 07:22–09:25Z):** QUICK-SIGN-1 / RUL-240 — Quick's button signs the Terms and publishes in one tap
+  (live 07:42Z, proven with QA #579). RUL-241 — every e-mail and SMS wave HELD until David starts WaveSession2. GI-0044 folded into it.
+- **THE NUMBER: 6 by a stranger's hand** — new **#566 Nanny (Pretoria), live 07:18:42Z**, 68 min after GI-0041's way-back letter
+  (1 of 9 letters converted so far). Live 147.
+- **Where people stop:** one new stranger, Shazz (Jhb, old SMS b15 link), 07:08–07:12Z: **four adverts in four minutes** (#575–#578,
+  cashier / security guard / hotel porter / waiter), then Google sign-in → Hub ~15 s → gone; back 09:28Z for ~2 s. No error. She came
+  30 min before QUICK-SIGN-1. Under it, her 3rd and 4th would hit "slots full" (Free = 2 live, RUL-128) after being built.
+- **Walk:** casual / services, Johannesburg, cold door → Cashier → "Publish now — I accept the Terms". Clean. Stopped at Publish — the
+  session's safety layer refused the click (as 29 Sep). `docs/E2E_2026-10-19.md`.
+- **Shipped (GI-0047, RG-1063):** MORE-JOBS-1 — `slots_left` on the live answer; the live card names a full plan and points to Edit on
+  the advert she has; the 402 card adds that way out. **Live proof 16:2xZ:** live quick.html in a headless phone with quick-publish
+  mocked in the browser → the line shows at slots_left 0, not at 1; `_qp_slots_left` on a DB copy correct; BEA main.py carries it.
+- **Ledger:** new tree 0 !!!! (31 NOT EVALUATED, vantage); base `/opt/marketsquare-src` e66f0f1: RG-0229, 0230, 0247, 0276, 0344,
+  0403, 0987 (other lanes', same as run 43 less RG-0246).
+- **REVIEW NOW:** GI-0048 (job seekers list several jobs; free plan stops the third — recommend one advert, several jobs);
+  GI-0044 held under RUL-241.
+- **QA data:** none created (nothing saved; the publish was mocked in the browser).
+- **Not reached:** the introduction leg of a Quick-published casual advert (RUL-241(d)) — it needs a publish this run cannot click.
+
 ## RUN 43 — Sun 18 Oct 2026, 15:55–16:40 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun43_wtest`, candidate copy

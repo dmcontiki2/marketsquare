@@ -5770,7 +5770,31 @@ def quick_publish(body: _QuickPublishIn, background_tasks: BackgroundTasks, requ
     # QUICK-HANDOFF-1 (David, 3 Oct 2026): "See my listing" signs whatever opens it in as her and lands on her own
     # advert in the Seller Hub with Edit beside it -- an iPhone's home-screen app and Safari keep separate sign-ins.
     return {"id": lid, "live": True, "identity": _qp_identity_kind(em),   # SMS-TRUTH-1: how introductions reach her
-            "open_url": _mint_signin_url(em, lid, 60)}
+            "open_url": _mint_signin_url(em, lid, 60),
+            "slots_left": _qp_slots_left(em)}   # MORE-JOBS-1: Quick says so when this tap filled her plan
+
+
+# MORE-JOBS-1 (Goal run 44, 19 Oct 2026). SMS b15, Johannesburg, 19 Oct 07:08-07:12Z: one job seeker built FOUR adverts
+# in four minutes -- cashier, security guard, hotel porter, waiter (#575-#578) -- through Quick's "List something else".
+# Since QUICK-SIGN-1 her first two go live in the tap and the third answers 402 "slot limit" (Free = 2 live, RUL-128),
+# after she has built it. How many live slots are left after this tap, so the live card can say -- before she builds
+# the next one -- that more kinds of work go into the advert she already has. None for a superuser or on any error.
+def _qp_slots_left(em):
+    try:
+        conn = database.get_db()
+        try:
+            u = conn.execute("SELECT slot_limit, is_superuser FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+            if not u or u["is_superuser"]:
+                return None
+            lim = int(u["slot_limit"] or 2)
+            n = conn.execute("SELECT COUNT(*) AS n FROM listings WHERE LOWER(seller_email)=? "
+                             "AND (listing_status IS NULL OR listing_status='live')", (em,)).fetchone()["n"]
+            return max(0, lim - int(n or 0))
+        finally:
+            conn.close()
+    except Exception as exc:
+        _log.warning("MORE-JOBS-1 slots_left skipped: %s", exc)
+        return None
 
 
 # DRAFT-CLAIM-1 (Goal run 39, 14 Oct 2026). SMS batch b2: a Pretoria cleaner built her advert in Quick, typed
