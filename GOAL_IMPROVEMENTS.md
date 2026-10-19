@@ -5,9 +5,10 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 18 Oct 2026 (run 43). GI-0044 is still the only thing between the app and any stranger: the balance is still 0.0 and the next SMS run is Mon 19 Oct 07:10Z (09:10 SAST).*
+*Open actions only — updated 19 Oct 2026 (GI-0041 done; GI-0044 held by David).* *Was: updated 18 Oct 2026 (run 43). GI-0044 is still the only thing between the app and any stranger: the balance is still 0.0 and the next SMS run is Mon 19 Oct 07:10Z (09:10 SAST).*
 
 ### GI-0044 — the SMS account ran out of credits this morning; ~700 texts are queued and waiting (spend: yours)
+- **David, 19 Oct: "No top up yet."** Held. The 07:10Z SMS runs keep failing harmlessly (texts stay queued as `failed`, nothing is lost). Runs keep reporting the balance in one line and do not re-ask.
 - **Run 43, 18 Oct 16:00Z:** BulkSMS profile still reads **balance 0.0**. Third day with nothing sent and no real visitor (bot=0 rows since run 42: none). Today's run fixed the ~330 queued Port Elizabeth / Nelspruit links (they now open her city — GI-0046), so the first day of credit is not spent on a "Which city?" screen.
 - **Run 42, 17 Oct:** still at **0.0 credits**. The 07:10Z run asked 400 and sent **0** (800 "Insufficient Credits" lines in
   `logs/sms_daily_20261017_071009.log`). The e-mail wave sends nothing either ("0 sendable · 0/40 cities · 344 held unreachable:
@@ -25,19 +26,12 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 - **Recommend:** top up enough for at least three days (~R350) before 07:10Z tomorrow (09:10 SAST, Mon–Sat). Nothing else to do —
   the run picks the queue up on its own.
 
-### GI-0041 — ten SMS drafts are saved and waiting; one short "tap to finish" note (mail in your name: yours)
-- **What I found (updated run 41):** the eight from run 40 still wait (#543, #545, #546, #555, #556, #557, #559; #558 = #557's
-  duplicate), plus two since: **#563 Durban housekeeper** (Cyprian, isiZulu; **#564 is the same advert twice** — his phone changed
-  network mid-save; run 41 stops that happening again, QUICK-DUP-2) and **#566 Pretoria nanny** (Gugulethu, own photo added; tapped
-  WhatsApp, then Pass Quick on, then closed onto a fresh door). Run 41 fixed that screen and the door now shows her listing
-  (GI-0043) — but only on her phone, and only if she opens Quick again.
-- **Why it is yours:** it goes out in TrustSquare's name to real people; moving #543 changes a real seller's record; archiving
-  #564/#558 changes real sellers' records.
-- **What I would do:** (a) one plain letter to the ten people, today's wording "Your listing is saved — one tap to put it live"
-  with their own sign-in link (the existing ONE-TAP letter, re-sent once); (b) move #543 to bekezelansingo23@gmail.com;
-  (c) archive the duplicates #564 and #558.
-- **Recommend:** yes to all three. Two of these (#563, #566) are from the Durban/Pretoria lanes that just produced live listings.
-
+### GI-0041 — DONE 19 Oct 06:10Z (David, 19 Oct: "Yes for GI-0041")
+- (b) #543 moved to bekezelansingo23@gmail.com (the Google account she signed in with). (c) duplicates #564 (= #563) and
+  #558 (= #557) archived. (a) one letter each to the nine people with a saved draft (#543, #545, #546, #555, #556, #557,
+  #559, #563, #566): "Your TrustSquare listing is saved — one tap to put it live", own 7-day sign-in link that opens the
+  draft, Resend 200 for all nine. Nothing published for them. Backup `/root/backup_gi0041_20261019061014.db`, record
+  `/root/gi0041_sent_2026-10-19.json`, script `scripts/gi0041_once.py`. Watch: which of the nine publish this week.
 
 ### GI-0039 — CLOSED 15 Oct by RUL-232 (your words: 400 texts a day, a number re-texted after 60 days, service providers in every
 city get a lane, the e-mail re-send waits for each address's 60 days). 15 Oct: 400 sent in b9–b15.
