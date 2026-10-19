@@ -6185,6 +6185,7 @@ drawDoor();
   /* ---------------- opening an icon: /quick/?p=<preset> ---------------- */
   function openIcon(){
     ready.then(function(on){
+      if(QF.token==='snap'){ return window.QSNAP_SHARED ? QSNAP_SHARED() : normalStart(''); }   /* QUICK-SNAP-1: a photo shared to Quick lands on the Snap screen */
       if(!on){ return normalStart(''); }                       /* the switch is off: Quick, as it always was */
       return api('/quick-presets',{}).then(function(res){
         if(res.st===401){ track('q_fast_fallback', {code:'signin'}); return normalStart('Sign in on this phone to use your quick icon.', true); }
@@ -6330,6 +6331,297 @@ drawDoor();
       if(QF.screen){ var t=QF.screen==='fast_find' ? 'quick_find_icon' : 'quick_sell_icon'; if(QHELP[t]) return t; }
       return _hTy();
     };
+  }catch(e){}
+})();
+</script>
+<script>
+/* ===========================================================================
+   QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, David 19 Oct 2026 19:36 SAST, "go worktree"): "1. A photo, 2. a sentence,
+   3. Terms acceptance - leading to a live advert." THE FOURTH STANDARD FLOW -- Snap or say, then one tap.
+   Quick's door gains "Snap it" and "Say it". Both open ONE screen: her photo (camera / gallery / the Share sheet) and one
+   sentence (the browser's own speech recognition when the phone has it; the typed box is always there), then "Make my
+   advert". POST /listings/snap-draft reads the photo (the existing Photo-First reader) and the sentence (no AI) and answers
+   the door, the picks and what it could not place. The picks are poured into the NORMAL flow -- same category, same
+   steps, same drawDraft, same "Publish now -- I accept the Terms" (RUL-240), same photo check on her own photo
+   (PHOTO-KIND-1 / RUL-239), same anonymity -- so nothing here is a second publish path. A step the reader could not fill
+   is the step she lands on, with one line (never a dead end, never a guess published). Area comes from the phone (GPS
+   nearest suburb, else her city's door) and she can change it on the advert.
+   Rollback: the dashboard switch QUICK_SNAP (launch_switches.quick_snap) OFF hides both buttons and the route 404s.
+   The file:// review copy never reaches these routes (LIVE is false there) and shows none of it.
+   =========================================================================== */
+(function(){
+  var LIVE = location.protocol!=='file:';
+  var SP = (function(){ try{ return new URLSearchParams(location.search); }catch(e){ return null; } })();
+  var QS = window.QSNAP = {on:false, photo:null, screen:'', door:'', words:'', active:false, fill:null, rec:null, last:null, lastStep:-1, shared:false};
+  function E(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function T(t){ try{ return qTr(t); }catch(e){ return t; } }
+  function tr(){ try{ qTranslate($('screen')); }catch(e){} }
+  function track(s, m){ try{ qTrack(s, m||null); }catch(e){} }
+  var css=document.createElement('style');
+  css.textContent=[
+   '.qs-acts{display:flex;gap:8px;width:100%;max-width:420px;margin:8px auto 0;padding:0 2px}',
+   '.qs-acts button{flex:1;padding:12px 8px;border-radius:999px;border:1.5px dashed var(--c);background:rgba(255,255,255,.04);color:#fff;font:800 14px system-ui,sans-serif;cursor:pointer}',
+   '.qs-doors{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:1px 1px 3px}.qs-doors::-webkit-scrollbar{display:none}',
+   '.qs-doors button{flex:0 0 auto;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);color:#e6f2ec;font:700 12.5px system-ui,sans-serif;cursor:pointer}',
+   '.qs-doors button.on{border-color:var(--c);color:#fff;background:rgba(255,255,255,.08)}',
+   '.qs-say{position:relative}',
+   '.qs-say textarea{width:100%;box-sizing:border-box;padding:13px 54px 13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);color:#fff;font:16px/1.4 system-ui,sans-serif;min-height:86px;resize:vertical}',
+   '.qs-say textarea:focus{outline:none;border-color:var(--c)}',
+   '.qs-mic{position:absolute;right:8px;top:8px;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--c);background:none;color:#fff;font-size:19px;cursor:pointer}',
+   '.qs-mic.on{background:#B4441F;border-color:#B4441F;animation:qsPulse 1s infinite}',
+   '@keyframes qsPulse{50%{opacity:.55}}',
+   '.qs-eg{font-size:12.5px;color:var(--dim);margin:-4px 2px 0;text-align:left}'
+  ].join('');
+  document.head.appendChild(css);
+
+  var ready = !LIVE ? Promise.resolve(false)
+    : fetch(location.origin+'/flags',{credentials:'same-origin'}).then(function(r){ return r.ok?r.json():null; })
+        .then(function(f){ QS.on=!!(f && f.effective && f.effective.quick_snap); return QS.on; }).catch(function(){ return false; });
+
+  function catIndex(k){ for(var i=0;i<CATS.length;i++) if(CATS[i].key===k) return i; return -1; }
+  function hasSR(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
+  function srLang(){ var l=(typeof QLANG==='string'&&QLANG)||'en', cc=String(window.QCC||'ZA'); return l+'-'+(cc==='UK'?'GB':cc); }
+  function note(html){
+    var b=$('screen') && $('screen').querySelector('.body'); var host=b||$('screen'); if(!host || !html) return null;
+    var d=document.createElement('div'); d.className='qf-note'; d.setAttribute('role','status'); d.innerHTML=html;
+    host.insertBefore(d, host.firstChild); return d;
+  }
+  function msg(t){ var m=$('qsmsg'); if(m) m.textContent=t||''; }
+
+  /* ---------------- the two buttons on the door ---------------- */
+  function doorButtons(){
+    var sc=$('screen'); if(!sc || !/\bdoor\b/.test(sc.className) || $('qsacts')) return;
+    var acts=sc.querySelector('.acts'); if(!acts) return;
+    acts.insertAdjacentHTML('afterend', '<div class="qs-acts" id="qsacts">'
+      +'<button type="button" id="qsSnap">&#128247; '+E(T('Snap it'))+'</button>'
+      +'<button type="button" id="qsSay">&#127908; '+E(T('Say it'))+'</button></div>');
+    $('qsSnap').onclick=function(){ track('q_snap_open', {via:'snap'}); open('snap'); };
+    $('qsSay').onclick=function(){ track('q_snap_open', {via:'say'}); open('say'); };
+    tr();
+  }
+  var _dd=drawDoor;
+  drawDoor=function(){ QS.active=false; QS.fill=null; QS.words=''; QS.screen=''; _dd.apply(this, arguments); ready.then(function(on){ if(on) doorButtons(); }); };
+  ready.then(function(on){ if(on) doorButtons(); });
+
+  /* ---------------- the photo (same shrink as the fast lane; the share-sheet mailbox too) ---------------- */
+  function shrink(file){
+    return new Promise(function(res){
+      try{
+        var u=URL.createObjectURL(file), im=new Image();
+        im.onload=function(){ try{ var w=im.naturalWidth, h=im.naturalHeight, s=Math.min(1, 1600/Math.max(w,h));
+            var cv=document.createElement('canvas'); cv.width=Math.round(w*s); cv.height=Math.round(h*s);
+            cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+            cv.toBlob(function(b){ res({blob:b||file, url:u}); }, 'image/jpeg', 0.86); }catch(e){ res({blob:file, url:u}); } };
+        im.onerror=function(){ res({blob:file, url:u}); };
+        im.src=u;
+      }catch(e){ res({blob:file, url:''}); }
+    });
+  }
+  function pickPhoto(camera){
+    var id=camera?'qs-cam':'qs-gal', inp=$(id);
+    if(!inp){ inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.id=id; inp.style.display='none';
+      if(camera) inp.setAttribute('capture','environment');
+      document.body.appendChild(inp);
+      inp.onchange=function(){ var f=inp.files && inp.files[0]; inp.value=''; if(!f) return;
+        shrink(f).then(function(p){ QS.photo=p; track(camera?'q_snap_photo_cam':'q_snap_photo_last'); paint(); }); }; }
+    inp.click();
+  }
+  function takeShared(){
+    if(!('caches' in window)) return Promise.resolve(false);
+    return caches.open('quick-share-inbox').then(function(box){
+      return box.match('/quick/__shared_photo').then(function(r){
+        if(!r) return false;
+        var at=+(r.headers.get('X-Shared-At')||0);
+        return box.delete('/quick/__shared_photo').then(function(){
+          if(!at || Date.now()-at>10*60*1000) return false;
+          return r.blob().then(function(b){ return shrink(b).then(function(p){ QS.photo=p; track('q_snap_shared_photo'); return true; }); });
+        });
+      });
+    }).catch(function(){ return false; });
+  }
+  /* a photo shared to the installed Quick icon (manifest share_target -> the service worker -> /quick/?p=snap&shared=1) */
+  window.QSNAP_SHARED=function(){
+    ready.then(function(on){
+      if(!on){ drawDoor(); return; }
+      QS.shared=true;
+      return takeShared().then(function(){ var i=catIndex('localmarket'); if(i>=0) ci=i; track('q_snap_open', {via:'share'}); open('snap'); });
+    }).catch(function(){ drawDoor(); });
+  };
+
+  /* ---------------- the one screen ---------------- */
+  function doorChips(){
+    var out='';
+    for(var i=0;i<CATS.length;i++){ var c=CATS[i]; if(c.key==='homehelp') continue;   /* RUL-159: the hidden Casuals entry never shows */
+      out+='<button type="button" data-k="'+E(c.key)+'" class="'+(c.key===QS.door?'on':'')+'">'+E(T(c.name))+'</button>'; }
+    return '<div class="qs-doors" id="qsdoors">'+out+'</div>';
+  }
+  function open(via){
+    QS.door=cat().key==='homehelp' ? 'services' : cat().key;
+    paint(via);
+  }
+  function paint(via){
+    QS.screen='snap'; mode=null; clearInterval(heroTimer); setNav();
+    var ph=QS.photo, keep=String(($('qssay')||{}).value||'');
+    $('screen').className='screen';
+    $('screen').innerHTML='<div class="q">'+E(T('Snap or say'))+'</div>'
+      +'<div class="body"><div class="qf-wrap">'
+      +'<div class="qf-why" style="text-align:left;margin:0">'+E(T('A photo, a sentence, or both — the app writes the advert; you check it and tap Publish.'))+'</div>'
+      +'<div class="qf-lab">'+E(T('What kind of advert?'))+'</div>'+doorChips()
+      +'<div class="qf-ph" id="qsph">'+(ph&&ph.url ? '<img src="'+E(ph.url)+'" alt="">' : '<div class="qf-none">'+E(T('Your photo of the item goes here.'))+'</div>')+'</div>'
+      +'<div class="qf-phb"><button type="button" id="qstake">&#128247; '+E(T('Take photo'))+'</button><button type="button" id="qslast">&#128444; '+E(T('Use last photo'))+'</button></div>'
+      +'<div class="qf-lab">'+E(T('Or say it in one sentence'))+'</div>'
+      +'<div class="qs-say"><textarea id="qssay" maxlength="240" placeholder="'+E(T('e.g. Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day'))+'"></textarea>'
+      +(hasSR() ? '<button type="button" class="qs-mic" id="qsmic" aria-label="'+E(T('Say it'))+'">&#127908;</button>' : '')+'</div>'
+      +'<div class="qs-eg">'+E(T(hasSR() ? 'Tap the microphone and say it, or type it. The price, the area and the days help.' : 'Type it. The price, the area and the days help.'))+'</div>'
+      +'<div class="qf-why" id="qsmsg" aria-live="polite"></div>'
+      +'<button type="button" class="qf-small" id="qsnormal">'+E(T('Use the normal Quick steps instead'))+'</button>'
+      +'</div></div>'
+      +'<div class="foot"><button class="btn solid" id="qsgo" style="width:100%">'+E(T('Make my advert'))+'</button></div>';
+    $('qssay').value=keep;
+    $('qstake').onclick=function(){ pickPhoto(true); };
+    $('qslast').onclick=function(){ pickPhoto(false); };
+    $('qsgo').onclick=submit;
+    $('qsnormal').onclick=function(){ track('q_snap_to_normal'); QS.screen=''; QS.photo=null; drawDoor(); };
+    if($('qsmic')) $('qsmic').onclick=function(){ listen(this); };
+    Array.prototype.forEach.call($('qsdoors').children, function(b){ b.onclick=function(){ QS.door=this.getAttribute('data-k'); var i=catIndex(QS.door); if(i>=0){ ci=i; paintTheme(); } paint(); }; });
+    $('qssay').onkeydown=function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submit(); } };
+    if(via==='say'){ setTimeout(function(){ try{ if(hasSR() && $('qsmic')) $('qsmic').click(); else $('qssay').focus(); }catch(e){} }, 150); }
+    else if(via==='snap' && !ph && !QS.shared){ setTimeout(function(){ try{ pickPhoto(false); }catch(e){} }, 150); }
+    tr();
+  }
+  /* the browser's own speech recognition: free, no server, no key; the typed box is always there */
+  function listen(btn){
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){ msg(T('Your phone cannot listen here — type it instead.')); return; }
+    if(QS.rec){ try{ QS.rec.stop(); }catch(e){} return; }
+    var rec, base=String($('qssay').value||'').trim();
+    try{ rec=new SR(); }catch(e){ msg(T('Your phone cannot listen here — type it instead.')); return; }
+    rec.lang=srLang(); rec.interimResults=true; rec.maxAlternatives=1; rec.continuous=false;
+    QS.rec=rec; btn.className='qs-mic on'; msg(T('Listening…')); track('q_snap_mic');
+    rec.onresult=function(ev){ var t=''; try{ for(var i=0;i<ev.results.length;i++) t+=ev.results[i][0].transcript; }catch(e){} if($('qssay')) $('qssay').value=(base?base+' ':'')+t; };
+    rec.onerror=function(ev){ msg(ev && ev.error==='not-allowed' ? T('The microphone is off for this site — type it instead.') : T('Could not hear that — try again, or type it.')); };
+    rec.onend=function(){ QS.rec=null; btn.className='qs-mic'; var m=$('qsmsg'); if(m && m.textContent===T('Listening…')) msg(''); };
+    try{ rec.start(); }catch(e){ QS.rec=null; btn.className='qs-mic'; msg(T('Could not hear that — try again, or type it.')); }
+  }
+  /* area from the phone: one position fix, a few seconds at most, never a blocker */
+  function gps(ms){
+    return new Promise(function(res){
+      var done=false, fin=function(v){ if(!done){ done=true; res(v); } };
+      try{
+        if(!navigator.geolocation) return fin(null);
+        setTimeout(function(){ fin(null); }, ms);
+        navigator.geolocation.getCurrentPosition(function(p){ fin({lat:p.coords.latitude, lng:p.coords.longitude}); }, function(){ fin(null); }, {timeout:ms, maximumAge:600000, enableHighAccuracy:false});
+      }catch(e){ fin(null); }
+    });
+  }
+  function submit(){
+    var txt=String(($('qssay')||{}).value||'').replace(/\s+/g,' ').trim();
+    if(!QS.photo && !txt){ msg(T('Add a photo or say one sentence.')); return; }
+    var b=$('qsgo'); if(!b || b.disabled) return;
+    b.disabled=true; b.textContent=T(QS.photo ? 'Reading your photo…' : 'Reading…');
+    track('q_snap_make', {photo:QS.photo?1:0, say:txt?1:0, door:QS.door});
+    gps(3500).then(function(pos){
+      var fd=new FormData();
+      if(QS.photo && QS.photo.blob) fd.append('photos', QS.photo.blob, 'snap.jpg');
+      fd.append('sentence', txt); fd.append('category_hint', QS.door||''); fd.append('city', LOC.city||'');
+      fd.append('country_iso2', window.QCC||'ZA'); fd.append('seller_email', HANDOVER.email||'');
+      if(pos){ fd.append('lat', String(pos.lat)); fd.append('lng', String(pos.lng)); }
+      return fetch(location.origin+'/listings/snap-draft', {method:'POST', credentials:'include', body:fd})
+        .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok, st:r.status, j:j}; }); });
+    }).then(function(res){
+      if(res.st===404){ track('q_snap_off'); QS.on=false; QS.screen=''; drawDoor(); return; }
+      if(!res.ok || !res.j || !res.j.cat){ b.disabled=false; b.textContent=T('Make my advert');
+        msg((res.j && res.j.detail) ? String(res.j.detail) : T('That did not work — nothing was lost. Please try again.')); return; }
+      land(res.j);
+    }).catch(function(){ b.disabled=false; b.textContent=T('Make my advert'); msg(T('No connection — nothing was sent.')); });
+  }
+
+  /* ---------------- the answer, poured into the normal flow ---------------- */
+  function tileFor(st, label){ var ts=(st&&st.tiles)||[]; for(var i=0;i<ts.length;i++) if(String(ts[i].t).toLowerCase()===String(label).toLowerCase()) return ts[i]; return null; }
+  function pricePick(f, c){
+    if(f.price==null || !(f.price>0)) return null;
+    var cc=String(window.QCC||'ZA'), M=window.QUICK_MINW||{}, mc=M[cc==='GB'?'UK':cc]||{s:'R', h:0};
+    var k=c.key, b=f.basis||'', units={hour:' / hour', day:' / day', visit:' / visit', job:' / job', callout:' / call-out', session:' / session', month:' / month', car:' / car'};
+    if(k==='homehelp' && !b) b='day';
+    if(k==='tutors' && !b) b='hour';
+    if(k==='services' && !b) return null;                       /* the 'how' step asks how she charges */
+    var fl=b==='day' ? (mc.h||0)*8 : (b==='hour' ? (mc.h||0) : 0);
+    if(fl && f.price<fl) return null;                            /* below the legal minimum wage: the rate step says so and asks */
+    var lab=(mc.s||'R')+String(Math.round(f.price)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+    var deal=pickOf('deal'); if(k==='property' && deal && /let|rent/i.test(deal.label)) lab+=' / month';
+    if(b && k!=='property' && k!=='cars' && k!=='collectors' && k!=='localmarket') lab+=units[b]||'';
+    var p={label:lab, photo:null, key:'price', cc:cc}; if(b && (k==='homehelp'||k==='services'||k==='tutors')) p.basis=b; return p;
+  }
+  function pickFor(st, f, c){
+    var k=st.key, v, t;
+    if(st.kind==='week'){ if(!f.days || !f.days.length) return null; var order=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      var ch=order.filter(function(d){ return f.days.indexOf(d)>=0; }); if(!ch.length) return null;
+      return {label: ch.length===7 ? 'Every day' : ch.join(', '), photo:null, key:k, days:ch}; }
+    if(k==='price') return pricePick(f, c);
+    if(k==='where'){ v=f.where||LOC.suburb; if(!v) return null; t=tileFor(st, v); return t ? {label:t.t, photo:t.p||null, key:k} : {label:String(v), photo:null, key:k, free:true}; }
+    if(k==='how'){ return f.how ? {label:f.how, photo:null, key:k} : null; }
+    v=f[k]; if(v==null || v==='') return null;
+    t=tileFor(st, v);
+    if(t) return {label:t.t, photo:t.p||null, key:k};
+    if(st.kind==='tile' && !st.free && k!=='what') return null;   /* a picture step with no typed option: ask her */
+    return {label:String(v).slice(0,80), photo:null, key:k, free:true};
+  }
+  function fillAhead(){
+    /* every step the reader answered is passed without a tap; the first it could not answer is shown */
+    if(!QS.fill || mode!=='sell' || QS.screen) return;
+    var st=flow().steps;
+    while(step<st.length && !pickOf(st[step].key)){ var p=pickFor(st[step], QS.fill, cat()); if(!p) break;
+      picks.push(p);
+      if(p.key==='how' && p.label!=='Quote first'){            /* the rate screen answers HOW and HOW MUCH together */
+        var pp=pricePick(QS.fill, cat()); if(pp) picks.push(pp); else { picks.pop(); break; } }
+      step++; taps=picks.length; }
+  }
+  function land(j){
+    var f=j.fields||{}, i=catIndex(j.cat);
+    if(i<0){ QS.screen=''; drawDoor(); note(E(T(j.line||''))); return; }
+    QS.screen=''; QS.last=j; QS.words=String(f.words||'').trim(); QS.active=true; QS.fill=f; QS.lastStep=-1;
+    ci=i; mode='sell'; step=0; picks=[]; narrow=[]; taps=0;
+    try{ QUICK.itemName=f.item||''; }catch(e){}
+    window.QPHOTO=QS.photo||null;                                 /* her real photo is the advert's photo (RUL-222(e)); the own-photo upload and PHOTO-KIND-1 hold follow as ever */
+    paintTheme();
+    var c=cat();
+    if(svcIs(c)){
+      var role=f.r ? svcRole(f.r) : null;
+      if(role){ var g=null; for(var k=0;k<SVC_GROUPS.length;k++) if(SVC_GROUPS[k].g===role.g) g=SVC_GROUPS[k];
+        picks.push({label:role.g, photo:'role_'+(g?g.rep:role.k), key:'group', g:role.g});
+        picks.push({label:role.l, photo:'role_'+role.k, key:'what', r:role.k}); }
+    }
+    fillAhead();
+    var steps=flow().steps;
+    if(step>=steps.length){
+      track('q_snap_draft', {cat:c.key, kind:j.kind, conf:j.confidence});
+      drawStep();
+      if(f.where_from==='phone') note(E(T('Area from your phone — change it on the advert if you work somewhere else.')));
+      return;
+    }
+    track('q_snap_missing', {cat:c.key, kind:j.kind, at:steps[step].key});
+    drawStep();
+    note(E(T(j.line || 'Nearly there — one or two things the photo and your words did not say.')));
+  }
+  var _ds=drawStep;
+  drawStep=function(){
+    try{ if(QS.fill){ if(step<QS.lastStep) QS.fill=null; else fillAhead(); QS.lastStep=step; } }catch(e){}
+    return _ds.apply(this, arguments);
+  };
+  var _ddr=drawDraft;
+  drawDraft=function(){ QS.fill=null; return _ddr.apply(this, arguments); };
+  /* the reader's words about the item lead the advert; her answers' sentence follows, as every Quick advert's does */
+  CATS.forEach(function(c){ var b0=c.draftBody; c.draftBody=function(pk){ var t=b0.apply(this, arguments); return (QS.active && QS.words && mode==='sell' && cat()===c) ? QS.words+' '+t : t; }; });
+  /* beacons: a Snap advert that went live (counted on the dashboard beside snaps and says) */
+  var _sa=window.qSeamArrived;
+  window.qSeamArrived=function(ov, r, title){
+    try{ if(_sa) _sa(ov, r, title); }catch(e){}
+    try{ if(QS.active && r && r.id) track('q_snap_published', {cat:cat().key, kind:(QS.last&&QS.last.kind)||'', photo:QS.photo?1:0}); }catch(e){}
+  };
+  /* How (HELP-SWAP-1): on the Snap screen the guide opens at the Snap story */
+  try{
+    var _hAt=qHelpAt; qHelpAt=function(){ return QS.screen ? 'snap' : _hAt(); };
+    var _hTy=qHelpType; qHelpType=function(){ if(QS.screen && QHELP.quick_snap) return 'quick_snap'; return _hTy(); };
   }catch(e){}
 })();
 </script>

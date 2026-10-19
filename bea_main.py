@@ -37938,6 +37938,14 @@ def _qf_quick_app_manifest(ts_user):
             m["shortcuts"] = [{"name": _qf_row_out(s)["name"], "short_name": s["label"][:12], "url": _qf_row_out(s)["start_url"],
                                "icons": [{"src": "/quick-icon/%s.png?s=192" % s["token"], "sizes": "192x192", "type": "image/png"}]}
                               for s in rows]
+    # QUICK-SNAP-1: while Snap is on, the installed Quick icon is a Share-sheet target -- a photo shared to "Quick" lands on
+    # the Snap screen (the service worker's /quick/share-in hand-over with the reserved token 'snap'; no preset is made).
+    try:
+        if _snap_on():
+            m["share_target"] = {"action": "/quick/share-in?p=snap&c=", "method": "POST", "enctype": "multipart/form-data",
+                                 "params": {"files": [{"name": "photo", "accept": ["image/*"]}]}}
+    except Exception:
+        pass
     return _JR(m, media_type="application/manifest+json", headers={"Cache-Control": "private, no-store"})
 
 
@@ -38204,6 +38212,32 @@ def _snap_areas(conn, city):
     return out
 
 
+def _snap_nearest_suburb(conn, city, lat, lng):
+    """Area from the phone: the nearest suburb (geo_suburbs with a point) of her city to the GPS fix, within 25 km; else None.
+    The same haversine the buyer app's msGeoFromGps uses for cities."""
+    try:
+        lat, lng = float(lat), float(lng)
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180) or conn is None:
+            return None
+        import math
+        best, bd = None, 25.0
+        rows = conn.execute("SELECT s.name, s.lat, s.lng FROM geo_suburbs s JOIN geo_cities c ON c.id = s.city_id "
+                            "WHERE LOWER(c.name) = LOWER(?) AND s.active = 1 AND s.lat IS NOT NULL", (str(city or "").strip(),)).fetchall()
+        if not rows:
+            rows = conn.execute("SELECT name, lat, lng FROM geo_suburbs WHERE active = 1 AND lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?",
+                                (lat - 0.3, lat + 0.3, lng - 0.3, lng + 0.3)).fetchall()
+        for r in rows:
+            p1, p2 = math.radians(lat), math.radians(float(r[1]))
+            dp, dl = math.radians(float(r[1]) - lat), math.radians(float(r[2]) - lng)
+            a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+            km = 2 * 6371.0 * math.asin(math.sqrt(a))
+            if km < bd:
+                best, bd = str(r[0]), km
+        return best
+    except Exception:
+        return None
+
+
 def _snap_parse_sentence(sentence, city="", conn=None):
     """One sentence -> {role, area, days, price, basis, item, parts}. No AI: the fast-find splitter for the parts, then
     whole-word lookups in the role registry, the area list and the weekday words, and one price pattern ("R350 a day")."""
@@ -38464,6 +38498,8 @@ async def snap_draft(
     city: str = Form(default="Pretoria"),
     country_iso2: str = Form(default="ZA"),
     seller_email: str = Form(default=""),
+    lat: str = Form(default=""),
+    lng: str = Form(default=""),
 ):
     """QUICK-SNAP-1: up to 3 photos and/or one sentence -> the Quick door, the picks, the quick-publish body, what is still
     missing, and a confidence. Stateless; no listing is made here. 404 while the switch is OFF."""
@@ -38504,9 +38540,14 @@ async def snap_draft(
     try:
         sp = _snap_parse_sentence(sentence, city, conn) if sentence else {"role": None, "area": None, "days": [], "price": None,
                                                                             "basis": None, "item": None, "parts": [], "text": ""}
+        # area from the phone (she can change it on the draft): the GPS fix's nearest suburb, only when the sentence named none
+        near = _snap_nearest_suburb(conn, city, lat, lng) if (lat and lng and not sp.get("area")) else None
     finally:
         conn.close()
     key, f, missing = _snap_merge(door, vis_key, vf, sp)
+    if near and not f.get("where"):
+        f["where"] = near
+        f["where_from"] = "phone"
     # confidence: what the photo reader said about the kind, lifted by every sentence fact that landed
     hits = sum(1 for k in ("role", "area", "price", "days", "item") if sp.get(k))
     conf = max(vconf if photo_read else 0.0, 0.0)

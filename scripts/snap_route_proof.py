@@ -89,7 +89,7 @@ c.execute("UPDATE launch_switches SET quick_snap=1 WHERE id=1"); c.commit(); c.c
 PNG = bytes.fromhex("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082")
 def run(**kw):
     kw.setdefault("photos", []); kw.setdefault("sentence", ""); kw.setdefault("category_hint", "")
-    kw.setdefault("city", "Pretoria"); kw.setdefault("country_iso2", "ZA"); kw.setdefault("seller_email", "")
+    kw.setdefault("city", "Pretoria"); kw.setdefault("country_iso2", "ZA"); kw.setdefault("seller_email", ""); kw.setdefault("lat", ""); kw.setdefault("lng", "")
     return asyncio.get_event_loop().run_until_complete(g["snap_draft"](None, None, **kw))
 
 ok = []
@@ -123,6 +123,11 @@ r = run(sentence="Honey, Pretoria East, R80", category_hint="localmarket")
 f = r["fields"]
 check("4 say: Honey / Pretoria East / R80 / Collect", r["cat"] == "localmarket" and f.get("what") == "Honey" and f.get("where") == "Pretoria East" and f.get("price") == 80 and f.get("ship") == "Collect" and r["missing"] == [], (f, r["missing"]))
 check("4 say: listing title in the Quick shape", r["listing"]["title"] == "Honey — Pretoria East" and r["listing"]["category"] == "local_market" and r["listing"]["source"] == "quick_snap", r["listing"])
+# 4b. area from the phone: a GPS fix near Menlyn, no area in the sentence
+r = run(sentence="Honey, R80", category_hint="localmarket", lat="-25.7830", lng="28.2760")
+check("4b phone area: nearest suburb to the fix, marked 'phone'", r["fields"].get("where_from") == "phone" and bool(r["fields"].get("where")), r["fields"].get("where"))
+r = run(sentence="Honey, Lynnwood, R80", category_hint="localmarket", lat="-25.7830", lng="28.2760")
+check("4b phone area: the sentence's area wins over the fix", r["fields"].get("where") == "Lynnwood" and not r["fields"].get("where_from"))
 # 5. an unreadable photo, no sentence
 VISION["answer"] = HTTPException(422, "Vision analysis returned unexpected format — try describing instead")
 r = run(photos=[UploadFile("blur.png", PNG)], category_hint="cars")
@@ -141,13 +146,13 @@ except HTTPException as e:
     check("7 empty call refused 400", e.status_code == 400)
 c = sqlite3.connect(DB); c.row_factory = sqlite3.Row
 rows = c.execute("SELECT kind, outcome, cat FROM quick_snap_log ORDER BY id").fetchall()
-check("7 counter rows with provenance", [tuple(x) for x in rows] == [("say", "draft", "homehelp"), ("say", "draft", "homehelp"), ("snap", "draft", "collectors"), ("both", "draft", "collectors"), ("say", "draft", "localmarket"), ("snap", "unread", "cars"), ("say", "missing", "cars"), ("say", "missing", "services")], [tuple(x) for x in rows])
+check("7 counter rows with provenance", [tuple(x) for x in rows] == [("say", "draft", "homehelp"), ("say", "draft", "homehelp"), ("snap", "draft", "collectors"), ("both", "draft", "collectors"), ("say", "draft", "localmarket"), ("say", "draft", "localmarket"), ("say", "draft", "localmarket"), ("snap", "unread", "cars"), ("say", "missing", "cars"), ("say", "missing", "services")], [tuple(x) for x in rows])
 c.execute("UPDATE launch_switches SET quick_snap=0 WHERE id=1"); c.commit(); c.close()
 try:
     run(sentence="Home cleaner, Mamelodi, R350 a day"); check("7 switch OFF -> 404", False)
 except HTTPException as e:
     check("7 switch OFF -> 404", e.status_code == 404)
 st = g["admin_quick_snap_stats"](30, None)
-check("7 stats shape", st["switch_on"] is False and st["reads"]["say"] == 5 and st["reads"]["snap"] == 2 and st["reads"]["both"] == 1 and st["outcomes"]["unread"] == 1 and st["outcomes"]["missing"] == 2, st)
+check("7 stats shape", st["switch_on"] is False and st["reads"]["say"] == 7 and st["reads"]["snap"] == 2 and st["reads"]["both"] == 1 and st["outcomes"]["unread"] == 1 and st["outcomes"]["missing"] == 2, st)
 print("\nRESULT: %d/%d PASS" % (sum(ok), len(ok)))
 sys.exit(0 if all(ok) else 1)
