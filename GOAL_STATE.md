@@ -24,8 +24,8 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   mocked in the browser → the line shows at slots_left 0, not at 1; `_qp_slots_left` on a DB copy correct; BEA main.py carries it.
 - **Ledger:** new tree 0 !!!! (31 NOT EVALUATED, vantage); base `/opt/marketsquare-src` e66f0f1: RG-0229, 0230, 0247, 0276, 0344,
   0403, 0987 (other lanes', same as run 43 less RG-0246).
-- **REVIEW NOW:** GI-0048 (job seekers list several jobs; free plan stops the third — recommend one advert, several jobs);
-  GI-0044 held under RUL-241.
+- **REVIEW NOW:** GI-0044 held under RUL-241 (GI-0048 rejected the same evening).
+- **Evening, David on GI-0048:** David, 19 Oct: "it is a lot for someone earning only R250, but for consistency and simplicity we stick world wide to a single cost structure. If a free user can be helped for any one of two free adverts, then we have been successful. For a million users to have 5+ free listings and just leaving them without ever deleting is a cost on our resources and will make the profit margins dissapear." GI-0048 rejected; MORE-JOBS-1's Edit advice was a bypass of Starter and is reworded as PLAN-FULL-NOTE-1 ("…slots are full. Starter gives you 10 live listings." + See plans). Standing: never suggest more free slots or packing several adverts into one.
 - **QA data:** none created (nothing saved; the publish was mocked in the browser).
 - **Not reached:** the introduction leg of a Quick-published casual advert (RUL-241(d)) — it needs a publish this run cannot click.
 
