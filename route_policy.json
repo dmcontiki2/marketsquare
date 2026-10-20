@@ -357,6 +357,16 @@
    "note": "QUICK-FAST-1 (RUL-222, 10 Oct 2026): the Quick fast lane (quick icons). The dashboard's fast-lane card."
   },
   {
+   "key": "POST /listings/snap-draft",
+   "level": "public",
+   "note": "QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, 19 Oct 2026): Snap or Say -> the Quick draft. Stateless like vision-draft (whose caps it inherits); 404 while launch_switches.quick_snap is OFF."
+  },
+  {
+   "key": "GET /admin/quick-snap/stats",
+   "level": "admin",
+   "note": "QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, 19 Oct 2026): the dashboard's Snap card (snaps, says, fallbacks)."
+  },
+  {
    "key": "GET /auth/handoff",
    "level": "user",
    "note": "QUICK-DOOR-HUB-1 (3 Oct 2026): mints a one-use sign-in hop for the signed-in session only; Quick sends strangers to /?go=signin when this answers 401."

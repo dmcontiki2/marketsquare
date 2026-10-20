@@ -1535,6 +1535,17 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-242": [
+   # David, 19 Oct 2026: "Snap or say, then one tap" / "go worktree" -- lives on branch `snap` until he merges; on main this entry reads FAIL until then (expected)
+   ("RULINGS.md", ["SNAP: THE FOURTH STANDARD FLOW"], []),
+   ("bea_main.py", ["# ══ QUICK-SNAP-1", "ADD COLUMN quick_snap", '"quick_snap": b("quick_snap")'], []),
+   ("quick.html", ["QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md", "f.effective.quick_snap", "function fillAhead()"], []),
+   ("genie/HARNESS.html", ["QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md"], []),
+   ("route_policy.json", ["POST /listings/snap-draft", "GET /admin/quick-snap/stats"], []),
+   ("dashboard.server.html", ["ls_m_snap", "/admin/quick-snap/stats"], []),
+   ("stories/quick_snap.json", ["quick_snap"], []),
+   ("scripts/regression_ledger.py", ["RG-1064", "RG-1065", "RG-1066", "RG-1067"], []),
+ ],
  "RUL-241": [
    # David, 19 Oct 2026: "please update the wording to be correct, but hold on the waves ... really ready before we initiate the next WaveSession2"
    ("RULINGS.md", ["EVERY WAVE -- E-MAIL AND SMS -- IS HELD UNTIL DAVID STARTS WAVESESSION2"], []),

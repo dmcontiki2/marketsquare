@@ -40235,5 +40235,128 @@ def rg_more_jobs():
         out.append((FAIL, "Quick advises packing more jobs into one advert again -- a bypass of the paid tier (David, 19 Oct)"))
     return out or [(INFO, "a full free plan is named on the live card with Starter and See plans; no pack-it-in advice")]
 
+
+# ── QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, David 19 Oct 2026 "go worktree") — built on the local branch `snap` under the IP hold.
+# OPEN until merged and shipped: on main these files carry none of the markers yet, so the four entries read FAIL (expected).
+# The session that merges + ships promotes them to LOCKED after the live one-tap proof. Ids may be renumbered at merge if main
+# took the numbers first (the fast-lane precedent, RG-0973..0982) — never renumber after LOCK.
+@entry("RG-1064", "QUICK-SNAP-1 route: POST /listings/snap-draft is glue over the existing readers, flag-dark (404 when "
+                  "launch_switches.quick_snap is OFF), declared in route_policy.json, and never publishes anything itself",
+       OPEN, fixed_on="2026-10-20",
+       scope="bea_main.py QUICK-SNAP-1 block (photos -> vision_draft, sentence -> the fast-find splitter + the Snap mapper; "
+             "'missing' names the steps, nothing guessed), launch_switches.quick_snap column + /flags + /admin/flags, "
+             "GET /admin/quick-snap/stats, quick_snap_log counters; route_policy.json. Proof: scripts/snap_route_proof.py on a "
+             "throwaway DB copy (23/23 PASS, 20 Oct 2026 00:3xZ).",
+       ref="QUICK_SNAP_BRIEF.md §8 U2. The route creates no listing: the advert is made by the ONE publish path "
+           "(quick-publish, sign_terms, RUL-240) exactly as every Quick advert.")
+def rg_quick_snap_1_route():
+    py = repo_file("bea_main.py"); rp = repo_file("route_policy.json")
+    if py is None or rp is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    i = py.find("# ══ QUICK-SNAP-1"); j = py.find("# ══ end QUICK-SNAP-1 ══")
+    if i < 0 or j < 0:
+        return [(FAIL, "bea_main.py carries no QUICK-SNAP-1 block (not merged yet, or removed)")]
+    blk = py[i:j]
+    if "quick_snap" not in blk or "404" not in blk:
+        out.append((FAIL, "snap-draft is not behind the quick_snap switch with a 404 when OFF"))
+    if "publish_listing(" in blk or "listing_status" in blk and "UPDATE listings" in blk:
+        out.append((FAIL, "the Snap route writes or publishes a listing itself -- a second publish path"))
+    if '"POST /listings/snap-draft"' not in rp or '"GET /admin/quick-snap/stats"' not in rp:
+        out.append((FAIL, "route_policy.json does not declare the Snap routes (SEC-GATE-1)"))
+    if "ADD COLUMN quick_snap" not in py or '"quick_snap": b("quick_snap")' not in py:
+        out.append((FAIL, "launch_switches.quick_snap column or its /flags line is missing"))
+    if repo_file("scripts/snap_route_proof.py") is None:
+        out.append((FAIL, "scripts/snap_route_proof.py (the route proof on a DB copy) is missing"))
+    return out or [(INFO, "Snap route: glue over existing readers, flag-dark, declared, proof script present")]
+
+
+@entry("RG-1065", "QUICK-SNAP-1 screens: Quick's door shows 'Snap it' / 'Say it' only while the switch is ON, one combined "
+                  "screen (photo + sentence) pours its answers into the NORMAL flow and lands on 'Here is your listing' with "
+                  "'Publish now -- I accept the Terms'; a step the reader could not fill is the step she lands on",
+       OPEN, fixed_on="2026-10-20",
+       scope="quick.html + genie/HARNESS.html (byte-identical) QUICK-SNAP-1 module: doorButtons gated by /flags effective.quick_snap, "
+             "open(), land() -> fillAhead() -> drawDraft(), 'missing' -> drawStep() + one .qf-note line; her photo = window.QPHOTO "
+             "(PHOTO-KIND-1 hold path unchanged). Rendered proof: scripts/snap_render_proof.py (worktree page served locally, APIs "
+             "mocked from the route proof's real answers) -> visuals/snap_*_2026-10-20.png: say -> full cleaner draft -> publish "
+             "(mocked) -> 'Your listing is live.'; snap -> Collectors draft with her photo; unplaced sentence -> 'What are you "
+             "selling?' + the one line; switch OFF -> no buttons.",
+       ref="QUICK_SNAP_BRIEF.md §8 U3/U6; RUL-240 (the tap is the signature); RUL-222(e) (her real photo, never the example).")
+def rg_quick_snap_1_screens():
+    q = repo_file("quick.html"); h = repo_file("genie/HARNESS.html")
+    if q is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if "QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md" not in q:
+        return [(FAIL, "quick.html carries no QUICK-SNAP-1 module (not merged yet, or removed)")]
+    for must, why in (("f.effective.quick_snap", "the doors are not gated by the quick_snap switch"),
+                      ("id=\"qsSnap\"", "the 'Snap it' button is gone"), ("id=\"qsSay\"", "the 'Say it' button is gone"),
+                      ("/listings/snap-draft", "the screen no longer calls snap-draft"),
+                      ("function fillAhead()", "the poured-into-the-normal-flow step is gone"),
+                      ("window.QPHOTO=QS.photo", "her own photo no longer becomes the advert's photo"),
+                      ("q_snap_missing", "the 'missing' landing no longer records itself")):
+        if must not in q:
+            out.append((FAIL, why))
+    if h is not None and h != q:
+        out.append((FAIL, "genie/HARNESS.html differs from quick.html (house rule: identical)"))
+    if repo_file("scripts/snap_render_proof.py") is None:
+        out.append((FAIL, "scripts/snap_render_proof.py (the rendered proof) is missing"))
+    return out or [(INFO, "Snap screens gated, poured into the normal flow, HARNESS identical, rendered proof present")]
+
+
+@entry("RG-1066", "QUICK-SNAP-1 words: every Snap string is in all 15 Quick languages through the one generator, a How story "
+                  "exists, and no AI model is named anywhere in the lane",
+       OPEN, fixed_on="2026-10-20",
+       scope="scripts/apply_snap_i18n.py -> roles/quick_i18n.json + the QI18N block; stories/quick_snap.json; the QUICK-SNAP-1 "
+             "blocks in quick.html and bea_main.py.",
+       ref="QUICK_SNAP_BRIEF.md §8 U4; RUL-149/160 (languages); 17 Sep 2026 ruling (no model named as a label).")
+def rg_quick_snap_1_words():
+    import json as _j
+    q = repo_file("quick.html"); py = repo_file("bea_main.py"); i18n = repo_file("roles/quick_i18n.json")
+    if q is None or i18n is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    try:
+        d = _j.loads(i18n); w = d.get("w", d)
+        for key in ("Snap it", "Say it", "Make my advert", "Or say it in one sentence"):
+            if key not in w:
+                out.append((FAIL, "Snap word '%s' is not in roles/quick_i18n.json" % key))
+            elif len(w[key]) < 14:
+                out.append((FAIL, "Snap word '%s' has %d languages, not all 15" % (key, len(w[key]))))
+    except Exception as exc:
+        out.append((FAIL, "roles/quick_i18n.json unreadable: %s" % exc))
+    if repo_file("stories/quick_snap.json") is None:
+        out.append((FAIL, "stories/quick_snap.json (the How story) is missing"))
+    import re as _re
+    segs = []
+    i = q.find("QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md"); segs.append(("quick.html", q[i:] if i >= 0 else ""))   # the Snap module is the last block
+    if py:
+        i = py.find("# ══ QUICK-SNAP-1"); j = py.find("# ══ end QUICK-SNAP-1 ══")
+        segs.append(("bea_main.py", py[i:j] if (i >= 0 and j > i) else ""))
+    for name, seg in segs:
+        if _re.search(r"\b(Haiku|Sonnet|Opus|Fable|GPT-?[0-9o]|Gemini|Llama|Mistral|Claude)\b", seg):
+            out.append((FAIL, "%s names an AI model inside the Snap lane" % name))
+    return out or [(INFO, "Snap words in every Quick language, How story present, no model named")]
+
+
+@entry("RG-1067", "QUICK-SNAP-1 dashboard: the Snap switch row and its two counters are READ from GET /admin/quick-snap/stats "
+                  "with provenance -- never a hand-typed number or a default colour (RG-0133's three properties)",
+       OPEN, fixed_on="2026-10-20",
+       scope="dashboard.server.html: switch 'Snap or say' (ls_m_snap -> launch_switches.quick_snap) + the counters line; NOT MEASURED "
+             "on a failed read.",
+       ref="QUICK_SNAP_BRIEF.md §8 U5; the EVIDENCE LADDER (no surface wears a colour nothing measures).")
+def rg_quick_snap_1_dashboard():
+    d = repo_file("dashboard.server.html")
+    if d is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if "ls_m_snap" not in d:
+        return [(FAIL, "dashboard.server.html has no Snap switch row (not merged yet, or removed)")]
+    if "/admin/quick-snap/stats" not in d:
+        out.append((FAIL, "the Snap counters are not read from the stats route"))
+    if "NOT MEASURED" not in d[d.find("QUICK-SNAP-1"):d.find("QUICK-SNAP-1") + 6000]:
+        out.append((FAIL, "a failed stats read does not fall back to NOT MEASURED"))
+    return out or [(INFO, "Snap switch row + counters read from the stats route, NOT MEASURED on a failed read")]
+
 if __name__ == "__main__":
     sys.exit(main())

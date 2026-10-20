@@ -1,0 +1,226 @@
+{
+ "type": "quick_snap",
+ "status": "draft",
+ "flow": "SNAP",
+ "serves": [],
+ "label": {
+  "en": "Snap or say",
+  "af": "Kiek of sê",
+  "zu": "Thwebula noma usho",
+  "xh": "Fota okanye uthethe",
+  "nso": "Tšea seswantšho goba o bolele"
+ },
+ "title": {
+  "en": "Snap or say, then one tap: a photo, a sentence, Publish",
+  "af": "Kiek of sê, dan een tik: 'n foto, 'n sin, Publiseer",
+  "zu": "Thwebula noma usho, bese kuthephwa kanye: isithombe, umusho, Shicilela",
+  "xh": "Fota okanye uthethe, emva koko ucofe kanye: ifoto, isivakalisi, Papasha",
+  "nso": "Tšea seswantšho goba o bolele, gomme o kgotle gatee: seswantšho, lefoko, Phatlalatša"
+ },
+ "walked_on": "2026-10-20",
+ "people": {
+  "you": "Thandi"
+ },
+ "chapters": [
+  {
+   "id": "c1",
+   "en": "Snap it or say it",
+   "af": "Kiek dit of sê dit",
+   "zu": "Yithwebule noma uyisho",
+   "xh": "Yifote okanye uyithethe",
+   "nso": "E tšee seswantšho goba o e bolele"
+  },
+  {
+   "id": "c2",
+   "en": "Check it and publish",
+   "af": "Kyk dit na en publiseer",
+   "zu": "Yihlole bese uyashicilela",
+   "xh": "Yijonge uze upapashe",
+   "nso": "E lekole gomme o phatlalatše"
+  },
+  {
+   "id": "c3",
+   "en": "If something was not clear",
+   "af": "As iets nie duidelik was nie",
+   "zu": "Uma okuthile kungacacanga",
+   "xh": "Ukuba kukho into engacacanga",
+   "nso": "Ge e le gore se sengwe se be se sa kwagale"
+  }
+ ],
+ "steps": [
+  {
+   "n": 1,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "sn01_door",
+   "pass": true,
+   "en": [
+    "Tap [[Snap it]] or [[Say it]] on Quick's first screen",
+    "Under the two usual buttons. Snap is for a thing you can photograph; Say is for work you do."
+   ],
+   "af": [
+    "Tik [[Snap it]] of [[Say it]] op Quick se eerste skerm",
+    "Onder die twee gewone knoppies. Snap is vir 'n ding wat jy kan afneem; Say is vir werk wat jy doen."
+   ],
+   "zu": [
+    "Thepha [[Snap it]] noma [[Say it]] esikrinini sokuqala se-Quick",
+    "Ngaphansi kwezinkinobho ezimbili ezijwayelekile. U-Snap owento ongayithwebula; u-Say owomsebenzi owenzayo."
+   ],
+   "xh": [
+    "Cofa [[Snap it]] okanye [[Say it]] kwisikrini sokuqala se-Quick",
+    "Ngaphantsi kwamaqhosha amabini aqhelekileyo. U-Snap ngowento onokuyifota; u-Say ngowomsebenzi owenzayo."
+   ],
+   "nso": [
+    "Kgotla [[Snap it]] goba [[Say it]] sekirining sa mathomo sa Quick",
+    "Ka tlase ga dikonope tše pedi tša ka mehla. Snap ke ya selo seo o ka se tšeago seswantšho; Say ke ya mošomo wo o o dirago."
+   ]
+  },
+  {
+   "n": 2,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "sn02_photo",
+   "pass": true,
+   "en": [
+    "Add the photo",
+    "Tap [[Take photo]] or [[Use last photo]]. From your gallery you can also share a picture straight to Quick. The example photo is never published — your photo is the advert's photo."
+   ],
+   "af": [
+    "Voeg die foto by",
+    "Tik [[Take photo]] of [[Use last photo]]. Vanuit jou galery kan jy ook 'n prent direk na Quick deel. Die voorbeeldfoto word nooit gepubliseer nie — jou foto is die advertensie se foto."
+   ],
+   "zu": [
+    "Faka isithombe",
+    "Thepha [[Take photo]] noma [[Use last photo]]. Ungaphinde wabelane ngesithombe ngqo ku-Quick usuka kugalari yakho. Isithombe sesibonelo asishicilelwa — isithombe sakho yisithombe sesikhangiso."
+   ],
+   "xh": [
+    "Faka ifoto",
+    "Cofa [[Take photo]] okanye [[Use last photo]]. Ungakwazi nokwabelana ngomfanekiso ngqo ku-Quick usuka kwigalari yakho. Ifoto yomzekelo ayipapashwa — ifoto yakho yifoto yesibhengezo."
+   ],
+   "nso": [
+    "Tsenya seswantšho",
+    "Kgotla [[Take photo]] goba [[Use last photo]]. Go tšwa galering ya gago o ka abelana ka seswantšho thwii go Quick. Seswantšho sa mohlala ga se phatlalatšwe — seswantšho sa gago ke seswantšho sa papatšo."
+   ]
+  },
+  {
+   "n": 3,
+   "ch": "c1",
+   "who": "you",
+   "cost": "free",
+   "img": "sn03_say",
+   "pass": true,
+   "en": [
+    "Or say one sentence",
+    "Tap the microphone and say it, or type it: “Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day.” The price, the area and the days help. Then tap [[Make my advert]]."
+   ],
+   "af": [
+    "Of sê een sin",
+    "Tik die mikrofoon en sê dit, of tik dit in: “Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day.” Die prys, die area en die dae help. Tik dan [[Make my advert]]."
+   ],
+   "zu": [
+    "Noma usho umusho owodwa",
+    "Thepha imakrofoni bese uyasho, noma ukuthayiphe: “Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day.” Intengo, indawo nezinsuku kuyasiza. Bese uthepha [[Make my advert]]."
+   ],
+   "xh": [
+    "Okanye uthethe isivakalisi esinye",
+    "Cofa imakrofoni uze uyithethe, okanye uyichwetheze: “Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day.” Ixabiso, indawo neentsuku ziyanceda. Emva koko cofa [[Make my advert]]."
+   ],
+   "nso": [
+    "Goba o bolele lefoko le tee",
+    "Kgotla maekrofouno gomme o e bolele, goba o e thaepe: “Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day.” Theko, lefelo le matšatši di a thuša. Gomme o kgotle [[Make my advert]]."
+   ]
+  },
+  {
+   "n": 4,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "sn04_draft",
+   "pass": true,
+   "en": [
+    "Here is your listing",
+    "The kind, the title, the words, the area from your phone and the price are filled in. Change anything by tapping it."
+   ],
+   "af": [
+    "Hier is jou advertensie",
+    "Die soort, die titel, die woorde, die area vanaf jou foon en die prys is ingevul. Verander enigiets deur daarop te tik."
+   ],
+   "zu": [
+    "Nasi isikhangiso sakho",
+    "Uhlobo, isihloko, amazwi, indawo evela efonini yakho nentengo kugcwalisiwe. Shintsha noma yini ngokuyithepha."
+   ],
+   "xh": [
+    "Nasi isibhengezo sakho",
+    "Uhlobo, isihloko, amazwi, indawo evela kwifowuni yakho nexabiso zigcwalisiwe. Tshintsha nantoni na ngokuyicofa."
+   ],
+   "nso": [
+    "Papatšo ya gago ke ye",
+    "Mohuta, sehlogo, mantšu, lefelo go tšwa founung ya gago le theko di tladitšwe. Fetola se sengwe le se sengwe ka go se kgotla."
+   ]
+  },
+  {
+   "n": 5,
+   "ch": "c2",
+   "who": "you",
+   "cost": "free",
+   "img": "sn05_publish",
+   "pass": true,
+   "en": [
+    "One tap: [[Publish now — I accept the Terms]]",
+    "Your e-mail, then the button. The tap is your signature on the Terms. Your photo goes through the same quick anonymity check as every photo; if it is held, the advert still goes live and the photo joins it once checked."
+   ],
+   "af": [
+    "Een tik: [[Publish now — I accept the Terms]]",
+    "Jou e-pos, dan die knoppie. Die tik is jou handtekening op die Terme. Jou foto gaan deur dieselfde vinnige anonimiteitskontrole as elke foto; as dit teruggehou word, gaan die advertensie steeds lewendig en die foto sluit later aan."
+   ],
+   "zu": [
+    "Ukuthepha kanye: [[Publish now — I accept the Terms]]",
+    "I-imeyili yakho, bese kuba inkinobho. Ukuthepha kuyisiginesha yakho eMigomweni. Isithombe sakho sidlula kuhlolo olufanayo olusheshayo lokungaziwa njengazo zonke izithombe; uma sibanjiwe, isikhangiso siyaphuma futhi isithombe siyahlangana naso uma sesihloliwe."
+   ],
+   "xh": [
+    "Ukucofa kanye: [[Publish now — I accept the Terms]]",
+    "I-imeyile yakho, emva koko iqhosha. Ukucofa kukutyikitya kwakho kwiMigaqo. Ifoto yakho idlula kolo hlolo lukhawulezayo lokungaziwa njengayo yonke ifoto; ukuba ibanjiwe, isibhengezo siyaphuma kwaye ifoto iyangena xa sele ihloliwe."
+   ],
+   "nso": [
+    "Go kgotla gatee: [[Publish now — I accept the Terms]]",
+    "Imeile ya gago, gomme konope. Go kgotla ke mosaeno wa gago Mabakeng. Seswantšho sa gago se feta tlhahlobong ye e swanago ya go akgofa ya go se tsebje bjalo ka seswantšho se sengwe le se sengwe; ge se swerwe, papatšo e sa dutše e tšwa gomme seswantšho se a tsenela ge se šetše se hlahlobilwe."
+   ]
+  },
+  {
+   "n": 6,
+   "ch": "c3",
+   "who": "you",
+   "cost": "free",
+   "img": "sn06_missing",
+   "pass": true,
+   "en": [
+    "A question you still answer",
+    "If the photo or your words did not say something — the make of the car, the days you work — Quick asks just that question, with one line saying why. Nothing is guessed on your behalf."
+   ],
+   "af": [
+    "'n Vraag wat jy nog beantwoord",
+    "As die foto of jou woorde iets nie gesê het nie — die kar se fabrikaat, die dae wat jy werk — vra Quick net daardie vraag, met een reël wat sê hoekom. Niks word namens jou geraai nie."
+   ],
+   "zu": [
+    "Umbuzo osawuphendula",
+    "Uma isithombe noma amazwi akho kungashongo okuthile — uhlobo lwemoto, izinsuku osebenza ngazo — i-Quick ibuza lowo mbuzo kuphela, ngomugqa owodwa othi kungani. Akukho okuqagelwa egameni lakho."
+   ],
+   "xh": [
+    "Umbuzo osawuphendulayo",
+    "Ukuba ifoto okanye amazwi akho awazange athethe into ethile — uhlobo lwemoto, iintsuku osebenza ngazo — i-Quick ibuza loo mbuzo kuphela, ngomgca omnye othi kutheni. Akukho nto iqikelelwayo egameni lakho."
+   ],
+   "nso": [
+    "Potšišo yeo o sa e arabago",
+    "Ge seswantšho goba mantšu a gago a sa bolela se sengwe — mohuta wa koloi, matšatši ao o šomago ka ona — Quick e botšiša fela potšišo yeo, ka mothaladi o tee wo o bolelago gore ke ka lebaka la eng. Ga go selo se se akanyetšwago legatong la gago."
+   ]
+  }
+ ],
+ "translations": {
+  "zu": "draft",
+  "xh": "draft",
+  "nso": "draft"
+ },
+ "_note": "QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, 19-20 Oct 2026): written in the IP-hold worktree before the lane is live; screens sn01..sn06 come from the headless proofs (visuals/snap_*.png) and are pushed with build_help.py --push-images when the lane ships. Flag-dark until launch_switches.quick_snap is on."
+}
