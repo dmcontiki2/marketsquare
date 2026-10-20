@@ -857,7 +857,7 @@
       <span class="om-chip nw" id="om-f-minor"><span class="om-dot"></span>minor <span class="om-v">—</span></span>
       <span class="om-chip nw" id="om-f-retest" title="Fix shipped, awaiting our own verification and the closure letter to the reporter (NO-RETEST-1: testers are never asked to retest)"><span class="om-dot"></span>fix shipped &middot; to close <span class="om-v">—</span></span>
       <span class="om-chip nw" id="om-f-closed"><span class="om-dot"></span>closed <span class="om-v">—</span></span>
-      <span class="om-chip nw" id="om-f-recur"><span class="om-dot"></span>recur ≥3 <span class="om-v">—</span></span>
+      <span class="om-chip nw" id="om-f-recur"><span class="om-dot"></span>recur ≥3 open <span class="om-v">—</span></span>
     </div>
     <div class="om-chips omc-switches"><span class="om-chip nw" id="om-faultflag"><span class="om-dot"></span>fault intake <span class="om-v">—</span></span></div>
   </div>
@@ -2595,14 +2595,24 @@ function switchView(view) {
         var nmin = active.length - nb - nm;
         var retest = rows.filter(function(x){ return x.status === 'awaiting-retest' || x.status === 'fixed'; }).length;
         var closed = rows.filter(function(x){ return ['closed','verified'].indexOf(x.status) >= 0; }).length;
-        var recur = rows.filter(function(x){ return (x.recurrence||0) >= 3; }).length;
+        // OPSMAP-RECUR-OPEN-1 (20 Oct 2026, David: "fix ... the 1 recurring one"): this chip counted EVERY row ever
+        // reported 3+ times, so TS-0022 -- fixed 10 Aug, verified 12 Aug, its damaged covers since removed --
+        // painted amber for ten weeks with nothing left to do. The watch that matters (FAULT_REGISTER rule 3) is a
+        // repeat fault that is still LIVE: count only open ones, and name the fixed ones in the tooltip. A
+        // reporter's "still broken" reopens a row, and a reopened row counts here again at once.
+        var _recurShut = ['closed','verified','rejected','not-a-fault','duplicate'];
+        var _recurAll = rows.filter(function(x){ return (x.recurrence||0) >= 3; });
+        var _recurFixed = _recurAll.filter(function(x){ return _recurShut.indexOf(x.status) >= 0; });
+        var recur = _recurAll.length - _recurFixed.length;
         var newq = rows.filter(function(x){ return x.status === 'new'; }).length;
         fill('om-f-blocker', String(nb), nb ? 'r' : 'g');
         fill('om-f-major', String(nm), nm ? 'a' : 'g');
         fill('om-f-minor', String(Math.max(0, nmin)), 'g');
         fill('om-f-retest', String(retest), retest ? 'a' : 'g');
         fill('om-f-closed', String(closed), 'g');
-        fill('om-f-recur', String(recur), recur ? 'a' : 'g');
+        fill('om-f-recur', String(recur), recur ? 'a' : 'g',
+             'Faults reported 3 or more times that are still open.' + (_recurFixed.length ?
+             ' Fixed and verified, not counted: ' + _recurFixed.map(function(x){ return x.ref; }).join(', ') + '.' : ''));
         fill('om-queue', newq + ' new', newq ? 'a' : 'g');
         fill('om-t-filed', String(rows.length), 'g');
         fill('om-t-retest', String(retest), retest ? 'a' : 'g');

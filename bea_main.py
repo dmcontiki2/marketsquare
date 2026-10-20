@@ -29551,7 +29551,7 @@ async def _classify_email(from_addr: str, subject: str, body: str,
     """Call Claude to classify an inbound email and draft a reply.
     Returns {category, urgency, draft_reply, auto_safe}. Safe fallback on failure."""
     fallback = {"category": "other", "urgency": "normal", "draft_reply": "", "auto_safe": False,
-                "bin": "MISC", "is_report": False}
+                "bin": "MISC", "is_report": False, "classified": False}
     _cats = _OUTREACH_CATEGORIES if lane == "outreach" else _TRIAGE_CATEGORIES
     if not ai_provider.any_lane_configured():
         return fallback
@@ -29709,6 +29709,9 @@ async def _classify_email(from_addr: str, subject: str, body: str,
             "auto_safe": bool(parsed.get("auto_safe", False)),
             "bin": _bin,
             "is_report": bool(parsed.get("is_report", False)),
+            # SUPPORT-SEVERITY-1 (20 Oct 2026): the model really answered -- the fallback never says this,
+            # so a caller can tell "judged a question" from "nobody judged it".
+            "classified": True,
         }
     except Exception as exc:
         _log.error("_classify_email failed: %s", exc)
@@ -29961,6 +29964,10 @@ async def _triage_message(from_addr_in: str, to_addr: str = "", subject_in: str 
         "ack_sent": bool(ack_sent),
         "auto_send_enabled": EMAIL_AUTO_SEND,
         "reply_drafted": bool(draft_reply),
+        # SUPPORT-SEVERITY-1 (20 Oct 2026): what the support form needs to refile a question out of 'major'.
+        "is_report": _is_report,
+        "classified": bool(result.get("classified")),
+        "bin": result.get("bin", "MISC"),
     }
 
 
@@ -30315,7 +30322,46 @@ def _support_subject(ref: str, title: str) -> str:
     return "[%s] %s" % (ref, t or "your message")
 
 
-async def _support_followup(ref: str, email: str, title: str, message: str, proven: bool = False):
+# -- SUPPORT-SEVERITY-1 (20 Oct 2026, David: "fix the 2 major findings ... from the ops map NCR & feedback") --
+# Every support-form message is stored as a 'major' fault BEFORE anyone has read it. That is the safe
+# direction -- an unread message might be a real breakage -- but nothing re-filed it once the support
+# agent HAD read it. So the Ops Map's NCR layer counted "I'm looking for a domestic nanny job" (TS-0042)
+# as a major fault. The agent already decides is_report ("did this person report something BROKEN, or
+# ask a question?", REF-HONESTY-1); this applies that verdict to the register. Only a POSITIVE verdict
+# moves anything: if the model did not answer (fallback, cost ceiling, no lane) the row stays major for
+# a human. A complaint about a listing stays major whatever the model says -- a report about someone
+# else's advert is a safety matter, not a question. The conversation is not lost: it lives in the support
+# queue (email_triage), where a held reply waits for its Send button (HELD-REPLY-SEND-1), and sending it
+# closes this row (dashboard_email_triage_send).
+def _support_refile(ref, handled, listing_report=False):
+    if not ref or not handled or not handled.get("classified"):
+        return False
+    if handled.get("is_report") or listing_report:
+        return False
+    answered = handled.get("status") == "sent"
+    b = str(handled.get("bin") or "MISC").upper()
+    if b not in FAULT_BINS:
+        b = "MISC"
+    # Customer-safe words: a signed-in reporter reads fix_note in their own reports list (/app/faults/mine).
+    # The opening phrase is also the marker dashboard_email_triage_send looks for -- keep the two in step.
+    note = ("A question, not a fault report: TrustSquare Support "
+            + ("answered it by email." if answered else "answers it by email."))
+    conn = database.get_db()
+    try:
+        cur = conn.execute(
+            "UPDATE app_faults SET severity = 'minor', status = ?, "
+            " bin = CASE WHEN bin = 'MISC' THEN ? ELSE bin END, "
+            " fix_note = CASE WHEN fix_note = '' THEN ? ELSE fix_note END, updated_at = ? "
+            "WHERE ref = ? AND source = 'support-form' AND severity = 'major' AND status = 'new'",
+            ("closed" if answered else "triaged", b, note, _fault_now(), ref))
+        conn.commit()
+        return cur.rowcount == 1
+    finally:
+        conn.close()
+
+
+async def _support_followup(ref: str, email: str, title: str, message: str, proven: bool = False,
+                            listing_report: bool = False):
     """Run one support-form message through the customer AI lane, and make sure the
     person is answered exactly once (ONE-REPLY-1) even if that lane cannot run.
     AUD-030 (4 Oct 2026 audit): to an address that is not the signed-in person's own, TrustSquare Support sends ONLY
@@ -30329,6 +30375,10 @@ async def _support_followup(ref: str, email: str, title: str, message: str, prov
             message, ref_override=ref, source="support-form", proven_sender=proven)
     except Exception as exc:
         _log.error("support triage failed for %s: %s", ref, exc)
+    try:
+        _support_refile(ref, handled, listing_report)   # SUPPORT-SEVERITY-1: a question is not a major fault
+    except Exception as exc:
+        _log.error("SUPPORT-SEVERITY-1 refile failed for %s: %s", ref, exc)
 
     # The lane sends exactly one message of its own -- the AI's answer, or the bare
     # acknowledgement when no answer is safe. We only write ourselves when it could not
@@ -30396,7 +30446,14 @@ async def support_message(
                             detail="Please give us an email address so we can write back.")
     name = _fault_text.clean_name(name)          # FAULT-TEXT-1
     topic = (topic or "").strip().lower()[:40]
-    bin_ = SUPPORT_TOPIC_BINS.get(topic, "MISC")
+    # SUPPORT-SEVERITY-1: the form sends the option's WORDS ("Listing issue", "Account access"), which never
+    # matched a key here, so every support row was binned MISC. Match on the first word as well.
+    bin_ = SUPPORT_TOPIC_BINS.get(topic) or SUPPORT_TOPIC_BINS.get((topic.split() or [""])[0], "MISC")
+    # A complaint about a listing stays a major whatever the support agent's classifier says.
+    _listing_report = bool(re.match(r"\s*Complaint about listing #\d+", message)) or (
+        "topic=report" in (page_url or "") and "listing=" in (page_url or ""))
+    if _listing_report:
+        bin_ = "LIST"
 
     # PROBE MODE, same convention as the opt-out lane: the reserved .invalid TLD (RFC 2606)
     # can never be a real person, so an instrument can prove this route is alive, anonymous
@@ -30453,7 +30510,7 @@ async def support_message(
         _log.warning("support-form per-recipient cap hit for %s (%s stored, not auto-answered)", email, ref)
         return {"ok": True, "ref": ref, "queued": False}
     _proven = bool(_session_email(ts_user) and _session_email(ts_user) == email)   # AUD-030
-    background_tasks.add_task(_support_followup, ref, email, title, message, _proven)
+    background_tasks.add_task(_support_followup, ref, email, title, message, _proven, _listing_report)
     return {"ok": True, "ref": ref, "queued": True}
 
 
@@ -31170,7 +31227,26 @@ def dashboard_email_triage_send(tid: int, req: _HeldReplySend,
     _log.info("HELD-REPLY-SEND-1: triage #%s %s from the Ops Dashboard", tid, "sent" if sent else "NOT sent")
     if not sent:
         raise HTTPException(status_code=502, detail="The reply could not be sent. It is still waiting; try again.")
-    return {"ok": True, "id": tid, "status": "sent"}
+    # SUPPORT-SEVERITY-1 (20 Oct 2026): this reply answered a support-form question the agent had already
+    # judged not a fault -- close that register row, so answered questions never pile up as open faults.
+    # Only rows _support_refile marked are touched; a real fault is never closed by a reply.
+    closed_ref = None
+    try:
+        _m = re.search(r"\bTS-\d{4,}\b", row["subject"] or "")
+        if _m:
+            conn = database.get_db()
+            try:
+                _c = conn.execute(
+                    "UPDATE app_faults SET status = 'closed', updated_at = ? "
+                    "WHERE ref = ? AND source = 'support-form' AND severity = 'minor' AND status = 'triaged' "
+                    "AND instr(fix_note, 'A question, not a fault report') = 1", (_fault_now(), _m.group(0)))
+                conn.commit()
+                closed_ref = _m.group(0) if _c.rowcount == 1 else None
+            finally:
+                conn.close()
+    except Exception as exc:
+        _log.error("SUPPORT-SEVERITY-1 close-after-send failed for triage #%s: %s", tid, exc)
+    return {"ok": True, "id": tid, "status": "sent", "closed_ref": closed_ref}
 
 # ── END AI EMAIL TRIAGE — Session 94 ─────────────────────────────────────────
 

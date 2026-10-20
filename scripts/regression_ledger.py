@@ -39919,6 +39919,102 @@ def rg_audit1018_held_reply_send():
                    "test refuses the whole release (it did, 18 Oct 07:59)")
     return [(FAIL, "; ".join(bad))] if bad else [(INFO, "a held support reply is sent from the dashboard, from the support address")]
 
+@entry("RG-1080", "SUPPORT-SEVERITY-1 (20 Oct 2026, David: fix the Ops Map's two major findings): a support-form QUESTION is "
+                  "re-filed out of 'major' once the support agent has read it; a real report, an unread message and a complaint "
+                  "about a listing stay major; sending the held reply closes the question; the form's topic reaches its bin",
+       OPEN,
+       scope="bea_main.py: _classify_email ('classified'), _triage_message (returns is_report/classified/bin), _support_refile, "
+             "_support_followup, support_message (_listing_report, topic first-word bin), dashboard_email_triage_send (close after "
+             "send, marker-gated). LIVE leg: the anonymous probe of POST /support/message reports bin LIST for the topic 'Listing "
+             "issue' and for a listing complaint. Proof harness: scripts/prove_support_severity.py (A-G, throwaway DB).",
+       ref="(Numbered RG-1080/1081, not 1068/1069: a cloud lane took those two the same evening.) "
+           "Ops Map NCR & Feedback layer, 20 Oct 2026: 'major 2' = TS-0041 (an empty listing report, class already closed by "
+           "REPORT-EMPTY-1) and TS-0042 'I'm looking for a domestic nanny job' -- every support-form message was stored as major "
+           "and nothing re-filed it after the agent read it. The form also sends the option's words ('Listing issue'), which "
+           "never matched SUPPORT_TOPIC_BINS, so every support row was binned MISC.")
+def rg_support_severity_1():
+    src = repo_file("bea_main.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    cls = fn_body(src, "async def _classify_email(")
+    if '"classified": False' not in cls or '"classified": True' not in cls:
+        bad.append("_classify_email no longer says whether the model really answered -- a fallback would read as 'a question'")
+    tri = fn_body(src, "async def _triage_message(")
+    if '"is_report": _is_report' not in tri or 'bool(result.get("classified"))' not in tri:
+        bad.append("_triage_message no longer hands the is_report/classified verdict back to the support form")
+    ref = fn_body(src, "def _support_refile(").split("\nasync def ")[0]
+    if not ref:
+        bad.append("_support_refile is gone -- questions sit in the register as major faults again")
+    else:
+        for needle, why in (('handled.get("classified")', "it would refile a message nobody judged"),
+                            ('handled.get("is_report") or listing_report', "it would refile a real report or a listing complaint"),
+                            ("source = 'support-form' AND severity = 'major' AND status = 'new'", "it could touch rows it does not own"),
+                            ("A question, not a fault report", "the note that marks a refiled question is gone")):
+            if needle not in ref:
+                bad.append("_support_refile lost a guard (%s)" % why)
+    if "_support_refile(ref, handled, listing_report)" not in fn_body(src, "async def _support_followup("):
+        bad.append("_support_followup no longer calls _support_refile")
+    sm = fn_body(src, "async def support_message(")
+    if "add_task(_support_followup, ref, email, title, message, _proven, _listing_report)" not in sm:
+        bad.append("support_message no longer tells the follow-up that a message is a listing complaint")
+    if "SUPPORT_TOPIC_BINS.get((topic.split()" not in sm:
+        bad.append("the form's topic words no longer reach their bin (every support row is MISC again)")
+    snd = fn_body(src, "def dashboard_email_triage_send(")
+    if "instr(fix_note, 'A question, not a fault report') = 1" not in snd:
+        bad.append("sending a held reply no longer closes the question -- or it could close a real fault")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    # LIVE leg: probe mode (.invalid) stores no row and mails nobody, and reports the bin the server would use.
+    import json as _j, urllib.parse as _up
+    _require_net()
+    out = []
+    for label, form in (("topic 'Listing issue'", {"message": "regression ledger probe RG-1080 -- the topic must reach its bin",
+                                                   "email": "rg1080-probe@example.invalid", "topic": "Listing issue"}),
+                        ("a listing complaint", {"message": "Complaint about listing #1 (https://trustsquare.co/?listing=1):\n\n"
+                                                            "regression ledger probe RG-1080",
+                                                 "email": "rg1080-probe@example.invalid", "topic": "Report a problem"})):
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(
+                BASE + "/support/message", data=_up.urlencode(form).encode(), method="POST",
+                headers=dict(UA, **{"Content-Type": "application/x-www-form-urlencoded"})), timeout=TIMEOUT)
+            live = _j.loads(r.read().decode() or "{}")
+        except urllib.error.HTTPError as ex:
+            out.append((FAIL, "the support probe for %s answered HTTP %s" % (label, ex.code)))
+            continue
+        except Exception as ex:
+            raise ProbeOffline(repr(ex)[:140])
+        if live.get("bin") != "LIST":
+            out.append((FAIL, "LIVE: %s is binned %r, not LIST -- the server is not running SUPPORT-SEVERITY-1"
+                        % (label, live.get("bin"))))
+    return out or [(INFO, "a question leaves 'major' once read; reports, unread messages and listing complaints stay major; "
+                          "live topics reach their bins")]
+
+
+@entry("RG-1081", "OPSMAP-RECUR-OPEN-1 (20 Oct 2026, David: fix the recurring one): the Ops Map's 'recur >=3' chip counts only "
+                  "repeat faults that are still OPEN -- a fixed and verified one is named in the tooltip, not painted amber",
+       LOCKED, fixed_on="2026-10-20",
+       scope="dashboard.server.html Ops Map NCR layer, the om-f-recur chip (the /admin/faults loader). FAULT_REGISTER rule 3 "
+             "watches a repeat fault that is still live; a reporter's 'still broken' reopens a row and it counts again at once.",
+       ref="TS-0022 (cover photos blurred too far, reported 3x by Maroushka 7-10 Aug) was fixed 10 Aug and VERIFIED 12 Aug "
+           "(RG-0044, RG-0047), the damaged listings were later removed and her current covers are sharp (checked 20 Oct) -- "
+           "yet the chip counted every row ever reported 3+ times, so it stayed amber for ten weeks with nothing to do.")
+def rg_opsmap_recur_open_1():
+    d = repo_file("dashboard.server.html")
+    if d is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    if "var recur = rows.filter(function(x){ return (x.recurrence||0) >= 3; }).length;" in d:
+        bad.append("the recur chip counts EVERY repeat fault again, fixed ones included")
+    i = d.find("OPSMAP-RECUR-OPEN-1")
+    seg = d[i:i + 2500] if i >= 0 else ""
+    if not seg or "_recurShut" not in seg or "'verified'" not in seg or "'closed'" not in seg:
+        bad.append("the recur chip no longer leaves fixed (closed/verified) faults out of its count")
+    if "fill('om-f-recur', String(recur)" not in d or "Fixed and verified, not counted" not in d:
+        bad.append("the recur chip no longer names the fixed ones in its tooltip")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the recur chip counts only repeat faults that are still open")]
+
+
 
 @entry("RG-1030", "SPEC-NARROW-1 + BACKBAR-WIDTH-1 (18 Oct 2026 bug audit, BA-036): a car's spec panel and the Support page fit a "
        "360 px phone -- no sideways slide, nothing clipped off the bottom bar",
