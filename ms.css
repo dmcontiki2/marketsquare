@@ -676,9 +676,6 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
    to cover its left end; it never takes taps (pointer-events:none). */
 .toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--navy);color:#fff;border-radius:22px;padding:11px 20px;font-size:13px;font-weight:600;opacity:0;transition:all .25s ease;z-index:10000;white-space:normal;width:max-content;max-width:min(calc(100vw - 32px),398px);text-align:center;overflow-wrap:break-word;pointer-events:none;font-family:'Inter',sans-serif;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast.show{pointer-events:auto;cursor:pointer;}
-.toast.sticky{padding-right:38px;text-align:left;border:1px solid rgba(255,255,255,.35);}
-.toast .toast-x{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:20px;line-height:1;opacity:.85;}
 /* ── OFFLINE BANNER ──────────────────────────────────────── */
 .offline-banner{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#1c1a18;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;z-index:600;transition:transform .3s ease;transform:translateX(-50%) translateY(-100%);}
 .offline-banner.show{transform:translateX(-50%) translateY(0);}

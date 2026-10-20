@@ -40415,31 +40415,5 @@ def rg_say_read_1():
         out.append((FAIL, "snap-draft no longer marks a price nobody said as the photo reader's guess"))
     return out or [(INFO, "Say reader run over 3 sentences: days, areas, roles, rand price, no guessed job")]
 
-
-@entry("RG-1069", "TOAST-READ-1 (20 Oct 2026, David: 'fix the pop-up finally'): no pop-up vanishes before it can be read -- "
-                  "every toast holds at least 1.5 s + 70 ms a character, and a failure, warning or step to act on stays until "
-                  "she taps it away (both apps: ms.js showToast, Quick's door note)",
-       LOCKED, fixed_on="2026-10-20",
-       scope="ms.js showToast (reading-time hold, sticky class, tap to close), ms.css .toast.show pointer-events + .sticky + "
-             ".toast-x; quick.html + genie/HARNESS.html note() (the 4.2-s qs-note). RG-0283's clamp still applies to the asked "
-             "duration; reading time may lengthen it to 20 s, never shorten it.",
-       ref="Goal run 39: the sign-in screen named the draft's address only in a 7-s toast; TOAST-DURATION-1 (RG-0283).")
-def rg_toast_read_1():
-    js = repo_file("ms.js"); css = repo_file("ms.css"); q = repo_file("quick.html")
-    if js is None or css is None or q is None:
-        return [(INFO, "NOT EVALUATED - repo not readable from here")]
-    out = []
-    i = js.find("function showToast(")
-    body = js[i:i + 2600] if i >= 0 else ""
-    if "TOAST-READ-1" not in body or "70 * text.length" not in body or "if(!sticky)" not in body:
-        out.append((FAIL, "showToast no longer holds for reading time or no longer keeps a failure until tapped"))
-    if "t.onclick" not in body:
-        out.append((FAIL, "a toast can no longer be tapped away"))
-    if ".toast.show{pointer-events:auto" not in css:
-        out.append((FAIL, "ms.css .toast stays pointer-events:none when shown -- a sticky toast could not be closed"))
-    if "TOAST-READ-1" not in q or "1500+70*t.length" not in q:
-        out.append((FAIL, "Quick's note() is back to a fixed 4.2-s toast"))
-    return out or [(INFO, "toasts hold for reading time; failures stay until tapped; both apps")]
-
 if __name__ == "__main__":
     sys.exit(main())

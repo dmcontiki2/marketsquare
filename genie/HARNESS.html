@@ -4629,13 +4629,7 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
   /* ---------------- QUICK-PASS-1: sender ---------------- */
   var PASS={tok:null, url:'', timer:null, noName:false};
   function iconSrc(){ var l=document.querySelector('link[rel="apple-touch-icon"]'); return l?l.getAttribute('href'):''; }
-  function note(msg){   /* TOAST-READ-1: long enough to read; a failure or anything to act on stays until tapped */
-    var t=String(msg==null?'':msg), sticky=t.length>110 || /fail|could ?n.?t|can.?t |cannot|error|try again|no connection|no longer|already used|declined|refused/i.test(t);
-    var old=document.querySelectorAll('.qs-note.auto'); for(var i=0;i<old.length;i++){ try{ old[i].parentNode.removeChild(old[i]); }catch(e){} }
-    var n=document.createElement('div'); n.className='qs-note auto'; n.textContent=t+(sticky?'  \u00d7':''); n.setAttribute('role', sticky?'alert':'status');
-    n.style.pointerEvents='auto'; n.style.cursor='pointer'; n.onclick=function(){ try{ n.parentNode.removeChild(n); }catch(e){} };
-    $('app').appendChild(n);
-    if(!sticky) setTimeout(function(){ try{ n.parentNode.removeChild(n); }catch(e){} }, Math.min(Math.max(4200, 1500+70*t.length), 20000)); }
+  function note(msg){ var n=document.createElement('div'); n.className='qs-note'; n.textContent=msg; $('app').appendChild(n); setTimeout(function(){ try{ n.parentNode.removeChild(n); }catch(e){} }, 4200); }
   function firstName(){ var n=String((window.QUICK&&QUICK.name)||'').trim().split(/\s+/)[0]||''; return /^[A-Za-zÀ-ɏ' -]{2,24}$/.test(n)?n:''; }
   function stopPoll(){ if(PASS.timer){ clearInterval(PASS.timer); PASS.timer=null; } }
   function closePass(){
