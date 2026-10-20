@@ -6563,6 +6563,13 @@ drawDoor();
       return {label: ch.length===7 ? 'Every day' : ch.join(', '), photo:null, key:k, days:ch}; }
     if(k==='price') return pricePick(f, c);
     if(k==='where' && f.where_list && f.where_list.length>1){ return {label:f.where_list.join(', '), areas:f.where_list.slice(0,4), photo:null, key:k, free:true}; }   /* SAY-READ-1: "Soshanguve and Akasia" -> both areas, the first is her suburb */
+    if(k==='where' && !f.where){   /* SAY-READ-1: an area she said that is one of this city's own tiles (the server's suburb list can miss it -- Observatory, Cape Town) */
+      var said=String((QS.last&&QS.last.sentence)||'').toLowerCase(), hits=[];
+      ((st&&st.tiles)||[]).forEach(function(t){ var n=String(t.t||'').toLowerCase(), at; if(n.length<3) return;
+        at=said.search(new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z])')); if(at>=0) hits.push({t:t.t, at:at}); });
+      hits.sort(function(a,b){ return a.at-b.at; }); hits=hits.map(function(h){ return h.t; });
+      if(hits.length>1) return {label:hits.slice(0,4).join(', '), areas:hits.slice(0,4), photo:null, key:k, free:true};
+      if(hits.length){ t=tileFor(st, hits[0]); return {label:t.t, photo:t.p||null, key:k}; } }
     if(k==='where'){ v=f.where; if(!v) return null;   /* SAY-READ-1: not said and no phone fix -> she taps her area; LOC.suburb is only the city's first tile, a guess */ t=tileFor(st, v); return t ? {label:t.t, photo:t.p||null, key:k} : {label:String(v), photo:null, key:k, free:true}; }
     if(k==='how'){ return f.how ? {label:f.how, photo:null, key:k} : null; }
     v=f[k]; if(v==null || v==='') return null;
