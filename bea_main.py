@@ -38515,7 +38515,8 @@ def _snap_listing(key, f, city, cc):
     what = f.get("item") or f.get("what") or ""
     where = f.get("where") or ""
     body = {"title": ((what or cat) + (" — " + where if where else ""))[:120], "price": f.get("price_label") or "POA",
-            "category": cat, "city": city or "Pretoria", "area": where or None, "suburb": where or None,
+            "category": cat, "city": city or "Pretoria", "area": where or None,
+            "suburb": (f.get("where_list") or [where])[0] or None,
             "description": (f.get("words") or ""), "source": "quick_snap", "country": cc or "ZA"}
     if key in ("homehelp", "services"):
         body["service_class"] = "Casuals" if key == "homehelp" else "Technical"
@@ -38601,6 +38602,8 @@ async def snap_draft(
     if near and not f.get("where"):
         f["where"] = near
         f["where_from"] = "phone"
+    if f.get("price") is not None and sp.get("price") is None and photo_read:
+        f["price_from"] = "photo"                # SAY-READ-1: a price nobody said is the reader's guess -- Quick says so on the draft
     # confidence: what the photo reader said about the kind, lifted by every sentence fact that landed
     hits = sum(1 for k in ("role", "area", "price", "days", "item") if sp.get(k))
     conf = max(vconf if photo_read else 0.0, 0.0)

@@ -5,6 +5,29 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 45 — Tue 20 Oct 2026, 15:55–16:45 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun45_wtest`). SSH via
+  `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w45` (removed at the end), shipped `claude/goal-run45` via CLOUD-SHIP-1.
+- **Today's other lane (David, 03:55–04:09Z):** QUICK-SNAP-1 / RUL-242 merged and **armed** — Snap it / Say it on Quick's door.
+- **THE NUMBER: still 6** (#542, #544, #554, #562, #565, #566). Live 147. No new user, draft or listing; no outreach (RUL-241).
+- **Where people stop:** nobody came — the only bot=0 sessions were David's iPhone (41.13.106.214, dashboard in the same minutes).
+- **Walk:** Snap/Say as a stranger, the day it was armed. **Break:** Say would have published "i do gardening cut grass akasia —
+  Soshanguve", "Available: Mon, Sat" for "…Soshanguve and Akasia, Monday to Saturday, R300 a day"; Snap filled an unsaid area
+  (city's first tile), Crafts for a chest of drawers, and an unmarked photo price (R1 200 / R1 800 on two reads of one photo).
+  `docs/E2E_2026-10-20.md`. Stopped at Publish (safety layer, as 29 Sep).
+- **Shipped (GI-0049, RG-1068):** SAY-READ-1 — reader + Quick fixes, "Price guessed from your photo" mark, Snap screen says
+  "listing" (RG-0504 cleared). Live proof 16:2xZ: "Gardener — Soshanguve, Akasia", Mon–Sat; photo-only → "Where are you?".
+- **Unblocked CLOUD-SHIP-1:** `build_help --check` had refused every cloud ship since the Snap merge (six Snap guide screens
+  never made). Captured live, placed in `/var/www/marketsquare/help/img/quick_snap/`, gallery + manifest rebuilt.
+- **Ledger:** new tree reds RG-0154, RG-0546 (cleared by the screens), RG-0504 (cleared) — all three also red on base; base
+  `/opt/marketsquare-src` 08d177e: RG-0154, 0229, 0230, 0247, 0276, 0344, 0403, 0504, 0546, 0987.
+- **REVIEW NOW:** nothing new. GI-0044 held under RUL-241.
+- **Seen, not changed:** David's QA user 2025 (`+qa-snap-20261020060552`) still on the server (his proof; #580 deleted). The
+  draft card's notes are transient toasts (the 7-s-toast weakness of run 39) — the photo-price mark inherits it.
+- **QA data:** no listing or account created; Say/Snap reads wrote `quick_snap_log` counter rows only (4 photo reads).
+- **Not reached:** the publish tap and the introduction leg of a Snap listing (safety layer).
+
 ## RUN 44 — Mon 19 Oct 2026, 15:55–16:30 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun44_wtest`). SSH via

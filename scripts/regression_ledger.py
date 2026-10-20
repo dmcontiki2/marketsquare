@@ -40409,8 +40409,10 @@ def rg_say_read_1():
     if sp3["days"] != ["Mon", "Fri", "Sat", "Sun"]:
         out.append((FAIL, "'Fri till Mon' read as %s" % sp3["days"]))
     q = repo_file("quick.html")
-    if q is not None and ("f.where_list" not in q or "heard=false" not in q):
-        out.append((FAIL, "quick.html does not take where_list as areas, or listen() has no watchdog"))
+    if q is not None and ("f.where_list" not in q or "heard=false" not in q or "f.price_from==='photo'" not in q):
+        out.append((FAIL, "quick.html does not take where_list as areas, listen() has no watchdog, or a photo-guessed price is not marked"))
+    if 'f["price_from"] = "photo"' not in py:
+        out.append((FAIL, "snap-draft no longer marks a price nobody said as the photo reader's guess"))
     return out or [(INFO, "Say reader run over 3 sentences: days, areas, roles, rand price, no guessed job")]
 
 if __name__ == "__main__":
