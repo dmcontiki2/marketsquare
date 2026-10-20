@@ -15488,11 +15488,25 @@ function showToast(msg, ms){
   // for 6 s) and "Publish failed: <reason>" (asked for 4 s). An instruction nobody can finish
   // reading is an instruction nobody follows, and a failure message that vanishes is a failure
   // the user cannot report. Found while tracing why 134 visitors filed nothing (SUPPORT-FORM-REAL-1).
+  // TOAST-READ-1 (20 Oct 2026, David: "fix the pop-up finally"): a pop-up that vanishes before it is read has cost us
+  // sellers more than once (run 39: the sign-in address only in a 7-s toast). Now (a) every toast stays at least as long
+  // as it takes to read -- 1.5 s + 70 ms a character, never shorter than asked; (b) a failure, a warning or anything she
+  // has to act on ("failed", "could not", "try again", "tap", "check" ... or longer than 110 characters) STAYS until she
+  // taps it away or the next message replaces it; (c) a tap closes any toast. Clamped so an ordinary toast never pins.
   const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
+  if(!t) return;
+  const text=String(msg==null?'':msg);
+  t.textContent=text;
+  const sticky = text.length>110 || /fail|could ?n.?t|can.?t |cannot|error|try again|not sent|no connection|offline|declined|refused|blocked|held|waiting|check your|tap |open your|letter|e-?mail/i.test(text);
+  t.classList.toggle('sticky', sticky);
+  if(sticky){ const x=document.createElement('span'); x.className='toast-x'; x.setAttribute('aria-hidden','true'); x.textContent='\u00d7'; t.appendChild(x); }
+  t.setAttribute('role', sticky ? 'alert' : 'status');
+  t.onclick=function(){ clearTimeout(toastTimer); t.classList.remove('show','sticky'); };
+  t.classList.add('show');
   clearTimeout(toastTimer);
-  const hold = Math.min(Math.max(parseInt(ms,10) || 2600, 1200), 12000);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),hold);
+  const asked = Math.min(Math.max(parseInt(ms,10) || 2600, 1200), 12000);
+  const hold = Math.min(Math.max(asked, 1500 + 70 * text.length), 20000);
+  if(!sticky) toastTimer=setTimeout(()=>t.classList.remove('show'),hold);
 }
 
 // ── FEATURED CAROUSEL desktop scroll ─────────────────────────
