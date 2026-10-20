@@ -38560,9 +38560,9 @@ async def snap_draft(
     _snap_log(kind, outcome, key, missing)
     line = ""
     if outcome == "unread":
-        line = "We could not read that photo. Carry on the normal way -- your photo stays on the advert."
+        line = "We could not read that photo. Carry on the normal way — your photo stays on the advert."
     elif missing:
-        line = "Nearly there -- one or two things the photo and your words did not say."
+        line = "Nearly there — one or two things the photo and your words did not say."
     return {"ok": True, "kind": kind, "cat": key, "flow": "sell", "fields": f, "missing": missing, "confidence": round(conf, 2),
             "listing": _snap_listing(key, f, city, country_iso2), "photo_read": photo_read, "sentence": sp.get("text") or "",
             "parts": sp.get("parts") or [], "warnings": warnings[:6], "line": line}
