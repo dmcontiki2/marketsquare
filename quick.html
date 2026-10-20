@@ -6570,7 +6570,9 @@ drawDoor();
     /* every step the reader answered is passed without a tap; the first it could not answer is shown */
     if(!QS.fill || mode!=='sell' || QS.screen) return;
     var st=flow().steps;
-    while(step<st.length && !pickOf(st[step].key)){ var p=pickFor(st[step], QS.fill, cat()); if(!p) break;
+    while(step<st.length){
+      if(pickOf(st[step].key)){ step++; continue; }                /* already answered (a role's group + what, or her own tap) */
+      var p=pickFor(st[step], QS.fill, cat()); if(!p) break;
       picks.push(p);
       if(p.key==='how' && p.label!=='Quote first'){            /* the rate screen answers HOW and HOW MUCH together */
         var pp=pricePick(QS.fill, cat()); if(pp) picks.push(pp); else { picks.pop(); break; } }
