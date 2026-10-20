@@ -1,3 +1,72 @@
+## 2026-10-19 — QUICK-SIGN-1 (RUL-240): a new lister signs the Terms and publishes in the same tap — the inbox hop is gone
+
+David, 19 Oct 2026, on the live read of the SMS waves: *"that suggestion is the right way forward and it is the way to reduce that last 3.5% ... Please proceed."*
+
+**What the live server said (19 Oct, 13–16 Oct waves):** about 830 texts, 730 delivered, 27 taps; 14 strangers built a complete advert and typed their e-mail (#542–#566); 5 published; 9 stopped at *"Your listing is saved. We emailed you a link — open it in TrustSquare, read and sign the Terms, and publish."* People reached on their phones do not go to an inbox. That hop was ours (RUL-166 + EMAIL-ANCHOR-1), not the product.
+
+**What changed**
+- `bea_main.py` quick_publish: new field `sign_terms`; `_quick_signed = not signed_member AND sign_terms AND not existing_account AND key_mode != 'link'`; a signed tap publishes through the ONE gate `publish_listing(lid, em, accepted_terms=1)`, which records `users.eula_accepted_at` exactly as the app's scroll-to-the-end gate does — the door itself still never writes an acceptance. Source is `quick_live`; the live letter (with its "If this was not you, open the link and delete the listing") is her way back. A brand-new account made by the tap is signed in on that phone (ONE-KEY-1 pattern). Decided again after QUICK-DUP-2 so her own second tap publishes the same draft.
+- Unchanged: an address that already has an account, typed by someone not signed in as it → draft + sign-in letter (AUDIT-Q1). WhatsApp-link key unchanged. Phone-code key stays off (RUL-192(b)). E-mail stays the anchor.
+- `quick.html` + `genie/HARNESS.html` (identical): the button reads **"Publish now — I accept the Terms"** for anyone without a signed EULA (members who signed keep "Publish"); the acceptance line + Terms link sit directly above it (same words as the fast lane and the sell flow; all 15 Quick languages already carried them — no new strings); the tap sends `sign_terms:true`; busy label "Publishing…".
+- RULINGS.md: RUL-240 appended; RUL-166 marked AMENDED-BY RUL-240 (nothing deleted). rulings_check.py: RUL-240 reflections. Ledger RG-0446: assertion rewritten (says so in its scope) — it asserted the inbox hop.
+- Cost model: none. Schema: none.
+
+**Still open on the same read, for David:** five lanes got zero taps from ~200 delivered texts (wording — two new texts per lane to come); the waves have sent nothing since 16 Oct because the SMS credit is used up (top-up is his).
+
+**Rendered check, 19 Oct 09:4x SAST (headless phone, stranger, `/quick/?role=home_cleaner`):** city → areas → days → price → "Here is your listing": button reads **"Publish now — I accept the Terms"**, the acceptance line with the Terms link renders. Two words corrected in the same pass: the flag now reads "ready to publish" (not "ready to save") and the acceptance line sits above the button (SAVE-NOT-PUBLISH-1 and the placement follow the new truth).
+
+**Rendered proof (live, 09:47 SAST, after 28404f2):** `visuals/quick_sign_1_draft_LIVE_2026-10-19.png` — flag "ready to publish", acceptance line above, button "Publish now — I accept the Terms". **PROVEN LIVE 10:49 SAST (David: "please proceed to test the QA listing live"):** headless phone, stranger, `/quick/?role=home_cleaner` → city, areas, days, price → typed name + a fresh QA alias (dmcontiki2+qa-sign-…) → tap **Publish now — I accept the Terms** → the server answered `live: true` (#579), the arrival screen read **"Your listing is live. People can find it now…"** with See my listing / WhatsApp / "We also emailed a link to …", and the app opened the advert as hers ("This is your listing — buyers see it like this"). Server: users.eula_accepted_at stamped 08:49:58Z, log `QUICK-SIGN-1 … publishing 579 in the same tap`, `quick-live mail for 579: sent`. The QA advert was deleted as the seller straight after (200). Pictures: `visuals/quick_sign_1_live_{1,2,3}_…_2026-10-19.png` (in the Visuals gallery).
+
+**Rulings board, same session:** two stale assertions corrected (not rot): RUL-169 wording followed RUL-209 ("someone who knows their work"); RUL-211's GEO-NET-CITY-1 marker was replaced the same day by GEO-CITY-SAFE-1 (network = country only). Board: 198 rulings, 0 FAIL.
+
+**Ledger after the fix (host-side run 09:55 SAST): 3 reds, all three instrument wording, none a rotted fix:** RG-0973 looked for `publish_listing(lid, em)` with its closing paren (the call now carries `accepted_terms`); RG-0450 took the comment that *names* the publish gate for the call itself (a code-pattern read tripped by prose — the evidence-ladder class); RG-0154 was the session counter one sitting behind (bumped to 231). Assertions corrected and say so in place; re-run queued host-side.
+- Follow-up (same session): the QUICK-DUP-1 guard (no second live copy of the same advert within 24 h) now covers a signed stranger's retry too, not only a signed-in member.
+
+**Same session, RUL-241 (WaveSession2):** SMS wording and the v2 letters corrected and the wave pointed at them; every e-mail and SMS wave HELD on the server (SEND_FREEZE present, SMS ARM file moved aside — both probed) until David lifts them for WaveSession2. Detail in CityLauncher/CHANGELOG.md 2026-10-19.
+- Shipped to the server 11:23 SAST (kit md5-identical for every changed file, 15 .v2 letters now on the deploy list — they were not before, so pointing TEMPLATES at them without that line would have killed the wave). Lesson kept here: the LIVE CityLauncher kit is `/var/www/citylauncher` (systemd timers run there); `/opt/CityLauncher` is the witness copy — the freeze file first went to the wrong one and was moved within the same session, then probed from the live path: e-mail frozen True, ARM ABSENT, v2 letter loads, new SMS lines build as one part.
+
+## 2026-10-19 — MORE-JOBS-1 (Goal run 44, RG-1063): Quick tells a job seeker when her plan is full, and where more jobs go
+
+**Why:** SMS b15, Johannesburg, 19 Oct 07:08–07:12Z — one stranger built four adverts in four minutes (cashier, security guard,
+hotel porter, waiter, #575–#578) with "List something else". Since QUICK-SIGN-1 the first two go live in the tap and the third
+answers 402 "slot limit" (Free = 2 live, RUL-128) only after she has built it.
+
+**What changed**
+- `bea_main.py` quick_publish: the live answer carries `slots_left` (`_qp_slots_left`: the plan's slot_limit minus live adverts;
+  None for a superuser or on any error).
+- `quick.html` (= `genie/HARNESS.html`) celebrate(): when `live && slots_left===0`, a line above "List something else": "Your
+  plan's listing slots are full. More kinds of work? Add them to this listing — tap See my listing, then Edit." The slots-full
+  card adds "Or add this work to one of your live listings — open it in TrustSquare and tap Edit."
+- `roles/quick_i18n.json` + the QI18N block: both phrases in 14 languages (st blank, as elsewhere) for the Language reviewer.
+- Ledger RG-1063. Cost model: none. Schema: none. RUL-128's slot counts unchanged — the commercial question is GI-0048 (David).
+
+**Same evening — PLAN-FULL-NOTE-1 replaces the Edit advice.** David, 19 Oct: "it is a lot for someone earning only R250, but for consistency and simplicity we stick world wide to a single cost structure. If a free user can be helped for any one of two free adverts, then we have been successful. For a million users to have 5+ free listings and just leaving them without ever deleting is a cost on our resources and will make the profit margins dissapear." The 'add more work to this listing — tap Edit' line (and its twin on the 402 card) steered a free user around Starter; the live card now reads "Your plan's listing slots are full. Starter gives you 10 live listings." with See plans, and the 402 card is back to its own words. RG-1063 now fails if Quick ever advises packing jobs into one advert.
+
+- **Incident, 18 Oct ~14:30–15:20 SAST: South African visitors stuck on "loading"** (bug audit BA-050; server-side, not in the repo).
+  Large files stalled between the Hetzner server and Cloudflare's Johannesburg edge (packet loss; cubic collapsed; JS/CSS went to Cloudflare uncompressed). Fixed on the server: BBR congestion control (/etc/sysctl.d/90-ts-bbr.conf) and nginx compression for JS/CSS/JSON (/etc/nginx/conf.d/ts_gzip.conf); stuck objects purged at Cloudflare and ms.js moved to v=1107 on the live index. Each file carries its own revert line.
+
+## 2026-10-18 — CITY-ALIAS-1 + LIST-WORDS-1 (Goal run 43, RG-1062)
+
+- WALKED: the queued SMS lanes' own links as a stranger (Afrikaans Cape Town gardener; isiXhosa Gqeberha).
+- CITY-ALIAS-1: the door's city pack says "Gqeberha (Port Elizabeth)" and "Mbombela (Nelspruit)"; links, accounts and
+  Cloudflare say "Port Elizabeth", "Gqeberha" or "Nelspruit". The exact match failed, so those links asked "Which city?"
+  with Pretoria first. quick.html `cityKey` accepts either name; CityLauncher `quick_door._pack_city` now puts
+  `city=Gqeberha` / `city=Mbombela` in the link, and `sms_wave` adds it only when it costs no extra SMS part
+  (Port Elizabeth services and Nelspruit now carry it; every other city's links are unchanged).
+- LIST-WORDS-1: an Afrikaans card showed "Mon, Wed, Fri" and "R350 / day" under "Beskikbaar: Ma, Wo, Vr ... R350 per dag".
+  `qTr` translates a comma list word by word and gives a price chip the same units the advert already uses.
+
+## 2026-10-18 — APP-SCRIPT-STALL-1: empty Home after the bug audit was a stalled Cloudflare copy of ms.js (RG-1061)
+
+- Symptom (David, 15:02 SAST): "after the audit the Trustsquare app is showing no listings" — every category tile read "0 listings".
+- PROBED: DB held 146 live listings; the app answered /listings with all of them; nothing was deleted.
+- PROBED: in Chrome, `static/ms.js?v=1106&m=1` sat "pending"; the app never started (`openDetail` undefined, `LISTINGS` empty), no console error.
+- Cause: the Cloudflare Johannesburg edge was serving a half-filled cached copy of that exact URL at ~30 KB/s (20–40 s reads got 96–870 KB of 1.4 MB). The same file under any other `?v=` arrived in <2 s; the origin served it in 4 ms. A purge-everything (200 OK) did not evict it at once.
+- Not caused by the audit's code changes (ms.js parses clean; diff since 4d461c1 reviewed). The audit's deploy simply produced the new URL whose edge fill stalled.
+- Recovered 15:20 SAST: Chrome loads 151 live listings, counts correct.
+- Lock: RG-1061 downloads the exact ms.js URL the live Home links and goes red if it is incomplete or slower than 15 s. Cure when it trips: ship any deploy (bumps `?v=`).
+- This deploy bumps `?v=` so no other edge city keeps the stalled copy.
+
 - **Closing regression board: two false reds of the audit's own making fixed, one content red restored** (bug audit BA-049).
   RG-0042 and RG-0222 read "the last mention" of a name: a comment in the OAuth fix mentioned /ops/selfcheck, and the held-reply Send button refreshes the triage list after its loader — both reworded/pointed at the real code (the self-check is still key-gated; the triage loader still sends X-Admin-Token). RG-0908: the pocket-watch picture came back on the US/UK/AU collectors letters in the 17 Oct 20:15 release; the six letters show the wristwatch again.
 

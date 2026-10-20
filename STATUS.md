@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-17 - svc area 1)
+## Last Completed (2026-10-19 - QUICK-SIGN-1 (RUL-240, 19 Oct 2026))
 
-- 17 Oct 2026 -- SVC-AREA-1 (RUL-237): casual workers can tie an advert to one street / small area and lock it (shown only there; work outside refused before the 1T hold). Verified by: scripts/prove_svc_area.py PASS + RG-1055; live walk after ship.
+- **QUICK-SIGN-1 (RUL-240, 19 Oct 2026):** a new e-mail lister now signs the Terms on the Quick button ("Publish now — I accept the Terms") and is live in the same tap; the e-mail hop ("We emailed you a link — open it in TrustSquare, read and sign the Terms") is gone for new addresses. Reason: 9 of 14 strangers from the 13–16 Oct SMS waves stopped exactly there. Existing-account addresses still get a draft + sign-in letter. Verified in the rendered app: see changelog fragment for the walk result.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- **QUICK-SIGN-1 (RUL-240, 19 Oct 2026):** a new e-mail lister now signs the Terms on the Quick button ("Publish now — I accept the Terms") and is live in the same tap; the e-mail hop ("We emailed you a link — open it in TrustSquare, read and sign the Terms") is gone for new addresses. Reason: 9 of 14 strangers from the 13–16 Oct SMS waves stopped exactly there. Existing-account addresses still get a draft + sign-in letter. Verified in the rendered app: see changelog fragment for the walk result.
 
 - 17 Oct 2026 -- SVC-AREA-1 (RUL-237): casual workers can tie an advert to one street / small area and lock it (shown only there; work outside refused before the 1T hold). Verified by: scripts/prove_svc_area.py PASS + RG-1055; live walk after ship.
 
