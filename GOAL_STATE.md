@@ -25,6 +25,12 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   never made). Captured live, placed in `/var/www/marketsquare/help/img/quick_snap/`, gallery + manifest rebuilt.
 - **Ledger:** new tree reds RG-0154, RG-0546 (cleared by the screens), RG-0504 (cleared) — all three also red on base; base
   `/opt/marketsquare-src` 08d177e: RG-0154, 0229, 0230, 0247, 0276, 0344, 0403, 0504, 0546, 0987.
+- **Evening, David live (19:00Z): "Please publish the snap, fix the pop-up finally. And go live please."** TOAST-READ-1
+  (RG-1069) shipped 47c669d 19:10Z: every toast holds 1.5 s + 70 ms a character; failures, warnings and steps to act on stay
+  until tapped (×); any toast closes on a tap; Quick's 4.2-s door note the same. Live proof 19:2xZ: a publish-failure toast
+  still up at 15 s, gone on a tap; "Saved" gone in 3 s. (The Snap draft's own lines were already inline and stay — run 45's
+  "transient toast" note about them was wrong.) **The Snap publish tap was refused again by the session's safety layer even
+  with David's word** — not attempted another way; his own 04:06Z proof (#580) remains the publish proof.
 - **REVIEW NOW:** nothing new. GI-0044 held under RUL-241.
 - **Seen, not changed:** David's QA user 2025 (`+qa-snap-20261020060552`) still on the server (his proof; #580 deleted). The
   draft card's notes are transient toasts (the 7-s-toast weakness of run 39) — the photo-price mark inherits it.
