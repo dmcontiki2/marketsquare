@@ -1,0 +1,1 @@
+- 2026-10-20 06:02 SAST: QUICK-SNAP-1 (RUL-242) ARMED by David from his enrolled browser; live one-tap proof passed in the rendered app (photo + sentence → one tap → #580 live with the Terms signed → deleted). RG-1064..RG-1067 LOCKED. The fourth standard flow (Snap or say) is live for everyone on trustsquare.co/quick. Follow-on: a video advert for the Snap flow.

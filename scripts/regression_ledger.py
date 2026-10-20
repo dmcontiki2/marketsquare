@@ -40242,7 +40242,7 @@ def rg_more_jobs():
 # took the numbers first (the fast-lane precedent, RG-0973..0982) — never renumber after LOCK.
 @entry("RG-1064", "QUICK-SNAP-1 route: POST /listings/snap-draft is glue over the existing readers, flag-dark (404 when "
                   "launch_switches.quick_snap is OFF), declared in route_policy.json, and never publishes anything itself",
-       OPEN, fixed_on="2026-10-20",
+       LOCKED, fixed_on="2026-10-20",
        scope="bea_main.py QUICK-SNAP-1 block (photos -> vision_draft, sentence -> the fast-find splitter + the Snap mapper; "
              "'missing' names the steps, nothing guessed), launch_switches.quick_snap column + /flags + /admin/flags, "
              "GET /admin/quick-snap/stats, quick_snap_log counters; route_policy.json. Proof: scripts/snap_route_proof.py on a "
@@ -40274,7 +40274,7 @@ def rg_quick_snap_1_route():
 @entry("RG-1065", "QUICK-SNAP-1 screens: Quick's door shows 'Snap it' / 'Say it' only while the switch is ON, one combined "
                   "screen (photo + sentence) pours its answers into the NORMAL flow and lands on 'Here is your listing' with "
                   "'Publish now -- I accept the Terms'; a step the reader could not fill is the step she lands on",
-       OPEN, fixed_on="2026-10-20",
+       LOCKED, fixed_on="2026-10-20",
        scope="quick.html + genie/HARNESS.html (byte-identical) QUICK-SNAP-1 module: doorButtons gated by /flags effective.quick_snap, "
              "open(), land() -> fillAhead() -> drawDraft(), 'missing' -> drawStep() + one .qf-note line; her photo = window.QPHOTO "
              "(PHOTO-KIND-1 hold path unchanged). Rendered proof: scripts/snap_render_proof.py (worktree page served locally, APIs "
@@ -40306,7 +40306,7 @@ def rg_quick_snap_1_screens():
 
 @entry("RG-1066", "QUICK-SNAP-1 words: every Snap string is in all 15 Quick languages through the one generator, a How story "
                   "exists, and no AI model is named anywhere in the lane",
-       OPEN, fixed_on="2026-10-20",
+       LOCKED, fixed_on="2026-10-20",
        scope="scripts/apply_snap_i18n.py -> roles/quick_i18n.json + the QI18N block; stories/quick_snap.json; the QUICK-SNAP-1 "
              "blocks in quick.html and bea_main.py.",
        ref="QUICK_SNAP_BRIEF.md §8 U4; RUL-149/160 (languages); 17 Sep 2026 ruling (no model named as a label).")
@@ -40341,7 +40341,7 @@ def rg_quick_snap_1_words():
 
 @entry("RG-1067", "QUICK-SNAP-1 dashboard: the Snap switch row and its two counters are READ from GET /admin/quick-snap/stats "
                   "with provenance -- never a hand-typed number or a default colour (RG-0133's three properties)",
-       OPEN, fixed_on="2026-10-20",
+       LOCKED, fixed_on="2026-10-20",
        scope="dashboard.server.html: switch 'Snap or say' (ls_m_snap -> launch_switches.quick_snap) + the counters line; NOT MEASURED "
              "on a failed read.",
        ref="QUICK_SNAP_BRIEF.md §8 U5; the EVIDENCE LADDER (no surface wears a colour nothing measures).")
