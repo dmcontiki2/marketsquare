@@ -2428,6 +2428,30 @@
    "quick": true
   },
   {
+   "type": "quick_snap",
+   "status": "draft",
+   "flow": "SNAP",
+   "label": {
+    "en": "Snap or say",
+    "af": "Kiek of sê",
+    "zu": "Thwebula noma usho",
+    "xh": "Fota okanye uthethe",
+    "nso": "Tšea seswantšho goba o bolele"
+   },
+   "title": {
+    "en": "Snap or say, then one tap: a photo, a sentence, Publish",
+    "af": "Kiek of sê, dan een tik: 'n foto, 'n sin, Publiseer",
+    "zu": "Thwebula noma usho, bese kuthephwa kanye: isithombe, umusho, Shicilela",
+    "xh": "Fota okanye uthethe, emva koko ucofe kanye: ifoto, isivakalisi, Papasha",
+    "nso": "Tšea seswantšho goba o bolele, gomme o kgotle gatee: seswantšho, lefoko, Phatlalatša"
+   },
+   "walked_on": "2026-10-20",
+   "steps": 6,
+   "cover": "sn01_door",
+   "door": "services",
+   "quick": false
+  },
+  {
    "type": "removals_helper",
    "status": "draft",
    "flow": "F1",
