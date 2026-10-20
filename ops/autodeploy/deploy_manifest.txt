@@ -429,6 +429,7 @@ stories/property_flat.json | help/data/property_flat.json
 stories/property_house.json | help/data/property_house.json
 stories/quick_find_icon.json | help/data/quick_find_icon.json
 stories/quick_sell_icon.json | help/data/quick_sell_icon.json
+stories/quick_snap.json | help/data/quick_snap.json
 stories/removals_helper.json | help/data/removals_helper.json
 stories/roofer.json | help/data/roofer.json
 stories/room_attendant.json | help/data/room_attendant.json
