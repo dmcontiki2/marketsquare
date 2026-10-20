@@ -18,6 +18,9 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
   `docs/E2E_2026-10-20.md`. Stopped at Publish (safety layer, as 29 Sep).
 - **Shipped (GI-0049, RG-1068):** SAY-READ-1 — reader + Quick fixes, "Price guessed from your photo" mark, Snap screen says
   "listing" (RG-0504 cleared). Live proof 16:2xZ: "Gardener — Soshanguve, Akasia", Mon–Sat; photo-only → "Where are you?".
+  Ships 3008365 (refused by the help gate), 5385454 16:22Z, e05f7cf 16:35Z (price mark), cb56eb7 16:39Z (an area she says that
+  is one of the city's Quick tiles is read on the phone — Cape Town's geo_suburbs lacks Observatory). Live 16:43Z: photo +
+  "Observatory" → "Three Drawer Wooden Chest — Observatory" with "Price guessed from your photo — tap the price to put your own."
 - **Unblocked CLOUD-SHIP-1:** `build_help --check` had refused every cloud ship since the Snap merge (six Snap guide screens
   never made). Captured live, placed in `/var/www/marketsquare/help/img/quick_snap/`, gallery + manifest rebuilt.
 - **Ledger:** new tree reds RG-0154, RG-0546 (cleared by the screens), RG-0504 (cleared) — all three also red on base; base
