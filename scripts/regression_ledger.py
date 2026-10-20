@@ -39922,12 +39922,14 @@ def rg_audit1018_held_reply_send():
 @entry("RG-1080", "SUPPORT-SEVERITY-1 (20 Oct 2026, David: fix the Ops Map's two major findings): a support-form QUESTION is "
                   "re-filed out of 'major' once the support agent has read it; a real report, an unread message and a complaint "
                   "about a listing stay major; sending the held reply closes the question; the form's topic reaches its bin",
-       OPEN,
+       LOCKED, fixed_on="2026-10-20",
        scope="bea_main.py: _classify_email ('classified'), _triage_message (returns is_report/classified/bin), _support_refile, "
              "_support_followup, support_message (_listing_report, topic first-word bin), dashboard_email_triage_send (close after "
              "send, marker-gated). LIVE leg: the anonymous probe of POST /support/message reports bin LIST for the topic 'Listing "
              "issue' and for a listing complaint. Proof harness: scripts/prove_support_severity.py (A-G, throwaway DB).",
-       ref="(Numbered RG-1080/1081, not 1068/1069: a cloud lane took those two the same evening.) "
+       ref="PROMOTED 20 Oct 2026 the run it printed READY TO LOCK: Release 9d23d4e DEPLOY OK 20:05Z (QA Bot gate clean); "
+           "the live probe bins 'Listing issue' and a listing complaint as LIST. "
+           "(Numbered RG-1080/1081, not 1068/1069: a cloud lane took those two the same evening.) "
            "Ops Map NCR & Feedback layer, 20 Oct 2026: 'major 2' = TS-0041 (an empty listing report, class already closed by "
            "REPORT-EMPTY-1) and TS-0042 'I'm looking for a domestic nanny job' -- every support-form message was stored as major "
            "and nothing re-filed it after the agent read it. The form also sends the option's words ('Listing issue'), which "
