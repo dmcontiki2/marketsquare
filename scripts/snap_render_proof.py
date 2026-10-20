@@ -56,7 +56,7 @@ async def main():
         await shot(pg,'snap_2_say_screen.png')
         await pg.locator('#qsgo').click(); await pg.wait_for_timeout(2500)
         q=(await pg.locator('#screen .q').first.text_content() or '').strip() if await pg.locator('#screen .q').count() else ''
-        print('A after Make my advert -> screen:', q, '| pub button:', await pg.locator('#pub').count())
+        print('A after Make my listing -> screen:', q, '| pub button:', await pg.locator('#pub').count())
         await shot(pg,'snap_3_cleaner_draft.png')
         card=(await pg.locator('#screen .card').first.inner_text())[:300].replace('\n',' | ') if await pg.locator('#screen .card').count() else ''
         print('A card:', card)

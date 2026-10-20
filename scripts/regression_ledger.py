@@ -40318,7 +40318,7 @@ def rg_quick_snap_1_words():
     out = []
     try:
         d = _j.loads(i18n); w = d.get("w", d)
-        for key in ("Snap it", "Say it", "Make my advert", "Or say it in one sentence"):
+        for key in ("Snap it", "Say it", "Make my listing", "Or say it in one sentence"):
             if key not in w:
                 out.append((FAIL, "Snap word '%s' is not in roles/quick_i18n.json" % key))
             elif len(w[key]) < 14:
@@ -40357,6 +40357,61 @@ def rg_quick_snap_1_dashboard():
     if "NOT MEASURED" not in d[d.find("QUICK-SNAP-1"):d.find("QUICK-SNAP-1") + 6000]:
         out.append((FAIL, "a failed stats read does not fall back to NOT MEASURED"))
     return out or [(INFO, "Snap switch row + counters read from the stats route, NOT MEASURED on a failed read")]
+
+
+@entry("RG-1068", "SAY-READ-1 (Goal run 45, 20 Oct 2026): Say's sentence reader RUNS over real casual-worker sentences and "
+                  "never publishes a guessed job: 'Monday to Saturday' is six days (not Mon, Sat), 'Soshanguve and Akasia' is two "
+                  "areas (not 'akasia' inside the job), 'I do gardening' is Gardener, and words it cannot match leave the job "
+                  "step for her to pick on the work doors (RUL-242(a): the step she lands on, never a guess published)",
+       LOCKED, fixed_on="2026-10-20",
+       scope="bea_main.py _snap_parse_sentence (day ranges, opening filler, up to 4 areas, -ing role names + _SNAP_ROLE_PHRASES, "
+             "price measured after 'rand'), _snap_merge (where_list; no sentence item as 'what' on homehelp/services); quick.html "
+             "+ HARNESS pickFor where_list -> areas; listen() 9 s watchdog so 'Listening...' never stays up.",
+       ref="docs/E2E_2026-10-20.md -- the live walk published-ready 'i do gardening cut grass akasia -- Soshanguve', "
+           "'Available: Mon, Sat'. GOAL_IMPROVEMENTS GI-0049.")
+def rg_say_read_1():
+    import ast as _a, re as _re, json as _j, os as _o, logging as _lg
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    want = {"_snap_roles", "_snap_find_name", "_snap_money_label", "_snap_areas", "_snap_parse_sentence", "_snap_merge"}
+    ns = {"re": _re, "json": _j, "os": _o, "_log": _lg.getLogger("rg1068"),
+          "__file__": _o.path.join(REPO, "bea_main.py")}
+    lines = py.splitlines(True)
+    try:
+        for node in _a.parse(py).body:
+            if isinstance(node, _a.Assign) and any(isinstance(t, _a.Name) and (t.id.startswith("_SNAP_") or t.id.startswith("_QF"))
+                                                   for t in node.targets):
+                exec("".join(lines[node.lineno - 1:node.end_lineno]), ns)
+            elif isinstance(node, _a.FunctionDef) and (node.name in want or node.name.startswith("_qf_")):
+                exec("".join(lines[node.lineno - 1:node.end_lineno]), ns)
+    except Exception as exc:
+        return [(FAIL, "could not load the Say reader to run it: %s" % exc)]
+    if "_snap_parse_sentence" not in ns or "_snap_merge" not in ns:
+        return [(FAIL, "bea_main.py has no _snap_parse_sentence/_snap_merge")]
+    if not ns["_snap_roles"]():
+        return [(INFO, "NOT EVALUATED - roles/role_registry.json not readable from here")]
+    out = []
+    sp = ns["_snap_parse_sentence"]("I do gardening and cut grass in Mamelodi and Centurion, Monday to Saturday, R300 a day", "Pretoria", None)
+    if sp["days"] != ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]:
+        out.append((FAIL, "'Monday to Saturday' read as %s" % sp["days"]))
+    if (sp.get("role") or {}).get("label") != "Gardener":
+        out.append((FAIL, "'I do gardening' did not read as Gardener (got %s / item %r)" % (sp.get("role"), sp.get("item"))))
+    if sp.get("areas") != ["Mamelodi", "Centurion"]:
+        out.append((FAIL, "two areas read as %s" % sp.get("areas")))
+    sp2 = ns["_snap_parse_sentence"]("babysitting weekends 250 rand a day", "", None)
+    if sp2["price"] != 250 or sp2["basis"] != "day":
+        out.append((FAIL, "'250 rand a day' read as %s / %s" % (sp2["price"], sp2["basis"])))
+    sp3 = ns["_snap_parse_sentence"]("Fix fridges and washing machines, Menlyn, Fri till Mon", "", None)
+    k, f, miss = ns["_snap_merge"]("services", None, {}, sp3)
+    if k in ("services", "homehelp") and not sp3.get("role") and ("what" not in miss):
+        out.append((FAIL, "an unmatched sentence became the job title %r on the %s door" % (f.get("what"), k)))
+    if sp3["days"] != ["Mon", "Fri", "Sat", "Sun"]:
+        out.append((FAIL, "'Fri till Mon' read as %s" % sp3["days"]))
+    q = repo_file("quick.html")
+    if q is not None and ("f.where_list" not in q or "heard=false" not in q):
+        out.append((FAIL, "quick.html does not take where_list as areas, or listen() has no watchdog"))
+    return out or [(INFO, "Say reader run over 3 sentences: days, areas, roles, rand price, no guessed job")]
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -38091,6 +38091,14 @@ _SNAP_BASIS = {"hour": "hour", "hr": "hour", "day": "day", "visit": "visit", "jo
                "car": "car", "callout": "callout", "call-out": "callout"}
 _SNAP_DOOR_AREAS = ("Pretoria East", "Centurion", "Mamelodi", "Menlyn", "Midrand", "Sandton")
 _SNAP_ROLES = {"rows": None}
+# SAY-READ-1 (goal run 45): plain phrases -> role key (only used when that key is in the registry and the phrase is no role's name)
+_SNAP_ROLE_PHRASES = {"cut grass": "gardener", "cutting grass": "gardener", "grass cutting": "gardener", "garden work": "gardener",
+                      "gardening": "gardener", "lawn mowing": "gardener", "mow lawns": "gardener", "mowing lawns": "gardener",
+                      "clean houses": "home_cleaner", "house cleaning": "home_cleaner", "cleaning houses": "home_cleaner",
+                      "look after children": "nanny", "look after kids": "nanny", "child care": "nanny", "childcare": "nanny",
+                      "washing and ironing": "laundry_ironing", "ironing": "laundry_ironing", "laundry": "laundry_ironing",
+                      "wash cars": "car_washer", "car wash": "car_washer", "washing cars": "car_washer",
+                      "babysitting": "nanny", "babysitter": "nanny", "baby sitting": "nanny", "baby sitter": "nanny"}
 # the door she is on -> the vision reader's hint (vision_draft keeps only property/services/adventures/cars from the
 # reader and overwrites anything else with the hint, so the hint must be the door)
 _SNAP_HINT = {"homehelp": "services", "services": "services", "tutors": "tutors", "property": "property", "cars": "cars",
@@ -38099,7 +38107,7 @@ _SNAP_COL_TYPE = {"coins": "Coins", "stamps": "Stamps", "trading cards": "Cards"
                   "watches": "Watches", "art": "Art"}
 _SNAP_LM_WORDS = (("Food & preserves", r"honey|jam|preserve|chutney|biltong|bread|cake|rusk|biscuit|koeksister|pickle|sauce|food|bake|cheese|egg|jar"),
                   ("Plants", r"plant|seedling|succulent|tree|shrub|flower|herb|pot plant|cutting"),
-                  ("Furniture", r"furniture|table|chair|dresser|couch|sofa|bed|cabinet|desk|shelf|bench|stool|wardrobe"),
+                  ("Furniture", r"furniture|table|chair|dresser|couch|sofa|bed|cabinet|desk|shelf|bench|stool|wardrobe|chest of drawers|drawers|cupboard|headboard|tv stand|bookcase|ottoman"),
                   ("Clothes", r"cloth|dress|shirt|jacket|apron|skirt|trouser|jersey|shoe|hat|garment|sew"),
                   ("Tools", r"tool|drill|saw|hammer|spanner|wrench|grinder|lawnmower|mower"),
                   ("Crafts", r"craft|handmade|hand-made|beadwork|bead|pottery|ceramic|woven|basket|knit|crochet|candle|soap|leather|wood"))
@@ -38170,6 +38178,25 @@ def _snap_roles():
                         rows.append((_n, _r.get("key"), _en, _cls))
         except Exception as _rex:
             _log.warning("QUICK-SNAP-1: role registry unreadable (%s) -- Say reads no roles", _rex)
+        # SAY-READ-1: people say the work, not the job title -- "gardening", "house cleaning", "plumbing", "babysitting" --
+        # so every English name ending in -er also answers to its -ing ("gardener" -> "gardening"), unless that word is
+        # already another role's name; plus the few phrases a casual worker uses for the commonest jobs.
+        _have = {t[0] for t in rows}
+        _extra = []
+        for _n, _k, _en, _c in rows:
+            _m = re.match(r"^(.*?)([a-z]{3,})er$", _n)
+            if not _m or not re.fullmatch(r"[a-z ]+", _n):
+                continue
+            _ing = _m.group(1) + _m.group(2) + "ing"
+            if _ing not in _have:
+                _have.add(_ing); _extra.append((_ing, _k, _en, _c))
+        _byk = {}
+        for _n, _k, _en, _c in rows:
+            _byk.setdefault(_k, (_k, _en, _c))
+        for _ph, _k in _SNAP_ROLE_PHRASES.items():
+            if _k in _byk and _ph not in _have:
+                _have.add(_ph); _extra.append((_ph,) + _byk[_k])
+        rows += _extra
         rows.sort(key=lambda t: -len(t[0]))
         _SNAP_ROLES["rows"] = rows
     return _SNAP_ROLES["rows"]
@@ -38248,6 +38275,7 @@ def _snap_parse_sentence(sentence, city="", conn=None):
     low = s.lower()
     # price + basis ("R350", "R350 a day", "350 rand" as speech writes it)
     s = re.sub(r"\b(\d[\d\s,]*(?:\.\d+)?)\s*(k)?\s*rand\b", lambda m: "R" + m.group(1).strip() + (m.group(2) or ""), s, flags=re.I)
+    low = s.lower()                              # SAY-READ-1: the price cut below is measured on this text, so read it after "rand" -> "R"
     m = _SNAP_PRICE_RE.search(s)
     if m:
         try:
@@ -38271,8 +38299,14 @@ def _snap_parse_sentence(sentence, city="", conn=None):
     if re.search(r"\b(every ?day|any ?day|all days|daily|7 days|seven days)\b", low):
         found = list(_SNAP_DAY_ORDER)
     else:
-        if re.search(r"\bweek ?days\b|mon(day)?\s*(to|-|–)\s*fri(day)?", low):
+        if re.search(r"\bweek ?days\b", low):
             found += ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        # SAY-READ-1 (goal run 45): any "Monday to Saturday" / "Tue-Thu" / "Fri till Sun" is every day between, not the two ends
+        for rm in re.finditer(r"\b([a-z]{3,9})\s*(?:to|-|–|until|till|through|thru)\s*([a-z]{3,9})\b", low):
+            a, b = _SNAP_DAYS.get(rm.group(1)), _SNAP_DAYS.get(rm.group(2))
+            if a and b:
+                i, j = _SNAP_DAY_ORDER.index(a), _SNAP_DAY_ORDER.index(b)
+                found += [_SNAP_DAY_ORDER[(i + n) % 7] for n in range(((j - i) % 7) + 1)]
         if re.search(r"\bweek ?ends?\b", low):
             found += ["Sat", "Sun"]
         for w in re.findall(r"[a-z]+", low):
@@ -38282,7 +38316,9 @@ def _snap_parse_sentence(sentence, city="", conn=None):
     out["days"] = [d for d in _SNAP_DAY_ORDER if d in found]
     for w, d in _SNAP_DAYS.items():
         low = re.sub(r"(?<![\w])" + w + r"(?![\w])", " ", low)
-    low = re.sub(r"\b(every ?day|any ?day|all days|daily|week ?days|week ?ends?|and|&|to|from|on|in|at|around|near|the|i am|i'm|im|available|avail)\b", " ", low)
+    low = re.sub(r"\b(every ?day|any ?day|all days|daily|week ?days|week ?ends?|and|&|to|until|till|through|from|on|in|at|around|near|the|i am|i'm|im|available|avail)\b", " ", low)
+    # SAY-READ-1: how people start the sentence is not the job ("I do gardening", "I can clean", "looking for work as a cook")
+    low = re.sub(r"\b(i|we)\s+(do|can do|can|offer|work as|am a|am an|provide)\b|\b(looking for|need|want)\s+(work|a job|job|piece ?jobs?)(\s+as)?\b|\b(work|job)\s+as\b|\bi\b", " ", low)
     # role (longest name wins)
     hit = _snap_find_name(low, [r[0] for r in _snap_roles()])
     if hit:
@@ -38293,10 +38329,20 @@ def _snap_parse_sentence(sentence, city="", conn=None):
         low = (low[:hit[1]] + " " + low[hit[2]:]).strip()
     # area (door tiles + the city's suburbs, longest first)
     areas = _snap_areas(conn, city)
-    hit = _snap_find_name(low, sorted(areas.keys(), key=lambda k: -len(k)))
-    if hit:
-        out["area"] = areas[hit[0]]
-        low = (low[:hit[1]] + " " + low[hit[2]:]).strip()
+    _anames = sorted(areas.keys(), key=lambda k: -len(k))
+    out["areas"] = []
+    _found = []
+    while len(_found) < 4:                       # SAY-READ-1: "Soshanguve and Akasia" is two areas, never "akasia" in the job
+        hit = _snap_find_name(low, _anames)
+        if not hit:
+            break
+        if areas[hit[0]] not in [a for _, a in _found]:
+            _found.append((hit[1], areas[hit[0]]))
+        low = low[:hit[1]] + " " * (hit[2] - hit[1]) + low[hit[2]:]     # same length, so the order she said them is kept
+    out["areas"] = [a for _, a in sorted(_found)]
+    low = low.strip()
+    if out["areas"]:
+        out["area"] = out["areas"][0]
     # what is left: the item / the typed role, as the fast-find splitter would cut it
     parts, _mx, _mn = _qf_parse_plain(re.sub(r"\s+", " ", low))
     parts = [p.strip(" ,.;-/") for p in parts if p and p.strip(" ,.;-/") and len(p.strip()) > 1]
@@ -38309,6 +38355,8 @@ def _snap_parse_sentence(sentence, city="", conn=None):
         first = parts[0] if re.search(r"[,;]", s) else " ".join(parts)
         i = s.lower().find(first.lower())
         out["item"] = (s[i:i + len(first)] if i >= 0 else first).strip()[:80]
+        if out["item"]:
+            out["item"] = out["item"][0].upper() + out["item"][1:]
     return out
 
 
@@ -38422,14 +38470,19 @@ def _snap_merge(door, vis_key, vf, sp):
         f["what"] = role["label"]
         f["r"] = role["key"]
         f["cls"] = role["cls"]
-    elif sp.get("item") and not f.get("what"):
+    elif sp.get("item") and not f.get("what") and key not in ("homehelp", "services"):
+        # SAY-READ-1: on the work doors "what" is a job from the list; words the reader could not match are not a job
+        # title to publish -- she picks it (the step she lands on, never a guess published, RUL-242(a))
         f["what"] = sp["item"]
         f.setdefault("item", sp["item"])
     if sp.get("price") is not None:
         f["price"] = sp["price"]
     if sp.get("basis"):
         f["basis"] = sp["basis"]
-    if sp.get("area"):
+    if sp.get("areas") and len(sp["areas"]) > 1:
+        f["where"] = ", ".join(sp["areas"])
+        f["where_list"] = list(sp["areas"])
+    elif sp.get("area"):
         f["where"] = sp["area"]
     if sp.get("days"):
         f["days"] = sp["days"]
@@ -38513,7 +38566,7 @@ async def snap_draft(
     if not photos and not sentence:
         raise HTTPException(status_code=400, detail="Add a photo or say one sentence.")
     if len(photos) > _SNAP_MAX_PHOTOS:
-        raise HTTPException(status_code=413, detail="Up to %d photos for a Snap advert." % _SNAP_MAX_PHOTOS)
+        raise HTTPException(status_code=413, detail="Up to %d photos for a Snap listing." % _SNAP_MAX_PHOTOS)
     kind = "both" if (photos and sentence) else ("snap" if photos else "say")
     warnings, vis_key, vf, photo_read = [], door or "localmarket", {}, None
     if photos:
@@ -38560,7 +38613,7 @@ async def snap_draft(
     _snap_log(kind, outcome, key, missing)
     line = ""
     if outcome == "unread":
-        line = "We could not read that photo. Carry on the normal way — your photo stays on the advert."
+        line = "We could not read that photo. Carry on the normal way — your photo stays on the listing."
     elif missing:
         line = "Nearly there — one or two things the photo and your words did not say."
     return {"ok": True, "kind": kind, "cat": key, "flow": "sell", "fields": f, "missing": missing, "confidence": round(conf, 2),

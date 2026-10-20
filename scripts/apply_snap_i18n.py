@@ -18,7 +18,7 @@ W = {
  'Snap or say': ['Kiek of sê', 'Thwebula noma usho', 'Nka setshwantsho kapa o bue', 'Fota okanye uthethe', 'Tšea seswantšho goba o bolele',
    'Fotografía o di', '拍照或说一句', 'Kunan o sabihin', 'Chụp hoặc nói', 'Tynnu llun neu ddweud', 'Pstryknij albo powiedz', 'Pozează sau spune',
    'ਫੋਟੋ ਖਿੱਚੋ ਜਾਂ ਬੋਲੋ', 'صوّر أو قل', '影相或者講'],
- 'A photo, a sentence, or both — the app writes the advert; you check it and tap Publish.': [
+ 'A photo, a sentence, or both — the app writes the listing; you check it and tap Publish.': [
    "'n Foto, 'n sin, of albei — die app skryf die advertensie; jy kyk dit na en tik Publiseer.",
    'Isithombe, umusho, noma kokubili — i-app ibhala isikhangiso; wena uyasihlola bese uthepha Shicilela.',
    'Setshwantsho, polelo, kapa tsohle — app e ngola papatso; o e hlahloba ebe o tobetsa Phatlalatsa.',
@@ -34,7 +34,7 @@ W = {
    'ਇੱਕ ਫੋਟੋ, ਇੱਕ ਵਾਕ, ਜਾਂ ਦੋਵੇਂ — ਐਪ ਇਸ਼ਤਿਹਾਰ ਲਿਖਦੀ ਹੈ; ਤੁਸੀਂ ਜਾਂਚ ਕੇ ਪ੍ਰਕਾਸ਼ਿਤ ਕਰੋ ਦਬਾਓ।',
    'صورة أو جملة أو كلاهما — التطبيق يكتب الإعلان؛ أنت تراجعه وتنقر نشر.',
    '一張相、一句話，或者兩樣都有——App 幫你寫廣告；你睇一睇，撳「發佈」。'],
- 'What kind of advert?': ['Watter soort advertensie?', 'Isikhangiso sohlobo luni?', 'Papatso ya mofuta ofe?', 'Isibhengezo sohlobo luni?',
+ 'What kind of listing?': ['Watter soort advertensie?', 'Isikhangiso sohlobo luni?', 'Papatso ya mofuta ofe?', 'Isibhengezo sohlobo luni?',
    'Papatšo ya mohuta mang?', '¿Qué tipo de anuncio?', '哪一类广告？', 'Anong uri ng anunsyo?', 'Loại quảng cáo nào?', 'Pa fath o hysbyseb?',
    'Jaki rodzaj ogłoszenia?', 'Ce fel de anunț?', 'ਕਿਸ ਕਿਸਮ ਦਾ ਇਸ਼ਤਿਹਾਰ?', 'أي نوع من الإعلانات؟', '邊類廣告？'],
  'Or say it in one sentence': ['Of sê dit in een sin', 'Noma kusho ngomusho owodwa', 'Kapa e bue ka polelo e le nngwe', 'Okanye yithethe ngesivakalisi esinye',
@@ -70,7 +70,7 @@ W = {
    'Escríbelo. El precio, la zona y los días ayudan.', '输入即可。价格、区域和日期会有帮助。', 'I-type mo. Nakakatulong ang presyo, lugar at mga araw.',
    'Gõ vào. Giá, khu vực và các ngày sẽ giúp ích.', "Teipiwch ef. Mae'r pris, yr ardal a'r dyddiau'n helpu.", 'Wpisz. Cena, okolica i dni pomagają.',
    'Scrie-l. Prețul, zona și zilele ajută.', 'ਟਾਈਪ ਕਰੋ। ਕੀਮਤ, ਇਲਾਕਾ ਅਤੇ ਦਿਨ ਮਦਦ ਕਰਦੇ ਹਨ।', 'اكتبها. السعر والمنطقة والأيام تساعد.', '打字就得。價錢、地區同日子都有幫助。'],
- 'Make my advert': ['Maak my advertensie', 'Yenza isikhangiso sami', 'Etsa papatso ya ka', 'Yenza isibhengezo sam', 'Dira papatšo ya ka', 'Crear mi anuncio',
+ 'Make my listing': ['Maak my advertensie', 'Yenza isikhangiso sami', 'Etsa papatso ya ka', 'Yenza isibhengezo sam', 'Dira papatšo ya ka', 'Crear mi anuncio',
    '生成我的广告', 'Gawin ang anunsyo ko', 'Tạo quảng cáo của tôi', 'Gwnewch fy hysbyseb', 'Stwórz moje ogłoszenie', 'Fă-mi anunțul', 'ਮੇਰਾ ਇਸ਼ਤਿਹਾਰ ਬਣਾਓ',
    'أنشئ إعلاني', '整我嘅廣告'],
  'Your phone cannot listen here — type it instead.': ['Jou foon kan nie hier luister nie — tik dit eerder in.', 'Ifoni yakho ayikwazi ukulalela lapha — kunalokho kuthayiphe.',
@@ -110,7 +110,7 @@ W = {
    'Không thành công — không mất gì cả. Vui lòng thử lại.', "Ni weithiodd hynny — ni chollwyd dim. Rhowch gynnig arall.",
    'To się nie udało — nic nie przepadło. Spróbuj ponownie.', 'Nu a mers — nu s-a pierdut nimic. Te rog încearcă din nou.',
    'ਇਹ ਕੰਮ ਨਹੀਂ ਕੀਤਾ — ਕੁਝ ਵੀ ਗੁੰਮ ਨਹੀਂ ਹੋਇਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।', 'لم ينجح ذلك — لم يُفقد شيء. يرجى المحاولة مرة أخرى.', '唔成功——冇嘢唔見咗。請再試一次。'],
- 'Area from your phone — change it on the advert if you work somewhere else.': [
+ 'Area from your phone — change it on the listing if you work somewhere else.': [
    'Area vanaf jou foon — verander dit op die advertensie as jy elders werk.',
    'Indawo evela efonini yakho — yishintshe esikhangisweni uma usebenza kwenye indawo.',
    'Sebaka ho tswa fonong ya hao — se fetole papatsong haeba o sebetsa sebakeng se seng.',
@@ -142,7 +142,7 @@ W = {
    'ਲਗਭਗ ਹੋ ਗਿਆ — ਇੱਕ-ਦੋ ਗੱਲਾਂ ਜੋ ਫੋਟੋ ਅਤੇ ਤੁਹਾਡੇ ਸ਼ਬਦਾਂ ਨੇ ਨਹੀਂ ਦੱਸੀਆਂ।',
    'اقتربنا — شيء أو شيئان لم تقلهما الصورة ولا كلماتك.',
    '就快得——仲有一兩樣嘢張相同你啲話未講到。'],
- 'We could not read that photo. Carry on the normal way — your photo stays on the advert.': [
+ 'We could not read that photo. Carry on the normal way — your photo stays on the listing.': [
    'Ons kon nie daardie foto lees nie. Gaan op die gewone manier voort — jou foto bly op die advertensie.',
    'Asikwazanga ukufunda leso sithombe. Qhubeka ngendlela ejwayelekile — isithombe sakho sihlala esikhangisweni.',
    'Ha re a kgona ho bala setshwantsho seo. Tswela pele ka tsela e tlwaelehileng — setshwantsho sa hao se dula papatsong.',
