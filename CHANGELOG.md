@@ -1,3 +1,48 @@
+## 2026-10-20 — SAY-READ-1 (Goal run 45, GI-0049, RG-1068)
+- Walked Snap/Say live as a stranger the day it was armed. Say turned "I do gardening and cut grass in Soshanguve and Akasia,
+  Monday to Saturday, R300 a day" into a ready-to-publish "i do gardening cut grass akasia — Soshanguve", "Available: Mon, Sat".
+- Sentence reader: day ranges ("Monday to Saturday", "Mon-Fri", "Fri till Mon") are every day between; opening filler ("I do",
+  "I can", "looking for work as") is dropped; up to four areas in the order said; the "-ing" of every -er job ("gardening",
+  "plumbing", "house cleaning") and a few plain phrases ("cut grass", "babysitting", "ironing") find the role; "250 rand a day"
+  measured on the right text; on the work doors words it cannot match leave the job step for her to pick (RUL-242(a)).
+- Quick: several areas travel as areas (first = suburb); an area nobody said and no phone fix is asked, not filled with the
+  city's first tile; "Listening…" gives up after 9 s on a browser that never answers.
+- Local Market photo reader: chest of drawers / cupboard / bookcase read as Furniture, not Crafts.
+- LISTING-WORD-1 (RG-0504, 26 Sep ruling): the Snap screen's five "advert" strings now say "listing" (translations unchanged).
+
+## 2026-10-20 — QUICK-SNAP-1 (RUL-242): the fourth standard flow — a photo, a sentence, Terms acceptance, a live advert (built on branch `snap`, IP hold, NOT merged)
+
+David, 19 Oct 2026: *"Snap or say, then one tap"* → *"go worktree … don't overspend past the current credit … keep track of the progress so that we don't lose it if we reach $0"*.
+
+**Built (worktree `_snap_wt`, 7 units, each committed, SNAP_PROGRESS.md names the next):**
+- **Route:** `POST /listings/snap-draft` — glue over the existing photo reader (vision_draft) and the fast-find sentence splitter + a small Snap mapper (role · area · days · price/basis); area from the phone's fix (nearest suburb) else her city's door; answer = the Quick picks + `missing` (steps it could not fill) + the one line. Flag-dark: 404 unless `launch_switches.quick_snap` (new column, default OFF; /flags + /admin/flags). Counters in `quick_snap_log`; `GET /admin/quick-snap/stats`. Declared in route_policy.json. It never publishes: the advert is made by the ONE publish path (quick-publish, `sign_terms`, RUL-240).
+- **Screens:** Quick's door gains **Snap it** / **Say it** (only while the switch is ON); one screen — door chips, photo (camera / gallery / share sheet), one sentence (the phone's own speech recognition when it has one; the typed box always) → **Make my advert** → the answers are poured into the NORMAL flow and land on "Here is your listing" with **Publish now — I accept the Terms**; her real photo is the advert's photo (PHOTO-KIND-1 hold path unchanged); a step the reader could not fill is the step she lands on, with one line. HARNESS.html byte-identical.
+- **Words:** 21 new strings in all 15 Quick languages through the one generator (`scripts/apply_snap_i18n.py`); How story `stories/quick_snap.json`. No AI model named anywhere.
+- **Dashboard:** switch row "Snap or say" + two counters read from the stats route (NOT MEASURED on a failed read).
+
+**Proofs (20 Oct 2026, 00:30–00:55 UTC):**
+- Route: `scripts/snap_route_proof.py` on a throwaway DB copy — **23/23 PASS** (cleaner sentence → full casuals draft, nothing missing; card photo → Collectors draft, one tap; sentence wins over photo on price/area; honey; phone fix → nearest suburb; unread photo and unplaced sentence → never a dead end, nothing guessed; switch OFF → 404; counters).
+- Rendered: `scripts/snap_render_proof.py` — the worktree page served locally in a headless phone, APIs mocked from the route proof's real answers: door buttons present → Say it → "Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day" → **"Here is your listing"** fully filled → Publish (mocked) → **"Your listing is live."**; Snap it with a photo → Collectors draft with "Your photo"; an unplaced sentence → lands on "What are you selling?" with the one line; switch OFF → no buttons. Pictures: `visuals/snap_*_2026-10-20.png`.
+- One fix found by the rendered proof and kept: `fillAhead()` skips steps already answered (a role's group + what) instead of stopping at them.
+- Stranger test: not runnable in the build VM (it cannot create `/var/www`); it runs at the ship gate, as for every deploy.
+- Ledger: RG-1064..RG-1067 added **OPEN** (they read FAIL on main until merged — expected); all four pass in the worktree. RULINGS.md RUL-242 + rulings_check reflections (branch).
+
+**NOT done, by design:** nothing pushed, nothing deployed, no listing on the live site. **Next (David's word):** merge `snap` → main, ship, I do the live one-tap proof (QA advert, deleted), he arms the switch; then LOCK RG-1064..1067. Credit note: the scheduled run built U1–U5 (01:38–02:04 SAST) on the cloud credit; U6–U7 were finished in David's live session on the subscription after he stopped the schedules.
+
+## 2026-10-20 — QUICK-SNAP-1 merged, shipped and ARMED (David: "Merge" 05:45, "arm snap" 06:01 SAST)
+- 05:58 SAST: branch `snap` merged into main (08d177e) and shipped through the gate (stranger test PASS, QA Bot gate clean, DEPLOY OK 03:58Z) with `launch_switches.quick_snap` = 0: doors hidden, `POST /listings/snap-draft` 404. PROBED from outside: /flags quick_snap false; Quick renders as before.
+- 06:02:27 SAST: `quick_snap` 0 → 1 from the Launch Switch card (David's enrolled laptop Chrome, admin_audit #288). Arming is David's act (RUL-076 §7.4, RUL-242).
+- 06:06 SAST: live one-tap proof, PROBED in the rendered app at phone width — Quick shows Snap it / Say it; Services door; a photo + "Home cleaner, Mamelodi, Tuesdays and Thursdays, R350 a day" → `POST /listings/snap-draft` 200 (kind both, reader confidence 1.0, nothing missing, one `quick_snap_log` row) → "Here is your listing" → ONE tap "Publish now — I accept the Terms" → `users.eula_accepted_at` written, listing #580 live in the same tap (QUICK-SIGN-1 log line), "Your listing is live." on screen, photo on the advert → deleted as the seller (200). Alias dmcontiki2+qa-snap-20261020060552@gmail.com; Casuals, hidden from strangers until a vouch (RUL-115).
+- Ledger: RG-1064..RG-1067 OPEN → LOCKED. Visuals: `Visuals/Snap_Live_Proof_2026-10-20/` (screen set, in the gallery) + `visuals/snap_live_*_2026-10-20.png`.
+- Follow-on (not started): a video advert for the Snap flow (David, 19 Oct: "For this flow we will investigate a good video advert").
+
+## 2026-10-20 — Ops Map NCR & Feedback: the two "major" findings and the "recurring" one (David: "please fix the 2 major findings as well as the 1 recurring one")
+- **TS-0041** (an empty report of listing #482, a demo cleaner listing) — the class was already closed by REPORT-EMPTY-1 (17 Oct) and the reporter answered on 18 Oct. PROBED live 20 Oct: the pre-filled report line alone is refused ("Please tell us a little more"), the same report with words is accepted (probe mode, no row). Register: LIST-041, **verified**, evidence in fix_note.
+- **TS-0042** ("I'm looking for a domestic nanny job") — not a fault. Re-filed **minor / triaged / BROWSE** with the marker note "A question, not a fault report: TrustSquare Support answers it by email." She already has a live listing (#566, Nanny — Centurion, Midrand, Sandton); the agent's held reply is weak, a better one is with David for approval.
+- **SUPPORT-SEVERITY-1** (bea_main.py; RG-1080 OPEN → LOCKED on the live probe; proof `scripts/prove_support_severity.py` A–G ALL PROVEN on a throwaway DB). Class: every support-form message is stored as major before anyone reads it, and nothing re-filed it after. Now the support agent's own verdict (is_report, REF-HONESTY-1) re-files a positively-judged QUESTION as minor (triaged, or closed if the agent answered it); a real report, a message nobody judged (classifier fallback) and any complaint about a listing stay major. Sending a held reply from the Ops Dashboard closes the question's row (marker-gated, never a real fault). Also: the form sends the option's words ("Listing issue"), which never matched SUPPORT_TOPIC_BINS — every support row was MISC; the first word now reaches its bin, and listing complaints bin LIST.
+- **OPSMAP-RECUR-OPEN-1** (dashboard.server.html; RG-1081 LOCKED). The "recur ≥3" chip counted every row ever reported 3+ times, so **TS-0022** (Maroushka's over-blurred covers, fixed 10 Aug, verified 12 Aug) stayed amber for ten weeks. Re-checked 20 Oct: RG-0044 + RG-0047 holding; the nine damaged listings are gone; her current Waterkloof covers (#526, #531) viewed and sharp. The chip now counts only repeat faults still open ("recur ≥3 open") and names the fixed ones in its tooltip; a reopened row counts again at once.
+- Before-board (unrelated to this work, already red at session start): RG-0154, RG-0218, RG-0344, RG-0504 — see ledger_runs/before-20261020-opsmap-ncr.txt.
+
 ## 2026-10-19 — QUICK-SIGN-1 (RUL-240): a new lister signs the Terms and publishes in the same tap — the inbox hop is gone
 
 David, 19 Oct 2026, on the live read of the SMS waves: *"that suggestion is the right way forward and it is the way to reduce that last 3.5% ... Please proceed."*

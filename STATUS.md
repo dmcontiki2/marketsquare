@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-19 - QUICK-SIGN-1 (RUL-240, 19 Oct 2026))
+## Last Completed (2026-10-20 - quick snap 1 merged)
 
-- **QUICK-SIGN-1 (RUL-240, 19 Oct 2026):** a new e-mail lister now signs the Terms on the Quick button ("Publish now — I accept the Terms") and is live in the same tap; the e-mail hop ("We emailed you a link — open it in TrustSquare, read and sign the Terms") is gone for new addresses. Reason: 9 of 14 strangers from the 13–16 Oct SMS waves stopped exactly there. Existing-account addresses still get a draft + sign-in letter. Verified in the rendered app: see changelog fragment for the walk result.
+- 2026-10-20 (David: "Merge", 05:45 SAST) QUICK-SNAP-1 (RUL-242) merged into main (08d177e) and shipped DARK: launch_switches.quick_snap=0, Snap/Say doors hidden, POST /listings/snap-draft 404 until David arms it ("arm snap" -> flipped from his enrolled browser, as the fast lane was). Next: live one-tap proof with a QA photo advert (deleted), then RG-1064..RG-1067 LOCKED. Video advert for the Snap flow is the follow-on.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,12 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 2026-10-20 (David: "Merge", 05:45 SAST) QUICK-SNAP-1 (RUL-242) merged into main (08d177e) and shipped DARK: launch_switches.quick_snap=0, Snap/Say doors hidden, POST /listings/snap-draft 404 until David arms it ("arm snap" -> flipped from his enrolled browser, as the fast lane was). Next: live one-tap proof with a QA photo advert (deleted), then RG-1064..RG-1067 LOCKED. Video advert for the Snap flow is the follow-on.
+
+- 2026-10-20 06:02 SAST: QUICK-SNAP-1 (RUL-242) ARMED by David from his enrolled browser; live one-tap proof passed in the rendered app (photo + sentence → one tap → #580 live with the Terms signed → deleted). RG-1064..RG-1067 LOCKED. The fourth standard flow (Snap or say) is live for everyone on trustsquare.co/quick. Follow-on: a video advert for the Snap flow.
+
+- 2026-10-20 (David: "fix the 2 major findings ... and the 1 recurring one" on the Ops Map NCR layer) TS-0041 verified (empty-report class closed 17 Oct, probed live), TS-0042 re-filed as a question (minor), TS-0022 confirmed fixed in the rendered app. Class fixes SUPPORT-SEVERITY-1 (support questions leave "major" once read; RG-1080) and OPSMAP-RECUR-OPEN-1 (recur chip counts open repeats only; RG-1081). Reply to TS-0042 awaits David's yes.
 
 - **QUICK-SIGN-1 (RUL-240, 19 Oct 2026):** a new e-mail lister now signs the Terms on the Quick button ("Publish now — I accept the Terms") and is live in the same tap; the e-mail hop ("We emailed you a link — open it in TrustSquare, read and sign the Terms") is gone for new addresses. Reason: 9 of 14 strangers from the 13–16 Oct SMS waves stopped exactly there. Existing-account addresses still get a draft + sign-in letter. Verified in the rendered app: see changelog fragment for the walk result.
 
