@@ -13308,14 +13308,19 @@ def rg_wave2_lane_runs_as_documented():
     if not os.path.isdir(cl):
         return [(INFO, "CityLauncher not beside this repo -- wave-lane checks skipped (live-only run)")]
     esrc = open(os.path.join(cl, "emailer", "emailer.py"), encoding="utf-8").read()
-    for needle in ("'adventures_accommodation': TMPL_DIR / 'adventures_accommodation_outreach.html'",
-                   "'adventures_experiences':   TMPL_DIR / 'adventures_experiences_outreach.html'"):
-        if needle not in esrc:
+    # ASSERTION AMENDED 21 Oct 2026 (LETTER-V2 POINTED, RUL-232(e), David 19 Oct: every letter with a .v2 is the one
+    # the wave sends): the property is unchanged -- each raw adventures key maps to ITS OWN letter, never a fuzzy
+    # neighbour's -- but the letter may now be the .v2 copy. The old needle demanded the v1 filename and read red on
+    # an intended change. Not weakened: the key must still be exact, point at its own category's letter, and that
+    # file must exist on disk.
+    import re as _re218
+    for k in ("adventures_accommodation", "adventures_experiences"):
+        m = _re218.search(r"'%s':\s*TMPL_DIR / '(%s_outreach(?:\.v2)?\.html)'" % (k, k), esrc)
+        if not m:
             out.append((FAIL, "TEMPLATES lost the exact adventures key %r -- fuzzy match mails "
-                              "the wrong copy again (ADV-TMPL-1)" % needle.split(':')[0]))
-    for t in ("adventures_accommodation_outreach.html", "adventures_experiences_outreach.html"):
-        if not os.path.exists(os.path.join(cl, "emailer", "templates", t)):
-            out.append((FAIL, "template %s is GONE from disk (ADV-TMPL-1)" % t))
+                              "the wrong copy again (ADV-TMPL-1)" % ("'" + k + "'")))
+        elif not os.path.exists(os.path.join(cl, "emailer", "templates", m.group(1))):
+            out.append((FAIL, "template %s is GONE from disk (ADV-TMPL-1)" % m.group(1)))
     wsrc = open(os.path.join(cl, "emailer", "wave_runner.py"), encoding="utf-8").read()
     if "from emailer import send_freeze" not in wsrc:
         out.append((FAIL, "wave_runner.py lost the package-style send_freeze import -- "

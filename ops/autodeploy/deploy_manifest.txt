@@ -510,3 +510,19 @@ orchestration_v2/templates/intl/AU/sports_club_outreach.html | orchestrator/v2/t
 orchestration_v2/templates/intl/AU/tutor_institution_outreach.html | orchestrator/v2/templates/intl/AU/tutor_institution_outreach.html
 orchestration_v2/templates/intl/AU/tutors_outreach.b.html | orchestrator/v2/templates/intl/AU/tutors_outreach.b.html
 orchestration_v2/templates/intl/AU/tutors_outreach.html | orchestrator/v2/templates/intl/AU/tutors_outreach.html
+# RG-0344 (21 Oct 2026): the .v2 letters the wave now sends (LETTER-V2 POINTED, RUL-232(e)) -- their dashboard previews ship too.
+orchestration_v2/templates/adventures_accommodation_outreach.v2.html | orchestrator/v2/templates/adventures_accommodation_outreach.v2.html
+orchestration_v2/templates/adventures_experiences_outreach.v2.html | orchestrator/v2/templates/adventures_experiences_outreach.v2.html
+orchestration_v2/templates/adventures_outfitter_outreach.v2.html | orchestrator/v2/templates/adventures_outfitter_outreach.v2.html
+orchestration_v2/templates/agency_outreach.v2.html | orchestrator/v2/templates/agency_outreach.v2.html
+orchestration_v2/templates/cars_dealer_outreach.v2.html | orchestrator/v2/templates/cars_dealer_outreach.v2.html
+orchestration_v2/templates/collectors_dealer_outreach.v2.html | orchestrator/v2/templates/collectors_dealer_outreach.v2.html
+orchestration_v2/templates/collectors_outreach.v2.html | orchestrator/v2/templates/collectors_outreach.v2.html
+orchestration_v2/templates/property_outreach.v2.html | orchestrator/v2/templates/property_outreach.v2.html
+orchestration_v2/templates/service_company_outreach.v2.html | orchestrator/v2/templates/service_company_outreach.v2.html
+orchestration_v2/templates/services_casuals_outreach.v2.html | orchestrator/v2/templates/services_casuals_outreach.v2.html
+orchestration_v2/templates/services_technical_outreach.v2.html | orchestrator/v2/templates/services_technical_outreach.v2.html
+orchestration_v2/templates/tour_guide_outreach.v2.html | orchestrator/v2/templates/tour_guide_outreach.v2.html
+orchestration_v2/templates/travel_agency_outreach.v2.html | orchestrator/v2/templates/travel_agency_outreach.v2.html
+orchestration_v2/templates/tutor_institution_outreach.v2.html | orchestrator/v2/templates/tutor_institution_outreach.v2.html
+orchestration_v2/templates/tutors_outreach.v2.html | orchestrator/v2/templates/tutors_outreach.v2.html
