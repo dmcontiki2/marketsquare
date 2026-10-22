@@ -40120,6 +40120,36 @@ def rg_cl_d1_d2_1():
 
 
 
+@entry("RG-1094", "NO-WIPE-1 + PIPE-SETTINGS-1 (David, 22 Oct 2026: 'the Pipelines page is still very old ... the settings page is "
+       "also outdated ... We do not want to lose any data'): the CityLauncher board cannot delete prospects, and its Pipeline "
+       "and Settings tabs read the outreach machine as it runs today",
+       LOCKED, fixed_on="2026-10-22",
+       scope="CityLauncher api/server.py POST /database/clear answers 410 before any DELETE; dashboard has no Clear-database "
+             "button; GET /pipeline/overview + /settings/overview feed the Pipeline tab (sources -> lanes -> live log) and the "
+             "read-only Settings tab (connections, send rules as ruled, cities by country, source health).",
+       ref="The old Settings 'Clear database' button deleted every non-opted-out prospect and its e-mail history in one click; "
+           "its three source toggles and the keyword box were wired to nothing. Rendered in Chrome 22 Oct 2026 20:30 UTC.")
+def rg_cl_no_wipe_1():
+    api, dash = _cl_file("api", "server.py"), _cl_file("dashboard", "citylauncher.html")
+    if api is None or dash is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher not mounted here")]
+    bad = []
+    i = api.find("def database_clear(")
+    seg = api[i:i + 2500] if i >= 0 else ""
+    if seg:
+        j, k = seg.find("status_code=410"), seg.find("DELETE FROM prospects")
+        if j < 0 or (k >= 0 and k < j):
+            bad.append("/database/clear can delete prospects again")
+    if "onclick=\"clearDatabase()\"" in dash:
+        bad.append("the Clear-database button is back on the board")
+    if "@app.get('/pipeline/overview')" not in api or "async function loadPipelineOverview()" not in dash:
+        bad.append("the Pipeline tab no longer reads the live lanes and sources")
+    if "@app.get('/settings/overview')" not in api or 'id="sendRules"' not in dash:
+        bad.append("the Settings tab no longer shows the connections and send rules")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the board cannot delete data; Pipeline and Settings read today's machine")]
+
+
+
 @entry("RG-1030", "SPEC-NARROW-1 + BACKBAR-WIDTH-1 (18 Oct 2026 bug audit, BA-036): a car's spec panel and the Support page fit a "
        "360 px phone -- no sideways slide, nothing clipped off the bottom bar",
        LOCKED, fixed_on="2026-10-18",
