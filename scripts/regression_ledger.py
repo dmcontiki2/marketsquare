@@ -40023,6 +40023,103 @@ def rg_opsmap_recur_open_1():
 
 
 
+@entry("RG-1090", "CREDIT-STOP-1 (CityLauncher review, 22 Oct 2026): the 09:10 SMS run reads the provider's credit before it "
+       "sends -- at R0 (or unreadable) it writes one 'NO CREDIT' line and tries no text",
+       LOCKED, fixed_on="2026-10-22",
+       scope="CityLauncher sms_arm.py cmd_run: credit_left() after the reply/delivery refresh and before the day's budget; "
+             "credit.json written for the board; fail closed on an unreadable credit.",
+       ref="Server sms_events: 384 + 400 + 400 = 1,184 'bulksms 403' fails on 16, 17 and 19 Oct 2026 -- the run kept trying "
+           "400 texts a day at R0 credit. Proven 22 Oct on a throwaway state dir with the real R0 account: ledger 'NO CREDIT', "
+           "wave() called 0 times.")
+def rg_cl_credit_stop_1():
+    src = _cl_file("sms_arm.py")
+    if src is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher not mounted here")]
+    bad = []
+    if "def credit_left(" not in src:
+        bad.append("sms_arm.py no longer reads the SMS credit")
+    i, j = src.find("credit = credit_left()"), src.find("budget = max(0, cap - sent_today())")
+    if i < 0 or j < 0 or i > j:
+        bad.append("the credit check no longer runs before the day's sends")
+    if "if credit <= 0:" not in src:
+        bad.append("an R0 or unreadable credit no longer stops the run (fail closed)")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "no text is tried at R0 credit")]
+
+
+@entry("RG-1091", "SOURCES-FILL-1 (CityLauncher review, 22 Oct 2026): the Gumtree phone refresh runs weekly on the server "
+       "without David, Limpopo (Sepedi) and three Afrikaans towns are read, and all 47 casual roles count as casual trades",
+       LOCKED, fixed_on="2026-10-22",
+       scope="CityLauncher gum_weekly.sh + deploy/citylauncher-gumrefresh.{service,timer} (Sun 02:00 UTC), shipped by "
+             "deploy_citylauncher.bat; scraper/sources/gumtree_refresh.py CITIES (Limpopo province shelf, Kimberley, George, "
+             "Mossel Bay); sms_wave.py REGION_LANG Limpopo=nso; scripts/casual_trades.py ROLE_TITLES (role registry, "
+             "service_class Casuals) + --city ALL.",
+       ref="Review 22 Oct 2026: the refresh was the only live source of SA mobiles (1,372 in Oct) but ran by hand, last 15 Oct; "
+           "0 Sepedi casual numbers; Polokwane's own Job Seekers shelf held 3 adverts, Limpopo's 10.")
+def rg_cl_sources_fill_1():
+    sh, unit, bat = _cl_file("gum_weekly.sh"), _cl_file("deploy", "citylauncher-gumrefresh.timer"), _cl_file("deploy_citylauncher.bat")
+    gr, sw, ct = _cl_file("scraper", "sources", "gumtree_refresh.py"), _cl_file("sms_wave.py"), _cl_file("scripts", "casual_trades.py")
+    if None in (sh, unit, bat, gr, sw, ct):
+        return [(FAIL if sh is None and gr is not None else INFO,
+                 "gum_weekly.sh / its timer is missing" if sh is None and gr is not None else "NOT EVALUATED - CityLauncher not mounted here")]
+    bad = []
+    if "OnCalendar=Sun" not in unit or "citylauncher-gumrefresh.timer" not in bat:
+        bad.append("the weekly refresh timer is not shipped/enabled by deploy_citylauncher.bat")
+    if '"Limpopo"' not in sh or '"Limpopo": ("limpopo"' not in gr:
+        bad.append("Limpopo is no longer read")
+    if '"Limpopo": "nso"' not in sw:
+        bad.append("Limpopo numbers are no longer texted in Sepedi")
+    if "ROLE_TITLES" not in ct or "service_class" not in ct:
+        bad.append("casual_trades.py no longer uses the 47 casual roles")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "weekly refresh, Limpopo and the 47 casual roles in place")]
+
+
+@entry("RG-1092", "TARGET-GROUPS-1 (CityLauncher review, 22 Oct 2026): the CityLauncher board shows every target group by "
+       "language -- e-mail ready, SMS ready, lanes -- and what each is WAITING FOR",
+       LOCKED, fixed_on="2026-10-22",
+       scope="CityLauncher target_groups.py (one category->group map, the wave's SMS gates), api/server.py GET "
+             "/prospects/target-groups, dashboard/citylauncher.html 'Target groups' tab (served at trustsquare.co/launch/).",
+       ref="Review step 7. Rendered in Chrome 22 Oct 2026 04:12 UTC: nine groups, e-mail HELD / SMS HELD / credit R0.00, "
+           "kzn-teachers lanes amber 'held' with 'payday funds'.")
+def rg_cl_target_groups_1():
+    tg, api, dash = _cl_file("target_groups.py"), _cl_file("api", "server.py"), _cl_file("dashboard", "citylauncher.html")
+    if None in (api, dash):
+        return [(INFO, "NOT EVALUATED - CityLauncher not mounted here")]
+    bad = []
+    if tg is None or "CATEGORY_GROUP" not in tg or "waiting_for" not in tg:
+        bad.append("target_groups.py (the one map + waiting-for) is gone")
+    if "@app.get('/prospects/target-groups')" not in api:
+        bad.append("the board's /prospects/target-groups endpoint is gone")
+    if 'id="tab-target"' not in dash or "async function loadTargetGroups()" not in dash:
+        bad.append("the Target groups tab is gone from the board")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "the board shows every target group and what it waits for")]
+
+
+@entry("RG-1093", "D1-PAUSE-1 + D2-HOLD-1 (David, 22 Oct 2026: 'D1 - please stop it till we say go, D2 - please proceed "
+       "Claude, but on hold for the R400 funds at payday'): no deploy restarts the paused search engine, and the KZN teacher "
+       "lanes stay held until his payday word",
+       LOCKED, fixed_on="2026-10-22",
+       scope="Server: citylauncher-scraper.service + citylauncher-strategist.service stopped and disabled (units kept). "
+             "deploy_citylauncher.bat must never enable/start them. sms_arm.py HELD_LANES kzn-teachers-dbn / -pmb: state "
+             "'held', hold reason names the payday funds; the same two lanes sit held in the WaveSession2 lane file.",
+       ref="Review 22 Oct 2026: the engine searched US cities 24/7 (30 CPU-min in 3.5 days) and added no prospect since 13 Oct. "
+           "KZN lanes: 356 + 423 may text, isiZulu in one SMS part each (about R160 at R0.20 a part).")
+def rg_cl_d1_d2_1():
+    bat, arm = _cl_file("deploy_citylauncher.bat"), _cl_file("sms_arm.py")
+    if bat is None or arm is None:
+        return [(INFO, "NOT EVALUATED - CityLauncher not mounted here")]
+    import re as _re
+    bad = []
+    if _re.search(r"(enable|start|restart)[^\n]*citylauncher-(scraper|strategist)", bat):
+        bad.append("deploy_citylauncher.bat would restart the search engine David paused (D1)")
+    for lane in ("kzn-teachers-dbn", "kzn-teachers-pmb"):
+        i = arm.find('"id": "%s"' % lane)
+        seg = arm[i:i + 500] if i >= 0 else ""
+        if not seg or '"state": "held"' not in seg or "PAYDAY_HOLD" not in seg:
+            bad.append("%s is no longer held for David's payday word (D2)" % lane)
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "engine stays paused across deploys; KZN lanes held for payday")]
+
+
+
 @entry("RG-1030", "SPEC-NARROW-1 + BACKBAR-WIDTH-1 (18 Oct 2026 bug audit, BA-036): a car's spec panel and the Support page fit a "
        "360 px phone -- no sideways slide, nothing clipped off the bottom bar",
        LOCKED, fixed_on="2026-10-18",
