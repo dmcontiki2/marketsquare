@@ -1571,7 +1571,7 @@ REFLECTIONS = {
  "RUL-244": [
    # David, 23 Oct 2026: "non $20 subscribers should land on a visual explaining advert page ... subscribers ... their AI PA page"
    ("RULINGS.md", ["THE AI PA DOOR"], []),
-   ("bea_main.py", ['@app.get("/pa")', '@app.get("/pa/about")', 'url="/pa/about"'], []),
+   ("bea_main.py", ['@app.get("/pa")', '@app.get("/pa/about")', 'content="0;url=/pa/about"'], []),
    ("pa.html", ["/squire/status", "/squire/brief"], []),
    ("pa_about.html", ["Included in Pro", "/?go=plans"], []),
  ],

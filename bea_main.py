@@ -8323,18 +8323,26 @@ def door_page():
 @app.get("/pa")
 def pa_page(ts_user: str = Cookie(default=None)):
     """The AI PA page for a Pro subscriber; everyone else lands on the explainer (David, 23 Oct 2026)."""
-    from fastapi.responses import RedirectResponse as _DoorRR
+    # PA-GATE-1 (23 Oct 2026): /pa is the Pro page, so anyone else is REFUSED (401) -- with a one-line page that sends
+    # them on to the explainer. It used to 302 to /pa/about; the QA Bot follows redirects, read the explainer as "data
+    # for a stranger" and rolled back every deploy after the door was armed. The door itself sends a non-Pro
+    # straight to /pa/about, so a person never sees this refusal.
+    from fastapi.responses import HTMLResponse as _DoorHR
     if not _one_door_on():
         raise HTTPException(status_code=404, detail="Not found")
     em = _session_email(ts_user)
-    if not em:
-        return _DoorRR(url="/pa/about", status_code=302)
-    conn = database.get_db()
-    try:
-        pro = _seller_tier_of(conn, em) == "pro"
-    finally:
-        conn.close()
-    return _door_page("pa.html") if pro else _DoorRR(url="/pa/about", status_code=302)
+    pro = False
+    if em:
+        conn = database.get_db()
+        try:
+            pro = _seller_tier_of(conn, em) == "pro"
+        finally:
+            conn.close()
+    if pro:
+        return _door_page("pa.html")
+    return _DoorHR(status_code=401, headers={"Cache-Control": "no-store"},
+                   content='<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=/pa/about">'
+                           '<a href="/pa/about">AI PA</a>')
 
 @app.get("/pa/about")
 def pa_about_page():

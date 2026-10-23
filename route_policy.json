@@ -2563,8 +2563,8 @@
   },
   {
    "key": "GET /pa",
-   "level": "public",
-   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. Pro session -> the AI PA page; anyone else is redirected to /pa/about."
+   "level": "user",
+   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): 404 while launch_switches.one_door is OFF. PA-GATE-1 (23 Oct 2026): a Pro session gets the AI PA page; anyone else is refused 401 with a one-line page that sends them on to /pa/about (the door sends a non-Pro there directly)."
   },
   {
    "key": "GET /pa/about",

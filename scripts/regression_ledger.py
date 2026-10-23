@@ -40666,7 +40666,7 @@ def rg_one_door_1_server():
     for needle in ("ADD COLUMN one_door", "ADD COLUMN interest_categories", "ADD COLUMN last_app", '"one_door": b("one_door")',
                    "def _one_door_on()", "def _door_note_interest(", '@app.get("/door/me")', '@app.post("/door/last")',
                    '@app.get("/pa/about")', "_door_note_interest(conn, intro.buyer_email, listing[\"category\"])",
-                   "FROM demand_prospects", 'url="/pa/about"'):
+                   "FROM demand_prospects", 'content="0;url=/pa/about"', 'status_code=401'):
         if needle not in py:
             bad.append("bea_main.py lacks %r" % needle)
     for k in ("GET /door", "GET /door/me", "POST /door/last", "GET /pa", "GET /pa/about"):

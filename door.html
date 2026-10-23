@@ -258,6 +258,7 @@ function tick(now){ var dt=Math.min(64,now-t0); t0=now;
 
 /* the tap: anywhere opens the app of that type; an AI PA card opens the AI PA door; an advert on TrustSquare opens that advert */
 function go(app,url){
+  if(app===PAAPP&&!url) url=ME.pro?"/pa":"/pa/about";   // PA-GATE-1: a non-Pro goes straight to the explainer; /pa refuses him (401)
   try{ localStorage.setItem("ts_last_app",app.key); }catch(e){}
   try{ fetch("/door/last",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({app:app.key}),keepalive:true}).catch(function(){}); }catch(e){}
   location.href=url||app.url;

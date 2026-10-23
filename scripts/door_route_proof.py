@@ -55,7 +55,9 @@ class RedirectResponse:
     def __init__(self, url, status_code=302): self.url, self.status_code, self.kind = url, status_code, "redirect"
 class JSONResponse:
     def __init__(self, content, media_type=None, headers=None): self.content, self.kind = content, "json"
-_fr = types.ModuleType("fastapi.responses"); _fr.FileResponse = FileResponse; _fr.RedirectResponse = RedirectResponse; _fr.JSONResponse = JSONResponse
+class HTMLResponse:
+    def __init__(self, content="", status_code=200, headers=None, media_type=None): self.content, self.status_code, self.kind = content, status_code, "html"
+_fr = types.ModuleType("fastapi.responses"); _fr.FileResponse = FileResponse; _fr.RedirectResponse = RedirectResponse; _fr.JSONResponse = JSONResponse; _fr.HTMLResponse = HTMLResponse
 _fa = types.ModuleType("fastapi"); _fa.responses = _fr
 sys.modules.setdefault("fastapi", _fa); sys.modules["fastapi.responses"] = _fr
 _ffm = types.ModuleType("feature_flags"); _ffm.squire_pro_pa_on = lambda: False; sys.modules["feature_flags"] = _ffm
@@ -129,8 +131,8 @@ expect_status(g["door_last"], 400, "unknown category refused", BaseModel(choice=
 g["door_last"](BaseModel(choice=""), "tp"); check(g["door_me"]("tp")["choice"] is None, "choice cleared with an empty category")
 r = g["door_last"](BaseModel(choice="property"), None); check(r["stored"] is False, "signed out -> choice not stored (the phone keeps it)")
 # 7
-r = g["pa_page"]("ta"); check(getattr(r, "kind", "") == "redirect" and r.url == "/pa/about", "non-Pro -> /pa/about")
-r = g["pa_page"](None); check(getattr(r, "kind", "") == "redirect", "signed out -> /pa/about")
+r = g["pa_page"]("ta"); check(getattr(r, "kind", "") == "html" and r.status_code == 401 and "/pa/about" in r.content, "non-Pro -> refused 401, sent on to /pa/about (PA-GATE-1)")
+r = g["pa_page"](None); check(getattr(r, "kind", "") == "html" and r.status_code == 401, "signed out -> refused 401 (PA-GATE-1)")
 r = g["pa_page"]("tp"); check(getattr(r, "kind", "") == "file" and r.path.endswith("pa.html"), "Pro -> pa.html")
 r = g["door_page"](); check(r.path.endswith("door.html"), "/door serves door.html")
 c.close()
