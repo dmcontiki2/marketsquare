@@ -5,7 +5,26 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 20 Oct 2026 (run 45): nothing new needs you; GI-0049 shipped. GI-0044 still held by RUL-241.* *Was: Open actions only — updated 19 Oct 2026 evening: GI-0048 rejected by David (no bypass of two free adverts); GI-0044 held by RUL-241 (WaveSession2).* *Was: Open actions only — updated 19 Oct 2026 (GI-0041 done; GI-0044 held by David).*
+*Open actions only — updated 23 Oct 2026 (run 46): GI-0051 is new (a question, not a blocker); GI-0050 shipped. GI-0044 still held by RUL-241.*
+
+### GI-0051 — REVIEW NOW (23 Oct, run 46): a cold stranger's first button is the Pro pitch
+- **What I saw:** since your 18:15 SAST release a fresh phone with no account lands on `/door` with a red **AI PA** pill top and
+  bottom (RUL-247: the door at rest is the AI PA door). Tapping it opens `/pa/about`: "$20 · R360 Included in Pro · Go Pro · Sign in".
+  The only other ways on are "‹ Back" and a small "TrustSquare" at the top right. Nothing errors.
+- **Why it matters:** the people outreach will bring back (casual workers from an SMS, a collector from a letter) arrive wanting to
+  list for free; their first tap now meets a monthly price before they have seen an advert or Sell.
+- **Why it is yours:** your ruling, shaped live today; I did not touch the door.
+- **Recommend (either, both small):** (a) a visitor with no account and no `door/last` rests on TrustSquare, AI PA one stop away; or
+  (b) `/pa/about` carries one free line under Go Pro — "Just selling? List free in TrustSquare →". I can build either on your word.
+
+### GI-0050 — SHIPPED 23 Oct (run 46): COL-QTY-1 — a Collectors read titled "Collection" fills Quantity
+- Evidence: `docs/E2E_2026-10-23.md` step 6 — a tray of coins read as "Mixed Vintage Coin Collection" left Quantity "—".
+- Change: `ms.js` sfApplyDraft (Collectors) fills a blank Quantity with Collection / Set from the read's own title, never Single item. RG-1100.
+- Size: small. Shipped 3fca29d (CLOUD-SHIP-1 16:24Z, deployed 16:27Z). Live proof: same photo → Quantity "Collection".
+- How we know it worked: fewer Collectors drafts left with Quantity blank (tiny volume; mostly a friction cut).
+
+
+*Was (20 Oct, run 45): nothing new needs you; GI-0049 shipped.* *Was: Open actions only — updated 19 Oct 2026 evening: GI-0048 rejected by David (no bypass of two free adverts); GI-0044 held by RUL-241 (WaveSession2).* *Was: Open actions only — updated 19 Oct 2026 (GI-0041 done; GI-0044 held by David).*
 
 ### GI-0048 — REJECTED 19 Oct (withdrawn): no bypass of the two free adverts
 - David, 19 Oct: "it is a lot for someone earning only R250, but for consistency and simplicity we stick world wide to a single cost structure. If a free user can be helped for any one of two free adverts, then we have been successful. For a million users to have 5+ free listings and just leaving them without ever deleting is a cost on our resources and will make the profit margins dissapear."

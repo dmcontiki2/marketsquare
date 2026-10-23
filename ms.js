@@ -24256,6 +24256,10 @@ function sfApplyDraft(d){
     var yr=(d.year!=null && String(d.year).trim()) ? String(d.year).trim().slice(0,40) : ((String(d.title||'').match(/\b(1[0-9]{3}|20[0-2][0-9])\b/)||[])[0]||'');
     if(yr && !A.era) A.era=yr;
     if(d.maker && !A.maker) A.maker=String(d.maker).slice(0,80);
+    /* COL-QTY-1 (Goal run 46, 23 Oct 2026): the read titled a tray of coins "Mixed Vintage Coin Collection" and left Quantity
+       "--". Its own title fills the blank -- only Collection or Set, only from the title, never a guess at "Single item". */
+    var _qt=String(d.title||'');
+    if(!A.qty){ if(/\bcollection\b/i.test(_qt)) A.qty='Collection'; else if(/\b(set|lot)\b/i.test(_qt)) A.qty='Set'; }
   }
 }
 function sfColType(d){   // COL-DRAFT-1: the read's item type onto the Collectors Category list, else from its own words
