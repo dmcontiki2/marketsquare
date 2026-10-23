@@ -1,3 +1,5 @@
+- **DOOR-TOUCH-1 + DOOR-SYNC-1 (23 Oct 2026):** a finger now scrolls the door stream on a phone (real touch events; the pointer drag was cancelled by the phone browser), and the bottom button always opens what the top slider shows -- it used to let the tap fall through to the card scrolling underneath it (an AI PA card or an advert). The slider also re-syncs after a back-navigation. Render proof 21/21.
+
 - **DOOR-SPEED-1 (23 Oct 2026):** the door feels quicker -- the collage turns a pane every 0.9 s (was 1.4 s) with a 1 s fade, the stream drifts at 45 px/s (was 28), and a finger or mouse wheel now scrolls the stream (a drag never opens anything; the drift resumes 2.5 s after). Render proof 19/19.
 
 - **RUL-247 (23 Oct 2026):** the door at rest (slider left) is now the AI PA door -- "Tap to meet your AI PA" opens /pa; TrustSquare stays the right stop. Render proof 18/18.
