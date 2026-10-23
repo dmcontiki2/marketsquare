@@ -5,6 +5,28 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 46 — Fri 23 Oct 2026, 15:56–16:45 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun46_wtest`). SSH via
+  `load_sandbox_ssh.sh` worked. Built in server worktree `/root/w46` (removed at the end), shipped `claude/goal-run46` 3fca29d via
+  CLOUD-SHIP-1 (16:24Z, deployed 16:27Z). No runs on 21–22 Oct (none recorded here).
+- **Today's other lane (David live all day):** the door — RUL-247…250, DOOR-TWIN/TOUCH/SYNC/SPEED-1, PA-GATE-1; releases to 18:15 SAST.
+  The door changed under this run's walk (AI PA pill at rest). Not touched by this run.
+- **THE NUMBER: still 6** (#542, #544, #554, #562, #565, #566). Live 147. No listing created or changed since 20 Oct; users seq
+  2077 vs max id 2025 (other lanes' QA created and removed). No outreach (RUL-241).
+- **Where people stop:** nobody came. Every bot=0 session since run 45 is David's iPhone (same minutes as admin calls).
+- **Walk:** stranger's first minutes, Collectors, Cape Town: door → Home → Change country → Sell → Collectors → photo → six steps →
+  score card. Clean; stopped at Publish (safety layer). `docs/E2E_2026-10-23.md`.
+- **Shipped (GI-0050, RG-1100):** COL-QTY-1 — the read's "…Collection"/"Set" title fills a blank Quantity. Live proof 16:3xZ: Quantity "Collection".
+- **REVIEW NOW:** GI-0051 — a cold stranger's first door button now opens the $20 Pro pitch (`/pa/about`); recommend resting a
+  no-account visitor on TrustSquare or a free "List free" line on /pa/about. GI-0044 held under RUL-241.
+- **Ledger:** new tree 1 !!!! (RG-0805, also red on base); base `/opt/marketsquare-src` (17 behind origin): RG-0229, 0230, 0247, 0276,
+  0344, 0403, 0805, 0987, 1090–1094 (other lanes').
+- **Seen, not changed:** tapping a stop's label on the door slider does nothing (only the knob moves); Collectors' drafted
+  description lands in "Provenance & history".
+- **QA data:** none created (nothing saved; one vision-draft read per walk, three walks).
+- **Not reached:** the publish tap and the fair-price / introduction legs (safety layer).
+
 ## RUN 45 — Tue 20 Oct 2026, 15:55–16:45 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun45_wtest`). SSH via
