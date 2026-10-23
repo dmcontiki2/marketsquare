@@ -1,7 +1,7 @@
 """door_render_proof.py -- ONE-DOOR-1 (DOOR_BRIEF.md U6): the door, the AI PA page and the explainer RENDERED in a headless
 phone (Playwright Chromium, 390x844). door.html / pa.html / pa_about.html come from this repo, the pictures from assets/door,
 the listings are the app's own Pretoria view (a saved copy of GET /listings); /door/me, /squire/status and every tap are
-mocked, so nothing is written anywhere. 18 checks: collage, last app, interest filter, advert tap, Snap tap, AI PA door,
+mocked, so nothing is written anywhere. 19 checks: collage, last app, interest filter, advert tap, Snap tap, AI PA door,
 AI PA page + new brief body, explainer, Afrikaans.
 Usage: python3 scripts/door_render_proof.py <listings.json saved from https://trustsquare.co/listings?city=Pretoria> [out_dir]"""
 import json, os, re, urllib.request, urllib.parse, sys
@@ -78,13 +78,19 @@ with sync_playwright() as p:
     cats = set(pg.eval_on_selector_all(".ad .cat", "e=>e.map(x=>x.textContent)"))
     check(cats == {"Collectors"}, "interest Collectors: only Collectors adverts (%s)" % sorted(cats))
     check("from your public adverts" in pg.inner_text("#ibar"), "the line says where the interest came from")
-    first = pg.locator(".ad").first; lid = first.get_attribute("data-id"); first.click(); pg.wait_for_timeout(1200)
+    lid = pg.evaluate("()=>{const e=document.elementFromPoint(195,480).closest('.ad');return e?e.dataset.id:null}"); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
     check(("nav", ORIGIN + "/?listing=" + lid) in calls, "TrustSquare: tapping an advert opens that advert (/?listing=%s)" % lid)
     check(any(c[0] == "last" and '"ts"' in c[1] for c in calls), "the tap records the last app (ts)"); ctx.close()
     # 4 Snap: tap anywhere opens Snap
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 1); pg.wait_for_timeout(1500)
     pg.screenshot(path=OUT + "/4_snap.png"); pg.mouse.click(195, 760); pg.wait_for_timeout(1200)
     check(("nav", ORIGIN + "/quick/?p=snap") in calls, "Snap: a tap opens Snap (/quick/?p=snap)"); ctx.close()
+    # 4b DOOR-SPEED-1: a finger drag scrolls the stream and is never a tap
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1500)
+    n0 = len(calls); t0 = pg.eval_on_selector("#lane", "e=>e.style.transform")
+    pg.mouse.move(195, 600); pg.mouse.down(); pg.mouse.move(195, 450, steps=8); pg.mouse.move(195, 300, steps=8); pg.mouse.up(); pg.wait_for_timeout(600)
+    t1 = pg.eval_on_selector("#lane", "e=>e.style.transform")
+    check(t0 != t1 and not any(c[0] == "nav" for c in calls[n0:]), "a finger drag scrolls the stream (%s -> %s) and opens nothing" % (t0, t1)); ctx.close()
     # 5 AI PA card -> /pa (Pro) -> the AI PA page
     ME.update(pro=True)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 2); pg.wait_for_timeout(1500)

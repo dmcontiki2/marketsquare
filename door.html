@@ -18,13 +18,13 @@ html,body{margin:0;height:100%;background:var(--night);color:var(--white);font-f
 .collage{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.25fr 1fr 1.15fr 1fr;gap:3px;transition:opacity 1s ease}
 .pane{position:relative;overflow:hidden;background:#111}
 .pane.wide{grid-column:1 / 3}
-.pane img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.6s ease;transform-origin:var(--ox,50%) var(--oy,50%)}
+.pane img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease;transform-origin:var(--ox,50%) var(--oy,50%)}
 .pane img.on{opacity:1;animation:drift 9s ease-out forwards}
 @keyframes drift{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.16) translate(var(--dx,-2%),var(--dy,-1%))}}
 .veil{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.72) 100%)}
 .mark{position:absolute;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--serif);font-size:30px;letter-spacing:.02em;text-shadow:0 2px 18px rgba(0,0,0,.6);transition:opacity .8s;pointer-events:none}
 .mark small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;opacity:.8;margin-top:4px}
-.stream{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;pointer-events:none;overflow:hidden;background:var(--night)}
+.stream{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;pointer-events:none;overflow:hidden;background:var(--night);touch-action:none}
 .stream.show{opacity:1;pointer-events:auto}
 .lane{display:flex;flex-direction:column;gap:6px;padding:calc(140px + env(safe-area-inset-top,0px)) 8px 0;will-change:transform;max-width:560px;margin:0 auto}
 .ad,.pa{position:relative;border-radius:16px;overflow:hidden;flex:0 0 auto;background:#111}
@@ -116,7 +116,7 @@ function buildCollage(){
   $("collage").innerHTML=PANES.map(function(w,i){return '<div class="pane'+(w?' wide':'')+'" id="pane'+i+'"><img alt=""><img alt=""></div>';}).join("");
   PANES.forEach(function(w,i){ show(i,(i*5)%COL.length); });
   var turn=0; setInterval(function(){ if(cur>0||document.hidden) return; var i=turn%PANES.length; turn++;
-    show(i,(+$("pane"+i).dataset.n+PANES.length+1)%COL.length); },1400);
+    show(i,(+$("pane"+i).dataset.n+PANES.length+1)%COL.length); },900);   // DOOR-SPEED-1: livelier collage (was 1400)
 }
 function show(i,n){
   var el=$("pane"+i), im=el.querySelectorAll("img"), a=im[0].classList.contains("on")?im[1]:im[0], b=a===im[0]?im[1]:im[0];
@@ -175,7 +175,10 @@ function buildLane(){
 }
 var t0=performance.now(), reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 function tick(now){ var dt=Math.min(64,now-t0); t0=now;
-  if(cur>0&&!reduce&&!document.hidden){ var l=$("lane"), per=l.scrollHeight/3; off+=dt*0.028; if(per>0&&off>=per) off-=per; l.style.transform="translateY("+(-off)+"px)"; }
+  if(cur>0&&!document.hidden){ var l=$("lane"), per=l.scrollHeight/3;
+    if(!drag&&!reduce&&now>held) off+=dt*0.045;   // DOOR-SPEED-1: was 0.028
+    if(per>0){ while(off>=per) off-=per; while(off<0) off+=per; }
+    l.style.transform="translateY("+(-off)+"px)"; }
   requestAnimationFrame(tick); }
 
 /* the tap: anywhere opens the app of that type; an AI PA card opens the AI PA door; an advert on TrustSquare opens that advert */
@@ -184,7 +187,15 @@ function go(app,url){
   try{ fetch("/door/last",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({app:app.key}),keepalive:true}).catch(function(){}); }catch(e){}
   location.href=url||app.url;
 }
+/* DOOR-SPEED-1: a finger (or mouse wheel) scrolls the stream; the drift resumes 2.5 s after she lets go. A drag is never a tap. */
+var drag=null, held=0, moved=false;
+$("stream").addEventListener("pointerdown",function(e){ drag={y:e.clientY,o:off}; moved=false; });
+window.addEventListener("pointermove",function(e){ if(!drag) return; var d=drag.y-e.clientY; if(Math.abs(d)>8) moved=true; if(moved) off=drag.o+d; });
+window.addEventListener("pointerup",function(){ if(drag){ drag=null; held=performance.now()+2500; } });
+window.addEventListener("pointercancel",function(){ drag=null; held=performance.now()+2500; });
+$("stream").addEventListener("wheel",function(e){ off+=e.deltaY; held=performance.now()+2500; e.preventDefault(); },{passive:false});
 $("door").addEventListener("click",function(e){
+  if(moved){ moved=false; return; }
   var pa=e.target.closest&&e.target.closest("[data-pa]"); if(pa){ go(PAAPP); return; }
   var a=APPS[cur]||PAAPP;   // RUL-247: a tap on the collage opens the AI PA door
   var ad=e.target.closest&&e.target.closest(".ad");

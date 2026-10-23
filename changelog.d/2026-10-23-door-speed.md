@@ -1,0 +1,1 @@
+- **DOOR-SPEED-1 (23 Oct 2026):** the door feels quicker -- the collage turns a pane every 0.9 s (was 1.4 s) with a 1 s fade, the stream drifts at 45 px/s (was 28), and a finger or mouse wheel now scrolls the stream (a drag never opens anything; the drift resumes 2.5 s after). Render proof 19/19.
