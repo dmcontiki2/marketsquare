@@ -1,0 +1,109 @@
+"""door_render_proof.py -- ONE-DOOR-1 (DOOR_BRIEF.md U6): the door, the AI PA page and the explainer RENDERED in a headless
+phone (Playwright Chromium, 390x844). door.html / pa.html / pa_about.html come from this repo, the pictures from assets/door,
+the listings are the app's own Pretoria view (a saved copy of GET /listings); /door/me, /squire/status and every tap are
+mocked, so nothing is written anywhere. 18 checks: collage, last app, interest filter, advert tap, Snap tap, AI PA door,
+AI PA page + new brief body, explainer, Afrikaans.
+Usage: python3 scripts/door_render_proof.py <listings.json saved from https://trustsquare.co/listings?city=Pretoria> [out_dir]"""
+import json, os, re, urllib.request, urllib.parse, sys
+from playwright.sync_api import sync_playwright
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+W = ROOT + "/"
+A = os.environ.get("DOOR_ASSETS", os.path.join(ROOT, "assets", "door")) + "/"
+OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "visuals", "door_proof"); os.makedirs(OUT, exist_ok=True)
+LIST = open(sys.argv[1]).read()
+ORIGIN = "https://trustsquare.co"
+calls = []
+ME = {"signed_in": False, "interest": [], "via": None, "last_app": None, "pro": False, "squire_pa": False}
+SQ = {"pro": True, "tier": "pro", "included": 20, "allowance": {"used": 3, "limit": 20},
+      "briefs": [{"id": 7, "kind": "buy", "category": "Collectors", "need_text": "A Krugerrand from the 1970s under R40 000, Pretoria", "rules": {"max_price": 40000, "buy_discount_pct": 10},
+                  "matches": 4, "new_matches": 1, "pa": None}],
+      "alerts": [{"kind": "buy", "urgency": "high", "title": "SA Krugerrand Collection · 1967–1985 matches your rule", "body": "R 32 000 · 9% under the band · Centurion"}],
+      "reports": [{"period": "2026-09", "body": {"title": "Squire monthly report — Collectors — 2026-09", "matches": 4,
+                   "movement": ["Median asking of matching listings: R 34 500 (first month on record)"], "reality": "2 of 4 matches meet your rule today."}}]}
+cache = {}
+def ext(url):
+    if url not in cache:
+        try: cache[url] = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=30).read()
+        except Exception: cache[url] = b""
+    return cache[url]
+def handler(route, request):
+    u = urllib.parse.urlparse(request.url); path = u.path
+    def ok(body, ct): route.fulfill(status=200, body=body, headers={"Content-Type": ct})
+    if u.netloc != "trustsquare.co":
+        b = ext(request.url); return ok(b, "image/jpeg") if b else route.fulfill(status=404, body="")
+    if path == "/door": return ok(open(W + "door.html", "rb").read(), "text/html")
+    if path == "/pa": return ok(open(W + "pa.html", "rb").read(), "text/html")
+    if path == "/pa/about": return ok(open(W + "pa_about.html", "rb").read(), "text/html")
+    if path.startswith("/static/door/"): return ok(open(A + path.split("/")[-1], "rb").read(), "image/jpeg")
+    if path == "/door/me": return ok(json.dumps(ME), "application/json")
+    if path == "/quick/me": return ok(json.dumps({"city": "Pretoria", "geo": {"city": "Pretoria"}}), "application/json")
+    if path == "/listings": return ok(LIST, "application/json")
+    if path == "/door/last": calls.append(("last", request.post_data)); return ok('{"ok":true,"stored":true}', "application/json")
+    if path == "/squire/status": return ok(json.dumps(SQ), "application/json")
+    if path == "/squire/brief" and request.method == "POST": calls.append(("brief", request.post_data)); return ok('{"brief_id":8}', "application/json")
+    if path.startswith("/squire/brief/") and path.endswith("/shortlist"):
+        L = json.loads(LIST); col = [l for l in L if l.get("category") == "Collectors"][:3]
+        return ok(json.dumps({"shortlist": [{"listing_id": l["id"], "reasons": ["trust %s" % l.get("trust_score"), "matches your chip"], "listing": {"title": l["title"], "price": l["price"]}} for l in col]}), "application/json")
+    if path.startswith("/static/") or path.startswith("/media/"):
+        b = ext(ORIGIN + path); return ok(b, "image/jpeg") if b else route.fulfill(status=404, body="")
+    # any app the door opens: a stub page that names where we landed
+    calls.append(("nav", request.url)); return ok("<html><body style='background:#fff'><h1>landed: %s</h1></body></html>" % request.url, "text/html")
+res = []
+def check(c, what): res.append(("PASS" if c else "FAIL", what)); print(("PASS " if c else "FAIL ") + what)
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    def page(lang="en"):
+        ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, locale=lang)
+        ctx.route("**/*", handler); pg = ctx.new_page(); errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e))); return ctx, pg, errs
+    def slide(pg, v): pg.evaluate("v=>{const s=document.getElementById('slider');s.value=v;s.dispatchEvent(new Event('input'))}", v)
+    # 1 first-time visitor: collage at rest
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(3500)
+    pg.screenshot(path=OUT + "/1_open_collage.png")
+    check(pg.locator("#collage .pane img.on").count() >= 5, "opening: the collage is showing journey photographs")
+    check("Tap to continue in TrustSquare" in pg.inner_text("#tap"), "opening: one tap continues in the last app (TrustSquare by default)")
+    # 2 slide to TrustSquare, no interest -> everything near you
+    slide(pg, 3); pg.wait_for_timeout(2500); pg.screenshot(path=OUT + "/2_trustsquare_everything.png")
+    n_ads = pg.locator(".ad").count(); n_pa = pg.locator(".pa").count()
+    check(n_ads > 10 and n_pa > 2, "TrustSquare: local adverts (%d) with AI PA cards woven in (%d)" % (n_ads, n_pa))
+    check("Everything near you" in pg.inner_text("#ibar"), "no interest known -> 'Everything near you'")
+    check(not errs, "no script errors (%s)" % errs[:1]); ctx.close()
+    # 3 interest from the prospect row: Collectors
+    ME.update(signed_in=True, interest=["Collectors"], via="prospect", last_app="quick", pro=False)
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(2500)
+    check("Tap to continue in Quick" in pg.inner_text("#tap"), "last app from the profile: Quick")
+    slide(pg, 3); pg.wait_for_timeout(2500); pg.screenshot(path=OUT + "/3_interest_collectors.png")
+    cats = set(pg.eval_on_selector_all(".ad .cat", "e=>e.map(x=>x.textContent)"))
+    check(cats == {"Collectors"}, "interest Collectors: only Collectors adverts (%s)" % sorted(cats))
+    check("from your public adverts" in pg.inner_text("#ibar"), "the line says where the interest came from")
+    first = pg.locator(".ad").first; lid = first.get_attribute("data-id"); first.click(); pg.wait_for_timeout(1200)
+    check(("nav", ORIGIN + "/?listing=" + lid) in calls, "TrustSquare: tapping an advert opens that advert (/?listing=%s)" % lid)
+    check(any(c[0] == "last" and '"ts"' in c[1] for c in calls), "the tap records the last app (ts)"); ctx.close()
+    # 4 Snap: tap anywhere opens Snap
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 1); pg.wait_for_timeout(1500)
+    pg.screenshot(path=OUT + "/4_snap.png"); pg.mouse.click(195, 760); pg.wait_for_timeout(1200)
+    check(("nav", ORIGIN + "/quick/?p=snap") in calls, "Snap: a tap opens Snap (/quick/?p=snap)"); ctx.close()
+    # 5 AI PA card -> /pa (Pro) -> the AI PA page
+    ME.update(pro=True)
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 2); pg.wait_for_timeout(1500)
+    pg.locator(".pa").first.click(); pg.wait_for_timeout(2500)
+    check(pg.url.endswith("/pa"), "an AI PA card opens the AI PA door (/pa)")
+    pg.screenshot(path=OUT + "/5_ai_pa_page.png", full_page=True)
+    check("Krugerrand" in pg.inner_text("body") and "monthly report" in pg.inner_text("body").lower(), "AI PA page: briefs, alerts and the monthly report from /squire/status")
+    pg.click("[data-sl='7']"); pg.wait_for_timeout(800); check(pg.locator("#sl7 a").count() >= 1, "See matches lists the shortlist")
+    pg.fill("#need", "A 4-bed with a pool in Waterkloof under R4.5m"); pg.select_option("#cat", "Property"); pg.fill("#maxp", "4500000"); pg.fill("#pct", "5")
+    pg.click("button[type=submit]"); pg.wait_for_timeout(1200)
+    bb = [json.loads(c[1]) for c in calls if c[0] == "brief"]
+    check(bb and bb[-1]["kind"] == "buy" and bb[-1]["rules"] == {"max_price": 4500000, "buy_discount_pct": 5} and bb[-1]["category"] == "Property",
+          "New brief posts kind, category and rules to /squire/brief")
+    pg.screenshot(path=OUT + "/6_ai_pa_brief_saved.png"); check(not errs, "no script errors on the AI PA page (%s)" % errs[:1]); ctx.close()
+    # 6 explainer
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/pa/about"); pg.wait_for_timeout(2500); pg.screenshot(path=OUT + "/7_ai_pa_explainer.png", full_page=True)
+    t = pg.inner_text("body"); check("Included in Pro" in t and "$20" in t and pg.locator("a#go").get_attribute("href") == "/?go=plans", "explainer: what it does, $20 / R360 Included in Pro, Go Pro")
+    ctx.close()
+    # 7 Afrikaans
+    ME.update(interest=[], pro=False)
+    ctx, pg, errs = page("af-ZA"); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 2); pg.wait_for_timeout(1500)
+    pg.screenshot(path=OUT + "/8_afrikaans.png"); check("Tik om Quick oop te maak" in pg.inner_text("#tap"), "the door speaks Afrikaans for an Afrikaans phone"); ctx.close()
+    b.close()
+print("RENDER PROOF: %d/%d PASS" % (sum(1 for r in res if r[0] == "PASS"), len(res)))

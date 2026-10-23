@@ -122,7 +122,10 @@ function load(){
       : empty("pa_sell_1.jpg", T("No alerts yet — your AI PA tells you the moment something matches."));
     var br=(s.briefs||[]);
     $("briefs").innerHTML = br.map(function(b){
-        var rules=b.rules||{}, chips=Object.keys(rules).map(function(k){return '<span class="chip">'+esc(k.replace(/_/g," "))+': '+esc(rules[k])+'</span>';}).join("");
+        var RL={max_price:"Highest price",min_price:"Highest price",buy_discount_pct:"Below market by (%)",sell_margin_pct:"Above market by (%)"};
+        var rules=b.rules||{}, chips=Object.keys(rules).filter(function(k){return RL[k]&&k!=="min_price";}).map(function(k){
+          var v=rules[k], lab=T(RL[k]); if(k==="max_price") v=Number(v).toLocaleString(); else lab=lab.replace(/\s*\(%\)/,""), v=v+"%";
+          return '<span class="chip">'+esc(lab)+': '+esc(v)+'</span>';}).join("");
         return '<div class="card" data-id="'+b.id+'"><span class="chip red">'+esc(T(b.kind==="sell"?"Sell":b.kind==="watch"?"Watch":"Buy"))+'</span><span class="chip">'+esc(T(b.category))+'</span>'+
           '<b>'+esc(b.need_text)+'</b>'+chips+'<p>'+esc(T("{n} matches",{n:b.matches||0}))+(b.new_matches?' · '+esc(T("{n} new",{n:b.new_matches})):'')+'</p>'+
           (b.pa?'<p><span class="chip">'+esc(T("Premium data"))+'</span> '+esc(b.pa.tuppence_per_month)+'T / '+esc(T("a month"))+'</p>':'')+
