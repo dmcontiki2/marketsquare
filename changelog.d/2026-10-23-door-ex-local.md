@@ -1,0 +1,1 @@
+DOOR-EX-LOCAL-1 (23 Oct 2026): the door's "Your listing here" examples now come from the visitor's own city (New York in $, London in GBP) and fall back to Pretoria's only where a city has none; before, every city outside Pretoria was shown Pretoria examples (Waterkloof, Hilux, Matric). Proof: visuals/door_ny_proof (before/after, en-US + es-US). Live, shipped in Release 18:55.

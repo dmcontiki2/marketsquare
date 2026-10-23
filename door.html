@@ -341,7 +341,31 @@ function load(){
   var meP=fetch("/door/me",{credentials:"same-origin"}).then(j).then(function(m){ ME=m||ME; ME.interest=ME.interest||[];
       if(m&&m.last_app) last=m.last_app;
       if(!CHOICE&&m&&m.choice&&m.choice.cat) CHOICE={cat:m.choice.cat,sub:m.choice.sub||""}; }).catch(function(){});
-  var geoP=fetch("/quick/me",{credentials:"same-origin"}).then(j).then(function(q){ var c=(q&&(q.city||(q.geo&&q.geo.city)))||""; if(c) CITY=c; }).catch(function(){});
+  /* DOOR-CITY-1 (David, 23 Oct 2026): she lands in a city TrustSquare covers, never in a borough or suburb name nobody lists
+     under ("Brooklyn" -> New York, "Centurion" -> Pretoria). Order: her account's city; the city the main app already
+     settled for her (her own pick, else GEO-AUTO-1's detection incl. phone location); then the network -- the covered
+     city of that name, else the nearest covered city within 150 km of the network's position, else the country's main
+     city (the same table as GEO-AUTO-1). Read only, nothing stored. */
+  var MAIN={ZA:"Pretoria",US:"New York",GB:"London",AU:"Sydney",KE:"Nairobi",NA:"Windhoek"};
+  var km=function(a,b,c,d){ var r=Math.PI/180, x=Math.sin((c-a)*r/2), y=Math.sin((d-b)*r/2);
+    return 12742*Math.asin(Math.sqrt(x*x+Math.cos(a*r)*Math.cos(c*r)*y*y)); };
+  var geoP=fetch("/quick/me",{credentials:"same-origin"}).then(j).then(function(q){
+    if(q&&q.city){ CITY=q.city; return; }
+    var app=""; try{ app=localStorage.getItem("ms_user_city")||localStorage.getItem("ms_auto_city")||""; }catch(e){}
+    if(app){ CITY=app; return; }
+    var g=(q&&q.geo)||{}, cc=String(g.country||"").toUpperCase(), net=String(g.city||"").toLowerCase();
+    if(!cc) { if(g.city) CITY=g.city; return; }
+    return fetch("/geo/cities?country="+encodeURIComponent(cc)).then(j).then(function(cs){
+      cs=Array.isArray(cs)?cs:[];
+      var hit=cs.filter(function(c){ return String(c.name||"").toLowerCase()===net; })[0];
+      if(!hit&&typeof g.lat==="number"&&typeof g.lng==="number"){
+        var best=null, bd=150;
+        cs.forEach(function(c){ if(typeof c.lat!=="number"||typeof c.lng!=="number") return; var d=km(g.lat,g.lng,c.lat,c.lng); if(d<bd){ bd=d; best=c; } });
+        hit=best;
+      }
+      if(hit) CITY=hit.name; else if(MAIN[cc]) CITY=MAIN[cc]; else if(g.city) CITY=g.city;
+    }).catch(function(){ if(MAIN[cc]) CITY=MAIN[cc]; });
+  }).catch(function(){});
   return Promise.all([meP,geoP]).then(function(){
     $("city").textContent=CITY;
     return fetch("/listings?city="+encodeURIComponent(CITY)+"&page_size=200&sort=random"+(DEMO?"&demo=1":""),{credentials:"same-origin"}).then(j).then(function(L){
