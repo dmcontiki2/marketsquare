@@ -1,3 +1,5 @@
+- **DOOR-PICK-1 (RUL-250, 23 Oct 2026):** her own categories on the door -- a right-to-left swipe on the adverts (or the "Categories" tab on the right edge, which pulses once with a one-time nudge) opens our category photographs drifting slowly, with sub-category chips from what is listed and "All"; one tap returns to the adverts, now hers ("Your choice: Cars"), remembered on her account (users.door_choice via POST /door/last) or the phone. Thin choices topped up per RUL-249. Words in 15 languages. Route proof 25/25, render proof 38/38.
+
 - **DOOR-INVITE-1 (RUL-249, 23 Oct 2026):** a thin city invites sellers -- below 6 real local adverts the door stream is topped up with our example adverts (city gaps or her interest first), each saying "Your listing here" bottom right and opening selling in Quick; an empty city says "Be the first seller in {city}". Real adverts always first. Words in 15 languages. Render proof 31/31.
 
 - **DOOR-TWIN-1 (23 Oct 2026):** the bottom button is now the twin of the top pill -- same size, border, colour and word (AI PA / SNAP / QUICK / TRUSTSQUARE); the "Tap to ..." sentence moved to its screen-reader label. Render proof 28/28.
