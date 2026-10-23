@@ -1,7 +1,7 @@
 """door_render_proof.py -- ONE-DOOR-1 (DOOR_BRIEF.md U6): the door, the AI PA page and the explainer RENDERED in a headless
 phone (Playwright Chromium, 390x844). door.html / pa.html / pa_about.html come from this repo, the pictures from assets/door,
 the listings are the app's own Pretoria view (a saved copy of GET /listings); /door/me, /squire/status and every tap are
-mocked, so nothing is written anywhere. 19 checks: collage, last app, interest filter, advert tap, Snap tap, AI PA door,
+mocked, so nothing is written anywhere. 21 checks: collage, last app, interest filter, advert tap, Snap tap, AI PA door,
 AI PA page + new brief body, explainer, Afrikaans.
 Usage: python3 scripts/door_render_proof.py <listings.json saved from https://trustsquare.co/listings?city=Pretoria> [out_dir]"""
 import json, os, re, urllib.request, urllib.parse, sys
@@ -91,6 +91,22 @@ with sync_playwright() as p:
     pg.mouse.move(195, 600); pg.mouse.down(); pg.mouse.move(195, 450, steps=8); pg.mouse.move(195, 300, steps=8); pg.mouse.up(); pg.wait_for_timeout(600)
     t1 = pg.eval_on_selector("#lane", "e=>e.style.transform")
     check(t0 != t1 and not any(c[0] == "nav" for c in calls[n0:]), "a finger drag scrolls the stream (%s -> %s) and opens nothing" % (t0, t1)); ctx.close()
+    # 4c DOOR-TOUCH-1: a real finger (touch events) scrolls the stream on a phone and opens nothing
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1500)
+    n0 = len(calls); t0 = pg.eval_on_selector("#lane", "e=>e.style.transform"); cdp = ctx.new_cdp_session(pg)
+    cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": 195, "y": 600}]})
+    for y in range(590, 290, -20): cdp.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": 195, "y": y}]})
+    cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); pg.wait_for_timeout(600)
+    t1 = pg.eval_on_selector("#lane", "e=>e.style.transform")
+    def ty(t): return float(t.split("(")[1].split("px")[0]) if t and "(" in t else 0.0
+    check(ty(t0) - ty(t1) > 200 and not any(c[0] == "nav" for c in calls[n0:]), "a finger on a phone scrolls the stream (%s -> %s) and opens nothing" % (t0, t1)); ctx.close()
+    # 4d DOOR-SYNC-1: play with the top, then press the bottom button -- it opens what the top shows, even with an AI PA card under it
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500)
+    for v in (3, 1, 2, 3, 2): slide(pg, v); pg.wait_for_timeout(250)
+    box = pg.locator("#tap").bounding_box(); cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    n0 = len(calls); pg.mouse.click(cx, cy); pg.wait_for_timeout(1200)
+    navs = [c[1] for c in calls[n0:] if c[0] == "nav"]
+    check(navs == [ORIGIN + "/quick/"], "the bottom button opens what the top shows (Quick), never the card under it: %s" % navs); ctx.close()
     # 5 AI PA card -> /pa (Pro) -> the AI PA page
     ME.update(pro=True)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 2); pg.wait_for_timeout(1500)
