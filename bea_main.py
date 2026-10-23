@@ -1423,6 +1423,11 @@ def run_migrations(conn):
         # QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md, 19 Oct 2026): Snap or Say, then one tap. Default OFF = both doors hidden and
         # POST /listings/snap-draft answers 404 -- the brief's rollback switch. Armed from the dashboard after the live tap proof.
         "ALTER TABLE launch_switches ADD COLUMN quick_snap INTEGER NOT NULL DEFAULT 0",
+        # ONE-DOOR-1 (DOOR_BRIEF.md, David 22-23 Oct 2026): the one entry screen. Default OFF = /door answers 404 and the
+        # app opens exactly as before -- the brief's rollback switch. Interest + last app are the two fields it reads.
+        "ALTER TABLE launch_switches ADD COLUMN one_door INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN interest_categories TEXT",
+        "ALTER TABLE users ADD COLUMN last_app TEXT",
     ):
         try:
             conn.execute(_ddl)
@@ -8258,6 +8263,152 @@ def quick_me(request: Request, ts_user: str = Cookie(default=None)):
     finally:
         conn.close()
 
+# ── ONE-DOOR-1 (DOOR_BRIEF.md; David 22-23 Oct 2026: "this door into the trusted TrustSquare apps world of wonders")
+# The app opens on a living collage; one slide shows local adverts for the visitor's interest; one tap opens the last
+# app of that type (Snap, Quick, TrustSquare, AI PA). Interest NEVER comes from the slider. It is read, in order, from
+# users.interest_categories (her previous use: introductions asked for, most recent first), users.primary_category
+# (what she sells) and the CityLauncher prospect row (demand_prospects.app_category, matched by the same email_hash the
+# RM-5 import wrote). Flag-dark: launch_switches.one_door (default OFF -> every /door and /pa page answers 404).
+DOOR_APPS = ("snap", "quick", "ts", "pa")
+DOOR_INTEREST_MAX = 3
+DOOR_CATS = ("Property", "Cars", "Collectors", "Adventures", "Services", "Tutors", "Local Market")
+
+def _one_door_on() -> bool:
+    """Fail-safe read of launch_switches.one_door: on ANY doubt the door is OFF and the app opens as before."""
+    return _bit_flag("one_door", False)
+
+def _door_cat(raw):
+    t = (raw or "").strip().lower().replace("_", " ")
+    if not t:
+        return None
+    if t in ("local market", "localmarket", "local"):
+        return "Local Market"
+    c = _demand_norm_category(t)
+    return c if c in DOOR_CATS else None
+
+def _door_note_interest(conn, email, category):
+    """Previous use -> interest: most recent first, at most DOOR_INTEREST_MAX. Never raises, never blocks the caller."""
+    try:
+        cat, em = _door_cat(category), (email or "").strip().lower()
+        if not cat or not em:
+            return
+        row = conn.execute("SELECT interest_categories FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+        if not row:
+            return
+        try:
+            cur = [c for c in json.loads(row["interest_categories"] or "[]") if c in DOOR_CATS]
+        except Exception:
+            cur = []
+        new = ([cat] + [c for c in cur if c != cat])[:DOOR_INTEREST_MAX]
+        conn.execute("UPDATE users SET interest_categories=? WHERE LOWER(email)=?", (json.dumps(new), em))
+    except Exception:
+        pass
+
+def _door_page(name):
+    from fastapi.responses import FileResponse
+    if not _one_door_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse("/var/www/marketsquare/%s" % name, media_type="text/html",
+                        headers={"Cache-Control": "public, max-age=300"})
+
+@app.get("/door")
+def door_page():
+    return _door_page("door.html")
+
+@app.get("/pa")
+def pa_page(ts_user: str = Cookie(default=None)):
+    """The AI PA page for a Pro subscriber; everyone else lands on the explainer (David, 23 Oct 2026)."""
+    from fastapi.responses import RedirectResponse as _DoorRR
+    if not _one_door_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    em = _session_email(ts_user)
+    if not em:
+        return _DoorRR(url="/pa/about", status_code=302)
+    conn = database.get_db()
+    try:
+        pro = _seller_tier_of(conn, em) == "pro"
+    finally:
+        conn.close()
+    return _door_page("pa.html") if pro else _DoorRR(url="/pa/about", status_code=302)
+
+@app.get("/pa/about")
+def pa_about_page():
+    return _door_page("pa_about.html")
+
+@app.get("/door/me")
+def door_me(ts_user: str = Cookie(default=None)):
+    """What the door needs to know about the visitor: her interest (and where it came from), her last app, Pro or not."""
+    if not _one_door_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    out = {"signed_in": False, "interest": [], "via": None, "last_app": None, "pro": False, "squire_pa": False}
+    em = _session_email(ts_user)
+    if not em:
+        return out
+    conn = database.get_db()
+    try:
+        u = conn.execute("SELECT * FROM users WHERE LOWER(email)=?", (em,)).fetchone()
+        if not u:
+            return out
+        u = dict(u)
+        out["signed_in"] = True
+        out["pro"] = (u.get("seller_tier") or "free").lower() == "pro"
+        la = (u.get("last_app") or "").strip().lower()
+        out["last_app"] = la if la in DOOR_APPS else None
+        try:
+            hist = [c for c in json.loads(u.get("interest_categories") or "[]") if c in DOOR_CATS]
+        except Exception:
+            hist = []
+        prim = _door_cat(u.get("primary_category"))
+        if prim and prim not in hist:
+            hist.append(prim)
+        if hist:
+            out.update(interest=hist[:DOOR_INTEREST_MAX], via="history")
+        else:
+            import hashlib as _door_hl
+            h = _door_hl.sha256(em.encode()).hexdigest()[:32]
+            try:
+                rows = conn.execute("SELECT COALESCE(app_category, category) AS c FROM demand_prospects "
+                                    "WHERE email_hash=? ORDER BY id DESC LIMIT 5", (h,)).fetchall()
+            except Exception:
+                rows = []
+            pc = []
+            for r in rows:
+                c = _door_cat(r["c"])
+                if c and c not in pc:
+                    pc.append(c)
+            if pc:
+                out.update(interest=pc[:DOOR_INTEREST_MAX], via="prospect")
+        try:
+            import feature_flags as _door_ff
+            out["squire_pa"] = bool(_door_ff.squire_pro_pa_on())
+        except Exception:
+            pass
+        return out
+    finally:
+        conn.close()
+
+class _DoorLastIn(BaseModel):
+    app: str
+
+@app.post("/door/last")
+def door_last(body: _DoorLastIn, ts_user: str = Cookie(default=None)):
+    """The tap remembers which app she opened, so the next tap on the collage opens it again."""
+    if not _one_door_on():
+        raise HTTPException(status_code=404, detail="Not found")
+    a = (body.app or "").strip().lower()
+    if a not in DOOR_APPS:
+        raise HTTPException(status_code=400, detail="Unknown app.")
+    em = _session_email(ts_user)
+    if not em:
+        return {"ok": True, "stored": False}   # signed out: the phone remembers it (door.html localStorage)
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE users SET last_app=? WHERE LOWER(email)=?", (a, em))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "stored": True}
+
 # ── QUICK-PASS-1 (David, 25 Sep 2026: "can two phones be held head to head and then the sender swipes the
 # icon towards the other phone ... where the two owners actually hold the phones they both approve"; he
 # answered "Build it now"). One Quick user hands Quick to the person beside her. What travels is a
@@ -10445,6 +10596,7 @@ def create_intro(intro: IntroRequest, background_tasks: BackgroundTasks,
             )
         except Exception:
             pass          # evidence logging must never break an introduction
+    _door_note_interest(conn, intro.buyer_email, listing["category"])   # ONE-DOOR-1: asking for an introduction = interest
     conn.commit()
     conn.close()
     if N8N_WEBHOOK_NEW_INTRO:
@@ -26173,6 +26325,7 @@ class _FlagsUpdate(BaseModel):
     auto_renew:            Optional[bool] = None  # AUTO-RENEW-1 (RUL-224): paid plans renew automatically, David's switch
     quick_snap:            Optional[bool] = None  # QUICK-SNAP-1 (QUICK_SNAP_BRIEF.md): Snap or Say, then one tap, David's switch
     quick_fastlane:        Optional[bool] = None  # QUICK-FAST-1 (RUL-222): the Quick fast lane (quick icons), default OFF
+    one_door:              Optional[bool] = None  # ONE-DOOR-1 (DOOR_BRIEF.md): the one entry screen, David's switch, default OFF
 
 def _flags_payload(d):
     def b(k): return bool(d.get(k, 0))
@@ -26200,6 +26353,8 @@ def _flags_payload(d):
         "quick_fastlane": b("quick_fastlane"),
         # QUICK-SNAP-1: a row predating the column reads OFF -- Snap hidden is the safe side.
         "quick_snap": b("quick_snap"),
+        # ONE-DOOR-1: a row predating the column reads OFF -- the app opening as before is the safe side.
+        "one_door": b("one_door"),
         "photo_max_blur_pct": round(_ANON_MAX_BLUR_FRAC * 100),
         "relay_configured": bool(RELAY_INBOUND_SECRET),
         "data": {"ops": b("data_ops"), "places": b("data_places"),
@@ -26218,6 +26373,7 @@ def _flags_payload(d):
             "auto_renew":          b("auto_renew"),    # AUTO-RENEW-1: ms.js shows the tick box and the renewal lines only when this is on
             "quick_fastlane":      b("quick_fastlane"),   # QUICK-FAST-1: quick.html + ms.js show the quick icons only when on
             "quick_snap":          b("quick_snap"),       # QUICK-SNAP-1: quick.html shows "Snap it" / "Say it" only when on
+            "one_door":            b("one_door"),         # ONE-DOOR-1: index.html opens on /door only when on
         },
         "bit_flags": {
             "ai_example_enabled":    bool(d.get("ai_example_enabled", 1)),
@@ -34392,6 +34548,8 @@ SQUIRE_INCLUDED_APPROACHES = 20      # per calendar month, included in Pro (flat
 SQUIRE_TOPUP_BUNDLE = 5              # approaches per top-up
 SQUIRE_TOPUP_TUPPENCE = 1            # price of the bundle, in Tuppence (1T = $2, fixed)
 SQUIRE_WARN_AT = 2                   # rung 2: warn before composing when this many remain
+SQUIRE_MONTHLY_AI_BRIEFS = 30        # SQUIRE-BRIEF-CAP-1 (RUL-246): AI-drafted briefs per Pro user per calendar month;
+                                     # past it a brief is still created, drafted by the template -- a ladder, never a wall (RUL-066)
 
 def _squire_on() -> bool:
     return _baseline_q4_on()
@@ -34488,11 +34646,13 @@ _FORGOT_QUESTIONS = {
     "Local Market": ["Collect or deliver?", "Once-off or a repeat order?"],
 }
 
-def _squire_draft_brief(need: str, cat_norm: str, chips: list, is_minor: bool, email: str) -> str:
+def _squire_draft_brief(need: str, cat_norm: str, chips: list, is_minor: bool, email: str, ai: bool = True) -> str:
     """The Sonnet-class call is reserved for brief drafting (what the cap pays for). A template
     answers when no provider is live or the ceiling refuses, so a brief is never lost."""
     chip_txt = ", ".join(c.get("label", "") for c in chips if c.get("label")) or "no filters yet"
     template = ("Looking for %s. Path: %s. In the buyer's words: %s" % (cat_norm.lower(), chip_txt, _squire_minimise(need, is_minor).strip()))
+    if not ai:   # SQUIRE-BRIEF-CAP-1: past the month's AI-drafted briefs the brief is still made -- from the template, at no cost
+        return template
     try:
         _check_cost_ceiling(email)
         sys_p = ("You write a short brief (max 80 words) from a buyer to a seller on an anonymous marketplace. "
@@ -34633,7 +34793,12 @@ def squire_brief_create(body: _SquireBriefIn, ts_user: str = Cookie(default=None
         res = _zoom.next_step(cands, cat_norm, {}, tier=tier, text=need)
         chips = [c for c in res["chips"] if not c.get("auto")]
         path = "|".join("%s:%s" % (c["facet"], c["v"]) for c in chips)
-        brief_text = _squire_draft_brief(need, cat_norm, chips, bool(is_minor), em)
+        _sq_month_n = conn.execute("SELECT COUNT(*) AS n FROM squire_briefs WHERE email=? AND created_at LIKE ?",
+                                   (em, _squire_period() + "%")).fetchone()["n"]
+        _sq_ai = _sq_month_n < SQUIRE_MONTHLY_AI_BRIEFS   # SQUIRE-BRIEF-CAP-1
+        if not _sq_ai:
+            _squire_event(conn, em, "brief_cap", "pro", cat_norm, SQUIRE_MONTHLY_AI_BRIEFS, "template brief")
+        brief_text = _squire_draft_brief(need, cat_norm, chips, bool(is_minor), em, ai=_sq_ai)
         questions = _FORGOT_QUESTIONS.get(cat_norm, ["When do you need it by?", "What is your budget?"])
         now = _squire_now()
         cur = conn.execute("INSERT INTO squire_briefs (email, category, city, need_text, path, brief_text, questions, answers, is_minor, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",

@@ -2545,6 +2545,31 @@
    "key": "POST /admin/photo-holds/{hold_id}/decide",
    "level": "admin",
    "note": "PHOTO-KIND-1 (RUL-239, 18 Oct 2026): David's one-tap check of seller photos the anonymity gate kept privately"
+  },
+  {
+   "key": "GET /door",
+   "level": "public",
+   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. The page itself."
+  },
+  {
+   "key": "GET /door/me",
+   "level": "public",
+   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. Reads only the session's own interest, last app and Pro flag; a stranger gets the empty answer."
+  },
+  {
+   "key": "POST /door/last",
+   "level": "public",
+   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. Writes only the session's own last_app; signed out it stores nothing."
+  },
+  {
+   "key": "GET /pa",
+   "level": "public",
+   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. Pro session -> the AI PA page; anyone else is redirected to /pa/about."
+  },
+  {
+   "key": "GET /pa/about",
+   "level": "public",
+   "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. The AI PA explainer page."
   }
  ]
 }
