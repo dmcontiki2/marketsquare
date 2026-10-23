@@ -1,0 +1,1 @@
+- **PHOTO-TALL-1 (23 Oct 2026):** an upright photo in a listing strip is shown whole over a soft blurred copy of itself, instead of centre-cropped to the 260px band (the Sandton housekeeper lost the bottom half of her photo; every portrait photo outside Collectors did). Landscape photos unchanged. Checked on a phone and a laptop against the live listing 566.

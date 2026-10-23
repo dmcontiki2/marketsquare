@@ -827,6 +827,11 @@ h1,h2,h3,h4,.hero-logo,.plan-name,.plan-price,.tn-num{font-family:'Syne',sans-se
 .photo-strip-slide{flex:0 0 100%;scroll-snap-align:start;position:relative;overflow:hidden;}
 .photo-strip-slide img{width:100%;height:100%;object-fit:cover;display:block;}
 .collectors-strip .photo-strip-slide img{object-fit:contain;background:#111827;}
+/* PHOTO-TALL-1 (23 Oct 2026): an upright photo is shown WHOLE in the listing strip -- over a soft blurred copy of itself,
+   so nothing is cut and there are no black bars. David: the Sandton housekeeper's photo lost its bottom half. */
+.photo-strip-slide.tall::before{content:"";position:absolute;inset:-28px;background:var(--psbg) center/cover no-repeat;filter:blur(22px) brightness(.62);transform:scale(1.08);pointer-events:none}
+.photo-strip-slide.tall img{position:relative;z-index:1;object-fit:contain !important;background:transparent !important}
+.photo-strip-slide.tall > div{z-index:2}
 .photo-strip-slide .emoji-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
 .photo-strip-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:3;}
 .psd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .2s;}

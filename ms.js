@@ -26503,3 +26503,16 @@ function msSvcAreaEditor(n){
   };
   w._msSvc = 1; window.msOwnerBar = w;
 })();
+
+/* PHOTO-TALL-1 (23 Oct 2026): any photo in a listing strip that is taller than wide gets the "tall" treatment (ms.css):
+   shown whole over a blurred copy of itself instead of centre-cropped to the 260px band. Landscape photos are untouched.
+   One capture-phase listener covers every strip (listing, Local Market) and the photos that load later (PHOTO-FIRST-1). */
+document.addEventListener('load', function(e){
+  var im = e.target;
+  if (!im || im.tagName !== 'IMG' || !im.parentElement || !im.parentElement.classList.contains('photo-strip-slide')) return;
+  if (im.naturalHeight > im.naturalWidth * 1.05) {
+    var sl = im.parentElement;
+    sl.style.setProperty('--psbg', 'url("' + String(im.currentSrc || im.src).replace(/"/g, '%22') + '")');
+    sl.classList.add('tall');
+  }
+}, true);
