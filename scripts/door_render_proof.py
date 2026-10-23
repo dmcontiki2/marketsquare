@@ -61,7 +61,7 @@ with sync_playwright() as p:
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(3500)
     pg.screenshot(path=OUT + "/1_open_collage.png")
     check(pg.locator("#collage .pane img.on").count() >= 5, "opening: the collage is showing journey photographs")
-    check("Tap to continue in TrustSquare" in pg.inner_text("#tap"), "opening: one tap continues in the last app (TrustSquare by default)")
+    check("Tap to meet your AI PA" in pg.inner_text("#tap"), "opening (left): the tap is the AI PA door (RUL-247)")
     # 2 slide to TrustSquare, no interest -> everything near you
     slide(pg, 3); pg.wait_for_timeout(2500); pg.screenshot(path=OUT + "/2_trustsquare_everything.png")
     n_ads = pg.locator(".ad").count(); n_pa = pg.locator(".pa").count()
@@ -71,7 +71,9 @@ with sync_playwright() as p:
     # 3 interest from the prospect row: Collectors
     ME.update(signed_in=True, interest=["Collectors"], via="prospect", last_app="quick", pro=False)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(2500)
-    check("Tap to continue in Quick" in pg.inner_text("#tap"), "last app from the profile: Quick")
+    pg.mouse.click(195, 760); pg.wait_for_timeout(1200)
+    check(("nav", ORIGIN + "/pa") in calls or pg.url.endswith("/pa") or pg.url.endswith("/pa/about"), "left: a tap on the collage opens the AI PA door (/pa)")
+    pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(2500)
     slide(pg, 3); pg.wait_for_timeout(2500); pg.screenshot(path=OUT + "/3_interest_collectors.png")
     cats = set(pg.eval_on_selector_all(".ad .cat", "e=>e.map(x=>x.textContent)"))
     check(cats == {"Collectors"}, "interest Collectors: only Collectors adverts (%s)" % sorted(cats))

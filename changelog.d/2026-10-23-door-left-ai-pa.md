@@ -1,0 +1,1 @@
+- **RUL-247 (23 Oct 2026):** the door at rest (slider left) is now the AI PA door -- "Tap to meet your AI PA" opens /pa; TrustSquare stays the right stop. Render proof 18/18.

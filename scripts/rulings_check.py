@@ -1541,6 +1541,11 @@ REFLECTIONS = {
    ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
    ("scripts/regression_ledger.py", ["RG-1097"], []),
  ],
+ "RUL-247": [
+   # David, 23 Oct 2026: "the left top selection took us to the AI PA ... on the live ... it goes into the trustsquare home page"
+   ("RULINGS.md", ["THE DOOR AT REST (SLIDER LEFT) IS THE AI PA DOOR"], []),
+   ("door.html", ["target=a||PAAPP", "var a=APPS[cur]||PAAPP", 'T("Tap to meet your AI PA")'], ["appOf(last)"]),
+ ],
  "RUL-245": [
    # David, 23 Oct 2026: "Demo can be left off for the first page and the AI PA page only need to be there when the three listing pages are selected"
    ("RULINGS.md", ["NO DEMO STOCK ON THE FIRST PAGE"], []),

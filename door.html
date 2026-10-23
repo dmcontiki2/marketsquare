@@ -137,10 +137,10 @@ function appOf(k){ return k==="pa"?PAAPP:(APPS.filter(function(a){return a&&a.ke
 function render(){
   $("thumb").style.left=(100*cur/3)+"%"; $("thumb").classList.toggle("set",cur>0);
   Array.prototype.forEach.call(document.querySelectorAll("#stops span"),function(s){ s.classList.toggle("on",+s.dataset.i===cur); });
-  var a=APPS[cur], target=a||appOf(last);
+  var a=APPS[cur], target=a||PAAPP;   // RUL-247: at rest (left), the door is the AI PA door
   $("cue").style.setProperty("--c",a?css(a.c):"transparent");
   var tap=$("tap"); tap.style.setProperty("--c",a?css(a.c):"rgba(255,255,255,.16)");
-  tap.innerHTML = a ? T("Tap to open {app}",{app:a.name})+' <i>&middot; '+T("where you left off")+'</i>' : T("Tap to continue in {app}",{app:target.name});
+  tap.innerHTML = a ? T("Tap to open {app}",{app:a.name})+' <i>&middot; '+T("where you left off")+'</i>' : T("Tap to meet your AI PA");
   $("collage").style.opacity=a?0:1; $("mark").style.opacity=a?0:1;
   $("stream").classList.toggle("show",!!a); $("door").classList.toggle("streaming",!!a);
   var ib=$("ibar");
@@ -186,7 +186,7 @@ function go(app,url){
 }
 $("door").addEventListener("click",function(e){
   var pa=e.target.closest&&e.target.closest("[data-pa]"); if(pa){ go(PAAPP); return; }
-  var a=APPS[cur]||appOf(last);
+  var a=APPS[cur]||PAAPP;   // RUL-247: a tap on the collage opens the AI PA door
   var ad=e.target.closest&&e.target.closest(".ad");
   if(ad&&a.key==="ts"&&ad.dataset.id) { go(a,"/?listing="+encodeURIComponent(ad.dataset.id)); return; }
   go(a);
