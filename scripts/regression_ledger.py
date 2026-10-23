@@ -35217,6 +35217,26 @@ def rg_col_draft_1():
     return [(INFO, "the Collectors photo read fills Category, Year and Maker blanks")]
 
 
+@entry("RG-1100", "COL-QTY-1 (Goal run 46, 23 Oct 2026): on Collectors a photo read whose title says Collection (or Set / Lot) fills a "
+       "blank Quantity -- only from the title, never Single item",
+       LOCKED, fixed_on="2026-10-23", scope="ms.js sfApplyDraft (Collectors)",
+       ref="docs/E2E_2026-10-23.md: a tray of coins read as 'Mixed Vintage Coin Collection' left Quantity '--'.")
+def rg_col_qty_1():
+    js = repo_file("ms.js")
+    if js is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = js.find("COL-QTY-1 (Goal run 46")
+    if i < 0:
+        return [(FAIL, "the Collectors read no longer fills Quantity from its own title")]
+    seg = js[i:i + 700]
+    for snip in ("if(!A.qty)", "A.qty='Collection'", "A.qty='Set'"):
+        if snip not in seg:
+            return [(FAIL, "COL-QTY-1 lost: " + snip)]
+    if "Single item" in seg.split("*/", 1)[-1]:
+        return [(FAIL, "COL-QTY-1 now guesses Single item")]
+    return [(INFO, "a Collection / Set title fills a blank Quantity")]
+
+
 @entry("RG-0813", "MAGIC-HELLO-1 (Goal run 28, 4 Oct 2026): a seller who arrives from our invitation e-mail is greeted by name on step 1 "
        "of the sell flow (escaped), and the Home long-press tip does not cover her form",
        LOCKED, fixed_on="2026-10-04", scope="ms.js sfMagicHello + sfPhotosS; showCatHomeHint",
