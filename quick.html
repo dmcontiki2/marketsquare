@@ -1357,7 +1357,25 @@ function qHelpClose(){
   var o=document.getElementById('qhov'), b=document.getElementById('qhb');
   if(o) o.style.display='none';
   if(b){ b.textContent=qHelpWord(false); b.setAttribute('aria-pressed','false'); }
+  var k=document.getElementById('back');   /* HOW-BACK-1: give Quick's back arrow its own state again */
+  if(k && k.hasAttribute('data-howcls')){ k.className=k.getAttribute('data-howcls'); k.removeAttribute('data-howcls'); }
 }
+/* HOW-BACK-1 (23 Oct 2026, David: "the HOW in Quick still not have a back button?"): inside How the gallery's and
+   guide's own back links are hidden (Quick's bar sits on top), and on Quick's first screen the bar's back arrow is
+   hidden too -- so How had no way back. While How is open the bar's arrow always shows: from a guide opened off the
+   list it goes back to the list; otherwise it closes How and leaves Quick exactly where she was. */
+function qHelpBack(){
+  var o=document.getElementById('qhov'); if(!o) return qHelpClose();
+  var ds=o.getAttribute('data-src')||'', fr=o.firstChild, p='';
+  try{ p=fr.contentWindow.location.pathname; }catch(e){}
+  if(/^\/help\/\?/.test(ds) && p && p.replace(/\/$/,'')!=='/help'){ fr.src=ds; return; }   /* guide -> back to the list */
+  qHelpClose();
+}
+window.addEventListener('click', function(e){
+  var o=document.getElementById('qhov'), k=document.getElementById('back');
+  if(!o || o.style.display!=='block' || !k || !k.contains(e.target)) return;
+  e.stopImmediatePropagation(); e.preventDefault(); qHelpBack();
+}, true);
 function qHelpOpen(){
   var app=document.getElementById('app'), bar=document.querySelector('.bar'), b=document.getElementById('qhb');
   if(!app || !bar || !b) return;
@@ -1377,6 +1395,8 @@ function qHelpOpen(){
     o.setAttribute('data-src', src);
   }
   b.textContent=qHelpWord(true); b.setAttribute('aria-pressed','true');
+  var k=document.getElementById('back');   /* HOW-BACK-1: the arrow shows while How is open */
+  if(k){ if(!k.hasAttribute('data-howcls')) k.setAttribute('data-howcls', k.className); k.className='ic'; }
 }
 function qHelpButton(){
   if(document.getElementById('qhb')) return;
