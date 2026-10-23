@@ -1550,7 +1550,7 @@ REFLECTIONS = {
  "RUL-247": [
    # David, 23 Oct 2026: "the left top selection took us to the AI PA ... on the live ... it goes into the trustsquare home page"
    ("RULINGS.md", ["THE DOOR AT REST (SLIDER LEFT) IS THE AI PA DOOR"], []),
-   ("door.html", ["target=a||PAAPP", "var a=APPS[cur]||PAAPP", 'T("Tap to meet your AI PA")'], ["appOf(last)"]),
+   ("door.html", ["target=a||PAAPP", "var a=APPS[cur]||PAAPP", 'T("Tap to meet your AI PA")', "tap.textContent = wheelName(cur).toUpperCase()"], ["appOf(last)"]),
  ],
  "RUL-245": [
    # David, 23 Oct 2026: "Demo can be left off for the first page and the AI PA page only need to be there when the three listing pages are selected"

@@ -61,7 +61,7 @@ with sync_playwright() as p:
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(3500)
     pg.screenshot(path=OUT + "/1_open_collage.png")
     check(pg.locator("#collage .pane img.on").count() >= 5, "opening: the collage is showing journey photographs")
-    check("Tap to meet your AI PA" in pg.inner_text("#tap"), "opening (left): the tap is the AI PA door (RUL-247)")
+    check(pg.inner_text("#tap") == "AI PA", "opening (left): the bottom button says AI PA, like the top pill (RUL-247/248)")
     # 2 slide to TrustSquare, no interest -> everything near you
     slide(pg, 3); pg.wait_for_timeout(2500); pg.screenshot(path=OUT + "/2_trustsquare_everything.png")
     n_ads = pg.locator(".ad").count(); n_pa = pg.locator(".pa").count()
@@ -110,10 +110,10 @@ with sync_playwright() as p:
     on2 = pg.inner_text("#strip span.on"); t2 = pg.inner_text("#tap"); pg.screenshot(path=OUT + "/4e_wheel_quick.png")
     sb = pg.locator("#strip span.on").bounding_box(); tb = pg.locator("#tap").bounding_box()
     centred = abs((sb["x"] + sb["width"] / 2) - (tb["x"] + tb["width"] / 2)) < 4
-    check(on0 == "AI PA" and on1 == "SNAP" and "Snap" in t1 and on2 == "QUICK" and "Quick" in t2 and centred,
+    check(on0 == "AI PA" and on1 == "SNAP" and t1 == "SNAP" and on2 == "QUICK" and t2 == "QUICK" and centred,
           "a swipe on the top wheel moves AI PA -> Snap -> Quick, centred over the bottom button, which follows (%s/%s/%s, centred=%s)" % (on0, on1, on2, centred))
     pg.click("#strip span[data-i='3']"); pg.wait_for_timeout(500)
-    check(pg.inner_text("#strip span.on") == "TRUSTSQUARE" and "TrustSquare" in pg.inner_text("#tap"), "a tap on a name in the wheel picks it")
+    check(pg.inner_text("#strip span.on") == "TRUSTSQUARE" and pg.inner_text("#tap") == "TRUSTSQUARE", "a tap on a name in the wheel picks it")
     check(not errs, "no script errors on the wheel (%s)" % errs[:1]); ctx.close()
     # 4b DOOR-SPEED-1: a finger drag scrolls the stream and is never a tap
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1500)
@@ -158,6 +158,6 @@ with sync_playwright() as p:
     # 7 Afrikaans
     ME.update(interest=[], pro=False)
     ctx, pg, errs = page("af-ZA"); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 2); pg.wait_for_timeout(1500)
-    pg.screenshot(path=OUT + "/8_afrikaans.png"); check("Tik om Quick oop te maak" in pg.inner_text("#tap"), "the door speaks Afrikaans for an Afrikaans phone"); ctx.close()
+    pg.screenshot(path=OUT + "/8_afrikaans.png"); check("Tik om Quick oop te maak" in (pg.get_attribute("#tap", "aria-label") or ""), "the door speaks Afrikaans for an Afrikaans phone"); ctx.close()
     b.close()
 print("RENDER PROOF: %d/%d PASS" % (sum(1 for r in res if r[0] == "PASS"), len(res)))
