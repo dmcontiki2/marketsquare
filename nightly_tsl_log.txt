@@ -3817,3 +3817,4 @@ Tue 10/20/2026  5:45:07.54  IN SYNC - DEPLOY DRIFT: clean - all 339 tracked file
 Wed 10/21/2026  5:45:07.50  IN SYNC - DEPLOY DRIFT: clean - all 340 tracked files match live
 Thu 10/22/2026  5:45:07.51  IN SYNC - DEPLOY DRIFT: clean - all 355 tracked files match live
 Fri 10/23/2026  5:45:07.09  IN SYNC - DEPLOY DRIFT: clean - all 355 tracked files match live
+Fri 10/23/2026 11:17:55.33  SHIPPING - DEPLOY DRIFT: 8 file(s) local-ahead of live - run /ship: bea_main.py, dashboard.server.html, door.html, marketsquare.html, pa.html, pa_about.html, quick.html, route_policy.json | gate green, releasing unattended

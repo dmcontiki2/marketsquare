@@ -8,9 +8,9 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 
 <!-- DASH-FEED-1:BEGIN (managed by scripts/status_compile.py - do not edit by hand) -->
 
-## Last Completed (2026-10-20 - quick snap 1 merged)
+## Last Completed (2026-10-23 - one door)
 
-- 2026-10-20 (David: "Merge", 05:45 SAST) QUICK-SNAP-1 (RUL-242) merged into main (08d177e) and shipped DARK: launch_switches.quick_snap=0, Snap/Say doors hidden, POST /listings/snap-draft 404 until David arms it ("arm snap" -> flipped from his enrolled browser, as the fast lane was). Next: live one-tap proof with a QA photo advert (deleted), then RG-1064..RG-1067 LOCKED. Video advert for the Snap flow is the follow-on.
+- 2026-10-23 ONE-DOOR-1 (RUL-243..246) built DARK on worktree branch `door` (not pushed, not deployed, main untouched): the one entry screen (door.html), the AI PA page (pa.html, Pro) and explainer (pa_about.html), interest + last-app fields, /app.webmanifest with Snap's share target, Squire monthly AI-brief cap (30). Verified: door_route_proof 20/20, node --check on every page, rulings 243-246 reflected, ledger RG-1095..1099 added (OPEN). Next: David reviews the rendered build -> "merge door" -> ship dark -> arm `one_door` from the +1 page after the live check; `squire_pro_pa` stays OFF until a premium feed has a monthly cost.
 
 <!-- DASH-FEED-1:END -->
 
@@ -35,6 +35,8 @@ BEA v1.3.1 · FastAPI + SQLite · Hetzner CPX32 (8GB RAM) + 100GB volume · trus
 _Closed 22 Aug and removed from this list: **DW-029/DW-057 secret rotation** (20 credentials closed — see SECRETS_REGISTER.md, RG-0146 LOCKED). Removed as ALREADY CLOSED on 21 Aug but still listed here until today: DW-027, DW-054, DW-044, DW-010, DW-028 — this block is hand-maintained and had been directing the next session at finished work for a day._
 
 ## Current Session
+
+- 2026-10-23 ONE-DOOR-1 (RUL-243..246) built DARK on worktree branch `door` (not pushed, not deployed, main untouched): the one entry screen (door.html), the AI PA page (pa.html, Pro) and explainer (pa_about.html), interest + last-app fields, /app.webmanifest with Snap's share target, Squire monthly AI-brief cap (30). Verified: door_route_proof 20/20, node --check on every page, rulings 243-246 reflected, ledger RG-1095..1099 added (OPEN). Next: David reviews the rendered build -> "merge door" -> ship dark -> arm `one_door` from the +1 page after the live check; `squire_pro_pa` stays OFF until a premium feed has a monthly cost.
 
 - 2026-10-20 (David: "Merge", 05:45 SAST) QUICK-SNAP-1 (RUL-242) merged into main (08d177e) and shipped DARK: launch_switches.quick_snap=0, Snap/Say doors hidden, POST /listings/snap-draft 404 until David arms it ("arm snap" -> flipped from his enrolled browser, as the fast lane was). Next: live one-tap proof with a QA photo advert (deleted), then RG-1064..RG-1067 LOCKED. Video advert for the Snap flow is the follow-on.
 
