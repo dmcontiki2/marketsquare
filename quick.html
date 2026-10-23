@@ -4545,7 +4545,9 @@ function svcFinishSpeaksOnly(){   /* redraw just the language row after "More" *
      a phone that will not take a service worker threw an unhandled rejection at the door (q_error 'promise: Rejected', 15 + 16 Oct). */
   if(LIVE && 'serviceWorker' in navigator){ try{ navigator.serviceWorker.register('/service-worker.js').catch(function(){}); }catch(e){} }
   function installInto(slot){
-    if(!slot || standalone() || ls('ts_q_tile')==='1') return;
+    /* ONE-DOOR-1 (RUL-243): with the one door armed, TrustSquare is the one home-screen icon -- Quick no longer offers its own tile
+       (an icon already installed keeps working: /quick/ is unchanged). */
+    if(!slot || standalone() || ls('ts_q_tile')==='1' || (QFLAGS && QFLAGS.one_door)) return;
     var ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
     slot.innerHTML='<button class="qs-inst" type="button">'+E(T('Add Quick to your home screen'))+'</button><div class="qs-hint"></div>';
     var b=slot.querySelector('button'), h=slot.querySelector('.qs-hint');

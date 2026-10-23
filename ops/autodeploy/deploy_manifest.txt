@@ -50,6 +50,11 @@ roles/app_i18n_nso.json    | roles/app_i18n_nso.json
 roles/lang_countries.json  | roles/lang_countries.json
 # QUICK-NEXT-1: the preview was promoted into quick.html on 23 Sep; /quick_next.html now redirects to /quick/.
 static/brand/quick.webmanifest | static/brand/quick.webmanifest
+# ONE-DOOR-1 (DOOR_BRIEF.md, RUL-243/244): the one entry screen and the AI PA pages. Served by the BEA (/door, /pa,
+# /pa/about) only while launch_switches.one_door is ON; their pictures ride the media lane (media_push.bat [1e]).
+door.html                  | door.html
+pa.html                    | pa.html
+pa_about.html              | pa_about.html
 ts_report.js               | static/ts_report.js
 # DEMO-BANNER-1 (22 Aug 2026): the red DEMO tab on the demo maps. Ungated -- unlike
 # ts_report.js it is a customer-facing honesty label and SURVIVES Soft Launch.

@@ -45,6 +45,11 @@ echo  [1d] Quick Listing door photos (assets\quick_ph to /static/quick)...
 if exist "%PROJECT%\assets\quick_ph" %SYNC% -LocalDir "%PROJECT%\assets\quick_ph" -Filter *.jpg -RemoteDir %REMOTE%/static/quick -Server %SERVER%
 if exist "%PROJECT%\assets\quick_ph" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/quick 2>/dev/null; chmod 644 %REMOTE%/static/quick/*.jpg 2>/dev/null"
 
+echo  [1e] One-door collage + AI PA pictures (assets\door to /static/door)...
+:: ONE-DOOR-1 (DOOR_BRIEF.md): the door's collage (journey photographs) and the AI PA scenes; read by door.html and pa_about.html.
+if exist "%PROJECT%\assets\door" %SYNC% -LocalDir "%PROJECT%\assets\door" -Filter *.jpg -RemoteDir %REMOTE%/static/door -Server %SERVER%
+if exist "%PROJECT%\assets\door" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/door 2>/dev/null; chmod 644 %REMOTE%/static/door/*.jpg 2>/dev/null; true"
+
 echo  [1b] Study ^& Work Abroad example photos (assets\studywork to /static/studywork)...
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.jpg -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.pdf -RemoteDir %REMOTE%/static/studywork -Server %SERVER%

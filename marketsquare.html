@@ -11,6 +11,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>TrustSquare</title>
+<!-- ONE-DOOR-1 (DOOR_BRIEF.md, RUL-243): when launch_switches.one_door is armed, a plain arrival at / (no advert, draft,
+     sign-in or any other link) opens the door first, once per visit; the door marks the visit so its own "TrustSquare"
+     tap lands here and stays. Switch OFF (the default) = this does nothing. -->
+<script>try{if(location.pathname==='/'&&!location.search&&!location.hash&&!sessionStorage.getItem('ts_door')){fetch('/flags',{cache:'no-store'}).then(function(r){return r.json();}).then(function(f){if(f&&f.effective&&f.effective.one_door){sessionStorage.setItem('ts_door','1');location.replace('/door');}}).catch(function(){});}}catch(e){}</script>
 <!-- LANDING-LEAN-1 (25 Sep 2026 inspection, live-06): an arrival on one advert, one draft or a sign-in link (Quick's key
      link included) does not download the home page's photos while its own screen is being opened; ms.js lifts this on
      the first screen change (goTo) and after 8 s at the latest. -->
