@@ -9,6 +9,7 @@ Asserts:
   5. primary_category -> interest from 'history'; an introduction (_door_note_interest) goes FIRST, max 3, no duplicates
   6. last app stored and read back; an unknown app refused (400)
   7. Pro tier read; /pa redirects a non-Pro to /pa/about and serves pa.html to Pro
+  8. /app.webmanifest: same id '/', Snap's share target only while the switch is ON
 Usage: python3 scripts/door_route_proof.py <path to a COPY of marketsquare.db named *door_proof*.db>   (never the live file)
 """
 import hashlib, json, os, sqlite3, sys
@@ -52,7 +53,9 @@ class FileResponse:
     def __init__(self, path, media_type=None, headers=None): self.path, self.kind = path, "file"
 class RedirectResponse:
     def __init__(self, url, status_code=302): self.url, self.status_code, self.kind = url, status_code, "redirect"
-_fr = types.ModuleType("fastapi.responses"); _fr.FileResponse = FileResponse; _fr.RedirectResponse = RedirectResponse
+class JSONResponse:
+    def __init__(self, content, media_type=None, headers=None): self.content, self.kind = content, "json"
+_fr = types.ModuleType("fastapi.responses"); _fr.FileResponse = FileResponse; _fr.RedirectResponse = RedirectResponse; _fr.JSONResponse = JSONResponse
 _fa = types.ModuleType("fastapi"); _fa.responses = _fr
 sys.modules.setdefault("fastapi", _fa); sys.modules["fastapi.responses"] = _fr
 _ffm = types.ModuleType("feature_flags"); _ffm.squire_pro_pa_on = lambda: False; sys.modules["feature_flags"] = _ffm
@@ -84,7 +87,9 @@ c.execute("UPDATE launch_switches SET one_door=0 WHERE id=1"); c.commit()
 for fn, a in ((g["door_page"], ()), (g["pa_about_page"], ()), (g["door_me"], ()), (g["pa_page"], ())):
     expect_status(fn, 404, "switch OFF: %s answers 404" % fn.__name__, *a)
 expect_status(g["door_last"], 404, "switch OFF: door_last answers 404", BaseModel(app="quick"))
+check("share_target" not in g["door_app_manifest"]().content and g["door_app_manifest"]().content["id"] == "/", "switch OFF: TrustSquare manifest has no share target, same id")
 c.execute("UPDATE launch_switches SET one_door=1 WHERE id=1"); c.commit()
+check(g["door_app_manifest"]().content.get("share_target", {}).get("action", "").startswith("/quick/share-in?p=snap"), "switch ON: TrustSquare manifest hands a shared photo to Snap")
 # 2
 r = g["door_me"](None); check(r["signed_in"] is False and r["interest"] == [], "signed out -> empty answer")
 r = g["door_last"](BaseModel(app="snap"), None); check(r["stored"] is False, "signed out -> last app not stored")

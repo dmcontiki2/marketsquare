@@ -8387,6 +8387,23 @@ def door_me(ts_user: str = Cookie(default=None)):
     finally:
         conn.close()
 
+@app.get("/app.webmanifest")
+def door_app_manifest():
+    """ONE-DOOR-1 (RUL-243): with one icon, the TrustSquare icon must also receive a photo from the phone's Share sheet
+    and hand it to Snap (the root service worker already takes POST /quick/share-in into the Snap mailbox). Same content
+    as /static/brand/site.webmanifest (same id "/", so an installed icon stays the same app); the share target is added
+    only while launch_switches.one_door is ON. index.html points at this manifest only when the door is armed."""
+    from fastapi.responses import JSONResponse as _DoorJR
+    m = {"id": "/", "name": "TrustSquare", "short_name": "TrustSquare", "start_url": "/", "scope": "/",
+         "icons": [{"src": "/static/brand/icon-192.png", "sizes": "192x192", "type": "image/png"},
+                   {"src": "/static/brand/icon-512.png", "sizes": "512x512", "type": "image/png"},
+                   {"src": "/static/brand/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}],
+         "theme_color": "#22C55E", "background_color": "#000000", "display": "standalone", "orientation": "any"}
+    if _one_door_on():
+        m["share_target"] = {"action": "/quick/share-in?p=snap&c=", "method": "POST", "enctype": "multipart/form-data",
+                             "params": {"files": [{"name": "photo", "accept": ["image/*"]}]}}
+    return _DoorJR(m, media_type="application/manifest+json", headers={"Cache-Control": "private, no-store"})
+
 class _DoorLastIn(BaseModel):
     app: str
 

@@ -1535,6 +1535,35 @@ REFLECTIONS = {
    ("scripts/regression_ledger.py", ["RG-0367"], []),
    ("RULINGS.md", ["THE BUZZ TERMS GO IN NOW"], []),
  ],
+ "RUL-246": [
+   # David, 23 Oct 2026: "yes for a monthly cap - it is a safety net" -- lives on branch `door` until he merges (FAIL on main until then, expected)
+   ("RULINGS.md", ["SQUIRE BRIEFS CARRY A MONTHLY AI CAP"], []),
+   ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
+   ("scripts/regression_ledger.py", ["RG-1097"], []),
+ ],
+ "RUL-245": [
+   # David, 23 Oct 2026: "Demo can be left off for the first page and the AI PA page only need to be there when the three listing pages are selected"
+   ("RULINGS.md", ["NO DEMO STOCK ON THE FIRST PAGE"], []),
+   ("door.html", ["col_aurail_l1_view", 'data-pa="1"', 'max="3"'], ["/static/demo/"]),
+ ],
+ "RUL-244": [
+   # David, 23 Oct 2026: "non $20 subscribers should land on a visual explaining advert page ... subscribers ... their AI PA page"
+   ("RULINGS.md", ["THE AI PA DOOR"], []),
+   ("bea_main.py", ['@app.get("/pa")', '@app.get("/pa/about")', 'url="/pa/about"'], []),
+   ("pa.html", ["/squire/status", "/squire/brief"], []),
+   ("pa_about.html", ["Included in Pro", "/?go=plans"], []),
+ ],
+ "RUL-243": [
+   # David, 22-23 Oct 2026: "I want this to be the only entry point" -- branch `door`, flag-dark, reviewed before arming
+   ("RULINGS.md", ["ONE DOOR: THE SINGLE ENTRY SCREEN"], []),
+   ("bea_main.py", ["ADD COLUMN one_door", '"one_door": b("one_door")', '@app.get("/door/me")', '@app.get("/app.webmanifest")'], []),
+   ("marketsquare.html", ["f.effective.one_door", "location.replace('/door')"], []),
+   ("quick.html", ["QFLAGS.one_door"], []),
+   ("genie/HARNESS.html", ["QFLAGS.one_door"], []),
+   ("route_policy.json", ["GET /door/me", "POST /door/last", "GET /app.webmanifest"], []),
+   ("dashboard.server.html", ["ls_m_door", "one_door:!!S.one_door"], []),
+   ("scripts/regression_ledger.py", ["RG-1095", "RG-1096", "RG-1098"], []),
+ ],
  "RUL-242": [
    # David, 19 Oct 2026: "Snap or say, then one tap" / "go worktree" -- lives on branch `snap` until he merges; on main this entry reads FAIL until then (expected)
    ("RULINGS.md", ["SNAP: THE FOURTH STANDARD FLOW"], []),

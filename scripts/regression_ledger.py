@@ -40645,5 +40645,158 @@ def rg_say_read_1():
         out.append((FAIL, "snap-draft no longer marks a price nobody said as the photo reader's guess"))
     return out or [(INFO, "Say reader run over 3 sentences: days, areas, roles, rand price, no guessed job")]
 
+
+# ── ONE-DOOR-1 (DOOR_BRIEF.md, branch `door`, 23 Oct 2026) ──────────────────────────────────────────────────────────────
+# Built under David's "Let us first review it before it goes live": OPEN until merged + shipped; the live halves print
+# READY TO LOCK after the deploy. Ids may be renumbered at merge if main took the numbers first -- never after LOCK.
+@entry("RG-1095", "ONE-DOOR-1 server: the one entry screen is flag-dark (launch_switches.one_door, default OFF -> /door, "
+                  "/door/me, /door/last, /pa, /pa/about answer 404), every route is declared, and interest is read from the "
+                  "profile (previous use -> what she sells -> CityLauncher prospect row), never from the slider",
+       OPEN,
+       scope="bea_main.py ONE-DOOR-1 block (_one_door_on, _door_cat, _door_note_interest fed by POST /intros, /door, /door/me, "
+             "/door/last, /pa (Pro -> pa.html, anyone else -> /pa/about), /pa/about); users.interest_categories + users.last_app; "
+             "/flags one_door + effective.one_door; route_policy.json 5 routes. Proof: scripts/door_route_proof.py 18/18 on a "
+             "throwaway DB copy (23 Oct 2026). LIVE half: /flags carries one_door once shipped.",
+       ref="DOOR_BRIEF.md U2; RUL-243/244. David 23 Oct 2026: interest is NOT derived from the slider.")
+def rg_one_door_1_server():
+    py = repo_file("bea_main.py"); rp = repo_file("route_policy.json")
+    if py is None or rp is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    for needle in ("ADD COLUMN one_door", "ADD COLUMN interest_categories", "ADD COLUMN last_app", '"one_door": b("one_door")',
+                   "def _one_door_on()", "def _door_note_interest(", '@app.get("/door/me")', '@app.post("/door/last")',
+                   '@app.get("/pa/about")', "_door_note_interest(conn, intro.buyer_email, listing[\"category\"])",
+                   "FROM demand_prospects", 'url="/pa/about"'):
+        if needle not in py:
+            bad.append("bea_main.py lacks %r" % needle)
+    for k in ("GET /door", "GET /door/me", "POST /door/last", "GET /pa", "GET /pa/about"):
+        if '"key": "%s"' % k not in rp:
+            bad.append("route_policy.json does not declare %s" % k)
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    try:
+        f = json.loads(_get("/flags"))
+    except Exception as e:
+        return [(INFO, "repo half PASS; live /flags not read (%s)" % str(e)[:80])]
+    if "one_door" not in f:
+        return [(FAIL, "repo half PASS; live /flags has no one_door yet (branch `door` not shipped)")]
+    return [(INFO, "door server flag-dark, routes declared, live /flags carries one_door (%s)" % f.get("one_door"))]
+
+
+@entry("RG-1096", "ONE-DOOR-1 pages: door.html (collage of journey photographs, no demo stock; one-colour Snap/Quick/TrustSquare "
+                  "slider; interest stream; AI PA cards marked Example), pa.html (Pro) and pa_about.html (everyone else) ship in "
+                  "the manifest, carry their words in all 15 Quick languages, name no AI model, and index.html opens the door "
+                  "only when flags.effective.one_door",
+       OPEN,
+       scope="door.html, pa.html, pa_about.html (deploy_manifest), roles/door_i18n.json + scripts/apply_door_i18n.py, "
+             "marketsquare.html ONE-DOOR-1 head script, quick.html (= HARNESS) Quick tile offer hidden when one_door, "
+             "media_push.bat [1e] assets/door -> /static/door.",
+       ref="DOOR_BRIEF.md U3/U4; RUL-243/244/245; RUL-139 (no model name as a label).")
+def rg_one_door_1_pages():
+    import re as _re
+    d, pa, ab = repo_file("door.html"), repo_file("pa.html"), repo_file("pa_about.html")
+    ix, qh, man = repo_file("marketsquare.html"), repo_file("quick.html"), repo_file("ops/autodeploy/deploy_manifest.txt")
+    if None in (d, pa, ab, ix, qh, man):
+        return [(FAIL, "a door page or its manifest/index/quick counterpart is missing (branch `door` not merged?)")]
+    bad = []
+    for name, h in (("door.html", d), ("pa.html", pa), ("pa_about.html", ab)):
+        if _re.search(r"(?i)\b(gpt|claude|sonnet|haiku|gemini|grok|mistral|llama|opus)\b", h):
+            bad.append("%s names an AI model" % name)
+        m = _re.search(r"/\*LANGS\*/(.*?)/\*END-LANGS\*/", h, _re.S)
+        if not m or len(json.loads(m.group(1))) != 15:
+            bad.append("%s does not carry the 15 Quick languages" % name)
+        if name + " " not in man.replace("|", " ") and ("%s " % name) not in man:
+            bad.append("%s is not in deploy_manifest.txt" % name)
+    if "/static/door/col_" not in d and "col_aurail" not in d:
+        bad.append("door.html collage is not the journey photographs")
+    if "/static/demo/" in d:
+        bad.append("door.html shows demo stock on the first page (RUL-245)")
+    if "f.effective.one_door" not in ix or "location.replace('/door')" not in ix:
+        bad.append("marketsquare.html does not open the door under the switch")
+    if "QFLAGS.one_door" not in qh:
+        bad.append("quick.html still offers its own tile under the one door")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "door, AI PA and explainer pages present, 15 languages, no model named, index opens the door only when ON")]
+
+
+@entry("RG-1097", "SQUIRE-BRIEF-CAP-1 (RUL-246, David 23 Oct 2026: 'yes for a monthly cap - it is a safety net'): a Pro user's "
+                  "AI-drafted Squire briefs stop at SQUIRE_MONTHLY_AI_BRIEFS a calendar month; past it the brief is still made, "
+                  "drafted by the template at no cost, and the ceiling hit is logged -- a ladder, never a wall (RUL-066)",
+       OPEN,
+       scope="bea_main.py SQUIRE_MONTHLY_AI_BRIEFS, squire_brief_create (_sq_month_n, _squire_event 'brief_cap'), "
+             "_squire_draft_brief(ai=False) returns the template before any provider call.",
+       ref="AI PA financial check 23 Oct 2026: the brief draft is Squire's only AI call (~$0.0033); the per-user daily ceiling "
+           "already bounded it, the monthly cap is the second net.")
+def rg_squire_brief_cap_1():
+    py = repo_file("bea_main.py")
+    if py is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    import re as _re
+    m = _re.search(r"SQUIRE_MONTHLY_AI_BRIEFS = (\d+)", py)
+    if not m or not (1 <= int(m.group(1)) <= 100):
+        bad.append("no SQUIRE_MONTHLY_AI_BRIEFS cap between 1 and 100")
+    i = py.find("def _squire_draft_brief(")
+    seg = py[i:i + 2500] if i >= 0 else ""
+    if "if not ai:" not in seg or seg.find("if not ai:") > seg.find("ai_provider.complete"):
+        bad.append("_squire_draft_brief does not return the template before the provider call when over the cap")
+    if "ai=_sq_ai" not in py or '"brief_cap"' not in py:
+        bad.append("squire_brief_create does not apply or log the cap")
+    return [(FAIL, "; ".join(bad))] if bad else [(INFO, "monthly AI-brief cap %s, template past it, ceiling logged" % m.group(1))]
+
+
+@entry("RG-1098", "ONE-DOOR-1 share sheet: with one icon (RUL-243) the TrustSquare icon receives a photo from the phone's Share "
+                  "sheet and hands it to Snap -- GET /app.webmanifest carries share_target (the root service worker's "
+                  "/quick/share-in mailbox) only while one_door is ON, and index.html points at it only then",
+       OPEN,
+       scope="bea_main.py GET /app.webmanifest (same id '/' as site.webmanifest); route_policy.json; marketsquare.html swaps the "
+             "manifest link under effective.one_door; door.html links /app.webmanifest. LIVE half after ship: /app.webmanifest answers.",
+       ref="DOOR_BRIEF.md §6; Snap's share target lived only in Quick's manifest (QUICK-SNAP-1 U3).")
+def rg_one_door_share_target():
+    py, ix, d = repo_file("bea_main.py"), repo_file("marketsquare.html"), repo_file("door.html")
+    if None in (py, ix, d):
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    bad = []
+    i = py.find('@app.get("/app.webmanifest")')
+    seg = py[i:i + 2500] if i >= 0 else ""
+    if not seg or '"/quick/share-in?p=snap' not in seg or "if _one_door_on():" not in seg:
+        bad.append("GET /app.webmanifest does not add Snap's share target under the switch")
+    if "m.href='/app.webmanifest'" not in ix:
+        bad.append("index.html does not point at the TrustSquare manifest under the door")
+    if 'href="/app.webmanifest"' not in d:
+        bad.append("door.html does not link the TrustSquare manifest")
+    if bad:
+        return [(FAIL, "; ".join(bad))]
+    try:
+        m = json.loads(_get("/app.webmanifest"))
+    except Exception as e:
+        return [(FAIL, "repo half PASS; live /app.webmanifest not served yet (%s)" % str(e)[:60])]
+    return [(INFO, "TrustSquare manifest live; share target present=%s" % ("share_target" in m))]
+
+
+_DEMO_PHOTO_MISMATCH = {"demo_tut_2": "8e682fed6dcee8c9.jpg", "demo_tut_3": "f6fa61cc8a02f98c.jpg", "demo_tut_5": "7298c72b41f1d1ce.jpg",
+    "demo_tut_6": "114dfbac85520c04.jpg", "demo_tut_9": "8e682fed6dcee8c9.jpg", "demo_tut_10": "f6fa61cc8a02f98c.jpg",
+    "demo_svc_3": "e917b2c1296104cb.jpg", "demo_svc_5": "7dbb581cac0db9cc.jpg", "demo_adv_2": "73ab005cab450061.jpg",
+    "demo_adv_5": "6663e16740fcb7d9.jpg", "demo_adv_6": "a4671669b191403a.jpg", "demo_stay_6": "6f7135d1e424bb1f.jpg",
+    "demo_stay_7": "370e523cc5a18373.jpg", "demo_col_2": "50223bc3608dc171.jpg", "demo_col_3": "8d85f61aba8a84cf.jpg",
+    "demo_col_5": "07500b9ce2b9691d.jpg", "demo_col_7": "0d2f68e38eed6633.jpg", "demo_col_9": "50223bc3608dc171.jpg",
+    "demo_col_10": "8d85f61aba8a84cf.jpg", "demo_car_1": "c80858ad9d01460d.jpg", "demo_car_10": "7dae2bc9c1ad82fd.jpg",
+    "demo_lm_1": "28b01188db192767.jpg", "demo_lm_5": "edda80203ec7da7d.jpg", "demo_lm_6": "28b01188db192767.jpg",
+    "demo_lm_7": "8d85f61aba8a84cf.jpg", "demo_lm_9": "14e7f570d22761e6.jpg", "demo_lm_10": "3acbe8b42882ad21.jpg"}
+
+@entry("RG-1099", "DEMO-PHOTO-MATCH-1: 27 of the 81 Pretoria demo adverts carry a photo of something else (a Porsche shown as a "
+                  "Bugatti, a Mauser rifle as a sneaker, a piano lesson as a classroom) -- each must show what its title sells",
+       OPEN,
+       scope="demo_listings.json Pretoria set: the 27 ids in _DEMO_PHOTO_MISMATCH keep the photo seen 23 Oct 2026; the entry "
+             "passes when none of them still carries that photo. The door (RUL-245) shows no demo stock meanwhile.",
+       ref="Found building the one-door prototype, 23 Oct 2026 (contact sheet checked by eye).")
+def rg_demo_photo_match_1():
+    raw = repo_file("demo_listings.json")
+    if raw is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    rows = {l.get("id"): str(l.get("photo") or "") for l in json.loads(raw).get("listings", [])}
+    still = [i for i, ph in _DEMO_PHOTO_MISMATCH.items() if rows.get(i, "").endswith(ph)]
+    return [(FAIL, "%d demo adverts still show a mismatched photo: %s" % (len(still), ", ".join(still[:8])))] if still else \
+           [(INFO, "every listed demo advert now shows what it sells")]
+
 if __name__ == "__main__":
     sys.exit(main())

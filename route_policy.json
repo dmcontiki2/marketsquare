@@ -2570,6 +2570,11 @@
    "key": "GET /pa/about",
    "level": "public",
    "note": "ONE-DOOR-1 (DOOR_BRIEF.md, 23 Oct 2026): the one entry screen; 404 while launch_switches.one_door is OFF. The AI PA explainer page."
+  },
+  {
+   "key": "GET /app.webmanifest",
+   "level": "public",
+   "note": "ONE-DOOR-1 (RUL-243): the TrustSquare manifest; carries Snap's share target only while launch_switches.one_door is ON."
   }
  ]
 }
