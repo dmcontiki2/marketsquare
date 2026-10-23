@@ -1,3 +1,5 @@
+- **DOOR-INVITE-1 (RUL-249, 23 Oct 2026):** a thin city invites sellers -- below 6 real local adverts the door stream is topped up with our example adverts (city gaps or her interest first), each saying "Your listing here" bottom right and opening selling in Quick; an empty city says "Be the first seller in {city}". Real adverts always first. Words in 15 languages. Render proof 31/31.
+
 - **DOOR-TWIN-1 (23 Oct 2026):** the bottom button is now the twin of the top pill -- same size, border, colour and word (AI PA / SNAP / QUICK / TRUSTSQUARE); the "Tap to ..." sentence moved to its screen-reader label. Render proof 28/28.
 
 - **DOOR-WHEEL-1 + DOOR-FAIR-1 (RUL-248, 23 Oct 2026):** the door top is now a sideways wheel (AI PA · Snap · Quick · TrustSquare) -- swipe or tap; the chosen name sits in a centre pill above the bottom button, which wears its colour. Any scrolling advert opens itself in TrustSquare. The stream is local only (listed in her city) and a fresh random draw each visit (new `sort=random` on GET /listings + a phone-side shuffle), so every local seller gets an equal turn. Render proof 28/28.
