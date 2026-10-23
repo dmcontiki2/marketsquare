@@ -8311,8 +8311,10 @@ def _door_page(name):
     from fastapi.responses import FileResponse
     if not _one_door_on():
         raise HTTPException(status_code=404, detail="Not found")
+    # DOOR-FRESH-1 (23 Oct 2026): "no-cache" -- the phone re-checks the door on every open (a 304 when nothing changed),
+    # so a release is on every phone at once instead of up to 5 minutes later (David: "i don't see it live on my phone")
     return FileResponse("/var/www/marketsquare/%s" % name, media_type="text/html",
-                        headers={"Cache-Control": "public, max-age=300"})
+                        headers={"Cache-Control": "no-cache"})
 
 @app.get("/door")
 def door_page():

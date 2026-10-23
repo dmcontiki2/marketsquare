@@ -1,0 +1,1 @@
+- **DOOR-FRESH-1 (23 Oct 2026):** the door, AI PA page and explainer are served "no-cache", so a phone re-checks them on every open and a release reaches every phone at once (was up to 5 minutes of the old page).
