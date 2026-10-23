@@ -1541,6 +1541,11 @@ REFLECTIONS = {
    ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
    ("scripts/regression_ledger.py", ["RG-1097"], []),
  ],
+ "RUL-249": [
+   # David, 23 Oct 2026: "showing our example adverts with a small but clear sentence in the bottom right 'your listing here'"
+   ("RULINGS.md", ["A THIN CITY INVITES SELLERS"], []),
+   ("door.html", ["MINLOCAL=6", 'T("Your listing here")', '"/quick/?src=door-example"', 'T("Be the first seller in {city}"', "function isEx("], []),
+ ],
  "RUL-248": [
    # David, 23 Oct 2026: "use the top to scroll left to right selectors ... click on a scrolling advert ... randomly selected to be fair, has to be local"
    ("RULINGS.md", ["A SIDEWAYS WHEEL ON TOP, ANY ADVERT OPENS ITSELF"], []),

@@ -36,7 +36,7 @@ def handler(route, request):
     if path == "/pa/about": return ok(open(W + "pa_about.html", "rb").read(), "text/html")
     if path.startswith("/static/door/"): return ok(open(A + path.split("/")[-1], "rb").read(), "image/jpeg")
     if path == "/door/me": return ok(json.dumps(ME), "application/json")
-    if path == "/quick/me": return ok(json.dumps({"city": "Pretoria", "geo": {"city": "Pretoria"}}), "application/json")
+    if path == "/quick/me": return ok(json.dumps({"city": GEO["city"], "geo": {"city": GEO["city"]}}), "application/json")
     if path == "/listings": calls.append(("listings", request.url)); return ok(LIST, "application/json")
     if path == "/door/last": calls.append(("last", request.post_data)); return ok('{"ok":true,"stored":true}', "application/json")
     if path == "/squire/status": return ok(json.dumps(SQ), "application/json")
@@ -49,6 +49,7 @@ def handler(route, request):
     # any app the door opens: a stub page that names where we landed
     calls.append(("nav", request.url)); return ok("<html><body style='background:#fff'><h1>landed: %s</h1></body></html>" % request.url, "text/html")
 res = []
+GEO = {"city": "Pretoria"}
 def check(c, what): res.append(("PASS" if c else "FAIL", what)); print(("PASS " if c else "FAIL ") + what)
 with sync_playwright() as p:
     b = p.chromium.launch()
@@ -78,16 +79,31 @@ with sync_playwright() as p:
     cats = set(pg.eval_on_selector_all(".ad .cat", "e=>e.map(x=>x.textContent)"))
     check(cats == {"Collectors"}, "interest Collectors: only Collectors adverts (%s)" % sorted(cats))
     check("from your public adverts" in pg.inner_text("#ibar"), "the line says where the interest came from")
-    lid = pg.evaluate("()=>{const e=document.elementFromPoint(195,480).closest('.ad');return e?e.dataset.id:null}"); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
-    check(("nav", ORIGIN + "/?listing=" + lid) in calls, "TrustSquare: tapping an advert opens that advert (/?listing=%s)" % lid)
-    check(any(c[0] == "last" and '"ts"' in c[1] for c in calls), "the tap records the last app (ts)"); ctx.close()
+    # RUL-249: Pretoria has no real Collectors adverts -> Collectors examples, each saying "Your listing here", tapping opens selling
+    nex = pg.locator(".ad.ex").count(); nyours = pg.locator(".ad.ex .yours").count(); nreal = pg.locator(".ad:not(.ex)").count()
+    check(nex > 0 and nyours == nex and nreal == 0 and "Your listing here" in pg.inner_text(".ad.ex .yours >> nth=0"),
+          "too few local Collectors: examples top up the stream, every one says 'Your listing here' (%d examples)" % nex)
+    n0 = len(calls); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
+    check(("nav", ORIGIN + "/quick/?src=door-example") in calls[n0:], "tapping an example opens selling in Quick, never the example")
+    check(any(c[0] == "last" for c in calls[n0:]), "the tap records the last app"); ctx.close()
+    # RUL-249: a city with no local adverts at all -> examples + "Be the first seller in Johannesburg"
+    saved = dict(ME); ME.update(interest=[], via=None); GEO["city"] = "Johannesburg"
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(2000); slide(pg, 3); pg.wait_for_timeout(2000)
+    pg.screenshot(path=OUT + "/3b_empty_city_invite.png")
+    ncats = len(set(pg.eval_on_selector_all(".ad.ex .cat", "e=>e.map(x=>x.textContent)")))
+    check("Be the first seller in Johannesburg" in pg.inner_text("#ibar") and pg.locator(".ad:not(.ex)").count() == 0 and ncats >= 3,
+          "an empty city: 'Be the first seller in Johannesburg' over examples from %d categories, no real adverts from elsewhere" % ncats)
+    check(not errs, "no script errors in an empty city (%s)" % errs[:1]); ctx.close()
+    GEO["city"] = "Pretoria"; ME.clear(); ME.update(saved)
     # 4 Snap: the bottom button opens Snap; an advert opens that advert in TrustSquare (RUL-248)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 1); pg.wait_for_timeout(1500)
     pg.screenshot(path=OUT + "/4_snap.png"); pg.click("#tap"); pg.wait_for_timeout(1200)
     check(("nav", ORIGIN + "/quick/?p=snap") in calls, "Snap: the bottom button opens Snap (/quick/?p=snap)"); ctx.close()
+    saved = dict(ME); ME.update(interest=[], via=None)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 1); pg.wait_for_timeout(1500)
     lid = pg.evaluate("()=>{const e=document.elementFromPoint(195,480).closest('.ad');return e?e.dataset.id:null}"); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
     check(lid and ("nav", ORIGIN + "/?listing=" + lid) in calls, "Snap: tapping a scrolling advert opens that advert in TrustSquare (/?listing=%s)" % lid); ctx.close()
+    ME.clear(); ME.update(saved)
     # 4a RUL-248: local only, fresh random draw
     city_of = {str(l["id"]): (l.get("city") or "") for l in json.loads(LIST)}
     saved = dict(ME); ME.update(interest=[], via=None)
