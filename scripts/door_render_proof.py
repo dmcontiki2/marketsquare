@@ -37,7 +37,7 @@ def handler(route, request):
     if path.startswith("/static/door/"): return ok(open(A + path.split("/")[-1], "rb").read(), "image/jpeg")
     if path == "/door/me": return ok(json.dumps(ME), "application/json")
     if path == "/quick/me": return ok(json.dumps({"city": "Pretoria", "geo": {"city": "Pretoria"}}), "application/json")
-    if path == "/listings": return ok(LIST, "application/json")
+    if path == "/listings": calls.append(("listings", request.url)); return ok(LIST, "application/json")
     if path == "/door/last": calls.append(("last", request.post_data)); return ok('{"ok":true,"stored":true}', "application/json")
     if path == "/squire/status": return ok(json.dumps(SQ), "application/json")
     if path == "/squire/brief" and request.method == "POST": calls.append(("brief", request.post_data)); return ok('{"brief_id":8}', "application/json")
@@ -81,10 +81,40 @@ with sync_playwright() as p:
     lid = pg.evaluate("()=>{const e=document.elementFromPoint(195,480).closest('.ad');return e?e.dataset.id:null}"); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
     check(("nav", ORIGIN + "/?listing=" + lid) in calls, "TrustSquare: tapping an advert opens that advert (/?listing=%s)" % lid)
     check(any(c[0] == "last" and '"ts"' in c[1] for c in calls), "the tap records the last app (ts)"); ctx.close()
-    # 4 Snap: tap anywhere opens Snap
+    # 4 Snap: the bottom button opens Snap; an advert opens that advert in TrustSquare (RUL-248)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 1); pg.wait_for_timeout(1500)
-    pg.screenshot(path=OUT + "/4_snap.png"); pg.mouse.click(195, 760); pg.wait_for_timeout(1200)
-    check(("nav", ORIGIN + "/quick/?p=snap") in calls, "Snap: a tap opens Snap (/quick/?p=snap)"); ctx.close()
+    pg.screenshot(path=OUT + "/4_snap.png"); pg.click("#tap"); pg.wait_for_timeout(1200)
+    check(("nav", ORIGIN + "/quick/?p=snap") in calls, "Snap: the bottom button opens Snap (/quick/?p=snap)"); ctx.close()
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 1); pg.wait_for_timeout(1500)
+    lid = pg.evaluate("()=>{const e=document.elementFromPoint(195,480).closest('.ad');return e?e.dataset.id:null}"); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
+    check(lid and ("nav", ORIGIN + "/?listing=" + lid) in calls, "Snap: tapping a scrolling advert opens that advert in TrustSquare (/?listing=%s)" % lid); ctx.close()
+    # 4a RUL-248: local only, fresh random draw
+    city_of = {str(l["id"]): (l.get("city") or "") for l in json.loads(LIST)}
+    saved = dict(ME); ME.update(interest=[], via=None)
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1500)
+    ids = pg.eval_on_selector_all(".ad", "e=>e.map(x=>x.dataset.id)"); cities = {city_of.get(i, "?") for i in ids}
+    check(ids and cities == {"Pretoria"}, "the stream is local only: every advert is listed in Pretoria (%s)" % sorted(cities))
+    check(any(c[0] == "listings" and "sort=random" in c[1] for c in calls), "the stream asks for a random draw (sort=random)")
+    first1 = pg.eval_on_selector_all(".ad", "e=>e.slice(0,8).map(x=>x.dataset.id).join()"); ctx.close()
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1500)
+    first2 = pg.eval_on_selector_all(".ad", "e=>e.slice(0,8).map(x=>x.dataset.id).join()"); ctx.close()
+    check(first1 != first2, "every visit draws a new order (%s | %s)" % (first1[:30], first2[:30]))
+    ME.clear(); ME.update(saved)
+    # 4e DOOR-WHEEL-1: swipe the top wheel left -> next name in the centre pill, and the bottom button follows it
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500)
+    wb = pg.locator("#wheel").bounding_box(); wy = wb["y"] + wb["height"] / 2; wx = wb["x"] + wb["width"] / 2
+    on0 = pg.inner_text("#strip span.on")
+    pg.mouse.move(wx + 60, wy); pg.mouse.down(); pg.mouse.move(wx - 20, wy, steps=6); pg.mouse.move(wx - 70, wy, steps=6); pg.mouse.up(); pg.wait_for_timeout(500)
+    on1 = pg.inner_text("#strip span.on"); t1 = pg.inner_text("#tap")
+    pg.mouse.move(wx + 60, wy); pg.mouse.down(); pg.mouse.move(wx - 20, wy, steps=6); pg.mouse.move(wx - 70, wy, steps=6); pg.mouse.up(); pg.wait_for_timeout(500)
+    on2 = pg.inner_text("#strip span.on"); t2 = pg.inner_text("#tap"); pg.screenshot(path=OUT + "/4e_wheel_quick.png")
+    sb = pg.locator("#strip span.on").bounding_box(); tb = pg.locator("#tap").bounding_box()
+    centred = abs((sb["x"] + sb["width"] / 2) - (tb["x"] + tb["width"] / 2)) < 4
+    check(on0 == "AI PA" and on1 == "SNAP" and "Snap" in t1 and on2 == "QUICK" and "Quick" in t2 and centred,
+          "a swipe on the top wheel moves AI PA -> Snap -> Quick, centred over the bottom button, which follows (%s/%s/%s, centred=%s)" % (on0, on1, on2, centred))
+    pg.click("#strip span[data-i='3']"); pg.wait_for_timeout(500)
+    check(pg.inner_text("#strip span.on") == "TRUSTSQUARE" and "TrustSquare" in pg.inner_text("#tap"), "a tap on a name in the wheel picks it")
+    check(not errs, "no script errors on the wheel (%s)" % errs[:1]); ctx.close()
     # 4b DOOR-SPEED-1: a finger drag scrolls the stream and is never a tap
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1500)
     n0 = len(calls); t0 = pg.eval_on_selector("#lane", "e=>e.style.transform")

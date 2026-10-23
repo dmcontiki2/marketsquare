@@ -4002,6 +4002,8 @@ def get_listings(city: str = "Pretoria", category: Optional[str] = None,
         "trust":      _ex_last + ", COALESCE(trust_score,0) DESC, created_at DESC",
         # smart = the design's dials: trust (60%) + freshness decay over 30 days (40%)
         "smart":      _ex_last + ", (COALESCE(trust_score,0)/100.0*0.6 + MAX(0, 1.0-(julianday('now')-julianday(created_at))/30.0)*0.4) DESC",
+        # DOOR-FAIR-1 (RUL-248): the door's advert stream draws at random so every local seller gets an equal turn
+        "random":     _ex_last + ", RANDOM()",
     }
     _order_clause = _sort_map.get((sort or "").strip().lower(), _ex_last + ", created_at DESC")
 

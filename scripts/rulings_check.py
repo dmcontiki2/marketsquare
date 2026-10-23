@@ -1541,6 +1541,12 @@ REFLECTIONS = {
    ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
    ("scripts/regression_ledger.py", ["RG-1097"], []),
  ],
+ "RUL-248": [
+   # David, 23 Oct 2026: "use the top to scroll left to right selectors ... click on a scrolling advert ... randomly selected to be fair, has to be local"
+   ("RULINGS.md", ["A SIDEWAYS WHEEL ON TOP, ANY ADVERT OPENS ITSELF"], []),
+   ("door.html", ['id="wheel"', "sort=random", 'String(l.city||"").toLowerCase()===here', "function shuffle(", 'go(APPS[3],"/?listing="'], ['a.key==="ts"&&ad.dataset.id']),
+   ("bea_main.py", ['"random":     _ex_last + ", RANDOM()"'], []),
+ ],
  "RUL-247": [
    # David, 23 Oct 2026: "the left top selection took us to the AI PA ... on the live ... it goes into the trustsquare home page"
    ("RULINGS.md", ["THE DOOR AT REST (SLIDER LEFT) IS THE AI PA DOOR"], []),

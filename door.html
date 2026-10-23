@@ -41,19 +41,19 @@ html,body{margin:0;height:100%;background:var(--night);color:var(--white);font-f
 .slidebar{position:absolute;left:0;right:0;top:0;z-index:5;padding:calc(16px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 26px max(18px,env(safe-area-inset-left,0px));cursor:default;transition:background .6s}
 .door.streaming .slidebar{background:linear-gradient(180deg,var(--night) 0%,var(--night) 80%,rgba(6,9,15,0) 100%)}
 .slidebar .in{max-width:520px;margin:0 auto}
-.stops{position:relative;height:14px;margin:0 22px 6px;font-size:10px;font-weight:800;letter-spacing:.08em}
-.stops span{position:absolute;bottom:0;transform:translateX(-50%);white-space:nowrap;color:rgba(255,255,255,.62);text-shadow:0 1px 6px rgba(0,0,0,.6)}
-.stops span:last-child{transform:translateX(-80%)}
-.stops span.on{color:#fff}
-.track{position:relative;height:40px;margin:0 22px}
-.rail{position:absolute;left:0;right:0;top:18px;height:3px;border-radius:2px;background:rgba(255,255,255,.55)}
-.dot{position:absolute;top:14px;width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.9);transform:translateX(-50%)}
-.track input{position:absolute;top:0;left:-22px;width:calc(100% + 44px);height:40px;margin:0;opacity:0;cursor:pointer;z-index:2;-webkit-appearance:none;appearance:none}
-.track input::-webkit-slider-thumb{-webkit-appearance:none;width:44px;height:40px}
-.track input:focus-visible + .thumb{outline:3px solid #fff;outline-offset:3px}
-.thumb{position:absolute;top:3px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid #fff;
-  box-shadow:0 2px 12px rgba(0,0,0,.35);transform:translateX(-50%);transition:left .2s ease,background .25s;pointer-events:none}
-.thumb.set{background:#fff}
+/* DOOR-WHEEL-1 (RUL-248): the top is a sideways wheel -- AI PA · Snap · Quick · TrustSquare. A finger swipes it left or right;
+   the chosen name sits in the centre pill, straight above the bottom button, which always opens that name. */
+.wheel{position:relative;height:44px;overflow:hidden;touch-action:pan-y;cursor:grab;-webkit-user-select:none;user-select:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 82%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 82%,transparent 100%)}
+.wheel:active{cursor:grabbing}
+.pill{position:absolute;left:50%;top:5px;width:118px;height:34px;transform:translateX(-50%);border-radius:999px;border:2px solid #fff;
+  background:var(--c,rgba(255,255,255,.14));box-shadow:0 2px 12px rgba(0,0,0,.35);transition:background .3s;pointer-events:none}
+.strip{position:absolute;top:0;left:50%;height:44px;display:flex;align-items:center;transition:transform .28s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.strip.live{transition:none}
+.strip span{flex:0 0 118px;text-align:center;white-space:nowrap;font-size:11px;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.6);
+  text-shadow:0 1px 6px rgba(0,0,0,.6);transition:color .2s,font-size .2s;position:relative;z-index:1}
+.strip span.on{color:#fff;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
 .cue{height:3px;margin:8px 22px 0;border-radius:2px;background:var(--c,transparent);transition:background .3s}
 .ibar{margin-top:7px;min-height:14px;text-align:center;font-size:11px;color:#e2e8f0;opacity:0;transition:opacity .4s}
 .ibar.show{opacity:1}
@@ -70,10 +70,8 @@ html,body{margin:0;height:100%;background:var(--night);color:var(--white);font-f
   <div class="mark" id="mark">TrustSquare<small id="city"></small></div>
   <div class="stream" id="stream"><div class="lane" id="lane"></div></div>
   <div class="slidebar" id="slidebar"><div class="in">
-    <div class="stops" id="stops"></div>
-    <div class="track"><div class="rail"></div><div id="dots"></div>
-      <input type="range" id="slider" autocomplete="off" min="0" max="3" step="1" value="0" aria-label="Snap, Quick or TrustSquare">
-      <div class="thumb" id="thumb"></div></div>
+    <div class="wheel" id="wheel"><div class="pill" id="pill"></div><div class="strip" id="strip"></div></div>
+    <input type="range" class="sr" id="slider" autocomplete="off" min="0" max="3" step="1" value="0" aria-label="AI PA, Snap, Quick or TrustSquare">
     <div class="cue" id="cue"></div>
     <div class="ibar" id="ibar" aria-live="polite"></div>
   </div></div>
@@ -127,19 +125,38 @@ function show(i,n){
 }
 
 /* slider: three stops, one colour */
+var W=118;   // one wheel slot, px
+function wheelName(i){ return i===0?PAAPP.name:APPS[i].name; }
+function setCur(v){ v=Math.max(0,Math.min(3,v)); if(v===cur){ render(); return; } cur=v; $("slider").value=v; render(); }
 function buildSlider(){
-  $("stops").innerHTML=APPS.slice(1).map(function(a,i){return '<span data-i="'+(i+1)+'" style="left:'+(100*(i+1)/3)+'%">'+a.name.toUpperCase()+'</span>';}).join("");
-  $("dots").innerHTML=APPS.slice(1).map(function(a,i){return '<div class="dot" style="left:'+(100*(i+1)/3)+'%"></div>';}).join("");
+  $("strip").innerHTML=[0,1,2,3].map(function(i){ return '<span data-i="'+i+'">'+esc(wheelName(i)).toUpperCase()+'</span>'; }).join("");
   $("slider").addEventListener("input",function(e){ cur=+e.target.value; render(); });
   ["click","pointerdown","pointerup","touchstart"].forEach(function(t){ $("slidebar").addEventListener(t,function(e){ e.stopPropagation(); },{passive:true}); });
+  /* swipe: touch on phones, pointer for the mouse; a short tap on a name picks it */
+  var sx=null, dx=0, wmoved=false;
+  function ws(x){ sx=x; dx=0; wmoved=false; $("strip").classList.add("live"); }
+  function wm(x){ if(sx===null) return false; dx=x-sx; if(Math.abs(dx)>6) wmoved=true; $("strip").style.transform="translateX("+(-(cur*W+W/2)+dx)+"px)"; return wmoved; }
+  function we(target){ if(sx===null) return; $("strip").classList.remove("live"); var v=cur;
+    if(wmoved) v=cur-Math.round(dx/W*1.25);
+    else if(target&&target.closest){ var sp=target.closest("#strip span"); if(sp) v=+sp.dataset.i; }
+    sx=null; setCur(v); render(); }
+  var w=$("wheel");
+  w.addEventListener("touchstart",function(e){ if(e.touches.length===1) ws(e.touches[0].clientX); },{passive:true});
+  w.addEventListener("touchmove",function(e){ if(e.touches.length===1&&wm(e.touches[0].clientX)) e.preventDefault(); },{passive:false});
+  w.addEventListener("touchend",function(e){ we(e.target); }); w.addEventListener("touchcancel",function(){ we(null); });
+  w.addEventListener("pointerdown",function(e){ if(e.pointerType!=="touch") ws(e.clientX); });
+  // capture phase: the slidebar stops pointerup bubbling (so the door behind never takes it as a tap)
+  window.addEventListener("pointermove",function(e){ if(e.pointerType!=="touch") wm(e.clientX); },true);
+  window.addEventListener("pointerup",function(e){ if(e.pointerType!=="touch") we(e.target); },true);
 }
 function appOf(k){ return k==="pa"?PAAPP:(APPS.filter(function(a){return a&&a.key===k;})[0]||APPS[3]); }
 function render(){
-  $("thumb").style.left=(100*cur/3)+"%"; $("thumb").classList.toggle("set",cur>0);
-  Array.prototype.forEach.call(document.querySelectorAll("#stops span"),function(s){ s.classList.toggle("on",+s.dataset.i===cur); });
+  $("strip").style.transform="translateX("+(-(cur*W+W/2))+"px)";
+  Array.prototype.forEach.call(document.querySelectorAll("#strip span"),function(s){ s.classList.toggle("on",+s.dataset.i===cur); });
+  $("pill").style.setProperty("--c",APPS[cur]?css(APPS[cur].c):css(PAAPP.c));
   var a=APPS[cur], target=a||PAAPP;   // RUL-247: at rest (left), the door is the AI PA door
   $("cue").style.setProperty("--c",a?css(a.c):"transparent");
-  var tap=$("tap"); tap.style.setProperty("--c",a?css(a.c):"rgba(255,255,255,.16)");
+  var tap=$("tap"); tap.style.setProperty("--c",css((a||PAAPP).c));   // the button wears the colour of the name in the pill
   tap.innerHTML = a ? T("Tap to open {app}",{app:a.name})+' <i>&middot; '+T("where you left off")+'</i>' : T("Tap to meet your AI PA");
   $("collage").style.opacity=a?0:1; $("mark").style.opacity=a?0:1;
   $("stream").classList.toggle("show",!!a); $("door").classList.toggle("streaming",!!a);
@@ -153,6 +170,7 @@ function render(){
 
 /* the stream: local adverts for her interest, AI PA cards woven in */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function interleave(list){ var g={},keys=[]; list.forEach(function(x){ if(!g[x.cat]){g[x.cat]=[];keys.push(x.cat);} g[x.cat].push(x); });
   var out=[],i=0; while(out.length<list.length){ var k=keys[i%keys.length]; if(g[k].length) out.push(g[k].shift()); i++; } return out; }
 var laneKey="", off=0, paTurn=0;
@@ -213,7 +231,7 @@ $("door").addEventListener("click",function(e){
   var pa=e.target.closest&&e.target.closest("[data-pa]"); if(pa){ go(PAAPP); return; }
   var a=APPS[cur]||PAAPP;   // RUL-247: a tap on the collage opens the AI PA door
   var ad=e.target.closest&&e.target.closest(".ad");
-  if(ad&&a.key==="ts"&&ad.dataset.id) { go(a,"/?listing="+encodeURIComponent(ad.dataset.id)); return; }
+  if(ad&&ad.dataset.id) { go(APPS[3],"/?listing="+encodeURIComponent(ad.dataset.id)); return; }   // RUL-248: any advert opens that advert in TrustSquare
   go(a);
 });
 
@@ -225,8 +243,11 @@ function load(){
   var geoP=fetch("/quick/me",{credentials:"same-origin"}).then(j).then(function(q){ var c=(q&&(q.city||(q.geo&&q.geo.city)))||""; if(c) CITY=c; }).catch(function(){});
   return Promise.all([meP,geoP]).then(function(){
     $("city").textContent=CITY;
-    return fetch("/listings?city="+encodeURIComponent(CITY)+"&page_size=120"+(DEMO?"&demo=1":""),{credentials:"same-origin"}).then(j).then(function(L){
-      ADS=(L||[]).filter(function(l){ return l&&l.thumb_url&&l.title; }).map(function(l){
+    return fetch("/listings?city="+encodeURIComponent(CITY)+"&page_size=200&sort=random"+(DEMO?"&demo=1":""),{credentials:"same-origin"}).then(j).then(function(L){
+      /* RUL-248: local only (listed in her city -- no trips from other cities, no online, no national reach), and a fresh
+         random draw on every visit so every local seller gets an equal turn, however many sellers or visitors there are */
+      var here=CITY.toLowerCase();
+      ADS=shuffle((L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&String(l.city||"").toLowerCase()===here; })).map(function(l){
         var c=CATMAP[String(l.category||"").toLowerCase()]||null;
         return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:l.price||"",where:l.suburb||l.area||l.city||"",cat:c};
       }).filter(function(x){return x.cat;});
