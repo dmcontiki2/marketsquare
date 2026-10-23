@@ -952,6 +952,57 @@
    "{city} ਵਿੱਚ ਪਹਿਲੇ ਵਿਕਰੇਤਾ ਬਣੋ",
    "كن أول بائع في {city}",
    "做{city}第一個賣家"
+  ],
+  "Categories": [
+   "Kategorieë",
+   "Izigaba",
+   "Mekgahlelo",
+   "Iindidi",
+   "Magoro",
+   "Categorías",
+   "类别",
+   "Mga kategorya",
+   "Danh mục",
+   "Categorïau",
+   "Kategorie",
+   "Categorii",
+   "ਸ਼੍ਰੇਣੀਆਂ",
+   "الفئات",
+   "類別"
+  ],
+  "All": [
+   "Alles",
+   "Konke",
+   "Tsohle",
+   "Zonke",
+   "Tšohle",
+   "Todo",
+   "全部",
+   "Lahat",
+   "Tất cả",
+   "Popeth",
+   "Wszystko",
+   "Toate",
+   "ਸਾਰੇ",
+   "الكل",
+   "全部"
+  ],
+  "Your choice: {cat}": [
+   "Jou keuse: {cat}",
+   "Okukhethile: {cat}",
+   "Kgetho ya hao: {cat}",
+   "Ukhetho lwakho: {cat}",
+   "Kgetho ya gago: {cat}",
+   "Tu elección: {cat}",
+   "你的选择：{cat}",
+   "Pinili mo: {cat}",
+   "Lựa chọn của bạn: {cat}",
+   "Eich dewis: {cat}",
+   "Twój wybór: {cat}",
+   "Alegerea ta: {cat}",
+   "ਤੁਹਾਡੀ ਚੋਣ: {cat}",
+   "اختيارك: {cat}",
+   "你揀咗：{cat}"
   ]
  }
 }

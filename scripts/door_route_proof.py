@@ -60,7 +60,8 @@ _fa = types.ModuleType("fastapi"); _fa.responses = _fr
 sys.modules.setdefault("fastapi", _fa); sys.modules["fastapi.responses"] = _fr
 _ffm = types.ModuleType("feature_flags"); _ffm.squire_pro_pa_on = lambda: False; sys.modules["feature_flags"] = _ffm
 
-g = {"json": json, "HTTPException": HTTPException, "app": _App(), "Cookie": Cookie, "BaseModel": BaseModel,
+from typing import Optional
+g = {"Optional": Optional, "json": json, "HTTPException": HTTPException, "app": _App(), "Cookie": Cookie, "BaseModel": BaseModel,
      "database": _DB, "_bit_flag": _bit_flag, "_session_email": _session_email, "_seller_tier_of": _seller_tier_of}
 exec(compile(norm, "norm", "exec"), g)
 exec(compile(block, "door", "exec"), g)
@@ -79,7 +80,8 @@ def expect_status(fn, code, what, *a, **k):
 
 c = _DB.get_db()
 for ddl in ("ALTER TABLE launch_switches ADD COLUMN one_door INTEGER NOT NULL DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN interest_categories TEXT", "ALTER TABLE users ADD COLUMN last_app TEXT"):
+            "ALTER TABLE users ADD COLUMN interest_categories TEXT", "ALTER TABLE users ADD COLUMN last_app TEXT",
+            "ALTER TABLE users ADD COLUMN door_choice TEXT"):
     try: c.execute(ddl)
     except Exception: pass
 c.execute("UPDATE launch_switches SET one_door=0 WHERE id=1"); c.commit()
@@ -120,6 +122,12 @@ r = g["door_me"]("tp"); check(r["interest"] == ["Local Market", "Property", "Adv
 r = g["door_last"](BaseModel(app="pa"), "tp"); check(r["stored"], "last app stored")
 check(g["door_me"]("tp")["last_app"] == "pa", "last app read back")
 expect_status(g["door_last"], 400, "unknown app refused", BaseModel(app="zzz"), "tp")
+# 6b DOOR-PICK-1 (RUL-250): her own category choice is stored on her account, read back, refused when unknown, cleared with ""
+r = g["door_last"](BaseModel(choice="cars", sub="Toyota"), "tp"); check(r["stored"], "choice stored")
+check(g["door_me"]("tp")["choice"] == {"cat": "Cars", "sub": "Toyota"} and g["door_me"]("tp")["last_app"] == "pa", "choice read back (last app untouched)")
+expect_status(g["door_last"], 400, "unknown category refused", BaseModel(choice="zzz"), "tp")
+g["door_last"](BaseModel(choice=""), "tp"); check(g["door_me"]("tp")["choice"] is None, "choice cleared with an empty category")
+r = g["door_last"](BaseModel(choice="property"), None); check(r["stored"] is False, "signed out -> choice not stored (the phone keeps it)")
 # 7
 r = g["pa_page"]("ta"); check(getattr(r, "kind", "") == "redirect" and r.url == "/pa/about", "non-Pro -> /pa/about")
 r = g["pa_page"](None); check(getattr(r, "kind", "") == "redirect", "signed out -> /pa/about")

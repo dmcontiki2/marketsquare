@@ -1541,6 +1541,12 @@ REFLECTIONS = {
    ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
    ("scripts/regression_ledger.py", ["RG-1097"], []),
  ],
+ "RUL-250": [
+   # David, 23 Oct 2026: "a 'hidden' side swap bringing up category selectors ... I like the hint - do it please, and build it"
+   ("RULINGS.md", ["HER OWN CATEGORIES: A HIDDEN SIDE SWIPE"], []),
+   ("door.html", ['id="cattab"', "function openPicker(", "function nudgeOnce(", "ts_door_choice", 'T("Your choice: {cat}"', "drag.dx<-60"], []),
+   ("bea_main.py", ["ADD COLUMN door_choice", 'UPDATE users SET door_choice=?', 'out["choice"]'], []),
+ ],
  "RUL-249": [
    # David, 23 Oct 2026: "showing our example adverts with a small but clear sentence in the bottom right 'your listing here'"
    ("RULINGS.md", ["A THIN CITY INVITES SELLERS"], []),

@@ -1428,6 +1428,7 @@ def run_migrations(conn):
         "ALTER TABLE launch_switches ADD COLUMN one_door INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE users ADD COLUMN interest_categories TEXT",
         "ALTER TABLE users ADD COLUMN last_app TEXT",
+        "ALTER TABLE users ADD COLUMN door_choice TEXT",   # DOOR-PICK-1 (RUL-250): her own category choice, JSON {cat, sub}
     ):
         try:
             conn.execute(_ddl)
@@ -8342,7 +8343,7 @@ def door_me(ts_user: str = Cookie(default=None)):
     """What the door needs to know about the visitor: her interest (and where it came from), her last app, Pro or not."""
     if not _one_door_on():
         raise HTTPException(status_code=404, detail="Not found")
-    out = {"signed_in": False, "interest": [], "via": None, "last_app": None, "pro": False, "squire_pa": False}
+    out = {"signed_in": False, "interest": [], "via": None, "last_app": None, "pro": False, "squire_pa": False, "choice": None}
     em = _session_email(ts_user)
     if not em:
         return out
@@ -8356,6 +8357,12 @@ def door_me(ts_user: str = Cookie(default=None)):
         out["pro"] = (u.get("seller_tier") or "free").lower() == "pro"
         la = (u.get("last_app") or "").strip().lower()
         out["last_app"] = la if la in DOOR_APPS else None
+        try:   # DOOR-PICK-1 (RUL-250): her own choice, when she made one
+            ch = json.loads(u.get("door_choice") or "null")
+            if isinstance(ch, dict) and ch.get("cat") in DOOR_CATS:
+                out["choice"] = {"cat": ch["cat"], "sub": str(ch.get("sub") or "")[:60]}
+        except Exception:
+            pass
         try:
             hist = [c for c in json.loads(u.get("interest_categories") or "[]") if c in DOOR_CATS]
         except Exception:
@@ -8407,22 +8414,34 @@ def door_app_manifest():
     return _DoorJR(m, media_type="application/manifest+json", headers={"Cache-Control": "private, no-store"})
 
 class _DoorLastIn(BaseModel):
-    app: str
+    app: Optional[str] = None
+    choice: Optional[str] = None   # DOOR-PICK-1 (RUL-250): a category from DOOR_CATS, or "" to clear her choice
+    sub: Optional[str] = None
 
 @app.post("/door/last")
 def door_last(body: _DoorLastIn, ts_user: str = Cookie(default=None)):
     """The tap remembers which app she opened, so the next tap on the collage opens it again."""
     if not _one_door_on():
         raise HTTPException(status_code=404, detail="Not found")
-    a = (body.app or "").strip().lower()
-    if a not in DOOR_APPS:
+    a = (getattr(body, "app", None) or "").strip().lower()
+    ch = None
+    bc, bs = getattr(body, "choice", None), getattr(body, "sub", None)
+    if bc is not None:   # DOOR-PICK-1 (RUL-250)
+        c = _door_cat(bc) if bc.strip() else ""
+        if c is None or (c and c not in DOOR_CATS):
+            raise HTTPException(status_code=400, detail="Unknown category.")
+        ch = json.dumps({"cat": c, "sub": (bs or "").strip()[:60]}) if c else ""
+    elif a not in DOOR_APPS:
         raise HTTPException(status_code=400, detail="Unknown app.")
     em = _session_email(ts_user)
     if not em:
         return {"ok": True, "stored": False}   # signed out: the phone remembers it (door.html localStorage)
     conn = database.get_db()
     try:
-        conn.execute("UPDATE users SET last_app=? WHERE LOWER(email)=?", (a, em))
+        if ch is not None:
+            conn.execute("UPDATE users SET door_choice=? WHERE LOWER(email)=?", (ch or None, em))
+        if a in DOOR_APPS:
+            conn.execute("UPDATE users SET last_app=? WHERE LOWER(email)=?", (a, em))
         conn.commit()
     finally:
         conn.close()

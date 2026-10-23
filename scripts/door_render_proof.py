@@ -153,6 +153,35 @@ with sync_playwright() as p:
     n0 = len(calls); pg.mouse.click(cx, cy); pg.wait_for_timeout(1200)
     navs = [c[1] for c in calls[n0:] if c[0] == "nav"]
     check(navs == [ORIGIN + "/quick/"], "the bottom button opens what the top shows (Quick), never the card under it: %s" % navs); ctx.close()
+    # 4f DOOR-PICK-1 (RUL-250): the hidden side swipe -> her categories; the hint tab; one tap picks; remembered; All clears
+    saved = dict(ME); ME.update(interest=[], via=None)
+    ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1900)
+    nudged = pg.eval_on_selector("#lane", "e=>e.classList.contains('nudge')") or pg.eval_on_selector("#cattab", "e=>e.classList.contains('pulse')")
+    check(pg.locator("#cattab").is_visible() and "Categories" in pg.inner_text("#cattab") and nudged, "the hint: a 'Categories' tab on the right edge, and a one-time nudge")
+    n0 = len(calls)
+    pg.mouse.move(330, 500); pg.mouse.down(); pg.mouse.move(250, 505, steps=6); pg.mouse.move(150, 508, steps=6); pg.mouse.up(); pg.wait_for_timeout(700)
+    tiles = pg.locator("#pl .ct").count()
+    check(pg.eval_on_selector("#picker", "e=>e.classList.contains('open')") and tiles == 8 and not any(c[0] == "nav" for c in calls[n0:]),
+          "a right-to-left swipe on the adverts opens the categories (%d tiles incl. All), opens nothing else" % tiles)
+    pg.wait_for_timeout(1500); pg.screenshot(path=OUT + "/4f_categories.png")
+    pg.click("#pl .ct[data-cat='Cars'] b"); pg.wait_for_timeout(900)
+    cats = set(pg.eval_on_selector_all(".ad .cat", "e=>e.map(x=>x.textContent)"))
+    check(not pg.eval_on_selector("#picker", "e=>e.classList.contains('open')") and cats == {"Cars"} and "Your choice: Cars" in pg.inner_text("#ibar")
+          and any(c[0] == "last" and '"choice":"Cars"' in (c[1] or "") for c in calls[n0:]),
+          "one tap on Cars: back to the adverts, only Cars (%s), 'Your choice: Cars', saved" % sorted(cats))
+    pg.screenshot(path=OUT + "/4g_choice_cars.png")
+    pg.reload(); pg.wait_for_timeout(1500); slide(pg, 3); pg.wait_for_timeout(1200)
+    check("Your choice: Cars" in pg.inner_text("#ibar"), "the choice is remembered on the next visit")
+    pg.click("#cattab"); pg.wait_for_timeout(600)
+    chip = pg.locator("#pl .ct[data-cat='Property'] .subs span").first
+    sub = chip.inner_text() if chip.count() else ""
+    if sub: chip.click(); pg.wait_for_timeout(900)
+    subs_ok = sub and pg.eval_on_selector_all(".ad .cat", "e=>e.every(x=>x.textContent==='Property')") and ("Property · " + sub) in pg.inner_text("#ibar")
+    check(bool(subs_ok), "a sub-category chip narrows it (Property · %s)" % sub)
+    pg.click("#cattab"); pg.wait_for_timeout(600); pg.click("#pl .ct.all"); pg.wait_for_timeout(900)
+    check("Your choice" not in pg.inner_text("#ibar") and len(set(pg.eval_on_selector_all(".ad .cat", "e=>e.map(x=>x.textContent)"))) > 1, "All clears her choice")
+    check(not errs, "no script errors in the categories (%s)" % errs[:1]); ctx.close()
+    ME.clear(); ME.update(saved)
     # 5 AI PA card -> /pa (Pro) -> the AI PA page
     ME.update(pro=True)
     ctx, pg, errs = page(); pg.goto(ORIGIN + "/door"); pg.wait_for_timeout(1500); slide(pg, 2); pg.wait_for_timeout(1500)
