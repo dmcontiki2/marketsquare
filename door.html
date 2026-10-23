@@ -354,9 +354,15 @@ function load(){
       }).filter(function(x){return x.cat;});
     }).catch(function(){ ADS=[]; });
   }).then(function(){
-    /* RUL-249: the example pool -- the house examples (they live in Pretoria), only fetched when her city is thin */
-    return fetch("/listings?city=Pretoria&demo=1&page_size=200&sort=random",{credentials:"same-origin"}).then(j).then(function(L){
-      EX=shuffle((L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&isEx(l); })).map(function(l){
+    /* RUL-249 + DOOR-EX-LOCAL-1: the example pool -- her own city's house examples first (New York's are in $, London's
+       in GBP), Pretoria's only for a city that has none of its own, so no visitor sees another country's examples */
+    var exOf=function(L,c){ return (L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&isEx(l)&&(!c||String(l.city||"").toLowerCase()===c); }); };
+    return fetch("/listings?city="+encodeURIComponent(CITY)+"&demo=1&page_size=200&sort=random",{credentials:"same-origin"}).then(j).then(function(L){
+      var mine=exOf(L,CITY.toLowerCase());
+      if(mine.length) return mine;
+      return fetch("/listings?city=Pretoria&demo=1&page_size=200&sort=random",{credentials:"same-origin"}).then(j).then(function(P){ return exOf(P,"pretoria"); });
+    }).then(function(L){
+      EX=shuffle(L||[]).map(function(l){
         var c=CATMAP[String(l.category||"").toLowerCase()]||null;
         return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:"",where:"",cat:c,sub:subOf(l,c),ex:true};
       }).filter(function(x){return x.cat;});

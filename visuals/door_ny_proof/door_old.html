@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06090f">
+<link rel="manifest" href="/app.webmanifest">
+<title>TrustSquare</title>
+<style>
+/* ONE-DOOR-1 (DOOR_BRIEF.md): the one entry screen. Opens like a film -- a living collage of the journey photographs;
+   one slide turns it into local adverts for the visitor's interest; one tap opens the app of that type. */
+:root{--snap:#2563eb;--quick:#16a34a;--ts:#7c3aed;--pa:#dc2626;--night:#06090f;--white:#f8fafc;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--night);color:var(--white);font-family:var(--sans);color-scheme:dark;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.door{position:fixed;inset:0;cursor:pointer}
+.collage{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.25fr 1fr 1.15fr 1fr;gap:3px;transition:opacity 1s ease}
+.pane{position:relative;overflow:hidden;background:#111}
+.pane.wide{grid-column:1 / 3}
+.pane img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease;transform-origin:var(--ox,50%) var(--oy,50%)}
+.pane img.on{opacity:1;animation:drift 9s ease-out forwards}
+@keyframes drift{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.16) translate(var(--dx,-2%),var(--dy,-1%))}}
+.veil{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.72) 100%)}
+.mark{position:absolute;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--serif);font-size:30px;letter-spacing:.02em;text-shadow:0 2px 18px rgba(0,0,0,.6);transition:opacity .8s;pointer-events:none}
+.mark small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;opacity:.8;margin-top:4px}
+.stream{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;pointer-events:none;overflow:hidden;background:var(--night);touch-action:none}
+.stream.show{opacity:1;pointer-events:auto}
+.lane{display:flex;flex-direction:column;gap:6px;padding:calc(140px + env(safe-area-inset-top,0px)) 8px 0;will-change:transform;max-width:560px;margin:0 auto}
+.ad,.pa{position:relative;border-radius:16px;overflow:hidden;flex:0 0 auto;background:#111}
+.ad{height:236px}.pa{height:330px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.ad img,.pa img{width:100%;height:100%;object-fit:cover;display:block}
+.ad .txt{position:absolute;left:0;right:0;bottom:0;padding:34px 14px 12px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.78))}
+.ad .txt b{display:block;font-size:15px;line-height:1.25}.ad .txt span{font-size:12px;color:#e2e8f0}
+/* DOOR-INVITE-1 (RUL-249): an example advert is never passed off as real -- it carries "Your listing here" and opens selling */
+.ad .yours{position:absolute;right:10px;bottom:12px;z-index:1;font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#fff;background:rgba(6,9,15,.8);
+  border:1px solid rgba(255,255,255,.55);padding:5px 9px;border-radius:999px;white-space:nowrap}
+.ad.ex .txt{padding-right:136px}
+/* DOOR-PICK-1 (RUL-250): a hidden side swipe opens her own categories; a small tab on the right edge is the hint */
+.cattab{position:absolute;right:0;top:50%;z-index:5;transform:translateY(-50%);display:none;align-items:center;gap:4px;padding:10px 8px 10px 10px;
+  border-radius:12px 0 0 12px;background:rgba(6,9,15,.78);border:1px solid rgba(255,255,255,.45);border-right:0;color:#fff;font-size:11px;font-weight:800;
+  letter-spacing:.06em;writing-mode:vertical-rl;text-orientation:mixed;cursor:pointer;box-shadow:-4px 0 18px rgba(0,0,0,.35)}
+.door.streaming .cattab{display:flex}
+.cattab b{writing-mode:horizontal-tb;font-size:14px}
+.cattab.pulse{animation:tabpulse 1.2s ease 2}
+@keyframes tabpulse{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-8px)}}
+.lane.nudge{animation:lanenudge 1.1s ease}
+@keyframes lanenudge{0%,100%{margin-left:0}45%{margin-left:-46px}}
+.picker{position:absolute;inset:0;z-index:7;background:var(--night);transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.picker.open{transform:translateX(0)}
+.picker .ph{display:flex;align-items:center;justify-content:space-between;padding:calc(16px + env(safe-area-inset-top,0px)) 18px 10px;font-family:var(--serif);font-size:24px}
+.picker .ph button{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:999px;width:38px;height:38px;font-size:18px;cursor:pointer}
+.picker .pl{flex:1;overflow-y:auto;padding:0 10px 30px;display:flex;flex-direction:column;gap:8px;max-width:560px;width:100%;margin:0 auto;box-sizing:border-box;touch-action:pan-y}
+.ct{position:relative;height:150px;border-radius:16px;overflow:hidden;flex:0 0 auto;cursor:pointer;background:#111}
+.ct img{width:100%;height:100%;object-fit:cover;display:block}
+.ct .cn{position:absolute;left:0;right:0;bottom:0;padding:30px 14px 10px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.8))}
+.ct .cn b{display:block;font-family:var(--serif);font-size:22px;font-weight:600}
+.ct .subs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ct .subs span{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.45)}
+.ct.on{outline:3px solid #fff;outline-offset:-3px}
+.ct.all{height:64px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.45);font-weight:800;letter-spacing:.06em}
+.ad .price{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.ad .cat{position:absolute;top:10px;left:10px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.9);color:#0f172a;padding:4px 8px;border-radius:999px}
+.pa header{position:absolute;left:0;right:0;bottom:0;padding:44px 14px 12px;background:linear-gradient(180deg,rgba(6,9,15,0),rgba(6,9,15,.86) 45%)}
+.pa .kind{display:inline-block;font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#c8102e;padding:3px 7px;border-radius:3px}
+.pa h4{margin:6px 0 3px;font-size:17px;line-height:1.2;font-family:var(--serif);font-weight:600;color:#fff}
+.pa .ex{font-size:9.5px;letter-spacing:.1em;color:#cbd5e1;text-transform:uppercase}
+.slidebar{position:absolute;left:0;right:0;top:0;z-index:5;padding:calc(16px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 26px max(18px,env(safe-area-inset-left,0px));cursor:default;transition:background .6s}
+.door.streaming .slidebar{background:linear-gradient(180deg,var(--night) 0%,var(--night) 80%,rgba(6,9,15,0) 100%)}
+.slidebar .in{max-width:520px;margin:0 auto}
+/* DOOR-WHEEL-1 (RUL-248): the top is a sideways wheel -- AI PA · Snap · Quick · TrustSquare. A finger swipes it left or right;
+   the chosen name sits in the centre pill, straight above the bottom button, which always opens that name. */
+.wheel{position:relative;height:44px;overflow:hidden;touch-action:pan-y;cursor:grab;-webkit-user-select:none;user-select:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 82%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 82%,transparent 100%)}
+.wheel:active{cursor:grabbing}
+.pill{position:absolute;left:50%;top:5px;width:118px;height:34px;transform:translateX(-50%);border-radius:999px;border:2px solid #fff;
+  background:var(--c,rgba(255,255,255,.14));box-shadow:0 2px 12px rgba(0,0,0,.35);transition:background .3s;pointer-events:none}
+.strip{position:absolute;top:0;left:50%;height:44px;display:flex;align-items:center;transition:transform .28s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.strip.live{transition:none}
+.strip span{flex:0 0 118px;text-align:center;white-space:nowrap;font-size:11px;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.6);
+  text-shadow:0 1px 6px rgba(0,0,0,.6);transition:color .2s,font-size .2s;position:relative;z-index:1}
+.strip span.on{color:#fff;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.cue{height:3px;margin:8px 22px 0;border-radius:2px;background:var(--c,transparent);transition:background .3s}
+.ibar{margin-top:7px;min-height:14px;text-align:center;font-size:11px;color:#e2e8f0;opacity:0;transition:opacity .4s}
+.ibar.show{opacity:1}
+/* DOOR-TWIN-1 (RUL-248): the bottom button is the twin of the top pill -- same size, border, colour and word */
+.tap{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;white-space:nowrap;
+  width:118px;height:34px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:999px;border:2px solid #fff;
+  font-size:13px;font-weight:800;letter-spacing:.08em;background:var(--c,rgba(255,255,255,.14));color:#fff;
+  box-shadow:0 2px 12px rgba(0,0,0,.35);transition:background .3s;pointer-events:auto;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.pane img.on{animation:none}.lane{transform:none!important}}
+</style>
+</head>
+<body>
+<div class="door" id="door" role="button" aria-label="Open TrustSquare">
+  <div class="collage" id="collage"></div>
+  <div class="veil"></div>
+  <div class="mark" id="mark">TrustSquare<small id="city"></small></div>
+  <div class="stream" id="stream"><div class="lane" id="lane"></div></div>
+  <div class="slidebar" id="slidebar"><div class="in">
+    <div class="wheel" id="wheel"><div class="pill" id="pill"></div><div class="strip" id="strip"></div></div>
+    <input type="range" class="sr" id="slider" autocomplete="off" min="0" max="3" step="1" value="0" aria-label="AI PA, Snap, Quick or TrustSquare">
+    <div class="cue" id="cue"></div>
+    <div class="ibar" id="ibar" aria-live="polite"></div>
+  </div></div>
+  <div class="tap" id="tap"></div>
+  <div class="cattab" id="cattab" role="button"><b>&lsaquo;</b><span id="cattabt"></span></div>
+  <div class="picker" id="picker" aria-hidden="true"><div class="ph"><span id="pickt"></span><button id="pickx" aria-label="Close">&rsaquo;</button></div><div class="pl" id="pl"></div></div>
+</div>
+<script>
+(function(){
+"use strict";
+var DI18N = /*DI18N*/{"Tap to continue in {app}":["Tik om voort te gaan in {app}","Thepha ukuze uqhubeke ku-{app}","Tobetsa ho tswela pele ho {app}","Cofa ukuze uqhubeke ku-{app}","Kgotla go tšwela pele go {app}","Toca para seguir en {app}","轻触继续使用 {app}","I-tap para magpatuloy sa {app}","Chạm để tiếp tục trong {app}","Tapiwch i barhau yn {app}","Dotknij, aby kontynuować w {app}","Atinge pentru a continua în {app}","{app} ਵਿੱਚ ਜਾਰੀ ਰੱਖਣ ਲਈ ਛੋਹਵੋ","انقر للمتابعة في {app}","輕按繼續用 {app}"],"Tap to open {app}":["Tik om {app} oop te maak","Thepha ukuze uvule i-{app}","Tobetsa ho bula {app}","Cofa ukuze uvule i-{app}","Kgotla go bula {app}","Toca para abrir {app}","轻触打开 {app}","I-tap para buksan ang {app}","Chạm để mở {app}","Tapiwch i agor {app}","Dotknij, aby otworzyć {app}","Atinge pentru a deschide {app}","{app} ਖੋਲ੍ਹਣ ਲਈ ਛੋਹਵੋ","انقر لفتح {app}","輕按打開 {app}"],"where you left off":["waar jy opgehou het","lapho ugcine khona","moo o emisitseng teng","apho uyeke khona","moo o emišitšego gona","donde lo dejaste","从上次离开的地方","kung saan ka huminto","nơi bạn đã dừng lại","lle gwnaethoch adael","tam, gdzie skończyłeś","de unde ai rămas","ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡਿਆ ਸੀ","من حيث توقفت","由上次停低嘅地方"],"Your interest: {cats}":["Jou belangstelling: {cats}","Okukuthandayo: {cats}","Seo o se ratang: {cats}","Umdla wakho: {cats}","Seo o se ratago: {cats}","Tu interés: {cats}","你的兴趣：{cats}","Ang interes mo: {cats}","Sở thích của bạn: {cats}","Eich diddordeb: {cats}","Twoje zainteresowania: {cats}","Interesul tău: {cats}","ਤੁਹਾਡੀ ਦਿਲਚਸਪੀ: {cats}","اهتمامك: {cats}","你嘅興趣：{cats}"],"from your previous use":["uit jou vorige gebruik","kusukela ekusebenziseni kwakho kwangaphambili","ho tswa tshebedisong ya hao ya pele","ukusuka ekusebenziseni kwakho kwangaphambili","go tšwa tšhomišong ya gago ya peleng","según tu uso anterior","根据你以往的使用","mula sa dati mong paggamit","từ lần sử dụng trước của bạn","o'ch defnydd blaenorol","na podstawie wcześniejszego korzystania","din utilizarea ta anterioară","ਤੁਹਾਡੀ ਪਿਛਲੀ ਵਰਤੋਂ ਤੋਂ","من استخدامك السابق","根據你之前嘅使用"],"from your public adverts":["uit jou openbare advertensies","kusukela ezikhangisweni zakho zomphakathi","ho tswa dipapatsong tsa hao tsa setjhaba","ukusuka kwiintengiso zakho zoluntu","go tšwa dipapatšong tša gago tša setšhaba","según tus anuncios públicos","根据你公开的广告","mula sa mga pampublikong anunsiyo mo","từ các quảng cáo công khai của bạn","o'ch hysbysebion cyhoeddus","na podstawie Twoich publicznych ogłoszeń","din anunțurile tale publice","ਤੁਹਾਡੇ ਜਨਤਕ ਇਸ਼ਤਿਹਾਰਾਂ ਤੋਂ","من إعلاناتك العامة","根據你公開嘅廣告"],"Everything near you":["Alles naby jou","Konke okuseduze nawe","Tsohle tse haufi le wena","Yonke into ekufutshane nawe","Tšohle tše kgauswi le wena","Todo cerca de ti","你附近的一切","Lahat ng malapit sa iyo","Mọi thứ gần bạn","Popeth yn agos atoch","Wszystko w pobliżu","Tot ce e aproape de tine","ਤੁਹਾਡੇ ਨੇੜੇ ਸਭ ਕੁਝ","كل ما هو قريب منك","你附近嘅一切"],"Executive report":["Bestuursverslag","Umbiko omkhulu","Tlaleho ya botsamaisi","Ingxelo yolawulo","Pego ya taolo","Informe ejecutivo","管理报告","Ulat pang-ehekutibo","Báo cáo điều hành","Adroddiad gweithredol","Raport zarządczy","Raport executiv","ਕਾਰਜਕਾਰੀ ਰਿਪੋਰਟ","تقرير تنفيذي","管理報告"],"Sell opportunity":["Verkoopgeleentheid","Ithuba lokuthengisa","Monyetla wa ho rekisa","Ithuba lokuthengisa","Sebaka sa go rekiša","Oportunidad de venta","出售机会","Pagkakataong magbenta","Cơ hội bán","Cyfle i werthu","Okazja sprzedaży","Oportunitate de vânzare","ਵੇਚਣ ਦਾ ਮੌਕਾ","فرصة بيع","放售機會"],"Buy opportunity":["Koopgeleentheid","Ithuba lokuthenga","Monyetla wa ho reka","Ithuba lokuthenga","Sebaka sa go reka","Oportunidad de compra","购买机会","Pagkakataong bumili","Cơ hội mua","Cyfle i brynu","Okazja zakupu","Oportunitate de cumpărare","ਖਰੀਦਣ ਦਾ ਮੌਕਾ","فرصة شراء","購入機會"],"Watch setup":["Waginstelling","Ukusetha ukuqapha","Ho seta tebelo","Ukuseta ukujonga","Go beakanya tebelelo","Configurar vigilancia","监看设置","Ayos ng pagbabantay","Thiết lập theo dõi","Gosod gwyliadwriaeth","Ustawienia obserwacji","Setări de urmărire","ਨਿਗਰਾਨੀ ਸੈਟਅੱਪ","إعداد المراقبة","監察設定"],"Your weekly report":["Jou weeklikse verslag","Umbiko wakho wesonto","Tlaleho ya hao ya beke","Ingxelo yakho yeveki","Pego ya gago ya beke","Tu informe semanal","你的每周报告","Ang lingguhang ulat mo","Báo cáo hằng tuần của bạn","Eich adroddiad wythnosol","Twój raport tygodniowy","Raportul tău săptămânal","ਤੁਹਾਡੀ ਹਫ਼ਤਾਵਾਰੀ ਰਿਪੋਰਟ","تقريرك الأسبوعي","你嘅每週報告"],"Buyers are looking for what you sell":["Kopers soek wat jy verkoop","Abathengi bafuna lokho okuthengisayo","Bareki ba batla seo o se rekisang","Abathengi bafuna oko ukuthengisayo","Bareki ba nyaka seo o se rekišago","Hay compradores buscando lo que vendes","有买家在找你卖的东西","May mga mamimiling naghahanap ng ibinebenta mo","Người mua đang tìm thứ bạn bán","Mae prynwyr yn chwilio am yr hyn rydych yn ei werthu","Kupujący szukają tego, co sprzedajesz","Cumpărătorii caută ce vinzi","ਖਰੀਦਦਾਰ ਉਹ ਲੱਭ ਰਹੇ ਹਨ ਜੋ ਤੁਸੀਂ ਵੇਚਦੇ ਹੋ","مشترون يبحثون عما تبيعه","有買家搵緊你賣嘅嘢"],"A bargain matches your watch":["'n Winskoop pas by jou wag","Okushibhile kufana nokuqapha kwakho","Theko e tlase e tsamaisana le tebelo ya hao","Into enexabiso eliphantsi ihambelana nokujonga kwakho","Theko ya fase e swanela tebelelo ya gago","Una ganga coincide con tu vigilancia","有一笔划算的交易符合你的监看","May murang alok na tugma sa binabantayan mo","Một món hời khớp với mục theo dõi của bạn","Mae bargen yn cyfateb i'ch gwyliadwriaeth","Okazja pasuje do Twojej obserwacji","O ofertă bună se potrivește cu ce urmărești","ਇੱਕ ਸਸਤਾ ਸੌਦਾ ਤੁਹਾਡੀ ਨਿਗਰਾਨੀ ਨਾਲ ਮੇਲ ਖਾਂਦਾ ਹੈ","صفقة رابحة تطابق مراقبتك","有平嘢啱晒你監察嘅條件"],"Your watches, set your way":["Jou wagte, soos jy dit wil hê","Ukuqapha kwakho, ngendlela yakho","Ditebelo tsa hao, ka tsela ya hao","Ukujonga kwakho, ngendlela yakho","Ditebelelo tša gago, ka tsela ya gago","Tus vigilancias, a tu manera","你的监看，按你的方式设置","Ang mga bantay mo, ayon sa gusto mo","Mục theo dõi của bạn, theo cách của bạn","Eich gwyliadwriaethau, eich ffordd chi","Twoje obserwacje, po Twojemu","Urmăririle tale, așa cum vrei","ਤੁਹਾਡੀਆਂ ਨਿਗਰਾਨੀਆਂ, ਤੁਹਾਡੇ ਤਰੀਕੇ ਨਾਲ","مراقباتك، بطريقتك","你嘅監察，照你嘅方式設定"],"Example":["Voorbeeld","Isibonelo","Mohlala","Umzekelo","Mohlala","Ejemplo","示例","Halimbawa","Ví dụ","Enghraifft","Przykład","Exemplu","ਉਦਾਹਰਨ","مثال","示例"],"Tap to meet your AI PA":["Tik om jou AI PA te ontmoet","Thepha ukuze uhlangane ne-AI PA yakho","Tobetsa ho kopana le AI PA ya hao","Cofa ukuze udibane ne-AI PA yakho","Kgotla go kopana le AI PA ya gago","Toca para conocer a tu AI PA","轻触认识你的 AI PA","I-tap para makilala ang AI PA mo","Chạm để gặp AI PA của bạn","Tapiwch i gwrdd â'ch AI PA","Dotknij, aby poznać swojego AI PA","Atinge pentru a-ți cunoaște AI PA","ਆਪਣੇ AI PA ਨੂੰ ਮਿਲਣ ਲਈ ਛੋਹਵੋ","انقر للتعرّف على مساعدك AI PA","輕按認識你嘅 AI PA"],"Your listing here":["Jou advertensie hier","Uhlu lwakho lapha","Papatso ya hao mona","Intengiso yakho apha","Papatšo ya gago mo","Tu anuncio aquí","你的广告放这里","Ang listing mo rito","Tin đăng của bạn ở đây","Eich hysbyseb yma","Twoje ogłoszenie tutaj","Anunțul tău aici","ਤੁਹਾਡਾ ਇਸ਼ਤਿਹਾਰ ਇੱਥੇ","إعلانك هنا","你嘅廣告擺呢度"],"Be the first seller in {city}":["Wees die eerste verkoper in {city}","Yiba ngumthengisi wokuqala e-{city}","Eba morekisi wa pele {city}","Yiba ngumthengisi wokuqala e-{city}","Eba morekiši wa mathomo ka {city}","Sé el primer vendedor en {city}","成为{city}的第一位卖家","Maging unang nagbebenta sa {city}","Hãy là người bán đầu tiên ở {city}","Byddwch y gwerthwr cyntaf yn {city}","Bądź pierwszym sprzedawcą w {city}","Fii primul vânzător din {city}","{city} ਵਿੱਚ ਪਹਿਲੇ ਵਿਕਰੇਤਾ ਬਣੋ","كن أول بائع في {city}","做{city}第一個賣家"],"Categories":["Kategorieë","Izigaba","Mekgahlelo","Iindidi","Magoro","Categorías","类别","Mga kategorya","Danh mục","Categorïau","Kategorie","Categorii","ਸ਼੍ਰੇਣੀਆਂ","الفئات","類別"],"All":["Alles","Konke","Tsohle","Zonke","Tšohle","Todo","全部","Lahat","Tất cả","Popeth","Wszystko","Toate","ਸਾਰੇ","الكل","全部"],"Your choice: {cat}":["Jou keuse: {cat}","Okukhethile: {cat}","Kgetho ya hao: {cat}","Ukhetho lwakho: {cat}","Kgetho ya gago: {cat}","Tu elección: {cat}","你的选择：{cat}","Pinili mo: {cat}","Lựa chọn của bạn: {cat}","Eich dewis: {cat}","Twój wybór: {cat}","Alegerea ta: {cat}","ਤੁਹਾਡੀ ਚੋਣ: {cat}","اختيارك: {cat}","你揀咗：{cat}"],"Property":["Eiendom","Izindlu nezindawo","Matlo le dibaka","Izindlu nemihlaba","Thoto","Propiedades","房产","Bahay at lupa","Bất động sản","Eiddo","Nieruchomości","Proprietăți","ਜਾਇਦਾਦ","عقارات","樓盤"],"Cars":["Motors","Izimoto","Dikoloi","Iimoto","Dikoloi","Autos","汽车","Mga kotse","Xe hơi","Ceir","Samochody","Mașini","ਕਾਰਾਂ","سيارات","汽車"],"Collectors":["Versamelaars","Abaqoqi","Babokelli","Abaqokeleli","Bakgobokanyi","Coleccionistas","收藏","Mga kolektor","Sưu tầm","Casglwyr","Kolekcjonerzy","Colecționari","ਸੰਗ੍ਰਹਿਕਾਰ","هواة الجمع","收藏"],"Adventures":["Avonture","Ukuvakasha","Maeto","Uhambo","Maeto","Aventuras","旅行","Mga adventure","Phiêu lưu","Anturiaethau","Przygody","Aventuri","ਸੈਰ-ਸਪਾਟਾ","مغامرات","旅遊"],"Services":["Dienste","Izinsizakalo","Ditshebeletso","Iinkonzo","Ditirelo","Servicios","服务","Mga serbisyo","Dịch vụ","Gwasanaethau","Usługi","Servicii","ਸੇਵਾਵਾਂ","خدمات","服務"],"Tutors":["Onderrig","Abafundisi","Barupeli","Abafundisi","Barutiši","Tutores","家教","Mga tutor","Gia sư","Tiwtoriaid","Korepetytorzy","Meditatori","ਟਿਊਟਰ","مدرّسون","補習老師"],"Local Market":["Plaaslike mark","Imakethe yendawo","Mmaraka wa lehae","Imarike yasekuhlaleni","Mmaraka wa selegae","Mercado local","本地市场","Lokal na palengke","Chợ địa phương","Marchnad Leol","Lokalny targ","Piața locală","ਸਥਾਨਕ ਬਜ਼ਾਰ","السوق المحلي","本地市場"]}/*END-DI18N*/;
+var LANGS = /*LANGS*/["af", "zu", "st", "xh", "nso", "es", "zh", "tl", "vi", "cy", "pl", "ro", "pa", "ar", "yue"]/*END-LANGS*/;
+function lang(){ var l=""; try{ l=localStorage.getItem("ts_lang")||localStorage.getItem("ts_qlang")||""; }catch(e){}
+  l=(l||navigator.language||"en").toLowerCase(); if(l.indexOf("yue")===0||l==="zh-hk") return "yue"; return l.split("-")[0]; }
+var LI=LANGS.indexOf(lang());
+function T(s,vars){ var t=(LI>=0&&DI18N[s]&&DI18N[s][LI])||s; if(vars) for(var k in vars) t=t.split("{"+k+"}").join(vars[k]); return t; }
+try{ sessionStorage.setItem("ts_door","1"); }catch(e){}   // index.html will not bounce a visitor the door sent there
+var DEMO = new URLSearchParams(location.search).get("demo")==="1";
+var IMG="/static/door/";
+var COL=["col_aurail_l1_view","col_gbrail_l4_view","col_moz_d1_view","col_ken_d1_view","col_c2c_l1_view","col_nam_d1_view","col_usrail_l2_view",
+ "col_bwa_d2_over","col_aurail_l2_over","col_gbrail_l2_view","col_moz_d2_over","col_ken_d2_over","col_c2c_l3_view","col_nam_d3_view","col_usrail_l3_over",
+ "col_bwa_d1_view","col_aurail_l3_view","col_gbrail_l3_over","col_moz_d3_view","col_ken_d3_view","col_c2c_l2_over","col_nam_d2_over","col_usrail_l4_view",
+ "col_bwa_d3_view","col_aurail_l1_start","col_gbrail_l1_start","col_c2c_l4_over","col_usrail_l1_view"];
+var APPS=[null,{key:"snap",name:"Snap",c:"--snap",url:"/quick/?p=snap"},{key:"quick",name:"Quick",c:"--quick",url:"/quick/"},
+          {key:"ts",name:"TrustSquare",c:"--ts",url:"/"}];
+var PAAPP={key:"pa",name:"AI PA",c:"--pa",url:"/pa"};
+var CATMAP={"property":"Property","cars":"Cars","collectors":"Collectors","adventures":"Adventures","adventures_experiences":"Adventures",
+  "adventures_accommodation":"Adventures","experiences":"Adventures","accommodation":"Adventures","tours":"Adventures","heritage":"Adventures",
+  "services":"Services","tutors":"Tutors","local_market":"Local Market","local market":"Local Market"};
+var PA=[{k:"Executive report",h:"Your weekly report",img:["report_1","report_2","report_3"]},
+        {k:"Sell opportunity",h:"Buyers are looking for what you sell",img:["sell_1","sell_2"]},
+        {k:"Buy opportunity",h:"A bargain matches your watch",img:["buy_1","buy_2"]},
+        {k:"Watch setup",h:"Your watches, set your way",img:["watch_1","watch_2"]}];
+var $=function(id){return document.getElementById(id);};
+var css=function(v){return "var("+v+")";};
+var EX=[], MINLOCAL=6;
+/* DOOR-PICK-1 (RUL-250): her own choice of category (and sub-category) outranks any guessed interest */
+var CHOICE=null; try{ CHOICE=JSON.parse(localStorage.getItem("ts_door_choice")||"null"); }catch(e){}
+var CATIMG={"Property":"/static/brand-photos/t560/cat_property.jpg","Cars":"/static/brand-photos/t560/cat_cars.jpg","Collectors":"/static/brand-photos/t560/cat_collectors.jpg",
+  "Adventures":"/static/brand-photos/t560/cat_adventures.jpg","Services":"/static/brand-photos/t560/cat_services.jpg","Tutors":"/static/brand-photos/t560/cat_tutors.jpg",
+  "Local Market":"/static/brand-photos/t560/lm_t_general.jpg"};
+function subOf(l,cat){ var v="";
+  if(cat==="Property") v=l.prop_type; else if(cat==="Cars") v=l.make; else if(cat==="Collectors") v=l.collectible_type;
+  else if(cat==="Services") v=l.service_type||l.service_class; else if(cat==="Tutors") v=l.subject;
+  else if(cat==="Adventures") v=/accommodation|stay/i.test(String(l.category||""))?"Stays":"Experiences";
+  v=String(v||"").trim().replace(/_/g," "); return v?v.charAt(0).toUpperCase()+v.slice(1):""; }
+function interest(){ return CHOICE&&CHOICE.cat?[CHOICE.cat]:ME.interest; }   // RUL-249: below 6 real local adverts the stream is topped up with examples
+var ME={interest:[],via:null,last_app:null,pro:false}, CITY="Pretoria", ADS=[], cur=0, last="ts";
+try{ var la=localStorage.getItem("ts_last_app"); if(la&&/^(snap|quick|ts|pa)$/.test(la)) last=la; }catch(e){}
+
+/* collage: six panes, one cross-fade every 1.4 s */
+var PANES=[1,0,0,1,0,0];
+function buildCollage(){
+  $("collage").innerHTML=PANES.map(function(w,i){return '<div class="pane'+(w?' wide':'')+'" id="pane'+i+'"><img alt=""><img alt=""></div>';}).join("");
+  PANES.forEach(function(w,i){ show(i,(i*5)%COL.length); });
+  var turn=0; setInterval(function(){ if(cur>0||document.hidden) return; var i=turn%PANES.length; turn++;
+    show(i,(+$("pane"+i).dataset.n+PANES.length+1)%COL.length); },900);   // DOOR-SPEED-1: livelier collage (was 1400)
+}
+function show(i,n){
+  var el=$("pane"+i), im=el.querySelectorAll("img"), a=im[0].classList.contains("on")?im[1]:im[0], b=a===im[0]?im[1]:im[0];
+  a.onload=function(){ a.style.setProperty("--dx",(Math.random()*4-2).toFixed(1)+"%"); a.style.setProperty("--dy",(Math.random()*3-1.5).toFixed(1)+"%");
+    a.style.setProperty("--ox",(30+Math.random()*40)+"%"); a.style.setProperty("--oy",(30+Math.random()*40)+"%");
+    a.classList.remove("on"); void a.offsetWidth; a.classList.add("on"); b.classList.remove("on"); };
+  a.src=IMG+COL[n%COL.length]+".jpg"; el.dataset.n=n;
+}
+
+/* slider: three stops, one colour */
+var W=118;   // one wheel slot, px
+function wheelName(i){ return i===0?PAAPP.name:APPS[i].name; }
+function setCur(v){ v=Math.max(0,Math.min(3,v)); if(v===cur){ render(); return; } cur=v; $("slider").value=v; render(); }
+function buildSlider(){
+  $("strip").innerHTML=[0,1,2,3].map(function(i){ return '<span data-i="'+i+'">'+esc(wheelName(i)).toUpperCase()+'</span>'; }).join("");
+  $("slider").addEventListener("input",function(e){ cur=+e.target.value; render(); });
+  ["click","pointerdown","pointerup","touchstart"].forEach(function(t){ $("slidebar").addEventListener(t,function(e){ e.stopPropagation(); },{passive:true}); });
+  /* swipe: touch on phones, pointer for the mouse; a short tap on a name picks it */
+  var sx=null, dx=0, wmoved=false;
+  function ws(x){ sx=x; dx=0; wmoved=false; $("strip").classList.add("live"); }
+  function wm(x){ if(sx===null) return false; dx=x-sx; if(Math.abs(dx)>6) wmoved=true; $("strip").style.transform="translateX("+(-(cur*W+W/2)+dx)+"px)"; return wmoved; }
+  function we(target){ if(sx===null) return; $("strip").classList.remove("live"); var v=cur;
+    if(wmoved) v=cur-Math.round(dx/W*1.25);
+    else if(target&&target.closest){ var sp=target.closest("#strip span"); if(sp) v=+sp.dataset.i; }
+    sx=null; setCur(v); render(); }
+  var w=$("wheel");
+  w.addEventListener("touchstart",function(e){ if(e.touches.length===1) ws(e.touches[0].clientX); },{passive:true});
+  w.addEventListener("touchmove",function(e){ if(e.touches.length===1&&wm(e.touches[0].clientX)) e.preventDefault(); },{passive:false});
+  w.addEventListener("touchend",function(e){ we(e.target); }); w.addEventListener("touchcancel",function(){ we(null); });
+  w.addEventListener("pointerdown",function(e){ if(e.pointerType!=="touch") ws(e.clientX); });
+  // capture phase: the slidebar stops pointerup bubbling (so the door behind never takes it as a tap)
+  window.addEventListener("pointermove",function(e){ if(e.pointerType!=="touch") wm(e.clientX); },true);
+  window.addEventListener("pointerup",function(e){ if(e.pointerType!=="touch") we(e.target); },true);
+}
+function appOf(k){ return k==="pa"?PAAPP:(APPS.filter(function(a){return a&&a.key===k;})[0]||APPS[3]); }
+function render(){
+  $("strip").style.transform="translateX("+(-(cur*W+W/2))+"px)";
+  Array.prototype.forEach.call(document.querySelectorAll("#strip span"),function(s){ s.classList.toggle("on",+s.dataset.i===cur); });
+  $("pill").style.setProperty("--c",APPS[cur]?css(APPS[cur].c):css(PAAPP.c));
+  var a=APPS[cur], target=a||PAAPP;   // RUL-247: at rest (left), the door is the AI PA door
+  $("cue").style.setProperty("--c",a?css(a.c):"transparent");
+  var tap=$("tap"); tap.style.setProperty("--c",css((a||PAAPP).c));   // the button wears the colour of the name in the pill
+  tap.textContent = wheelName(cur).toUpperCase();   // DOOR-TWIN-1: the same word as the top pill
+  tap.setAttribute("role","button"); tap.setAttribute("aria-label", a ? T("Tap to open {app}",{app:a.name}) : T("Tap to meet your AI PA"));
+  $("collage").style.opacity=a?0:1; $("mark").style.opacity=a?0:1;
+  $("stream").classList.toggle("show",!!a); $("door").classList.toggle("streaming",!!a);
+  var ib=$("ibar");
+  $("cattabt").textContent=T("Categories");
+  if(a&&CHOICE&&CHOICE.cat){ ib.textContent=T("Your choice: {cat}",{cat:T(CHOICE.cat)+(CHOICE.sub?" · "+CHOICE.sub:"")}); ib.classList.add("show"); }
+  else if(a&&!ADS.length&&EX.length){ ib.textContent=T("Be the first seller in {city}",{city:CITY}); ib.classList.add("show"); }
+  else if(a&&ME.interest.length){ ib.textContent=T("Your interest: {cats}",{cats:ME.interest.map(function(c){return T(c);}).join(" · ")})+" — "+
+      (ME.via==="prospect"?T("from your public adverts"):T("from your previous use")); ib.classList.add("show"); }
+  else if(a){ ib.textContent=T("Everything near you")+" · "+CITY; ib.classList.add("show"); }
+  else ib.classList.remove("show");
+  if(a){ buildLane(); nudgeOnce(); }
+}
+
+/* the stream: local adverts for her interest, AI PA cards woven in */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function isEx(l){ return !!(l&&(l.is_demo||l.super_example)); }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function interleave(list){ var g={},keys=[]; list.forEach(function(x){ if(!g[x.cat]){g[x.cat]=[];keys.push(x.cat);} g[x.cat].push(x); });
+  var out=[],i=0; while(out.length<list.length){ var k=keys[i%keys.length]; if(g[k].length) out.push(g[k].shift()); i++; } return out; }
+var laneKey="", off=0, paTurn=0;
+function buildLane(){
+  var IN=interest(), SUB=CHOICE&&CHOICE.sub||"";
+  var key=IN.join(",")+"/"+SUB+"|"+ADS.length+"|"+EX.length; if(key===laneKey) return; laneKey=key; off=0;
+  var mine=function(x){ return (!IN.length||IN.indexOf(x.cat)>=0)&&(!SUB||x.sub===SUB); };
+  var list=interleave(ADS.filter(mine));            // real local adverts first, always
+  if(list.length<MINLOCAL){                         // RUL-249: too few for her -- top up with examples that invite a seller
+    var want=IN.length?EX.filter(mine):EX;
+    if(!want.length&&IN.length) want=EX.filter(function(x){ return IN.indexOf(x.cat)>=0; });
+    if(!want.length) want=EX;
+    var have={}; list.forEach(function(x){ have[x.cat]=1; });
+    want=want.filter(function(x){ return !have[x.cat]; }).concat(want.filter(function(x){ return have[x.cat]; }));   // her city's gaps first
+    list=list.concat(interleave(want).slice(0,Math.max(12-list.length,MINLOCAL)));
+  }
+  var html=[], n=0;
+  list.forEach(function(d,i){
+    html.push('<div class="ad'+(d.ex?' ex" data-ex="1':'')+'" data-id="'+esc(d.id)+'"><img src="'+esc(d.img)+'" alt="" loading="lazy"><span class="cat">'+esc(T(d.cat))+'</span>'+
+      (d.price?'<span class="price">'+esc(d.price)+'</span>':'')+'<div class="txt"><b>'+esc(d.title)+'</b><span>'+esc(d.where||"")+'</span></div>'+
+      (d.ex?'<span class="yours">'+esc(T("Your listing here"))+'</span>':'')+'</div>');
+    if(i%3===2){ var p=PA[paTurn%PA.length]; paTurn++;
+      html.push('<article class="pa" data-pa="1"><img src="'+IMG+'pa_'+p.img[n++%p.img.length]+'.jpg" alt="" loading="lazy"><header><span class="kind">'+esc(T(p.k))+
+        '</span><h4>'+esc(T(p.h))+'</h4><span class="ex">AI PA · '+esc(T("Example"))+'</span></header></article>'); }
+  });
+  if(!list.length){ html=PA.map(function(p,i){ return '<article class="pa" data-pa="1"><img src="'+IMG+'pa_'+p.img[0]+'.jpg" alt=""><header><span class="kind">'+esc(T(p.k))+
+      '</span><h4>'+esc(T(p.h))+'</h4><span class="ex">AI PA · '+esc(T("Example"))+'</span></header></article>'; }); }
+  var one=html.join(""); $("lane").innerHTML=one+one+one;
+}
+var t0=performance.now(), reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tick(now){ var dt=Math.min(64,now-t0); t0=now;
+  if(cur>0&&!document.hidden){ var l=$("lane"), per=l.scrollHeight/3;
+    if(!drag&&!reduce&&now>held) off+=dt*0.045;   // DOOR-SPEED-1: was 0.028
+    if(per>0){ while(off>=per) off-=per; while(off<0) off+=per; }
+    l.style.transform="translateY("+(-off)+"px)"; }
+  requestAnimationFrame(tick); }
+
+/* the tap: anywhere opens the app of that type; an AI PA card opens the AI PA door; an advert on TrustSquare opens that advert */
+function go(app,url){
+  if(app===PAAPP&&!url) url=ME.pro?"/pa":"/pa/about";   // PA-GATE-1: a non-Pro goes straight to the explainer; /pa refuses him (401)
+  try{ localStorage.setItem("ts_last_app",app.key); }catch(e){}
+  try{ fetch("/door/last",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({app:app.key}),keepalive:true}).catch(function(){}); }catch(e){}
+  location.href=url||app.url;
+}
+/* DOOR-SPEED-1: a finger (or mouse wheel) scrolls the stream; the drift resumes 2.5 s after she lets go. A drag is never a tap. */
+var drag=null, held=0, moved=false;
+/* DOOR-TOUCH-1: phones get real touch events (a browser that starts its own pan sends pointercancel and kills a pointer drag);
+   the mouse keeps pointer events. */
+/* DOOR-PICK-1: a sideways swipe (right to left) on the stream opens her categories; up/down still scrolls */
+function dStart(y,x){ drag={y:y,x:x||0,o:off,h:null,dx:0}; moved=false; }
+function dMove(y,x){ if(!drag) return false; var d=drag.y-y, dx=(x||0)-drag.x; drag.dx=dx;
+  if(drag.h===null&&(Math.abs(d)>8||Math.abs(dx)>8)) drag.h=Math.abs(dx)>Math.abs(d);
+  if(drag.h===null) return false; moved=true; if(!drag.h) off=drag.o+d; return true; }
+function dEnd(){ if(drag){ var sw=drag.h&&drag.dx<-60; drag=null; held=performance.now()+2500; if(sw) openPicker(); } }
+$("stream").addEventListener("touchstart",function(e){ if(e.touches.length===1) dStart(e.touches[0].clientY,e.touches[0].clientX); },{passive:true});
+window.addEventListener("touchmove",function(e){ if(drag&&e.touches.length===1&&dMove(e.touches[0].clientY,e.touches[0].clientX)) e.preventDefault(); },{passive:false});
+window.addEventListener("touchend",dEnd); window.addEventListener("touchcancel",dEnd);
+$("stream").addEventListener("pointerdown",function(e){ if(e.pointerType!=="touch") dStart(e.clientY,e.clientX); });
+window.addEventListener("pointermove",function(e){ if(e.pointerType!=="touch") dMove(e.clientY,e.clientX); });
+window.addEventListener("pointerup",function(e){ if(e.pointerType!=="touch") dEnd(); });
+window.addEventListener("pointercancel",function(e){ if(e.pointerType!=="touch") dEnd(); });
+$("stream").addEventListener("wheel",function(e){ off+=e.deltaY; held=performance.now()+2500; e.preventDefault(); },{passive:false});
+/* DOOR-PICK-1 (RUL-250): the categories screen -- our photographs, sub-categories as chips, one tap picks and returns */
+var pickOff=0, pickHeld=0, pickOpen=false;
+function subsFor(cat){ var n={}; ADS.concat(EX).forEach(function(x){ if(x.cat===cat&&x.sub) n[x.sub]=(n[x.sub]||0)+(x.ex?1:3); });
+  return Object.keys(n).sort(function(a,b){ return n[b]-n[a]; }).slice(0,6); }
+function openPicker(){
+  var cats=["Property","Cars","Collectors","Adventures","Services","Tutors","Local Market"];
+  $("pickt").textContent=T("Categories");
+  $("pl").innerHTML='<div class="ct all'+(CHOICE?'':' on')+'" data-cat="">'+esc(T("All"))+'</div>'+cats.map(function(c){
+    return '<div class="ct'+(CHOICE&&CHOICE.cat===c?' on':'')+'" data-cat="'+esc(c)+'"><img src="'+CATIMG[c]+'" alt="" loading="lazy"><div class="cn"><b>'+esc(T(c))+'</b>'+
+      '<div class="subs">'+subsFor(c).map(function(sb){ return '<span data-sub="'+esc(sb)+'">'+esc(sb)+'</span>'; }).join("")+'</div></div></div>'; }).join("");
+  $("pl").scrollTop=0; pickHeld=performance.now()+1200; pickOpen=true; $("picker").classList.add("open"); $("picker").setAttribute("aria-hidden","false");
+}
+function closePicker(){ pickOpen=false; $("picker").classList.remove("open"); $("picker").setAttribute("aria-hidden","true"); }
+function choose(cat,sub){
+  CHOICE=cat?{cat:cat,sub:sub||""}:null;
+  try{ if(CHOICE) localStorage.setItem("ts_door_choice",JSON.stringify(CHOICE)); else localStorage.removeItem("ts_door_choice"); }catch(e){}
+  try{ fetch("/door/last",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",
+        body:JSON.stringify({choice:CHOICE?CHOICE.cat:"",sub:CHOICE?CHOICE.sub:""}),keepalive:true}).catch(function(){}); }catch(e){}
+  closePicker(); laneKey=""; render();
+}
+["click","pointerdown","pointerup","touchstart"].forEach(function(t){ $("picker").addEventListener(t,function(e){ e.stopPropagation(); },{passive:true}); $("cattab").addEventListener(t,function(e){ e.stopPropagation(); },{passive:true}); });
+$("cattab").addEventListener("click",function(){ openPicker(); });
+$("pickx").addEventListener("click",function(){ closePicker(); });
+$("pl").addEventListener("click",function(e){ var sb=e.target.closest("[data-sub]"), ct=e.target.closest(".ct"); if(!ct) return;
+  choose(ct.dataset.cat, sb?sb.dataset.sub:""); });
+/* the categories drift slowly, like the adverts; a finger takes over, and a swipe back to the right closes */
+(function(){ var sx=null, sy=0;
+  $("pl").addEventListener("touchstart",function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; pickHeld=performance.now()+2500; },{passive:true});
+  $("pl").addEventListener("touchend",function(e){ var t=e.changedTouches[0]; if(sx!==null&&t.clientX-sx>70&&Math.abs(t.clientY-sy)<50) closePicker(); sx=null; pickHeld=performance.now()+2500; });
+  $("pl").addEventListener("wheel",function(){ pickHeld=performance.now()+2500; },{passive:true});
+  $("pl").addEventListener("pointerdown",function(){ pickHeld=performance.now()+2500; });
+  var t0p=performance.now(); (function step(now){ var dt=Math.min(64,now-t0p); t0p=now;
+    if(pickOpen&&!reduce&&now>pickHeld){ var pl=$("pl"); pickOff=(pickOff||pl.scrollTop)+dt*0.03; pl.scrollTop=pickOff; if(pl.scrollTop+pl.clientHeight>=pl.scrollHeight-1) pickHeld=now+1e9; }
+    else pickOff=0; requestAnimationFrame(step); })(t0p);
+})();
+/* the hint: on her first stream the tab pulses and the adverts lean left once, then never again */
+function nudgeOnce(){ var k="ts_door_nudged"; try{ if(localStorage.getItem(k)) return; localStorage.setItem(k,"1"); }catch(e){ return; }
+  setTimeout(function(){ $("cattab").classList.add("pulse"); $("lane").classList.add("nudge"); setTimeout(function(){ $("lane").classList.remove("nudge"); },1200); },1500); }
+/* DOOR-SYNC-1: the bottom button is its own target -- it always opens what the top slider shows. It used to let the tap
+   fall through to whatever card was scrolling underneath it (an AI PA card or an advert), so it could open something else. */
+$("tap").addEventListener("click",function(e){ e.stopPropagation(); if(moved){ moved=false; return; } go(APPS[cur]||PAAPP); });
+/* DOOR-SYNC-1: a back-navigation or a restored form can leave the slider showing one stop while cur holds another;
+   the slider's own value is the truth. */
+window.addEventListener("pageshow",function(){ var v=+$("slider").value||0; if(v!==cur){ cur=v; render(); } });
+$("door").addEventListener("click",function(e){
+  if(moved){ moved=false; return; }
+  var pa=e.target.closest&&e.target.closest("[data-pa]"); if(pa){ go(PAAPP); return; }
+  var a=APPS[cur]||PAAPP;   // RUL-247: a tap on the collage opens the AI PA door
+  var ad=e.target.closest&&e.target.closest(".ad");
+  if(ad&&ad.dataset.ex) { go(APPS[2],"/quick/?src=door-example"); return; }   // RUL-249: an example opens selling, never the example
+  if(ad&&ad.dataset.id) { go(APPS[3],"/?listing="+encodeURIComponent(ad.dataset.id)); return; }   // RUL-248: any advert opens that advert in TrustSquare
+  go(a);
+});
+
+/* data: who she is (interest, last app) and what is near her */
+function load(){
+  var j=function(r){ if(!r.ok) throw new Error(r.status); return r.json(); };
+  var meP=fetch("/door/me",{credentials:"same-origin"}).then(j).then(function(m){ ME=m||ME; ME.interest=ME.interest||[];
+      if(m&&m.last_app) last=m.last_app;
+      if(!CHOICE&&m&&m.choice&&m.choice.cat) CHOICE={cat:m.choice.cat,sub:m.choice.sub||""}; }).catch(function(){});
+  var geoP=fetch("/quick/me",{credentials:"same-origin"}).then(j).then(function(q){ var c=(q&&(q.city||(q.geo&&q.geo.city)))||""; if(c) CITY=c; }).catch(function(){});
+  return Promise.all([meP,geoP]).then(function(){
+    $("city").textContent=CITY;
+    return fetch("/listings?city="+encodeURIComponent(CITY)+"&page_size=200&sort=random"+(DEMO?"&demo=1":""),{credentials:"same-origin"}).then(j).then(function(L){
+      /* RUL-248: local only (listed in her city -- no trips from other cities, no online, no national reach), and a fresh
+         random draw on every visit so every local seller gets an equal turn, however many sellers or visitors there are */
+      var here=CITY.toLowerCase();
+      ADS=shuffle((L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&String(l.city||"").toLowerCase()===here&&!isEx(l); })).map(function(l){
+        var c=CATMAP[String(l.category||"").toLowerCase()]||null;
+        return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:l.price||"",where:l.suburb||l.area||l.city||"",cat:c,sub:subOf(l,c)};
+      }).filter(function(x){return x.cat;});
+    }).catch(function(){ ADS=[]; });
+  }).then(function(){
+    /* RUL-249: the example pool -- the house examples (they live in Pretoria), only fetched when her city is thin */
+    return fetch("/listings?city=Pretoria&demo=1&page_size=200&sort=random",{credentials:"same-origin"}).then(j).then(function(L){
+      EX=shuffle((L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&isEx(l); })).map(function(l){
+        var c=CATMAP[String(l.category||"").toLowerCase()]||null;
+        return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:"",where:"",cat:c,sub:subOf(l,c),ex:true};
+      }).filter(function(x){return x.cat;});
+    }).catch(function(){ EX=[]; });
+  }).then(function(){ laneKey=""; render(); });
+}
+buildCollage(); buildSlider(); render(); requestAnimationFrame(tick); load();
+})();
+</script>
+<!-- tester fault report (MAINT-B1b): every page a tester can land on carries the widget; shown only while the switch is on -->
+<script src="/static/ts_report.js?v=9" defer></script>
+</body>
+</html>

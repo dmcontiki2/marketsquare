@@ -1,3 +1,5 @@
+- **PHOTO-TALL-1 (23 Oct 2026):** an upright photo in a listing strip is shown whole over a soft blurred copy of itself, instead of centre-cropped to the 260px band (the Sandton housekeeper lost the bottom half of her photo; every portrait photo outside Collectors did). Landscape photos unchanged. Checked on a phone and a laptop against the live listing 566.
+
 - **PA-GATE-1 (23 Oct 2026):** GET /pa now refuses anyone who is not Pro (401, with a one-line page on to /pa/about) instead of a 302; the door sends a non-Pro straight to /pa/about. The QA Bot follows redirects, read the explainer as data for a stranger and rolled back every deploy after the door was armed (12:15-17:55 SAST) -- the live door stayed on the 11:18 release. route_policy GET /pa -> user. Route proof 25/25, render proof 38/38.
 
 - **DOOR-FRESH-1 (23 Oct 2026):** the door, AI PA page and explainer are served "no-cache", so a phone re-checks them on every open and a release reaches every phone at once (was up to 5 minutes of the old page).
