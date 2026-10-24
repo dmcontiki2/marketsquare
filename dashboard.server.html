@@ -1298,6 +1298,28 @@ function fuLoad(){
     <div id="infra-out" style="font-size:12px;color:var(--muted);margin-top:10px;white-space:pre-wrap"></div>
   </div>
 
+  <!-- PHOTO-TOOLS-1 (24 Oct 2026, David): two photo-generation tools, both on API keys he controls.
+       Keys live on David's PC (MarketSquare/.env and .secrets/), not on the server, so nothing here is
+       probed live: grey NOT MEASURED, never a hand-written green (RG-0133 rule). Prices are MEASURED on the bills. -->
+  <div class="ls-card" id="photo-tools-card" style="position:relative">
+    <div class="ls-h">&#128247; Photo tools <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">&mdash; 2 suppliers, API keys, prepaid, auto top-up OFF</span></div>
+    <div style="font-size:12px;color:var(--muted);margin:-4px 0 10px">Example and app pictures only &mdash; never a user's own photos. Rule: cheapest model whose results pass by eye (no faces, no text, no plates, no logos). Re-test cheaper models before each big run.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+      <div style="border-left:5px solid #3b82f6;padding:6px 10px;background:rgba(59,130,246,.08);border-radius:6px">
+        <b>Atlas Cloud</b> <span class="ls-badge" style="background:#26303f;color:#7c8aa0">NOT MEASURED</span><br>
+        Default model: GPT Image 2 on the <b>low</b> setting &mdash; <b>US$0.011</b> a photo (measured 24 Oct; the high setting is US$0.216 &mdash; never the default)<br>
+        Key: <code>.secrets/atlas_api_key.txt</code> &middot; Lane: <code>gen_role_pictures.py --provider atlas</code> &middot; Credit lasts 365 days, failed photos refunded<br>
+        <a href="https://www.atlascloud.ai/console/billing" target="_blank" rel="noopener">Balance &amp; bill</a> &middot; <a href="https://www.atlascloud.ai/console/api-keys" target="_blank" rel="noopener">API keys</a> &middot; <a href="https://www.atlascloud.ai/models" target="_blank" rel="noopener">Models</a>
+      </div>
+      <div style="border-left:5px solid #22c55e;padding:6px 10px;background:rgba(34,197,94,.08);border-radius:6px">
+        <b>Higgsfield</b> <span class="ls-badge" style="background:#26303f;color:#7c8aa0">NOT MEASURED</span><br>
+        Models on the key: Soul 2 US$0.003 (failed the text rule) &middot; Marketing Studio Image US$0.011 (passed, slow) &middot; Z-Image Turbo US$0.015 (failed) &middot; Grok Imagine 2.0 US$0.040 (passed) &middot; 6 more, list on the pricing page<br>
+        Key: <code>HIGGSFIELD_API_KEY</code> in <code>.env</code> &middot; Lane: <code>gen_role_pictures.py --provider higgsfield</code><br>
+        <a href="https://open.higgsfield.ai/" target="_blank" rel="noopener">Dashboard (balance, billing, API keys)</a> &middot; <a href="https://open.higgsfield.ai/pricing?tab=images" target="_blank" rel="noopener">Image prices</a>
+      </div>
+    </div>
+  </div>
+
   <!-- TP-VIZ-1 (3 Aug 2026, David) — Travel lane card + Tuppence & referral flow visual -->
   <div class="ls-card" id="travel-lane-card" style="position:relative">
     <button type="button" class="ms-viz-btn" onclick="msTravelVizOpen()" title="See the Tuppence &amp; referral flow — where every coin lands">&#127758; Visual</button>

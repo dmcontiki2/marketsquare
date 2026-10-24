@@ -25,13 +25,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REG = os.path.join(ROOT, "roles", "role_registry.json")
 PICS = os.path.join(ROOT, "roles", "pictures")
 MAN = os.path.join(PICS, "manifest.json")
-EST_USD = {"higgsfield": 0.06, "gemini": 0.039, "xai": 0.07, "openai": 0.04}
-DEFAULT_MODEL = {"higgsfield": "xai/grok-imagine-image-2.0", "gemini": "gemini-2.5-flash-image", "xai": "grok-imagine-image-2.0", "openai": "gpt-image-1"}
-ENVKEY = {"higgsfield": "HIGGSFIELD_API_KEY", "gemini": "GEMINI_API_KEY", "xai": "XAI_API_KEY", "openai": "OPENAI_API_KEY"}
+EST_USD = {"higgsfield": 0.06, "gemini": 0.039, "xai": 0.07, "openai": 0.04, "atlas": 0.011}
+DEFAULT_MODEL = {"higgsfield": "xai/grok-imagine-image-2.0", "gemini": "gemini-2.5-flash-image", "xai": "grok-imagine-image-2.0", "openai": "gpt-image-1", "atlas": "openai/gpt-image-2/text-to-image"}
+ENVKEY = {"higgsfield": "HIGGSFIELD_API_KEY", "gemini": "GEMINI_API_KEY", "xai": "XAI_API_KEY", "openai": "OPENAI_API_KEY", "atlas": "ATLAS_API_KEY"}
 
 def key_for(provider):
     name = ENVKEY[provider]
     if os.environ.get(name): return os.environ[name]
+    sf = os.path.join(ROOT, ".secrets", name.lower() + ".txt")   # e.g. .secrets/atlas_api_key.txt (gitignored)
+    if os.path.exists(sf):
+        v = io.open(sf, encoding="utf-8").read().strip()
+        if v: return v
     envf = os.path.join(ROOT, ".env")
     if os.path.exists(envf):
         for line in io.open(envf, encoding="utf-8"):
@@ -54,6 +58,25 @@ def generate(provider, model, key, prompt):
         res = hc.subscribe(model, arguments={"prompt": prompt, "aspect_ratio": "1:1"})
         with urllib.request.urlopen(res["images"][0]["url"], timeout=120) as r:
             return r.read()
+    if provider == "atlas":
+        # Atlas Cloud (second lane beside Higgsfield, 24 Oct 2026). MEASURED on the bill: gpt-image-2 low = US$0.0109, high = US$0.2157 -- never default to high: submit, then poll data.urls.get until completed
+        h = {"Authorization": "Bearer " + key, "User-Agent": "Mozilla/5.0 TrustSquare"}
+        d = post("https://api.atlascloud.ai/api/v1/model/generateImage",
+                 {"model": model, "prompt": prompt, "size": "1024x1024", "quality": os.environ.get("ATLAS_QUALITY", "low")}, h)
+        poll = ((d.get("data") or {}).get("urls") or {}).get("get")
+        for _ in range(90):
+            out = (d.get("data") or {}).get("outputs") or []
+            st = str((d.get("data") or {}).get("status", "")).lower()
+            if out and st in ("completed", "succeeded", "success", ""):
+                u = out[0] if isinstance(out[0], str) else out[0].get("url")
+                if u.startswith("data:"): return base64.b64decode(u.split(",", 1)[1])
+                with urllib.request.urlopen(u, timeout=120) as r: return r.read()
+            if st in ("failed", "error", "canceled", "cancelled"): raise RuntimeError("atlas: %s" % json.dumps(d)[:300])
+            if not poll: raise RuntimeError("atlas: no poll url: %s" % json.dumps(d)[:300])
+            time.sleep(2)
+            req = urllib.request.Request(poll, headers=h)
+            with urllib.request.urlopen(req, timeout=60) as r: d = json.loads(r.read().decode())
+        raise RuntimeError("atlas: timed out")
     if provider == "gemini":
         d = post("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model,
                  {"contents": [{"parts": [{"text": prompt}]}],
