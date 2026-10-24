@@ -77,8 +77,27 @@ def execute(action: str, arg: str) -> tuple[int, str]:
         return run(['python', str(py)], proj)
     return 2, f'unknown action {action}'
 
+def daily_backup() -> None:
+    """BACKUP-DAILY-1 (24 Oct 2026): the DB-archive lane gets a PRODUCER that needs no session.
+    RG-0234 went red three times (1 Sep, 10 Sep, 24 Oct) because only a session that remembered made a
+    backup. This agent tick runs every 20 minutes on David's PC; once the newest backups/*.zip is 20 h
+    old it takes one: server snapshot (read-only .backup), md5-matched pull, integrity-checked, restored
+    from the archive, proof appended. It deletes nothing (retention stays David's -- RUL-095)."""
+    try:
+        bdir = HERE / 'backups'
+        zips = sorted(bdir.glob('20??-??-??_????.zip'), key=lambda p: p.stat().st_mtime) if bdir.is_dir() else []
+        age_h = (datetime.now().timestamp() - zips[-1].stat().st_mtime) / 3600 if zips else 1e9
+        if age_h < 20:
+            return
+        log(f'BACKUP-DAILY-1: newest archive {age_h:.0f} h old -- taking today\'s backup')
+        rc, out = run([sys.executable, str(HERE / 'scripts' / 'backup_db_sandbox.py')], HERE)
+        log(f'BACKUP-DAILY-1: rc={rc} {out.strip().splitlines()[-1][:200] if out.strip() else ""}')
+    except Exception as ex:
+        log(f'BACKUP-DAILY-1: could not run: {ex!r}'[:300])
+
 def main() -> int:
     DONE.mkdir(parents=True, exist_ok=True)
+    daily_backup()
     reqs = sorted(QDIR.glob('*.req'), key=lambda p: p.stat().st_mtime)
     if not reqs: return 0
     allow = allowlist()

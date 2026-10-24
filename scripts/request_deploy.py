@@ -93,6 +93,23 @@ def main():
         print('CityLauncher deploy requested -> agent ships on its next 20-min tick'); return 0
     # HARNESS-PARITY-1 (RUL-193): quick.html == genie/HARNESS.html before anything is committed or shipped
     subprocess.run([sys.executable, os.path.join(HERE, 'harness_parity.py'), '--fix'], cwd=REPO)
+    # EMAIL-VIEW-SYNC-1 (24 Oct 2026): the Ops Email Templates view is a MIRROR of the CityLauncher letters. Any session
+    # that edits a letter left it stale until someone remembered to rebuild (RG-0344 red twice in one day). Rebuild it on
+    # every deploy, add any new letter's manifest row, and commit ONLY those outputs -- so it can never ship stale.
+    ev = subprocess.run([sys.executable, os.path.join(HERE, 'build_email_templates_page.py'), '--fix-manifest'],
+                        cwd=REPO, capture_output=True, text=True)
+    # SESSION-COUNT-SYNC-1 (24 Oct 2026): the dashboard's session number is derived from the fragments on disk; it fell
+    # behind (RG-0154) because only deploy_marketsquare.bat recomputed it and deploys now go through here. Recompute too.
+    subprocess.run([sys.executable, os.path.join(HERE, 'session_counter.py'), '--quiet'], cwd=REPO, capture_output=True)
+    evpaths = ['orchestration_v2/email_templates.html', 'orchestration_v2/templates', 'ops/autodeploy/deploy_manifest.txt',
+               'SESSION_COUNTER.json']
+    if ev.returncode == 0 and git('status', '--porcelain', '--', *evpaths):
+        git('add', '--', *evpaths)
+        git('-c', 'user.name=Claude (CTO)', '-c', 'user.email=claude@trustsquare.co', 'commit', '-q', '-m',
+            'EMAIL-VIEW-SYNC-1 + SESSION-COUNT-SYNC-1: email view and session counter refreshed (auto, pre-deploy)')
+        print('email view: rebuilt and committed')
+    elif ev.returncode != 0:
+        print('email view: rebuild FAILED (deploy continues; RG-0344 will show it):', (ev.stdout + ev.stderr).strip()[-200:])
     # pre-flight: compile everything changed
     changed = [l[3:] for l in git('status', '--porcelain').splitlines() if l.endswith('.py')]
     for f in changed:

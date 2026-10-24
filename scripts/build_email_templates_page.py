@@ -536,7 +536,14 @@ def build(check_only=False):
         print("[email-page] page: rewritten (%d bytes)" % len(html))
     if orphans:
         print("[email-page] NOTE orphan previews not in the send lane (nothing sends them): " + ", ".join(orphans))
-    if missing_rows:
+    if missing_rows and FIX_MANIFEST and not check_only:
+        # EMAIL-VIEW-SYNC-1 (24 Oct 2026): a NEW letter (e.g. sports_club) also needs its manifest row, or its
+        # preview never ships. request_deploy.py runs this with --fix-manifest before every deploy.
+        mp = os.path.join(ROOT_MS, "ops", "autodeploy", "deploy_manifest.txt")
+        with open(mp, "a", encoding="utf-8") as fh:
+            fh.write("".join(r + "\n" for r in missing_rows))
+        print("[email-page] MANIFEST: added %d row(s): %s" % (len(missing_rows), ", ".join(missing_rows)))
+    elif missing_rows:
         print("[email-page] MANIFEST rows missing -- add to ops/autodeploy/deploy_manifest.txt:")
         for r in missing_rows:
             print("    " + r)
@@ -544,5 +551,7 @@ def build(check_only=False):
 
 
 AGENCY_SET = set()
+FIX_MANIFEST = "--fix-manifest" in sys.argv
+ROOT_MS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if __name__ == "__main__":
     sys.exit(build(check_only="--check" in sys.argv))

@@ -171,6 +171,18 @@ def _missing_third_party(text):
     return mod
 
 
+def _leg_broke(e, label="behavioural leg"):
+    """LEG-DEPS-1 (24 Oct 2026): RG-0187's rule for IN-PROCESS legs. A leg that imports a sibling
+    project's module in-process died on 'No module named dotenv' and printed REGRESSION -- the app
+    was fine, this machine lacked a package. A missing THIRD-PARTY module reads NOT EVALUATED;
+    a missing module of OUR OWN (a deleted fix) still reads FAIL."""
+    mod = _missing_third_party("ModuleNotFoundError: %s" % e) if isinstance(e, ModuleNotFoundError) else None
+    if mod:
+        return (INFO, "NOT EVALUATED - %s needs the third-party module %r, absent on this machine "
+                      "(LEG-DEPS-1; scripts/maint_deps.py installs it)" % (label, mod))
+    return (FAIL, "%s broke: %s" % (label, str(e)[:90]))
+
+
 def _harness(argv, timeout=90, cwd=None, full=False):
     """Run a proof in a subprocess. Returns (ok, blind, detail).
 
@@ -15686,7 +15698,7 @@ def rg_one_per_org_ramp_floor():
         if not any(r == FAIL for r, _ in out):
             out.append((INFO, "one-per-org picks clean across sampled cities; 2-send wave holds ramp at %d" % allowed))
     except Exception as e:
-        out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
+        out.append(_leg_broke(e))
     return out
 
 @entry("RG-0248", "Outreach clicks are SCORED per recipient (human_click / human_open / uncertain / "
@@ -15737,7 +15749,17 @@ def rg_human_clicks_register():
                 if needle not in s:
                     out.append((FAIL, "api/server.py: %s" % why))
         rs = os.path.join(base, "resend_human_clicks.py")
-        if not os.path.exists(rs):
+        # RETIRE-AWARE-1 (24 Oct 2026): the follow-up lane was RETIRED on purpose in the 22 Oct CityLauncher
+        # review (one-shot launchers -> _retired/2026-10-22/oneshot_launchers/). A deliberate retirement is
+        # not a rotted fix: with no follow-up lane, nothing can resend to a scanner tier, which is the
+        # property this entry protects. Gone AND not retired is still a FAIL.
+        import glob as _g
+        retired = _g.glob(os.path.join(base, "_retired", "*", "**", "resend_human_clicks.py"), recursive=True)
+        if not os.path.exists(rs) and retired:
+            out.append((INFO, "follow-up lane retired on purpose (%s) -- no lane exists that could resend to a "
+                              "scanner tier; the scorer and the key-gated list are still asserted above"
+                              % os.path.relpath(retired[0], base).replace(os.sep, "/")))
+        elif not os.path.exists(rs):
             out.append((FAIL, "resend_human_clicks.py is GONE -- the humans-only lane no longer exists"))
         else:
             s = open(rs, encoding="utf-8").read()
@@ -15765,7 +15787,7 @@ def rg_human_clicks_register():
             if reg.get("c@d.co", {}).get("tier") != "human_click":
                 out.append((FAIL, "a 6-hour-later CTA click from a residential IP did not score human_click (got %s)" % reg.get("c@d.co", {}).get("tier")))
         except Exception as e:
-            out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
+            out.append(_leg_broke(e))
     else:
         out.append((INFO, "CityLauncher not beside this repo -- source leg skipped"))
     try:
@@ -16467,7 +16489,7 @@ def rg_person_only_lanes():
         if m._looks_role_address("info@pamgolding.co.za", "Estate Agents"): out.append((FAIL, "info@ on the agency lane is HELD -- the guard ate an agency (RG-0217 boundary)"))
         if m._looks_role_address("jane@gmail.com", "Tutors"): out.append((FAIL, "a personal address on the Tutors lane is held"))
     except Exception as e:
-        out.append((FAIL, "behavioural leg broke: %s" % str(e)[:90]))
+        out.append(_leg_broke(e))
     if not any(r == FAIL for r, _ in out):
         out.append((INFO, "office desks held on Tutors, agencies untouched, competitors refused everywhere"))
     return out
@@ -26390,6 +26412,12 @@ def rg_letter_click_1():
     else:
         import re as _re
         shipped = {m.lower() for m in _re.findall(r"templates\\([\w.\-]+)", bat)}
+        # EMAIL-SHIP-ALL-1 (24 Oct 2026): the bat now ships every *.v2.html by glob -- then every v2 letter on disk ships
+        if "templates\\*.v2.html" in bat:
+            _td = _cl_path("emailer", "templates") if "_cl_path" in globals() else None
+            _td = _td or os.path.join(REPO, "..", "CityLauncher", "emailer", "templates")
+            if os.path.isdir(_td):
+                shipped |= {f.lower() for f in os.listdir(_td) if f.lower().endswith(".v2.html")}
         sel = {m.lower() for m in _re.findall(r"TMPL_DIR\s*/\s*'([^']+)'", em)}
         if not shipped or not sel:
             out.append((INFO, "could not read both lists - deploy half unasserted rather than "
@@ -35215,6 +35243,60 @@ def rg_col_draft_1():
     if "Coins" not in seg or "coins?" not in seg:
         return [(FAIL, "sfColType cannot name a coin any more")]
     return [(INFO, "the Collectors photo read fills Category, Year and Maker blanks")]
+
+
+@entry("RG-1102", "BACKUP-DAILY-1 (24 Oct 2026): the DB-archive lane has a PRODUCER that needs no session -- the 20-minute "
+       "host queue tick takes a backup once the newest archive is 20 h old",
+       LOCKED, fixed_on="2026-10-24", scope="scripts/host_queue_worker.py daily_backup() -> scripts/backup_db_sandbox.py (Windows-safe)",
+       ref="RG-0234 red three times (1 Sep, 10 Sep, 24 Oct: 12 days stale) because only a session that remembered made a backup.")
+def rg_backup_daily_1():
+    w = repo_file("scripts/host_queue_worker.py"); b = repo_file("scripts/backup_db_sandbox.py")
+    if w is None or b is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    if "def daily_backup" not in w or "    daily_backup()" not in w:
+        out.append((FAIL, "the host tick no longer takes the daily backup -- the lane is back to depending on a session"))
+    if "age_h < 20" not in w:
+        out.append((FAIL, "daily_backup lost its 20 h freshness gate"))
+    if 'os.name != "nt"' not in b:
+        out.append((FAIL, "backup_db_sandbox.py calls bash on Windows again -- the host tick would crash"))
+    return out or [(INFO, "host tick takes a backup once the newest is 20 h old; no session needed")]
+
+
+@entry("RG-1103", "DEPLOY-SYNC-1 (24 Oct 2026): every deploy rebuilds the derived views before shipping -- the Ops Email "
+       "Templates view (+ new letters' manifest rows) and the session counter -- so neither can ship stale",
+       LOCKED, fixed_on="2026-10-24", scope="scripts/request_deploy.py pre-flight; scripts/build_email_templates_page.py --fix-manifest",
+       ref="RG-0344 went red twice on 24 Oct as sessions edited letters; RG-0154 fell behind once deploys moved to request_deploy.py.")
+def rg_deploy_sync_1():
+    r = repo_file("scripts/request_deploy.py"); e = repo_file("scripts/build_email_templates_page.py")
+    if r is None or e is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    out = []
+    for snip in ("build_email_templates_page.py'), '--fix-manifest'", "session_counter.py'), '--quiet'", "'SESSION_COUNTER.json'"):
+        if snip not in r:
+            out.append((FAIL, "request_deploy.py lost a pre-deploy refresh: " + snip))
+    if "FIX_MANIFEST and not check_only" not in e:
+        out.append((FAIL, "the email-view builder no longer adds a new letter's manifest row"))
+    return out or [(INFO, "deploy refreshes the email view, new manifest rows and the session counter")]
+
+
+@entry("RG-1104", "SHIP-AND-SEE-1 (24 Oct 2026): CityLauncher ships EVERY *.v2.html letter by glob, and an in-process ledger "
+       "leg that lacks a third-party module reads NOT EVALUATED, never REGRESSION",
+       LOCKED, fixed_on="2026-10-24", scope="CityLauncher/deploy_citylauncher.bat (EMAIL-SHIP-ALL-1); regression_ledger _leg_broke (LEG-DEPS-1); maint_deps dotenv",
+       ref="RG-0418: a new sports_club letter was missing from the hand list. RG-0254: 'No module named dotenv' printed as a regression.")
+def rg_ship_and_see_1():
+    out = []
+    bat = _cl_file("deploy_citylauncher.bat")
+    if bat is None:
+        out.append((INFO, "NOT EVALUATED - deploy_citylauncher.bat not readable from here"))
+    elif 'templates\\*.v2.html") do scp' not in bat:
+        out.append((FAIL, "deploy_citylauncher.bat went back to a hand list of letters -- a new letter can be left behind"))
+    led = repo_file("scripts/regression_ledger.py"); md = repo_file("scripts/maint_deps.py")
+    if led is not None and ('out.append((FAIL, "behavioural' + ' leg broke') in led:   # split: never match this line itself
+        out.append((FAIL, "an in-process leg reports a missing module as a regression again (use _leg_broke)"))
+    if md is not None and '"dotenv"' not in md:
+        out.append((FAIL, "maint_deps.py no longer installs python-dotenv"))
+    return out or [(INFO, "letters ship by glob; missing third-party modules read NOT EVALUATED; dotenv installed")]
 
 
 @entry("RG-1101", "GEN-EX-1 (RUL-253, 24 Oct 2026): one generic example set in every city -- priced in the visitor's money "

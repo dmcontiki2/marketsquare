@@ -31,6 +31,7 @@ import sys
 REQUIRED = {
     "httpx":   ("httpx",   "scripts/maintenance_agent.py -- the shadow agent cannot run at all"),
     "fastapi": ("fastapi", "regression_ledger RG-0181/RG-0182 harnesses -- demoted to NOT EVALUATED"),
+    "dotenv":  ("python-dotenv", "CityLauncher emailer/wave_runner imports -- RG-0254 and other in-process legs (LEG-DEPS-1, 24 Oct 2026)"),
 }
 
 

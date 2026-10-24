@@ -27,7 +27,7 @@ def _run(cmd, **kw):
 def main():
     # the sandbox loses ~/.ssh between sessions -- SSH-BOOTSTRAP-1 self-heals it
     loader = os.path.join(REPO, "load_sandbox_ssh.sh")
-    if os.path.isfile(loader):
+    if os.name != "nt" and os.path.isfile(loader):   # BACKUP-DAILY-1: on David's PC, Windows OpenSSH + his own key
         _run(["bash", loader])
 
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M")
@@ -85,9 +85,9 @@ def main():
                  "- restored from archive to temp, PRAGMA integrity_check: ok\n"
                  "- rows: users=%s, listings=%s\n"
                  "- source: live DB snapshot via sqlite3 .backup on the box, md5-matched "
-                 "after scp\n- made by: scripts/backup_db_sandbox.py (unattended, "
-                 "maintenance loop)\n"
-                 % (stamp[:10], stamp, counts["users"], counts["listings"]))
+                 "after scp\n- made by: scripts/backup_db_sandbox.py (unattended, %s)\n"
+                 % (stamp[:10], stamp, counts["users"], counts["listings"],
+                    "daily, host queue tick" if os.name == "nt" else "maintenance loop"))
     print("OK  archive %s (%d bytes), restores clean, users=%s listings=%s"
           % (os.path.basename(arc), os.path.getsize(arc), counts["users"], counts["listings"]))
     return 0
