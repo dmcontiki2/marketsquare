@@ -5,6 +5,31 @@ diary. Durable background lives in `GOAL_FACTS.md` — read that when you need t
 
 ---
 
+## RUN 47 — Sat 24 Oct 2026, 15:56–16:30 UTC (Opus 5.5)
+
+- **Acting:** folder mounted and writable (`rm` not permitted; probe `.write_test` left on the laptop). SSH via `load_sandbox_ssh.sh`
+  worked. Built in server worktree `/root/w47` (removed at the end), shipped `claude/goal-run47` c78c2de via CLOUD-SHIP-1 (16:13Z).
+- **Today's other lanes (David live):** RUL-251 (footers), RUL-252 (the review is the test; FB ad for New York instead of US SMS;
+  SMS only to real people), RUL-253 / GEN-EX-1 (one example set every city, local prices), FB-LAND-1, RUL-254 (languages signed off).
+  Waves still held (RUL-241/252).
+- **THE NUMBER: still 6** (#542, #544, #554, #562, #565, #566). Live 147. No listing created since 20 Oct; no new stranger user
+  (only `dmcontiki2+qa-draft@` 00:42Z). No outreach.
+- **Where people stop:** nobody came. Every bot=0 session since run 46 is David's iPhone / Mac.
+- **Walk:** the Facebook-ad stranger, New York phone (NY clock): `/door?src=fb-tutors` → Tutors door → Math → University → Both →
+  $75/h → Brooklyn → card; stopped at Publish (safety layer). `docs/E2E_2026-10-24.md`. **Break:** the door's big Quick button
+  ignored the ad's / chosen category and opened Services ("What kind of work? … Shops & forecourt"); fb-cards the same.
+- **Shipped (GI-0052, RG-1105):** QUICK-PILL-CAT-1. Live proof 16:17Z: fb-tutors → `/quick/tutors?cc=US&city=New York`, fb-cards →
+  Collectors, saved Property → Property, plain door unchanged.
+- **REVIEW NOW:** nothing new. GI-0051 (cold door rests on the $20 AI PA page) still open; GI-0044 held under RUL-241/252.
+- **Ledger:** new tree 1 !!!! (RG-0805, also red on base); base `/opt/marketsquare-src` 53c6710: RG-0229, 0230, 0247, 0276, 0344,
+  0403, 0805, 0987, 1090, 1104 and others (other lanes').
+- **Measurement note:** a walk with the browser clock on UTC shows a "New Yorker" South African languages — Quick reads her languages
+  from the phone clock (RUL-205). Walk with `timezone_id` set to the city's zone.
+- **Seen, not changed:** US tutors see "Primary" (US: Elementary); NY area tiles have no Manhattan/Midtown; the card chip reads a bare
+  "Both" (online and in person); some example cards carry no city line.
+- **QA data:** none created.
+- **Not reached:** the publish tap (safety layer); a ZA-phone check of the new button (the sandbox is a US IP — logic is country-blind).
+
 ## RUN 46 — Fri 23 Oct 2026, 15:56–16:45 UTC (Opus 5.5)
 
 - **Acting:** folder mounted and writable (`rm` not permitted; probe moved to `_to_delete/goalrun46_wtest`). SSH via

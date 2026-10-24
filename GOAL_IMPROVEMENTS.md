@@ -5,7 +5,20 @@ not yet live — says why), REVIEW NOW, APPROVED or REJECTED.
 
 ## REVIEW NOW
 
-*Open actions only — updated 23 Oct 2026 (run 46): GI-0051 is new (a question, not a blocker); GI-0050 shipped. GI-0044 still held by RUL-241.*
+*Open actions only — updated 24 Oct 2026 (run 47): nothing new needs you; GI-0052 shipped. GI-0051 still open (your door). GI-0044 held by RUL-241/252.*
+
+*Was (23 Oct, run 46): GI-0051 is new (a question, not a blocker); GI-0050 shipped. GI-0044 still held by RUL-241.*
+
+### GI-0052 — SHIPPED 24 Oct (run 47): QUICK-PILL-CAT-1 — the door's Quick button follows the ad / the chosen category
+- Evidence: `docs/E2E_2026-10-24.md` step 2 — a New York phone on `/door?src=fb-tutors` (today's FB-LAND-1, the Facebook ad RUL-252(b)
+  pays for) reads "Your choice: Tutors" over a stream of tutor examples, but the big green Quick button opened plain `/quick/`:
+  "Get seen for work" → "What kind of work? Home & care · Shops & forecourt …". fb-cards the same. The example cards were already right.
+- Change: `door.html` go() — the Quick button opens `/quick/<category door>` with her cc and city when the door shows a category that
+  has a Quick door; otherwise exactly as before. RG-1105.
+- Size: small. Shipped c78c2de (CLOUD-SHIP-1 16:13Z). Live proof 16:17Z: fb-tutors → Tutors door in New York; fb-cards → Collectors;
+  saved Property → Property; plain door unchanged.
+- How we know it worked: Facebook-ad sessions (`src=fb-*`) reach `q_step_1` on Tutors / Collectors, not Services — readable in
+  `onboard_steps` once the ad runs.
 
 ### GI-0051 — REVIEW NOW (23 Oct, run 46): a cold stranger's first button is the Pro pitch
 - **What I saw:** since your 18:15 SAST release a fresh phone with no account lands on `/door` with a red **AI PA** pill top and

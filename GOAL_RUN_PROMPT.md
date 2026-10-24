@@ -88,6 +88,8 @@ fresh clone of `origin/main` through the server relay (push the branch to `/opt/
   cloud sandbox instead: Python Playwright, a fresh context (375×812, mobile UA, `proxy={"server": $HTTPS_PROXY}`).
   The Playwright MCP is blocked from trustsquare.co; the Python library is not. Since FUNNEL-WEBDRIVER-1 these walks
   land bot=2 by themselves.
+  Set the context's `timezone_id` (and `locale`) to the walked city's zone: Quick picks her languages from the phone's clock
+  (RUL-205), so a UTC browser "in New York" sees South Africa's languages — a false red (run 47).
 - The device VM has too little disk for a clone. Build in a server worktree
   (`git -C /opt/marketsquare-src worktree add -b <br> /root/<dir> origin/main`), run the ledger there (in the
   background — a full run is ~4 min), compare its `!!!!` list with the same run on `/opt/marketsquare-src`, then push
