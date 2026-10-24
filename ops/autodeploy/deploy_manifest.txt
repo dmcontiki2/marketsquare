@@ -531,3 +531,4 @@ orchestration_v2/templates/tour_guide_outreach.v2.html | orchestrator/v2/templat
 orchestration_v2/templates/travel_agency_outreach.v2.html | orchestrator/v2/templates/travel_agency_outreach.v2.html
 orchestration_v2/templates/tutor_institution_outreach.v2.html | orchestrator/v2/templates/tutor_institution_outreach.v2.html
 orchestration_v2/templates/tutors_outreach.v2.html | orchestrator/v2/templates/tutors_outreach.v2.html
+orchestration_v2/templates/sports_club_outreach.v2.html | orchestrator/v2/templates/sports_club_outreach.v2.html

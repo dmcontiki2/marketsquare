@@ -219,23 +219,23 @@
 ""
 ]
 ],
-"sports_club_outreach.html": [
+"sports_club_outreach.v2.html": [
 [
 "US",
 "US \u00b7 New York",
-"templates/intl/US/sports_club_outreach.html",
+"templates/intl/US/sports_club_outreach.v2.html",
 ""
 ],
 [
 "GB",
 "UK \u00b7 London",
-"templates/intl/GB/sports_club_outreach.html",
+"templates/intl/GB/sports_club_outreach.v2.html",
 ""
 ],
 [
 "AU",
 "AU \u00b7 Sydney",
-"templates/intl/AU/sports_club_outreach.html",
+"templates/intl/AU/sports_club_outreach.v2.html",
 ""
 ]
 ],
