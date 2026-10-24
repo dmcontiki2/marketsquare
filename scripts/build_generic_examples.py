@@ -73,8 +73,14 @@ def main():
         for n in range(1, 6):
             src = os.path.join(SRC, "%s_%d.jpg" % (g, n))
             if not os.path.exists(src): sys.exit("MISSING photo %s" % src)
-            im = Image.open(src).convert("RGB"); im.thumbnail((720, 720)); im.save(os.path.join(OUT, "%s_%d.jpg" % (g, n)), "JPEG", quality=80)
-            imgs.append("%s_%d" % (g, n))
+            im = Image.open(src).convert("RGB"); name = "%s_%d" % (g, n)
+            if im.height > im.width:   # an upright photo (David's own cards): whole, over a soft blurred copy -- like PHOTO-TALL-1
+                from PIL import ImageFilter
+                W, H = 960, 600; bg = im.resize((W, int(im.height * W / im.width))).crop((0, 0, W, H)).filter(ImageFilter.GaussianBlur(28))
+                fg = im.copy(); fg.thumbnail((W, H)); bg.paste(fg, ((W - fg.width) // 2, (H - fg.height) // 2)); im = bg
+                name += "_w"   # new name: /static is cached for a year (VERSIONED-PHOTO-1)
+            im.thumbnail((960, 960)); im.save(os.path.join(OUT, name + ".jpg"), "JPEG", quality=80)
+            imgs.append(name)
         ex.append({"g": g, "cat": cat, "sub": sub, "title": title, "img": imgs, "price": prices})
     blob = json.dumps(ex, ensure_ascii=False, separators=(",", ":"))
     s = open(DOOR, encoding="utf-8").read()
