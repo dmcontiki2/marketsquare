@@ -22405,7 +22405,7 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
              + "\n\nIt is saved and not yet public. Open it, check it and publish it:\n"
              + link
              + "\n\nTap it within 3 days: it signs you in on that phone and opens your listing, and it keeps "
-             "opening it there for 7 days. Any other time, or on another phone, open " + APP_URL + " and sign in with "
+             "opening it there for 7 days. Any other time, or on another phone, open " + APP_URL + "/?app=1 and sign in with "   # APP-MAIL-DOOR-2: the bare address opens the door, which has no Sign in
              + to_email + " -- the listing is waiting on that address.\n\n"
              "You are getting this because you entered this address to publish a "
              "listing. If that wasn't you, ignore it.")

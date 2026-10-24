@@ -389,7 +389,7 @@ def build(check_only=False):
         if note:
             meta.append(esc(note))
         meta.append("%d KB · sending copy last changed %s · as sent today" % (kb, mtime))
-        cards[grp].append(card("templates/" + fn, esc(TITLES.get(fn, fn)), " · ".join(meta),
+        cards[grp].append(card("templates/" + fn, esc(TITLES.get(fn) or (TITLES.get(fn.replace(".v2.html", ".html"), fn) + (" (v2)" if fn.endswith(".v2.html") else ""))), " · ".join(meta),   # OUTREACH-AUDIT-2: v2 letters carry their names
                                badges_for(fn, raw, sent, special), txt=fn.endswith(".txt"),
                                extra=intl_row(views.get(fn))))
     lane_names = {x[0] for x in lane}
@@ -499,9 +499,11 @@ def build(check_only=False):
         "<div class=\"ctx\">%s</div>\n"
         % (n_lane, today, ctx)
     )
-    html += section("Sending now — organisations: agencies, dealers, operators, institutions (%d)" % len(cards["org"]), cards["org"])
-    html += section("Sending now — clubs and published registers, the RUL-099 letter shape (%d)" % len(cards["clubs"]), cards["clubs"])
-    html += section("Sending now — individual sellers (%d)" % len(cards["ind"]), cards["ind"])
+    # OUTREACH-AUDIT-2: while emailer/SEND_FREEZE stands (RUL-241(c), RUL-252) nothing sends -- the page must not say "Sending now".
+    _lead = "Held (SEND_FREEZE, RUL-241/RUL-252) — the letter the wave will send" if os.path.exists(os.path.join(CL, "emailer", "SEND_FREEZE")) else "Sending now"
+    html += section(_lead + " — organisations: agencies, dealers, operators, institutions (%d)" % len(cards["org"]), cards["org"])
+    html += section(_lead + " — clubs and published registers, the RUL-099 letter shape (%d)" % len(cards["clubs"]), cards["clubs"])
+    html += section(_lead + " — individual sellers (%d)" % len(cards["ind"]), cards["ind"])
     html += section("Also in the send lane — A/B arms, follow-ups and the permission letter (%d)" % len(cards["other"]), cards["other"])
     html += section("Placement lane — David's reserved send (RUL-046): the invite and the 8-email onboarding sequence, Day 0–18", pl)
     if dz:

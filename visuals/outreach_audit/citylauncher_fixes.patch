@@ -1,0 +1,52 @@
+diff --git a/emailer/emailer.py b/emailer/emailer.py
+index ee77db9..7e3848b 100644
+--- a/emailer/emailer.py
++++ b/emailer/emailer.py
+@@ -773,7 +773,14 @@ def render(template: str, prospect: dict, listing_title: str, api_base: str) ->
+     # DOOR-LINK-1 (outreach audit, 24 Oct 2026): a bare trustsquare.co link ("have a look around first", the footer
+     # wordmark) now opens the one door (RUL-243) carrying the wave tag and her city -- the door shows HER city and hands
+     # the src on to whatever she opens. A bare link used to arrive untagged, so a look-first visit could never be credited.
+-    _door_q = urllib.parse.urlencode({k: v for k, v in (('src', _src), ('cc', _country or ''), ('city', city_name)) if v})
++    # QUICK-CITY-AREA-1: a Brooklyn or Centurion row names its covered city (New York, Pretoria) on the link, so the door
++    # never has to fall back to her phone network to place her.
++    _door_city = city_name
++    try:
++        _door_city = (_qd._pack_city(_country or '', city_name) if _qd is not None else None) or city_name
++    except Exception:
++        pass
++    _door_q = urllib.parse.urlencode({k: v for k, v in (('src', _src), ('cc', _country or ''), ('city', _door_city)) if v})
+     out = out.replace('href="https://trustsquare.co"', 'href="https://trustsquare.co/door?%s"' % _door_q.replace('&', '&amp;'))
+     out = out.replace('{{optout_link}}',      optout_link)
+     out = out.replace('{{unsubscribe_link}}', unsubscribe_link)
+diff --git a/emailer/quick_door.py b/emailer/quick_door.py
+index 2ce9ad6..1a53413 100644
+--- a/emailer/quick_door.py
++++ b/emailer/quick_door.py
+@@ -111,7 +111,13 @@ def _pack_city(cc, city):
+         names = [base, k] + re.findall(r"\(([^)]+)\)", k)
+         if lc in (n.strip().lower() for n in names):
+             return base
+-    return None
++    # QUICK-CITY-AREA-1 (outreach audit, 24 Oct 2026): a prospect filed under one of a covered city's own areas
++    # (Brooklyn, Queens, Centurion ...) opens Quick in that city, as the door already does (DOOR-CITY-1). Her link
++    # used to carry no city at all, so Quick fell back to guessing from her phone network.
++    # An area two cities share (Hyde Park: Austin and Chicago) names no city -- guessing would be the old fault.
++    hits = {k.split(" (")[0].strip() for k, areas in cities.items()
++            if any(lc == (a or "").strip().lower() for a in (areas or []))}
++    return hits.pop() if len(hits) == 1 else None
+ 
+ 
+ def _pack_has_city(cc, city) -> bool:
+diff --git a/sms_wave.py b/sms_wave.py
+index 6df7e2d..ae9e8ae 100644
+--- a/sms_wave.py
++++ b/sms_wave.py
+@@ -85,7 +85,7 @@ BUSINESS_LANG = {"Cape Town": "af", "George": "af", "Knysna": "af", "Mossel Bay"
+                  "Kimberley": "af"}
+ PITCH_LANG = {
+     "af":  {"services": "TrustSquare: kry werk naby jou. Lys gratis:",   # SMS-WORDS-2
+-            "casuals": "TrustSquare: laat werkgewers jou kry. Lys gratis:",
++            "casuals": "TrustSquare: werkgewers kry jou. Lys gratis:",   # OUTREACH-AUDIT-2: 6 chars shorter, so Cape Town / Bloemfontein / Kimberley casuals stay one part
+             "tutors": "TrustSquare: laat ouers jou kry. Lys gratis:",
+             "adventures": "TrustSquare: lys jou toere gratis:",
+             "adventures_accommodation": "TrustSquare: lys jou gastehuis gratis:"},

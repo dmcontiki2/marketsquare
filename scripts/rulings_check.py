@@ -1560,7 +1560,7 @@ REFLECTIONS = {
  "RUL-249": [
    # David, 23 Oct 2026: "showing our example adverts with a small but clear sentence in the bottom right 'your listing here'"
    ("RULINGS.md", ["A THIN CITY INVITES SELLERS"], []),
-   ("door.html", ["MINLOCAL=6", 'T("Your listing here")', 'go(APPS[2],"/quick/?src="+encodeURIComponent(INSRC||"door-example"))', 'T("Be the first seller in {city}"', "function isEx("], []),
+   ("door.html", ["MINLOCAL=6", 'T("Your listing here")', 'go(APPS[2],exUrl(ad))', 'return "/quick/"+q+"?src="+encodeURIComponent(INSRC||"door-example")', 'T("Be the first seller in {city}"', "function isEx("], []),
  ],
  "RUL-248": [
    # David, 23 Oct 2026: "use the top to scroll left to right selectors ... click on a scrolling advert ... randomly selected to be fair, has to be local"

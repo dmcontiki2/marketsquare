@@ -4,6 +4,13 @@
 > April n8n outreach fleet are SUPERSEDED (archived in n8n/email_templates/_archive_2026-04/).
 > The live outreach machine is CityLauncher/emailer (Resend, dry-run-guarded, opt-out wired).
 
+## Current state (24 Oct 2026 -- OUTREACH-AUDIT-2; read this before the history below)
+
+- **The letters that send** are CityLauncher/emailer/templates/*.v2.html (emailer.py TEMPLATES, RUL-232(e)/RUL-241(b)); sports clubs keep sports_club_outreach.html. Every CTA opens Quick's door for her category (`/q/<door>?src=&cc=&city=`) or the one door (`/door?src=&cc=&city=`, RUL-243); "founding" wording is gone (RUL-047).
+- **Footers** (localize.py `_FOOTER`): no footer promises a single letter -- a further letter may follow after at least 60 days, never after an unsubscribe (RUL-251); RECONTACT-1's 60-day floor (RUL-106) and the GB/NZ exclusions stand.
+- **Hold:** nothing sends. emailer/SEND_FREEZE and the absent SMS ARM file stand on the server (RUL-241(c)); the New York e-mail wave sends only after David's old-versus-new review (RUL-252(a)); no SMS to the US (RUL-252(b)); an SMS goes only to a real person's number (RUL-252(c)).
+- **The audit board:** visuals/outreach_audit/OUTREACH_AUDIT_2026-10-24.html. The wave table below is history (28 Jul).
+
 ## The rule set (three lines)
 
 1. **Skin ruling:** the LIVE reference is `CityLauncher/emailer/templates/agency_outreach.html`

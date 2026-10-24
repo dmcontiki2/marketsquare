@@ -310,7 +310,8 @@
    "R150k": "P100k",
    "matric": "Form 5",
    "Grade 10": "Form 4",
-   "body corporate": "estate committee"
+   "body corporate": "estate committee",
+   "afrikaans": "setswana"
   },
   "bands": {
    "cars": [
@@ -424,7 +425,8 @@
    "R150k": "MT 500k",
    "matric": "12th class",
    "Grade 10": "10th class",
-   "body corporate": "building committee"
+   "body corporate": "building committee",
+   "afrikaans": "portuguese"
   },
   "bands": {
    "cars": [
@@ -542,7 +544,8 @@
    "R150k": "KSh 1m",
    "matric": "Form 4",
    "Grade 10": "Form 3",
-   "body corporate": "estate committee"
+   "body corporate": "estate committee",
+   "afrikaans": "kiswahili"
   },
   "bands": {
    "cars": [
@@ -740,7 +743,8 @@
    "R150k": "£5k",
    "matric": "sixth form",
    "Grade 10": "Year 11",
-   "body corporate": "residents’ association"
+   "body corporate": "residents’ association",
+   "afrikaans": "french"
   },
   "bands": {
    "cars": [
@@ -860,7 +864,8 @@
    "R150k": "€5,000",
    "matric": "Abitur year",
    "Grade 10": "Year 10",
-   "body corporate": "residents’ board"
+   "body corporate": "residents’ board",
+   "afrikaans": "german"
   },
   "bands": {
    "cars": [
@@ -988,7 +993,8 @@
    "R150k": "A$20k",
    "matric": "Year 12",
    "Grade 10": "Year 10",
-   "body corporate": "strata"
+   "body corporate": "strata",
+   "afrikaans": "french"
   },
   "bands": {
    "cars": [
@@ -1197,7 +1203,9 @@
    "R150k": "$15k",
    "matric": "senior year",
    "Grade 10": "10th grade",
-   "body corporate": "HOA"
+   "body corporate": "HOA",
+   "afrikaans": "spanish",
+   "maths": "math"
   },
   "bands": {
    "cars": [

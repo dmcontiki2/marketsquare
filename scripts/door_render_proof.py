@@ -84,7 +84,8 @@ with sync_playwright() as p:
     check(nex > 0 and nyours == nex and nreal == 0 and "Your listing here" in pg.inner_text(".ad.ex .yours >> nth=0"),
           "too few local Collectors: examples top up the stream, every one says 'Your listing here' (%d examples)" % nex)
     n0 = len(calls); pg.mouse.click(195, 480); pg.wait_for_timeout(1200)
-    check(("nav", ORIGIN + "/quick/?src=door-example") in calls[n0:], "tapping an example opens selling in Quick, never the example")
+    check(any(c[0] == "nav" and str(c[1]).startswith(ORIGIN + "/quick/collectors?src=door-example") for c in calls[n0:]),
+          "tapping an example opens selling in Quick -- in that example's own door (EX-DOOR-1) -- never the example")
     check(any(c[0] == "last" for c in calls[n0:]), "the tap records the last app"); ctx.close()
     # RUL-249: a city with no local adverts at all -> examples + "Be the first seller in Johannesburg"
     saved = dict(ME); ME.update(interest=[], via=None); GEO["city"] = "Johannesburg"

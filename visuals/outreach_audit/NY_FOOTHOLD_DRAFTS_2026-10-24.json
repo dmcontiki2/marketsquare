@@ -1,0 +1,196 @@
+[
+ {
+  "group": "uni",
+  "name": "University tutors & learners",
+  "audience": "Columbia, NYU, CUNY, Fordham, The New School, Pace — published tutoring-centre and student-tutor listings",
+  "email": {
+   "subject": "Tutor students in New York — list your sessions free",
+   "body": [
+    "Hi {{first_name}},",
+    "Students across New York look for help with calculus, statistics, chemistry, essays and code. On TrustSquare a tutor lists a session in about a minute: pick your subject and level, set your rate (for example $75 an hour) and choose your neighborhoods — or online.",
+    "You stay anonymous until you accept a student's introduction. Listing is free; the student pays a $2 introduction fee, and you keep everything you charge.",
+    "Looking for a tutor instead? The second link shows what is already listed in New York."
+   ],
+   "cta": [
+    [
+     "List in a minute",
+     "https://trustsquare.co/q/tutors?src=nyc-uni-e-20261024&cc=US&city=New+York"
+    ],
+    [
+     "See New York first",
+     "https://trustsquare.co/door?src=nyc-uni-e-20261024&cc=US&city=New+York"
+    ]
+   ],
+   "footer": "TrustSquare (Pty) Ltd · Reg No. 2026/340128/07 · 6 Villa Christiaan, Manie Road, Elarduspark, Pretoria 0181, South Africa · This is an advertisement for TrustSquare's free listing service. You are receiving this message because your contact details are publicly listed (source: published club or business contact page). A further letter may follow after at least 60 days, never after you unsubscribe. Unsubscribe instantly: {{unsubscribe_link}}"
+  },
+  "sms": {
+   "text": "TrustSquare: tutor students in NYC, list free: https://trustsquare.co/q/tutors?src=sms-nyc-uni&cc=US&city=New+York Reply STOP to opt out",
+   "chars": 136,
+   "parts": 1,
+   "status": "DRAFT ONLY - not sendable: no SMS to the US (RUL-252(b)); TCPA/10DLC"
+  },
+  "door_link": "https://trustsquare.co/door?src=nyc-uni-e-20261024&cc=US&city=New+York",
+  "quick_link": "https://trustsquare.co/q/tutors?src=nyc-uni-e-20261024&cc=US&city=New+York"
+ },
+ {
+  "group": "cards",
+  "name": "Card clubs",
+  "audience": "trading-card game stores and campus card clubs (club desk = club lane, RUL-059)",
+  "email": {
+   "subject": "Sell your spare cards to collectors in New York — free",
+   "body": [
+    "Hi {{first_name}},",
+    "Card players in New York buy singles, sealed product and graded cards from people near them. On TrustSquare you list a card in about a minute: a photo, the kind of card and your price in dollars (for example $4 to $60 a single).",
+    "Your club or store stays anonymous until you accept a buyer's introduction. Listing is free and we never take a share of the sale.",
+    "Members can use the second link to see what is already for sale in New York."
+   ],
+   "cta": [
+    [
+     "List in a minute",
+     "https://trustsquare.co/q/collectors?src=nyc-cards-e-20261024&cc=US&city=New+York"
+    ],
+    [
+     "See New York first",
+     "https://trustsquare.co/door?src=nyc-cards-e-20261024&cc=US&city=New+York"
+    ]
+   ],
+   "footer": "TrustSquare (Pty) Ltd · Reg No. 2026/340128/07 · 6 Villa Christiaan, Manie Road, Elarduspark, Pretoria 0181, South Africa · This is an advertisement for TrustSquare's free listing service. You are receiving this message because your contact details are publicly listed (source: published club or business contact page). A further letter may follow after at least 60 days, never after you unsubscribe. Unsubscribe instantly: {{unsubscribe_link}}"
+  },
+  "sms": {
+   "text": "TrustSquare: sell your cards in NYC, list free: https://trustsquare.co/q/collectors?src=sms-nyc-cards&cc=US&city=New+York Reply STOP to opt out",
+   "chars": 143,
+   "parts": 1,
+   "status": "DRAFT ONLY - not sendable: no SMS to the US (RUL-252(b)); TCPA/10DLC"
+  },
+  "door_link": "https://trustsquare.co/door?src=nyc-cards-e-20261024&cc=US&city=New+York",
+  "quick_link": "https://trustsquare.co/q/collectors?src=nyc-cards-e-20261024&cc=US&city=New+York"
+ },
+ {
+  "group": "pt",
+  "name": "Gyms & personal trainers",
+  "audience": "independent trainers and small gyms with published contact pages",
+  "email": {
+   "subject": "Personal trainers: get found in New York — free listing",
+   "body": [
+    "Hi {{first_name}},",
+    "People in New York look for a trainer by neighborhood, goal and price. On TrustSquare a trainer lists sessions in about a minute: your discipline, your rate (for example $85 a session) and your areas — Brooklyn, Queens, the Upper West Side and more.",
+    "Clients see your session, never your name or number, until you accept their introduction. Free to list; the client pays a $2 introduction fee and you keep everything you charge."
+   ],
+   "cta": [
+    [
+     "List in a minute",
+     "https://trustsquare.co/q/tutors?role=personal_trainer&src=nyc-pt-e-20261024&cc=US&city=New+York"
+    ],
+    [
+     "See New York first",
+     "https://trustsquare.co/door?src=nyc-pt-e-20261024&cc=US&city=New+York"
+    ]
+   ],
+   "footer": "TrustSquare (Pty) Ltd · Reg No. 2026/340128/07 · 6 Villa Christiaan, Manie Road, Elarduspark, Pretoria 0181, South Africa · This is an advertisement for TrustSquare's free listing service. You are receiving this message because your contact details are publicly listed (source: published club or business contact page). A further letter may follow after at least 60 days, never after you unsubscribe. Unsubscribe instantly: {{unsubscribe_link}}"
+  },
+  "sms": {
+   "text": "TrustSquare: NYC trainers, list free: https://trustsquare.co/q/tutors?role=personal_trainer&src=sms-nyc-pt&cc=US&city=New+York Reply STOP to opt out",
+   "chars": 148,
+   "parts": 1,
+   "status": "DRAFT ONLY - not sendable: no SMS to the US (RUL-252(b)); TCPA/10DLC"
+  },
+  "door_link": "https://trustsquare.co/door?src=nyc-pt-e-20261024&cc=US&city=New+York",
+  "quick_link": "https://trustsquare.co/q/tutors?role=personal_trainer&src=nyc-pt-e-20261024&cc=US&city=New+York"
+ },
+ {
+  "group": "climb",
+  "name": "Climbing & mountaineering clubs",
+  "audience": "climbing gyms, instructors and mountaineering clubs",
+  "email": {
+   "subject": "List your climbing courses in New York — no commission",
+   "body": [
+    "Hi {{first_name}},",
+    "New Yorkers look for intro courses, bouldering coaching and guided outdoor days. On TrustSquare an instructor, gym or club lists a course in about a minute, priced per session in dollars (for example $120 for a half-day intro).",
+    "No commission on your bookings: the person asking pays a $2 introduction fee and you decide whom to accept."
+   ],
+   "cta": [
+    [
+     "List in a minute",
+     "https://trustsquare.co/q/tutors?role=climbing_instructor&src=nyc-climb-e-20261024&cc=US&city=New+York"
+    ],
+    [
+     "See New York first",
+     "https://trustsquare.co/door?src=nyc-climb-e-20261024&cc=US&city=New+York"
+    ]
+   ],
+   "footer": "TrustSquare (Pty) Ltd · Reg No. 2026/340128/07 · 6 Villa Christiaan, Manie Road, Elarduspark, Pretoria 0181, South Africa · This is an advertisement for TrustSquare's free listing service. You are receiving this message because your contact details are publicly listed (source: published club or business contact page). A further letter may follow after at least 60 days, never after you unsubscribe. Unsubscribe instantly: {{unsubscribe_link}}"
+  },
+  "sms": {
+   "text": "TrustSquare: list climbing courses free: https://trustsquare.co/q/tutors?role=climbing_instructor&src=sms-nyc-climb&cc=US&city=New+York Reply STOP to opt out",
+   "chars": 157,
+   "parts": 1,
+   "status": "DRAFT ONLY - not sendable: no SMS to the US (RUL-252(b)); TCPA/10DLC"
+  },
+  "door_link": "https://trustsquare.co/door?src=nyc-climb-e-20261024&cc=US&city=New+York",
+  "quick_link": "https://trustsquare.co/q/tutors?role=climbing_instructor&src=nyc-climb-e-20261024&cc=US&city=New+York"
+ },
+ {
+  "group": "cave",
+  "name": "Caving clubs (NSS grottos)",
+  "audience": "National Speleological Society grottos in and around New York — club contact addresses only",
+  "email": {
+   "subject": "Introduce new cavers to your grotto — a free listing in New York",
+   "body": [
+    "Hi {{first_name}},",
+    "People in New York who want to try caving rarely know where to start. On TrustSquare a club lists an introductory trip or a training evening in about a minute — the level, the gear supplied and the price per person (for example $95, or free).",
+    "Your club stays anonymous until you accept an enquiry, and we never ask for your member list. Listing is free."
+   ],
+   "cta": [
+    [
+     "List in a minute",
+     "https://trustsquare.co/q/adventures?src=nyc-cave-e-20261024&cc=US&city=New+York"
+    ],
+    [
+     "See New York first",
+     "https://trustsquare.co/door?src=nyc-cave-e-20261024&cc=US&city=New+York"
+    ]
+   ],
+   "footer": "TrustSquare (Pty) Ltd · Reg No. 2026/340128/07 · 6 Villa Christiaan, Manie Road, Elarduspark, Pretoria 0181, South Africa · This is an advertisement for TrustSquare's free listing service. You are receiving this message because your contact details are publicly listed (source: published club or business contact page). A further letter may follow after at least 60 days, never after you unsubscribe. Unsubscribe instantly: {{unsubscribe_link}}"
+  },
+  "sms": {
+   "text": "TrustSquare: list your caving trips free: https://trustsquare.co/q/adventures?src=sms-nyc-cave&cc=US&city=New+York Reply STOP to opt out",
+   "chars": 136,
+   "parts": 1,
+   "status": "DRAFT ONLY - not sendable: no SMS to the US (RUL-252(b)); TCPA/10DLC"
+  },
+  "door_link": "https://trustsquare.co/door?src=nyc-cave-e-20261024&cc=US&city=New+York",
+  "quick_link": "https://trustsquare.co/q/adventures?src=nyc-cave-e-20261024&cc=US&city=New+York"
+ },
+ {
+  "group": "chess",
+  "name": "Chess clubs",
+  "audience": "club and campus chess clubs and coaches",
+  "email": {
+   "subject": "Chess coaching and club nights in New York — free listing",
+   "body": [
+    "Hi {{first_name}},",
+    "Parents, students and adult improvers in New York look for a chess coach or a club to play at. On TrustSquare a club or coach lists lessons in about a minute: your level, your rate (for example $60 an hour) and your neighborhoods.",
+    "People see the lesson, not your name or number, until you accept their introduction. Free to list; the enquirer pays a $2 introduction fee."
+   ],
+   "cta": [
+    [
+     "List in a minute",
+     "https://trustsquare.co/q/tutors?role=chess_coach&src=nyc-chess-e-20261024&cc=US&city=New+York"
+    ],
+    [
+     "See New York first",
+     "https://trustsquare.co/door?src=nyc-chess-e-20261024&cc=US&city=New+York"
+    ]
+   ],
+   "footer": "TrustSquare (Pty) Ltd · Reg No. 2026/340128/07 · 6 Villa Christiaan, Manie Road, Elarduspark, Pretoria 0181, South Africa · This is an advertisement for TrustSquare's free listing service. You are receiving this message because your contact details are publicly listed (source: published club or business contact page). A further letter may follow after at least 60 days, never after you unsubscribe. Unsubscribe instantly: {{unsubscribe_link}}"
+  },
+  "sms": {
+   "text": "TrustSquare: list chess coaching free in NYC: https://trustsquare.co/q/tutors?role=chess_coach&src=sms-nyc-chess&cc=US&city=New+York Reply STOP to opt out",
+   "chars": 154,
+   "parts": 1,
+   "status": "DRAFT ONLY - not sendable: no SMS to the US (RUL-252(b)); TCPA/10DLC"
+  },
+  "door_link": "https://trustsquare.co/door?src=nyc-chess-e-20261024&cc=US&city=New+York",
+  "quick_link": "https://trustsquare.co/q/tutors?role=chess_coach&src=nyc-chess-e-20261024&cc=US&city=New+York"
+ }
+]

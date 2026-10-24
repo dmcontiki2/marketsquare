@@ -247,7 +247,7 @@ function buildLane(){
   }
   var html=[], n=0;
   list.forEach(function(d,i){
-    html.push('<div class="ad'+(d.ex?' ex" data-ex="1':'')+'" data-id="'+esc(d.id)+'"><img src="'+esc(d.img)+'" alt="" loading="lazy"><span class="cat">'+esc(T(d.cat))+'</span>'+
+    html.push('<div class="ad'+(d.ex?' ex" data-ex="1':'')+'" data-id="'+esc(d.id)+'" data-cat="'+esc(d.cat||"")+'"><img src="'+esc(d.img)+'" alt="" loading="lazy"><span class="cat">'+esc(T(d.cat))+'</span>'+
       (d.price?'<span class="price">'+esc(d.price)+'</span>':'')+'<div class="txt"><b>'+esc(d.title)+'</b><span>'+esc(d.where||"")+'</span></div>'+
       (d.ex?'<span class="yours">'+esc(T("Your listing here"))+'</span>':'')+'</div>');
     if(i%3===2){ var p=PA[paTurn%PA.length]; paTurn++;
@@ -267,6 +267,11 @@ function tick(now){ var dt=Math.min(64,now-t0); t0=now;
   requestAnimationFrame(tick); }
 
 /* the tap: anywhere opens the app of that type; an AI PA card opens the AI PA door; an advert on TrustSquare opens that advert */
+/* EX-DOOR-1 (outreach audit, 24 Oct 2026): an example opens selling in ITS OWN Quick door, in her city and country -- a tap on
+   a New York property example used to open the Services door with no city, so Quick had to guess both again. */
+var QDOOR={Property:"property",Services:"services",Tutors:"tutors",Collectors:"collectors",Cars:"cars",Adventures:"adventures"};
+function exUrl(ad){ var q=QDOOR[(ad&&ad.dataset.cat)||""]||"";
+  return "/quick/"+q+"?src="+encodeURIComponent(INSRC||"door-example")+(CC?"&cc="+encodeURIComponent(CC):"")+(CITY?"&city="+encodeURIComponent(CITY):""); }
 function go(app,url){
   if(app===PAAPP&&!url) url=ME.pro?"/pa":"/pa/about";   // PA-GATE-1: a non-Pro goes straight to the explainer; /pa refuses him (401)
   try{ localStorage.setItem("ts_last_app",app.key); }catch(e){}
@@ -342,7 +347,7 @@ $("door").addEventListener("click",function(e){
   var pa=e.target.closest&&e.target.closest("[data-pa]"); if(pa){ go(PAAPP); return; }
   var a=APPS[cur]||PAAPP;   // RUL-247: a tap on the collage opens the AI PA door
   var ad=e.target.closest&&e.target.closest(".ad");
-  if(ad&&ad.dataset.ex) { go(APPS[2],"/quick/?src="+encodeURIComponent(INSRC||"door-example")); return; }   // RUL-249: an example opens selling, never the example
+  if(ad&&ad.dataset.ex) { go(APPS[2],exUrl(ad)); return; }   // RUL-249: an example opens selling, never the example
   if(ad&&ad.dataset.id) { go(APPS[3],"/?listing="+encodeURIComponent(ad.dataset.id)); return; }   // RUL-248: any advert opens that advert in TrustSquare
   go(a);
 });
