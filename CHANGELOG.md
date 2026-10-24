@@ -1,3 +1,7 @@
+DOOR-EX-LOCAL-1 (23 Oct 2026): the door's "Your listing here" examples now come from the visitor's own city (New York in $, London in GBP) and fall back to Pretoria's only where a city has none; before, every city outside Pretoria was shown Pretoria examples (Waterkloof, Hilux, Matric). Proof: visuals/door_ny_proof (before/after, en-US + es-US). Live, shipped in Release 18:55.
+
+DOOR-CITY-1 (23 Oct 2026, David "Please do"): the door lands a visitor in a city TrustSquare covers -- her account city, else the main app's own/auto city, else the network's city if covered, else the nearest covered city within 150 km, else the country's main city. Brooklyn/Queens -> New York, Centurion -> Pretoria. Proof 7/7 in visuals/door_ny_proof.
+
 - **PHOTO-TALL-1 (23 Oct 2026):** an upright photo in a listing strip is shown whole over a soft blurred copy of itself, instead of centre-cropped to the 260px band (the Sandton housekeeper lost the bottom half of her photo; every portrait photo outside Collectors did). Landscape photos unchanged. Checked on a phone and a laptop against the live listing 566.
 
 - **PA-GATE-1 (23 Oct 2026):** GET /pa now refuses anyone who is not Pro (401, with a one-line page on to /pa/about) instead of a 302; the door sends a non-Pro straight to /pa/about. The QA Bot follows redirects, read the explainer as data for a stranger and rolled back every deploy after the door was armed (12:15-17:55 SAST) -- the live door stayed on the 11:18 release. route_policy GET /pa -> user. Route proof 25/25, render proof 38/38.
