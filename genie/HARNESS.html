@@ -5639,7 +5639,11 @@ drawDoor();
       {q:find?'Who do you need?':'Which one do you coach?', key:'what', kind:'tile', free:true, freeHint:'Name your sport',
        tiles:roleTiles(gp)}];
     if(!find) steps.push(stepOf(base,'price'));
-    steps.push(stepOf(base,'where'));
+    /* TRN-WHERE-1 (outreach audit, 24 Oct 2026): the area step comes from the flow every other door uses, so it carries HER
+       city's areas (New York: Brooklyn, Queens ...). It was read from the raw tutors door, whose tiles are Pretoria's -- a
+       personal trainer in New York or London was asked to pick Pretoria East, Centurion or Menlyn. */
+    var wh=null; try{ var f0=_flowT(); wh=f0 && f0.steps && stepOf(f0,'where'); }catch(e){ wh=null; }
+    steps.push(wh || stepOf(base,'where'));
     return {steps:steps.filter(Boolean)};
   };
   /* RUL-157 for the door: a trainer's advert opens on the sport's picture, never on an area tile's photo */
