@@ -35328,6 +35328,27 @@ def rg_gen_ex_1():
             return [(FAIL, "GEN-EX-1 lost: " + snip)]
     return [(INFO, "%d generic examples, 5 photos each, priced per country, placed in her city" % len(g))]
 
+@entry("RG-1105", "QUICK-PILL-CAT-1 (Goal run 47, 24 Oct 2026): the door's Quick button opens the Quick door of the category "
+       "the door shows ('Your choice: Tutors', a Facebook ad's category) in her country and city -- never plain /quick/ (Services)",
+       LOCKED, fixed_on="2026-10-24", scope="door.html go()",
+       ref="docs/E2E_2026-10-24.md: /door?src=fb-tutors -> Quick button -> 'Get seen for work' / 'What kind of work? ... Shops & forecourt'.")
+def rg_quick_pill_cat_1():
+    h = repo_file("door.html")
+    if h is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    i = h.find("QUICK-PILL-CAT-1 (Goal run 47")
+    if i < 0:
+        return [(FAIL, "the Quick button no longer follows the door's chosen category")]
+    seg = h[i:i + 900]
+    for snip in ("app===APPS[2]&&!url&&CHOICE&&QDOOR[CHOICE.cat]", '"/quick/"+QDOOR[CHOICE.cat]', "if(CC){"):
+        if snip not in seg:
+            return [(FAIL, "QUICK-PILL-CAT-1 lost: " + snip)]
+    g = h.find("function go(app,url)")
+    if g < 0 or not (g < i < g + 1200):
+        return [(FAIL, "QUICK-PILL-CAT-1 is no longer inside go()")]
+    return [(INFO, "the Quick button opens the chosen category's Quick door in her city")]
+
+
 @entry("RG-1100", "COL-QTY-1 (Goal run 46, 23 Oct 2026): on Collectors a photo read whose title says Collection (or Set / Lot) fills a "
        "blank Quantity -- only from the title, never Single item",
        LOCKED, fixed_on="2026-10-23", scope="ms.js sfApplyDraft (Collectors)",

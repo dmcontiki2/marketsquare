@@ -286,6 +286,12 @@ function exUrl(ad){ var q=QDOOR[(ad&&ad.dataset.cat)||""]||"";
   return "/quick/"+q+"?src="+encodeURIComponent(INSRC||"door-example")+(CC?"&cc="+encodeURIComponent(CC):"")+(CITY?"&city="+encodeURIComponent(CITY):""); }
 function go(app,url){
   if(app===PAAPP&&!url) url=ME.pro?"/pa":"/pa/about";   // PA-GATE-1: a non-Pro goes straight to the explainer; /pa refuses him (401)
+  /* QUICK-PILL-CAT-1 (Goal run 47, 24 Oct 2026): the Quick button opens the Quick door of the category written under it
+     ("Your choice: Tutors"), in her city and country -- from a Facebook tutors ad it opened plain /quick/, the Services door
+     ("What kind of work? ... Shops & forecourt"), while the example cards in the same stream opened Tutors. */
+  if(app===APPS[2]&&!url&&CHOICE&&QDOOR[CHOICE.cat]){ var qp=[];
+    if(CC){ qp.push("cc="+encodeURIComponent(CC)); if(CITY) qp.push("city="+encodeURIComponent(CITY)); }   // no country yet: Quick works out both
+    url="/quick/"+QDOOR[CHOICE.cat]+(qp.length?"?"+qp.join("&"):""); }
   try{ localStorage.setItem("ts_last_app",app.key); }catch(e){}
   try{ fetch("/door/last",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({app:app.key}),keepalive:true}).catch(function(){}); }catch(e){}
   url=url||app.url;
