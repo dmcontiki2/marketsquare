@@ -1128,7 +1128,8 @@ REFLECTIONS = {
    # A session removing the guard, shortening the floor, or adding a second door trips here.
    ("RULINGS.md", ["NOBODY WE HAVE ALREADY WRITTEN TO IS WRITTEN TO AGAIN"], []),
    ("../CityLauncher/emailer/emailer.py", ["RECONTACT-1", "RECONTACT_DAYS = 60", "_recontact_blocked(to)", "TS_RECONTACT_PERMISSION"], []),
-   ("../CityLauncher/emailer/localize.py", ["We will not email you again"], []),
+   # RUL-251 (24 Oct 2026) amended the footer: the floor stays, the "never again" promise is gone.
+   ("../CityLauncher/emailer/localize.py", ["We may write again after at least 60 days, and never after you unsubscribe."], []),
    ("scripts/regression_ledger.py", ["RG-0332"], []),
  ],
  "RUL-011": [
@@ -1541,6 +1542,15 @@ REFLECTIONS = {
    ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
    ("scripts/regression_ledger.py", ["RG-1097"], []),
  ],
+ "RUL-252": [
+   # David, 24 Oct 2026: "Restart the New York e-mail wave ... not use SMS there ... only send ones going to real people ... if i am satisfied then only will we unleash"
+   ("RULINGS.md", ["THE REVIEW WITH DAVID IS THE TEST"], []),
+ ],
+ "RUL-251": [
+   # David, 24 Oct 2026: "Please change those footers ... for the future we want to resend after 60 days"
+   ("RULINGS.md", ["THE FOOTERS STOP PROMISING A SINGLE LETTER"], []),
+   ("../CityLauncher/emailer/localize.py", ["RUL-251"], ["We will not email you again", "We will never email you again", "single message"]),
+ ],
  "RUL-250": [
    # David, 23 Oct 2026: "a 'hidden' side swap bringing up category selectors ... I like the hint - do it please, and build it"
    ("RULINGS.md", ["HER OWN CATEGORIES: A HIDDEN SIDE SWIPE"], []),
@@ -1550,7 +1560,7 @@ REFLECTIONS = {
  "RUL-249": [
    # David, 23 Oct 2026: "showing our example adverts with a small but clear sentence in the bottom right 'your listing here'"
    ("RULINGS.md", ["A THIN CITY INVITES SELLERS"], []),
-   ("door.html", ["MINLOCAL=6", 'T("Your listing here")', '"/quick/?src=door-example"', 'T("Be the first seller in {city}"', "function isEx("], []),
+   ("door.html", ["MINLOCAL=6", 'T("Your listing here")', 'go(APPS[2],"/quick/?src="+encodeURIComponent(INSRC||"door-example"))', 'T("Be the first seller in {city}"', "function isEx("], []),
  ],
  "RUL-248": [
    # David, 23 Oct 2026: "use the top to scroll left to right selectors ... click on a scrolling advert ... randomly selected to be fair, has to be local"
