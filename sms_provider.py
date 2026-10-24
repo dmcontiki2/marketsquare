@@ -142,6 +142,22 @@ def codes_ready() -> bool:
     return ready() and "phone-code" in SMS_PURPOSES
 
 
+
+# SMS-LONG-1: the GSM-7 alphabet (basic + extension); anything else makes the text a Unicode (70/67-char part) text.
+_GSM = set("@\u00a3$\u00a5\u00e8\u00e9\u00f9\u00ec\u00f2\u00c7\n\u00d8\u00f8\r\u00c5\u00e5\u0394_\u03a6\u0393\u039b\u03a9\u03a0\u03a8\u03a3\u0398\u039e\u00c6\u00e6\u00df\u00c9 !\"#\u00a4%&'()*+,-./0123456789:;<=>?\u00a1ABCDEFGHIJKLMNOPQRSTUVWXYZ\u00c4\u00d6\u00d1\u00dc\u00a7\u00bfabcdefghijklmnopqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0")
+_GSM_EXT = set("^{}\\[~]|\u20ac")
+MAX_PARTS = 6
+
+
+def _parts(text):
+    """Billable parts for one text: GSM-7 160/153 a part, Unicode 70/67 a part."""
+    if all(c in _GSM or c in _GSM_EXT for c in text):
+        n = len(text) + sum(1 for c in text if c in _GSM_EXT)
+        return 1 if n <= 160 else -(-n // 153)
+    n = len(text)
+    return 1 if n <= 70 else -(-n // 67)
+
+
 def send(to: str, text: str, purpose: str = "") -> tuple:
     """Send one SMS. Returns (status, info): status in 'sent' | 'skipped' | 'failed'."""
     if purpose not in SMS_PURPOSES:
@@ -159,7 +175,15 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
     if _over_daily_cap():
         _log.warning("sms refused (%s): daily cap of %d reached or uncountable -- to %s", purpose, daily_cap(), mask(e164))
         return ("skipped", "daily cap reached")
-    text = (text or "")[:459]              # three concatenated GSM parts at most
+    # SMS-LONG-1 (David, 24 Oct 2026: "allow all languages without cutting them off; but the advert or screen should
+    # also not be broken"): a text is never cut. It used to be sliced at 459 characters, which can end mid-word or
+    # mid-link. Now a text goes whole as up to MAX_PARTS concatenated parts (the phone joins them into one message),
+    # in Unicode whenever it carries a letter outside the GSM alphabet (Sepedi's s-caron) so no letter is mangled.
+    # Longer than that is refused, never shortened.
+    text = text or ""
+    if _parts(text) > MAX_PARTS:
+        _log.warning("sms refused (%s): %d parts is over the %d-part limit -- to %s", purpose, _parts(text), MAX_PARTS, mask(e164))
+        return ("failed", "text too long (%d parts)" % _parts(text))
     try:
         import httpx
     except Exception:
@@ -170,7 +194,7 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
     try:
         if prov == "bulksms":
             basic = base64.b64encode(tok.encode()).decode()
-            body = {"to": e164, "body": text}
+            body = {"to": e164, "body": text, "longMessageMaxParts": MAX_PARTS}   # SMS-LONG-1: never truncated by BulkSMS
             # SMS-REPLY-1 (David, 12 Oct 2026: 'Make "Reply STOP" true'). Every text we send says "Reply STOP to
             # opt out", so every text must come from a number a reply can reach US on. A named (alphanumeric)
             # sender cannot be replied to, and leaving "from" out leaves it to the account's default-repliable
@@ -178,7 +202,7 @@ def send(to: str, text: str, purpose: str = "") -> tuple:
             # linked to the text it answers -- received() below reads them. The text itself names TrustSquare.
             # Proven 12 Oct 2026: a REPLIABLE submission to BulkSMS's free test number 1111111 -> 201, 0 credits.
             body["from"] = {"type": "REPLIABLE"}
-            r = httpx.post("https://api.bulksms.com/v1/messages", json=body,
+            r = httpx.post("https://api.bulksms.com/v1/messages?auto-unicode=true", json=body,   # SMS-LONG-1: Unicode when needed
                            headers={"Authorization": "Basic " + basic}, timeout=15)
             ok = r.status_code in (200, 201)
         elif prov == "clickatell":

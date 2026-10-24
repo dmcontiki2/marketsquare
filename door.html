@@ -155,6 +155,11 @@ function genEx(){ return GEX.map(function(e){ var im=e.img[Math.floor(Math.rando
   return {id:"gex-"+e.g,img:"/static/ex/"+im+".jpg",title:e.title,price:(CC&&e.price[CC])||"",where:CITY,cat:e.cat,sub:e.sub||"",ex:true}; }); }
 /* DOOR-PICK-1 (RUL-250): her own choice of category (and sub-category) outranks any guessed interest */
 var CHOICE=null; try{ CHOICE=JSON.parse(localStorage.getItem("ts_door_choice")||"null"); }catch(e){}
+/* FB-LAND-1 (David, 24 Oct 2026): a visitor from a Facebook ad lands straight on the ad's category in Quick's stream --
+   not on the travel collage she has to swipe past. For this visit only (her saved choice is not overwritten). */
+var ADCAT={"fb-tutors":"Tutors","fb-cards":"Collectors","fb-chess":"Tutors","fb-trainers":"Tutors","fb-climb":"Adventures"}[INSRC.toLowerCase()]||null;
+if(ADCAT) CHOICE={cat:ADCAT};
+var ADKEY={"fb-cards":/card/i,"fb-chess":/chess/i,"fb-trainers":/personal training|trainer/i,"fb-climb":/climb/i,"fb-tutors":/universit|maths|statistic/i}[INSRC.toLowerCase()]||null;
 var CATIMG={"Property":"/static/brand-photos/t560/cat_property.jpg","Cars":"/static/brand-photos/t560/cat_cars.jpg","Collectors":"/static/brand-photos/t560/cat_collectors.jpg",
   "Adventures":"/static/brand-photos/t560/cat_adventures.jpg","Services":"/static/brand-photos/t560/cat_services.jpg","Tutors":"/static/brand-photos/t560/cat_tutors.jpg",
   "Local Market":"/static/brand-photos/t560/lm_t_general.jpg"};
@@ -251,6 +256,7 @@ function buildLane(){
     want=want.filter(function(x){ return !have[x.cat]; }).concat(want.filter(function(x){ return have[x.cat]; }));   // her city's gaps first
     list=list.concat(interleave(want).slice(0,Math.max(12-list.length,MINLOCAL)));
   }
+  if(ADKEY){ list=list.filter(function(x){ return ADKEY.test(x.title||""); }).concat(list.filter(function(x){ return !ADKEY.test(x.title||""); })); }   // FB-LAND-1: the ad's own thing first
   var html=[], n=0;
   list.forEach(function(d,i){
     html.push('<div class="ad'+(d.ex?' ex" data-ex="1':'')+'" data-id="'+esc(d.id)+'" data-cat="'+esc(d.cat||"")+'"><img src="'+esc(d.img)+'" alt="" loading="lazy"><span class="cat">'+esc(T(d.cat))+'</span>'+
@@ -429,7 +435,7 @@ function load(){
     }).catch(function(){ EX=[]; });
   }).then(function(){ laneKey=""; render(); });
 }
-buildCollage(); buildSlider(); render(); requestAnimationFrame(tick); load();
+buildCollage(); buildSlider(); if(ADCAT){ cur=2; $("slider").value=2; } render(); requestAnimationFrame(tick); load();   // FB-LAND-1: open on Quick
 })();
 </script>
 <!-- tester fault report (MAINT-B1b): every page a tester can land on carries the widget; shown only while the switch is on -->
