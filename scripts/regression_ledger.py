@@ -35217,6 +35217,35 @@ def rg_col_draft_1():
     return [(INFO, "the Collectors photo read fills Category, Year and Maker blanks")]
 
 
+@entry("RG-1101", "GEN-EX-1 (RUL-253, 24 Oct 2026): one generic example set in every city -- priced in the visitor's money "
+       "(no price where her country has none), placed in her city, five neutral photos each",
+       LOCKED, fixed_on="2026-10-24", scope="door.html GEX block + genEx(); all cities, all countries",
+       ref="Render proof 24 Oct: New York $, London GBP, Pretoria R, Nairobi KSh, Berlin EUR; 23 examples x 5 photos.")
+def rg_gen_ex_1():
+    s = repo_file("door.html")
+    if s is None:
+        return [(INFO, "NOT EVALUATED - repo not readable from here")]
+    import json as _j, re as _re
+    m = _re.search(r"/\*GEX\*/(.*?)/\*END-GEX\*/", s, _re.S)
+    if not m:
+        return [(FAIL, "door.html lost the GEX block")]
+    try:
+        g = _j.loads(m.group(1))
+    except Exception:
+        return [(FAIL, "GEX block is not valid JSON")]
+    if len(g) < 20:
+        return [(FAIL, "generic examples shrank to %d" % len(g))]
+    for e in g:
+        if len(e.get("img", [])) != 5:
+            return [(FAIL, "%s has %d photos, not 5" % (e.get("g"), len(e.get("img", []))))]
+        for cc in ("US", "GB", "ZA"):
+            if cc not in e.get("price", {}):
+                return [(FAIL, "%s has no %s price" % (e.get("g"), cc))]
+    for snip in ("(CC&&e.price[CC])||\"\"", "where:CITY", ".concat(genEx())"):
+        if snip not in s:
+            return [(FAIL, "GEN-EX-1 lost: " + snip)]
+    return [(INFO, "%d generic examples, 5 photos each, priced per country, placed in her city" % len(g))]
+
 @entry("RG-1100", "COL-QTY-1 (Goal run 46, 23 Oct 2026): on Collectors a photo read whose title says Collection (or Set / Lot) fills a "
        "blank Quantity -- only from the title, never Single item",
        LOCKED, fixed_on="2026-10-23", scope="ms.js sfApplyDraft (Collectors)",

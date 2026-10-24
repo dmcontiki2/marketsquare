@@ -50,6 +50,12 @@ echo  [1e] One-door collage + AI PA pictures (assets\door to /static/door)...
 if exist "%PROJECT%\assets\door" %SYNC% -LocalDir "%PROJECT%\assets\door" -Filter *.jpg -RemoteDir %REMOTE%/static/door -Server %SERVER%
 if exist "%PROJECT%\assets\door" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/door 2>/dev/null; chmod 644 %REMOTE%/static/door/*.jpg 2>/dev/null; true"
 
+echo  [1g] Generic example-advert photos (assets\ex to /static/ex)...
+:: GEN-EX-1 (RUL-253, 24 Oct 2026): the 23 generic examples x 5 photos; read by door.html (GEX block).
+if exist "%PROJECT%\assets\ex" ssh -n -o ConnectTimeout=15 %SERVER% "mkdir -p %REMOTE%/static/ex"
+if exist "%PROJECT%\assets\ex" %SYNC% -LocalDir "%PROJECT%\assets\ex" -Filter *.jpg -RemoteDir %REMOTE%/static/ex -Server %SERVER%
+if exist "%PROJECT%\assets\ex" ssh -n -o ConnectTimeout=15 %SERVER% "mkdir -p %REMOTE%/static/ex; chmod 755 %REMOTE%/static/ex 2>/dev/null; chmod 644 %REMOTE%/static/ex/*.jpg 2>/dev/null; true"
+
 echo  [1f] Letter Quick-door pictures (CityLauncher emailer\assets\qhero to /static/qhero)...
 :: OUTREACH-AUDIT-1 (24 Oct 2026): the hosted fallback of the picture every letter carries inline; re-shot from today's Quick door (Snap it / Say it).
 if exist "%PROJECT%\..\CityLauncher\emailer\assets\qhero" %SYNC% -LocalDir "%PROJECT%\..\CityLauncher\emailer\assets\qhero" -Filter *.jpg -RemoteDir %REMOTE%/static/qhero -Server %SERVER%

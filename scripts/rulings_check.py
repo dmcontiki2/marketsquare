@@ -1542,6 +1542,11 @@ REFLECTIONS = {
    ("bea_main.py", ["SQUIRE_MONTHLY_AI_BRIEFS = 30", "ai=_sq_ai", "if not ai:   # SQUIRE-BRIEF-CAP-1"], []),
    ("scripts/regression_ledger.py", ["RG-1097"], []),
  ],
+ "RUL-253": [
+   # David, 24 Oct 2026: "the prices will reflect correct for different countries ... the location should also change to where it gets adverticed"
+   ("RULINGS.md", ["ONE SET OF EXAMPLE ADVERTS FOR EVERY CITY"], []),
+   ("door.html", ["var GEX=/*GEX*/[{", "(CC&&e.price[CC])||\"\"", "where:CITY", ".concat(genEx())"], []),
+ ],
  "RUL-252": [
    # David, 24 Oct 2026: "Restart the New York e-mail wave ... not use SMS there ... only send ones going to real people ... if i am satisfied then only will we unleash"
    ("RULINGS.md", ["THE REVIEW WITH DAVID IS THE TEST"], []),
