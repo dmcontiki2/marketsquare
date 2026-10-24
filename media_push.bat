@@ -50,6 +50,11 @@ echo  [1e] One-door collage + AI PA pictures (assets\door to /static/door)...
 if exist "%PROJECT%\assets\door" %SYNC% -LocalDir "%PROJECT%\assets\door" -Filter *.jpg -RemoteDir %REMOTE%/static/door -Server %SERVER%
 if exist "%PROJECT%\assets\door" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/door 2>/dev/null; chmod 644 %REMOTE%/static/door/*.jpg 2>/dev/null; true"
 
+echo  [1f] Letter Quick-door pictures (CityLauncher emailer\assets\qhero to /static/qhero)...
+:: OUTREACH-AUDIT-1 (24 Oct 2026): the hosted fallback of the picture every letter carries inline; re-shot from today's Quick door (Snap it / Say it).
+if exist "%PROJECT%\..\CityLauncher\emailer\assets\qhero" %SYNC% -LocalDir "%PROJECT%\..\CityLauncher\emailer\assets\qhero" -Filter *.jpg -RemoteDir %REMOTE%/static/qhero -Server %SERVER%
+if exist "%PROJECT%\..\CityLauncher\emailer\assets\qhero" ssh -n -o ConnectTimeout=15 %SERVER% "chmod 755 %REMOTE%/static/qhero 2>/dev/null; chmod 644 %REMOTE%/static/qhero/*.jpg 2>/dev/null; true"
+
 echo  [1b] Study ^& Work Abroad example photos (assets\studywork to /static/studywork)...
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.jpg -RemoteDir %REMOTE%/static/studywork -Server %SERVER%
 if exist "%PROJECT%\assets\studywork" %SYNC% -LocalDir "%PROJECT%\assets\studywork" -Filter *.pdf -RemoteDir %REMOTE%/static/studywork -Server %SERVER%

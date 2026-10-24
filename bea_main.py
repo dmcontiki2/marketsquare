@@ -22393,7 +22393,7 @@ def _send_draft_waiting_email(to_email: str, link: str, title: str, code: str = 
         # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06): the letter states the rule the server keeps.
         + ("<p style='color:#6b7280;font-size:13px'>Tap it within 3 days: it signs you in on that phone and "
            "opens your listing, and it keeps opening it there for 7 days. Any other time, or on another phone, "
-           "open <a href='" + APP_URL + "'>trustsquare.co</a> and sign in with <b>"
+           "open <a href='" + APP_URL + "/?app=1'>trustsquare.co</a> and sign in with <b>"
            + to_email + "</b> \u2014 the listing is waiting on that address, and only "
            "that one.</p>")
         + "<p style='color:#6b7280;font-size:12px'>You are getting this because you "
@@ -22471,7 +22471,7 @@ def _send_quick_live_email(to_email: str, link: str, title: str) -> str:
         "Open my listing &rarr;</a></p>"
         "<p style='color:#6b7280;font-size:13px'>Add photos there to make it stronger. Tap the button within "
         "3 days to sign in on that phone; it keeps opening your listing there for 7 days. Any other time, "
-        "sign in at <a href='" + APP_URL + "'>trustsquare.co</a> with <b>"
+        "sign in at <a href='" + APP_URL + "/?app=1'>trustsquare.co</a> with <b>"
         + to_email + "</b>.</p>"   # LETTER-REOPEN-1 (25 Sep 2026 inspection, backend-06)
         "<p style='color:#6b7280;font-size:12px'>If this was not you, open the link and delete the "
         "listing, or ignore this letter.</p></div>")
@@ -22516,17 +22516,17 @@ def _send_invite_email(to_email: str, link: str, agency_name: str = "") -> str:
         # AGENT-INVITE-STEPS-1 (7 Oct 2026, F14 walk): the agent landed on Home with no idea where to go or what to upload
         "<p style='margin:14px 0 6px'><b>Your first three steps</b></p>"
         "<ol style='margin:0 0 12px 18px;padding:0'><li>Open <b>Sell &rarr; Seller Hub &rarr; Agent Hub</b> and complete your profile.</li>"
-        "<li>Upload the papers your trade needs (estate agents: <b>PPRA registration</b> and current <b>Fidelity Fund "
-        "Certificate</b>) &mdash; a person checks them before your profile goes live.</li><li>List your first property from <b>Sell</b>.</li></ol>"
+        "<li>Upload the papers your trade needs (South African estate agents: <b>PPRA registration</b> and current <b>Fidelity Fund "
+        "Certificate</b>; elsewhere, your agent licence) &mdash; a person checks them before your profile goes live.</li><li>List your first property from <b>Sell</b>.</li></ol>"
         "<p style='color:#6b7280;font-size:13px'>The button works for 72 hours. After that (or on "
-        "another device) just go to <a href='" + APP_URL + "' style='color:#0f3460'>trustsquare.co</a>, "
+        "another device) just go to <a href='" + APP_URL + "/?app=1' style='color:#0f3460'>trustsquare.co</a>, "
         "tap <b>Sign in</b>, and we&rsquo;ll email you a 6-digit code &mdash; no password needed, ever.</p>"
         "<p style='color:#6b7280;font-size:12px'>If you weren&rsquo;t expecting this, you can ignore it "
         "&mdash; nothing goes live without you.</p>"
         "</div>"
     )
-    plain = ((who or "Your agency") + " set up your TrustSquare account.\n\nFirst steps: Sell > Seller Hub > Agent Hub; upload the papers your trade needs (estate agents: PPRA registration and FFC) -- a person checks them before your profile goes live; then list from Sell.\n\nOpen it here (works for 72 hours):\n"
-             + link + "\n\nAny other time or device: go to " + APP_URL
+    plain = ((who or "Your agency") + " set up your TrustSquare account.\n\nFirst steps: Sell > Seller Hub > Agent Hub; upload the papers your trade needs (South African estate agents: PPRA registration and FFC; elsewhere, your agent licence) -- a person checks them before your profile goes live; then list from Sell.\n\nOpen it here (works for 72 hours):\n"
+             + link + "\n\nAny other time or device: go to " + APP_URL + "/?app=1"
              + ", tap Sign in, and we'll email you a 6-digit code.")
     return _send_html_email(to_email, subject, html, plain)
 
@@ -32296,9 +32296,12 @@ def _lc_parse_ts(s):
 
 
 def _lc_email_html(title: str, body: str, cta: str = "Open TrustSquare") -> str:
+    # APP-MAIL-DOOR-1 (outreach audit, 24 Oct 2026): with the one door armed (RUL-243) a bare trustsquare.co opens the door,
+    # which has no Sign in; every app letter's "Open TrustSquare" / "sign in at trustsquare.co" link now carries ?app=1
+    # so it lands in the app itself (any query skips the door) -- the letters say "tap Sign in" and she must find it.
     return ("<div style='font-family:Inter,Arial,sans-serif;max-width:440px;margin:auto'>"
             "<h2 style='color:#0c1a2e'>" + title + "</h2><p>" + body + "</p>"
-            "<p><a href='" + APP_URL + "' style='display:inline-block;background:#C8873A;color:#fff;"
+            "<p><a href='" + APP_URL + "/?app=1' style='display:inline-block;background:#C8873A;color:#fff;"
             "text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700'>"
             + cta + " &rarr;</a></p></div>")
 

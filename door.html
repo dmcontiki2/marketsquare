@@ -119,6 +119,16 @@ var LI=LANGS.indexOf(lang());
 function T(s,vars){ var t=(LI>=0&&DI18N[s]&&DI18N[s][LI])||s; if(vars) for(var k in vars) t=t.split("{"+k+"}").join(vars[k]); return t; }
 try{ sessionStorage.setItem("ts_door","1"); }catch(e){}   // index.html will not bounce a visitor the door sent there
 var DEMO = new URLSearchParams(location.search).get("demo")==="1";
+/* DOOR-LINK-1 (outreach audit, 24 Oct 2026): a letter or text that links to the door says where she is and which wave
+   brought her. ?src= rides on to whatever she opens from here (Quick credits a wave by the src on its own address), and
+   ?city= (with ?cc=) is a hint the door trusts only when it names a city TrustSquare covers -- after her account's city
+   and her own pick, before the network's guess (a phone network often places a New Yorker in Ohio). */
+var LP=new URLSearchParams(location.search), INSRC=String(LP.get("src")||"").replace(/[^A-Za-z0-9_.~-]/g,"").slice(0,120),
+    LINKCITY=String(LP.get("city")||"").slice(0,60), LINKCC=String(LP.get("cc")||"").toUpperCase().replace(/[^A-Z]/g,"").slice(0,2);
+var CC="", EXOWN=false;
+var SYM={ZA:"R",US:"$",GB:"\u00a3",AU:"A$",KE:"KSh ",NA:"N$",NZ:"NZ$",CA:"C$",BW:"P",MZ:"MT "};
+/* DOOR-MONEY-1: a price saved as a bare number ("23 990") wears her country's symbol on the door */
+function money(p){ p=String(p||""); return (/^[\d\s.,\u00a0]+$/.test(p)&&SYM[CC])?SYM[CC]+p:p; }
 var IMG="/static/door/";
 var COL=["col_aurail_l1_view","col_gbrail_l4_view","col_moz_d1_view","col_ken_d1_view","col_c2c_l1_view","col_nam_d1_view","col_usrail_l2_view",
  "col_bwa_d2_over","col_aurail_l2_over","col_gbrail_l2_view","col_moz_d2_over","col_ken_d2_over","col_c2c_l3_view","col_nam_d3_view","col_usrail_l3_over",
@@ -261,7 +271,9 @@ function go(app,url){
   if(app===PAAPP&&!url) url=ME.pro?"/pa":"/pa/about";   // PA-GATE-1: a non-Pro goes straight to the explainer; /pa refuses him (401)
   try{ localStorage.setItem("ts_last_app",app.key); }catch(e){}
   try{ fetch("/door/last",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({app:app.key}),keepalive:true}).catch(function(){}); }catch(e){}
-  location.href=url||app.url;
+  url=url||app.url;
+  if(INSRC&&!/[?&]src=/.test(url)) url+=(url.indexOf("?")<0?"?":"&")+"src="+encodeURIComponent(INSRC);   // DOOR-LINK-1
+  location.href=url;
 }
 /* DOOR-SPEED-1: a finger (or mouse wheel) scrolls the stream; the drift resumes 2.5 s after she lets go. A drag is never a tap. */
 var drag=null, held=0, moved=false;
@@ -330,7 +342,7 @@ $("door").addEventListener("click",function(e){
   var pa=e.target.closest&&e.target.closest("[data-pa]"); if(pa){ go(PAAPP); return; }
   var a=APPS[cur]||PAAPP;   // RUL-247: a tap on the collage opens the AI PA door
   var ad=e.target.closest&&e.target.closest(".ad");
-  if(ad&&ad.dataset.ex) { go(APPS[2],"/quick/?src=door-example"); return; }   // RUL-249: an example opens selling, never the example
+  if(ad&&ad.dataset.ex) { go(APPS[2],"/quick/?src="+encodeURIComponent(INSRC||"door-example")); return; }   // RUL-249: an example opens selling, never the example
   if(ad&&ad.dataset.id) { go(APPS[3],"/?listing="+encodeURIComponent(ad.dataset.id)); return; }   // RUL-248: any advert opens that advert in TrustSquare
   go(a);
 });
@@ -350,10 +362,22 @@ function load(){
   var km=function(a,b,c,d){ var r=Math.PI/180, x=Math.sin((c-a)*r/2), y=Math.sin((d-b)*r/2);
     return 12742*Math.asin(Math.sqrt(x*x+Math.cos(a*r)*Math.cos(c*r)*y*y)); };
   var geoP=fetch("/quick/me",{credentials:"same-origin"}).then(j).then(function(q){
+    CC=String(((q&&q.geo)||{}).country||"").toUpperCase();
     if(q&&q.city){ CITY=q.city; return; }
     var app=""; try{ app=localStorage.getItem("ms_user_city")||localStorage.getItem("ms_auto_city")||""; }catch(e){}
     if(app){ CITY=app; return; }
     var g=(q&&q.geo)||{}, cc=String(g.country||"").toUpperCase(), net=String(g.city||"").toLowerCase();
+    if(LINKCITY&&(LINKCC||cc)){   // DOOR-LINK-1: the link's city, when it is one we cover
+      var want=LINKCITY.toLowerCase(), lcc=LINKCC||cc;
+      return fetch("/geo/cities?country="+encodeURIComponent(lcc)).then(j).then(function(cs){
+        var hit=(Array.isArray(cs)?cs:[]).filter(function(c){ return String(c.name||"").toLowerCase()===want; })[0];
+        if(hit){ CITY=hit.name; CC=lcc; return; }
+        return netCity(g,cc,net);
+      }).catch(function(){ return netCity(g,cc,net); });
+    }
+    return netCity(g,cc,net);
+  }).catch(function(){});
+  function netCity(g,cc,net){
     if(!cc) { if(g.city) CITY=g.city; return; }
     return fetch("/geo/cities?country="+encodeURIComponent(cc)).then(j).then(function(cs){
       cs=Array.isArray(cs)?cs:[];
@@ -365,7 +389,7 @@ function load(){
       }
       if(hit) CITY=hit.name; else if(MAIN[cc]) CITY=MAIN[cc]; else if(g.city) CITY=g.city;
     }).catch(function(){ if(MAIN[cc]) CITY=MAIN[cc]; });
-  }).catch(function(){});
+  }
   return Promise.all([meP,geoP]).then(function(){
     $("city").textContent=CITY;
     return fetch("/listings?city="+encodeURIComponent(CITY)+"&page_size=200&sort=random"+(DEMO?"&demo=1":""),{credentials:"same-origin"}).then(j).then(function(L){
@@ -374,7 +398,7 @@ function load(){
       var here=CITY.toLowerCase();
       ADS=shuffle((L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&String(l.city||"").toLowerCase()===here&&!isEx(l); })).map(function(l){
         var c=CATMAP[String(l.category||"").toLowerCase()]||null;
-        return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:l.price||"",where:l.suburb||l.area||l.city||"",cat:c,sub:subOf(l,c)};
+        return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:money(l.price),where:l.suburb||l.area||l.city||"",cat:c,sub:subOf(l,c)};
       }).filter(function(x){return x.cat;});
     }).catch(function(){ ADS=[]; });
   }).then(function(){
@@ -383,12 +407,12 @@ function load(){
     var exOf=function(L,c){ return (L||[]).filter(function(l){ return l&&l.thumb_url&&l.title&&isEx(l)&&(!c||String(l.city||"").toLowerCase()===c); }); };
     return fetch("/listings?city="+encodeURIComponent(CITY)+"&demo=1&page_size=200&sort=random",{credentials:"same-origin"}).then(j).then(function(L){
       var mine=exOf(L,CITY.toLowerCase());
-      if(mine.length) return mine;
+      if(mine.length){ EXOWN=true; return mine; }
       return fetch("/listings?city=Pretoria&demo=1&page_size=200&sort=random",{credentials:"same-origin"}).then(j).then(function(P){ return exOf(P,"pretoria"); });
     }).then(function(L){
       EX=shuffle(L||[]).map(function(l){
         var c=CATMAP[String(l.category||"").toLowerCase()]||null;
-        return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:"",where:"",cat:c,sub:subOf(l,c),ex:true};
+        return {id:l.id,img:l.medium_url||l.thumb_url,title:l.title,price:EXOWN?money(l.price):"",where:"",cat:c,sub:subOf(l,c),ex:true};   // DOOR-MONEY-1: her own city's examples show their price in her money; another city's never do
       }).filter(function(x){return x.cat;});
     }).catch(function(){ EX=[]; });
   }).then(function(){ laneKey=""; render(); });
