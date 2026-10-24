@@ -4764,3 +4764,39 @@ DEPLOY DRIFT: 5 file(s) local-ahead of live - run /ship: CHANGELOG.md, SESSION_C
  ============================================================
 Press any key to continue . . . 
 Fri 10/23/2026 18:55:50.44  SHIPPED rc=0 - server now runs migrations + health itself
+Sat 10/24/2026  5:45:08.04  SHIPPING - DEPLOY DRIFT: 4 file(s) local-ahead of live - run /ship: CHANGELOG.md, bea_main.py, door.html, quick.html | gate green, releasing unattended
+
+ ============================================================
+  MARKETSQUARE  RELEASE  (one deploy: publish the deploy ref)
+  Sat 10/24/2026  5:45:08.09
+ ============================================================
+
+  [autobump] 0 reference(s) bumped
+harness-parity: BOTH quick.html and genie/HARNESS.html changed, differently -- nothing copied; merge them by hand so they are identical
+DASHBOARD PROVENANCE (PROVENANCE-1)
+  70 chip(s) total: 1 live-fed, 61 honestly not-wired, 1 registered static
+  DEFECTS: 0 unfed health chip(s), 0 orphaned id(s)
+
+  OK -- every health colour on the page is fed, honestly dashed, or registered with a live review date.
+no pending fragments.
+C:\Users\David\Projects\MarketSquare\scripts\status_compile.py:110: SyntaxWarning: "\Z" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\Z"? A raw string is also an option.
+  GET /dashboard/summary captures a section with `## Last Completed[^\n]*\n(.*?)(?=\n## |\Z)`,
+no pending fragments.
+  ------------------------------------------------------------
+  PRE-DEPLOY CHANGE SCAN   2026-10-24T03:45:10Z   mode=strict
+  Working tree: 4 file(s) uncommitted; 0 deploy target(s) changed.
+  Evidence-true trust check: ok
+  Scoreboard guard suite: ok
+  Base-40 trust canon check: ok
+  One-evidence-set trust check: ok
+  PG-readiness ratchet: ok — remaining to convert: {'datetime_now': 15, 'strftime': 14, 'julianday': 2, 'insert_or': 12}
+  Maintenance-agent guards: ok
+  Tester fault-intake guards: ok
+  !! HARNESS PARITY: quick.html and genie/HARNESS.html differ -- the cloud lane would be blocked.
+       run: python scripts/harness_parity.py --fix
+  Verdict: DANGER   (logged -> deploy_audit.log)
+  ------------------------------------------------------------
+ ABORT: pre-deploy scan flagged a dangerous change - strict mode. See deploy_audit.log.
+Press any key to continue . . . 
+Sat 10/24/2026  5:45:14.26  SHIP FAILED rc=1 - engine auto-rolls-back on bad health
+Sat 10/24/2026  9:37:16.93  SHIPPING - DEPLOY DRIFT: 1 file(s) local-ahead of live - run /ship: SESSION_COUNTER.json | gate green, releasing unattended
